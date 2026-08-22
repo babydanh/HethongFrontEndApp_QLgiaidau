@@ -737,7 +737,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                       ],
                       const SizedBox(height: 4),
                       Text(
-                        notif.timeAgo,
+                        notif.localizedTimeAgo(l10n),
                         style: TextStyle(fontSize: 11, color: colors.textMuted),
                       ),
                     ],

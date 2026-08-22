@@ -1,5 +1,8 @@
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'dart:ui';
+
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/domain/repositories/community_social_repository.dart';
 import 'package:dio/dio.dart';
@@ -63,14 +66,18 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
           if (mediaUrls.isNotEmpty) 'mediaUrls': mediaUrls,
           if (topicTags.isNotEmpty) 'topics': topicTags,
           if (mentions.isNotEmpty) 'mentions': mentions,
-          if (poll != null) 'poll': poll,
+          ...?poll == null ? null : {'poll': poll},
         },
         options: Options(headers: {'Idempotency-Key': Uuid().v4()}),
       );
       final body = _asMap(response.data);
       final data = _asMap(body['data'] ?? body);
       final post = CommunityPostModel.fromJson(data);
-      if (post.id.isEmpty) throw const FormatException('Bài đăng không hợp lệ');
+      if (post.id.isEmpty) {
+        throw FormatException(
+          lookupAppLocalizations(PlatformDispatcher.instance.locale).communityPostInvalid,
+        );
+      }
       return post;
     } catch (error, stack) {
       _log.error('Không thể tạo bài đăng CLB: $communityId', error, stack);
@@ -135,7 +142,9 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
         _asMap(payload['data'] ?? payload),
       );
       if (comment.id.isEmpty) {
-        throw const FormatException('Bình luận không hợp lệ');
+        throw FormatException(
+          lookupAppLocalizations(PlatformDispatcher.instance.locale).communityCommentInvalid,
+        );
       }
       return comment;
     } catch (error, stack) {
@@ -170,7 +179,10 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
   }
 
   @override
-  Future<List<CommunityReportModel>> getReports(String communityId, {String status = 'OPEN'}) async {
+  Future<List<CommunityReportModel>> getReports(
+    String communityId, {
+    String status = 'OPEN',
+  }) async {
     final response = await _dioClient.dio.get(
       '/communities/$communityId/moderation/reports',
       queryParameters: {'status': status},
@@ -178,11 +190,19 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
     final payload = _asMap(response.data);
     final raw = payload['data'] ?? payload;
     if (raw is! List) return const [];
-    return raw.map(_asMap).map(CommunityReportModel.fromJson).where((item) => item.id.isNotEmpty).toList(growable: false);
+    return raw
+        .map(_asMap)
+        .map(CommunityReportModel.fromJson)
+        .where((item) => item.id.isNotEmpty)
+        .toList(growable: false);
   }
 
   @override
-  Future<void> updateReportStatus(String communityId, String reportId, {required String status}) async {
+  Future<void> updateReportStatus(
+    String communityId,
+    String reportId, {
+    required String status,
+  }) async {
     await _dioClient.dio.patch(
       '/communities/$communityId/moderation/reports/$reportId',
       data: {'status': status},
@@ -305,7 +325,9 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
           payload['url']?.toString() ??
           _asMap(payload['data'])['url']?.toString();
       if (url == null || url.isEmpty) {
-        throw const FormatException('Ảnh tải lên không hợp lệ');
+        throw FormatException(
+          lookupAppLocalizations(PlatformDispatcher.instance.locale).communityMediaInvalid,
+        );
       }
       return url;
     } catch (error, stack) {

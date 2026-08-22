@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
@@ -19,6 +20,7 @@ class UserStatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final tier = TierPalette.matchTier(ranking.eloPoints, tiers);
     final isUnranked = ranking.rank <= 0;
 
@@ -98,7 +100,9 @@ class UserStatsCard extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        ranking.fullName.isNotEmpty ? ranking.fullName : 'Bạn',
+                        ranking.fullName.isNotEmpty
+                            ? ranking.fullName
+                            : l10n.rankingYouLabel,
                         style: TextStyle(
                           color: colors.textPrimary,
                           fontSize: 13.5,
@@ -118,8 +122,8 @@ class UserStatsCard extends StatelessWidget {
                         color: colors.info,
                         borderRadius: BorderRadius.circular(5),
                       ),
-                      child: const Text(
-                        'BẠN',
+                      child: Text(
+                        l10n.rankingYouLabel,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 9,
@@ -133,8 +137,13 @@ class UserStatsCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   isUnranked
-                      ? 'Chưa xếp hạng · ${tier?.name ?? 'Tân thủ'}'
-                      : 'Hạng #${ranking.rank} · ${tier?.name ?? 'Kỳ thủ'}',
+                      ? l10n.rankingUserStatsUnranked(
+                          tier?.name ?? l10n.ranking_unranked,
+                        )
+                      : l10n.rankingUserStatsRanked(
+                          ranking.rank,
+                          tier?.name ?? l10n.ranking_ranked,
+                        ),
                   style: TextStyle(
                     color: colors.textMuted,
                     fontSize: 11,

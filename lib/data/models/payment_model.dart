@@ -1,3 +1,7 @@
+import 'dart:ui';
+
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+
 class PaymentModel {
   final String id;
   final String tournamentId;
@@ -77,7 +81,8 @@ class PaymentModel {
           : (pMap['participant'] is Map
                 ? (pMap['participant'] as Map)['teamName']?.toString()
                 : json['teamName']?.toString()),
-      divisionId: (pMap['divisionId'] ??
+      divisionId:
+          (pMap['divisionId'] ??
                   pMap['tournamentDivisionId'] ??
                   json['divisionId'] ??
                   json['tournamentDivisionId'])
@@ -100,33 +105,39 @@ class PaymentModel {
       status == 'CANCELLED' ||
       status == 'EXPIRED';
 
-  String get statusLabel {
+  String get statusLabel =>
+      localizedStatusLabel(lookupAppLocalizations(PlatformDispatcher.instance.locale));
+
+  String localizedStatusLabel(AppLocalizations l10n) {
     switch (status) {
       case 'COMPLETED':
-        return 'Hoàn thành';
+        return l10n.paymentStatusCompleted;
       case 'PENDING':
-        return 'Chờ thanh toán';
+        return l10n.paymentStatusPending;
       case 'FAILED':
-        return 'Thất bại';
+        return l10n.paymentStatusFailed;
       case 'REFUNDED':
-        return 'Đã hoàn tiền';
+        return l10n.paymentStatusRefunded;
       case 'CANCELLED':
-        return 'Đã huỷ';
+        return l10n.paymentStatusCancelled;
       case 'EXPIRED':
-        return 'Đã hết hạn';
+        return l10n.paymentStatusExpired;
       default:
         return status;
     }
   }
 
-  String get gatewayLabel {
+  String get gatewayLabel =>
+      localizedGatewayLabel(lookupAppLocalizations(PlatformDispatcher.instance.locale));
+
+  String localizedGatewayLabel(AppLocalizations l10n) {
     switch (gateway) {
       case 'VNPAY':
         return 'VNPAY';
       case 'MOMO':
         return 'MoMo';
       case 'TRANSFER':
-        return 'Chuyển khoản';
+        return l10n.paymentGatewayTransfer;
       case 'PAYOS':
         return 'PAYOS';
       default:

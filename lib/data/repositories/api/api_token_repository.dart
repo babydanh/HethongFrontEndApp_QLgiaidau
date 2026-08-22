@@ -1,5 +1,8 @@
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'dart:ui';
+
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/data/models/token_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/token_repository.dart';
 
@@ -9,6 +12,9 @@ class ApiTokenRepository implements ITokenRepository {
 
   ApiTokenRepository(this._dioClient);
 
+  AppLocalizations get _l10n =>
+      lookupAppLocalizations(PlatformDispatcher.instance.locale);
+
   @override
   Future<TokenModel> createToken({
     required String code,
@@ -16,7 +22,7 @@ class ApiTokenRepository implements ITokenRepository {
     required String tournamentId,
   }) async {
     // Mobile không trực tiếp tạo token, vai trò này thuộc về Web.
-    throw UnimplementedError('Mobile app cannot create tokens directly.');
+    throw UnimplementedError(_l10n.tokenCreateUnsupported);
   }
 
   @override
@@ -26,7 +32,7 @@ class ApiTokenRepository implements ITokenRepository {
     required String refereeToken,
     required String viewerToken,
   }) async {
-    throw UnimplementedError('Mobile app cannot create tournament tokens directly.');
+    throw UnimplementedError(_l10n.tokenCreateTournamentUnsupported);
   }
 
   @override
@@ -52,13 +58,15 @@ class ApiTokenRepository implements ITokenRepository {
           final String tournamentId = data['id'];
           String role = requestedRole;
           if (role == 'viewer') {
-            if (code.toUpperCase().startsWith('ADM') || code == data['adminToken']) {
+            if (code.toUpperCase().startsWith('ADM') ||
+                code == data['adminToken']) {
               role = 'admin';
-            } else if (code.toUpperCase().startsWith('REF') || code == data['refereeToken']) {
+            } else if (code.toUpperCase().startsWith('REF') ||
+                code == data['refereeToken']) {
               role = 'referee';
             }
           }
-          
+
           return TokenModel(
             id: code.toUpperCase().trim(),
             code: code.toUpperCase().trim(),
@@ -80,14 +88,18 @@ class ApiTokenRepository implements ITokenRepository {
   Stream<TokenModel?> watchToken(String code) {
     // Mobile app currently polls token state through the backend flow.
     // Nếu token bị hủy hoặc thay đổi, interceptor 401 của Dio sẽ bắt và xử lý logout.
-    return Stream.value(TokenModel(
-      id: code,
-      code: code,
-      role: code.toUpperCase().startsWith('ADM') ? 'admin' : (code.toUpperCase().startsWith('REF') ? 'referee' : 'viewer'),
-      tournamentId: '',
-      isActive: true,
-      createdAt: DateTime.now(),
-    ));
+    return Stream.value(
+      TokenModel(
+        id: code,
+        code: code,
+        role: code.toUpperCase().startsWith('ADM')
+            ? 'admin'
+            : (code.toUpperCase().startsWith('REF') ? 'referee' : 'viewer'),
+        tournamentId: '',
+        isActive: true,
+        createdAt: DateTime.now(),
+      ),
+    );
   }
 
   @override
@@ -134,7 +146,7 @@ class ApiTokenRepository implements ITokenRepository {
 
   @override
   Future<void> deactivateToken(String tokenId) async {
-    throw UnimplementedError('Mobile app cannot deactivate tokens.');
+    throw UnimplementedError(_l10n.tokenDeactivateUnsupported);
   }
 
   @override
@@ -144,14 +156,16 @@ class ApiTokenRepository implements ITokenRepository {
     required String newCode,
   }) async {
     _log.info('Requesting token regeneration for role: $role');
-    final response = await _dioClient.dio.post('/tournaments/$tournamentId/regenerate-invite');
+    final response = await _dioClient.dio.post(
+      '/tournaments/$tournamentId/regenerate-invite',
+    );
     if (response.statusCode == 200) {
       final data = response.data['data'];
       if (role == 'admin') return data['adminToken'] ?? newCode;
       if (role == 'referee') return data['refereeToken'] ?? newCode;
       return data['viewerToken'] ?? newCode;
     }
-    throw Exception('Failed to regenerate token via API');
+    throw Exception(_l10n.tokenRegenerateApiFailed);
   }
 
   @override

@@ -1,5 +1,8 @@
 import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
+import 'dart:ui';
+
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentRefereeInvite {
   final String refereeId;
@@ -24,7 +27,11 @@ class TournamentRefereeInvite {
     return TournamentRefereeInvite(
       refereeId: json['refereeId']?.toString() ?? '',
       tournamentId: json['tournamentId']?.toString() ?? '',
-      tournamentName: json['tournamentName']?.toString() ?? 'Giải đấu',
+      tournamentName:
+          json['tournamentName']?.toString() ??
+          lookupAppLocalizations(
+            PlatformDispatcher.instance.locale,
+          ).workspaceDefaultTournament,
       tournamentStatus: json['tournamentStatus']?.toString() ?? '',
       categoryName: json['categoryName']?.toString() ?? '',
       assignedAt: DateParser.parseDateOptional(json['assignedAt']),
@@ -70,7 +77,11 @@ class TournamentAssignedMatch {
     return TournamentAssignedMatch(
       id: json['id']?.toString() ?? '',
       tournamentId: json['tournamentId']?.toString() ?? '',
-      tournamentName: json['tournamentName']?.toString() ?? 'Giải đấu',
+      tournamentName:
+          json['tournamentName']?.toString() ??
+          lookupAppLocalizations(
+            PlatformDispatcher.instance.locale,
+          ).workspaceDefaultTournament,
       categoryName: json['categoryName']?.toString() ?? '',
       stageName: json['stageName']?.toString() ?? '',
       groupName: json['groupName']?.toString() ?? '',
@@ -84,15 +95,25 @@ class TournamentAssignedMatch {
     );
   }
 
-  String get matchLabel => 'Trận $matchOrder';
+  String get matchLabel => localizedMatchLabel(
+    lookupAppLocalizations(PlatformDispatcher.instance.locale),
+  );
 
-  String get participantLabel {
+  String localizedMatchLabel(AppLocalizations l10n) =>
+      l10n.workspaceMatchLabel(matchOrder);
+
+  String get participantLabel => localizedParticipantLabel(
+    lookupAppLocalizations(PlatformDispatcher.instance.locale),
+  );
+
+  String localizedParticipantLabel(AppLocalizations l10n) {
     final player1 = participant1Name?.trim();
     final player2 = participant2Name?.trim();
-    if ((player1 == null || player1.isEmpty) && (player2 == null || player2.isEmpty)) {
-      return 'Chờ xác định cặp đấu';
+    if ((player1 == null || player1.isEmpty) &&
+        (player2 == null || player2.isEmpty)) {
+      return l10n.workspaceWaitingPair;
     }
-    return '${player1?.isNotEmpty == true ? player1 : 'Chờ đội 1'} vs ${player2?.isNotEmpty == true ? player2 : 'Chờ đội 2'}';
+    return '${player1?.isNotEmpty == true ? player1 : l10n.workspaceWaitingTeam1} ${l10n.matchVsLabel} ${player2?.isNotEmpty == true ? player2 : l10n.workspaceWaitingTeam2}';
   }
 }
 
@@ -118,7 +139,9 @@ class TournamentWorkspace {
       final raw = json[key] as List<dynamic>? ?? const [];
       return raw
           .whereType<Map<String, dynamic>>()
-          .map((item) => Tournament.fromJson(item, item['id']?.toString() ?? ''))
+          .map(
+            (item) => Tournament.fromJson(item, item['id']?.toString() ?? ''),
+          )
           .where((item) => item.id.isNotEmpty)
           .toList();
     }
@@ -163,7 +186,8 @@ class TournamentWorkspace {
     return map.values.toList();
   }
 
-  int get pendingInviteCount => refereeInvites.where((invite) => invite.isPending).length;
+  int get pendingInviteCount =>
+      refereeInvites.where((invite) => invite.isPending).length;
 
   int get activeRoleCount {
     var count = 0;

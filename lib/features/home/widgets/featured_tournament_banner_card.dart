@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -32,24 +33,37 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
     return '${apiBase.replaceAll('/api/v1', '')}$firstUrl';
   }
 
-  String _sportLabel() {
-    return AppConstants.sportNames[tournament.sport] ?? tournament.sport;
+  String _sportLabel(AppLocalizations l10n) {
+    switch (tournament.sport) {
+      case AppConstants.sportBadminton:
+        return l10n.createClubTournament_sportBadminton;
+      case AppConstants.sportTableTennis:
+        return l10n.createClubTournament_sportTableTennis;
+      case AppConstants.sportFootball:
+        return l10n.createClubTournament_sportFootball;
+      case AppConstants.sportPickleball:
+        return l10n.createClubTournament_sportPickleball;
+      case AppConstants.sportTennis:
+        return l10n.createClubTournament_sportTennis;
+      default:
+        return tournament.sport;
+    }
   }
 
-  String _statusLabel() {
+  String _statusLabel(AppLocalizations l10n) {
     switch (tournament.status.toLowerCase()) {
       case 'live':
       case 'in_progress':
-        return 'Đang thi đấu';
+        return l10n.matchesStatusLive;
       case 'completed':
       case 'finished':
-        return 'Đã kết thúc';
+        return l10n.matchesFilterEnded;
       case 'registration':
       case 'published':
       case 'active':
-        return 'Đang đăng ký';
+        return l10n.lite_statusRegistering;
       default:
-        return 'Sắp diễn ra';
+        return l10n.matchesStatusScheduled;
     }
   }
 
@@ -72,6 +86,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final bannerUrl = _resolveImageUrl(tournament.bannerUrl);
     final hasBanner = bannerUrl.isNotEmpty;
@@ -130,12 +145,12 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                   child: Row(
                     children: [
                       _CompactTopSportBadge(
-                        label: _sportLabel(),
+                        label: _sportLabel(l10n),
                         icon: Icons.sports_tennis_rounded,
                       ),
                       const Spacer(),
                       _CompactTopStatusBadge(
-                        label: _statusLabel(),
+                        label: _statusLabel(l10n),
                         color: _statusColor(),
                       ),
                     ],

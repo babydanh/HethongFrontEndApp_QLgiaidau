@@ -123,7 +123,9 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final fmt = NumberFormat('#,###', 'vi_VN');
+    final fmt = NumberFormat.decimalPattern(
+      Localizations.localeOf(context).toLanguageTag(),
+    );
     final colors = context.colors;
 
     return Scaffold(

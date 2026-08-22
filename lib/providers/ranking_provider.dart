@@ -51,6 +51,9 @@ typedef EloHistoryQuery = ({
   String? categoryId,
   String? scope,
   String? communityId,
+  String? matchType,
+  String? genderRestriction,
+  String? partnerId,
   int limit,
   String? cursor,
 });
@@ -66,7 +69,10 @@ final eloHistoryProvider = FutureProvider.family<List<EloHistoryLog>, EloHistory
       };
       if (query.categoryId != null) params['categoryId'] = query.categoryId;
       if (query.scope != null) params['scope'] = query.scope;
-      if (query.communityId != null) params['communityId'] = query.communityId;
+            if (query.communityId != null) params['communityId'] = query.communityId;
+      if (query.matchType != null) params['matchType'] = query.matchType;
+      if (query.genderRestriction != null) params['genderRestriction'] = query.genderRestriction;
+      if (query.partnerId != null) params['partnerId'] = query.partnerId;
 
       final response = await dio.get('/rankings/user/${query.userId}/history', queryParameters: params);
       final raw = response.data;

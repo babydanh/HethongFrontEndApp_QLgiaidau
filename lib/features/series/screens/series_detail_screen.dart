@@ -330,7 +330,9 @@ class _SeriesDetailContentState extends ConsumerState<_SeriesDetailContent>
     final statusColor = isActive
         ? colors.error
         : (d.status == 'COMPLETED' ? colors.success : colors.info);
-    final fmt = NumberFormat('#,###', 'vi_VN');
+    final fmt = NumberFormat.decimalPattern(
+      Localizations.localeOf(context).toLanguageTag(),
+    );
 
     return Stack(
       fit: StackFit.expand,

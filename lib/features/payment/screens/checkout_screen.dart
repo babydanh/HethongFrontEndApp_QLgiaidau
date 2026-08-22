@@ -145,7 +145,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final fmt = NumberFormat('#,###', 'vi_VN');
+    final fmt = NumberFormat.decimalPattern(
+      Localizations.localeOf(context).toLanguageTag(),
+    );
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
 

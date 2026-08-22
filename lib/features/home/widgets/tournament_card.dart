@@ -34,11 +34,30 @@ class TournamentCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final sportIcon = AppConstants.sportIcons[tournament.sport] ?? '🏆';
-    final sportName =
-        AppConstants.sportNames[tournament.sport] ?? tournament.sport;
-    final statusName = StatusHelper.getTournamentStatusLabel(tournament.status);
-    final bracketName =
-        AppConstants.bracketTypeNames[tournament.bracketType] ?? '';
+    final sportName = switch (tournament.sport) {
+      AppConstants.sportFootball => l10n.createClubTournament_sportFootball,
+      AppConstants.sportBadminton => l10n.createClubTournament_sportBadminton,
+      AppConstants.sportTennis => l10n.createClubTournament_sportTennis,
+      AppConstants.sportPickleball => l10n.createClubTournament_sportPickleball,
+      AppConstants.sportTableTennis =>
+        l10n.createClubTournament_sportTableTennis,
+      _ => tournament.sport,
+    };
+    final statusName = StatusHelper.getTournamentStatusLabel(
+      tournament.status,
+      l10n: l10n,
+    );
+    final bracketName = switch (tournament.bracketType) {
+      AppConstants.bracketSingleElimination =>
+        l10n.createClubTournament_bracketSingleElimination,
+      AppConstants.bracketDoubleElimination =>
+        l10n.createClubTournament_bracketDoubleElimination,
+      AppConstants.bracketRoundRobin =>
+        l10n.createClubTournament_bracketRoundRobin,
+      AppConstants.bracketGroupStageKnockout =>
+        l10n.createClubTournament_bracketGroupStageKnockout,
+      _ => '',
+    };
 
     final statusColor =
         StatusHelper.getTournamentStatusColor(tournament.status, context);

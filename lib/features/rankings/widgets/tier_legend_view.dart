@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Thanh hiển thị các bậc ELO (tier) của môn thể thao đang chọn.
 /// Mỗi bậc hiển thị: badge chữ đầy đủ (TIER S / HIGH TIER A...) + dải ELO.
@@ -10,15 +11,12 @@ class TierLegendView extends StatelessWidget {
   final List<EloTier> tiers;
   final int? highlightElo;
 
-  const TierLegendView({
-    super.key,
-    required this.tiers,
-    this.highlightElo,
-  });
+  const TierLegendView({super.key, required this.tiers, this.highlightElo});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     if (tiers.isEmpty) return const SizedBox.shrink();
 
     // Sắp xếp các tier từ cao nhất (Tier S: 1800+) xuống thấp nhất (Low Tier D: 0-1099) giống hệt Web
@@ -42,7 +40,9 @@ class TierLegendView extends StatelessWidget {
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: colors.bgCard,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
                     ),
                     child: SingleChildScrollView(
                       child: Column(
@@ -54,15 +54,21 @@ class TierLegendView extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primary.withValues(alpha: 0.1),
+                                  color: AppTheme.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.info_outline_rounded, color: AppTheme.primary, size: 20),
+                                child: const Icon(
+                                  Icons.info_outline_rounded,
+                                  color: AppTheme.primary,
+                                  size: 20,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  'Hệ thống phân hạng ELO',
+                                  l10n.rankingTierSystemTitle,
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -78,12 +84,16 @@ class TierLegendView extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Điểm ELO tích lũy sau mỗi trận đấu chính thức sẽ xếp người chơi vào các Tier trình độ tương ứng. Chi tiết dải điểm:',
-                            style: TextStyle(fontSize: 12, color: colors.textMuted, height: 1.4),
+                            l10n.rankingTierSystemDescription,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colors.textMuted,
+                              height: 1.4,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'HỆ THỐNG BẬC TRÌNH ĐỘ (TIERS)',
+                            l10n.rankingTierLevelsTitle,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
@@ -94,23 +104,34 @@ class TierLegendView extends StatelessWidget {
                           const SizedBox(height: 8),
                           ...sortedTiers.map((t) {
                             final palette = TierPalette.from(t);
-                            final eloRangeText = (t.maxElo > 5000 || t.minElo >= 1800)
+                            final eloRangeText =
+                                (t.maxElo > 5000 || t.minElo >= 1800)
                                 ? '${t.minElo}+ ELO'
                                 : '${t.minElo} - ${t.maxElo} ELO';
 
                             return Container(
                               margin: const EdgeInsets.only(bottom: 8),
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
                               decoration: BoxDecoration(
                                 color: palette.soft,
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: palette.border, width: 1.2),
+                                border: Border.all(
+                                  color: palette.border,
+                                  width: 1.2,
+                                ),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: palette.badgeBg,
                                       borderRadius: BorderRadius.circular(5),
@@ -142,7 +163,7 @@ class TierLegendView extends StatelessWidget {
                           Divider(color: colors.border.withValues(alpha: 0.5)),
                           const SizedBox(height: 12),
                           Text(
-                            'QUY LUẬT & TÍNH ĐIỂM ELO',
+                            l10n.rankingEloRulesTitle,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
@@ -151,14 +172,14 @@ class TierLegendView extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          _ruleItem(colors, 'Người mới bắt đầu từ 1000 ELO.'),
-                          _ruleItem(colors, 'ELO chỉ thay đổi sau trận đấu chính thức đã hoàn tất.'),
-                          _ruleItem(colors, 'Đánh đôi: ELO được tính theo sức mạnh trung bình hai đội rồi phân bổ cho từng người.'),
-                          _ruleItem(colors, 'Không thi đấu trong 1 tháng liên tục: dưới 1400 ELO giữ nguyên; từ 1400 trở lên giảm theo tier: 2%, 3%, 4% hoặc 5% mỗi tháng.'),
-                          _ruleItem(colors, 'Khiên ELO bảo vệ khi decay làm rơi qua mốc: giữ mốc một lần rồi tiêu thụ khiên.'),
-                          _ruleItem(colors, 'Đánh đôi có rank riêng cho từng cặp, bắt đầu từ 1000 ELO; không lấy trung bình ELO cá nhân.'),
-                          _ruleItem(colors, 'Khi thi đấu lại, mốc giảm ELO được tính lại từ đầu; không trừ dồn các tháng trước.'),
-                          _ruleItem(colors, 'Tier được cập nhật tự động khi ELO thay đổi.'),
+                          _ruleItem(colors, l10n.rankingRuleNewbie),
+                          _ruleItem(colors, l10n.rankingRuleOfficialComplete),
+                          _ruleItem(colors, l10n.rankingRuleDoublesAverage),
+                          _ruleItem(colors, l10n.rankingRuleDecay),
+                          _ruleItem(colors, l10n.rankingRuleShield),
+                          _ruleItem(colors, l10n.rankingRuleDoublesPair),
+                          _ruleItem(colors, l10n.rankingRuleDecayReset),
+                          _ruleItem(colors, l10n.rankingRuleAutoTier),
                           const SizedBox(height: 12),
                         ],
                       ),
@@ -172,7 +193,11 @@ class TierLegendView extends StatelessWidget {
                   color: AppTheme.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.info_outline_rounded, color: AppTheme.primary, size: 20),
+                child: const Icon(
+                  Icons.info_outline_rounded,
+                  color: AppTheme.primary,
+                  size: 20,
+                ),
               ),
             ),
           ),
@@ -186,12 +211,16 @@ class TierLegendView extends StatelessWidget {
               itemBuilder: (_, i) {
                 final tier = sortedTiers[i];
                 final palette = TierPalette.from(tier);
-                final isMine = highlightElo != null &&
+                final isMine =
+                    highlightElo != null &&
                     highlightElo! >= tier.minElo &&
                     highlightElo! <= tier.maxElo;
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: isMine ? palette.soft : colors.bgCard,
                     borderRadius: BorderRadius.circular(14),
@@ -235,7 +264,9 @@ class TierLegendView extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
-                                color: isMine ? palette.color : colors.textPrimary,
+                                color: isMine
+                                    ? palette.color
+                                    : colors.textPrimary,
                               ),
                             ),
                             Text(
@@ -266,11 +297,22 @@ class TierLegendView extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('• ', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 12)),
+          const Text(
+            '• ',
+            style: TextStyle(
+              color: AppTheme.primary,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
           Expanded(
             child: Text(
               text,
-              style: TextStyle(color: colors.textSecondary, fontSize: 12, height: 1.35),
+              style: TextStyle(
+                color: colors.textSecondary,
+                fontSize: 12,
+                height: 1.35,
+              ),
             ),
           ),
         ],

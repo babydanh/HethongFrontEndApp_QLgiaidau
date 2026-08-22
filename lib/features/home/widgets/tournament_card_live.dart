@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 class TournamentCardLive extends StatelessWidget {
   final Tournament tournament;
@@ -14,8 +16,9 @@ class TournamentCardLive extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sportLabel = AppConstants.sportNames[tournament.sport] ?? tournament.sport;
-    final formatLabel = AppConstants.formatNames[tournament.format] ?? tournament.format;
+    final l10n = AppLocalizations.of(context)!;
+    final sportLabel = l10n.sportDisplayName(tournament.sport);
+    final formatLabel = l10n.formatDisplayName(tournament.format);
 
     return GestureDetector(
       onTap: onTap,

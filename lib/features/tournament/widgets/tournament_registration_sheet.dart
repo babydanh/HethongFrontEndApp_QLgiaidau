@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Compatibility sheet for older call sites.
 ///
@@ -15,6 +16,7 @@ class TournamentRegistrationSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       top: false,
       child: Container(
@@ -58,7 +60,7 @@ class TournamentRegistrationSheet extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Đăng ký tham gia',
+                        l10n.tournamentRegistrationSheetTitle,
                         style: TextStyle(
                           color: colors.textPrimary,
                           fontSize: 18,
@@ -83,7 +85,7 @@ class TournamentRegistrationSheet extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             Text(
-              'Tiếp tục sang luồng đăng ký đầy đủ để hệ thống kiểm tra hồ sơ, hạng mục, ELO, mã mời và thanh toán.',
+              l10n.tournamentRegistrationSheetDescription,
               style: TextStyle(
                 color: colors.textSecondary,
                 fontSize: 13,
@@ -100,9 +102,9 @@ class TournamentRegistrationSheet extends StatelessWidget {
                   context.push('/register/${tournament.id}');
                 },
                 icon: const Icon(Icons.arrow_forward_rounded),
-                label: const Text(
-                  'Tiếp tục đăng ký',
-                  style: TextStyle(fontWeight: FontWeight.w800),
+                label: Text(
+                  l10n.tournamentRegistrationSheetContinue,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ),
             ),

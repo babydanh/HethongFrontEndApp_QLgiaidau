@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -13,14 +15,15 @@ class TeamService {
   Future<void> _checkConstraints() async {
     final tournamentAsync = ref.read(tournamentProvider(tournamentId));
     final tournament = tournamentAsync.value;
-    
+
+    final l10n = lookupAppLocalizations(ref.read(localeProvider));
     if (tournament == null) {
-      throw StateError('Không tìm thấy thông tin giải đấu.');
+      throw StateError(l10n.teamTournamentMissing);
     }
-    
-    if (tournament.status == AppConstants.statusInProgress || 
+
+    if (tournament.status == AppConstants.statusInProgress ||
         tournament.status == AppConstants.statusCompleted) {
-      throw StateError('Không thể thay đổi danh sách đội khi giải đấu đang diễn ra hoặc đã kết thúc.');
+      throw StateError(l10n.teamTournamentLocked);
     }
   }
 
@@ -31,7 +34,9 @@ class TeamService {
 
   Future<void> updateTeam(Team team) async {
     await _checkConstraints();
-    await ref.read(teamRepositoryProvider).update(tournamentId, team.id, team.toJson());
+    await ref
+        .read(teamRepositoryProvider)
+        .update(tournamentId, team.id, team.toJson());
   }
 
   Future<void> deleteTeam(String teamId) async {
@@ -53,6 +58,9 @@ class TeamService {
   }
 }
 
-final teamServiceProvider = Provider.family<TeamService, String>((ref, tournamentId) {
+final teamServiceProvider = Provider.family<TeamService, String>((
+  ref,
+  tournamentId,
+) {
   return TeamService(ref, tournamentId);
 });

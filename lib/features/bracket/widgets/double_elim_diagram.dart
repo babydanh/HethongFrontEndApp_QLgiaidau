@@ -228,7 +228,10 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                       } else if (fromEnd == 1) {
                         label = l10n.doubleElimUpperSemifinal;
                       } else {
-                        label = MatchRoundLabel.doubleUpperHeader(fromEnd);
+                        label = MatchRoundLabel.doubleUpperHeader(
+                          fromEnd,
+                          l10n: l10n,
+                        );
                       }
                       return Positioned(
                         left: layout.winnerColumnX(round),
@@ -252,6 +255,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                         label = MatchRoundLabel.doubleLowerHeader(
                           fromEnd,
                           round,
+                          l10n: l10n,
                         );
                       }
                       return Positioned(

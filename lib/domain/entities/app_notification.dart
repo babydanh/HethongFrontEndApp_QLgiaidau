@@ -1,3 +1,6 @@
+import 'dart:ui';
+
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Entity cho thông báo từ API GET /notifications
@@ -30,8 +33,12 @@ class AppNotification {
       body: json['content'] ?? json['body'],
       redirectUrl: json['redirectUrl'],
       isRead: json['isRead'] ?? json['is_read'] ?? false,
-      createdAt: DateTime.tryParse(json['createdAt'] ?? json['created_at'] ?? '') ?? DateTime.now(),
-      data: (json['data'] is Map<String, dynamic>) ? json['data'] as Map<String, dynamic> : null,
+      createdAt:
+          DateTime.tryParse(json['createdAt'] ?? json['created_at'] ?? '') ??
+          DateTime.now(),
+      data: (json['data'] is Map<String, dynamic>)
+          ? json['data'] as Map<String, dynamic>
+          : null,
     );
   }
 
@@ -102,7 +109,8 @@ class AppNotification {
 
       default:
         if (type.startsWith('FOOTBALL_TEAM_')) {
-          if (footballTeamId != null) return '/football-teams?teamId=$footballTeamId';
+          if (footballTeamId != null)
+            return '/football-teams?teamId=$footballTeamId';
           return _normalizeRedirectUrl(redirectUrl);
         }
         if (type.contains('MATCH') && matchId != null) {
@@ -140,14 +148,19 @@ class AppNotification {
     final path = uri.path;
     final segments = uri.pathSegments;
 
-    if (path == '/profile' || path == '/notifications' || path == '/football-teams') return raw;
+    if (path == '/profile' ||
+        path == '/notifications' ||
+        path == '/football-teams')
+      return raw;
     if (segments.length >= 2 && segments[0] == 'tournaments') {
       final participantId = uri.queryParameters['participantId'];
       if (participantId != null && participantId.isNotEmpty) {
         final divisionId = uri.queryParameters['divisionId'];
         return '/register/${segments[1]}/team?participantId=${Uri.encodeQueryComponent(participantId)}${divisionId == null ? '' : '&divisionId=${Uri.encodeQueryComponent(divisionId)}'}';
       }
-      if (segments.length >= 5 && segments[2] == 'participants' && segments[4] == 'accept-partner') {
+      if (segments.length >= 5 &&
+          segments[2] == 'participants' &&
+          segments[4] == 'accept-partner') {
         return '/join-team?tournamentId=${segments[1]}&pid=${segments[3]}';
       }
       if (segments.length >= 3 && segments[2] == 'join-team') {
@@ -160,12 +173,17 @@ class AppNotification {
         final tab = uri.queryParameters['tab'];
         final participantId = uri.queryParameters['participantId'];
         final query = <String, String>{
-          if (divisionId != null && divisionId.isNotEmpty) 'divisionId': divisionId,
+          if (divisionId != null && divisionId.isNotEmpty)
+            'divisionId': divisionId,
           if (tab != null && tab.isNotEmpty) 'tab': tab,
-          if (participantId != null && participantId.isNotEmpty) 'participantId': participantId,
+          if (participantId != null && participantId.isNotEmpty)
+            'participantId': participantId,
         };
         final suffix = query.entries
-            .map((entry) => '${Uri.encodeQueryComponent(entry.key)}=${Uri.encodeQueryComponent(entry.value)}')
+            .map(
+              (entry) =>
+                  '${Uri.encodeQueryComponent(entry.key)}=${Uri.encodeQueryComponent(entry.value)}',
+            )
             .join('&');
         return '/register/${segments[1]}${suffix.isEmpty ? '' : '?$suffix'}';
       }
@@ -206,8 +224,10 @@ class AppNotification {
           ? null
           : '/reset-password?token=${Uri.encodeComponent(token)}';
     }
-    if (path.startsWith('/live/') || path.startsWith('/intro/') ||
-        path.startsWith('/club/') || path.startsWith('/register/')) {
+    if (path.startsWith('/live/') ||
+        path.startsWith('/intro/') ||
+        path.startsWith('/club/') ||
+        path.startsWith('/register/')) {
       return raw;
     }
     return null;
@@ -351,13 +371,22 @@ class AppNotification {
     }
   }
 
-  /// Format thời gian tương đối
-  String get timeAgo {
+  /// Legacy Vietnamese formatter kept for non-UI compatibility.
+  String get timeAgo =>
+      localizedTimeAgo(lookupAppLocalizations(PlatformDispatcher.instance.locale));
+
+  String localizedTimeAgo(AppLocalizations l10n) {
     final diff = DateTime.now().difference(createdAt);
-    if (diff.inMinutes < 1) return 'Vừa xong';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
-    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
-    if (diff.inDays < 7) return '${diff.inDays} ngày trước';
+    if (diff.inMinutes < 1) return l10n.communityComment_justNow;
+    if (diff.inMinutes < 60) {
+      return l10n.notificationMinutesAgo(diff.inMinutes);
+    }
+    if (diff.inHours < 24) {
+      return l10n.notificationHoursAgo(diff.inHours);
+    }
+    if (diff.inDays < 7) {
+      return l10n.notificationDaysAgo(diff.inDays);
+    }
     return '${createdAt.day}/${createdAt.month}/${createdAt.year}';
   }
 }

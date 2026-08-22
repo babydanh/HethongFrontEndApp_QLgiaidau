@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
+import 'package:app_quanly_giaidau/features/match/utils/score_validation_localizer.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
-/// Bottom bar: penalty, override, kết thúc set/trận.
+/// Bottom bar: penalty, override, end set/match.
 class MatchBottomBar extends ConsumerWidget {
   final MatchControlParams params;
   const MatchBottomBar({required this.params, super.key});
@@ -31,7 +32,7 @@ class MatchBottomBar extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
-                state.errorMessage!,
+                formatScoreValidationError(l10n, state.errorMessage!),
                 style: const TextStyle(color: Colors.red, fontSize: 12),
               ),
             ),

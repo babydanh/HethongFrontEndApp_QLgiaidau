@@ -7,6 +7,7 @@ import 'dart:io' show Platform;
 
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
@@ -363,10 +364,9 @@ class _LiveTournamentWithMatchesCardState
             : (widget.tournament.bracketType == 'round_robin'
                   ? (l10n.exploreBracketGroup)
                   : (l10n.exploreBracketKnockout)));
-    final sportText =
-        AppConstants.sportNames[match.sportKey ?? widget.tournament.sport] ??
-        match.sportKey ??
-        widget.tournament.sport;
+    final sportText = l10n.sportDisplayName(
+      match.sportKey ?? widget.tournament.sport,
+    );
     final courtText = match.court.isNotEmpty
         ? match.court
         : (l10n.exploreCourtNotAssigned);
@@ -749,7 +749,7 @@ class _LiveTournamentWithMatchesCardState
                   onTap: () {
                     AppShareModal.show(
                       context: context,
-                      title: '${match.team1Name} VS ${match.team2Name}',
+                      title: '${match.team1Name} ${l10n.matchVsLabel} ${match.team2Name}',
                       subtitle: l10n.exploreShareSubtitle(
                         widget.tournament.name,
                         match.court.isNotEmpty

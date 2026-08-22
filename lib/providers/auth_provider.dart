@@ -5,6 +5,8 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/auth_session.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 import 'package:app_quanly_giaidau/providers/saved_tournaments_provider.dart';
 
 // ─── Enums ───
@@ -61,6 +63,9 @@ class AuthNotifier extends Notifier<AuthState> {
 
   StreamSubscription? _tokenSubscription;
   bool _initialized = false;
+
+  AppLocalizations get _l10n =>
+      lookupAppLocalizations(ref.read(localeProvider));
 
   @override
   AuthState build() {
@@ -132,7 +137,7 @@ class AuthNotifier extends Notifier<AuthState> {
       if (token == null) {
         state = AuthState(
           status: AuthStatus.invalid,
-          errorMessage: 'Token không hợp lệ hoặc đã hết hạn',
+          errorMessage: _l10n.authTokenInvalid,
         );
         return false;
       }
@@ -164,7 +169,11 @@ class AuthNotifier extends Notifier<AuthState> {
       _log.error('Lỗi xác thực token', e, stack);
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: 'Lỗi xác thực: ${e.toString()}',
+        errorMessage: ErrorParser.parse(
+          e,
+          _l10n.authTokenValidationFailed,
+          _l10n,
+        ),
       );
       return false;
     }
@@ -228,10 +237,7 @@ class AuthNotifier extends Notifier<AuthState> {
       _log.error('Lỗi đăng nhập', e, stack);
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: ErrorParser.parse(
-          e,
-          'Đăng nhập thất bại. Vui lòng thử lại.',
-        ),
+        errorMessage: ErrorParser.parse(e, _l10n.authLoginFailed, _l10n),
       );
       return false;
     }
@@ -258,10 +264,7 @@ class AuthNotifier extends Notifier<AuthState> {
       _log.error('Lỗi đăng nhập Google', e, stack);
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: ErrorParser.parse(
-          e,
-          'Đăng nhập Google thất bại. Vui lòng thử lại.',
-        ),
+        errorMessage: ErrorParser.parse(e, _l10n.authGoogleLoginFailed, _l10n),
       );
       return false;
     }
@@ -292,10 +295,7 @@ class AuthNotifier extends Notifier<AuthState> {
       _log.error('Lỗi đăng nhập Apple', e, stack);
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: ErrorParser.parse(
-          e,
-          'Đăng nhập Apple thất bại. Vui lòng thử lại.',
-        ),
+        errorMessage: ErrorParser.parse(e, _l10n.authAppleLoginFailed, _l10n),
       );
       return false;
     }
@@ -324,7 +324,8 @@ class AuthNotifier extends Notifier<AuthState> {
         status: AuthStatus.invalid,
         errorMessage: ErrorParser.parse(
           e,
-          'Đăng nhập Facebook thất bại. Vui lòng thử lại.',
+          _l10n.authFacebookLoginFailed,
+          _l10n,
         ),
       );
       return false;
@@ -356,10 +357,7 @@ class AuthNotifier extends Notifier<AuthState> {
       _log.error('Lỗi đăng ký', e, stack);
       state = AuthState(
         status: AuthStatus.invalid,
-        errorMessage: ErrorParser.parse(
-          e,
-          'Đăng ký thất bại. Vui lòng kiểm tra thông tin và thử lại.',
-        ),
+        errorMessage: ErrorParser.parse(e, _l10n.authRegisterFailed, _l10n),
       );
       return false;
     }
@@ -390,10 +388,7 @@ class AuthNotifier extends Notifier<AuthState> {
             _log.warning(
               'Token $tokenCode đã bị vô hiệu hóa hoặc xóa. Tiến hành đăng xuất tự động.',
             );
-            signOut(
-              reason:
-                  'Phiên đăng nhập đã hết hạn hoặc mã truy cập đã được đổi.',
-            );
+            signOut(reason: _l10n.authSessionExpired);
           }
         });
   }

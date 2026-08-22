@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'dart:ui';
+
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/core/services/match_socket_service.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
@@ -18,6 +21,9 @@ class ApiTournamentRepository implements ITournamentRepository {
   final Map<String, Tournament> _tournamentCache = {};
 
   ApiTournamentRepository(this._dioClient, [this._matchSocketService]);
+
+  AppLocalizations get _l10n =>
+      lookupAppLocalizations(PlatformDispatcher.instance.locale);
 
   @override
   Future<Tournament> create(Tournament tournament) async {
@@ -55,7 +61,7 @@ class ApiTournamentRepository implements ITournamentRepository {
       final data = response.data['data'];
       return Tournament.fromJson(data, data['id']);
     }
-    throw Exception('Failed to create tournament via API');
+    throw Exception(_l10n.tournamentCreateApiFailed);
   }
 
   Future<String> _resolveCategoryId(String sportSlug) async {
@@ -78,7 +84,9 @@ class ApiTournamentRepository implements ITournamentRepository {
     }
 
     throw Exception(
-      'Không tìm thấy bộ môn "${sportSlug.isEmpty ? 'không xác định' : sportSlug}" trên hệ thống',
+      sportSlug.isEmpty
+          ? _l10n.tournamentCategoryUnknown
+          : _l10n.tournamentCategoryNotFound(sportSlug),
     );
   }
 
@@ -150,7 +158,7 @@ class ApiTournamentRepository implements ITournamentRepository {
           'bestOf': 1,
         };
       default:
-        throw ArgumentError('Unsupported sport: $sport');
+        throw ArgumentError(_l10n.tournamentUnsupportedSport(sport));
     }
   }
 
@@ -361,7 +369,11 @@ class ApiTournamentRepository implements ITournamentRepository {
     final body = response.data;
     final rawData = body is Map && body['data'] is Map ? body['data'] : body;
     if (rawData is! Map) {
-      throw const FormatException('Phản hồi đăng ký không hợp lệ.');
+      throw FormatException(
+        lookupAppLocalizations(
+          PlatformDispatcher.instance.locale,
+        ).tournamentRegistrationResponseInvalid,
+      );
     }
     return TournamentRegistrationResult.fromJson(
       Map<String, dynamic>.from(rawData),
@@ -372,7 +384,11 @@ class ApiTournamentRepository implements ITournamentRepository {
   Future<void> joinLite(String inviteCode) async {
     final code = inviteCode.trim();
     if (code.isEmpty) {
-      throw const FormatException('Mã tham gia giải không hợp lệ.');
+      throw FormatException(
+        lookupAppLocalizations(
+          PlatformDispatcher.instance.locale,
+        ).tournamentInviteCodeInvalid,
+      );
     }
     await _dioClient.dio.post('/tournaments/lite/join/$code');
   }
@@ -388,7 +404,11 @@ class ApiTournamentRepository implements ITournamentRepository {
     final body = response.data;
     final data = body is Map && body['data'] is Map ? body['data'] : body;
     if (data is! Map) {
-      throw const FormatException('Phản hồi roster bóng đá không hợp lệ.');
+      throw FormatException(
+        lookupAppLocalizations(
+          PlatformDispatcher.instance.locale,
+        ).footballRosterResponseInvalid,
+      );
     }
     return FootballRosterStatus.fromJson(Map<String, dynamic>.from(data));
   }
@@ -407,7 +427,11 @@ class ApiTournamentRepository implements ITournamentRepository {
     final body = response.data;
     final data = body is Map && body['data'] is Map ? body['data'] : body;
     if (data is! Map) {
-      throw const FormatException('Phản hồi cập nhật roster không hợp lệ.');
+      throw FormatException(
+        lookupAppLocalizations(
+          PlatformDispatcher.instance.locale,
+        ).footballRosterUpdateResponseInvalid,
+      );
     }
     return FootballRosterStatus.fromJson(Map<String, dynamic>.from(data));
   }
@@ -789,7 +813,7 @@ class ApiTournamentRepository implements ITournamentRepository {
     );
     try {
       if (divisionId == null || divisionId.isEmpty) {
-        throw ArgumentError('divisionId is required to update bracket slots');
+        throw ArgumentError(_l10n.tournamentDivisionIdRequired);
       }
       final response = await _dioClient.dio.patch(
         '/tournaments/$tournamentId/divisions/$divisionId/bracket/slots',
@@ -797,7 +821,9 @@ class ApiTournamentRepository implements ITournamentRepository {
       );
       final statusCode = response.statusCode ?? 0;
       if (statusCode < 200 || statusCode >= 300) {
-        throw Exception('Bracket slots update failed ($statusCode)');
+        throw Exception(
+          _l10n.tournamentBracketSlotsUpdateFailed(statusCode.toString()),
+        );
       }
     } catch (e, stack) {
       _log.error('Error updating bracket slots', e, stack);

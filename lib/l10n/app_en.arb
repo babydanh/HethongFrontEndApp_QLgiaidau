@@ -1,5 +1,11 @@
 {
   "@@locale": "en",
+  "appTagline": "Play together",
+  "memberTagSuggestionFunny": "Comic relief",
+  "memberTagSuggestionGoodOdds": "Great odds",
+  "memberTagSuggestionWeeklyMvp": "Weekly MVP",
+  "memberTagSuggestionInForm": "In form",
+  "memberTagSuggestionToughMatch": "Tough matchup",
   "club_favorite": "Favorite",
   "club_unfavorite": "Unfavorite",
   "club_follow": "Follow",
@@ -45,7 +51,7 @@
   "settingsPaymentHistory": "Payment History",
   "settingsSeries": "Tournament Series",
   "settingsClubInvites": "Club Invites",
-  "settingsChangePassword": "Change Password",
+  "settingsChangePassword": "Change password",
   "settingsEloHistory": "ELO History",
   "settingsNotifications": "Notifications",
   "settingsDarkMode": "Dark Mode",
@@ -69,7 +75,7 @@
   "changePassword_errorGeneric": "Could not change password. Please try again.",
   "changePassword_button": "Change Password",
   "changePassword_help": "Your password must contain at least 6 characters, including an uppercase letter and a number, to keep your account secure.",
-  "languageVi": "Tiếng Việt",
+  "languageVi": "Vietnamese",
   "languageEn": "English",
   "infoMyTournaments": "My Tournaments",
   "infoMyClubs": "My Clubs & Communities",
@@ -144,6 +150,27 @@
   "publicProfileMatchesShort": "Matches",
   "publicProfileWinRateShort": "Win rate",
   "publicProfileNoRankData": "No ranking data",
+  "publicProfileNoPlayedElo": "No completed ranked matches yet",
+  "publicProfileNoPlayedEloHint": "Join a ranked match to unlock this ELO profile.",
+  "publicProfileScopeSingles": "Singles",
+  "publicProfileScopeDoubles": "Doubles",
+  "publicProfileScopeMixedDoubles": "Mixed doubles",
+  "publicProfilePartner": "Partner",
+  "publicProfileCurrentStreak": "Current streak",
+  "publicProfileWinStreak": "{count} win streak",
+  "publicProfileLossStreak": "{count} loss streak",
+  "publicProfileNoStreak": "No current streak",
+  "publicProfileResultWin": "Win",
+  "publicProfileResultLoss": "Loss",
+  "publicProfileResultDraw": "Draw",
+  "publicProfileOpponent": "Opponent",
+  "publicProfileUnknownOpponent": "Unknown opponent",
+  "publicProfileScore": "Score",
+  "publicProfileEloBefore": "Before",
+  "publicProfileEloAfter": "After",
+  "publicProfileEloChange": "Change",
+  "publicProfileActivity": "ACTIVITY",
+  "publicProfilePeakElo": "Peak ELO",
   "publicProfileLoadError": "Could not load profile information",
   "publicProfileHomeButton": "Go to home",
   "publicProfileUserFallback": "User",
@@ -583,6 +610,9 @@
   "tennisGamePointsInfo": "Game points",
   "tennisFormatSets": "Win {sets} sets",
   "tennisDeuce": "Deuce",
+  "tennisAdvantage": "Advantage",
+  "tennisTeam1Short": "T1",
+  "tennisTeam2Short": "T2",
   "tennisGameLabel": "GAME",
   "tennisCurrentPoint": "Current point: {points}",
   "tennisTiebreakHint": "Set is in tiebreak, points shown as actual numbers.",
@@ -683,7 +713,7 @@
   "registerSubmitFee": "{label} • {fee}",
   "registerSubmitFree": "{label} (Free)",
   "registerTournamentNotFound": "Tournament not found",
-  "registerFeeUnit": "đ",
+  "registerFeeUnit": "₫",
   "doublesRegTitle": "Doubles Registration",
   "doublesRegStep1": "STEP 1",
   "doublesRegStep2": "STEP 2",
@@ -881,7 +911,7 @@
   "checkout_payOSDescription": "Scan VietQR code for automatic matching and instant activation",
   "checkout_confirmInstruction": "Please double check tournament info and fee amount before proceeding.",
   "checkout_freeConfirmButton": "CONFIRM FREE PARTICIPATION",
-  "checkout_payButton": "PAY {amount}đ",
+  "checkout_payButton": "PAY {amount}₫",
   "@checkout_payButton": {
     "placeholders": {
       "amount": {}
@@ -1912,6 +1942,12 @@
   "chatRoomAnnouncementOnlySubtitle": "Only administrators can send messages",
   "chatRoomSlowModeTitle": "Slow mode",
   "chatRoomSlowModeWait": "Members must wait {seconds} seconds between messages",
+  "chatRoomSlowModeDuration": "{seconds} seconds",
+  "@chatRoomSlowModeDuration": {
+    "placeholders": {
+      "seconds": {}
+    }
+  },
   "chatRoomSlowModeOffSubtitle": "Slow mode off (normal messaging)",
   "chatRoomSlowModeOff": "Off",
   "chatRoomAllNotificationsTitle": "All messages",
@@ -2249,7 +2285,6 @@
   "settingsVerifyPhoneSubtitle": "Send an OTP to your current phone number",
   "settingsStatusLoadError": "Unable to load status",
   "settingsPasswordSection": "Password",
-  "settingsChangePassword": "Change password",
   "settingsChangePasswordSubtitle": "Update your sign-in password",
   "settingsStrongPassword": "Strong password",
   "settingsStrongPasswordSubtitle": "At least 8 characters; uppercase letters and numbers are recommended",
@@ -2679,6 +2714,7 @@
   "tournamentCategoryMixedDoubles": "Mixed doubles",
   "createClubTournament_formatSingles": "Singles",
   "createClubTournament_formatDoubles": "Doubles",
+  "createClubTournament_formatMixedDoubles": "Mixed doubles",
   "createClubTournament_bracketSingleElimination": "Single elimination",
   "createClubTournament_bracketSingleEliminationDescription": "Eliminated immediately after a loss",
   "createClubTournament_bracketDoubleElimination": "Double elimination",
@@ -2713,7 +2749,7 @@
   "editClub_logoTitle": "Club logo",
   "editClub_logoHint": "1:1 ratio",
   "editClub_bannerTitle": "Banner",
-  "editClub_bannerHint": "3:1 ratio (1200×400)",
+  "editClub_bannerHint": "3:1 ratio (1200 x 400)",
   "editClub_captureNew": "Take a new photo",
   "editClub_chooseLibrary": "Choose from library",
   "editClub_changeImage": "Change",
@@ -2993,8 +3029,8 @@
   "registerDetailsPaid": "Paid",
   "registerDetailsUnpaid": "Unpaid",
   "registerViewInviteCode": "View invite code & pairing link",
-  "registerPayNow": "Pay {amount}đ",
-  "registerFeePending2": "Entry fee {amount}đ unpaid",
+  "registerPayNow": "Pay {amount}₫",
+  "registerFeePending2": "Entry fee {amount}₫ unpaid",
   "registerApprovalSuccessTitle": "Request sent successfully!",
   "registerLoadError": "Error: {error}",
   "registerCustomFieldRequired": "Please fill in “{label}”.",
@@ -3382,6 +3418,43 @@
   "matchBottom_team2Wins": "Team 2 wins",
   "matchBottom_overrideAction": "Override (finalize exceptional score)",
   "matchBottom_cancelOverride": "Cancel override",
+  "scorePanel_overrideReasonRequired": "Enter a reason before exceeding the preset limit.",
+  "scorePanel_maxPresetPoints": "This sport has reached its preset limit of {maxPoints} points. Enable Override if the official needs to record a different score.",
+  "scorePanel_servingTeamOnly": "Only the serving team can score!",
+  "scorePanel_footballSyncError": "Unable to sync the football score.",
+  "scorePanel_completeOverrideInvalid": "Enter a reason and make sure the team awarded the win is leading by sets/games.",
+  "scorePanel_matchNotReady": "The match does not meet the configured completion conditions.",
+  "scorePanel_footballWinnerNotFound": "Could not find the winning team for this football match.",
+  "scorePanel_footballShootoutRequired": "A tied match requires different shootout scores to determine the winner.",
+  "scorePanel_completeError": "Error: {error}",
+  "scorePanel_finishSetWithScore": "Finish set {setNumber} at {score1}-{score2}?",
+  "scorePanel_finishSet": "Finish set {setNumber}?",
+  "clubChat_memberFallback": "Club member",
+  "scorePanel_matchAlreadyComplete": "The match has already reached the configured number of set wins.",
+  "scorePanel_conflictRefresh": "The score changed on another device. The latest data has been refreshed.",
+  "scorePanel_liveSyncError": "Unable to sync the live score. Please try again.",
+  "@scorePanel_maxPresetPoints": {
+    "placeholders": {
+      "maxPoints": {}
+    }
+  },
+  "@scorePanel_completeError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@scorePanel_finishSetWithScore": {
+    "placeholders": {
+      "setNumber": {},
+      "score1": {},
+      "score2": {}
+    }
+  },
+  "@scorePanel_finishSet": {
+    "placeholders": {
+      "setNumber": {}
+    }
+  },
   "report_title": "Report a violation",
   "report_description": "Please select a reason for the report. Your information will remain confidential.",
   "report_reasonSpam": "Spam / Advertising",
@@ -3905,46 +3978,29 @@
   "bracketDiagramDefaultTitle": "Competition bracket",
   "crossTableEmpty": "No team data yet",
   "crossTableError": "Error: {error}",
-  "crossTableDefaultGroup": "Group A",
-  "crossTableLegTitle": "{title} - Round {leg}",
-  "crossTablePreviousLeg": "Previous round",
-  "crossTableNextLeg": "Next round",
-  "crossTableLegIndicator": "Round {current} / {max}",
-  "crossTableTeamCount": "{count} teams",
-  "bracketDiagramGroupStageTitle": "Qualification bracket",
-  "bracketDiagramBack": "Back",
-  "bracketCrossTableRoundProgress": "Round {current} / {max}",
-  "bracketCrossTablePreviousRound": "Previous round",
-  "bracketCrossTableNextRound": "Next round",
-  "qrScannerInvalidCode": "Invalid QR code",
-  "qrScannerTitle": "Scan QR code",
-  "qrScannerVerifying": "Verifying...",
-  "officialScoreScoringTab": "Scoring",
-  "officialScorePenaltyTab": "Penalties",
-  "doubleElimUpperGrandFinal": "WINNERS BRACKET FINAL",
-  "doubleElimUpperSemifinal": "WINNERS BRACKET SEMIFINAL",
-  "doubleElimLowerGrandFinal": "LOSERS BRACKET FINAL",
-  "doubleElimLowerSemifinal": "LOSERS BRACKET SEMIFINAL",
-  "liveMatchRemainingLabel": "Remaining",
-  "teamScoreEditForbidden": "Error: You do not have permission to edit the score.",
-  "chatDetailRevokedMessage": "This message was revoked",
   "@crossTableError": {
     "placeholders": {
       "error": {}
     }
   },
+  "crossTableDefaultGroup": "Group A",
+  "crossTableLegTitle": "{title} - Round {leg}",
   "@crossTableLegTitle": {
     "placeholders": {
-      "title": {},
-      "leg": {}
+      "leg": {},
+      "title": {}
     }
   },
+  "crossTablePreviousLeg": "Previous round",
+  "crossTableNextLeg": "Next round",
+  "crossTableLegIndicator": "Round {current} / {max}",
   "@crossTableLegIndicator": {
     "placeholders": {
       "current": {},
       "max": {}
     }
   },
+  "crossTableTeamCount": "{count} teams",
   "@crossTableTeamCount": {
     "placeholders": {
       "count": {}
@@ -3953,9 +4009,20 @@
   "bracketDiagramGroupStageTitle": "Qualification bracket",
   "bracketDiagramBack": "Back",
   "bracketCrossTableRoundProgress": "Round {current} / {max}",
+  "@bracketCrossTableRoundProgress": {
+    "placeholders": {
+      "current": {},
+      "max": {}
+    }
+  },
   "bracketCrossTablePreviousRound": "Previous round",
   "bracketCrossTableNextRound": "Next round",
   "bracketCrossTableTeamCount": "{count} teams",
+  "@bracketCrossTableTeamCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "qrScannerInvalidCode": "Invalid QR code",
   "qrScannerTitle": "Scan QR code",
   "qrScannerVerifying": "Verifying...",
@@ -3968,16 +4035,730 @@
   "liveMatchRemainingLabel": "Remaining",
   "teamScoreEditForbidden": "Error: You do not have permission to edit the score.",
   "chatDetailRevokedMessage": "This message was revoked",
-  "singleElimUpdateError": "Unable to update the position: {error}",
-  "@bracketCrossTableRoundProgress": {
+  "singleElimUpdateError": "Could not update the position: {error}",
+  "@singleElimUpdateError": {
     "placeholders": {
-      "current": {},
-      "max": {}
+      "error": {}
     }
   },
-  "@bracketCrossTableTeamCount": {
+  "penaltyDialogRulesTitle": "Penalty rules",
+  "penaltyDialogTitle": "Record penalty",
+  "penaltyDialogOffendingTeam": "Offending team",
+  "penaltyDialogType": "Penalty type",
+  "penaltyDialogReasonRequired": "Reason (required)",
+  "penaltyDialogReasonHint": "Enter the reason for the violation...",
+  "penaltyDialogConfirm": "Confirm",
+  "tokenInputRequired": "Please enter a token code",
+  "tokenInputInvalid": "Invalid token code",
+  "tokenInputHint": "Code format ABC-XXXX",
+  "ranking_matchTypeSingles": "Singles",
+  "ranking_matchTypeDoubles": "Doubles",
+  "ranking_matchTypeMixedDoubles": "Mixed doubles",
+  "ranking_matchTypeOverview": "Overview",
+  "ranking_sportFallback": "Sport",
+  "ranking_unranked": "Unranked",
+  "ranking_ranked": "Ranked",
+  "ranking_tierLowD": "Low Tier D",
+  "ranking_tierHighD": "High Tier D",
+  "ranking_tierLowC": "Low Tier C",
+  "ranking_tierHighC": "High Tier C",
+  "ranking_tierLowB": "Low Tier B",
+  "ranking_tierHighB": "High Tier B",
+  "ranking_tierLowA": "Low Tier A",
+  "ranking_tierHighA": "High Tier A",
+  "ranking_tierS": "Tier S",
+  "ranking_eloPeakProgress": "🏆 Peak reached — Tier S",
+  "ranking_eloToNext": "{remaining} ELO to {nextName}",
+  "ranking_shieldOnboarding": "Play 1 ranked match to unlock ELO and the rank shield.",
+  "ranking_shieldActive": "Shield intact — it protects one fall from your current rank.",
+  "ranking_shieldBroken": "Shield broken — rank up or fall in rank to restore it.",
+  "ranking_eloOnboarding": "Play 1 ranked match to start your ELO journey",
+  "@ranking_eloToNext": {
     "placeholders": {
-      "count": {}
+      "remaining": {},
+      "nextName": {}
     }
-  }
+  },
+  "rankingUserStatsUnranked": "Unranked · {tier}",
+  "@rankingUserStatsUnranked": {
+    "placeholders": {
+      "tier": {}
+    }
+  },
+  "rankingUserStatsRanked": "Rank #{rank} · {tier}",
+  "@rankingUserStatsRanked": {
+    "placeholders": {
+      "rank": {},
+      "tier": {}
+    }
+  },
+  "scoreValidationSetLabel": "Set {number}",
+  "scoreValidationGameLabel": "Game {number}",
+  "scoreValidationRallyLabel": "Game {number}",
+  "scoreValidationTie": "{label}: The score cannot be tied ({score1}-{score2})",
+  "scoreValidationMinimum": "{label}: The winner must reach at least {target} points",
+  "scoreValidationDeuceMargin": "{label}: Deuce requires a 2-point lead",
+  "scoreValidationExactTarget": "{label}: The winner must reach exactly {target} points",
+  "scoreValidationMaximum": "{label}: The score exceeds the limit of {maxPoints}",
+  "scoreValidationTennisSet": "{label}: Result {score1}-{score2} is invalid for tennis",
+  "scoreValidationTennisTiebreak": "{label}: Tiebreak result {score1}-{score2} is invalid",
+  "scoreValidationSideOutDeuce": "{label}: Side-out requires a 2-point lead in the final phase",
+  "scoreValidationSideOutTarget": "{label}: The standard side-out target is {target}",
+  "scoreValidationSideOutExactTarget": "{label}: With win-by-2 disabled, the winner must reach {target}",
+  "scoreValidationSideOutMaximum": "{label}: The score exceeds the threshold of {maxPoints}",
+  "@scoreValidationSetLabel": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+  "@scoreValidationGameLabel": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+  "@scoreValidationRallyLabel": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+  "@scoreValidationTie": {
+    "placeholders": {
+      "label": {},
+      "score1": {},
+      "score2": {}
+    }
+  },
+  "@scoreValidationMinimum": {
+    "placeholders": {
+      "label": {},
+      "target": {}
+    }
+  },
+  "@scoreValidationDeuceMargin": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "@scoreValidationExactTarget": {
+    "placeholders": {
+      "label": {},
+      "target": {}
+    }
+  },
+  "@scoreValidationMaximum": {
+    "placeholders": {
+      "label": {},
+      "maxPoints": {}
+    }
+  },
+  "@scoreValidationTennisSet": {
+    "placeholders": {
+      "label": {},
+      "score1": {},
+      "score2": {}
+    }
+  },
+  "@scoreValidationTennisTiebreak": {
+    "placeholders": {
+      "label": {},
+      "score1": {},
+      "score2": {}
+    }
+  },
+  "@scoreValidationSideOutDeuce": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "@scoreValidationSideOutTarget": {
+    "placeholders": {
+      "label": {},
+      "target": {}
+    }
+  },
+  "@scoreValidationSideOutExactTarget": {
+    "placeholders": {
+      "label": {},
+      "target": {}
+    }
+  },
+  "@scoreValidationSideOutMaximum": {
+    "placeholders": {
+      "label": {},
+      "maxPoints": {}
+    }
+  },
+  "scoreValidationUnknown": "Unable to identify the scoring error. Please check the result again.",
+  "lite_apiSessionExpired": "Your session has expired. Please sign in again.",
+  "lite_apiForbidden": "You do not have permission to manage this Lite tournament.",
+  "lite_apiRateLimited": "The system is temporarily rate-limiting requests. Your previous data is preserved; please try again in a few seconds.",
+  "lite_apiServerBusy": "The server is busy. Your previous data is preserved; please try again in a few seconds.",
+  "lite_loadTimeout": "Loading the Lite tournament took too long. Please try again.",
+  "lite_loadError": "Unable to load the Lite tournament data. Please try again.",
+  "lite_tournamentTypeAdvanced": "This is an Advanced tournament. The app only supports managing Lite tournaments.",
+  "lite_tournamentLoadError": "Unable to load tournament information",
+  "lite_participantsLoadError": "Unable to load participants",
+  "lite_matchesLoadError": "Unable to load matches right now.",
+  "liveScoreSetupTennisGames": "Games needed to reach the set target (default: {points})",
+  "@liveScoreSetupTennisGames": {
+    "description": "Localized message: liveScoreSetupTennisGames",
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "liveScoreSetupSideOutPoints": "Side-out game point target (default: {points})",
+  "@liveScoreSetupSideOutPoints": {
+    "description": "Localized message: liveScoreSetupSideOutPoints",
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "liveScoreSetupSetPoints": "Point target per set (default: {points})",
+  "@liveScoreSetupSetPoints": {
+    "description": "Localized message: liveScoreSetupSetPoints",
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "matchTableRoundQualifying": "Qualifying round",
+  "matchTableUpperFinal": "Winners bracket final",
+  "matchTableUpperQuarterfinal": "Winners bracket quarterfinal",
+  "matchTableUpperRoundOf": "Winners bracket round of {size}",
+  "@matchTableUpperRoundOf": {
+    "description": "Localized message: matchTableUpperRoundOf",
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "matchTableUpperQualifying": "Winners bracket qualifying round",
+  "matchTableLowerFinal": "Losers bracket final",
+  "matchTableLowerSemifinal": "Losers bracket semifinal",
+  "matchTableLowerRound": "Losers bracket round {round}",
+  "@matchTableLowerRound": {
+    "description": "Localized message: matchTableLowerRound",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "matchTableGrandFinalReset": "Grand final reset",
+  "matchTableWinnersRound": "Winners bracket - {round}",
+  "@matchTableWinnersRound": {
+    "description": "Localized message: matchTableWinnersRound",
+    "placeholders": {
+      "round": {
+        "type": "String"
+      }
+    }
+  },
+  "matchTableLosersRoundOf": "Losers bracket - Round {round}",
+  "@matchTableLosersRoundOf": {
+    "description": "Localized message: matchTableLosersRoundOf",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "matchTableWinnersRoundOf": "Winners bracket - Round {round}",
+  "@matchTableWinnersRoundOf": {
+    "description": "Localized message: matchTableWinnersRoundOf",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "communityFeedLoadError": "Unable to load the feed. Check your connection and try again.",
+  "communityFeedLoadMoreError": "Unable to load more posts.",
+  "errorParserLoginCancelled": "You cancelled the sign-in action.",
+  "errorParserGoogleUnavailable": "Google Sign-In is unavailable in this app version. Use email sign-in or try again later.",
+  "errorParserGoogleSignInFailed": "Unable to sign in with Google. Try again or check the Google Sign-In configuration.",
+  "errorParserAppleSignInFailed": "Unable to sign in with Apple. Try again or check the Apple Sign-In configuration.",
+  "errorParserInvalidDivision": "The competition division is invalid. Go back and select the division again.",
+  "errorParserNoDeviceSpace": "The device is out of storage. Free up space and try again.",
+  "errorParserPaymentLinkExpired": "The payment link has expired. Create a new transaction.",
+  "errorParserPaymentAlreadyProcessed": "This fee has already been paid or is being processed.",
+  "errorParserRegistrationClosed": "Registration for this tournament is closed.",
+  "errorParserRegistrationNotStarted": "The registration period has not started.",
+  "errorParserRegistrationEnded": "The registration period has ended.",
+  "errorParserTournamentFull": "This tournament has reached its participant limit.",
+  "errorParserAlreadyRegistered": "You are already registered for this tournament.",
+  "errorParserTournamentNotFound": "Tournament not found.",
+  "errorParserInvalidInviteCode": "The tournament invite code is invalid or expired.",
+  "errorParserTournamentConfigLocked": "Tournament settings cannot be changed after the tournament has started or ended.",
+  "errorParserInvalidSelection": "The selected data is invalid. Reload and select again.",
+  "errorParserConnectionTimeout": "The connection to the server timed out. Check your connection and try again.",
+  "errorParserConnectionFailed": "Unable to connect to the server. Check your network connection or server.",
+  "errorParserBadRequest": "Invalid request (Error 400).",
+  "errorParserInvalidCredentials": "Incorrect email or password.",
+  "errorParserForbidden": "You do not have permission to perform this action.",
+  "errorParserNotFound": "The requested resource was not found (Error 404).",
+  "errorParserServerError": "Server error (Error {code}).",
+  "@errorParserServerError": {
+    "description": "Localized message: errorParserServerError",
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "errorParserResponseError": "The server returned an error code (Error {code}).",
+  "@errorParserResponseError": {
+    "description": "Localized message: errorParserResponseError",
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "errorParserRequestCancelled": "The request was cancelled.",
+  "errorParserBrowserConnectionFailed": "Unable to connect to the server. This may be caused by a network, CORS, or server availability issue.",
+  "errorParserFallback": "A system error occurred",
+  "errorParserEmailRegistered": "This email is already registered. Use another email or sign in.",
+  "errorParserEmailRequired": "Please enter an email address.",
+  "errorParserEmailInvalid": "Invalid email address.",
+  "errorParserPasswordMin": "Password must be at least 6 characters.",
+  "errorParserPasswordRequired": "Please enter a password.",
+  "errorParserFullNameRequired": "Please enter your full name.",
+  "errorParserInvalidCredentialsMessage": "Incorrect email or password.",
+  "errorParserGoogleAccount": "This account was registered with Google. Sign in with Google.",
+  "authInvalidInviteToken": "The token is invalid or has expired",
+  "authValidationFailed": "Authentication error: {error}",
+  "@authValidationFailed": {
+    "description": "Localized message: authValidationFailed",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationLoadError": "Unable to load notifications. Please try again.",
+  "notificationMinutesAgo": "{minutes} minutes ago",
+  "@notificationMinutesAgo": {
+    "description": "Localized message: notificationMinutesAgo",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationHoursAgo": "{hours} hours ago",
+  "@notificationHoursAgo": {
+    "description": "Localized message: notificationHoursAgo",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationDaysAgo": "{days} days ago",
+  "@notificationDaysAgo": {
+    "description": "Localized message: notificationDaysAgo",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "teamStatusApproved": "Approved",
+  "teamStatusWaitingForPartner": "Waiting for teammate",
+  "teamStatusPending": "Pending approval",
+  "teamStatusQueue": "Queue",
+  "teamStatusRejected": "Rejected",
+  "teamStatusWithdrawn": "Withdrawn",
+  "teamStatusEliminated": "Eliminated",
+  "tournamentWorkspacePendingPairing": "Waiting for pairings",
+  "chatTypeConversation": "Conversation",
+  "paymentStatusPending": "Payment pending",
+  "paymentStatusCancelled": "Cancelled",
+  "paymentStatusExpired": "Expired",
+  "paymentMethodBankTransfer": "Bank transfer",
+  "apiPostInvalid": "Invalid post",
+  "apiCommentInvalid": "Invalid comment",
+  "apiUploadImageInvalid": "Invalid uploaded image",
+  "apiCreateTeamInvalid": "Invalid team creation response.",
+  "apiTeamLogoInvalid": "Invalid logo image.",
+  "apiRegistrationResponseInvalid": "Invalid registration response.",
+  "apiInviteCodeInvalid": "Invalid tournament participation code.",
+  "apiFootballRosterResponseInvalid": "Invalid football roster response.",
+  "apiFootballRosterUpdateInvalid": "Invalid roster update response.",
+  "authTokenInvalid": "The token is invalid or has expired",
+  "authTokenValidationFailed": "Token validation failed. Please try again.",
+  "authLoginFailed": "Sign-in failed. Please try again.",
+  "authGoogleLoginFailed": "Google sign-in failed. Please try again.",
+  "authAppleLoginFailed": "Apple sign-in failed. Please try again.",
+  "authFacebookLoginFailed": "Facebook sign-in failed. Please try again.",
+  "authRegisterFailed": "Registration failed. Please check your information and try again.",
+  "authSessionExpired": "Your session has expired or the access code has changed.",
+  "communityFeedCreatePostError": "Failed to publish the post. Please try again.",
+  "paymentStatusCompleted": "Completed",
+  "paymentStatusFailed": "Failed",
+  "paymentStatusRefunded": "Refunded",
+  "paymentGatewayTransfer": "Bank transfer",
+  "teamApprovalApproved": "Approved",
+  "teamApprovalPendingPartner": "Waiting for teammate",
+  "teamApprovalPending": "Pending approval",
+  "teamApprovalWaitlisted": "Waitlisted",
+  "teamApprovalRejected": "Rejected",
+  "teamApprovalWithdrawn": "Withdrawn",
+  "teamApprovalKicked": "Eliminated",
+  "workspaceDefaultTournament": "Tournament",
+  "workspaceMatchLabel": "Match {order}",
+  "@workspaceMatchLabel": {
+    "placeholders": {
+      "order": {}
+    }
+  },
+  "workspaceWaitingPair": "Waiting for pairing",
+  "workspaceWaitingTeam1": "Waiting for Team 1",
+  "workspaceWaitingTeam2": "Waiting for Team 2",
+  "chatParticipantFallback": "User",
+  "chatClubFallback": "Club",
+  "chatConversationFallback": "Conversation",
+  "userGuestFallback": "Guest",
+  "matchRoundWinnersFinal": "Winners' Final",
+  "matchRoundWinnersSemifinal": "Winners' Semifinal",
+  "matchRoundWinnersQuarterfinal": "Winners' Quarterfinal",
+  "matchRoundWinnersRoundOf": "Winners' Round of {size}",
+  "@matchRoundWinnersRoundOf": {
+    "placeholders": {
+      "size": {}
+    }
+  },
+  "matchRoundWinnersQualifying": "Winners' Qualifying Round",
+  "matchRoundLosersFinal": "Losers' Final",
+  "matchRoundLosersSemifinal": "Losers' Semifinal",
+  "matchRoundLosersRound": "Losers' Round {round}",
+  "@matchRoundLosersRound": {
+    "placeholders": {
+      "round": {}
+    }
+  },
+  "matchRoundGrandFinal": "Grand Final",
+  "matchRoundGrandFinalReset": "Grand Final (Reset)",
+  "matchRoundLosersMatch": "Losers' Round {round}",
+  "@matchRoundLosersMatch": {
+    "placeholders": {
+      "round": {}
+    }
+  },
+  "matchRoundWinnersMatch": "Winners' {base}",
+  "@matchRoundWinnersMatch": {
+    "placeholders": {
+      "base": {}
+    }
+  },
+  "communityPostInvalid": "Invalid post.",
+  "communityCommentInvalid": "Invalid comment.",
+  "communityMediaInvalid": "Invalid uploaded image.",
+  "teamCreateResponseInvalid": "Invalid team creation response.",
+  "teamLogoInvalid": "Invalid team logo.",
+  "teamFallbackName": "Team {id}",
+  "@teamFallbackName": {
+    "placeholders": {
+      "id": {}
+    }
+  },
+  "teamMemberFallback": "Athlete",
+  "tournamentRegistrationResponseInvalid": "Invalid registration response.",
+  "tournamentInviteCodeInvalid": "Invalid tournament invite code.",
+  "footballRosterResponseInvalid": "Invalid football roster response.",
+  "footballRosterUpdateResponseInvalid": "Invalid football roster update response.",
+  "rankingUnrankedFallback": "Unranked",
+  "rankingLoadError": "Unable to load the user's ranking information",
+  "teamTournamentMissing": "Tournament information was not found.",
+  "teamTournamentLocked": "Team rosters cannot be changed while the tournament is in progress or has ended.",
+  "rankingRequestFailed": "Ranking request failed",
+  "rankingEloTiersLoadError": "Unable to load ELO tiers",
+  "statusLabelDraft": "Draft",
+  "statusLabelUpcoming": "Upcoming",
+  "statusLabelRegistration": "Registration open",
+  "statusLabelRegistrationClosed": "Registration closed",
+  "statusLabelDrawing": "Drawing",
+  "statusLabelInProgress": "In progress",
+  "statusLabelCompleted": "Completed",
+  "statusLabelCancelled": "Cancelled",
+  "statusLabelScheduled": "Not started",
+  "statusLabelLive": "Live",
+  "statusLabelWalkover": "Walkover",
+  "club_joinPendingApproval": "Join request sent. Please wait for the club administrators to review it.",
+  "memberTagMenu": "Assign tag",
+  "memberTagAssignTitle": "Assign tags to member",
+  "memberTagAssignDesc": "Tags are displayed next to the member name (up to 3 tags).",
+  "memberTagAddHint": "Enter a new tag...",
+  "memberTagAdd": "Add",
+  "memberTagSave": "Save tags",
+  "memberTagSaving": "Saving...",
+  "memberTagMaxReached": "Maximum of 3 tags reached",
+  "memberTagEmpty": "No tags yet. Add a tag below to get started.",
+  "memberTagTooLong": "Each tag can be up to 15 characters.",
+  "memberTagInvalid": "Tags can contain only letters, numbers, spaces, underscores (_), and hyphens (-).",
+  "memberTagDuplicate": "This tag already exists.",
+  "memberTagRemove": "Remove tag",
+  "memberTagSaveError": "Unable to save tags. Please try again.",
+  "memberTagCounter": "Used {used}/{max} tags.",
+  "@memberTagCounter": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "roleAdminDisplay": "👑 Organizer (Admin)",
+  "roleRefereeDisplay": "⚖️ Referee",
+  "roleViewerDisplay": "👀 Viewer",
+  "roleAdminShort": "Admin",
+  "roleRefereeShort": "Referee",
+  "roleViewerShort": "Viewer",
+  "excelMatchProtocolTitle": "MATCH PROTOCOL",
+  "excelResultsTitle": "TOURNAMENT RESULTS SUMMARY: {tournamentName}",
+  "@excelResultsTitle": {
+    "placeholders": {
+      "tournamentName": {
+        "type": "String"
+      }
+    }
+  },
+  "excelOverviewSheet": "Overview",
+  "excelTimelineSheet": "Event history",
+  "excelResultsSheet": "Tournament results",
+  "excelStatus": "Status:",
+  "excelRound": "Round:",
+  "excelMatchNumber": "Match number:",
+  "excelStartTime": "Start time:",
+  "excelEndTime": "End time:",
+  "excelNotStarted": "Not started",
+  "excelNotEnded": "Not completed",
+  "excelTeam1": "Team 1",
+  "excelTeam2": "Team 2",
+  "excelScore": "Score",
+  "excelWinner": "Winner:",
+  "excelUndetermined": "Undetermined",
+  "excelTime": "Time",
+  "excelTeam": "Team",
+  "excelEvent": "Event",
+  "excelPointsChanged": "Points changed",
+  "excelNotes": "Notes",
+  "excelOtherEvent": "Other",
+  "excelScoreEvent": "Score",
+  "excelFoulEvent": "Foul",
+  "excelYellowCardEvent": "Yellow card",
+  "excelRedCardEvent": "Red card",
+  "excelInjuryEvent": "Medical/Injury",
+  "excelPenaltyEvent": "Penalty card",
+  "excelWinnerHeader": "Winner",
+  "excelStatusHeader": "Status",
+  "excelEndTimeHeader": "End time",
+  "excelReferee": "Referee",
+  "excelMatchProtocolShare": "Match protocol",
+  "excelResultsShare": "Tournament results {tournamentName}",
+  "@excelResultsShare": {
+    "placeholders": {
+      "tournamentName": {
+        "type": "String"
+      }
+    }
+  },
+  "excelMatchProtocolFilePrefix": "MatchProtocol",
+  "excelResultsFilePrefix": "Results",
+  "excelScore1": "Score 1",
+  "excelScore2": "Score 2",
+  "bracketDiagramZoomHint": "Pan & zoom",
+  "bracketDiagramEmptyTitle": "No bracket diagram yet",
+  "bracketDiagramEmptyHint": "Complete the draw to create the bracket",
+  "authCredentialsMissingResponse": "Authentication information was not found in the response",
+  "authRegisterResponseInvalid": "Registration failed. Please try again.",
+  "authGoogleCredentialsMissing": "Google authentication information was not found",
+  "authAppleCredentialsMissing": "Apple authentication information was not found",
+  "authFacebookCredentialsMissing": "Facebook authentication information was not found",
+  "networkConnectionFailed": "Could not connect to the server",
+  "userProfileLoadFailed": "Unable to load user information",
+  "userProfileUpdateFailed": "Profile update failed",
+  "userAvatarUploadFailed": "Avatar upload failed",
+  "userCoverUploadFailed": "Cover upload failed",
+  "userPublicProfileLoadFailed": "Unable to load user information",
+  "userPasswordChangeFailed": "Password change failed",
+  "userAccountDeleteFailed": "Account deletion failed",
+  "userChangeRequestFailed": "Request failed",
+  "communityMembersLoadFailed": "Failed to load club members",
+  "communityJoinFailed": "Unable to join the club",
+  "reportHistoryLoadFailed": "Unable to load report history",
+  "tournamentCreateApiFailed": "Failed to create tournament via API",
+  "tournamentInfoTimeout": "Timed out while loading tournament information.",
+  "profileTierSNotRanked": "Not ranked in Tier S",
+  "drawService_minTeams": "At least 2 teams are required to draw the bracket.",
+  "communityUpdateFailed": "Failed to update the club",
+  "matchUnexpectedResponse": "Unexpected match response: {statusCode}",
+  "@matchUnexpectedResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "String"
+      }
+    }
+  },
+  "teamCreateRegisterApiFailed": "Failed to create/register team via the API",
+  "tokenRegenerateApiFailed": "Failed to regenerate the token via the API",
+  "tournamentUnsupportedSport": "Unsupported sport: {sport}",
+  "@tournamentUnsupportedSport": {
+    "placeholders": {
+      "sport": {
+        "type": "String"
+      }
+    }
+  },
+  "tournamentDivisionIdRequired": "divisionId is required to update bracket slots",
+  "tournamentBracketSlotsUpdateFailed": "Bracket slots update failed ({statusCode})",
+  "@tournamentBracketSlotsUpdateFailed": {
+    "placeholders": {
+      "statusCode": {
+        "type": "String"
+      }
+    }
+  },
+  "reportFileLinkMissing": "The file link was not received",
+  "matchCreateUnsupported": "The mobile app cannot create matches directly. Matches are generated by the backend bracket.",
+  "matchBatchCreateUnsupported": "The mobile app cannot batch-create matches directly.",
+  "tokenCreateUnsupported": "The mobile app cannot create tokens directly.",
+  "tokenCreateTournamentUnsupported": "The mobile app cannot create tournament tokens directly.",
+  "tokenDeactivateUnsupported": "The mobile app cannot deactivate tokens.",
+  "tournamentCategoryUnknown": "Could not find an unspecified sport in the system.",
+  "tournamentCategoryNotFound": "Could not find sport \"{sport}\" in the system.",
+  "reportDefaultReason": "Report: {reason}",
+  "@tournamentCategoryNotFound": {
+    "description": "Sport name included when a tournament category cannot be found.",
+    "placeholders": {
+      "sport": {
+        "type": "String"
+      }
+    }
+  },
+  "@reportDefaultReason": {
+    "description": "Default report reason when the user leaves the details empty.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "customErrorDisplay": "A display error occurred",
+  "scoreServingIndicator": "Serving: {team} · Serve {number}",
+  "sportoHeaderLoginRegister": "Log in / Sign up",
+  "sportoHeaderNationalRank": "National ranking",
+  "sportoHeaderMatches": "Matches",
+  "sportoHeaderWins": "Wins",
+  "sportoHeaderRate": "Rate",
+  "bracketStatusUpcoming": "UPCOMING",
+  "bracketStatusLive": "LIVE",
+  "bracketStatusCompleted": "DONE",
+  "bracketStatusChampion": "CHAMPION",
+  "bracketBye": "BYE",
+  "bracketScoreAction": "Score →",
+  "bracketViewAction": "View →",
+  "tokenTournamentCodeTitle": "Enter tournament code",
+  "tokenTournamentCodeDescription": "Enter your tournament access code to continue with the corresponding role.",
+  "tournamentRegistrationSheetTitle": "Register to participate",
+  "tournamentRegistrationSheetDescription": "Continue to the full registration flow so the system can check your profile, division, ELO, invitation code, and payment.",
+  "tournamentRegistrationSheetContinue": "Continue registration",
+  "tournamentTeamMemberCount": "{count} members",
+  "tournamentTeamSeed": "Seed #{seed}",
+  "tournamentTeamMembersTitle": "MEMBERS",
+  "tournamentTeamNoMembers": "No member information yet",
+  "tournamentTeamCaptain": "Captain",
+  "tournamentTeamWaitlisted": "Team is on the waitlist",
+  "tournamentTeamPendingPartner": "Team is waiting for a partner",
+  "tournamentTeamPendingApproval": "Team is awaiting approval",
+  "tournamentAthleteInfo": "Athlete information",
+  "tennisScorePointsGuide": "15 • 30 • 40",
+  "tennisScoreSetLabel": "Set",
+  "tennisScoreFormatLabel": "Format",
+  "tennisScoreSetsToWin": "Win {sets} sets",
+  "tennisScoreStatusLabel": "Status",
+  "tennisScoreTiebreakHelp": "The set is in a tiebreak; points are shown as raw scores.",
+  "tennisScoreGameHelp": "Score the tournament tennis game; the system handles deuce and advantage automatically.",
+  "tennisScoreVs": "VS",
+  "rankingChartEmpty": "No ELO chart data yet",
+  "rankingProgressTitle": "ELO PROGRESS",
+  "rankingPodiumTitle": "Top 100 Athletes",
+  "rankingTierSystemTitle": "ELO Ranking System",
+  "rankingTierSystemDescription": "ELO points earned after each official match place players into the corresponding skill tiers. Point ranges:",
+  "rankingTierLevelsTitle": "SKILL TIER SYSTEM",
+  "rankingEloRulesTitle": "ELO RULES & CALCULATION",
+  "rankingYouLabel": "YOU",
+  "officialScoreCancel": "Cancel",
+  "bracketEmptyTitle": "No bracket yet",
+  "imageViewerZoomHint": "Pinch or double-tap to zoom",
+  "@scoreServingIndicator": {
+    "description": "Serving indicator with team and serve number.",
+    "placeholders": {
+      "team": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "@tournamentTeamMemberCount": {
+    "description": "Number of members in a tournament team.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@tournamentTeamSeed": {
+    "description": "Tournament team seed number.",
+    "placeholders": {
+      "seed": {
+        "type": "int"
+      }
+    }
+  },
+  "@tennisScoreSetsToWin": {
+    "description": "Number of sets required to win.",
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      }
+    }
+  },
+  "rankingRuleNewbie": "New players start at 1000 ELO.",
+  "rankingRuleOfficialComplete": "ELO changes only after an official match is completed.",
+  "rankingRuleDoublesAverage": "Doubles: ELO is calculated from the average strength of both teams and then assigned to each player.",
+  "rankingRuleDecay": "After one month without playing: ratings below 1400 ELO stay unchanged; ratings from 1400 upward decay by tier at 2%, 3%, 4%, or 5% per month.",
+  "rankingRuleShield": "An ELO shield protects a rating when decay crosses a tier threshold: it preserves the threshold once, then consumes the shield.",
+  "rankingRuleDoublesPair": "Doubles pairs have a separate ranking starting at 1000 ELO; individual ratings are not averaged.",
+  "rankingRuleDecayReset": "When you play again, the ELO decay clock restarts; previous months are not cumulatively deducted.",
+  "rankingRuleAutoTier": "The tier updates automatically when ELO changes.",
+  "rankingEloChartNoData": "No ELO chart data yet",
+  "rankingTop100Athletes": "Top 100 Athletes",
+  "rankingSeason": "Season {year}",
+  "tournamentTeamsEmptyTitle": "No athletes registered yet",
+  "tournamentTeamsEmptySubtitle": "Check again after tournament registration opens",
+  "commonErrorPrefix": "Error",
+  "rankingDefaultElo": "1000 ELO",
+  "communityTournamentCreateFailed": "Failed to create tournament",
+  "routerDefaultCommunity": "Community",
+  "routerDefaultUser": "User",
+  "devicePairingTitle": "Pair camera device",
+  "devicePairingInstruction": "Scan the QR code shown by the tournament organizer.",
+  "devicePairingScanAgain": "Scan again",
+  "devicePairingSuccess": "Camera paired successfully",
+  "devicePairingInvalidCode": "This QR code is not a valid camera pairing code.",
+  "devicePairingFingerprintUnavailable": "Could not identify this device.",
+  "devicePairingCameraPermission": "Camera permission is required to scan the pairing code.",
+  "devicePairingClose": "Close"
 }

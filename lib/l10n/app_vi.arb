@@ -1,5 +1,11 @@
 {
   "@@locale": "vi",
+  "appTagline": "Chơi cùng nhau",
+  "memberTagSuggestionFunny": "Cây hài",
+  "memberTagSuggestionGoodOdds": "Kèo thơm",
+  "memberTagSuggestionWeeklyMvp": "MVP tuần",
+  "memberTagSuggestionInForm": "Đang lên form",
+  "memberTagSuggestionToughMatch": "Kèo khó",
   "club_favorite": "Yêu thích",
   "club_unfavorite": "Bỏ yêu thích",
   "club_follow": "Theo dõi",
@@ -140,6 +146,27 @@
   "publicProfileMatchesShort": "Trận",
   "publicProfileWinRateShort": "Tỉ lệ",
   "publicProfileNoRankData": "Chưa có dữ liệu xếp hạng",
+  "publicProfileNoPlayedElo": "Chưa có trận xếp hạng đã hoàn thành",
+  "publicProfileNoPlayedEloHint": "Hãy tham gia một trận xếp hạng để mở hồ sơ ELO.",
+  "publicProfileScopeSingles": "Đơn",
+  "publicProfileScopeDoubles": "Đôi",
+  "publicProfileScopeMixedDoubles": "Đôi nam nữ",
+  "publicProfilePartner": "Đồng đội",
+  "publicProfileCurrentStreak": "Chuỗi hiện tại",
+  "publicProfileWinStreak": "Chuỗi thắng {count} trận",
+  "publicProfileLossStreak": "Chuỗi thua {count} trận",
+  "publicProfileNoStreak": "Không có chuỗi hiện tại",
+  "publicProfileResultWin": "Thắng",
+  "publicProfileResultLoss": "Thua",
+  "publicProfileResultDraw": "Hòa",
+  "publicProfileOpponent": "Đối thủ",
+  "publicProfileUnknownOpponent": "Chưa rõ đối thủ",
+  "publicProfileScore": "Tỉ số",
+  "publicProfileEloBefore": "Trước trận",
+  "publicProfileEloAfter": "Sau trận",
+  "publicProfileEloChange": "Thay đổi",
+  "publicProfileActivity": "HOẠT ĐỘNG",
+  "publicProfilePeakElo": "ELO cao nhất",
   "publicProfileLoadError": "Không thể tải thông tin",
   "publicProfileHomeButton": "Về trang chủ",
   "publicProfileUserFallback": "Người dùng",
@@ -579,6 +606,9 @@
   "tennisGamePointsInfo": "Điểm game",
   "tennisFormatSets": "Thắng {sets} set",
   "tennisDeuce": "Deuce",
+  "tennisAdvantage": "Ưu thế",
+  "tennisTeam1Short": "Đ1",
+  "tennisTeam2Short": "Đ2",
   "tennisGameLabel": "GAME",
   "tennisCurrentPoint": "Pha hiện tại: {points}",
   "tennisTiebreakHint": "Set đang vào tiebreak, điểm hiển thị theo số thực.",
@@ -1653,7 +1683,6 @@
   "rank_activity": "HOẠT ĐỘNG",
   "rank_decay": "Suy giảm ELO (không thi đấu)",
   "rank_update": "Cập nhật ELO",
-  "tournamentNotFound": "Giải đấu không tồn tại",
   "@edit_profile_load_error": {
     "placeholders": {
       "error": {}
@@ -1913,6 +1942,12 @@
   "chatRoomAnnouncementOnlySubtitle": "Chỉ Ban Quản Trị mới có thể gửi tin nhắn",
   "chatRoomSlowModeTitle": "Chế độ làm chậm (Slow mode)",
   "chatRoomSlowModeWait": "Thành viên phải chờ {seconds} giây giữa mỗi tin",
+  "chatRoomSlowModeDuration": "{seconds} giây",
+  "@chatRoomSlowModeDuration": {
+    "placeholders": {
+      "seconds": {}
+    }
+  },
   "chatRoomSlowModeOffSubtitle": "Tắt làm chậm (nhắn tin bình thường)",
   "chatRoomSlowModeOff": "Tắt",
   "chatRoomAllNotificationsTitle": "Tất cả tin nhắn",
@@ -2250,7 +2285,6 @@
   "settingsVerifyPhoneSubtitle": "Gửi mã OTP tới số điện thoại đang dùng",
   "settingsStatusLoadError": "Không thể tải trạng thái",
   "settingsPasswordSection": "Mật khẩu",
-  "settingsChangePassword": "Đổi mật khẩu",
   "settingsChangePasswordSubtitle": "Cập nhật mật khẩu đăng nhập",
   "settingsStrongPassword": "Mật khẩu mạnh",
   "settingsStrongPasswordSubtitle": "Tối thiểu 8 ký tự, nên có chữ hoa và số",
@@ -2680,6 +2714,7 @@
   "tournamentCategoryMixedDoubles": "Đôi nam nữ",
   "createClubTournament_formatSingles": "Đánh đơn",
   "createClubTournament_formatDoubles": "Đánh đôi",
+  "createClubTournament_formatMixedDoubles": "Đôi nam nữ",
   "createClubTournament_bracketSingleElimination": "Loại trực tiếp",
   "createClubTournament_bracketSingleEliminationDescription": "Loại ngay khi thua",
   "createClubTournament_bracketDoubleElimination": "Loại kép",
@@ -3383,6 +3418,43 @@
   "matchBottom_team2Wins": "Đội 2 thắng",
   "matchBottom_overrideAction": "Override (chốt tỉ số ngoại lệ)",
   "matchBottom_cancelOverride": "Huỷ override",
+  "scorePanel_overrideReasonRequired": "Nhập lý do Ngoại lệ trước khi vượt trần preset.",
+  "scorePanel_maxPresetPoints": "Đã chạm trần {maxPoints} điểm của môn này. Bật Ngoại lệ nếu BTC cần ghi khác preset.",
+  "scorePanel_servingTeamOnly": "Chỉ đội giao bóng mới được ghi điểm!",
+  "scorePanel_footballSyncError": "Không thể đồng bộ tỉ số bóng đá.",
+  "scorePanel_completeOverrideInvalid": "Nhập lý do và bảo đảm đội được xử thắng đang dẫn theo số set/game.",
+  "scorePanel_matchNotReady": "Trận chưa đạt điều kiện kết thúc theo cấu hình.",
+  "scorePanel_footballWinnerNotFound": "Không tìm thấy đội thắng của trận bóng đá.",
+  "scorePanel_footballShootoutRequired": "Trận hòa cần tỷ số luân lưu khác nhau để phân định.",
+  "scorePanel_completeError": "Lỗi: {error}",
+  "scorePanel_finishSetWithScore": "Kết thúc set {setNumber} với tỉ số {score1}-{score2}?",
+  "scorePanel_finishSet": "Kết thúc set {setNumber}?",
+  "clubChat_memberFallback": "Thành viên CLB",
+  "scorePanel_matchAlreadyComplete": "Trận đã đủ số set thắng theo cấu hình.",
+  "scorePanel_conflictRefresh": "Điểm đã thay đổi từ thiết bị khác. Đã làm mới số liệu.",
+  "scorePanel_liveSyncError": "Không đồng bộ được điểm live. Vui lòng thử lại.",
+  "@scorePanel_maxPresetPoints": {
+    "placeholders": {
+      "maxPoints": {}
+    }
+  },
+  "@scorePanel_completeError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@scorePanel_finishSetWithScore": {
+    "placeholders": {
+      "setNumber": {},
+      "score1": {},
+      "score2": {}
+    }
+  },
+  "@scorePanel_finishSet": {
+    "placeholders": {
+      "setNumber": {}
+    }
+  },
   "report_title": "Báo cáo vi phạm",
   "report_description": "Vui lòng chọn lý do báo cáo. Thông tin của bạn sẽ được bảo mật.",
   "report_reasonSpam": "Spam / Quảng cáo",
@@ -3906,17 +3978,51 @@
   "bracketDiagramDefaultTitle": "Sơ đồ thi đấu",
   "crossTableEmpty": "Chưa có dữ liệu đội thi đấu",
   "crossTableError": "Lỗi: {error}",
+  "@crossTableError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "crossTableDefaultGroup": "Bảng A",
   "crossTableLegTitle": "{title} - Vòng {leg}",
+  "@crossTableLegTitle": {
+    "placeholders": {
+      "leg": {},
+      "title": {}
+    }
+  },
   "crossTablePreviousLeg": "Vòng trước",
   "crossTableNextLeg": "Vòng tiếp theo",
   "crossTableLegIndicator": "Vòng {current} / {max}",
+  "@crossTableLegIndicator": {
+    "placeholders": {
+      "current": {},
+      "max": {}
+    }
+  },
   "crossTableTeamCount": "{count} đội",
+  "@crossTableTeamCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "bracketDiagramGroupStageTitle": "Sơ đồ vòng loại",
   "bracketDiagramBack": "Quay lại",
   "bracketCrossTableRoundProgress": "Vòng {current} / {max}",
+  "@bracketCrossTableRoundProgress": {
+    "placeholders": {
+      "current": {},
+      "max": {}
+    }
+  },
   "bracketCrossTablePreviousRound": "Vòng trước",
   "bracketCrossTableNextRound": "Vòng tiếp theo",
+  "bracketCrossTableTeamCount": "{count} đội",
+  "@bracketCrossTableTeamCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "qrScannerInvalidCode": "Mã QR không hợp lệ",
   "qrScannerTitle": "Quét mã QR",
   "qrScannerVerifying": "Đang xác thực...",
@@ -3929,56 +4035,730 @@
   "liveMatchRemainingLabel": "Còn lại",
   "teamScoreEditForbidden": "Lỗi: Bạn không có quyền sửa điểm.",
   "chatDetailRevokedMessage": "Tin nhắn đã bị thu hồi",
-  "@crossTableError": {
+  "singleElimUpdateError": "Không thể cập nhật vị trí: {error}",
+  "@singleElimUpdateError": {
     "placeholders": {
       "error": {}
     }
   },
-  "@crossTableLegTitle": {
+  "penaltyDialogRulesTitle": "Quy định phạt",
+  "penaltyDialogTitle": "Ghi nhận phạt",
+  "penaltyDialogOffendingTeam": "Đội vi phạm",
+  "penaltyDialogType": "Loại phạt",
+  "penaltyDialogReasonRequired": "Lý do (bắt buộc)",
+  "penaltyDialogReasonHint": "Nhập lý do vi phạm...",
+  "penaltyDialogConfirm": "Xác nhận",
+  "tokenInputRequired": "Vui lòng nhập mã token",
+  "tokenInputInvalid": "Mã token không hợp lệ",
+  "tokenInputHint": "Mã dạng ABC-XXXX",
+  "ranking_matchTypeSingles": "Đơn",
+  "ranking_matchTypeDoubles": "Đôi",
+  "ranking_matchTypeMixedDoubles": "Đôi nam nữ",
+  "ranking_matchTypeOverview": "Tổng quan",
+  "ranking_sportFallback": "Môn thi đấu",
+  "ranking_unranked": "Chưa xếp hạng",
+  "ranking_ranked": "Đã xếp hạng",
+  "ranking_tierLowD": "Hạng D thấp",
+  "ranking_tierHighD": "Hạng D cao",
+  "ranking_tierLowC": "Hạng C thấp",
+  "ranking_tierHighC": "Hạng C cao",
+  "ranking_tierLowB": "Hạng B thấp",
+  "ranking_tierHighB": "Hạng B cao",
+  "ranking_tierLowA": "Hạng A thấp",
+  "ranking_tierHighA": "Hạng A cao",
+  "ranking_tierS": "Hạng S",
+  "ranking_eloPeakProgress": "🏆 Đã đạt đỉnh — Hạng S",
+  "ranking_eloToNext": "Còn {remaining} ELO tới {nextName}",
+  "ranking_shieldOnboarding": "Đánh 1 trận xếp hạng để mở khóa ELO và khiên rank.",
+  "ranking_shieldActive": "Khiên còn nguyên — đỡ 1 lần rớt khỏi mốc rank hiện tại.",
+  "ranking_shieldBroken": "Khiên đã vỡ — cần lên rank hoặc rớt rank để hồi lại khiên.",
+  "ranking_eloOnboarding": "Đánh 1 trận xếp hạng để bắt đầu tiến trình ELO",
+  "@ranking_eloToNext": {
     "placeholders": {
-      "title": {},
-      "leg": {}
+      "remaining": {},
+      "nextName": {}
     }
   },
-  "@crossTableLegIndicator": {
+  "rankingUserStatsUnranked": "Chưa xếp hạng · {tier}",
+  "@rankingUserStatsUnranked": {
     "placeholders": {
-      "current": {},
-      "max": {}
+      "tier": {}
     }
   },
-  "@crossTableTeamCount": {
+  "rankingUserStatsRanked": "Hạng #{rank} · {tier}",
+  "@rankingUserStatsRanked": {
     "placeholders": {
-      "count": {}
+      "rank": {},
+      "tier": {}
     }
   },
-  "bracketDiagramGroupStageTitle": "SÆ¡ Ä‘á»“ vÃ²ng loáº¡i",
-  "bracketDiagramBack": "Quay láº¡i",
-  "bracketCrossTableRoundProgress": "VÃ²ng {current} / {max}",
-  "bracketCrossTablePreviousRound": "VÃ²ng trÆ°á»›c",
-  "bracketCrossTableNextRound": "VÃ²ng tiáº¿p theo",
-  "bracketCrossTableTeamCount": "{count} Ä‘á»™i",
-  "qrScannerInvalidCode": "MÃ£ QR khÃ´ng há»£p lá»‡",
-  "qrScannerTitle": "QuÃ©t mÃ£ QR",
-  "qrScannerVerifying": "Äang xÃ¡c thá»±c...",
-  "officialScoreScoringTab": "TÃ­nh Ä‘iá»ƒm",
-  "officialScorePenaltyTab": "Pháº¡m lá»—i",
-  "doubleElimUpperGrandFinal": "CK NHÃNH THáº®NG",
-  "doubleElimUpperSemifinal": "BK NHÃNH THáº®NG",
-  "doubleElimLowerGrandFinal": "CK NHÃNH THUA",
-  "doubleElimLowerSemifinal": "BK NHÃNH THUA",
-  "liveMatchRemainingLabel": "CÃ²n láº¡i",
-  "teamScoreEditForbidden": "Lá»—i: Báº¡n khÃ´ng cÃ³ quyá»n sá»­a Ä‘iá»ƒm.",
-  "chatDetailRevokedMessage": "Tin nháº¯n Ä‘Ã£ bá»‹ thu há»“i",
-  "singleElimUpdateError": "KhÃ´ng thá»ƒ cáº­p nháº­t vá»‹ trÃ­: {error}",
-  "@bracketCrossTableRoundProgress": {
+  "scoreValidationSetLabel": "Set {number}",
+  "scoreValidationGameLabel": "Game {number}",
+  "scoreValidationRallyLabel": "Hiệp {number}",
+  "scoreValidationTie": "{label}: Tỉ số không được hòa ({score1}-{score2})",
+  "scoreValidationMinimum": "{label}: Người thắng phải đạt tối thiểu {target} điểm",
+  "scoreValidationDeuceMargin": "{label}: Deuce yêu cầu thắng cách 2 điểm",
+  "scoreValidationExactTarget": "{label}: Người thắng phải đạt đúng {target} điểm",
+  "scoreValidationMaximum": "{label}: Điểm số vượt quá giới hạn {maxPoints}",
+  "scoreValidationTennisSet": "{label}: Kết quả {score1}-{score2} không hợp lệ cho tennis",
+  "scoreValidationTennisTiebreak": "{label}: Kết quả tiebreak {score1}-{score2} không hợp lệ",
+  "scoreValidationSideOutDeuce": "{label}: Side-out yêu cầu thắng cách 2 điểm ở giai đoạn cuối",
+  "scoreValidationSideOutTarget": "{label}: Điểm đích chuẩn side-out là {target}",
+  "scoreValidationSideOutExactTarget": "{label}: Khi tắt win-by-2, đội thắng phải chạm {target}",
+  "scoreValidationSideOutMaximum": "{label}: Điểm vượt ngưỡng {maxPoints}",
+  "@scoreValidationSetLabel": {
     "placeholders": {
-      "current": {},
-      "max": {}
+      "number": {}
     }
   },
-  "@bracketCrossTableTeamCount": {
+  "@scoreValidationGameLabel": {
     "placeholders": {
-      "count": {}
+      "number": {}
     }
-  }
+  },
+  "@scoreValidationRallyLabel": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+  "@scoreValidationTie": {
+    "placeholders": {
+      "label": {},
+      "score1": {},
+      "score2": {}
+    }
+  },
+  "@scoreValidationMinimum": {
+    "placeholders": {
+      "label": {},
+      "target": {}
+    }
+  },
+  "@scoreValidationDeuceMargin": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "@scoreValidationExactTarget": {
+    "placeholders": {
+      "label": {},
+      "target": {}
+    }
+  },
+  "@scoreValidationMaximum": {
+    "placeholders": {
+      "label": {},
+      "maxPoints": {}
+    }
+  },
+  "@scoreValidationTennisSet": {
+    "placeholders": {
+      "label": {},
+      "score1": {},
+      "score2": {}
+    }
+  },
+  "@scoreValidationTennisTiebreak": {
+    "placeholders": {
+      "label": {},
+      "score1": {},
+      "score2": {}
+    }
+  },
+  "@scoreValidationSideOutDeuce": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "@scoreValidationSideOutTarget": {
+    "placeholders": {
+      "label": {},
+      "target": {}
+    }
+  },
+  "@scoreValidationSideOutExactTarget": {
+    "placeholders": {
+      "label": {},
+      "target": {}
+    }
+  },
+  "@scoreValidationSideOutMaximum": {
+    "placeholders": {
+      "label": {},
+      "maxPoints": {}
+    }
+  },
+  "scoreValidationUnknown": "Không thể xác định lỗi điểm số. Vui lòng kiểm tra lại kết quả.",
+  "lite_apiSessionExpired": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+  "lite_apiForbidden": "Bạn không có quyền quản lý giải Lite này.",
+  "lite_apiRateLimited": "Hệ thống đang giới hạn yêu cầu tạm thời. Dữ liệu cũ vẫn được giữ; vui lòng thử lại sau ít giây.",
+  "lite_apiServerBusy": "Máy chủ đang bận. Dữ liệu cũ vẫn được giữ; vui lòng thử lại sau ít giây.",
+  "lite_loadTimeout": "Tải dữ liệu giải Lite quá lâu. Vui lòng thử lại.",
+  "lite_loadError": "Không thể tải dữ liệu giải Lite. Vui lòng thử lại.",
+  "lite_tournamentTypeAdvanced": "Đây là giải Nâng Cao. App chỉ hỗ trợ quản lý giải Lite.",
+  "lite_tournamentLoadError": "Không thể tải thông tin giải đấu",
+  "lite_participantsLoadError": "Không thể tải danh sách người tham gia",
+  "lite_matchesLoadError": "Không thể tải danh sách trận lúc này.",
+  "liveScoreSetupTennisGames": "Số game để chạm mốc set (mặc định {points})",
+  "@liveScoreSetupTennisGames": {
+    "description": "Localized message: liveScoreSetupTennisGames",
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "liveScoreSetupSideOutPoints": "Mốc điểm game side-out (mặc định {points})",
+  "@liveScoreSetupSideOutPoints": {
+    "description": "Localized message: liveScoreSetupSideOutPoints",
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "liveScoreSetupSetPoints": "Mốc điểm mỗi set (mặc định {points})",
+  "@liveScoreSetupSetPoints": {
+    "description": "Localized message: liveScoreSetupSetPoints",
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "matchTableRoundQualifying": "Vòng loại",
+  "matchTableUpperFinal": "CK nhánh thắng",
+  "matchTableUpperQuarterfinal": "Tứ kết nhánh thắng",
+  "matchTableUpperRoundOf": "Vòng {size} nhánh thắng",
+  "@matchTableUpperRoundOf": {
+    "description": "Localized message: matchTableUpperRoundOf",
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "matchTableUpperQualifying": "Vòng loại nhánh thắng",
+  "matchTableLowerFinal": "CK nhánh thua",
+  "matchTableLowerSemifinal": "BK nhánh thua",
+  "matchTableLowerRound": "Lượt nhánh thua {round}",
+  "@matchTableLowerRound": {
+    "description": "Localized message: matchTableLowerRound",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "matchTableGrandFinalReset": "Chung kết tổng (đấu lại)",
+  "matchTableWinnersRound": "Nhánh thắng - {round}",
+  "@matchTableWinnersRound": {
+    "description": "Localized message: matchTableWinnersRound",
+    "placeholders": {
+      "round": {
+        "type": "String"
+      }
+    }
+  },
+  "matchTableLosersRoundOf": "Nhánh thua - Vòng {round}",
+  "@matchTableLosersRoundOf": {
+    "description": "Localized message: matchTableLosersRoundOf",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "matchTableWinnersRoundOf": "Nhánh thắng - Vòng {round}",
+  "@matchTableWinnersRoundOf": {
+    "description": "Localized message: matchTableWinnersRoundOf",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "communityFeedLoadError": "Chưa thể tải bảng tin. Kiểm tra kết nối rồi thử lại.",
+  "communityFeedLoadMoreError": "Chưa thể tải thêm bài đăng.",
+  "errorParserLoginCancelled": "Bạn đã hủy thao tác đăng nhập.",
+  "errorParserGoogleUnavailable": "Đăng nhập Google chưa khả dụng trên bản ứng dụng này. Vui lòng dùng email hoặc thử lại sau.",
+  "errorParserGoogleSignInFailed": "Không thể đăng nhập bằng Google. Vui lòng thử lại hoặc kiểm tra cấu hình Google Sign-In.",
+  "errorParserAppleSignInFailed": "Không thể đăng nhập bằng Apple. Vui lòng thử lại hoặc kiểm tra cấu hình Apple Sign-In.",
+  "errorParserInvalidDivision": "Hạng mục thi đấu không hợp lệ. Vui lòng quay lại chọn lại hạng mục.",
+  "errorParserNoDeviceSpace": "Thiết bị không còn đủ dung lượng. Vui lòng giải phóng bộ nhớ rồi thử lại.",
+  "errorParserPaymentLinkExpired": "Liên kết thanh toán đã hết hạn. Vui lòng tạo giao dịch mới.",
+  "errorParserPaymentAlreadyProcessed": "Khoản phí này đã được thanh toán hoặc đang được xử lý.",
+  "errorParserRegistrationClosed": "Giải đấu đã đóng đăng ký.",
+  "errorParserRegistrationNotStarted": "Thời gian đăng ký chưa bắt đầu.",
+  "errorParserRegistrationEnded": "Thời gian đăng ký đã kết thúc.",
+  "errorParserTournamentFull": "Giải đấu đã đủ số lượng người tham gia.",
+  "errorParserAlreadyRegistered": "Bạn đã đăng ký tham gia giải đấu này rồi.",
+  "errorParserTournamentNotFound": "Không tìm thấy giải đấu.",
+  "errorParserInvalidInviteCode": "Mã mời giải đấu không hợp lệ hoặc đã hết hạn.",
+  "errorParserTournamentConfigLocked": "Không thể đổi cấu hình giải khi giải đã bắt đầu hoặc đã kết thúc.",
+  "errorParserInvalidSelection": "Dữ liệu được chọn không hợp lệ. Vui lòng tải lại và chọn lại.",
+  "errorParserConnectionTimeout": "Kết nối tới máy chủ quá hạn. Vui lòng kiểm tra lại đường truyền và thử lại.",
+  "errorParserConnectionFailed": "Không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối mạng hoặc server.",
+  "errorParserBadRequest": "Yêu cầu gửi đi không hợp lệ (Lỗi 400).",
+  "errorParserInvalidCredentials": "Email hoặc mật khẩu không chính xác.",
+  "errorParserForbidden": "Bạn không có quyền thực hiện hành động này.",
+  "errorParserNotFound": "Không tìm thấy tài nguyên được yêu cầu (Lỗi 404).",
+  "errorParserServerError": "Lỗi hệ thống phía máy chủ (Lỗi {code}).",
+  "@errorParserServerError": {
+    "description": "Localized message: errorParserServerError",
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "errorParserResponseError": "Máy chủ phản hồi mã lỗi (Lỗi {code}).",
+  "@errorParserResponseError": {
+    "description": "Localized message: errorParserResponseError",
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "errorParserRequestCancelled": "Yêu cầu đã bị hủy bỏ.",
+  "errorParserBrowserConnectionFailed": "Không thể kết nối tới máy chủ (Có thể do lỗi mạng, CORS hoặc server chưa hoạt động).",
+  "errorParserFallback": "Đã xảy ra lỗi hệ thống",
+  "errorParserEmailRegistered": "Email này đã được đăng ký. Vui lòng dùng email khác hoặc đăng nhập.",
+  "errorParserEmailRequired": "Vui lòng nhập địa chỉ email.",
+  "errorParserEmailInvalid": "Địa chỉ email không hợp lệ.",
+  "errorParserPasswordMin": "Mật khẩu phải có ít nhất 6 ký tự.",
+  "errorParserPasswordRequired": "Vui lòng nhập mật khẩu.",
+  "errorParserFullNameRequired": "Vui lòng nhập họ và tên.",
+  "errorParserInvalidCredentialsMessage": "Email hoặc mật khẩu không đúng.",
+  "errorParserGoogleAccount": "Tài khoản này đã đăng ký qua Google. Vui lòng đăng nhập bằng Google.",
+  "authInvalidInviteToken": "Token không hợp lệ hoặc đã hết hạn",
+  "authValidationFailed": "Lỗi xác thực: {error}",
+  "@authValidationFailed": {
+    "description": "Localized message: authValidationFailed",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationLoadError": "Không thể tải thông báo. Hãy thử lại.",
+  "notificationMinutesAgo": "{minutes} phút trước",
+  "@notificationMinutesAgo": {
+    "description": "Localized message: notificationMinutesAgo",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationHoursAgo": "{hours} giờ trước",
+  "@notificationHoursAgo": {
+    "description": "Localized message: notificationHoursAgo",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationDaysAgo": "{days} ngày trước",
+  "@notificationDaysAgo": {
+    "description": "Localized message: notificationDaysAgo",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "teamStatusApproved": "Đã duyệt",
+  "teamStatusWaitingForPartner": "Chờ đồng đội",
+  "teamStatusPending": "Đang duyệt",
+  "teamStatusQueue": "Hàng chờ",
+  "teamStatusRejected": "Bị từ chối",
+  "teamStatusWithdrawn": "Đã rút lui",
+  "teamStatusEliminated": "Đã bị loại",
+  "tournamentWorkspacePendingPairing": "Chờ xác định cặp đấu",
+  "chatTypeConversation": "Cuộc trò chuyện",
+  "paymentStatusPending": "Chờ thanh toán",
+  "paymentStatusCancelled": "Đã huỷ",
+  "paymentStatusExpired": "Đã hết hạn",
+  "paymentMethodBankTransfer": "Chuyển khoản",
+  "apiPostInvalid": "Bài đăng không hợp lệ",
+  "apiCommentInvalid": "Bình luận không hợp lệ",
+  "apiUploadImageInvalid": "Ảnh tải lên không hợp lệ",
+  "apiCreateTeamInvalid": "Phản hồi tạo đội không hợp lệ.",
+  "apiTeamLogoInvalid": "Ảnh logo không hợp lệ.",
+  "apiRegistrationResponseInvalid": "Phản hồi đăng ký không hợp lệ.",
+  "apiInviteCodeInvalid": "Mã tham gia giải không hợp lệ.",
+  "apiFootballRosterResponseInvalid": "Phản hồi roster bóng đá không hợp lệ.",
+  "apiFootballRosterUpdateInvalid": "Phản hồi cập nhật roster không hợp lệ.",
+  "authTokenInvalid": "Token không hợp lệ hoặc đã hết hạn",
+  "authTokenValidationFailed": "Xác thực token thất bại. Vui lòng thử lại.",
+  "authLoginFailed": "Đăng nhập thất bại. Vui lòng thử lại.",
+  "authGoogleLoginFailed": "Đăng nhập Google thất bại. Vui lòng thử lại.",
+  "authAppleLoginFailed": "Đăng nhập Apple thất bại. Vui lòng thử lại.",
+  "authFacebookLoginFailed": "Đăng nhập Facebook thất bại. Vui lòng thử lại.",
+  "authRegisterFailed": "Đăng ký thất bại. Vui lòng kiểm tra thông tin và thử lại.",
+  "authSessionExpired": "Phiên đăng nhập đã hết hạn hoặc mã truy cập đã được đổi.",
+  "communityFeedCreatePostError": "Đăng bài thất bại. Vui lòng thử lại.",
+  "paymentStatusCompleted": "Hoàn thành",
+  "paymentStatusFailed": "Thất bại",
+  "paymentStatusRefunded": "Đã hoàn tiền",
+  "paymentGatewayTransfer": "Chuyển khoản",
+  "teamApprovalApproved": "Đã duyệt",
+  "teamApprovalPendingPartner": "Chờ đồng đội",
+  "teamApprovalPending": "Đang duyệt",
+  "teamApprovalWaitlisted": "Hàng chờ",
+  "teamApprovalRejected": "Bị từ chối",
+  "teamApprovalWithdrawn": "Đã rút lui",
+  "teamApprovalKicked": "Đã bị loại",
+  "workspaceDefaultTournament": "Giải đấu",
+  "workspaceMatchLabel": "Trận {order}",
+  "@workspaceMatchLabel": {
+    "placeholders": {
+      "order": {}
+    }
+  },
+  "workspaceWaitingPair": "Chờ xác định cặp đấu",
+  "workspaceWaitingTeam1": "Chờ đội 1",
+  "workspaceWaitingTeam2": "Chờ đội 2",
+  "chatParticipantFallback": "Người dùng",
+  "chatClubFallback": "Câu lạc bộ",
+  "chatConversationFallback": "Cuộc trò chuyện",
+  "userGuestFallback": "Khách",
+  "matchRoundWinnersFinal": "CK nhánh thắng",
+  "matchRoundWinnersSemifinal": "BK nhánh thắng",
+  "matchRoundWinnersQuarterfinal": "Tứ kết nhánh thắng",
+  "matchRoundWinnersRoundOf": "Vòng {size} nhánh thắng",
+  "@matchRoundWinnersRoundOf": {
+    "placeholders": {
+      "size": {}
+    }
+  },
+  "matchRoundWinnersQualifying": "Vòng loại nhánh thắng",
+  "matchRoundLosersFinal": "CK nhánh thua",
+  "matchRoundLosersSemifinal": "BK nhánh thua",
+  "matchRoundLosersRound": "Lượt nhánh thua {round}",
+  "@matchRoundLosersRound": {
+    "placeholders": {
+      "round": {}
+    }
+  },
+  "matchRoundGrandFinal": "Chung kết tổng",
+  "matchRoundGrandFinalReset": "Chung kết tổng (đấu lại)",
+  "matchRoundLosersMatch": "Nhánh thua - Lượt {round}",
+  "@matchRoundLosersMatch": {
+    "placeholders": {
+      "round": {}
+    }
+  },
+  "matchRoundWinnersMatch": "Nhánh thắng - {base}",
+  "@matchRoundWinnersMatch": {
+    "placeholders": {
+      "base": {}
+    }
+  },
+  "communityPostInvalid": "Bài đăng không hợp lệ",
+  "communityCommentInvalid": "Bình luận không hợp lệ",
+  "communityMediaInvalid": "Ảnh tải lên không hợp lệ",
+  "teamCreateResponseInvalid": "Phản hồi tạo đội không hợp lệ.",
+  "teamLogoInvalid": "Ảnh logo không hợp lệ.",
+  "teamFallbackName": "Đội {id}",
+  "@teamFallbackName": {
+    "placeholders": {
+      "id": {}
+    }
+  },
+  "teamMemberFallback": "VĐV",
+  "tournamentRegistrationResponseInvalid": "Phản hồi đăng ký không hợp lệ.",
+  "tournamentInviteCodeInvalid": "Mã tham gia giải không hợp lệ.",
+  "footballRosterResponseInvalid": "Phản hồi roster bóng đá không hợp lệ.",
+  "footballRosterUpdateResponseInvalid": "Phản hồi cập nhật roster không hợp lệ.",
+  "rankingUnrankedFallback": "Chưa xếp hạng",
+  "rankingLoadError": "Không thể tải thông tin xếp hạng của người dùng",
+  "teamTournamentMissing": "Không tìm thấy thông tin giải đấu.",
+  "teamTournamentLocked": "Không thể thay đổi danh sách đội khi giải đấu đang diễn ra hoặc đã kết thúc.",
+  "rankingRequestFailed": "Yêu cầu bảng xếp hạng thất bại",
+  "rankingEloTiersLoadError": "Không thể tải danh sách bậc ELO",
+  "statusLabelDraft": "Nháp",
+  "statusLabelUpcoming": "Sắp diễn ra",
+  "statusLabelRegistration": "Đang mở đăng ký",
+  "statusLabelRegistrationClosed": "Đã đóng đăng ký",
+  "statusLabelDrawing": "Bốc thăm",
+  "statusLabelInProgress": "Đang thi đấu",
+  "statusLabelCompleted": "Đã kết thúc",
+  "statusLabelCancelled": "Đã hủy",
+  "statusLabelScheduled": "Chưa thi đấu",
+  "statusLabelLive": "Đang thi đấu",
+  "statusLabelWalkover": "Bỏ cuộc",
+  "club_joinPendingApproval": "Đã gửi yêu cầu tham gia. Vui lòng chờ Ban chủ nhiệm xét duyệt!",
+  "memberTagMenu": "Gán tag",
+  "memberTagAssignTitle": "Gán tag cho thành viên",
+  "memberTagAssignDesc": "Tag hiển thị cạnh tên trong danh sách thành viên (tối đa 3 tag).",
+  "memberTagAddHint": "Nhập tag mới...",
+  "memberTagAdd": "Thêm",
+  "memberTagSave": "Lưu tag",
+  "memberTagSaving": "Đang lưu...",
+  "memberTagMaxReached": "Đã đạt tối đa 3 tag",
+  "memberTagEmpty": "Chưa có tag nào. Thêm tag bên dưới để bắt đầu.",
+  "memberTagTooLong": "Mỗi tag tối đa 15 ký tự.",
+  "memberTagInvalid": "Tag chỉ được chứa chữ cái, số, khoảng trắng, gạch dưới (_) và gạch ngang (-).",
+  "memberTagDuplicate": "Tag này đã tồn tại.",
+  "memberTagRemove": "Xoá tag",
+  "memberTagSaveError": "Không thể lưu tag. Vui lòng thử lại.",
+  "memberTagCounter": "Đã dùng {used}/{max} tag.",
+  "@memberTagCounter": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "roleAdminDisplay": "👑 Ban Tổ Chức (Admin)",
+  "roleRefereeDisplay": "⚖️ Trọng Tài (Referee)",
+  "roleViewerDisplay": "👀 Khán Giả (Viewer)",
+  "roleAdminShort": "Admin",
+  "roleRefereeShort": "Trọng Tài",
+  "roleViewerShort": "Viewer",
+  "excelMatchProtocolTitle": "BIÊN BẢN TRẬN ĐẤU",
+  "excelResultsTitle": "TỔNG HỢP KẾT QUẢ GIẢI ĐẤU: {tournamentName}",
+  "@excelResultsTitle": {
+    "placeholders": {
+      "tournamentName": {
+        "type": "String"
+      }
+    }
+  },
+  "excelOverviewSheet": "Tổng quan",
+  "excelTimelineSheet": "Lịch sử sự kiện",
+  "excelResultsSheet": "Kết quả toàn giải",
+  "excelStatus": "Trạng thái:",
+  "excelRound": "Vòng:",
+  "excelMatchNumber": "Trận số:",
+  "excelStartTime": "Thời gian bắt đầu:",
+  "excelEndTime": "Thời gian kết thúc:",
+  "excelNotStarted": "Chưa bắt đầu",
+  "excelNotEnded": "Chưa kết thúc",
+  "excelTeam1": "Đội 1",
+  "excelTeam2": "Đội 2",
+  "excelScore": "Điểm số",
+  "excelWinner": "Đội thắng cuộc:",
+  "excelUndetermined": "Chưa xác định",
+  "excelTime": "Thời gian",
+  "excelTeam": "Đội",
+  "excelEvent": "Sự kiện",
+  "excelPointsChanged": "Điểm thay đổi",
+  "excelNotes": "Ghi chú",
+  "excelOtherEvent": "Khác",
+  "excelScoreEvent": "Ghi điểm",
+  "excelFoulEvent": "Lỗi",
+  "excelYellowCardEvent": "Thẻ vàng",
+  "excelRedCardEvent": "Thẻ đỏ",
+  "excelInjuryEvent": "Y tế/Chấn thương",
+  "excelPenaltyEvent": "Thẻ phạt",
+  "excelWinnerHeader": "Đội thắng",
+  "excelStatusHeader": "Trạng thái",
+  "excelEndTimeHeader": "Thời gian kết thúc",
+  "excelReferee": "Trọng tài",
+  "excelMatchProtocolShare": "Biên bản trận đấu",
+  "excelResultsShare": "Kết quả giải đấu {tournamentName}",
+  "@excelResultsShare": {
+    "placeholders": {
+      "tournamentName": {
+        "type": "String"
+      }
+    }
+  },
+  "excelMatchProtocolFilePrefix": "BienBan",
+  "excelResultsFilePrefix": "KetQua",
+  "excelScore1": "Điểm 1",
+  "excelScore2": "Điểm 2",
+  "bracketDiagramZoomHint": "Kéo & thu phóng",
+  "bracketDiagramEmptyTitle": "Chưa có sơ đồ thi đấu",
+  "bracketDiagramEmptyHint": "Hãy hoàn tất bốc thăm để tạo sơ đồ",
+  "authCredentialsMissingResponse": "Không tìm thấy thông tin xác thực trong phản hồi",
+  "authRegisterResponseInvalid": "Đăng ký không thành công. Vui lòng thử lại.",
+  "authGoogleCredentialsMissing": "Không tìm thấy thông tin xác thực Google",
+  "authAppleCredentialsMissing": "Không tìm thấy thông tin xác thực Apple",
+  "authFacebookCredentialsMissing": "Không tìm thấy thông tin xác thực Facebook",
+  "networkConnectionFailed": "Lỗi kết nối đến máy chủ",
+  "userProfileLoadFailed": "Không thể lấy thông tin người dùng",
+  "userProfileUpdateFailed": "Cập nhật thông tin thất bại",
+  "userAvatarUploadFailed": "Tải ảnh đại diện thất bại",
+  "userCoverUploadFailed": "Tải ảnh bìa thất bại",
+  "userPublicProfileLoadFailed": "Không thể tải thông tin người dùng",
+  "userPasswordChangeFailed": "Đổi mật khẩu thất bại",
+  "userAccountDeleteFailed": "Xóa tài khoản thất bại",
+  "userChangeRequestFailed": "Gửi yêu cầu thất bại",
+  "communityMembersLoadFailed": "Lỗi lấy thành viên CLB",
+  "communityJoinFailed": "Không thể tham gia CLB",
+  "reportHistoryLoadFailed": "Không thể tải lịch sử báo cáo",
+  "tournamentCreateApiFailed": "Không thể tạo giải đấu qua API",
+  "tournamentInfoTimeout": "Quá thời gian tải thông tin giải đấu.",
+  "profileTierSNotRanked": "Chưa được xếp hạng ở bậc S",
+  "drawService_minTeams": "Cần ít nhất 2 đội để bốc thăm.",
+  "communityUpdateFailed": "Cập nhật CLB thất bại",
+  "matchUnexpectedResponse": "Phản hồi trận đấu không hợp lệ: {statusCode}",
+  "@matchUnexpectedResponse": {
+    "placeholders": {
+      "statusCode": {
+        "type": "String"
+      }
+    }
+  },
+  "teamCreateRegisterApiFailed": "Không thể tạo/đăng ký đội qua API",
+  "tokenRegenerateApiFailed": "Không thể cấp lại token qua API",
+  "tournamentUnsupportedSport": "Môn thể thao không được hỗ trợ: {sport}",
+  "@tournamentUnsupportedSport": {
+    "placeholders": {
+      "sport": {
+        "type": "String"
+      }
+    }
+  },
+  "tournamentDivisionIdRequired": "divisionId là bắt buộc để cập nhật ô bracket",
+  "tournamentBracketSlotsUpdateFailed": "Cập nhật ô bracket thất bại ({statusCode})",
+  "@tournamentBracketSlotsUpdateFailed": {
+    "placeholders": {
+      "statusCode": {
+        "type": "String"
+      }
+    }
+  },
+  "reportFileLinkMissing": "Không nhận được liên kết tệp",
+  "matchCreateUnsupported": "Ứng dụng di động không thể tạo trận trực tiếp. Trận được tạo từ bracket backend.",
+  "matchBatchCreateUnsupported": "Ứng dụng di động không thể tạo hàng loạt trận trực tiếp.",
+  "tokenCreateUnsupported": "Ứng dụng di động không thể tạo token trực tiếp.",
+  "tokenCreateTournamentUnsupported": "Ứng dụng di động không thể tạo token giải đấu trực tiếp.",
+  "tokenDeactivateUnsupported": "Ứng dụng di động không thể vô hiệu hóa token.",
+  "tournamentCategoryUnknown": "Không tìm thấy bộ môn không xác định trên hệ thống.",
+  "tournamentCategoryNotFound": "Không tìm thấy bộ môn \"{sport}\" trên hệ thống.",
+  "reportDefaultReason": "Báo cáo: {reason}",
+  "@tournamentCategoryNotFound": {
+    "description": "Sport name included when a tournament category cannot be found.",
+    "placeholders": {
+      "sport": {
+        "type": "String"
+      }
+    }
+  },
+  "@reportDefaultReason": {
+    "description": "Default report reason when the user leaves the details empty.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "customErrorDisplay": "Đã có lỗi hiển thị",
+  "scoreServingIndicator": "Giao bóng: {team} · Giao {number}",
+  "sportoHeaderLoginRegister": "Đăng nhập / Đăng ký",
+  "sportoHeaderNationalRank": "Xếp hạng Quốc gia",
+  "sportoHeaderMatches": "Trận",
+  "sportoHeaderWins": "Thắng",
+  "sportoHeaderRate": "Tỷ lệ",
+  "bracketStatusUpcoming": "SẮP ĐẤU",
+  "bracketStatusLive": "LIVE",
+  "bracketStatusCompleted": "XONG",
+  "bracketStatusChampion": "VÔ ĐỊCH",
+  "bracketBye": "Miễn đấu",
+  "bracketScoreAction": "Tính điểm →",
+  "bracketViewAction": "Xem →",
+  "tokenTournamentCodeTitle": "Nhập mã Giải đấu",
+  "tokenTournamentCodeDescription": "Nhập mã truy cập giải đấu của bạn để tiếp tục với vai trò tương ứng.",
+  "tournamentRegistrationSheetTitle": "Đăng ký tham gia",
+  "tournamentRegistrationSheetDescription": "Tiếp tục sang luồng đăng ký đầy đủ để hệ thống kiểm tra hồ sơ, hạng mục, ELO, mã mời và thanh toán.",
+  "tournamentRegistrationSheetContinue": "Tiếp tục đăng ký",
+  "tournamentTeamMemberCount": "{count} thành viên",
+  "tournamentTeamSeed": "Hạt giống #{seed}",
+  "tournamentTeamMembersTitle": "THÀNH VIÊN",
+  "tournamentTeamNoMembers": "Chưa có thông tin thành viên",
+  "tournamentTeamCaptain": "Trưởng nhóm",
+  "tournamentTeamWaitlisted": "Đội đang trong hàng chờ",
+  "tournamentTeamPendingPartner": "Đội đang chờ đồng đội",
+  "tournamentTeamPendingApproval": "Đội đang duyệt",
+  "tournamentAthleteInfo": "Thông tin VĐV",
+  "tennisScorePointsGuide": "15 • 30 • 40",
+  "tennisScoreSetLabel": "Set",
+  "tennisScoreFormatLabel": "Format",
+  "tennisScoreSetsToWin": "Thắng {sets} set",
+  "tennisScoreStatusLabel": "Trạng thái",
+  "tennisScoreTiebreakHelp": "Set đang vào tiebreak, điểm hiển thị theo số thực.",
+  "tennisScoreGameHelp": "Chấm theo game tennis của giải, hệ thống tự xử lý deuce và advantage.",
+  "tennisScoreVs": "VS",
+  "rankingChartEmpty": "Chưa có dữ liệu biểu đồ ELO",
+  "rankingProgressTitle": "TIẾN TRÌNH ELO",
+  "rankingPodiumTitle": "Top 100 Vận động viên",
+  "rankingTierSystemTitle": "Hệ thống phân hạng ELO",
+  "rankingTierSystemDescription": "Điểm ELO tích lũy sau mỗi trận đấu chính thức sẽ xếp người chơi vào các Tier trình độ tương ứng. Chi tiết dải điểm:",
+  "rankingTierLevelsTitle": "HỆ THỐNG BẬC TRÌNH ĐỘ (TIERS)",
+  "rankingEloRulesTitle": "QUY LUẬT & TÍNH ĐIỂM ELO",
+  "rankingYouLabel": "BẠN",
+  "officialScoreCancel": "Hủy",
+  "bracketEmptyTitle": "Chưa có sơ đồ",
+  "imageViewerZoomHint": "Chụm tay hoặc chạm 2 lần để phóng to",
+  "@scoreServingIndicator": {
+    "description": "Serving indicator with team and serve number.",
+    "placeholders": {
+      "team": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "@tournamentTeamMemberCount": {
+    "description": "Number of members in a tournament team.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@tournamentTeamSeed": {
+    "description": "Tournament team seed number.",
+    "placeholders": {
+      "seed": {
+        "type": "int"
+      }
+    }
+  },
+  "@tennisScoreSetsToWin": {
+    "description": "Number of sets required to win.",
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      }
+    }
+  },
+  "rankingRuleNewbie": "Người mới bắt đầu từ 1000 ELO.",
+  "rankingRuleOfficialComplete": "ELO chỉ thay đổi sau trận đấu chính thức đã hoàn tất.",
+  "rankingRuleDoublesAverage": "Đánh đôi: ELO được tính theo sức mạnh trung bình hai đội rồi phân bổ cho từng người.",
+  "rankingRuleDecay": "Không thi đấu trong 1 tháng liên tục: dưới 1400 ELO giữ nguyên; từ 1400 trở lên giảm theo tier: 2%, 3%, 4% hoặc 5% mỗi tháng.",
+  "rankingRuleShield": "Khiên ELO bảo vệ khi decay làm rơi qua mốc: giữ mốc một lần rồi tiêu thụ khiên.",
+  "rankingRuleDoublesPair": "Đánh đôi có rank riêng cho từng cặp, bắt đầu từ 1000 ELO; không lấy trung bình ELO cá nhân.",
+  "rankingRuleDecayReset": "Khi thi đấu lại, mốc giảm ELO được tính lại từ đầu; không trừ dồn các tháng trước.",
+  "rankingRuleAutoTier": "Tier được cập nhật tự động khi ELO thay đổi.",
+  "rankingEloChartNoData": "Chưa có dữ liệu biểu đồ ELO",
+  "rankingTop100Athletes": "Top 100 Vận động viên",
+  "rankingSeason": "Mùa {year}",
+  "tournamentTeamsEmptyTitle": "Chưa có VĐV đăng ký",
+  "tournamentTeamsEmptySubtitle": "Hãy kiểm tra lại sau khi giải đấu mở đăng ký",
+  "commonErrorPrefix": "Lỗi",
+  "rankingDefaultElo": "1000 ELO",
+  "communityTournamentCreateFailed": "Tạo giải đấu thất bại",
+  "routerDefaultCommunity": "Cộng đồng",
+  "routerDefaultUser": "Người dùng",
+  "devicePairingTitle": "Ghép nối thiết bị camera",
+  "devicePairingInstruction": "Quét mã QR do ban tổ chức giải cung cấp.",
+  "devicePairingScanAgain": "Quét lại",
+  "devicePairingSuccess": "Đã ghép nối camera thành công",
+  "devicePairingInvalidCode": "Mã QR này không phải mã ghép nối camera hợp lệ.",
+  "devicePairingFingerprintUnavailable": "Không thể xác định thiết bị này.",
+  "devicePairingCameraPermission": "Cần cấp quyền camera để quét mã ghép nối.",
+  "devicePairingClose": "Đóng"
 }

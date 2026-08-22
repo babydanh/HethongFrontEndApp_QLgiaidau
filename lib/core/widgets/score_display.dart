@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Hiển thị set history dạng badge
 class SetHistoryDisplay extends StatelessWidget {
@@ -53,11 +54,16 @@ class SetHistoryDisplay extends StatelessWidget {
 /// Điểm tennis text (Love, Fifteen, etc.)
 String tennisPointLabel(int points) {
   switch (points) {
-    case 0: return '0';
-    case 1: return '15';
-    case 2: return '30';
-    case 3: return '40';
-    default: return '40';
+    case 0:
+      return '0';
+    case 1:
+      return '15';
+    case 2:
+      return '30';
+    case 3:
+      return '40';
+    default:
+      return '40';
   }
 }
 
@@ -75,22 +81,29 @@ class TennisGamePoint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
     if (team1Points >= 3 && team2Points >= 3) {
       if (team1Points == team2Points) {
-        return _point('Deuce', AppTheme.accent);
+        return _point(l10n.tennisDeuce, AppTheme.accent);
       }
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (team1Points > team2Points) ...[
-            _point('Ad', AppTheme.primary),
+            _point(l10n.tennisAdvantage, AppTheme.primary),
             const SizedBox(width: 4),
-            Text('T1', style: TextStyle(fontSize: 10, color: colors.textMuted)),
+            Text(
+              l10n.tennisTeam1Short,
+              style: TextStyle(fontSize: 10, color: colors.textMuted),
+            ),
           ] else ...[
-            _point('Ad', const Color(0xFFEA580C)),
+            _point(l10n.tennisAdvantage, const Color(0xFFEA580C)),
             const SizedBox(width: 4),
-            Text('T2', style: TextStyle(fontSize: 10, color: colors.textMuted)),
+            Text(
+              l10n.tennisTeam2Short,
+              style: TextStyle(fontSize: 10, color: colors.textMuted),
+            ),
           ],
         ],
       );
@@ -101,7 +114,14 @@ class TennisGamePoint extends StatelessWidget {
       children: [
         _point(tennisPointLabel(team1Points), AppTheme.primary),
         const SizedBox(width: 6),
-        Text('-', style: TextStyle(color: colors.textMuted, fontSize: 16, fontWeight: FontWeight.w900)),
+        Text(
+          '-',
+          style: TextStyle(
+            color: colors.textMuted,
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
         const SizedBox(width: 6),
         _point(tennisPointLabel(team2Points), const Color(0xFFEA580C)),
       ],
@@ -151,10 +171,19 @@ class PickleballServerIndicator extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.volunteer_activism_rounded, size: 12, color: AppTheme.primary),
+          Icon(
+            Icons.volunteer_activism_rounded,
+            size: 12,
+            color: AppTheme.primary,
+          ),
           const SizedBox(width: 4),
           Text(
-            'Giao bóng: ${isTeam1Serving ? "Đội 1" : "Đội 2"} · Giao $serveNumber',
+            AppLocalizations.of(context)!.scoreServingIndicator(
+              isTeam1Serving
+                  ? AppLocalizations.of(context)!.tennisTeam1Short
+                  : AppLocalizations.of(context)!.tennisTeam2Short,
+              serveNumber,
+            ),
             style: TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.w700,

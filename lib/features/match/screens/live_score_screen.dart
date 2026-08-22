@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -677,7 +678,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
               const SizedBox(height: 12),
               Text(
-                'Thông tin trận đấu',
+                l10n.liveMatchInfo,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 22,
@@ -687,7 +688,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                '${match.team1Name} vs ${match.team2Name}',
+                '${match.team1Name} ${l10n.matchVsLabel} ${match.team2Name}',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -707,7 +708,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Luật giải đang áp dụng',
+                      l10n.liveAppliedRules,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -716,7 +717,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Các thông số được lấy từ cấu hình của ban tổ chức. App chỉ mở bảng chấm điểm theo luật này.',
+                      l10n.liveAppliedRulesDescription,
                       style: TextStyle(
                         fontSize: 12,
                         color: context.colors.textSecondary,
@@ -730,16 +731,19 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       children: [
                         _buildSetupChip(
                           l10n.liveSportLabel,
-                          AppConstants.sportNames[match.sportKey
-                                  ?.toLowerCase()] ??
-                              AppConstants.sportNames[ref
-                                  .watch(
-                                    tournamentProvider(widget.tournamentId),
-                                  )
-                                  .value
-                                  ?.sport
-                                  .toLowerCase()] ??
-                              _setupSportLabel(kind),
+                          (() {
+                            final sportKey =
+                                match.sportKey ??
+                                ref
+                                    .watch(
+                                      tournamentProvider(widget.tournamentId),
+                                    )
+                                    .value
+                                    ?.sport;
+                            return sportKey == null || sportKey.trim().isEmpty
+                                ? _setupSportLabel(kind)
+                                : l10n.sportDisplayName(sportKey);
+                          })(),
                         ),
                         _buildSetupChip(
                           l10n.liveFormatLabel,
@@ -885,7 +889,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '${match.team1Name} vs ${match.team2Name}',
+                  '${match.team1Name} ${l10n.matchVsLabel} ${match.team2Name}',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -1134,28 +1138,30 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   String _setupSportLabel(SportRuleKind kind) {
+    final l10n = AppLocalizations.of(context)!;
     switch (kind) {
       case SportRuleKind.tennis:
-        return 'Tennis';
+        return l10n.createClubTournament_sportTennis;
       case SportRuleKind.pickleball:
-        return 'Pickleball';
+        return l10n.createClubTournament_sportPickleball;
       case SportRuleKind.tableTennis:
-        return 'Bóng bàn';
+        return l10n.createClubTournament_sportTableTennis;
       case SportRuleKind.badminton:
-        return 'Cầu lông';
+        return l10n.createClubTournament_sportBadminton;
       case SportRuleKind.football:
-        return 'Bóng đá';
+        return l10n.createClubTournament_sportFootball;
     }
   }
 
   String _setupScoreLabel(SportRuleKind kind, SportConfig config) {
+    final l10n = AppLocalizations.of(context)!;
     if (kind == SportRuleKind.tennis) {
-      return 'Số game để chạm mốc set (mặc định ${config.pointsPerSet})';
+      return l10n.liveScoreSetupTennisGames(config.pointsPerSet);
     }
     if (config.scoringModel == SportScoringModel.pickleballSideOut) {
-      return 'Mốc điểm game side-out (mặc định ${config.pointsPerSet})';
+      return l10n.liveScoreSetupSideOutPoints(config.pointsPerSet);
     }
-    return 'Mốc điểm mỗi set (mặc định ${config.pointsPerSet})';
+    return l10n.liveScoreSetupSetPoints(config.pointsPerSet);
   }
 
   Widget _buildSetupChip(String label, String value) {
@@ -2883,7 +2889,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 child: Column(
                   children: [
                     Text(
-                      'SET ${index + 1}',
+                      '${l10n.tennisInfoSet} ${index + 1}',
                       style: TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.bold,

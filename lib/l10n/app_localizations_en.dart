@@ -9,6 +9,24 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get appTagline => 'Play together';
+
+  @override
+  String get memberTagSuggestionFunny => 'Comic relief';
+
+  @override
+  String get memberTagSuggestionGoodOdds => 'Great odds';
+
+  @override
+  String get memberTagSuggestionWeeklyMvp => 'Weekly MVP';
+
+  @override
+  String get memberTagSuggestionInForm => 'In form';
+
+  @override
+  String get memberTagSuggestionToughMatch => 'Tough matchup';
+
+  @override
   String get club_favorite => 'Favorite';
 
   @override
@@ -208,7 +226,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your password must contain at least 6 characters, including an uppercase letter and a number, to keep your account secure.';
 
   @override
-  String get languageVi => 'Tiếng Việt';
+  String get languageVi => 'Vietnamese';
 
   @override
   String get languageEn => 'English';
@@ -437,6 +455,74 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get publicProfileNoRankData => 'No ranking data';
+
+  @override
+  String get publicProfileNoPlayedElo => 'No completed ranked matches yet';
+
+  @override
+  String get publicProfileNoPlayedEloHint =>
+      'Join a ranked match to unlock this ELO profile.';
+
+  @override
+  String get publicProfileScopeSingles => 'Singles';
+
+  @override
+  String get publicProfileScopeDoubles => 'Doubles';
+
+  @override
+  String get publicProfileScopeMixedDoubles => 'Mixed doubles';
+
+  @override
+  String get publicProfilePartner => 'Partner';
+
+  @override
+  String get publicProfileCurrentStreak => 'Current streak';
+
+  @override
+  String publicProfileWinStreak(Object count) {
+    return '$count win streak';
+  }
+
+  @override
+  String publicProfileLossStreak(Object count) {
+    return '$count loss streak';
+  }
+
+  @override
+  String get publicProfileNoStreak => 'No current streak';
+
+  @override
+  String get publicProfileResultWin => 'Win';
+
+  @override
+  String get publicProfileResultLoss => 'Loss';
+
+  @override
+  String get publicProfileResultDraw => 'Draw';
+
+  @override
+  String get publicProfileOpponent => 'Opponent';
+
+  @override
+  String get publicProfileUnknownOpponent => 'Unknown opponent';
+
+  @override
+  String get publicProfileScore => 'Score';
+
+  @override
+  String get publicProfileEloBefore => 'Before';
+
+  @override
+  String get publicProfileEloAfter => 'After';
+
+  @override
+  String get publicProfileEloChange => 'Change';
+
+  @override
+  String get publicProfileActivity => 'ACTIVITY';
+
+  @override
+  String get publicProfilePeakElo => 'Peak ELO';
 
   @override
   String get publicProfileLoadError => 'Could not load profile information';
@@ -1666,6 +1752,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tennisDeuce => 'Deuce';
 
   @override
+  String get tennisAdvantage => 'Advantage';
+
+  @override
+  String get tennisTeam1Short => 'T1';
+
+  @override
+  String get tennisTeam2Short => 'T2';
+
+  @override
   String get tennisGameLabel => 'GAME';
 
   @override
@@ -1984,7 +2079,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerTournamentNotFound => 'Tournament not found';
 
   @override
-  String get registerFeeUnit => 'đ';
+  String get registerFeeUnit => '₫';
 
   @override
   String get doublesRegTitle => 'Doubles Registration';
@@ -2178,7 +2273,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String checkout_payButton(Object amount) {
-    return 'PAY $amountđ';
+    return 'PAY $amount₫';
   }
 
   @override
@@ -4827,6 +4922,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String chatRoomSlowModeDuration(Object seconds) {
+    return '$seconds seconds';
+  }
+
+  @override
   String get chatRoomSlowModeOffSubtitle => 'Slow mode off (normal messaging)';
 
   @override
@@ -7348,6 +7448,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createClubTournament_formatDoubles => 'Doubles';
 
   @override
+  String get createClubTournament_formatMixedDoubles => 'Mixed doubles';
+
+  @override
   String get createClubTournament_bracketSingleElimination =>
       'Single elimination';
 
@@ -7428,7 +7531,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editClub_bannerTitle => 'Banner';
 
   @override
-  String get editClub_bannerHint => '3:1 ratio (1200×400)';
+  String get editClub_bannerHint => '3:1 ratio (1200 x 400)';
 
   @override
   String get editClub_captureNew => 'Take a new photo';
@@ -8121,12 +8224,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String registerPayNow(Object amount) {
-    return 'Pay $amountđ';
+    return 'Pay $amount₫';
   }
 
   @override
   String registerFeePending2(Object amount) {
-    return 'Entry fee $amountđ unpaid';
+    return 'Entry fee $amount₫ unpaid';
   }
 
   @override
@@ -8833,6 +8936,72 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get matchBottom_cancelOverride => 'Cancel override';
+
+  @override
+  String get scorePanel_overrideReasonRequired =>
+      'Enter a reason before exceeding the preset limit.';
+
+  @override
+  String scorePanel_maxPresetPoints(Object maxPoints) {
+    return 'This sport has reached its preset limit of $maxPoints points. Enable Override if the official needs to record a different score.';
+  }
+
+  @override
+  String get scorePanel_servingTeamOnly => 'Only the serving team can score!';
+
+  @override
+  String get scorePanel_footballSyncError =>
+      'Unable to sync the football score.';
+
+  @override
+  String get scorePanel_completeOverrideInvalid =>
+      'Enter a reason and make sure the team awarded the win is leading by sets/games.';
+
+  @override
+  String get scorePanel_matchNotReady =>
+      'The match does not meet the configured completion conditions.';
+
+  @override
+  String get scorePanel_footballWinnerNotFound =>
+      'Could not find the winning team for this football match.';
+
+  @override
+  String get scorePanel_footballShootoutRequired =>
+      'A tied match requires different shootout scores to determine the winner.';
+
+  @override
+  String scorePanel_completeError(Object error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String scorePanel_finishSetWithScore(
+    Object setNumber,
+    Object score1,
+    Object score2,
+  ) {
+    return 'Finish set $setNumber at $score1-$score2?';
+  }
+
+  @override
+  String scorePanel_finishSet(Object setNumber) {
+    return 'Finish set $setNumber?';
+  }
+
+  @override
+  String get clubChat_memberFallback => 'Club member';
+
+  @override
+  String get scorePanel_matchAlreadyComplete =>
+      'The match has already reached the configured number of set wins.';
+
+  @override
+  String get scorePanel_conflictRefresh =>
+      'The score changed on another device. The latest data has been refreshed.';
+
+  @override
+  String get scorePanel_liveSyncError =>
+      'Unable to sync the live score. Please try again.';
 
   @override
   String get report_title => 'Report a violation';
@@ -9832,7 +10001,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get crossTableDefaultGroup => 'Group A';
 
   @override
-  String crossTableLegTitle(Object title, Object leg) {
+  String crossTableLegTitle(Object leg, Object title) {
     return '$title - Round $leg';
   }
 
@@ -9868,6 +10037,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bracketCrossTableNextRound => 'Next round';
+
+  @override
+  String bracketCrossTableTeamCount(Object count) {
+    return '$count teams';
+  }
 
   @override
   String get qrScannerInvalidCode => 'Invalid QR code';
@@ -9907,12 +10081,1349 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatDetailRevokedMessage => 'This message was revoked';
 
   @override
-  String bracketCrossTableTeamCount(Object count) {
-    return '$count teams';
+  String singleElimUpdateError(Object error) {
+    return 'Could not update the position: $error';
   }
 
   @override
-  String singleElimUpdateError(Object error) {
-    return 'Unable to update the position: $error';
+  String get penaltyDialogRulesTitle => 'Penalty rules';
+
+  @override
+  String get penaltyDialogTitle => 'Record penalty';
+
+  @override
+  String get penaltyDialogOffendingTeam => 'Offending team';
+
+  @override
+  String get penaltyDialogType => 'Penalty type';
+
+  @override
+  String get penaltyDialogReasonRequired => 'Reason (required)';
+
+  @override
+  String get penaltyDialogReasonHint => 'Enter the reason for the violation...';
+
+  @override
+  String get penaltyDialogConfirm => 'Confirm';
+
+  @override
+  String get tokenInputRequired => 'Please enter a token code';
+
+  @override
+  String get tokenInputInvalid => 'Invalid token code';
+
+  @override
+  String get tokenInputHint => 'Code format ABC-XXXX';
+
+  @override
+  String get ranking_matchTypeSingles => 'Singles';
+
+  @override
+  String get ranking_matchTypeDoubles => 'Doubles';
+
+  @override
+  String get ranking_matchTypeMixedDoubles => 'Mixed doubles';
+
+  @override
+  String get ranking_matchTypeOverview => 'Overview';
+
+  @override
+  String get ranking_sportFallback => 'Sport';
+
+  @override
+  String get ranking_unranked => 'Unranked';
+
+  @override
+  String get ranking_ranked => 'Ranked';
+
+  @override
+  String get ranking_tierLowD => 'Low Tier D';
+
+  @override
+  String get ranking_tierHighD => 'High Tier D';
+
+  @override
+  String get ranking_tierLowC => 'Low Tier C';
+
+  @override
+  String get ranking_tierHighC => 'High Tier C';
+
+  @override
+  String get ranking_tierLowB => 'Low Tier B';
+
+  @override
+  String get ranking_tierHighB => 'High Tier B';
+
+  @override
+  String get ranking_tierLowA => 'Low Tier A';
+
+  @override
+  String get ranking_tierHighA => 'High Tier A';
+
+  @override
+  String get ranking_tierS => 'Tier S';
+
+  @override
+  String get ranking_eloPeakProgress => '🏆 Peak reached — Tier S';
+
+  @override
+  String ranking_eloToNext(Object remaining, Object nextName) {
+    return '$remaining ELO to $nextName';
   }
+
+  @override
+  String get ranking_shieldOnboarding =>
+      'Play 1 ranked match to unlock ELO and the rank shield.';
+
+  @override
+  String get ranking_shieldActive =>
+      'Shield intact — it protects one fall from your current rank.';
+
+  @override
+  String get ranking_shieldBroken =>
+      'Shield broken — rank up or fall in rank to restore it.';
+
+  @override
+  String get ranking_eloOnboarding =>
+      'Play 1 ranked match to start your ELO journey';
+
+  @override
+  String rankingUserStatsUnranked(Object tier) {
+    return 'Unranked · $tier';
+  }
+
+  @override
+  String rankingUserStatsRanked(Object rank, Object tier) {
+    return 'Rank #$rank · $tier';
+  }
+
+  @override
+  String scoreValidationSetLabel(Object number) {
+    return 'Set $number';
+  }
+
+  @override
+  String scoreValidationGameLabel(Object number) {
+    return 'Game $number';
+  }
+
+  @override
+  String scoreValidationRallyLabel(Object number) {
+    return 'Game $number';
+  }
+
+  @override
+  String scoreValidationTie(Object label, Object score1, Object score2) {
+    return '$label: The score cannot be tied ($score1-$score2)';
+  }
+
+  @override
+  String scoreValidationMinimum(Object label, Object target) {
+    return '$label: The winner must reach at least $target points';
+  }
+
+  @override
+  String scoreValidationDeuceMargin(Object label) {
+    return '$label: Deuce requires a 2-point lead';
+  }
+
+  @override
+  String scoreValidationExactTarget(Object label, Object target) {
+    return '$label: The winner must reach exactly $target points';
+  }
+
+  @override
+  String scoreValidationMaximum(Object label, Object maxPoints) {
+    return '$label: The score exceeds the limit of $maxPoints';
+  }
+
+  @override
+  String scoreValidationTennisSet(Object label, Object score1, Object score2) {
+    return '$label: Result $score1-$score2 is invalid for tennis';
+  }
+
+  @override
+  String scoreValidationTennisTiebreak(
+    Object label,
+    Object score1,
+    Object score2,
+  ) {
+    return '$label: Tiebreak result $score1-$score2 is invalid';
+  }
+
+  @override
+  String scoreValidationSideOutDeuce(Object label) {
+    return '$label: Side-out requires a 2-point lead in the final phase';
+  }
+
+  @override
+  String scoreValidationSideOutTarget(Object label, Object target) {
+    return '$label: The standard side-out target is $target';
+  }
+
+  @override
+  String scoreValidationSideOutExactTarget(Object label, Object target) {
+    return '$label: With win-by-2 disabled, the winner must reach $target';
+  }
+
+  @override
+  String scoreValidationSideOutMaximum(Object label, Object maxPoints) {
+    return '$label: The score exceeds the threshold of $maxPoints';
+  }
+
+  @override
+  String get scoreValidationUnknown =>
+      'Unable to identify the scoring error. Please check the result again.';
+
+  @override
+  String get lite_apiSessionExpired =>
+      'Your session has expired. Please sign in again.';
+
+  @override
+  String get lite_apiForbidden =>
+      'You do not have permission to manage this Lite tournament.';
+
+  @override
+  String get lite_apiRateLimited =>
+      'The system is temporarily rate-limiting requests. Your previous data is preserved; please try again in a few seconds.';
+
+  @override
+  String get lite_apiServerBusy =>
+      'The server is busy. Your previous data is preserved; please try again in a few seconds.';
+
+  @override
+  String get lite_loadTimeout =>
+      'Loading the Lite tournament took too long. Please try again.';
+
+  @override
+  String get lite_loadError =>
+      'Unable to load the Lite tournament data. Please try again.';
+
+  @override
+  String get lite_tournamentTypeAdvanced =>
+      'This is an Advanced tournament. The app only supports managing Lite tournaments.';
+
+  @override
+  String get lite_tournamentLoadError =>
+      'Unable to load tournament information';
+
+  @override
+  String get lite_participantsLoadError => 'Unable to load participants';
+
+  @override
+  String get lite_matchesLoadError => 'Unable to load matches right now.';
+
+  @override
+  String liveScoreSetupTennisGames(int points) {
+    return 'Games needed to reach the set target (default: $points)';
+  }
+
+  @override
+  String liveScoreSetupSideOutPoints(int points) {
+    return 'Side-out game point target (default: $points)';
+  }
+
+  @override
+  String liveScoreSetupSetPoints(int points) {
+    return 'Point target per set (default: $points)';
+  }
+
+  @override
+  String get matchTableRoundQualifying => 'Qualifying round';
+
+  @override
+  String get matchTableUpperFinal => 'Winners bracket final';
+
+  @override
+  String get matchTableUpperQuarterfinal => 'Winners bracket quarterfinal';
+
+  @override
+  String matchTableUpperRoundOf(int size) {
+    return 'Winners bracket round of $size';
+  }
+
+  @override
+  String get matchTableUpperQualifying => 'Winners bracket qualifying round';
+
+  @override
+  String get matchTableLowerFinal => 'Losers bracket final';
+
+  @override
+  String get matchTableLowerSemifinal => 'Losers bracket semifinal';
+
+  @override
+  String matchTableLowerRound(int round) {
+    return 'Losers bracket round $round';
+  }
+
+  @override
+  String get matchTableGrandFinalReset => 'Grand final reset';
+
+  @override
+  String matchTableWinnersRound(String round) {
+    return 'Winners bracket - $round';
+  }
+
+  @override
+  String matchTableLosersRoundOf(int round) {
+    return 'Losers bracket - Round $round';
+  }
+
+  @override
+  String matchTableWinnersRoundOf(int round) {
+    return 'Winners bracket - Round $round';
+  }
+
+  @override
+  String get communityFeedLoadError =>
+      'Unable to load the feed. Check your connection and try again.';
+
+  @override
+  String get communityFeedLoadMoreError => 'Unable to load more posts.';
+
+  @override
+  String get errorParserLoginCancelled => 'You cancelled the sign-in action.';
+
+  @override
+  String get errorParserGoogleUnavailable =>
+      'Google Sign-In is unavailable in this app version. Use email sign-in or try again later.';
+
+  @override
+  String get errorParserGoogleSignInFailed =>
+      'Unable to sign in with Google. Try again or check the Google Sign-In configuration.';
+
+  @override
+  String get errorParserAppleSignInFailed =>
+      'Unable to sign in with Apple. Try again or check the Apple Sign-In configuration.';
+
+  @override
+  String get errorParserInvalidDivision =>
+      'The competition division is invalid. Go back and select the division again.';
+
+  @override
+  String get errorParserNoDeviceSpace =>
+      'The device is out of storage. Free up space and try again.';
+
+  @override
+  String get errorParserPaymentLinkExpired =>
+      'The payment link has expired. Create a new transaction.';
+
+  @override
+  String get errorParserPaymentAlreadyProcessed =>
+      'This fee has already been paid or is being processed.';
+
+  @override
+  String get errorParserRegistrationClosed =>
+      'Registration for this tournament is closed.';
+
+  @override
+  String get errorParserRegistrationNotStarted =>
+      'The registration period has not started.';
+
+  @override
+  String get errorParserRegistrationEnded =>
+      'The registration period has ended.';
+
+  @override
+  String get errorParserTournamentFull =>
+      'This tournament has reached its participant limit.';
+
+  @override
+  String get errorParserAlreadyRegistered =>
+      'You are already registered for this tournament.';
+
+  @override
+  String get errorParserTournamentNotFound => 'Tournament not found.';
+
+  @override
+  String get errorParserInvalidInviteCode =>
+      'The tournament invite code is invalid or expired.';
+
+  @override
+  String get errorParserTournamentConfigLocked =>
+      'Tournament settings cannot be changed after the tournament has started or ended.';
+
+  @override
+  String get errorParserInvalidSelection =>
+      'The selected data is invalid. Reload and select again.';
+
+  @override
+  String get errorParserConnectionTimeout =>
+      'The connection to the server timed out. Check your connection and try again.';
+
+  @override
+  String get errorParserConnectionFailed =>
+      'Unable to connect to the server. Check your network connection or server.';
+
+  @override
+  String get errorParserBadRequest => 'Invalid request (Error 400).';
+
+  @override
+  String get errorParserInvalidCredentials => 'Incorrect email or password.';
+
+  @override
+  String get errorParserForbidden =>
+      'You do not have permission to perform this action.';
+
+  @override
+  String get errorParserNotFound =>
+      'The requested resource was not found (Error 404).';
+
+  @override
+  String errorParserServerError(int code) {
+    return 'Server error (Error $code).';
+  }
+
+  @override
+  String errorParserResponseError(int code) {
+    return 'The server returned an error code (Error $code).';
+  }
+
+  @override
+  String get errorParserRequestCancelled => 'The request was cancelled.';
+
+  @override
+  String get errorParserBrowserConnectionFailed =>
+      'Unable to connect to the server. This may be caused by a network, CORS, or server availability issue.';
+
+  @override
+  String get errorParserFallback => 'A system error occurred';
+
+  @override
+  String get errorParserEmailRegistered =>
+      'This email is already registered. Use another email or sign in.';
+
+  @override
+  String get errorParserEmailRequired => 'Please enter an email address.';
+
+  @override
+  String get errorParserEmailInvalid => 'Invalid email address.';
+
+  @override
+  String get errorParserPasswordMin =>
+      'Password must be at least 6 characters.';
+
+  @override
+  String get errorParserPasswordRequired => 'Please enter a password.';
+
+  @override
+  String get errorParserFullNameRequired => 'Please enter your full name.';
+
+  @override
+  String get errorParserInvalidCredentialsMessage =>
+      'Incorrect email or password.';
+
+  @override
+  String get errorParserGoogleAccount =>
+      'This account was registered with Google. Sign in with Google.';
+
+  @override
+  String get authInvalidInviteToken => 'The token is invalid or has expired';
+
+  @override
+  String authValidationFailed(String error) {
+    return 'Authentication error: $error';
+  }
+
+  @override
+  String get notificationLoadError =>
+      'Unable to load notifications. Please try again.';
+
+  @override
+  String notificationMinutesAgo(int minutes) {
+    return '$minutes minutes ago';
+  }
+
+  @override
+  String notificationHoursAgo(int hours) {
+    return '$hours hours ago';
+  }
+
+  @override
+  String notificationDaysAgo(int days) {
+    return '$days days ago';
+  }
+
+  @override
+  String get teamStatusApproved => 'Approved';
+
+  @override
+  String get teamStatusWaitingForPartner => 'Waiting for teammate';
+
+  @override
+  String get teamStatusPending => 'Pending approval';
+
+  @override
+  String get teamStatusQueue => 'Queue';
+
+  @override
+  String get teamStatusRejected => 'Rejected';
+
+  @override
+  String get teamStatusWithdrawn => 'Withdrawn';
+
+  @override
+  String get teamStatusEliminated => 'Eliminated';
+
+  @override
+  String get tournamentWorkspacePendingPairing => 'Waiting for pairings';
+
+  @override
+  String get chatTypeConversation => 'Conversation';
+
+  @override
+  String get paymentStatusPending => 'Payment pending';
+
+  @override
+  String get paymentStatusCancelled => 'Cancelled';
+
+  @override
+  String get paymentStatusExpired => 'Expired';
+
+  @override
+  String get paymentMethodBankTransfer => 'Bank transfer';
+
+  @override
+  String get apiPostInvalid => 'Invalid post';
+
+  @override
+  String get apiCommentInvalid => 'Invalid comment';
+
+  @override
+  String get apiUploadImageInvalid => 'Invalid uploaded image';
+
+  @override
+  String get apiCreateTeamInvalid => 'Invalid team creation response.';
+
+  @override
+  String get apiTeamLogoInvalid => 'Invalid logo image.';
+
+  @override
+  String get apiRegistrationResponseInvalid => 'Invalid registration response.';
+
+  @override
+  String get apiInviteCodeInvalid => 'Invalid tournament participation code.';
+
+  @override
+  String get apiFootballRosterResponseInvalid =>
+      'Invalid football roster response.';
+
+  @override
+  String get apiFootballRosterUpdateInvalid =>
+      'Invalid roster update response.';
+
+  @override
+  String get authTokenInvalid => 'The token is invalid or has expired';
+
+  @override
+  String get authTokenValidationFailed =>
+      'Token validation failed. Please try again.';
+
+  @override
+  String get authLoginFailed => 'Sign-in failed. Please try again.';
+
+  @override
+  String get authGoogleLoginFailed =>
+      'Google sign-in failed. Please try again.';
+
+  @override
+  String get authAppleLoginFailed => 'Apple sign-in failed. Please try again.';
+
+  @override
+  String get authFacebookLoginFailed =>
+      'Facebook sign-in failed. Please try again.';
+
+  @override
+  String get authRegisterFailed =>
+      'Registration failed. Please check your information and try again.';
+
+  @override
+  String get authSessionExpired =>
+      'Your session has expired or the access code has changed.';
+
+  @override
+  String get communityFeedCreatePostError =>
+      'Failed to publish the post. Please try again.';
+
+  @override
+  String get paymentStatusCompleted => 'Completed';
+
+  @override
+  String get paymentStatusFailed => 'Failed';
+
+  @override
+  String get paymentStatusRefunded => 'Refunded';
+
+  @override
+  String get paymentGatewayTransfer => 'Bank transfer';
+
+  @override
+  String get teamApprovalApproved => 'Approved';
+
+  @override
+  String get teamApprovalPendingPartner => 'Waiting for teammate';
+
+  @override
+  String get teamApprovalPending => 'Pending approval';
+
+  @override
+  String get teamApprovalWaitlisted => 'Waitlisted';
+
+  @override
+  String get teamApprovalRejected => 'Rejected';
+
+  @override
+  String get teamApprovalWithdrawn => 'Withdrawn';
+
+  @override
+  String get teamApprovalKicked => 'Eliminated';
+
+  @override
+  String get workspaceDefaultTournament => 'Tournament';
+
+  @override
+  String workspaceMatchLabel(Object order) {
+    return 'Match $order';
+  }
+
+  @override
+  String get workspaceWaitingPair => 'Waiting for pairing';
+
+  @override
+  String get workspaceWaitingTeam1 => 'Waiting for Team 1';
+
+  @override
+  String get workspaceWaitingTeam2 => 'Waiting for Team 2';
+
+  @override
+  String get chatParticipantFallback => 'User';
+
+  @override
+  String get chatClubFallback => 'Club';
+
+  @override
+  String get chatConversationFallback => 'Conversation';
+
+  @override
+  String get userGuestFallback => 'Guest';
+
+  @override
+  String get matchRoundWinnersFinal => 'Winners\' Final';
+
+  @override
+  String get matchRoundWinnersSemifinal => 'Winners\' Semifinal';
+
+  @override
+  String get matchRoundWinnersQuarterfinal => 'Winners\' Quarterfinal';
+
+  @override
+  String matchRoundWinnersRoundOf(Object size) {
+    return 'Winners\' Round of $size';
+  }
+
+  @override
+  String get matchRoundWinnersQualifying => 'Winners\' Qualifying Round';
+
+  @override
+  String get matchRoundLosersFinal => 'Losers\' Final';
+
+  @override
+  String get matchRoundLosersSemifinal => 'Losers\' Semifinal';
+
+  @override
+  String matchRoundLosersRound(Object round) {
+    return 'Losers\' Round $round';
+  }
+
+  @override
+  String get matchRoundGrandFinal => 'Grand Final';
+
+  @override
+  String get matchRoundGrandFinalReset => 'Grand Final (Reset)';
+
+  @override
+  String matchRoundLosersMatch(Object round) {
+    return 'Losers\' Round $round';
+  }
+
+  @override
+  String matchRoundWinnersMatch(Object base) {
+    return 'Winners\' $base';
+  }
+
+  @override
+  String get communityPostInvalid => 'Invalid post.';
+
+  @override
+  String get communityCommentInvalid => 'Invalid comment.';
+
+  @override
+  String get communityMediaInvalid => 'Invalid uploaded image.';
+
+  @override
+  String get teamCreateResponseInvalid => 'Invalid team creation response.';
+
+  @override
+  String get teamLogoInvalid => 'Invalid team logo.';
+
+  @override
+  String teamFallbackName(Object id) {
+    return 'Team $id';
+  }
+
+  @override
+  String get teamMemberFallback => 'Athlete';
+
+  @override
+  String get tournamentRegistrationResponseInvalid =>
+      'Invalid registration response.';
+
+  @override
+  String get tournamentInviteCodeInvalid => 'Invalid tournament invite code.';
+
+  @override
+  String get footballRosterResponseInvalid =>
+      'Invalid football roster response.';
+
+  @override
+  String get footballRosterUpdateResponseInvalid =>
+      'Invalid football roster update response.';
+
+  @override
+  String get rankingUnrankedFallback => 'Unranked';
+
+  @override
+  String get rankingLoadError =>
+      'Unable to load the user\'s ranking information';
+
+  @override
+  String get teamTournamentMissing => 'Tournament information was not found.';
+
+  @override
+  String get teamTournamentLocked =>
+      'Team rosters cannot be changed while the tournament is in progress or has ended.';
+
+  @override
+  String get rankingRequestFailed => 'Ranking request failed';
+
+  @override
+  String get rankingEloTiersLoadError => 'Unable to load ELO tiers';
+
+  @override
+  String get statusLabelDraft => 'Draft';
+
+  @override
+  String get statusLabelUpcoming => 'Upcoming';
+
+  @override
+  String get statusLabelRegistration => 'Registration open';
+
+  @override
+  String get statusLabelRegistrationClosed => 'Registration closed';
+
+  @override
+  String get statusLabelDrawing => 'Drawing';
+
+  @override
+  String get statusLabelInProgress => 'In progress';
+
+  @override
+  String get statusLabelCompleted => 'Completed';
+
+  @override
+  String get statusLabelCancelled => 'Cancelled';
+
+  @override
+  String get statusLabelScheduled => 'Not started';
+
+  @override
+  String get statusLabelLive => 'Live';
+
+  @override
+  String get statusLabelWalkover => 'Walkover';
+
+  @override
+  String get club_joinPendingApproval =>
+      'Join request sent. Please wait for the club administrators to review it.';
+
+  @override
+  String get memberTagMenu => 'Assign tag';
+
+  @override
+  String get memberTagAssignTitle => 'Assign tags to member';
+
+  @override
+  String get memberTagAssignDesc =>
+      'Tags are displayed next to the member name (up to 3 tags).';
+
+  @override
+  String get memberTagAddHint => 'Enter a new tag...';
+
+  @override
+  String get memberTagAdd => 'Add';
+
+  @override
+  String get memberTagSave => 'Save tags';
+
+  @override
+  String get memberTagSaving => 'Saving...';
+
+  @override
+  String get memberTagMaxReached => 'Maximum of 3 tags reached';
+
+  @override
+  String get memberTagEmpty => 'No tags yet. Add a tag below to get started.';
+
+  @override
+  String get memberTagTooLong => 'Each tag can be up to 15 characters.';
+
+  @override
+  String get memberTagInvalid =>
+      'Tags can contain only letters, numbers, spaces, underscores (_), and hyphens (-).';
+
+  @override
+  String get memberTagDuplicate => 'This tag already exists.';
+
+  @override
+  String get memberTagRemove => 'Remove tag';
+
+  @override
+  String get memberTagSaveError => 'Unable to save tags. Please try again.';
+
+  @override
+  String memberTagCounter(int used, int max) {
+    return 'Used $used/$max tags.';
+  }
+
+  @override
+  String get roleAdminDisplay => '👑 Organizer (Admin)';
+
+  @override
+  String get roleRefereeDisplay => '⚖️ Referee';
+
+  @override
+  String get roleViewerDisplay => '👀 Viewer';
+
+  @override
+  String get roleAdminShort => 'Admin';
+
+  @override
+  String get roleRefereeShort => 'Referee';
+
+  @override
+  String get roleViewerShort => 'Viewer';
+
+  @override
+  String get excelMatchProtocolTitle => 'MATCH PROTOCOL';
+
+  @override
+  String excelResultsTitle(String tournamentName) {
+    return 'TOURNAMENT RESULTS SUMMARY: $tournamentName';
+  }
+
+  @override
+  String get excelOverviewSheet => 'Overview';
+
+  @override
+  String get excelTimelineSheet => 'Event history';
+
+  @override
+  String get excelResultsSheet => 'Tournament results';
+
+  @override
+  String get excelStatus => 'Status:';
+
+  @override
+  String get excelRound => 'Round:';
+
+  @override
+  String get excelMatchNumber => 'Match number:';
+
+  @override
+  String get excelStartTime => 'Start time:';
+
+  @override
+  String get excelEndTime => 'End time:';
+
+  @override
+  String get excelNotStarted => 'Not started';
+
+  @override
+  String get excelNotEnded => 'Not completed';
+
+  @override
+  String get excelTeam1 => 'Team 1';
+
+  @override
+  String get excelTeam2 => 'Team 2';
+
+  @override
+  String get excelScore => 'Score';
+
+  @override
+  String get excelWinner => 'Winner:';
+
+  @override
+  String get excelUndetermined => 'Undetermined';
+
+  @override
+  String get excelTime => 'Time';
+
+  @override
+  String get excelTeam => 'Team';
+
+  @override
+  String get excelEvent => 'Event';
+
+  @override
+  String get excelPointsChanged => 'Points changed';
+
+  @override
+  String get excelNotes => 'Notes';
+
+  @override
+  String get excelOtherEvent => 'Other';
+
+  @override
+  String get excelScoreEvent => 'Score';
+
+  @override
+  String get excelFoulEvent => 'Foul';
+
+  @override
+  String get excelYellowCardEvent => 'Yellow card';
+
+  @override
+  String get excelRedCardEvent => 'Red card';
+
+  @override
+  String get excelInjuryEvent => 'Medical/Injury';
+
+  @override
+  String get excelPenaltyEvent => 'Penalty card';
+
+  @override
+  String get excelWinnerHeader => 'Winner';
+
+  @override
+  String get excelStatusHeader => 'Status';
+
+  @override
+  String get excelEndTimeHeader => 'End time';
+
+  @override
+  String get excelReferee => 'Referee';
+
+  @override
+  String get excelMatchProtocolShare => 'Match protocol';
+
+  @override
+  String excelResultsShare(String tournamentName) {
+    return 'Tournament results $tournamentName';
+  }
+
+  @override
+  String get excelMatchProtocolFilePrefix => 'MatchProtocol';
+
+  @override
+  String get excelResultsFilePrefix => 'Results';
+
+  @override
+  String get excelScore1 => 'Score 1';
+
+  @override
+  String get excelScore2 => 'Score 2';
+
+  @override
+  String get bracketDiagramZoomHint => 'Pan & zoom';
+
+  @override
+  String get bracketDiagramEmptyTitle => 'No bracket diagram yet';
+
+  @override
+  String get bracketDiagramEmptyHint =>
+      'Complete the draw to create the bracket';
+
+  @override
+  String get authCredentialsMissingResponse =>
+      'Authentication information was not found in the response';
+
+  @override
+  String get authRegisterResponseInvalid =>
+      'Registration failed. Please try again.';
+
+  @override
+  String get authGoogleCredentialsMissing =>
+      'Google authentication information was not found';
+
+  @override
+  String get authAppleCredentialsMissing =>
+      'Apple authentication information was not found';
+
+  @override
+  String get authFacebookCredentialsMissing =>
+      'Facebook authentication information was not found';
+
+  @override
+  String get networkConnectionFailed => 'Could not connect to the server';
+
+  @override
+  String get userProfileLoadFailed => 'Unable to load user information';
+
+  @override
+  String get userProfileUpdateFailed => 'Profile update failed';
+
+  @override
+  String get userAvatarUploadFailed => 'Avatar upload failed';
+
+  @override
+  String get userCoverUploadFailed => 'Cover upload failed';
+
+  @override
+  String get userPublicProfileLoadFailed => 'Unable to load user information';
+
+  @override
+  String get userPasswordChangeFailed => 'Password change failed';
+
+  @override
+  String get userAccountDeleteFailed => 'Account deletion failed';
+
+  @override
+  String get userChangeRequestFailed => 'Request failed';
+
+  @override
+  String get communityMembersLoadFailed => 'Failed to load club members';
+
+  @override
+  String get communityJoinFailed => 'Unable to join the club';
+
+  @override
+  String get reportHistoryLoadFailed => 'Unable to load report history';
+
+  @override
+  String get tournamentCreateApiFailed => 'Failed to create tournament via API';
+
+  @override
+  String get tournamentInfoTimeout =>
+      'Timed out while loading tournament information.';
+
+  @override
+  String get profileTierSNotRanked => 'Not ranked in Tier S';
+
+  @override
+  String get drawService_minTeams =>
+      'At least 2 teams are required to draw the bracket.';
+
+  @override
+  String get communityUpdateFailed => 'Failed to update the club';
+
+  @override
+  String matchUnexpectedResponse(String statusCode) {
+    return 'Unexpected match response: $statusCode';
+  }
+
+  @override
+  String get teamCreateRegisterApiFailed =>
+      'Failed to create/register team via the API';
+
+  @override
+  String get tokenRegenerateApiFailed =>
+      'Failed to regenerate the token via the API';
+
+  @override
+  String tournamentUnsupportedSport(String sport) {
+    return 'Unsupported sport: $sport';
+  }
+
+  @override
+  String get tournamentDivisionIdRequired =>
+      'divisionId is required to update bracket slots';
+
+  @override
+  String tournamentBracketSlotsUpdateFailed(String statusCode) {
+    return 'Bracket slots update failed ($statusCode)';
+  }
+
+  @override
+  String get reportFileLinkMissing => 'The file link was not received';
+
+  @override
+  String get matchCreateUnsupported =>
+      'The mobile app cannot create matches directly. Matches are generated by the backend bracket.';
+
+  @override
+  String get matchBatchCreateUnsupported =>
+      'The mobile app cannot batch-create matches directly.';
+
+  @override
+  String get tokenCreateUnsupported =>
+      'The mobile app cannot create tokens directly.';
+
+  @override
+  String get tokenCreateTournamentUnsupported =>
+      'The mobile app cannot create tournament tokens directly.';
+
+  @override
+  String get tokenDeactivateUnsupported =>
+      'The mobile app cannot deactivate tokens.';
+
+  @override
+  String get tournamentCategoryUnknown =>
+      'Could not find an unspecified sport in the system.';
+
+  @override
+  String tournamentCategoryNotFound(String sport) {
+    return 'Could not find sport \"$sport\" in the system.';
+  }
+
+  @override
+  String reportDefaultReason(String reason) {
+    return 'Report: $reason';
+  }
+
+  @override
+  String get customErrorDisplay => 'A display error occurred';
+
+  @override
+  String scoreServingIndicator(String team, int number) {
+    return 'Serving: $team · Serve $number';
+  }
+
+  @override
+  String get sportoHeaderLoginRegister => 'Log in / Sign up';
+
+  @override
+  String get sportoHeaderNationalRank => 'National ranking';
+
+  @override
+  String get sportoHeaderMatches => 'Matches';
+
+  @override
+  String get sportoHeaderWins => 'Wins';
+
+  @override
+  String get sportoHeaderRate => 'Rate';
+
+  @override
+  String get bracketStatusUpcoming => 'UPCOMING';
+
+  @override
+  String get bracketStatusLive => 'LIVE';
+
+  @override
+  String get bracketStatusCompleted => 'DONE';
+
+  @override
+  String get bracketStatusChampion => 'CHAMPION';
+
+  @override
+  String get bracketBye => 'BYE';
+
+  @override
+  String get bracketScoreAction => 'Score →';
+
+  @override
+  String get bracketViewAction => 'View →';
+
+  @override
+  String get tokenTournamentCodeTitle => 'Enter tournament code';
+
+  @override
+  String get tokenTournamentCodeDescription =>
+      'Enter your tournament access code to continue with the corresponding role.';
+
+  @override
+  String get tournamentRegistrationSheetTitle => 'Register to participate';
+
+  @override
+  String get tournamentRegistrationSheetDescription =>
+      'Continue to the full registration flow so the system can check your profile, division, ELO, invitation code, and payment.';
+
+  @override
+  String get tournamentRegistrationSheetContinue => 'Continue registration';
+
+  @override
+  String tournamentTeamMemberCount(int count) {
+    return '$count members';
+  }
+
+  @override
+  String tournamentTeamSeed(int seed) {
+    return 'Seed #$seed';
+  }
+
+  @override
+  String get tournamentTeamMembersTitle => 'MEMBERS';
+
+  @override
+  String get tournamentTeamNoMembers => 'No member information yet';
+
+  @override
+  String get tournamentTeamCaptain => 'Captain';
+
+  @override
+  String get tournamentTeamWaitlisted => 'Team is on the waitlist';
+
+  @override
+  String get tournamentTeamPendingPartner => 'Team is waiting for a partner';
+
+  @override
+  String get tournamentTeamPendingApproval => 'Team is awaiting approval';
+
+  @override
+  String get tournamentAthleteInfo => 'Athlete information';
+
+  @override
+  String get tennisScorePointsGuide => '15 • 30 • 40';
+
+  @override
+  String get tennisScoreSetLabel => 'Set';
+
+  @override
+  String get tennisScoreFormatLabel => 'Format';
+
+  @override
+  String tennisScoreSetsToWin(int sets) {
+    return 'Win $sets sets';
+  }
+
+  @override
+  String get tennisScoreStatusLabel => 'Status';
+
+  @override
+  String get tennisScoreTiebreakHelp =>
+      'The set is in a tiebreak; points are shown as raw scores.';
+
+  @override
+  String get tennisScoreGameHelp =>
+      'Score the tournament tennis game; the system handles deuce and advantage automatically.';
+
+  @override
+  String get tennisScoreVs => 'VS';
+
+  @override
+  String get rankingChartEmpty => 'No ELO chart data yet';
+
+  @override
+  String get rankingProgressTitle => 'ELO PROGRESS';
+
+  @override
+  String get rankingPodiumTitle => 'Top 100 Athletes';
+
+  @override
+  String get rankingTierSystemTitle => 'ELO Ranking System';
+
+  @override
+  String get rankingTierSystemDescription =>
+      'ELO points earned after each official match place players into the corresponding skill tiers. Point ranges:';
+
+  @override
+  String get rankingTierLevelsTitle => 'SKILL TIER SYSTEM';
+
+  @override
+  String get rankingEloRulesTitle => 'ELO RULES & CALCULATION';
+
+  @override
+  String get rankingYouLabel => 'YOU';
+
+  @override
+  String get officialScoreCancel => 'Cancel';
+
+  @override
+  String get bracketEmptyTitle => 'No bracket yet';
+
+  @override
+  String get imageViewerZoomHint => 'Pinch or double-tap to zoom';
+
+  @override
+  String get rankingRuleNewbie => 'New players start at 1000 ELO.';
+
+  @override
+  String get rankingRuleOfficialComplete =>
+      'ELO changes only after an official match is completed.';
+
+  @override
+  String get rankingRuleDoublesAverage =>
+      'Doubles: ELO is calculated from the average strength of both teams and then assigned to each player.';
+
+  @override
+  String get rankingRuleDecay =>
+      'After one month without playing: ratings below 1400 ELO stay unchanged; ratings from 1400 upward decay by tier at 2%, 3%, 4%, or 5% per month.';
+
+  @override
+  String get rankingRuleShield =>
+      'An ELO shield protects a rating when decay crosses a tier threshold: it preserves the threshold once, then consumes the shield.';
+
+  @override
+  String get rankingRuleDoublesPair =>
+      'Doubles pairs have a separate ranking starting at 1000 ELO; individual ratings are not averaged.';
+
+  @override
+  String get rankingRuleDecayReset =>
+      'When you play again, the ELO decay clock restarts; previous months are not cumulatively deducted.';
+
+  @override
+  String get rankingRuleAutoTier =>
+      'The tier updates automatically when ELO changes.';
+
+  @override
+  String get rankingEloChartNoData => 'No ELO chart data yet';
+
+  @override
+  String get rankingTop100Athletes => 'Top 100 Athletes';
+
+  @override
+  String rankingSeason(Object year) {
+    return 'Season $year';
+  }
+
+  @override
+  String get tournamentTeamsEmptyTitle => 'No athletes registered yet';
+
+  @override
+  String get tournamentTeamsEmptySubtitle =>
+      'Check again after tournament registration opens';
+
+  @override
+  String get commonErrorPrefix => 'Error';
+
+  @override
+  String get rankingDefaultElo => '1000 ELO';
+
+  @override
+  String get communityTournamentCreateFailed => 'Failed to create tournament';
+
+  @override
+  String get routerDefaultCommunity => 'Community';
+
+  @override
+  String get routerDefaultUser => 'User';
+
+  @override
+  String get devicePairingTitle => 'Pair camera device';
+
+  @override
+  String get devicePairingInstruction =>
+      'Scan the QR code shown by the tournament organizer.';
+
+  @override
+  String get devicePairingScanAgain => 'Scan again';
+
+  @override
+  String get devicePairingSuccess => 'Camera paired successfully';
+
+  @override
+  String get devicePairingInvalidCode =>
+      'This QR code is not a valid camera pairing code.';
+
+  @override
+  String get devicePairingFingerprintUnavailable =>
+      'Could not identify this device.';
+
+  @override
+  String get devicePairingCameraPermission =>
+      'Camera permission is required to scan the pairing code.';
+
+  @override
+  String get devicePairingClose => 'Close';
 }

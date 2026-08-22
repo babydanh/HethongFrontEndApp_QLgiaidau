@@ -57,7 +57,13 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.singleElimUpdateError(error.toString()))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.singleElimUpdateError(error.toString()),
+            ),
+          ),
         );
       }
     } finally {
@@ -211,7 +217,7 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     if (roundMap.isEmpty) {
       return Center(
         child: Text(
-          'Chưa có sơ đồ',
+          AppLocalizations.of(context)!.bracketEmptyTitle,
           style: TextStyle(color: colors.textSecondary),
         ),
       );
@@ -317,14 +323,15 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
   }
 
   String _getRoundLabel(int columnIndex, int totalColumns) {
+    final l10n = AppLocalizations.of(context)!;
     final fromEnd = totalColumns - 1 - columnIndex;
-    if (fromEnd == 0) return 'CHUNG KẾT';
-    if (fromEnd == 1) return 'BÁN KẾT';
-    if (fromEnd == 2) return 'TỨ KẾT';
-    if (fromEnd == 3) return 'VÒNG 1/8';
-    if (fromEnd == 4) return 'VÒNG 1/16';
-    if (fromEnd == 5) return 'VÒNG 1/32';
-    return 'VÒNG 1/${1 << fromEnd}';
+    if (fromEnd == 0) return l10n.matchTableGrandFinal;
+    if (fromEnd == 1) return l10n.matchTableRoundSemifinal;
+    if (fromEnd == 2) return l10n.matchTableRoundQuarterfinal;
+    if (fromEnd == 3) return l10n.matchTableWinnersRoundOf(8);
+    if (fromEnd == 4) return l10n.matchTableWinnersRoundOf(16);
+    if (fromEnd == 5) return l10n.matchTableWinnersRoundOf(32);
+    return l10n.matchTableWinnersRoundOf(1 << fromEnd);
   }
 }
 

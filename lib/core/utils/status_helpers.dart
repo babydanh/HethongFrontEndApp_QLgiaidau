@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
+
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
 class StatusHelper {
@@ -17,9 +20,23 @@ class StatusHelper {
     };
   }
 
-  static String getTournamentStatusLabel(String status) {
+  static String getTournamentStatusLabel(
+    String status, {
+    AppLocalizations? l10n,
+  }) {
     final normalized = normalizeTournamentStatus(status);
-    return AppConstants.statusNames[normalized] ?? normalized;
+    final labels = l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    return switch (normalized) {
+      AppConstants.statusDraft => labels.statusLabelDraft,
+      AppConstants.statusUpcoming => labels.statusLabelUpcoming,
+      AppConstants.statusRegistration => labels.statusLabelRegistration,
+      AppConstants.statusRegistrationClosed => labels.statusLabelRegistrationClosed,
+      AppConstants.statusDrawing => labels.statusLabelDrawing,
+      AppConstants.statusInProgress => labels.statusLabelInProgress,
+      AppConstants.statusCompleted => labels.statusLabelCompleted,
+      AppConstants.statusCancelled => labels.statusLabelCancelled,
+      _ => normalized,
+    };
   }
 
   static bool isTournamentDraft(String status) => normalizeTournamentStatus(status) == AppConstants.statusDraft;
@@ -56,12 +73,16 @@ class StatusHelper {
   }
 
   // Display name with emoji
-  static String getStatusDisplayName(String status) {
+  static String getStatusDisplayName(
+    String status, {
+    AppLocalizations? l10n,
+  }) {
+    final labels = l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
     return switch (status) {
-      AppConstants.matchScheduled => 'Chưa thi đấu',
-      AppConstants.matchLive => 'Đang thi đấu',
-      AppConstants.matchCompleted => 'Đã kết thúc',
-      AppConstants.matchWalkover => 'Walkover',
+      AppConstants.matchScheduled => labels.statusLabelScheduled,
+      AppConstants.matchLive => labels.statusLabelLive,
+      AppConstants.matchCompleted => labels.statusLabelCompleted,
+      AppConstants.matchWalkover => labels.statusLabelWalkover,
       _ => status,
     };
   }

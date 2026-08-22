@@ -171,7 +171,9 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      l10n.clubChat_notificationDescription(widget.communityName),
+                      l10n.clubChat_notificationDescription(
+                        widget.communityName,
+                      ),
                       style: TextStyle(
                         fontSize: 12,
                         color: colors.textSecondary,
@@ -180,8 +182,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                     const SizedBox(height: 16),
                     _buildNotificationOption(
                       title: l10n.clubChat_allMessages,
-                      subtitle:
-                          l10n.clubChat_allMessagesDescription,
+                      subtitle: l10n.clubChat_allMessagesDescription,
                       icon: Icons.notifications_active_outlined,
                       iconColor: const Color(0xFF2563EB),
                       value: 'ALL',
@@ -194,8 +195,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                     const SizedBox(height: 8),
                     _buildNotificationOption(
                       title: l10n.clubChat_mentionsOnly,
-                      subtitle:
-                          l10n.clubChat_mentionsOnlyDescription,
+                      subtitle: l10n.clubChat_mentionsOnlyDescription,
                       icon: Icons.alternate_email_rounded,
                       iconColor: const Color(0xFFD97706),
                       value: 'MENTIONS_ONLY',
@@ -355,14 +355,14 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
         await ref.read(communityRepositoryProvider).clearChatRoom(_roomId!);
         if (!mounted || !context.mounted) return;
         setState(() => _messages = const []);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.clubChat_cleared)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.clubChat_cleared)));
       } catch (e) {
         if (!mounted || !context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.clubChat_clearError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.clubChat_clearError)));
       }
     }
   }
@@ -637,9 +637,9 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
       await _refreshMessages();
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.clubChat_revokeError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.clubChat_revokeError)));
       }
     }
   }
@@ -660,9 +660,9 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.clubChat_pinError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.clubChat_pinError)));
       }
     }
   }
@@ -692,7 +692,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     ];
   }
 
-    void _showMessageActions(_ClubChatMessage message) {
+  void _showMessageActions(_ClubChatMessage message) {
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet<void>(
       context: context,
@@ -795,9 +795,9 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
   void _onSocketPinned(Map<String, dynamic> data) {
     final l10n = AppLocalizations.of(context)!;
     if (!mounted || data['roomId']?.toString() != _roomId) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.clubChat_roomPinnedNotice)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.clubChat_roomPinnedNotice)));
   }
 
   Future<void> _toggleReaction(_ClubChatMessage message, String emoji) async {
@@ -828,9 +828,9 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     } catch (error, stack) {
       _log.error('Không thể cập nhật cảm xúc tin nhắn', error, stack);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.clubChat_reactionError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.clubChat_reactionError)));
       }
     }
   }
@@ -923,7 +923,10 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
           if (_typingUser != null)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text(l10n.clubChat_typing, style: const TextStyle(fontSize: 11)),
+              child: Text(
+                l10n.clubChat_typing,
+                style: const TextStyle(fontSize: 11),
+              ),
             ),
           Expanded(child: _buildMessages(colors)),
           SafeArea(child: _buildComposer(colors)),
@@ -932,7 +935,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     );
   }
 
-    Widget _buildMessages(AppColorsExtension colors) {
+  Widget _buildMessages(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_error != null) return Center(child: Text(_error!));
@@ -1003,7 +1006,10 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Text(
-                                message.senderName,
+                                message.senderName.trim().isEmpty
+                                    ? l10n.clubChat_memberFallback
+                                    : message.senderName,
+
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
@@ -1101,83 +1107,83 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
   Widget _buildComposer(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
-    padding: const EdgeInsets.fromLTRB(
-      AppTheme.spacingMD,
-      8,
-      AppTheme.spacingSM,
-      8,
-    ),
-    decoration: BoxDecoration(
-      color: colors.bgCard,
-      border: Border(top: BorderSide(color: colors.borderLight)),
-    ),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (_replyingTo != null)
-          ListTile(
-            dense: true,
-            leading: const Icon(Icons.reply, size: 16),
-            title: Text(l10n.clubChat_replyTo(_replyingTo!.senderName)),
-            trailing: IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () => setState(() => _replyingTo = null),
-            ),
-          ),
-        if (_selectedAttachments.isNotEmpty)
-          SizedBox(
-            height: 58,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _selectedAttachments.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 6),
-
-              itemBuilder: (_, i) => Image.network(
-                _selectedAttachments[i],
-                width: 58,
-                height: 58,
-                fit: BoxFit.cover,
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacingMD,
+        8,
+        AppTheme.spacingSM,
+        8,
+      ),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        border: Border(top: BorderSide(color: colors.borderLight)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_replyingTo != null)
+            ListTile(
+              dense: true,
+              leading: const Icon(Icons.reply, size: 16),
+              title: Text(l10n.clubChat_replyTo(_replyingTo!.senderName)),
+              trailing: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => setState(() => _replyingTo = null),
               ),
             ),
-          ),
-        Row(
-          children: [
-            IconButton(
-              onPressed: _uploading ? null : _pickAttachment,
-              icon: _uploading
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.image_outlined),
-            ),
-            Expanded(
-              child: TextField(
-                controller: _messageController,
-                minLines: 1,
-                maxLines: 4,
-                textInputAction: TextInputAction.newline,
-                onChanged: _onMessageChanged,
-                decoration: InputDecoration(
-                  hintText: l10n.clubChat_composerHint,
-                  border: InputBorder.none,
+          if (_selectedAttachments.isNotEmpty)
+            SizedBox(
+              height: 58,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _selectedAttachments.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 6),
+
+                itemBuilder: (_, i) => Image.network(
+                  _selectedAttachments[i],
+                  width: 58,
+                  height: 58,
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
-            IconButton(
-              onPressed: _sending ? null : _sendMessage,
-              icon: _sending
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.send_rounded),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
+          Row(
+            children: [
+              IconButton(
+                onPressed: _uploading ? null : _pickAttachment,
+                icon: _uploading
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.image_outlined),
+              ),
+              Expanded(
+                child: TextField(
+                  controller: _messageController,
+                  minLines: 1,
+                  maxLines: 4,
+                  textInputAction: TextInputAction.newline,
+                  onChanged: _onMessageChanged,
+                  decoration: InputDecoration(
+                    hintText: l10n.clubChat_composerHint,
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: _sending ? null : _sendMessage,
+                icon: _sending
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.send_rounded),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   void _onMessageChanged(String value) {
@@ -1240,7 +1246,8 @@ class _ClubChatMessage {
       senderName:
           json['senderName']?.toString() ??
           sender['displayName']?.toString() ??
-          'Thành viên CLB',
+          '',
+
       text: (json['messageText'] ?? json['content'] ?? '').toString(),
       createdAt:
           DateTime.tryParse(json['createdAt']?.toString() ?? '') ??

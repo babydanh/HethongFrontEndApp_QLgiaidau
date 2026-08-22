@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/match_card_detail.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/team_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Unified bracket match card used in both single-elim and double-elim diagrams.
 /// Replaces the former _BracketMatchCard (single_elim_diagram) and _DeBracketMatchCard (double_elim_diagram).
@@ -173,6 +174,7 @@ class BracketMatchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final isBye1 = match.team1Name == 'BYE' || match.team1Id == 'BYE';
     final isBye2 = match.team2Name == 'BYE' || match.team2Id == 'BYE';
 
@@ -180,25 +182,25 @@ class BracketMatchCard extends StatelessWidget {
     final isGrandFinalWinner = isFinal && match.isCompleted;
 
     Color statusColor = colors.textMuted;
-    String statusLabel = 'SẮP ĐẤU';
+    String statusLabel = l10n.bracketStatusUpcoming;
     Color borderColor = colors.border;
     Color cardBgColor = colors.bgCard;
 
     if (match.isLive) {
       statusColor = colors.error;
-      statusLabel = 'LIVE';
+      statusLabel = l10n.bracketStatusLive;
       borderColor = colors.error.withValues(alpha: 0.5);
       cardBgColor = colors.error.withValues(alpha: 0.06);
     } else if (match.isCompleted) {
       statusColor = colors.success;
-      statusLabel = 'XONG';
+      statusLabel = l10n.bracketStatusCompleted;
     }
 
     if (isGrandFinalWinner) {
       borderColor = colors.warning;
       cardBgColor = colors.warning.withValues(alpha: 0.15);
       statusColor = colors.warning;
-      statusLabel = 'VÔ ĐỊCH';
+      statusLabel = l10n.bracketStatusChampion;
     }
 
     return GestureDetector(
@@ -227,7 +229,7 @@ class BracketMatchCard extends StatelessWidget {
             Expanded(
               child: _buildSlotRow(
                 context: context,
-                name: isBye1 ? 'Miễn đấu' : match.team1Name,
+                name: isBye1 ? l10n.bracketBye : match.team1Name,
                 logoUrl: isBye1 ? null : match.team1LogoUrl,
                 score: match.score1,
                 sets: match.sets.isNotEmpty
@@ -250,7 +252,7 @@ class BracketMatchCard extends StatelessWidget {
             Expanded(
               child: _buildSlotRow(
                 context: context,
-                name: isBye2 ? 'Miễn đấu' : match.team2Name,
+                name: isBye2 ? l10n.bracketBye : match.team2Name,
                 logoUrl: isBye2 ? null : match.team2LogoUrl,
                 score: match.score2,
                 sets: match.sets.isNotEmpty
@@ -306,7 +308,7 @@ class BracketMatchCard extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: Text(
-                        'Tính điểm →',
+                        l10n.bracketScoreAction,
                         style: TextStyle(
                           fontSize: 8,
                           fontWeight: FontWeight.bold,
@@ -318,7 +320,7 @@ class BracketMatchCard extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: Text(
-                        'Xem →',
+                        l10n.bracketViewAction,
                         style: TextStyle(
                           fontSize: 8,
                           fontWeight: FontWeight.bold,

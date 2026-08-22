@@ -1,14 +1,20 @@
+import 'dart:ui';
+
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/repositories/user_repository.dart';
 import 'package:dio/dio.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class ApiUserRepository implements IUserRepository {
   static const _log = AppLogger('ApiUserRepository');
   final DioClient _dioClient;
 
   ApiUserRepository(this._dioClient);
+
+  AppLocalizations get _l10n =>
+      lookupAppLocalizations(PlatformDispatcher.instance.locale);
 
   @override
   Future<UserProfile> getProfile() async {
@@ -24,14 +30,16 @@ class ApiUserRepository implements IUserRepository {
         }
       }
 
-      throw Exception('Không thể lấy thông tin người dùng');
+      throw Exception(_l10n.userProfileLoadFailed);
     } catch (e, stack) {
       _log.error('Lỗi lấy thông tin người dùng', e, stack);
       if (e is DioException) {
-        throw Exception(_parseNestJsError(
-          e.response?.data,
-          e.message ?? 'Lỗi kết nối đến máy chủ',
-        ));
+        throw Exception(
+          _parseNestJsError(
+            e.response?.data,
+            e.message ?? _l10n.networkConnectionFailed,
+          ),
+        );
       }
       rethrow;
     }
@@ -41,10 +49,7 @@ class ApiUserRepository implements IUserRepository {
   Future<UserProfile> updateProfile(Map<String, dynamic> data) async {
     _log.info('Cập nhật thông tin người dùng qua API');
     try {
-      final response = await _dioClient.dio.patch(
-        '/users/profile',
-        data: data,
-      );
+      final response = await _dioClient.dio.patch('/users/profile', data: data);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final raw = response.data;
@@ -54,14 +59,16 @@ class ApiUserRepository implements IUserRepository {
         }
       }
 
-      throw Exception('Cập nhật thông tin thất bại');
+      throw Exception(_l10n.userProfileUpdateFailed);
     } catch (e, stack) {
       _log.error('Lỗi cập nhật thông tin người dùng', e, stack);
       if (e is DioException) {
-        throw Exception(_parseNestJsError(
-          e.response?.data,
-          e.message ?? 'Lỗi kết nối đến máy chủ',
-        ));
+        throw Exception(
+          _parseNestJsError(
+            e.response?.data,
+            e.message ?? _l10n.networkConnectionFailed,
+          ),
+        );
       }
       rethrow;
     }
@@ -72,20 +79,13 @@ class ApiUserRepository implements IUserRepository {
     _log.info('Tải lên ảnh đại diện qua API');
     try {
       final formData = FormData.fromMap({
-        'file': MultipartFile.fromBytes(
-          bytes,
-          filename: fileName,
-        ),
+        'file': MultipartFile.fromBytes(bytes, filename: fileName),
       });
 
       final response = await _dioClient.dio.post(
         '/users/profile/avatar',
         data: formData,
-        options: Options(
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        ),
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -96,14 +96,16 @@ class ApiUserRepository implements IUserRepository {
         }
       }
 
-      throw Exception('Tải ảnh đại diện thất bại');
+      throw Exception(_l10n.userAvatarUploadFailed);
     } catch (e, stack) {
       _log.error('Lỗi tải lên ảnh đại diện', e, stack);
       if (e is DioException) {
-        throw Exception(_parseNestJsError(
-          e.response?.data,
-          e.message ?? 'Lỗi kết nối đến máy chủ',
-        ));
+        throw Exception(
+          _parseNestJsError(
+            e.response?.data,
+            e.message ?? _l10n.networkConnectionFailed,
+          ),
+        );
       }
       rethrow;
     }
@@ -114,20 +116,13 @@ class ApiUserRepository implements IUserRepository {
     _log.info('Tải lên ảnh bìa qua API');
     try {
       final formData = FormData.fromMap({
-        'file': MultipartFile.fromBytes(
-          bytes,
-          filename: fileName,
-        ),
+        'file': MultipartFile.fromBytes(bytes, filename: fileName),
       });
 
       final response = await _dioClient.dio.post(
         '/users/profile/cover',
         data: formData,
-        options: Options(
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        ),
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -138,14 +133,16 @@ class ApiUserRepository implements IUserRepository {
         }
       }
 
-      throw Exception('Tải ảnh bìa thất bại');
+      throw Exception(_l10n.userCoverUploadFailed);
     } catch (e, stack) {
       _log.error('Lỗi tải lên ảnh bìa', e, stack);
       if (e is DioException) {
-        throw Exception(_parseNestJsError(
-          e.response?.data,
-          e.message ?? 'Lỗi kết nối đến máy chủ',
-        ));
+        throw Exception(
+          _parseNestJsError(
+            e.response?.data,
+            e.message ?? _l10n.networkConnectionFailed,
+          ),
+        );
       }
       rethrow;
     }
@@ -163,14 +160,16 @@ class ApiUserRepository implements IUserRepository {
           return UserPublicProfile.fromJson(Map<String, dynamic>.from(data));
         }
       }
-      throw Exception('Không thể tải thông tin người dùng');
+      throw Exception(_l10n.userPublicProfileLoadFailed);
     } catch (e, stack) {
       _log.error('Lỗi tải hồ sơ công khai', e, stack);
       if (e is DioException) {
-        throw Exception(_parseNestJsError(
-          e.response?.data,
-          e.message ?? 'Lỗi kết nối đến máy chủ',
-        ));
+        throw Exception(
+          _parseNestJsError(
+            e.response?.data,
+            e.message ?? _l10n.networkConnectionFailed,
+          ),
+        );
       }
       rethrow;
     }
@@ -182,10 +181,7 @@ class ApiUserRepository implements IUserRepository {
     try {
       final response = await _dioClient.dio.patch(
         '/users/change-password',
-        data: {
-          'oldPassword': oldPassword,
-          'newPassword': newPassword,
-        },
+        data: {'oldPassword': oldPassword, 'newPassword': newPassword},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -193,14 +189,16 @@ class ApiUserRepository implements IUserRepository {
         return;
       }
 
-      throw Exception('Đổi mật khẩu thất bại');
+      throw Exception(_l10n.userPasswordChangeFailed);
     } catch (e, stack) {
       _log.error('Lỗi đổi mật khẩu', e, stack);
       if (e is DioException) {
-        throw Exception(_parseNestJsError(
-          e.response?.data,
-          e.message ?? 'Lỗi kết nối đến máy chủ',
-        ));
+        throw Exception(
+          _parseNestJsError(
+            e.response?.data,
+            e.message ?? _l10n.networkConnectionFailed,
+          ),
+        );
       }
       rethrow;
     }
@@ -210,13 +208,19 @@ class ApiUserRepository implements IUserRepository {
   Future<List<UserSearchResult>> searchUsers(String query) async {
     _log.info('Tìm kiếm người dùng: $query');
     try {
-      final response = await _dioClient.dio.get('/users/search', queryParameters: {'q': query});
+      final response = await _dioClient.dio.get(
+        '/users/search',
+        queryParameters: {'q': query},
+      );
       if (response.statusCode == 200) {
         final raw = response.data;
         final list = raw is Map
             ? (raw['data'] as List<dynamic>? ?? [])
             : (raw is List ? raw : []);
-        return list.whereType<Map<String, dynamic>>().map((e) => UserSearchResult.fromJson(e)).toList();
+        return list
+            .whereType<Map<String, dynamic>>()
+            .map((e) => UserSearchResult.fromJson(e))
+            .toList();
       }
       return [];
     } catch (e, stack) {
@@ -237,21 +241,26 @@ class ApiUserRepository implements IUserRepository {
         _log.success('Đã xóa tài khoản');
         return;
       }
-      throw Exception('Xóa tài khoản thất bại');
+      throw Exception(_l10n.userAccountDeleteFailed);
     } catch (e, stack) {
       _log.error('Lỗi xóa tài khoản', e, stack);
       if (e is DioException) {
-        throw Exception(_parseNestJsError(
-          e.response?.data,
-          e.message ?? 'Lỗi kết nối đến máy chủ',
-        ));
+        throw Exception(
+          _parseNestJsError(
+            e.response?.data,
+            e.message ?? _l10n.networkConnectionFailed,
+          ),
+        );
       }
       rethrow;
     }
   }
 
   @override
-  Future<void> createChangeRequest({required String requestType, required String newValue}) async {
+  Future<void> createChangeRequest({
+    required String requestType,
+    required String newValue,
+  }) async {
     _log.info('Gửi yêu cầu thay đổi ($requestType) qua API');
     try {
       final response = await _dioClient.dio.post(
@@ -259,14 +268,16 @@ class ApiUserRepository implements IUserRepository {
         data: {'requestType': requestType, 'newValue': newValue},
       );
       if (response.statusCode == 200 || response.statusCode == 201) return;
-      throw Exception('Gửi yêu cầu thất bại');
+      throw Exception(_l10n.userChangeRequestFailed);
     } catch (e, stack) {
       _log.error('Lỗi gửi yêu cầu thay đổi', e, stack);
       if (e is DioException) {
-        throw Exception(_parseNestJsError(
-          e.response?.data,
-          e.message ?? 'Lỗi kết nối đến máy chủ',
-        ));
+        throw Exception(
+          _parseNestJsError(
+            e.response?.data,
+            e.message ?? _l10n.networkConnectionFailed,
+          ),
+        );
       }
       rethrow;
     }

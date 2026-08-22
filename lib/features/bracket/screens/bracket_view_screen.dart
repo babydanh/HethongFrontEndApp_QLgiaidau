@@ -847,7 +847,11 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen>
               // totalRounds must only count knockout rounds — not group stage rounds.
               final label = isRoundRobin || isGroupStageRound
                   ? l10n.bracketView_round(r)
-                  : MatchRoundLabel.knockoutRoundName(r, effectiveTotalRounds);
+                  : MatchRoundLabel.knockoutRoundName(
+                      r,
+                      effectiveTotalRounds,
+                      l10n: l10n,
+                    );
               final count = groupScopedMatches
                   .where((m) => m.round == r)
                   .length;

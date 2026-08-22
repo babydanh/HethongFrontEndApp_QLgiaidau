@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class MatchCardLive extends StatelessWidget {
   final MatchModel match;
@@ -9,6 +10,7 @@ class MatchCardLive extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -36,12 +38,12 @@ class MatchCardLive extends StatelessWidget {
                 topRight: Radius.circular(AppTheme.radiusLarge - 2),
               ),
             ),
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.fiber_manual_record, size: 10, color: Colors.white),
                 SizedBox(width: 6),
-                Text('LIVE',
+                Text(l10n.liveLiveBadge,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -97,7 +99,7 @@ class MatchCardLive extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Vòng ${match.round}',
+                      l10n.matchRound(match.round),
                       style: TextStyle(
                         fontSize: 11,
                         color: context.colors.textMuted,

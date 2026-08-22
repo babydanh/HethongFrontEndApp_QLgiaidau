@@ -52,12 +52,12 @@ class _EloProgressCardState extends State<EloProgressCard> {
     final matchesWon = activeRank?.matchesWon ?? 0;
     final winRate = EloHelpers.getRankWinRate(activeRank);
     final peakElo = activeRank?.peakElo ?? eloPoints;
-    final progress = EloHelpers.getEloProgressInfo(eloPoints);
+    final progress = EloHelpers.getEloProgressInfo(eloPoints, l10n);
     final currentThreshold = EloHelpers.thresholds[progress.currentIndex];
     final nextThreshold = progress.nextIndex == null
         ? null
         : EloHelpers.thresholds[progress.nextIndex!];
-    final shield = EloHelpers.getShieldStatus(activeRank);
+    final shield = EloHelpers.getShieldStatus(activeRank, l10n);
 
     return Container(
       width: double.infinity,
@@ -220,7 +220,7 @@ class _EloProgressCardState extends State<EloProgressCard> {
                           Text(
                             activeRank == null
                                 ? l10n.ranking_overviewLabel
-                                : EloHelpers.getRankDisplayName(activeRank),
+                                : EloHelpers.getRankDisplayName(activeRank, l10n),
                             style: TextStyle(
                               color: context.colors.textPrimary,
                               fontSize: 14,
@@ -261,7 +261,7 @@ class _EloProgressCardState extends State<EloProgressCard> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      hasRank ? currentThreshold.name : '1000',
+                      hasRank ? EloHelpers.getTierName(progress.currentIndex, l10n) : '1000',
                       style: TextStyle(
                         color: context.colors.textPrimary,
                         fontSize: 11,
@@ -272,7 +272,7 @@ class _EloProgressCardState extends State<EloProgressCard> {
                       child: Text(
                         hasRank
                             ? progress.label
-                            : EloHelpers.getOnboardingCopy(),
+                            : EloHelpers.getOnboardingCopy(l10n),
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           color: context.colors.textMuted,

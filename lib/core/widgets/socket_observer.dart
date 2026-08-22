@@ -28,7 +28,8 @@ class SocketObserver extends ConsumerStatefulWidget {
   ConsumerState<SocketObserver> createState() => _SocketObserverState();
 }
 
-class _SocketObserverState extends ConsumerState<SocketObserver> with WidgetsBindingObserver {
+class _SocketObserverState extends ConsumerState<SocketObserver>
+    with WidgetsBindingObserver {
   static const _log = AppLogger('SocketObserver');
   bool _recoveringAfterResume = false;
 
@@ -123,7 +124,7 @@ class _SocketObserverState extends ConsumerState<SocketObserver> with WidgetsBin
               duration: const Duration(seconds: 4),
               action: notif.routeTarget != null
                   ? SnackBarAction(
-                      label: AppLocalizations.of(context)?.coreView ?? 'View',
+                      label: AppLocalizations.of(context)!.coreView,
                       onPressed: () {
                         context.push(notif.routeTarget!);
                       },
@@ -143,21 +144,21 @@ class _SocketObserverState extends ConsumerState<SocketObserver> with WidgetsBin
   @override
   Widget build(BuildContext context) {
     // Lắng nghe auth state để connect/disconnect socket và FCM
-    ref.listen<bool>(
-      authProvider.select((s) => s.isAuthenticated),
-      (prev, next) {
-        final socketService = ref.read(socketServiceProvider);
-        final dioClient = ref.read(dioClientProvider);
+    ref.listen<bool>(authProvider.select((s) => s.isAuthenticated), (
+      prev,
+      next,
+    ) {
+      final socketService = ref.read(socketServiceProvider);
+      final dioClient = ref.read(dioClientProvider);
 
-        if (next == true && prev != true) {
-          _connectSocket(socketService);
-          PushNotificationService.instance.initialize(dioClient: dioClient);
-        } else if (next == false && prev != false) {
-          socketService.disconnect();
-          PushNotificationService.instance.unregisterToken(dioClient: dioClient);
-        }
-      },
-    );
+      if (next == true && prev != true) {
+        _connectSocket(socketService);
+        PushNotificationService.instance.initialize(dioClient: dioClient);
+      } else if (next == false && prev != false) {
+        socketService.disconnect();
+        PushNotificationService.instance.unregisterToken(dioClient: dioClient);
+      }
+    });
 
     return widget.child;
   }

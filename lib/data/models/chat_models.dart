@@ -1,3 +1,7 @@
+import 'dart:ui';
+
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+
 class ChatParticipant {
   final String id;
   final String fullName;
@@ -42,7 +46,10 @@ class ChatPollOptionModel {
     this.voterIds = const [],
   });
 
-  factory ChatPollOptionModel.fromJson(Map<String, dynamic> json, {String? currentUserId}) {
+  factory ChatPollOptionModel.fromJson(
+    Map<String, dynamic> json, {
+    String? currentUserId,
+  }) {
     final rawVoters = json['voters'] ?? json['voterIds'];
     final voterIds = <String>[];
     if (rawVoters is List) {
@@ -54,8 +61,12 @@ class ChatPollOptionModel {
         }
       }
     }
-    final isVoted = json['isVoted'] == true || (currentUserId != null && voterIds.contains(currentUserId));
-    final count = json['voteCount'] is num ? (json['voteCount'] as num).toInt() : voterIds.length;
+    final isVoted =
+        json['isVoted'] == true ||
+        (currentUserId != null && voterIds.contains(currentUserId));
+    final count = json['voteCount'] is num
+        ? (json['voteCount'] as num).toInt()
+        : voterIds.length;
 
     return ChatPollOptionModel(
       id: (json['id'] ?? '').toString(),
@@ -86,17 +97,24 @@ class ChatPollModel {
     this.options = const [],
   });
 
-  factory ChatPollModel.fromJson(Map<String, dynamic> json, {String? currentUserId}) {
+  factory ChatPollModel.fromJson(
+    Map<String, dynamic> json, {
+    String? currentUserId,
+  }) {
     final rawOptions = json['options'];
     final optionsList = <ChatPollOptionModel>[];
     if (rawOptions is List) {
       for (final opt in rawOptions) {
         if (opt is Map<String, dynamic>) {
-          optionsList.add(ChatPollOptionModel.fromJson(opt, currentUserId: currentUserId));
+          optionsList.add(
+            ChatPollOptionModel.fromJson(opt, currentUserId: currentUserId),
+          );
         }
       }
     }
-    int total = json['totalVotes'] is num ? (json['totalVotes'] as num).toInt() : 0;
+    int total = json['totalVotes'] is num
+        ? (json['totalVotes'] as num).toInt()
+        : 0;
     if (total == 0) {
       for (final opt in optionsList) {
         total += opt.voteCount;
@@ -128,7 +146,10 @@ class ChatReactionModel {
     this.isReacted = false,
   });
 
-  factory ChatReactionModel.fromJson(Map<String, dynamic> json, {String? currentUserId}) {
+  factory ChatReactionModel.fromJson(
+    Map<String, dynamic> json, {
+    String? currentUserId,
+  }) {
     final rawUsers = json['userIds'] ?? json['users'];
     final userIds = <String>[];
     if (rawUsers is List) {
@@ -140,8 +161,12 @@ class ChatReactionModel {
         }
       }
     }
-    final isReacted = json['isReacted'] == true || (currentUserId != null && userIds.contains(currentUserId));
-    final count = json['count'] is num ? (json['count'] as num).toInt() : userIds.length;
+    final isReacted =
+        json['isReacted'] == true ||
+        (currentUserId != null && userIds.contains(currentUserId));
+    final count = json['count'] is num
+        ? (json['count'] as num).toInt()
+        : userIds.length;
 
     return ChatReactionModel(
       emoji: (json['emoji'] ?? '❤️').toString(),
@@ -149,6 +174,42 @@ class ChatReactionModel {
       userIds: userIds,
       isReacted: isReacted,
     );
+  }
+}
+
+class ChatLinkPreviewModel {
+  final String url;
+  final String? title;
+  final String? description;
+  final String? image;
+  final String? siteName;
+
+  const ChatLinkPreviewModel({
+    required this.url,
+    this.title,
+    this.description,
+    this.image,
+    this.siteName,
+  });
+
+  factory ChatLinkPreviewModel.fromJson(Map<String, dynamic> json) {
+    return ChatLinkPreviewModel(
+      url: (json['url'] ?? '').toString(),
+      title: _optionalString(json['title']),
+      description: _optionalString(json['description']),
+      image: _optionalString(json['image'] ?? json['imageUrl']),
+      siteName: _optionalString(json['siteName'] ?? json['site_name']),
+    );
+  }
+
+  bool get hasContent =>
+      (title?.trim().isNotEmpty ?? false) ||
+      (description?.trim().isNotEmpty ?? false) ||
+      (image?.trim().isNotEmpty ?? false);
+
+  static String? _optionalString(dynamic value) {
+    final text = value?.toString().trim();
+    return text == null || text.isEmpty ? null : text;
   }
 }
 
@@ -163,6 +224,7 @@ class ChatMessageModel {
   final List<String> mediaUrls;
   final ChatMessageModel? replyToMessage;
   final ChatPollModel? poll;
+  final ChatLinkPreviewModel? linkPreview;
   final List<ChatReactionModel> reactions;
   final bool isPinned;
   final bool isRevoked;
@@ -181,6 +243,7 @@ class ChatMessageModel {
     this.mediaUrls = const [],
     this.replyToMessage,
     this.poll,
+    this.linkPreview,
     this.reactions = const [],
     this.isPinned = false,
     this.isRevoked = false,
@@ -189,14 +252,30 @@ class ChatMessageModel {
     this.isMine = false,
   });
 
-  factory ChatMessageModel.fromJson(Map<String, dynamic> json, {String? currentUserId}) {
-    final sender = json['sender'] is Map<String, dynamic> ? json['sender'] as Map<String, dynamic> : null;
+  factory ChatMessageModel.fromJson(
+    Map<String, dynamic> json, {
+    String? currentUserId,
+  }) {
+    final sender = json['sender'] is Map<String, dynamic>
+        ? json['sender'] as Map<String, dynamic>
+        : null;
     final senderId = (json['senderId'] ?? sender?['id'] ?? '').toString();
-    final senderName = (json['senderName'] ?? sender?['fullName'] ?? sender?['name'] ?? 'Thành viên').toString();
-    final senderAvatarUrl = json['senderAvatarUrl']?.toString() ?? sender?['avatarUrl']?.toString();
-    final senderRole = json['senderRole']?.toString() ?? sender?['role']?.toString();
+    final senderName =
+        (json['senderName'] ??
+                sender?['fullName'] ??
+                sender?['name'] ??
+                'Thành viên')
+            .toString();
+    final senderAvatarUrl =
+        json['senderAvatarUrl']?.toString() ?? sender?['avatarUrl']?.toString();
+    final senderRole =
+        json['senderRole']?.toString() ?? sender?['role']?.toString();
 
-    final rawMedia = json['attachmentsUrls'] ?? json['attachments_urls'] ?? json['mediaUrls'] ?? json['attachments'];
+    final rawMedia =
+        json['attachmentsUrls'] ??
+        json['attachments_urls'] ??
+        json['mediaUrls'] ??
+        json['attachments'];
     final mediaUrls = <String>[];
     if (rawMedia is List) {
       for (final m in rawMedia) {
@@ -207,16 +286,41 @@ class ChatMessageModel {
 
     ChatMessageModel? replyTo;
     if (json['replyToMessage'] is Map<String, dynamic>) {
-      replyTo = ChatMessageModel.fromJson(json['replyToMessage'] as Map<String, dynamic>, currentUserId: currentUserId);
+      replyTo = ChatMessageModel.fromJson(
+        json['replyToMessage'] as Map<String, dynamic>,
+        currentUserId: currentUserId,
+      );
     } else if (json['replyTo'] is Map<String, dynamic>) {
-      replyTo = ChatMessageModel.fromJson(json['replyTo'] as Map<String, dynamic>, currentUserId: currentUserId);
+      replyTo = ChatMessageModel.fromJson(
+        json['replyTo'] as Map<String, dynamic>,
+        currentUserId: currentUserId,
+      );
+    }
+
+    ChatLinkPreviewModel? linkPreview;
+    final rawMetadata = json['metadata'];
+    if (json['linkPreview'] is Map<String, dynamic>) {
+      linkPreview = ChatLinkPreviewModel.fromJson(
+        json['linkPreview'] as Map<String, dynamic>,
+      );
+    } else if (rawMetadata is Map && rawMetadata['linkPreview'] is Map) {
+      linkPreview = ChatLinkPreviewModel.fromJson(
+        Map<String, dynamic>.from(rawMetadata['linkPreview'] as Map),
+      );
     }
 
     ChatPollModel? poll;
     if (json['poll'] is Map<String, dynamic>) {
-      poll = ChatPollModel.fromJson(json['poll'] as Map<String, dynamic>, currentUserId: currentUserId);
-    } else if (json['metadata'] is Map && (json['metadata'] as Map)['poll'] is Map) {
-      poll = ChatPollModel.fromJson((json['metadata'] as Map)['poll'] as Map<String, dynamic>, currentUserId: currentUserId);
+      poll = ChatPollModel.fromJson(
+        json['poll'] as Map<String, dynamic>,
+        currentUserId: currentUserId,
+      );
+    } else if (json['metadata'] is Map &&
+        (json['metadata'] as Map)['poll'] is Map) {
+      poll = ChatPollModel.fromJson(
+        (json['metadata'] as Map)['poll'] as Map<String, dynamic>,
+        currentUserId: currentUserId,
+      );
     }
 
     final rawReactions = json['reactions'];
@@ -224,23 +328,35 @@ class ChatMessageModel {
     if (rawReactions is List) {
       for (final r in rawReactions) {
         if (r is Map<String, dynamic>) {
-          reactionsList.add(ChatReactionModel.fromJson(r, currentUserId: currentUserId));
+          reactionsList.add(
+            ChatReactionModel.fromJson(r, currentUserId: currentUserId),
+          );
         } else if (r is String) {
           reactionsList.add(ChatReactionModel(emoji: r));
         }
       }
     } else if (rawReactions is Map) {
       rawReactions.forEach((emoji, users) {
-        reactionsList.add(ChatReactionModel(
-          emoji: emoji.toString(),
-          count: users is List ? users.length : 1,
-          userIds: users is List ? users.map((u) => u.toString()).toList() : [],
-          isReacted: currentUserId != null && users is List && users.contains(currentUserId),
-        ));
+        reactionsList.add(
+          ChatReactionModel(
+            emoji: emoji.toString(),
+            count: users is List ? users.length : 1,
+            userIds: users is List
+                ? users.map((u) => u.toString()).toList()
+                : [],
+            isReacted:
+                currentUserId != null &&
+                users is List &&
+                users.contains(currentUserId),
+          ),
+        );
       });
     }
 
-    final isMine = currentUserId != null && currentUserId.isNotEmpty && senderId == currentUserId;
+    final isMine =
+        currentUserId != null &&
+        currentUserId.isNotEmpty &&
+        senderId == currentUserId;
 
     return ChatMessageModel(
       id: (json['id'] ?? '').toString(),
@@ -249,14 +365,18 @@ class ChatMessageModel {
       senderName: senderName,
       senderAvatarUrl: senderAvatarUrl,
       senderRole: senderRole,
-      content: (json['messageText'] ?? json['content'] ?? json['text'] ?? '').toString(),
+      content: (json['messageText'] ?? json['content'] ?? json['text'] ?? '')
+          .toString(),
       mediaUrls: mediaUrls,
       replyToMessage: replyTo,
       poll: poll,
+      linkPreview: linkPreview,
       reactions: reactionsList,
       isPinned: json['isPinned'] == true,
       isRevoked: json['isRevoked'] == true || json['revokedAt'] != null,
-      createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
       isRead: json['isRead'] != false,
       isMine: isMine,
     );
@@ -268,6 +388,7 @@ class ChatMessageModel {
     bool? isPinned,
     bool? isRevoked,
     ChatPollModel? poll,
+    ChatLinkPreviewModel? linkPreview,
   }) {
     return ChatMessageModel(
       id: id,
@@ -280,6 +401,7 @@ class ChatMessageModel {
       mediaUrls: mediaUrls,
       replyToMessage: replyToMessage,
       poll: poll ?? this.poll,
+      linkPreview: linkPreview ?? this.linkPreview,
       reactions: reactions ?? this.reactions,
       isPinned: isPinned ?? this.isPinned,
       isRevoked: isRevoked ?? this.isRevoked,
@@ -319,7 +441,10 @@ class ChatRoomModel {
     required this.updatedAt,
   });
 
-  factory ChatRoomModel.fromJson(Map<String, dynamic> json, {String? currentUserId}) {
+  factory ChatRoomModel.fromJson(
+    Map<String, dynamic> json, {
+    String? currentUserId,
+  }) {
     final rawParticipants = json['participants'];
     final participantsList = <ChatParticipant>[];
     if (rawParticipants is List) {
@@ -332,36 +457,56 @@ class ChatRoomModel {
 
     ChatMessageModel? lastMsg;
     if (json['lastMessage'] is Map<String, dynamic>) {
-      lastMsg = ChatMessageModel.fromJson(json['lastMessage'] as Map<String, dynamic>, currentUserId: currentUserId);
+      lastMsg = ChatMessageModel.fromJson(
+        json['lastMessage'] as Map<String, dynamic>,
+        currentUserId: currentUserId,
+      );
     }
 
     return ChatRoomModel(
       id: (json['id'] ?? '').toString(),
       type: (json['type'] ?? 'DIRECT').toString().toUpperCase(),
       name: json['name']?.toString(),
-      clubName: json['clubName']?.toString() ?? json['communityName']?.toString(),
-      clubAvatar: json['clubAvatar']?.toString() ?? json['communityLogo']?.toString(),
+      clubName:
+          json['clubName']?.toString() ?? json['communityName']?.toString(),
+      clubAvatar:
+          json['clubAvatar']?.toString() ?? json['communityLogo']?.toString(),
       communityId: json['communityId']?.toString(),
       participants: participantsList,
       lastMessage: lastMsg,
-      unreadCount: json['unreadCount'] is num ? (json['unreadCount'] as num).toInt() : 0,
+      unreadCount: json['unreadCount'] is num
+          ? (json['unreadCount'] as num).toInt()
+          : 0,
       isPinned: json['isPinned'] == true,
       isMuted: json['isMuted'] == true,
-      updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ?? DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 
-  String displayTitle(String? currentUserId) {
+  String displayTitle(String? currentUserId) => localizedDisplayTitle(
+    currentUserId,
+    lookupAppLocalizations(PlatformDispatcher.instance.locale),
+  );
+
+  String localizedDisplayTitle(String? currentUserId, AppLocalizations l10n) {
     if (name != null && name!.trim().isNotEmpty) return name!.trim();
-    if (clubName != null && clubName!.trim().isNotEmpty) return clubName!.trim();
+    if (clubName != null && clubName!.trim().isNotEmpty) {
+      return clubName!.trim();
+    }
     if (type == 'DIRECT') {
       final other = participants.firstWhere(
         (p) => p.id != currentUserId,
-        orElse: () => participants.isNotEmpty ? participants.first : const ChatParticipant(id: '', fullName: 'Người dùng'),
+        orElse: () => participants.isNotEmpty
+            ? participants.first
+            : ChatParticipant(id: '', fullName: l10n.chatParticipantFallback),
       );
       return other.fullName;
     }
-    return type == 'CLUB' ? 'Câu lạc bộ' : 'Cuộc trò chuyện';
+    return type == 'CLUB'
+        ? l10n.chatClubFallback
+        : l10n.chatConversationFallback;
   }
 
   String? displayAvatar(String? currentUserId) {
@@ -369,7 +514,9 @@ class ChatRoomModel {
     if (type == 'DIRECT') {
       final other = participants.firstWhere(
         (p) => p.id != currentUserId,
-        orElse: () => participants.isNotEmpty ? participants.first : const ChatParticipant(id: '', fullName: 'Người dùng'),
+        orElse: () => participants.isNotEmpty
+            ? participants.first
+            : const ChatParticipant(id: '', fullName: ''),
       );
       return other.avatarUrl;
     }

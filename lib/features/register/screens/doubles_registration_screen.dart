@@ -1454,7 +1454,7 @@ class _DoublesRegistrationFlowState
                   ),
                   child: Text(
                     l10n.doublesRegEntryFee(
-                      '${NumberFormat('#,###', 'vi_VN').format(_entryFee!.ceil())}đ',
+                      '${NumberFormat.decimalPattern(Localizations.localeOf(context).toLanguageTag()).format(_entryFee!.ceil())}${l10n.registerFeeUnit}',
                     ),
                     style: TextStyle(
                       fontWeight: FontWeight.w800,

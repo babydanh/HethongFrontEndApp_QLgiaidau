@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class CustomErrorWidget extends StatelessWidget {
   final FlutterErrorDetails details;
@@ -9,6 +10,7 @@ class CustomErrorWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Trong môi trường release, ta không muốn hiển thị chi tiết lỗi cho người dùng.
+    final l10n = AppLocalizations.of(context)!;
     return Material(
       color: Colors.transparent,
       child: Center(
@@ -18,7 +20,9 @@ class CustomErrorWidget extends StatelessWidget {
           decoration: BoxDecoration(
             color: context.colors.bgCard,
             borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-            border: Border.all(color: context.colors.error.withValues(alpha: 0.5)),
+            border: Border.all(
+              color: context.colors.error.withValues(alpha: 0.5),
+            ),
             boxShadow: [
               BoxShadow(
                 color: context.colors.error.withValues(alpha: 0.1),
@@ -37,7 +41,7 @@ class CustomErrorWidget extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Oops! Đã có lỗi hiển thị',
+                l10n.customErrorDisplay,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

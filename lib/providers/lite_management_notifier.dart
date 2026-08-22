@@ -7,6 +7,8 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 
 // ──────────────────────────────────────────────
 // Data models (shared with LitePairingScreen)
@@ -217,22 +219,25 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
 
   Dio get _dio => ref.read(dioClientProvider).dio;
 
+  AppLocalizations get _l10n =>
+      lookupAppLocalizations(ref.read(localeProvider));
+
   String _apiError(DioException error, String fallback) {
     final data = error.response?.data;
     if (data is Map && data['message'] != null) {
       return data['message'].toString();
     }
     if (error.response?.statusCode == 401) {
-      return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+      return _l10n.lite_apiSessionExpired;
     }
     if (error.response?.statusCode == 403) {
-      return 'Bạn không có quyền quản lý giải Lite này.';
+      return _l10n.lite_apiForbidden;
     }
     if (error.response?.statusCode == 429) {
-      return 'He thong dang gioi han request tam thoi. Du lieu cu van duoc giu; vui long thu lai sau it giay.';
+      return _l10n.lite_apiRateLimited;
     }
     if ((error.response?.statusCode ?? 0) >= 500) {
-      return 'May chu dang ban. Du lieu cu van duoc giu; vui long thu lai sau it giay.';
+      return _l10n.lite_apiServerBusy;
     }
     return fallback;
   }
@@ -248,22 +253,15 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         _fetchTournament(tournamentId),
         _fetchParticipants(tournamentId),
         _fetchBracket(tournamentId),
-        
       ]).timeout(const Duration(seconds: 15));
       _loadInFlight = false;
     } on TimeoutException {
       _loadInFlight = false;
-      state = state.copyWith(
-        loading: false,
-        error: 'Tải dữ liệu giải Lite quá lâu. Vui lòng thử lại.',
-      );
+      state = state.copyWith(loading: false, error: _l10n.lite_loadTimeout);
     } catch (e, stack) {
       _loadInFlight = false;
       _log.error('Lỗi khởi tạo quản lý Lite', e, stack);
-      state = state.copyWith(
-        loading: false,
-        error: 'Không thể tải dữ liệu giải Lite. Vui lòng thử lại.',
-      );
+      state = state.copyWith(loading: false, error: _l10n.lite_loadError);
     }
   }
 
@@ -288,7 +286,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         if (!isLite) {
           state = state.copyWith(
             loading: false,
-            error: 'Đây là giải Nâng Cao. App chỉ hỗ trợ quản lý giải Lite.',
+            error: _l10n.lite_tournamentTypeAdvanced,
           );
           return;
         }
@@ -324,8 +322,8 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       state = state.copyWith(
         loading: false,
         error: e is DioException
-            ? _apiError(e, 'Không thể tải thông tin giải đấu')
-            : 'Không thể tải thông tin giải đấu',
+            ? _apiError(e, _l10n.lite_tournamentLoadError)
+            : _l10n.lite_tournamentLoadError,
       );
     }
   }
@@ -358,8 +356,8 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       state = state.copyWith(
         loading: false,
         error: e is DioException
-            ? _apiError(e, 'Không thể tải danh sách người tham gia')
-            : 'Không thể tải danh sách người tham gia',
+            ? _apiError(e, _l10n.lite_participantsLoadError)
+            : _l10n.lite_participantsLoadError,
       );
     }
   }
@@ -388,8 +386,8 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     } catch (e, stack) {
       _log.error('Lỗi tải danh sách trận Lite', e, stack);
       final message = e is DioException
-          ? _apiError(e, 'Khong the tai danh sach tran luc nay.')
-          : 'Khong the tai danh sach tran luc nay.';
+          ? _apiError(e, _l10n.lite_matchesLoadError)
+          : _l10n.lite_matchesLoadError;
       // Preserve the last good snapshot. A transient 429/5xx must not look
       // like the tournament has no matches.
       state = state.copyWith(matchesError: message);
@@ -407,15 +405,11 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         _fetchTournament(tournamentId),
         _fetchParticipants(tournamentId),
         _fetchBracket(tournamentId),
-        
       ]).timeout(const Duration(seconds: 15));
       _loadInFlight = false;
     } on TimeoutException {
       _loadInFlight = false;
-      state = state.copyWith(
-        loading: false,
-        error: 'Tải dữ liệu giải Lite quá lâu. Vui lòng thử lại.',
-      );
+      state = state.copyWith(loading: false, error: _l10n.lite_loadTimeout);
     }
   }
 

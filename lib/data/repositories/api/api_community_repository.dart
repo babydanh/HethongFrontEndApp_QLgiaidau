@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
@@ -11,12 +13,16 @@ import 'package:app_quanly_giaidau/data/models/community_invite_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:dio/dio.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class ApiCommunityRepository implements ICommunityRepository {
   static const _log = AppLogger('ApiCommunityRepo');
   final DioClient _dioClient;
 
   ApiCommunityRepository(this._dioClient);
+
+  AppLocalizations get _l10n =>
+      lookupAppLocalizations(PlatformDispatcher.instance.locale);
 
   @override
   Future<List<Community>> getCommunities({
@@ -159,7 +165,7 @@ class ApiCommunityRepository implements ICommunityRepository {
             .toList();
       }
       _log.warning('getMembers status=${response.statusCode}');
-      throw StateError('Unexpected members response: ${response.statusCode}');
+      throw StateError(_l10n.communityMembersLoadFailed);
     } catch (e, stack) {
       _log.error('Lỗi lấy thành viên CLB', e, stack);
       rethrow;
@@ -183,7 +189,7 @@ class ApiCommunityRepository implements ICommunityRepository {
       _log.error('Lỗi tham gia CLB', e, stack);
       // Ném lỗi kèm message backend (CLB riêng tư, hết chỗ, cần lời mời...)
       // để UI hiện lý do thật thay vì "Thất bại" chung chung.
-      throw Exception(ErrorParser.parse(e, 'Không thể tham gia CLB'));
+      throw Exception(ErrorParser.parse(e, _l10n.communityJoinFailed));
     }
   }
 
@@ -252,7 +258,8 @@ class ApiCommunityRepository implements ICommunityRepository {
         }
       }
       final msg =
-          response.data?['message']?.toString() ?? 'Tạo giải đấu thất bại';
+          response.data?['message']?.toString() ??
+          _l10n.communityTournamentCreateFailed;
       throw Exception(msg);
     } catch (e, stack) {
       _log.error('Lỗi tạo giải đấu trong CLB', e, stack);
@@ -552,7 +559,7 @@ class ApiCommunityRepository implements ICommunityRepository {
             response.data['data'] as Map<String, dynamic>? ?? response.data;
         return Community.fromJson(result);
       }
-      throw Exception('Cập nhật CLB thất bại');
+      throw Exception(_l10n.communityUpdateFailed);
     } catch (e, stack) {
       _log.error('Lỗi cập nhật CLB', e, stack);
       rethrow;
@@ -792,7 +799,11 @@ class ApiCommunityRepository implements ICommunityRepository {
           : (raw as List<dynamic>? ?? const []);
       return list
           .whereType<Map>()
-          .map((item) => ClubNotificationPrefModel.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) => ClubNotificationPrefModel.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
           .toList();
     } catch (e, stack) {
       _log.error('Lỗi lấy danh sách cài đặt thông báo CLB', e, stack);

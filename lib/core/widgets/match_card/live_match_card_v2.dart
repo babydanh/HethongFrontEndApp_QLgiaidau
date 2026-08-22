@@ -114,6 +114,8 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
                       child: _buildTeamSide(
                         context,
                         teamName: widget.match.team1Name,
+                        teamLogoUrl: widget.match.team1LogoUrl,
+                        members: widget.match.team1MemberInfos,
                         score: widget.match.score1,
                         isWinner:
                             widget.isCompleted &&
@@ -169,6 +171,8 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
                       child: _buildTeamSide(
                         context,
                         teamName: widget.match.team2Name,
+                        teamLogoUrl: widget.match.team2LogoUrl,
+                        members: widget.match.team2MemberInfos,
                         score: widget.match.score2,
                         isWinner:
                             widget.isCompleted &&
@@ -309,42 +313,37 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
   Widget _buildTeamSide(
     BuildContext context, {
     required String teamName,
+    required String? teamLogoUrl,
+    required List<MatchMemberInfo> members,
     required int score,
     required bool isWinner,
     required CrossAxisAlignment alignment,
   }) {
+    final memberLabel = members.length == 2
+        ? members
+            .map((member) => _lastNameWord(member.fullName))
+            .where((name) => name.isNotEmpty)
+            .join(' / ')
+        : '';
+    final displayLabel = members.length == 2 && memberLabel.isNotEmpty
+        ? memberLabel
+        : teamName;
+
     return Column(
       crossAxisAlignment: alignment,
       children: [
-        // Team avatar circle
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: context.colors.bgSurface,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isWinner ? context.colors.success : context.colors.border,
-              width: isWinner ? 2 : 1,
-            ),
-          ),
-          child: Center(
-            child: Text(
-              teamName.isNotEmpty ? teamName[0].toUpperCase() : '?',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: isWinner
-                    ? context.colors.success
-                    : context.colors.textPrimary,
-              ),
-            ),
-          ),
+        _buildMemberAvatars(
+          context,
+          teamName: teamName,
+          teamLogoUrl: teamLogoUrl,
+          members: members,
+          isWinner: isWinner,
+          alignment: alignment,
         ),
         const SizedBox(height: 8),
-        // Team name
+        // Singles keep the team name; doubles show each member's final name word.
         Text(
-          teamName,
+          displayLabel,
           style: TextStyle(
             fontSize: 13,
             fontWeight: isWinner ? FontWeight.w700 : FontWeight.w500,
@@ -375,6 +374,85 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
         ),
       ],
     );
+  }
+
+  Widget _buildMemberAvatars(
+    BuildContext context, {
+    required String teamName,
+    required String? teamLogoUrl,
+    required List<MatchMemberInfo> members,
+    required bool isWinner,
+    required CrossAxisAlignment alignment,
+  }) {
+    final displayMembers = members.length == 2
+        ? members
+        : const <MatchMemberInfo>[];
+    final borderColor = isWinner ? context.colors.success : context.colors.border;
+    final fallbackInitial = teamName.isNotEmpty ? teamName[0].toUpperCase() : '?';
+
+    Widget avatar({String? url, required String initial}) {
+      return Container(
+        width: displayMembers.length >= 2 ? 32 : 36,
+        height: displayMembers.length >= 2 ? 32 : 36,
+        decoration: BoxDecoration(
+          color: context.colors.bgSurface,
+          shape: BoxShape.circle,
+          border: Border.all(color: borderColor, width: isWinner ? 2 : 1),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: url != null && url.isNotEmpty
+            ? Image.network(url, fit: BoxFit.cover)
+            : Center(
+                child: Text(
+                  initial,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: isWinner
+                        ? context.colors.success
+                        : context.colors.textPrimary,
+                  ),
+                ),
+              ),
+      );
+    }
+
+    if (displayMembers.length < 2) {
+      return avatar(url: teamLogoUrl, initial: fallbackInitial);
+    }
+
+    return SizedBox(
+      width: 64,
+      height: 36,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            left: alignment == CrossAxisAlignment.end ? 0 : 28,
+            child: avatar(
+              url: displayMembers[0].avatarUrl,
+              initial: displayMembers[0].fullName.trim().isNotEmpty
+                  ? displayMembers[0].fullName.trim()[0].toUpperCase()
+                  : fallbackInitial,
+            ),
+          ),
+          Positioned(
+            left: alignment == CrossAxisAlignment.end ? 28 : 0,
+            child: avatar(
+              url: displayMembers[1].avatarUrl,
+              initial: displayMembers[1].fullName.trim().isNotEmpty
+                  ? displayMembers[1].fullName.trim()[0].toUpperCase()
+                  : fallbackInitial,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _lastNameWord(String value) {
+    final words = value.trim().split(RegExp(r'\s+')).where((word) => word.isNotEmpty).toList(growable: false);
+    return words.isEmpty ? '' : words.last;
   }
 
   Widget _buildSetScores(BuildContext context) {

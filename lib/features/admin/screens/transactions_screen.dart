@@ -203,7 +203,9 @@ class _AdminTransactionsScreenState
     final createdAt = transaction['createdAt']?.toString() ?? '';
     final reference = transaction['transactionReference']?.toString() ?? '';
 
-    final fmt = NumberFormat('#,###', 'vi_VN');
+    final fmt = NumberFormat.decimalPattern(
+      Localizations.localeOf(context).toLanguageTag(),
+    );
 
     Color statusColor;
     String statusLabel;

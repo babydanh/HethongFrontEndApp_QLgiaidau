@@ -279,8 +279,14 @@ class UserPublicRank {
   final int matchesPlayed;
   final int matchesWon;
   final String? matchType;
+  final String? genderRestriction;
+  final String? partnerId;
   final String? partnerName;
   final String? partnerAvatarUrl;
+  final int? peakElo;
+  final bool? shieldActive;
+  final String? currentStreakType;
+  final int currentStreakCount;
 
   const UserPublicRank({
     required this.categoryId,
@@ -290,23 +296,68 @@ class UserPublicRank {
     this.matchesPlayed = 0,
     this.matchesWon = 0,
     this.matchType,
+    this.genderRestriction,
+    this.partnerId,
     this.partnerName,
     this.partnerAvatarUrl,
+    this.peakElo,
+    this.shieldActive,
+    this.currentStreakType,
+    this.currentStreakCount = 0,
   });
 
   factory UserPublicRank.fromJson(Map<String, dynamic> json) {
+    int asInt(dynamic value, [int fallback = 0]) {
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? fallback;
+      return fallback;
+    }
+
+    String? asString(dynamic value) => value?.toString();
+
+    final category = json['category'] is Map
+        ? Map<String, dynamic>.from(json['category'] as Map)
+        : null;
+    final tier = json['tier'] is Map
+        ? Map<String, dynamic>.from(json['tier'] as Map)
+        : null;
+    final streakType = asString(
+      json['currentStreakType'] ?? json['current_streak_type'],
+    )?.toUpperCase();
+
     return UserPublicRank(
-      categoryId: json['categoryId'] as String? ?? '',
-      categoryName: json['categoryName'] as String? ?? '',
-      eloPoints: ((json['eloPoints'] ?? 0) as num).toInt(),
-      tierName: json['tierName'] as String?,
-      matchesPlayed: ((json['matchesPlayed'] ?? 0) as num).toInt(),
-      matchesWon: ((json['matchesWon'] ?? 0) as num).toInt(),
-      matchType: json['matchType'] as String?,
-      partnerName: json['partnerName'] as String?,
-      partnerAvatarUrl: json['partnerAvatarUrl'] as String?,
+      categoryId: asString(json['categoryId'] ?? category?['id']) ?? '',
+      categoryName: asString(json['categoryName'] ?? category?['name']) ?? '',
+      eloPoints: asInt(json['eloPoints'] ?? json['elo_points']),
+      tierName: asString(tier?['name'] ?? json['tierName']),
+      matchesPlayed: asInt(json['matchesPlayed'] ?? json['totalMatches']),
+      matchesWon: asInt(json['matchesWon'] ?? json['wins']),
+      matchType: asString(
+        json['matchType'] ?? json['match_type'],
+      )?.toUpperCase(),
+      genderRestriction: asString(
+        json['genderRestriction'] ?? json['gender_restriction'],
+      )?.toUpperCase(),
+      partnerId: asString(json['partnerId'] ?? json['partner_id']),
+      partnerName: asString(json['partnerName'] ?? json['partner_name']),
+      partnerAvatarUrl: asString(
+        json['partnerAvatarUrl'] ?? json['partner_avatar_url'],
+      ),
+      peakElo: json['peakElo'] == null && json['peak_elo'] == null
+          ? null
+          : asInt(json['peakElo'] ?? json['peak_elo']),
+      shieldActive:
+          json['shieldActive'] as bool? ?? json['shield_active'] as bool?,
+      currentStreakType: streakType,
+      currentStreakCount: asInt(
+        json['currentStreakCount'] ?? json['current_streak_count'],
+      ),
     );
   }
+
+  bool get isDoubles => matchType == 'DOUBLES' || matchType == 'MIXED_DOUBLES';
+
+  bool get hasPlayed => matchesPlayed > 0;
 }
 
 /// Kết quả tìm kiếm người dùng (GET /users/search).

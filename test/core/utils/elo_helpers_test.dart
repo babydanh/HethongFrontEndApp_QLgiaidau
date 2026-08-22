@@ -1,8 +1,12 @@
 import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  final l10n = lookupAppLocalizations(const Locale('vi'));
+
   PlayerRanking ranking({
     required String id,
     required int elo,
@@ -91,14 +95,16 @@ void main() {
           categoryName: 'Pickleball',
           matchType: 'DOUBLES',
         ),
+        l10n,
       );
 
       expect(displayName, 'Pickleball • Đôi');
     });
 
     test('fallback loại đánh không rõ thành Tổng quan', () {
-      expect(EloHelpers.getEloMatchTypeLabel(null), 'Tổng quan');
-      expect(EloHelpers.getEloMatchTypeLabel('UNKNOWN'), 'Tổng quan');
+      expect(EloHelpers.getEloMatchTypeLabel(null, l10n), 'Tổng quan');
+
+      expect(EloHelpers.getEloMatchTypeLabel('UNKNOWN', l10n), 'Tổng quan');
     });
   });
 
@@ -106,6 +112,7 @@ void main() {
     test('chưa có trận thì khiên ở trạng thái onboarding', () {
       final status = EloHelpers.getShieldStatus(
         ranking(id: 'r', elo: 1000, played: 0),
+        l10n,
       );
 
       expect(status.state, ShieldState.onboarding);
@@ -115,6 +122,7 @@ void main() {
     test('shieldActive true thì khiên đang hoạt động', () {
       final status = EloHelpers.getShieldStatus(
         ranking(id: 'r', elo: 1200, played: 5, shieldActive: true),
+        l10n,
       );
 
       expect(status.state, ShieldState.active);
@@ -123,6 +131,7 @@ void main() {
     test('đã đấu nhưng shieldActive false thì khiên đã vỡ', () {
       final status = EloHelpers.getShieldStatus(
         ranking(id: 'r', elo: 1200, played: 5, shieldActive: false),
+        l10n,
       );
 
       expect(status.state, ShieldState.broken);

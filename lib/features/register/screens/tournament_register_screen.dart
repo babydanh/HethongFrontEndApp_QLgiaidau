@@ -135,6 +135,14 @@ class _TournamentRegisterScreenState
   bool _submitting = false;
   bool _success = false;
   AppLocalizations get l10n => AppLocalizations.of(context)!;
+
+  String _formatAmount(num amount) => NumberFormat.decimalPattern(
+    Localizations.localeOf(context).toLanguageTag(),
+  ).format(amount.ceil());
+
+  String _formatFee(num amount) =>
+      '${_formatAmount(amount)}${l10n.registerFeeUnit}';
+
   String? _genderError;
   String? _eloError;
   bool _eloChecking = false;
@@ -410,12 +418,10 @@ class _TournamentRegisterScreenState
       final response = await repo.getUserRank(userId, categoryId);
       final elo = response.eloPoints ?? 1000;
       if (minElo != null && elo < minElo) {
-        setState(
-() => _eloError = l10n.registerEloTooLow(elo, minElo.toInt()),
-        );
+        setState(() => _eloError = l10n.registerEloTooLow(elo, minElo.toInt()));
       } else if (maxElo != null && elo > maxElo) {
         setState(
-() => _eloError = l10n.registerEloTooHigh(elo, maxElo.toInt()),
+          () => _eloError = l10n.registerEloTooHigh(elo, maxElo.toInt()),
         );
       }
     } catch (_) {
@@ -481,9 +487,7 @@ class _TournamentRegisterScreenState
           context: context,
           builder: (ctx) => AlertDialog(
             title: Text(l10n.registerProfileIncompleteTitle),
-            content: Text(
-              l10n.registerProfileIncompleteFields(missingStr),
-            ),
+            content: Text(l10n.registerProfileIncompleteFields(missingStr)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
@@ -525,9 +529,7 @@ class _TournamentRegisterScreenState
     if (tournament?.isRanked == true && !_rankingConsent) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-SnackBar(
-            content: Text(l10n.registerRankingConsentRequired),
-          ),
+          SnackBar(content: Text(l10n.registerRankingConsentRequired)),
         );
       }
       return;
@@ -645,7 +647,7 @@ SnackBar(
             'participantId': result.participantId,
             'divisionId': divisionId,
             'amount': effectiveFee,
-            'tournamentName': t?.name ?? 'Giải đấu',
+            'tournamentName': t?.name ?? l10n.payments_defaultTournamentName,
           },
         );
       } else {
@@ -689,7 +691,7 @@ SnackBar(
 
   String _divisionTypeLabel(TournamentDivisionOption d) {
     final gender = switch (_normalizedGender(d.genderRestriction)) {
-      'MALE' => 'Nam',
+      'MALE' => l10n.registerDivMale,
       'FEMALE' => l10n.registerDivFemale,
       'MIXED' => l10n.registerDivMixed,
       _ => '',
@@ -740,9 +742,7 @@ SnackBar(
       items.add(l10n.registerEloRange(min, max));
     }
     if (d.entryFee != null && d.entryFee! > 0) {
-      items.add(
-        '${NumberFormat('#,###', 'vi_VN').format(d.entryFee!.ceil())}đ',
-      );
+      items.add(_formatFee(d.entryFee!));
     } else {
       items.add(l10n.registerFree);
     }
@@ -755,7 +755,7 @@ SnackBar(
     };
     if (bracket != null) items.add(bracket);
     if (d.participantCount != null) {
-final count = d.maxParticipants != null
+      final count = d.maxParticipants != null
           ? '${d.participantCount}/${d.maxParticipants}'
           : '${d.participantCount}';
       items.add(l10n.registerParticipantCount(count));
@@ -982,11 +982,7 @@ final count = d.maxParticipants != null
                   },
                 ),
                 icon: const Icon(Icons.payment_rounded),
-                label: Text(
-                  l10n.registerPayNow(
-                    NumberFormat('#,###', 'vi_VN').format(fee.ceil()),
-                  ),
-                ),
+                label: Text(l10n.registerPayNow(_formatAmount(fee))),
               ),
             ),
           ],
@@ -1129,10 +1125,7 @@ final count = d.maxParticipants != null
                   _registrationTeamStatus == 'WAITLISTED'
                       ? l10n.registerNoPaymentWaitlisted
                       : l10n.registerFeePending2(
-                          NumberFormat(
-                            '#,###',
-                            'vi_VN',
-                          ).format(_registeredEntryFee!.ceil()),
+                          _formatAmount(_registeredEntryFee!),
                         ),
                   style: TextStyle(
                     fontSize: 13,
@@ -1184,7 +1177,6 @@ final count = d.maxParticipants != null
 
   Widget _buildHeader(Tournament t) {
     final colors = context.colors;
-    final fmt = NumberFormat('#,###', 'vi_VN');
     final hasFee = t.entryFee != null && t.entryFee! > 0;
 
     return Container(
@@ -1224,7 +1216,7 @@ final count = d.maxParticipants != null
                   border: Border.all(color: colors.border),
                 ),
                 child: Text(
-                  'Tối đa: ${t.maxTeams} đội',
+                  l10n.registerMaxTeams(t.maxTeams),
                   style: TextStyle(
                     color: colors.textMuted,
                     fontSize: 12,
@@ -1250,7 +1242,7 @@ final count = d.maxParticipants != null
                 ),
                 child: Text(
                   hasFee
-                      ? 'Phí: ${fmt.format(t.entryFee!.ceil())}đ'
+                      ? l10n.doublesRegEntryFee(_formatFee(t.entryFee!))
                       : l10n.registerFree,
                   style: TextStyle(
                     color: hasFee ? AppTheme.primary : colors.textMuted,
@@ -1964,10 +1956,16 @@ final count = d.maxParticipants != null
                                 ? l10n.registerRegClosed
                                 : (_selectedDivision?.entryFee != null &&
                                       _selectedDivision!.entryFee! > 0)
-                                ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(_selectedDivision!.entryFee!.ceil())}đ'
+                                ? l10n.registerSubmitFee(
+                                    _getSubmitLabel(t),
+                                    _formatFee(_selectedDivision!.entryFee!),
+                                  )
                                 : (t.entryFee != null && t.entryFee! > 0)
-                                ? '${_getSubmitLabel(t)} • ${NumberFormat('#,###', 'vi_VN').format(t.entryFee!.ceil())}đ'
-                                : '${_getSubmitLabel(t)} (Miễn phí)',
+                                ? l10n.registerSubmitFee(
+                                    _getSubmitLabel(t),
+                                    _formatFee(t.entryFee!),
+                                  )
+                                : l10n.registerSubmitFree(_getSubmitLabel(t)),
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,

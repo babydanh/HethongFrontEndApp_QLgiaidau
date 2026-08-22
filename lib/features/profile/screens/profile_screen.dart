@@ -1,4 +1,3 @@
-import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +6,7 @@ import 'package:shimmer/shimmer.dart';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/theme_provider.dart' as tp;
@@ -25,9 +24,10 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dart';
-import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
+import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
 import 'package:app_quanly_giaidau/core/utils/rank_tier_colors.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -171,7 +171,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Lỗi: ${e.toString().replaceAll("Exception: ", "")}',
+                '${l10n.commonErrorPrefix}: ${e.toString().replaceAll("Exception: ", "")}',
               ),
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
@@ -201,7 +201,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Lỗi: ${e.toString().replaceAll("Exception: ", "")}',
+                '${l10n.commonErrorPrefix}: ${e.toString().replaceAll("Exception: ", "")}',
               ),
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
@@ -1035,63 +1035,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return rankingsAsync.when(
       data: (rankings) {
         final playedRankings =
-            rankings.where((r) => r.matchesPlayed > 0).toList()
+            rankings.where((ranking) => ranking.matchesPlayed > 0).toList()
               ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
 
         if (playedRankings.isEmpty) {
-          const unranked = PlayerRanking(
-            id: '',
-            userId: '',
-            fullName: '',
-            eloPoints: 0,
-            tierName: 'Chưa xếp hạng',
-            matchesPlayed: 0,
-            matchesWon: 0,
-          );
-
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildRankDonutSummary(
-              context,
-              ranking: unranked,
-              losses: 0,
-              winRate: 0,
-              eloProgress: 0.0,
-              nextLabel: '',
-            ),
+            child: _buildPrivateNoRankState(colors),
           );
         }
 
-        final ranking = playedRankings.first;
-        final losses = (ranking.matchesPlayed - ranking.matchesWon).clamp(
-          0,
-          9999,
-        );
-        final winRate = ranking.matchesPlayed == 0
-            ? 0.0
-            : ranking.matchesWon / ranking.matchesPlayed;
-        final progress = EloHelpers.getEloProgressInfo(ranking.eloPoints);
-        final nextThreshold = progress.nextIndex == null
-            ? null
-            : EloHelpers.thresholds[progress.nextIndex!];
-        final nextLabel = nextThreshold?.name ?? ranking.tierName;
-
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: _buildRankDonutSummary(
-            context,
-            ranking: ranking,
-            losses: losses,
-            winRate: winRate,
-            eloProgress: progress.percent / 100.0,
-            nextLabel: nextLabel,
+          child: Column(
+            children: playedRankings
+                .map((ranking) => _buildPrivateRankCard(context, ranking))
+                .toList(),
           ),
         );
       },
       loading: () => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Container(
-          height: 180,
+          height: 140,
           decoration: BoxDecoration(
             color: colors.bgCard,
             borderRadius: BorderRadius.circular(AppTheme.radiusXL),
@@ -1099,234 +1065,255 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
       ),
-      error: (_, stackTrace) => Padding(
+      error: (_, _) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: _buildRankDonutSummary(
-          context,
-          ranking: const PlayerRanking(
-            id: '',
-            userId: '',
-            fullName: '',
-            eloPoints: 0,
-            tierName: 'Chưa xếp hạng',
-            matchesPlayed: 0,
-            matchesWon: 0,
-          ),
-          losses: 0,
-          winRate: 0,
-          eloProgress: 0.0,
-          nextLabel: '',
-        ),
+        child: _buildPrivateNoRankState(colors),
       ),
     );
   }
 
-  Widget _buildRankDonutSummary(
-    BuildContext context, {
-    required PlayerRanking ranking,
-    required int losses,
-    required double winRate,
-    required double eloProgress,
-    required String nextLabel,
-  }) {
-    final colors = context.colors;
+  Widget _buildPrivateNoRankState(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
-    final isUnranked =
-        ranking.matchesPlayed == 0 ||
-        ranking.tierName == 'Chưa xếp hạng' ||
-        ranking.tierName.toUpperCase().contains('UNRANKED');
-
-    final tierColor = isUnranked
-        ? const Color(0xFF94A3B8)
-        : _getTierColor(ranking.tierName);
-    final fmt = NumberFormat('#,###');
-    const winColor = Color(0xFF22C55E);
-    const lossColor = Color(0xFFEF4444);
-
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
         border: Border.all(color: colors.border),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.06),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
       ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _buildWinLossStat(
-                context,
-                label: l10n.infoWin,
-                value: ranking.matchesWon,
-                color: winColor,
-              ),
-              SizedBox(
-                width: 140,
-                height: 140,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CustomPaint(
-                      size: const Size.square(140),
-                      painter: _EloRingPainter(
-                        progress: isUnranked ? 0.0 : eloProgress,
-                        activeColor: tierColor,
-                        trackColor: tierColor.withValues(alpha: 0.15),
-                      ),
-                    ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          isUnranked
-                              ? l10n.profileRankStatus
-                              : l10n.profileRankLabel,
-                          style: TextStyle(
-                            color: colors.textMuted,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          isUnranked ? '-' : _rankLetter(ranking.tierName),
-                          style: TextStyle(
-                            color: tierColor,
-                            fontSize: isUnranked ? 28 : 34,
-                            height: 1.0,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          isUnranked
-                              ? l10n.profileNoRank
-                              : '${fmt.format(ranking.eloPoints)} ELO',
-                          style: TextStyle(
-                            color: isUnranked ? colors.textMuted : tierColor,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              _buildWinLossStat(
-                context,
-                label: l10n.infoLoss,
-                value: losses,
-                color: lossColor,
-              ),
-            ],
+          Icon(Icons.emoji_events_outlined, size: 42, color: colors.textMuted),
+          const SizedBox(height: 10),
+          Text(
+            l10n.publicProfileNoPlayedElo,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: colors.textSecondary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '${l10n.infoWinRate} ',
-                style: TextStyle(
-                  color: colors.textSecondary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Text(
-                '${(winRate * 100).toStringAsFixed(1)}%',
-                style: const TextStyle(
-                  color: winColor,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
-              if (!isUnranked && nextLabel.isNotEmpty) ...[
-                Text(
-                  ' • ',
-                  style: TextStyle(color: colors.textMuted, fontSize: 13),
-                ),
-                Text(
-                  l10n.profileEloProgress(
-                    nextLabel,
-                    (eloProgress * 100).toStringAsFixed(1),
-                  ),
-                  style: TextStyle(
-                    color: tierColor,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ],
+          const SizedBox(height: 5),
+          Text(
+            l10n.publicProfileNoPlayedEloHint,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: colors.textMuted, fontSize: 12),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildWinLossStat(
-    BuildContext context, {
-    required String label,
-    required int value,
-    required Color color,
-  }) {
-    final colors = context.colors;
+  Widget _buildPrivateRankCard(BuildContext context, PlayerRanking ranking) {
     final l10n = AppLocalizations.of(context)!;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
+    final colors = context.colors;
+    final tierColor = _getTierColor(ranking.tierName);
+    final winRate = ranking.matchesPlayed > 0
+        ? (ranking.matchesWon / ranking.matchesPlayed * 100).round()
+        : 0;
+    final isDoubles =
+        ranking.matchType == 'DOUBLES' || ranking.matchType == 'MIXED_DOUBLES';
+    final streakType = ranking.currentStreakType?.toUpperCase();
+    final streakColor = streakType == 'WIN'
+        ? const Color(0xFF2563EB)
+        : streakType == 'LOSS'
+        ? const Color(0xFFDC2626)
+        : colors.textMuted;
+    final streakText = streakType == 'WIN'
+        ? l10n.publicProfileWinStreak(ranking.currentStreakCount)
+        : streakType == 'LOSS'
+        ? l10n.publicProfileLossStreak(ranking.currentStreakCount)
+        : l10n.publicProfileNoStreak;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        border: Border.all(color: colors.border),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => EloHistoryScreen(
+              userId: ranking.userId,
+              userName: ranking.fullName,
+              avatarUrl: ranking.avatarUrl,
+              currentElo: ranking.eloPoints,
+              tierName: ranking.tierName,
+              categoryId: ranking.categoryId,
+              categoryName: ranking.categoryName,
+              initialScope: 'PUBLIC',
+              matchType: ranking.matchType,
+              genderRestriction: ranking.genderRestriction ?? '__NONE__',
+              partnerId: ranking.partnerId,
+              lockRatingScope: true,
+            ),
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          '$value',
-          style: TextStyle(
-            color: color,
-            fontSize: 26,
-            height: 1,
-            fontWeight: FontWeight.w700,
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  isDoubles ? Icons.people_alt_rounded : Icons.person_rounded,
+                  color: AppTheme.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    ranking.categoryName?.isNotEmpty == true
+                        ? ranking.categoryName!
+                        : l10n.publicProfileUserFallback,
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  isDoubles
+                      ? ranking.matchType == 'MIXED_DOUBLES'
+                            ? l10n.publicProfileScopeMixedDoubles
+                            : l10n.publicProfileScopeDoubles
+                      : l10n.publicProfileScopeSingles,
+                  style: TextStyle(
+                    color: colors.textMuted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: colors.textMuted,
+                ),
+              ],
+            ),
+            if (isDoubles && ranking.partnerName?.isNotEmpty == true) ...[
+              const SizedBox(height: 8),
+              Text(
+                '${l10n.publicProfilePartner}: ${ranking.partnerName}',
+                style: TextStyle(color: colors.textSecondary, fontSize: 12),
+              ),
+            ],
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'ELO',
+                        style: TextStyle(color: colors.textMuted, fontSize: 10),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${ranking.eloPoints}',
+                        style: TextStyle(
+                          color: tierColor,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                _buildCompactProfileStat(
+                  l10n.publicProfileMatchesShort,
+                  '${ranking.matchesPlayed}',
+                  colors,
+                ),
+                _buildCompactProfileStat(
+                  l10n.infoWin,
+                  '${ranking.matchesWon}',
+                  colors,
+                ),
+                _buildCompactProfileStat(
+                  l10n.publicProfileWinRateShort,
+                  '$winRate%',
+                  colors,
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: (winRate / 100).clamp(0.0, 1.0),
+                minHeight: 5,
+                backgroundColor: colors.border,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  winRate >= 60 ? colors.success : tierColor,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(
+                  streakType == 'NONE'
+                      ? Icons.remove_circle_outline_rounded
+                      : Icons.local_fire_department_rounded,
+                  color: streakColor,
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${l10n.publicProfileCurrentStreak}: $streakText',
+                  style: TextStyle(
+                    color: streakColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-        const SizedBox(height: 2),
-        Text(
-          l10n.profileMatches,
-          style: TextStyle(
-            color: colors.textMuted,
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  String _rankLetter(String tierName) {
-    final upper = tierName.trim().toUpperCase();
-    if (upper.isEmpty) return '-';
-    if (upper.contains('S')) return 'S';
-    if (upper.contains('A')) return 'A';
-    if (upper.contains('B')) return 'B';
-    if (upper.contains('C')) return 'C';
-    if (upper.contains('D')) return 'D';
-    return upper.characters.first;
+  Widget _buildCompactProfileStat(
+    String label,
+    String value,
+    AppColorsExtension colors,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 14),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              color: colors.textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              color: colors.textMuted,
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // ─── INFO CARD ──────────────────────────────────────────────────────
@@ -1796,10 +1783,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       for (final rawS in club.sports) {
         final sTrim = rawS.trim();
         if (sTrim.isEmpty) continue;
-        final mapped =
-            AppConstants.sportNames[sTrim] ??
-            AppConstants.sportNames[sTrim.toLowerCase()] ??
-            sTrim;
+        final mapped = l10n.sportDisplayName(sTrim);
         sportWidgets.add(
           Container(
             margin: const EdgeInsets.only(right: 6),
@@ -2865,53 +2849,5 @@ class ProfileShimmerLoading extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _EloRingPainter extends CustomPainter {
-  final double progress; // 0.0 to 1.0
-  final Color activeColor;
-  final Color trackColor;
-
-  const _EloRingPainter({
-    required this.progress,
-    required this.activeColor,
-    required this.trackColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.shortestSide - 14) / 2;
-    final rect = Rect.fromCircle(center: center, radius: radius);
-    const strokeWidth = 10.0;
-    const startAngle = -1.57079632679; // Top 12 o'clock
-
-    final trackPaint = Paint()
-      ..color = trackColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawCircle(center, radius, trackPaint);
-
-    final safeProgress = progress.clamp(0.0, 1.0);
-    if (safeProgress > 0) {
-      final activePaint = Paint()
-        ..color = activeColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
-
-      final sweepAngle = 6.28318530718 * safeProgress;
-      canvas.drawArc(rect, startAngle, sweepAngle, false, activePaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _EloRingPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
-        oldDelegate.activeColor != activeColor ||
-        oldDelegate.trackColor != trackColor;
   }
 }

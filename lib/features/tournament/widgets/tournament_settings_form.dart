@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/widgets/form_section.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 class TournamentSettingsForm extends ConsumerWidget {
   final String selectedSport;
@@ -425,34 +426,20 @@ class TournamentSettingsForm extends ConsumerWidget {
 
   Widget _buildBracketSelector(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final bracketNames = {
-      AppConstants.bracketSingleElimination:
-          l10n.createClubTournament_bracketSingleElimination,
-      AppConstants.bracketDoubleElimination:
-          l10n.createClubTournament_bracketDoubleElimination,
-      AppConstants.bracketRoundRobin:
-          l10n.createClubTournament_bracketRoundRobin,
-      AppConstants.bracketGroupStageKnockout:
-          l10n.createClubTournament_bracketGroupStageKnockout,
-    };
-    final bracketDescriptions = {
-      AppConstants.bracketSingleElimination:
-          l10n.createClubTournament_bracketSingleEliminationDescription,
-      AppConstants.bracketDoubleElimination:
-          l10n.createClubTournament_bracketDoubleEliminationDescription,
-      AppConstants.bracketRoundRobin:
-          l10n.createClubTournament_bracketRoundRobinDescription,
-      AppConstants.bracketGroupStageKnockout:
-          l10n.createClubTournament_bracketGroupStageKnockoutDescription,
-    };
+    final bracketKeys = <String>[
+      AppConstants.bracketSingleElimination,
+      AppConstants.bracketDoubleElimination,
+      AppConstants.bracketRoundRobin,
+      AppConstants.bracketGroupStageKnockout,
+    ];
     return Column(
-      children: AppConstants.bracketTypeNames.entries.map((entry) {
-        final isSelected = selectedBracket == entry.key;
-        final name = bracketNames[entry.key] ?? entry.value;
-        final desc = bracketDescriptions[entry.key] ?? '';
+      children: bracketKeys.map((bracketKey) {
+        final isSelected = selectedBracket == bracketKey;
+        final name = l10n.bracketDisplayName(bracketKey);
+        final desc = l10n.bracketDescription(bracketKey);
         return GestureDetector(
           onTap: () {
-            onBracketChanged(entry.key);
+            onBracketChanged(bracketKey);
             formKey.currentState?.validate();
           },
           child:

@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 import 'dart:async';
 import 'package:intl/intl.dart';
 
@@ -173,7 +174,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
       firstDate: now.subtract(const Duration(days: 365)),
       lastDate: now.add(const Duration(days: 365)),
       initialDateRange: _selectedDateRange,
-      locale: const Locale('vi'),
+      locale: Localizations.localeOf(context),
     );
     if (picked != null) {
       setState(() {
@@ -357,7 +358,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
             _FilterChip(
               label: _selectedSport.isEmpty
                   ? l10n.matchesFilterSport
-                  : AppConstants.sportNames[_selectedSport] ?? _selectedSport,
+                  : l10n.sportDisplayName(_selectedSport),
               icon: Icons.sports_rounded,
               isActive: _selectedSport.isNotEmpty,
               colors: colors,
@@ -396,7 +397,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
     if (_selectedSport.isNotEmpty) {
       chips.add(
         _buildActiveChip(
-          AppConstants.sportNames[_selectedSport] ?? _selectedSport,
+          AppLocalizations.of(context)!.sportDisplayName(_selectedSport),
           () => setState(() {
             _selectedSport = '';
             _applyFilters();
@@ -508,8 +509,20 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
             ),
             const SizedBox(height: 16),
             _buildSportOption(ctx, colors, '', l10n.matchesFilterAll, null),
-            ...AppConstants.sportNames.entries.map(
-              (e) => _buildSportOption(ctx, colors, e.key, e.value, e.key),
+            ...[
+              AppConstants.sportFootball,
+              AppConstants.sportBadminton,
+              AppConstants.sportTennis,
+              AppConstants.sportPickleball,
+              AppConstants.sportTableTennis,
+            ].map(
+              (sportKey) => _buildSportOption(
+                ctx,
+                colors,
+                sportKey,
+                l10n.sportDisplayName(sportKey),
+                sportKey,
+              ),
             ),
           ],
         ),

@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentTeamSheet extends StatelessWidget {
   final Team team;
 
-  const TournamentTeamSheet({
-    super.key,
-    required this.team,
-  });
+  const TournamentTeamSheet({super.key, required this.team});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -24,9 +23,15 @@ class TournamentTeamSheet extends StatelessWidget {
               CircleAvatar(
                 radius: 24,
                 backgroundColor: const Color(0xFF2979FF).withValues(alpha: 0.1),
-                backgroundImage: team.photoUrl.isNotEmpty ? NetworkImage(team.photoUrl) : null,
+                backgroundImage: team.photoUrl.isNotEmpty
+                    ? NetworkImage(team.photoUrl)
+                    : null,
                 child: team.photoUrl.isEmpty
-                    ? const Icon(Icons.group, size: 24, color: Color(0xFF2979FF))
+                    ? const Icon(
+                        Icons.group,
+                        size: 24,
+                        color: Color(0xFF2979FF),
+                      )
                     : null,
               ),
               const SizedBox(width: 12),
@@ -44,7 +49,7 @@ class TournamentTeamSheet extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "${team.members.length} thành viên",
+                      l10n.tournamentTeamMemberCount(team.members.length),
                       style: TextStyle(
                         fontSize: 12,
                         color: colors.textSecondary,
@@ -55,13 +60,16 @@ class TournamentTeamSheet extends StatelessWidget {
               ),
               if (team.seed > 0)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFD97706).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    "Hạt giống #${team.seed}",
+                    l10n.tournamentTeamSeed(team.seed),
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -75,7 +83,7 @@ class TournamentTeamSheet extends StatelessWidget {
           const Divider(height: 1.0),
           const SizedBox(height: 16),
           Text(
-            "THÀNH VIÊN",
+            l10n.tournamentTeamMembersTitle,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.bold,
@@ -96,11 +104,8 @@ class TournamentTeamSheet extends StatelessWidget {
                   Icon(Icons.info_outline, size: 18, color: colors.textMuted),
                   const SizedBox(width: 8),
                   Text(
-                    "Chưa có thông tin thành viên",
-                    style: TextStyle(
-                      color: colors.textSecondary,
-                      fontSize: 13,
-                    ),
+                    l10n.tournamentTeamNoMembers,
+                    style: TextStyle(color: colors.textSecondary, fontSize: 13),
                   ),
                 ],
               ),
@@ -117,18 +122,25 @@ class TournamentTeamSheet extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: colors.bgSurface,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: colors.border.withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: colors.border.withValues(alpha: 0.5),
+                  ),
                 ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () => _showMemberProfile(context, memberName, isCaptain),
+                  onTap: () =>
+                      _showMemberProfile(context, memberName, isCaptain),
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 18,
-                        backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                        backgroundColor: AppTheme.primary.withValues(
+                          alpha: 0.1,
+                        ),
                         child: Text(
-                          memberName.isNotEmpty ? memberName[0].toUpperCase() : "?",
+                          memberName.isNotEmpty
+                              ? memberName[0].toUpperCase()
+                              : "?",
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -154,13 +166,18 @@ class TournamentTeamSheet extends StatelessWidget {
                                 if (isCaptain) ...[
                                   const SizedBox(width: 8),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: colors.error.withValues(alpha: 0.12),
+                                      color: colors.error.withValues(
+                                        alpha: 0.12,
+                                      ),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
-                                      "Trưởng nhóm",
+                                      l10n.tournamentTeamCaptain,
                                       style: TextStyle(
                                         fontSize: 9,
                                         color: colors.error,
@@ -174,7 +191,11 @@ class TournamentTeamSheet extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Icon(Icons.arrow_forward_ios_rounded, size: 16, color: colors.textMuted),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                        color: colors.textMuted,
+                      ),
                     ],
                   ),
                 ),
@@ -187,18 +208,24 @@ class TournamentTeamSheet extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFFD97706).withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFD97706).withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: const Color(0xFFD97706).withValues(alpha: 0.2),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded, size: 16, color: Color(0xFFD97706)),
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    size: 16,
+                    color: Color(0xFFD97706),
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     team.isWaitlisted
-                        ? "Đội đang trong hàng chờ"
+                        ? l10n.tournamentTeamWaitlisted
                         : team.isPendingPartner
-                            ? "Đội đang chờ đồng đội"
-                            : "Đội đang duyệt",
+                        ? l10n.tournamentTeamPendingPartner
+                        : l10n.tournamentTeamPendingApproval,
                     style: TextStyle(
                       fontSize: 12,
                       color: Color(0xFFD97706),
@@ -217,10 +244,8 @@ class TournamentTeamSheet extends StatelessWidget {
   void _showMemberProfile(BuildContext context, String name, bool isCaptain) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => _MemberProfileScreen(
-          name: name,
-          isCaptain: isCaptain,
-        ),
+        builder: (context) =>
+            _MemberProfileScreen(name: name, isCaptain: isCaptain),
       ),
     );
   }
@@ -230,14 +255,12 @@ class _MemberProfileScreen extends StatelessWidget {
   final String name;
   final bool isCaptain;
 
-  const _MemberProfileScreen({
-    required this.name,
-    this.isCaptain = false,
-  });
+  const _MemberProfileScreen({required this.name, this.isCaptain = false});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: colors.bgDark,
       appBar: AppBar(
@@ -248,7 +271,7 @@ class _MemberProfileScreen extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          "Thông tin VĐV",
+          l10n.tournamentAthleteInfo,
           style: TextStyle(
             color: colors.textPrimary,
             fontWeight: FontWeight.bold,
@@ -284,13 +307,16 @@ class _MemberProfileScreen extends StatelessWidget {
             if (isCaptain) ...[
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: colors.error.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  "Trưởng nhóm",
+                  l10n.tournamentTeamCaptain,
                   style: TextStyle(
                     fontSize: 12,
                     color: colors.error,

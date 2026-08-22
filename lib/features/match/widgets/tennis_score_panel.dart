@@ -74,7 +74,7 @@ class TennisScorePanel extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'TIEBREAK · Mỗi pha bóng được 1 điểm, chạm ${ts.tiebreakPoints ?? 7} và cách 2 để thắng set',
+                        l10n.tennisTiebreakInfo(ts.tiebreakPoints ?? 7),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 11,
@@ -101,11 +101,20 @@ class TennisScorePanel extends ConsumerWidget {
                 children: [
                   _infoPill(
                     l10n.tennisGameLabel,
-                    t.isTiebreak ? l10n.tennisTiebreakLabel : '15 • 30 • 40',
+                    t.isTiebreak
+                        ? l10n.tennisTiebreakLabel
+                        : l10n.tennisScorePointsGuide,
                   ),
-                  _infoPill('Set', '${ts.pointsPerSet} game/set'),
-                  _infoPill('Format', 'Thắng ${ts.setsToWin} set'),
-                  if (isDeuce) _infoPill('Trạng thái', l10n.tennisDeuce),
+                  _infoPill(
+                    l10n.tennisScoreSetLabel,
+                    '${ts.pointsPerSet} game/set',
+                  ),
+                  _infoPill(
+                    l10n.tennisScoreFormatLabel,
+                    l10n.tennisScoreSetsToWin(ts.setsToWin),
+                  ),
+                  if (isDeuce)
+                    _infoPill(l10n.tennisScoreStatusLabel, l10n.tennisDeuce),
                 ],
               ),
             ),
@@ -121,6 +130,7 @@ class TennisScorePanel extends ConsumerWidget {
                             colors: colors,
                             teamName: team1Name,
                             compact: compact,
+                            l10n: l10n,
                           ),
                         ),
                         Padding(
@@ -140,6 +150,7 @@ class TennisScorePanel extends ConsumerWidget {
                             colors: colors,
                             teamName: team2Name,
                             compact: compact,
+                            l10n: l10n,
                           ),
                         ),
                       ],
@@ -154,6 +165,7 @@ class TennisScorePanel extends ConsumerWidget {
                             colors: colors,
                             teamName: team1Name,
                             compact: compact,
+                            l10n: l10n,
                           ),
                         ),
                         Padding(
@@ -173,6 +185,7 @@ class TennisScorePanel extends ConsumerWidget {
                             colors: colors,
                             teamName: team2Name,
                             compact: compact,
+                            l10n: l10n,
                           ),
                         ),
                       ],
@@ -182,8 +195,8 @@ class TennisScorePanel extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               child: Text(
                 t.isTiebreak
-                    ? 'Set đang vào tiebreak, điểm hiển thị theo số thực.'
-                    : 'Chấm theo game tennis của giải, hệ thống tự xử lý deuce và advantage.',
+                    ? l10n.tennisScoreTiebreakHelp
+                    : l10n.tennisScoreGameHelp,
                 style: TextStyle(fontSize: 11, color: colors.textMuted),
                 textAlign: TextAlign.center,
               ),
@@ -201,6 +214,7 @@ class TennisScorePanel extends ConsumerWidget {
     required AppColorsExtension colors,
     required String teamName,
     required bool compact,
+    required AppLocalizations l10n,
   }) {
     final displayPoints = formatTennisPoint(
       isTeam1 ? t.team1GamePoints : t.team2GamePoints,
@@ -250,7 +264,7 @@ class TennisScorePanel extends ConsumerWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              'Pha hiện tại: $rawPoints',
+              l10n.tennisCurrentPoint(rawPoints),
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
@@ -303,7 +317,7 @@ class TennisScorePanel extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'VS',
+          l10n.tennisScoreVs,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,

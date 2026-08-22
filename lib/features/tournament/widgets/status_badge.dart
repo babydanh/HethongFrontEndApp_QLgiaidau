@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 
 class StatusBadge extends StatelessWidget {
@@ -9,7 +10,11 @@ class StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusName = StatusHelper.getTournamentStatusLabel(statusKey);
+    final l10n = AppLocalizations.of(context)!;
+    final statusName = StatusHelper.getTournamentStatusLabel(
+      statusKey,
+      l10n: l10n,
+    );
     final bgColor = StatusHelper.getTournamentStatusColor(statusKey, context);
     final isLive = statusKey == AppConstants.statusInProgress;
 
@@ -34,7 +39,7 @@ class StatusBadge extends StatelessWidget {
             const SizedBox(width: 5),
           ],
           Text(
-            isLive ? "LIVE" : statusName.toUpperCase(),
+            isLive ? l10n.matchTableLive : statusName.toUpperCase(),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 10,

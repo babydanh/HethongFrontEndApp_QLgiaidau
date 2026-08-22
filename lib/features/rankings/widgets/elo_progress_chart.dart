@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// A reusable ELO progression line chart widget.
 ///
@@ -33,6 +34,7 @@ class EloProgressChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
     if (data.isEmpty) {
       return onHistoryEmpty ??
@@ -54,7 +56,7 @@ class EloProgressChart extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Chưa có dữ liệu biểu đồ ELO',
+                    l10n.rankingEloChartNoData,
                     style: TextStyle(fontSize: 13, color: colors.textMuted),
                   ),
                 ],
@@ -91,7 +93,7 @@ class EloProgressChart extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'TIẾN TRÌNH ELO',
+                  l10n.ranking_progressTitle,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -121,7 +123,9 @@ class EloProgressChart extends StatelessWidget {
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        NumberFormat('#,###', 'vi_VN').format(currentElo),
+                        NumberFormat.decimalPattern(
+                          Localizations.localeOf(context).toLanguageTag(),
+                        ).format(currentElo),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w900,

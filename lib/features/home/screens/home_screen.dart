@@ -33,6 +33,7 @@ import 'package:intl/intl.dart';
 import 'dart:ui';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 // ═══════════════════════════════════════════════════════
 //  WAVE HEADER PAINTER
@@ -836,13 +837,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             final sportName = hasPlayed
                 ? (bestRank.categoryName?.trim().isNotEmpty == true
                       ? bestRank.categoryName!.trim()
-                      : 'Pickleball')
+                      : l10n.ranking_sportFallback)
                 : (_activeSportFilter != 'all'
-                      ? (AppConstants.sportNames[_activeSportFilter] ??
-                            'Pickleball')
-                      : 'Pickleball');
+                      ? l10n.sportDisplayName(_activeSportFilter)
+                      : l10n.ranking_sportFallback);
 
-            final tierName = EloHelpers.getRankTierName(bestRank);
+            final tierName = EloHelpers.getRankTierName(bestRank, l10n);
             final elo = hasPlayed ? bestRank.eloPoints : 1000;
             final wins = hasPlayed ? bestRank.matchesWon : 0;
             final totalMatches = hasPlayed ? bestRank.matchesPlayed : 0;
@@ -850,7 +850,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ? ((wins / totalMatches) * 100).round()
                 : 0;
 
-            final progressInfo = EloHelpers.getEloProgressInfo(elo);
+            final progressInfo = EloHelpers.getEloProgressInfo(elo, l10n);
             final progressPercent = hasPlayed
                 ? (progressInfo.percent / 100.0).clamp(0.0, 1.0)
                 : 0.0;
@@ -2930,11 +2930,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 for (final s in club.sports) {
                                   final sTrim = s.trim();
                                   if (sTrim.isEmpty) continue;
-                                  final mapped =
-                                      AppConstants.sportNames[sTrim] ??
-                                      AppConstants.sportNames[sTrim
-                                          .toLowerCase()] ??
-                                      sTrim;
+                                  final mapped = l10n.sportDisplayName(sTrim);
                                   if (!sports.contains(mapped)) {
                                     sports.add(mapped);
                                   }

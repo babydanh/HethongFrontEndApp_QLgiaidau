@@ -7,6 +7,8 @@ import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.da
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 
 /// Provider cho ScorePanelNotifier.
 final scorePanelNotifierProvider = NotifierProvider.autoDispose
@@ -24,17 +26,26 @@ FootballLiveState? _readFootballState(Map<String, dynamic> details) {
     minute: raw['minute'] is int ? raw['minute'] as int : 0,
     addedMinute: raw['addedMinute'] is int ? raw['addedMinute'] as int : 0,
     events: raw['events'] is List
-        ? (raw['events'] as List).whereType<Map>().map((event) => FootballEvent(
-              type: event['type']?.toString() ?? 'NOTE',
-              isTeam1: event['team'] == 1,
-              minute: event['minute'] is int ? event['minute'] as int : 0,
-              addedMinute: event['addedMinute'] is int ? event['addedMinute'] as int : 0,
-            )).toList()
+        ? (raw['events'] as List)
+              .whereType<Map>()
+              .map(
+                (event) => FootballEvent(
+                  type: event['type']?.toString() ?? 'NOTE',
+                  isTeam1: event['team'] == 1,
+                  minute: event['minute'] is int ? event['minute'] as int : 0,
+                  addedMinute: event['addedMinute'] is int
+                      ? event['addedMinute'] as int
+                      : 0,
+                ),
+              )
+              .toList()
         : const [],
-    shootoutTeam1Goals: raw['shootout'] is Map && (raw['shootout'] as Map)['team1Goals'] is int
+    shootoutTeam1Goals:
+        raw['shootout'] is Map && (raw['shootout'] as Map)['team1Goals'] is int
         ? (raw['shootout'] as Map)['team1Goals'] as int
         : null,
-    shootoutTeam2Goals: raw['shootout'] is Map && (raw['shootout'] as Map)['team2Goals'] is int
+    shootoutTeam2Goals:
+        raw['shootout'] is Map && (raw['shootout'] as Map)['team2Goals'] is int
         ? (raw['shootout'] as Map)['team2Goals'] as int
         : null,
   );
@@ -50,6 +61,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   bool _liveSyncPending = false;
 
   ScorePanelNotifier(this.arg);
+
+  AppLocalizations get _l10n =>
+      lookupAppLocalizations(ref.read(localeProvider));
 
   @override
   ScorePanelState build() {
@@ -72,7 +86,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     var initialState = ScorePanelState(
       config: config,
       isLite: _isLiteMatch(initialMatch),
-      football: SportRuleKind.fromString(initialMatch?.sportKey) == SportRuleKind.football
+      football:
+          SportRuleKind.fromString(initialMatch?.sportKey) ==
+              SportRuleKind.football
           ? const FootballLiveState()
           : null,
     );
@@ -137,14 +153,13 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       SportRuleKind.fromString(match.sportKey),
     );
     if (details == null) {
-      return current.copyWith(
-        config: config,
-        isLite: _isLiteMatch(match),
-      );
+      return current.copyWith(config: config, isLite: _isLiteMatch(match));
     }
 
     // 1. Finished Sets
-    final rawSets = details['sets'] is List ? details['sets'] as List : const [];
+    final rawSets = details['sets'] is List
+        ? details['sets'] as List
+        : const [];
     final allSets = rawSets
         .whereType<Map>()
         .map((s) => SetScoreData.fromJson(Map<String, dynamic>.from(s)))
@@ -245,15 +260,14 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     if (state.isLite || state.config.maxPoints <= 0) return true;
     if (state.overrideEnabled && state.overrideReason.trim().isEmpty) {
       state = state.copyWith(
-        errorMessage: 'Nhập lý do Ngoại lệ trước khi vượt trần preset.',
+        errorMessage: _l10n.scorePanel_overrideReasonRequired,
       );
       return false;
     }
     if (state.overrideEnabled) return true;
     if (currentScore >= state.config.maxPoints) {
       state = state.copyWith(
-        errorMessage:
-            'Đã chạm trần ${state.config.maxPoints} điểm của môn này. Bật Ngoại lệ nếu BTC cần ghi khác preset.',
+        errorMessage: _l10n.scorePanel_maxPresetPoints(state.config.maxPoints),
       );
       return false;
     }
@@ -372,9 +386,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   bool pickleballAwardPoint(bool isTeam1) {
     final pb = state.pickleball ?? const PickleballServeState();
     if (!state.isLite && pb.isTeam1Serving != isTeam1) {
-      state = state.copyWith(
-        errorMessage: 'Chỉ đội giao bóng mới được ghi điểm!',
-      );
+      state = state.copyWith(errorMessage: _l10n.scorePanel_servingTeamOnly);
       return false;
     }
     final r = state.rally ?? const RallySetState();
@@ -510,37 +522,54 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   void footballRemoveGoal(bool isTeam1) {
     final current = state.football ?? const FootballLiveState();
     final next = current.copyWith(
-      team1Goals: isTeam1 ? (current.team1Goals > 0 ? current.team1Goals - 1 : 0) : current.team1Goals,
-      team2Goals: isTeam1 ? current.team2Goals : (current.team2Goals > 0 ? current.team2Goals - 1 : 0),
+      team1Goals: isTeam1
+          ? (current.team1Goals > 0 ? current.team1Goals - 1 : 0)
+          : current.team1Goals,
+      team2Goals: isTeam1
+          ? current.team2Goals
+          : (current.team2Goals > 0 ? current.team2Goals - 1 : 0),
     );
     state = state.copyWith(football: next, errorMessage: null);
     unawaited(_syncFootball(next));
   }
 
   void footballSetPhase(String phase) {
-    final next = (state.football ?? const FootballLiveState()).copyWith(phase: phase);
+    final next = (state.football ?? const FootballLiveState()).copyWith(
+      phase: phase,
+    );
     state = state.copyWith(football: next, errorMessage: null);
     unawaited(_syncFootball(next));
   }
 
   void footballSetMinute(int minute) {
-    final next = (state.football ?? const FootballLiveState()).copyWith(minute: minute.clamp(0, 130));
+    final next = (state.football ?? const FootballLiveState()).copyWith(
+      minute: minute.clamp(0, 130),
+    );
     state = state.copyWith(football: next, errorMessage: null);
     unawaited(_syncFootball(next));
   }
 
   void footballSetAddedMinute(int addedMinute) {
-    final next = (state.football ?? const FootballLiveState()).copyWith(addedMinute: addedMinute.clamp(0, 30));
+    final next = (state.football ?? const FootballLiveState()).copyWith(
+      addedMinute: addedMinute.clamp(0, 30),
+    );
     state = state.copyWith(football: next, errorMessage: null);
     unawaited(_syncFootball(next));
   }
 
   void footballAddEvent(String type, bool isTeam1) {
     final current = state.football ?? const FootballLiveState();
-    final next = current.copyWith(events: [
-      ...current.events,
-      FootballEvent(type: type, isTeam1: isTeam1, minute: current.minute, addedMinute: current.addedMinute),
-    ]);
+    final next = current.copyWith(
+      events: [
+        ...current.events,
+        FootballEvent(
+          type: type,
+          isTeam1: isTeam1,
+          minute: current.minute,
+          addedMinute: current.addedMinute,
+        ),
+      ],
+    );
     state = state.copyWith(football: next, errorMessage: null);
     unawaited(_syncFootball(next));
   }
@@ -559,36 +588,45 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     final match = ref.read(singleMatchProvider(arg)).value;
     if (match == null) return;
     try {
-      await ref.read(matchControllerProvider(arg)).updateSetsWithDetails(
-        p1SetsWon: 0,
-        p2SetsWon: 0,
-        scoreDetails: const [],
-        scoreDetailsExtras: {
-          'football': {
-            'team1Goals': value.team1Goals,
-            'team2Goals': value.team2Goals,
-            'phase': value.phase,
-            'minute': value.minute,
-            'addedMinute': value.addedMinute,
-            'events': value.events.asMap().entries.map((entry) => {
-              'id': 'app-${entry.key}-${value.minute}',
-              'type': entry.value.type,
-              'team': entry.value.isTeam1 ? 1 : 2,
-              'minute': entry.value.minute,
-              'addedMinute': entry.value.addedMinute,
-            }).toList(),
-            if (value.shootoutTeam1Goals != null && value.shootoutTeam2Goals != null)
-              'shootout': {
-                'team1Goals': value.shootoutTeam1Goals,
-                'team2Goals': value.shootoutTeam2Goals,
+      await ref
+          .read(matchControllerProvider(arg))
+          .updateSetsWithDetails(
+            p1SetsWon: 0,
+            p2SetsWon: 0,
+            scoreDetails: const [],
+            scoreDetailsExtras: {
+              'football': {
+                'team1Goals': value.team1Goals,
+                'team2Goals': value.team2Goals,
+                'phase': value.phase,
+                'minute': value.minute,
+                'addedMinute': value.addedMinute,
+                'events': value.events
+                    .asMap()
+                    .entries
+                    .map(
+                      (entry) => {
+                        'id': 'app-${entry.key}-${value.minute}',
+                        'type': entry.value.type,
+                        'team': entry.value.isTeam1 ? 1 : 2,
+                        'minute': entry.value.minute,
+                        'addedMinute': entry.value.addedMinute,
+                      },
+                    )
+                    .toList(),
+                if (value.shootoutTeam1Goals != null &&
+                    value.shootoutTeam2Goals != null)
+                  'shootout': {
+                    'team1Goals': value.shootoutTeam1Goals,
+                    'team2Goals': value.shootoutTeam2Goals,
+                  },
               },
-          },
-        },
-        expectedRevision: match.revision,
-      );
+            },
+            expectedRevision: match.revision,
+          );
     } catch (error, stack) {
       _log.error('Football live score sync failed', error, stack);
-      state = state.copyWith(errorMessage: 'Không thể đồng bộ tỉ số bóng đá.');
+      state = state.copyWith(errorMessage: _l10n.scorePanel_footballSyncError);
     }
   }
 
@@ -602,16 +640,19 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       if (football.team1Goals == football.team2Goals) {
         final shootout1 = football.shootoutTeam1Goals;
         final shootout2 = football.shootoutTeam2Goals;
-        if (shootout1 == null || shootout2 == null || shootout1 == shootout2) return false;
+        if (shootout1 == null || shootout2 == null || shootout1 == shootout2) {
+          return false;
+        }
+
         final shootoutWinner = shootout1 > shootout2 ? 1 : 2;
-        return shootoutWinner == winnerTeam && match?.team1Id.isNotEmpty == true && match?.team2Id.isNotEmpty == true;
+        return shootoutWinner == winnerTeam &&
+            match?.team1Id.isNotEmpty == true &&
+            match?.team2Id.isNotEmpty == true;
       }
       return winnerTeam == 1 ? team1Wins : team2Wins;
     }
     if (state.isLite) {
-      final (team1Wins, team2Wins) = computeMatchSetsWon(
-        _setsForSubmission(),
-      );
+      final (team1Wins, team2Wins) = computeMatchSetsWon(_setsForSubmission());
       return team1Wins != team2Wins &&
           (winnerTeam == 1 ? team1Wins > team2Wins : team2Wins > team1Wins);
     }
@@ -646,8 +687,8 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     if (!canCompleteAs(winnerTeam)) {
       state = state.copyWith(
         errorMessage: state.overrideEnabled
-            ? 'Nhập lý do và bảo đảm đội được xử thắng đang dẫn theo số set/game.'
-            : 'Trận chưa đạt điều kiện kết thúc theo cấu hình.',
+            ? _l10n.scorePanel_completeOverrideInvalid
+            : _l10n.scorePanel_matchNotReady,
       );
       return;
     }
@@ -656,13 +697,20 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       if (state.football != null) {
         final football = state.football!;
         final match = ref.read(singleMatchProvider(arg)).value;
-        final winnerId = winnerTeam == 1 ? match?.team1Id ?? '' : match?.team2Id ?? '';
-        if (winnerId.isEmpty) throw StateError('Không tìm thấy đội thắng của trận bóng đá.');
+        final winnerId = winnerTeam == 1
+            ? match?.team1Id ?? ''
+            : match?.team2Id ?? '';
+        if (winnerId.isEmpty) {
+          throw StateError(_l10n.scorePanel_footballWinnerNotFound);
+        }
         final isDraw = football.team1Goals == football.team2Goals;
         final shootout1 = football.shootoutTeam1Goals;
         final shootout2 = football.shootoutTeam2Goals;
-        if (isDraw && (shootout1 == null || shootout2 == null || shootout1 == shootout2)) {
-          throw StateError('Trận hòa cần tỷ số luân lưu khác nhau để phân định.');
+        if (isDraw &&
+            (shootout1 == null ||
+                shootout2 == null ||
+                shootout1 == shootout2)) {
+          throw StateError(_l10n.scorePanel_footballShootoutRequired);
         }
         final scoreDetails = <String, dynamic>{
           'football': {
@@ -670,12 +718,18 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
             'team2Goals': football.team2Goals,
             'phase': isDraw ? 'PENALTY_SHOOTOUT' : 'COMPLETED',
             'minute': football.minute,
-            'events': football.events.asMap().entries.map((entry) => {
-              'id': 'app-${entry.key}-${football.minute}',
-              'type': entry.value.type,
-              'team': entry.value.isTeam1 ? 1 : 2,
-              'minute': entry.value.minute,
-            }).toList(),
+            'events': football.events
+                .asMap()
+                .entries
+                .map(
+                  (entry) => {
+                    'id': 'app-${entry.key}-${football.minute}',
+                    'type': entry.value.type,
+                    'team': entry.value.isTeam1 ? 1 : 2,
+                    'minute': entry.value.minute,
+                  },
+                )
+                .toList(),
             if (isDraw)
               'shootout': {
                 'team1Goals': shootout1,
@@ -684,14 +738,16 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
               },
           },
         };
-        await ref.read(matchControllerProvider(arg)).updateSetsWithDetails(
-          p1SetsWon: 0,
-          p2SetsWon: 0,
-          scoreDetails: const [],
-          scoreDetailsExtras: scoreDetails,
-          winnerId: winnerId,
-          expectedRevision: match?.revision,
-        );
+        await ref
+            .read(matchControllerProvider(arg))
+            .updateSetsWithDetails(
+              p1SetsWon: 0,
+              p2SetsWon: 0,
+              scoreDetails: const [],
+              scoreDetailsExtras: scoreDetails,
+              winnerId: winnerId,
+              expectedRevision: match?.revision,
+            );
         state = state.copyWith(isSubmitting: false);
         return;
       }
@@ -717,7 +773,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       state = state.copyWith(isSubmitting: false);
     } catch (e, stack) {
       _log.error('Lỗi kết thúc trận', e, stack);
-      state = state.copyWith(isSubmitting: false, errorMessage: 'Lỗi: $e');
+      state = state.copyWith(
+        isSubmitting: false,
+        errorMessage: _l10n.scorePanel_completeError(e.toString()),
+      );
     }
   }
 
@@ -731,19 +790,25 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     final tennis = state.tennis;
     if (rally != null && (rally.currentP1 > 0 || rally.currentP2 > 0)) {
       final setNum = state.finishedSets.length + 1;
-      return 'Kết thúc set $setNum với tỉ số ${rally.currentP1}-${rally.currentP2}?';
+      return _l10n.scorePanel_finishSetWithScore(
+        setNum,
+        rally.currentP1,
+        rally.currentP2,
+      );
     }
     if (state.config.scoringModel == SportScoringModel.tennisSet &&
         tennis != null) {
       final setNum = state.finishedSets.length + 1;
-      return 'Kết thúc set $setNum?';
+      return _l10n.scorePanel_finishSet(setNum);
     }
     return null;
   }
 
   Future<void> finishSet() async {
     if (state.isMatchComplete) {
-      state = state.copyWith(errorMessage: 'Trận đã đủ số set thắng theo cấu hình.');
+      state = state.copyWith(
+        errorMessage: _l10n.scorePanel_matchAlreadyComplete,
+      );
       return;
     }
     final rally = state.rally;
@@ -796,18 +861,17 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   bool _validateSetBeforeFinish(SetScoreData set) {
     if (state.isLite || state.overrideEnabled) return true;
     try {
-      final label = state.config.scoringModel == SportScoringModel.tennisSet
-          ? 'Set ${state.finishedSets.length + 1}'
-          : 'Hiệp ${state.finishedSets.length + 1}';
+      final setNumber = state.finishedSets.length + 1;
+
       switch (state.config.scoringModel) {
         case SportScoringModel.tennisSet:
-          validateTennisSet(set, state.config, label: label);
+          validateTennisSet(set, state.config, setNumber: setNumber);
           break;
         case SportScoringModel.pickleballSideOut:
-          validatePickleballSideOutSet(set, state.config, label: label);
+          validatePickleballSideOutSet(set, state.config, setNumber: setNumber);
           break;
         case SportScoringModel.rallyPointSet:
-          validateRallyPointSet(set, state.config, label: label);
+          validateRallyPointSet(set, state.config, setNumber: setNumber);
           break;
       }
       return true;
@@ -826,21 +890,23 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         await completeMatch(state.winnerTeam);
       } else {
         final rev = ref.read(singleMatchProvider(arg)).value?.revision;
-        await ref.read(matchControllerProvider(arg)).updateSetsWithDetails(
-          p1SetsWon: p1Sets,
-          p2SetsWon: p2Sets,
-          scoreDetails: setsToSubmit,
-          expectedRevision: rev,
-        );
+        await ref
+            .read(matchControllerProvider(arg))
+            .updateSetsWithDetails(
+              p1SetsWon: p1Sets,
+              p2SetsWon: p2Sets,
+              scoreDetails: setsToSubmit,
+              expectedRevision: rev,
+            );
       }
     } on Exception catch (e) {
       final msg = e.toString();
       if (msg.contains('409') || msg.contains('thay đổi từ thiết bị khác')) {
-        _log.warning('Conflict 409: điểm đã thay đổi từ thiết bị khác. Refetching latest match...');
-        ref.invalidate(singleMatchProvider(arg));
-        state = state.copyWith(
-          errorMessage: 'Điểm đã thay đổi từ thiết bị khác. Đã làm mới số liệu.',
+        _log.warning(
+          'Conflict 409: điểm đã thay đổi từ thiết bị khác. Refetching latest match...',
         );
+        ref.invalidate(singleMatchProvider(arg));
+        state = state.copyWith(errorMessage: _l10n.scorePanel_conflictRefresh);
       } else {
         _log.error('Lỗi đồng bộ tỉ số set lên backend', e);
       }
@@ -875,12 +941,14 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     final (p1Sets, p2Sets) = computeMatchSetsWon(state.finishedSets);
     try {
       final rev = ref.read(singleMatchProvider(arg)).value?.revision;
-      await ref.read(matchControllerProvider(arg)).updateSetsWithDetails(
-        p1SetsWon: p1Sets,
-        p2SetsWon: p2Sets,
-        scoreDetails: sets,
-        expectedRevision: rev,
-      );
+      await ref
+          .read(matchControllerProvider(arg))
+          .updateSetsWithDetails(
+            p1SetsWon: p1Sets,
+            p2SetsWon: p2Sets,
+            scoreDetails: sets,
+            expectedRevision: rev,
+          );
       _liveSyncPending = false;
     } catch (e, stack) {
       final msg = e.toString();
@@ -889,7 +957,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         ref.invalidate(singleMatchProvider(arg));
       }
       _log.error('Lỗi đồng bộ điểm live', e, stack);
-      state = state.copyWith(errorMessage: 'Không đồng bộ được điểm live. Vui lòng thử lại.');
+      state = state.copyWith(errorMessage: _l10n.scorePanel_liveSyncError);
     }
   }
 }

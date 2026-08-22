@@ -17,6 +17,7 @@ import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_ranking_widget.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
@@ -1030,7 +1031,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           SnackBar(
             content: Text(
               isApproval
-                  ? 'Đã gửi yêu cầu tham gia. Vui lòng chờ Ban chủ nhiệm xét duyệt!'
+                  ? l10n.club_joinPendingApproval
                   : l10n.club_joinSuccess,
             ),
             backgroundColor: const Color(0xFF059669),
@@ -1076,10 +1077,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       for (final s in club.sports) {
         final sTrim = s.trim();
         if (sTrim.isEmpty) continue;
-        final mapped =
-            AppConstants.sportNames[sTrim] ??
-            AppConstants.sportNames[sTrim.toLowerCase()] ??
-            sTrim;
+        final mapped = l10n.sportDisplayName(sTrim);
         sportTagWidgets.add(_buildSportTag(mapped, sColor));
         sportTagWidgets.add(const SizedBox(width: 6));
       }
@@ -1398,12 +1396,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final l10n = AppLocalizations.of(context)!;
     final String sportsDisplay = club.sports.isNotEmpty
         ? club.sports
-              .map((s) => AppConstants.sportNames[s.trim()] ?? s.trim())
+              .map(l10n.sportDisplayName)
               .where((s) => s.isNotEmpty && s.toLowerCase() != 'thể thao')
               .join(', ')
-        : "Pickleball";
+        : l10n.createClubTournament_sportPickleball;
     final finalSportsText = sportsDisplay.isEmpty
-        ? "Pickleball"
+        ? l10n.createClubTournament_sportPickleball
         : sportsDisplay;
 
     return ListView(
@@ -1638,8 +1636,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
   String _tournamentSportLabel(String sport, AppLocalizations l10n) {
     final key = sport.trim().toLowerCase();
-    return AppConstants.sportNames[key] ??
-        (key.isEmpty ? l10n.clubDetailOtherSport : key.replaceAll('_', ' '));
+    final localized = l10n.sportDisplayName(key);
+    return localized.isEmpty ? l10n.clubDetailOtherSport : localized;
   }
 
   Widget _buildTournamentFilters(
@@ -2719,7 +2717,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        AppConstants.memberTagMenu,
+                        l10n.memberTagMenu,
                         style: const TextStyle(fontSize: 13),
                       ),
                     ],

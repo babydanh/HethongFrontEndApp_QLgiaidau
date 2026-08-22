@@ -9,6 +9,24 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
+  String get appTagline => 'Chơi cùng nhau';
+
+  @override
+  String get memberTagSuggestionFunny => 'Cây hài';
+
+  @override
+  String get memberTagSuggestionGoodOdds => 'Kèo thơm';
+
+  @override
+  String get memberTagSuggestionWeeklyMvp => 'MVP tuần';
+
+  @override
+  String get memberTagSuggestionInForm => 'Đang lên form';
+
+  @override
+  String get memberTagSuggestionToughMatch => 'Kèo khó';
+
+  @override
   String get club_favorite => 'Yêu thích';
 
   @override
@@ -434,6 +452,74 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get publicProfileNoRankData => 'Chưa có dữ liệu xếp hạng';
+
+  @override
+  String get publicProfileNoPlayedElo => 'Chưa có trận xếp hạng đã hoàn thành';
+
+  @override
+  String get publicProfileNoPlayedEloHint =>
+      'Hãy tham gia một trận xếp hạng để mở hồ sơ ELO.';
+
+  @override
+  String get publicProfileScopeSingles => 'Đơn';
+
+  @override
+  String get publicProfileScopeDoubles => 'Đôi';
+
+  @override
+  String get publicProfileScopeMixedDoubles => 'Đôi nam nữ';
+
+  @override
+  String get publicProfilePartner => 'Đồng đội';
+
+  @override
+  String get publicProfileCurrentStreak => 'Chuỗi hiện tại';
+
+  @override
+  String publicProfileWinStreak(Object count) {
+    return 'Chuỗi thắng $count trận';
+  }
+
+  @override
+  String publicProfileLossStreak(Object count) {
+    return 'Chuỗi thua $count trận';
+  }
+
+  @override
+  String get publicProfileNoStreak => 'Không có chuỗi hiện tại';
+
+  @override
+  String get publicProfileResultWin => 'Thắng';
+
+  @override
+  String get publicProfileResultLoss => 'Thua';
+
+  @override
+  String get publicProfileResultDraw => 'Hòa';
+
+  @override
+  String get publicProfileOpponent => 'Đối thủ';
+
+  @override
+  String get publicProfileUnknownOpponent => 'Chưa rõ đối thủ';
+
+  @override
+  String get publicProfileScore => 'Tỉ số';
+
+  @override
+  String get publicProfileEloBefore => 'Trước trận';
+
+  @override
+  String get publicProfileEloAfter => 'Sau trận';
+
+  @override
+  String get publicProfileEloChange => 'Thay đổi';
+
+  @override
+  String get publicProfileActivity => 'HOẠT ĐỘNG';
+
+  @override
+  String get publicProfilePeakElo => 'ELO cao nhất';
 
   @override
   String get publicProfileLoadError => 'Không thể tải thông tin';
@@ -1661,6 +1747,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tennisDeuce => 'Deuce';
+
+  @override
+  String get tennisAdvantage => 'Ưu thế';
+
+  @override
+  String get tennisTeam1Short => 'Đ1';
+
+  @override
+  String get tennisTeam2Short => 'Đ2';
 
   @override
   String get tennisGameLabel => 'GAME';
@@ -4825,6 +4920,11 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String chatRoomSlowModeDuration(Object seconds) {
+    return '$seconds giây';
+  }
+
+  @override
   String get chatRoomSlowModeOffSubtitle =>
       'Tắt làm chậm (nhắn tin bình thường)';
 
@@ -7335,6 +7435,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get createClubTournament_formatDoubles => 'Đánh đôi';
 
   @override
+  String get createClubTournament_formatMixedDoubles => 'Đôi nam nữ';
+
+  @override
   String get createClubTournament_bracketSingleElimination => 'Loại trực tiếp';
 
   @override
@@ -8816,6 +8919,72 @@ class AppLocalizationsVi extends AppLocalizations {
   String get matchBottom_cancelOverride => 'Huỷ override';
 
   @override
+  String get scorePanel_overrideReasonRequired =>
+      'Nhập lý do Ngoại lệ trước khi vượt trần preset.';
+
+  @override
+  String scorePanel_maxPresetPoints(Object maxPoints) {
+    return 'Đã chạm trần $maxPoints điểm của môn này. Bật Ngoại lệ nếu BTC cần ghi khác preset.';
+  }
+
+  @override
+  String get scorePanel_servingTeamOnly =>
+      'Chỉ đội giao bóng mới được ghi điểm!';
+
+  @override
+  String get scorePanel_footballSyncError => 'Không thể đồng bộ tỉ số bóng đá.';
+
+  @override
+  String get scorePanel_completeOverrideInvalid =>
+      'Nhập lý do và bảo đảm đội được xử thắng đang dẫn theo số set/game.';
+
+  @override
+  String get scorePanel_matchNotReady =>
+      'Trận chưa đạt điều kiện kết thúc theo cấu hình.';
+
+  @override
+  String get scorePanel_footballWinnerNotFound =>
+      'Không tìm thấy đội thắng của trận bóng đá.';
+
+  @override
+  String get scorePanel_footballShootoutRequired =>
+      'Trận hòa cần tỷ số luân lưu khác nhau để phân định.';
+
+  @override
+  String scorePanel_completeError(Object error) {
+    return 'Lỗi: $error';
+  }
+
+  @override
+  String scorePanel_finishSetWithScore(
+    Object setNumber,
+    Object score1,
+    Object score2,
+  ) {
+    return 'Kết thúc set $setNumber với tỉ số $score1-$score2?';
+  }
+
+  @override
+  String scorePanel_finishSet(Object setNumber) {
+    return 'Kết thúc set $setNumber?';
+  }
+
+  @override
+  String get clubChat_memberFallback => 'Thành viên CLB';
+
+  @override
+  String get scorePanel_matchAlreadyComplete =>
+      'Trận đã đủ số set thắng theo cấu hình.';
+
+  @override
+  String get scorePanel_conflictRefresh =>
+      'Điểm đã thay đổi từ thiết bị khác. Đã làm mới số liệu.';
+
+  @override
+  String get scorePanel_liveSyncError =>
+      'Không đồng bộ được điểm live. Vui lòng thử lại.';
+
+  @override
   String get report_title => 'Báo cáo vi phạm';
 
   @override
@@ -9809,7 +9978,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get crossTableDefaultGroup => 'Bảng A';
 
   @override
-  String crossTableLegTitle(Object title, Object leg) {
+  String crossTableLegTitle(Object leg, Object title) {
     return '$title - Vòng $leg';
   }
 
@@ -9830,66 +9999,1400 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get bracketDiagramGroupStageTitle => 'SÆ¡ Ä‘á»“ vÃ²ng loáº¡i';
+  String get bracketDiagramGroupStageTitle => 'Sơ đồ vòng loại';
 
   @override
-  String get bracketDiagramBack => 'Quay láº¡i';
+  String get bracketDiagramBack => 'Quay lại';
 
   @override
   String bracketCrossTableRoundProgress(Object current, Object max) {
-    return 'VÃ²ng $current / $max';
+    return 'Vòng $current / $max';
   }
 
   @override
-  String get bracketCrossTablePreviousRound => 'VÃ²ng trÆ°á»›c';
+  String get bracketCrossTablePreviousRound => 'Vòng trước';
 
   @override
-  String get bracketCrossTableNextRound => 'VÃ²ng tiáº¿p theo';
-
-  @override
-  String get qrScannerInvalidCode => 'MÃ£ QR khÃ´ng há»£p lá»‡';
-
-  @override
-  String get qrScannerTitle => 'QuÃ©t mÃ£ QR';
-
-  @override
-  String get qrScannerVerifying => 'Äang xÃ¡c thá»±c...';
-
-  @override
-  String get officialScoreScoringTab => 'TÃ­nh Ä‘iá»ƒm';
-
-  @override
-  String get officialScorePenaltyTab => 'Pháº¡m lá»—i';
-
-  @override
-  String get doubleElimUpperGrandFinal => 'CK NHÃNH THáº®NG';
-
-  @override
-  String get doubleElimUpperSemifinal => 'BK NHÃNH THáº®NG';
-
-  @override
-  String get doubleElimLowerGrandFinal => 'CK NHÃNH THUA';
-
-  @override
-  String get doubleElimLowerSemifinal => 'BK NHÃNH THUA';
-
-  @override
-  String get liveMatchRemainingLabel => 'CÃ²n láº¡i';
-
-  @override
-  String get teamScoreEditForbidden =>
-      'Lá»—i: Báº¡n khÃ´ng cÃ³ quyá»n sá»­a Ä‘iá»ƒm.';
-
-  @override
-  String get chatDetailRevokedMessage => 'Tin nháº¯n Ä‘Ã£ bá»‹ thu há»“i';
+  String get bracketCrossTableNextRound => 'Vòng tiếp theo';
 
   @override
   String bracketCrossTableTeamCount(Object count) {
-    return '$count Ä‘á»™i';
+    return '$count đội';
   }
 
   @override
+  String get qrScannerInvalidCode => 'Mã QR không hợp lệ';
+
+  @override
+  String get qrScannerTitle => 'Quét mã QR';
+
+  @override
+  String get qrScannerVerifying => 'Đang xác thực...';
+
+  @override
+  String get officialScoreScoringTab => 'Tính điểm';
+
+  @override
+  String get officialScorePenaltyTab => 'Phạm lỗi';
+
+  @override
+  String get doubleElimUpperGrandFinal => 'CK NHÁNH THẮNG';
+
+  @override
+  String get doubleElimUpperSemifinal => 'BK NHÁNH THẮNG';
+
+  @override
+  String get doubleElimLowerGrandFinal => 'CK NHÁNH THUA';
+
+  @override
+  String get doubleElimLowerSemifinal => 'BK NHÁNH THUA';
+
+  @override
+  String get liveMatchRemainingLabel => 'Còn lại';
+
+  @override
+  String get teamScoreEditForbidden => 'Lỗi: Bạn không có quyền sửa điểm.';
+
+  @override
+  String get chatDetailRevokedMessage => 'Tin nhắn đã bị thu hồi';
+
+  @override
   String singleElimUpdateError(Object error) {
-    return 'KhÃ´ng thá»ƒ cáº­p nháº­t vá»‹ trÃ­: $error';
+    return 'Không thể cập nhật vị trí: $error';
   }
+
+  @override
+  String get penaltyDialogRulesTitle => 'Quy định phạt';
+
+  @override
+  String get penaltyDialogTitle => 'Ghi nhận phạt';
+
+  @override
+  String get penaltyDialogOffendingTeam => 'Đội vi phạm';
+
+  @override
+  String get penaltyDialogType => 'Loại phạt';
+
+  @override
+  String get penaltyDialogReasonRequired => 'Lý do (bắt buộc)';
+
+  @override
+  String get penaltyDialogReasonHint => 'Nhập lý do vi phạm...';
+
+  @override
+  String get penaltyDialogConfirm => 'Xác nhận';
+
+  @override
+  String get tokenInputRequired => 'Vui lòng nhập mã token';
+
+  @override
+  String get tokenInputInvalid => 'Mã token không hợp lệ';
+
+  @override
+  String get tokenInputHint => 'Mã dạng ABC-XXXX';
+
+  @override
+  String get ranking_matchTypeSingles => 'Đơn';
+
+  @override
+  String get ranking_matchTypeDoubles => 'Đôi';
+
+  @override
+  String get ranking_matchTypeMixedDoubles => 'Đôi nam nữ';
+
+  @override
+  String get ranking_matchTypeOverview => 'Tổng quan';
+
+  @override
+  String get ranking_sportFallback => 'Môn thi đấu';
+
+  @override
+  String get ranking_unranked => 'Chưa xếp hạng';
+
+  @override
+  String get ranking_ranked => 'Đã xếp hạng';
+
+  @override
+  String get ranking_tierLowD => 'Hạng D thấp';
+
+  @override
+  String get ranking_tierHighD => 'Hạng D cao';
+
+  @override
+  String get ranking_tierLowC => 'Hạng C thấp';
+
+  @override
+  String get ranking_tierHighC => 'Hạng C cao';
+
+  @override
+  String get ranking_tierLowB => 'Hạng B thấp';
+
+  @override
+  String get ranking_tierHighB => 'Hạng B cao';
+
+  @override
+  String get ranking_tierLowA => 'Hạng A thấp';
+
+  @override
+  String get ranking_tierHighA => 'Hạng A cao';
+
+  @override
+  String get ranking_tierS => 'Hạng S';
+
+  @override
+  String get ranking_eloPeakProgress => '🏆 Đã đạt đỉnh — Hạng S';
+
+  @override
+  String ranking_eloToNext(Object remaining, Object nextName) {
+    return 'Còn $remaining ELO tới $nextName';
+  }
+
+  @override
+  String get ranking_shieldOnboarding =>
+      'Đánh 1 trận xếp hạng để mở khóa ELO và khiên rank.';
+
+  @override
+  String get ranking_shieldActive =>
+      'Khiên còn nguyên — đỡ 1 lần rớt khỏi mốc rank hiện tại.';
+
+  @override
+  String get ranking_shieldBroken =>
+      'Khiên đã vỡ — cần lên rank hoặc rớt rank để hồi lại khiên.';
+
+  @override
+  String get ranking_eloOnboarding =>
+      'Đánh 1 trận xếp hạng để bắt đầu tiến trình ELO';
+
+  @override
+  String rankingUserStatsUnranked(Object tier) {
+    return 'Chưa xếp hạng · $tier';
+  }
+
+  @override
+  String rankingUserStatsRanked(Object rank, Object tier) {
+    return 'Hạng #$rank · $tier';
+  }
+
+  @override
+  String scoreValidationSetLabel(Object number) {
+    return 'Set $number';
+  }
+
+  @override
+  String scoreValidationGameLabel(Object number) {
+    return 'Game $number';
+  }
+
+  @override
+  String scoreValidationRallyLabel(Object number) {
+    return 'Hiệp $number';
+  }
+
+  @override
+  String scoreValidationTie(Object label, Object score1, Object score2) {
+    return '$label: Tỉ số không được hòa ($score1-$score2)';
+  }
+
+  @override
+  String scoreValidationMinimum(Object label, Object target) {
+    return '$label: Người thắng phải đạt tối thiểu $target điểm';
+  }
+
+  @override
+  String scoreValidationDeuceMargin(Object label) {
+    return '$label: Deuce yêu cầu thắng cách 2 điểm';
+  }
+
+  @override
+  String scoreValidationExactTarget(Object label, Object target) {
+    return '$label: Người thắng phải đạt đúng $target điểm';
+  }
+
+  @override
+  String scoreValidationMaximum(Object label, Object maxPoints) {
+    return '$label: Điểm số vượt quá giới hạn $maxPoints';
+  }
+
+  @override
+  String scoreValidationTennisSet(Object label, Object score1, Object score2) {
+    return '$label: Kết quả $score1-$score2 không hợp lệ cho tennis';
+  }
+
+  @override
+  String scoreValidationTennisTiebreak(
+    Object label,
+    Object score1,
+    Object score2,
+  ) {
+    return '$label: Kết quả tiebreak $score1-$score2 không hợp lệ';
+  }
+
+  @override
+  String scoreValidationSideOutDeuce(Object label) {
+    return '$label: Side-out yêu cầu thắng cách 2 điểm ở giai đoạn cuối';
+  }
+
+  @override
+  String scoreValidationSideOutTarget(Object label, Object target) {
+    return '$label: Điểm đích chuẩn side-out là $target';
+  }
+
+  @override
+  String scoreValidationSideOutExactTarget(Object label, Object target) {
+    return '$label: Khi tắt win-by-2, đội thắng phải chạm $target';
+  }
+
+  @override
+  String scoreValidationSideOutMaximum(Object label, Object maxPoints) {
+    return '$label: Điểm vượt ngưỡng $maxPoints';
+  }
+
+  @override
+  String get scoreValidationUnknown =>
+      'Không thể xác định lỗi điểm số. Vui lòng kiểm tra lại kết quả.';
+
+  @override
+  String get lite_apiSessionExpired =>
+      'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+
+  @override
+  String get lite_apiForbidden => 'Bạn không có quyền quản lý giải Lite này.';
+
+  @override
+  String get lite_apiRateLimited =>
+      'Hệ thống đang giới hạn yêu cầu tạm thời. Dữ liệu cũ vẫn được giữ; vui lòng thử lại sau ít giây.';
+
+  @override
+  String get lite_apiServerBusy =>
+      'Máy chủ đang bận. Dữ liệu cũ vẫn được giữ; vui lòng thử lại sau ít giây.';
+
+  @override
+  String get lite_loadTimeout =>
+      'Tải dữ liệu giải Lite quá lâu. Vui lòng thử lại.';
+
+  @override
+  String get lite_loadError =>
+      'Không thể tải dữ liệu giải Lite. Vui lòng thử lại.';
+
+  @override
+  String get lite_tournamentTypeAdvanced =>
+      'Đây là giải Nâng Cao. App chỉ hỗ trợ quản lý giải Lite.';
+
+  @override
+  String get lite_tournamentLoadError => 'Không thể tải thông tin giải đấu';
+
+  @override
+  String get lite_participantsLoadError =>
+      'Không thể tải danh sách người tham gia';
+
+  @override
+  String get lite_matchesLoadError => 'Không thể tải danh sách trận lúc này.';
+
+  @override
+  String liveScoreSetupTennisGames(int points) {
+    return 'Số game để chạm mốc set (mặc định $points)';
+  }
+
+  @override
+  String liveScoreSetupSideOutPoints(int points) {
+    return 'Mốc điểm game side-out (mặc định $points)';
+  }
+
+  @override
+  String liveScoreSetupSetPoints(int points) {
+    return 'Mốc điểm mỗi set (mặc định $points)';
+  }
+
+  @override
+  String get matchTableRoundQualifying => 'Vòng loại';
+
+  @override
+  String get matchTableUpperFinal => 'CK nhánh thắng';
+
+  @override
+  String get matchTableUpperQuarterfinal => 'Tứ kết nhánh thắng';
+
+  @override
+  String matchTableUpperRoundOf(int size) {
+    return 'Vòng $size nhánh thắng';
+  }
+
+  @override
+  String get matchTableUpperQualifying => 'Vòng loại nhánh thắng';
+
+  @override
+  String get matchTableLowerFinal => 'CK nhánh thua';
+
+  @override
+  String get matchTableLowerSemifinal => 'BK nhánh thua';
+
+  @override
+  String matchTableLowerRound(int round) {
+    return 'Lượt nhánh thua $round';
+  }
+
+  @override
+  String get matchTableGrandFinalReset => 'Chung kết tổng (đấu lại)';
+
+  @override
+  String matchTableWinnersRound(String round) {
+    return 'Nhánh thắng - $round';
+  }
+
+  @override
+  String matchTableLosersRoundOf(int round) {
+    return 'Nhánh thua - Vòng $round';
+  }
+
+  @override
+  String matchTableWinnersRoundOf(int round) {
+    return 'Nhánh thắng - Vòng $round';
+  }
+
+  @override
+  String get communityFeedLoadError =>
+      'Chưa thể tải bảng tin. Kiểm tra kết nối rồi thử lại.';
+
+  @override
+  String get communityFeedLoadMoreError => 'Chưa thể tải thêm bài đăng.';
+
+  @override
+  String get errorParserLoginCancelled => 'Bạn đã hủy thao tác đăng nhập.';
+
+  @override
+  String get errorParserGoogleUnavailable =>
+      'Đăng nhập Google chưa khả dụng trên bản ứng dụng này. Vui lòng dùng email hoặc thử lại sau.';
+
+  @override
+  String get errorParserGoogleSignInFailed =>
+      'Không thể đăng nhập bằng Google. Vui lòng thử lại hoặc kiểm tra cấu hình Google Sign-In.';
+
+  @override
+  String get errorParserAppleSignInFailed =>
+      'Không thể đăng nhập bằng Apple. Vui lòng thử lại hoặc kiểm tra cấu hình Apple Sign-In.';
+
+  @override
+  String get errorParserInvalidDivision =>
+      'Hạng mục thi đấu không hợp lệ. Vui lòng quay lại chọn lại hạng mục.';
+
+  @override
+  String get errorParserNoDeviceSpace =>
+      'Thiết bị không còn đủ dung lượng. Vui lòng giải phóng bộ nhớ rồi thử lại.';
+
+  @override
+  String get errorParserPaymentLinkExpired =>
+      'Liên kết thanh toán đã hết hạn. Vui lòng tạo giao dịch mới.';
+
+  @override
+  String get errorParserPaymentAlreadyProcessed =>
+      'Khoản phí này đã được thanh toán hoặc đang được xử lý.';
+
+  @override
+  String get errorParserRegistrationClosed => 'Giải đấu đã đóng đăng ký.';
+
+  @override
+  String get errorParserRegistrationNotStarted =>
+      'Thời gian đăng ký chưa bắt đầu.';
+
+  @override
+  String get errorParserRegistrationEnded => 'Thời gian đăng ký đã kết thúc.';
+
+  @override
+  String get errorParserTournamentFull =>
+      'Giải đấu đã đủ số lượng người tham gia.';
+
+  @override
+  String get errorParserAlreadyRegistered =>
+      'Bạn đã đăng ký tham gia giải đấu này rồi.';
+
+  @override
+  String get errorParserTournamentNotFound => 'Không tìm thấy giải đấu.';
+
+  @override
+  String get errorParserInvalidInviteCode =>
+      'Mã mời giải đấu không hợp lệ hoặc đã hết hạn.';
+
+  @override
+  String get errorParserTournamentConfigLocked =>
+      'Không thể đổi cấu hình giải khi giải đã bắt đầu hoặc đã kết thúc.';
+
+  @override
+  String get errorParserInvalidSelection =>
+      'Dữ liệu được chọn không hợp lệ. Vui lòng tải lại và chọn lại.';
+
+  @override
+  String get errorParserConnectionTimeout =>
+      'Kết nối tới máy chủ quá hạn. Vui lòng kiểm tra lại đường truyền và thử lại.';
+
+  @override
+  String get errorParserConnectionFailed =>
+      'Không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối mạng hoặc server.';
+
+  @override
+  String get errorParserBadRequest => 'Yêu cầu gửi đi không hợp lệ (Lỗi 400).';
+
+  @override
+  String get errorParserInvalidCredentials =>
+      'Email hoặc mật khẩu không chính xác.';
+
+  @override
+  String get errorParserForbidden =>
+      'Bạn không có quyền thực hiện hành động này.';
+
+  @override
+  String get errorParserNotFound =>
+      'Không tìm thấy tài nguyên được yêu cầu (Lỗi 404).';
+
+  @override
+  String errorParserServerError(int code) {
+    return 'Lỗi hệ thống phía máy chủ (Lỗi $code).';
+  }
+
+  @override
+  String errorParserResponseError(int code) {
+    return 'Máy chủ phản hồi mã lỗi (Lỗi $code).';
+  }
+
+  @override
+  String get errorParserRequestCancelled => 'Yêu cầu đã bị hủy bỏ.';
+
+  @override
+  String get errorParserBrowserConnectionFailed =>
+      'Không thể kết nối tới máy chủ (Có thể do lỗi mạng, CORS hoặc server chưa hoạt động).';
+
+  @override
+  String get errorParserFallback => 'Đã xảy ra lỗi hệ thống';
+
+  @override
+  String get errorParserEmailRegistered =>
+      'Email này đã được đăng ký. Vui lòng dùng email khác hoặc đăng nhập.';
+
+  @override
+  String get errorParserEmailRequired => 'Vui lòng nhập địa chỉ email.';
+
+  @override
+  String get errorParserEmailInvalid => 'Địa chỉ email không hợp lệ.';
+
+  @override
+  String get errorParserPasswordMin => 'Mật khẩu phải có ít nhất 6 ký tự.';
+
+  @override
+  String get errorParserPasswordRequired => 'Vui lòng nhập mật khẩu.';
+
+  @override
+  String get errorParserFullNameRequired => 'Vui lòng nhập họ và tên.';
+
+  @override
+  String get errorParserInvalidCredentialsMessage =>
+      'Email hoặc mật khẩu không đúng.';
+
+  @override
+  String get errorParserGoogleAccount =>
+      'Tài khoản này đã đăng ký qua Google. Vui lòng đăng nhập bằng Google.';
+
+  @override
+  String get authInvalidInviteToken => 'Token không hợp lệ hoặc đã hết hạn';
+
+  @override
+  String authValidationFailed(String error) {
+    return 'Lỗi xác thực: $error';
+  }
+
+  @override
+  String get notificationLoadError => 'Không thể tải thông báo. Hãy thử lại.';
+
+  @override
+  String notificationMinutesAgo(int minutes) {
+    return '$minutes phút trước';
+  }
+
+  @override
+  String notificationHoursAgo(int hours) {
+    return '$hours giờ trước';
+  }
+
+  @override
+  String notificationDaysAgo(int days) {
+    return '$days ngày trước';
+  }
+
+  @override
+  String get teamStatusApproved => 'Đã duyệt';
+
+  @override
+  String get teamStatusWaitingForPartner => 'Chờ đồng đội';
+
+  @override
+  String get teamStatusPending => 'Đang duyệt';
+
+  @override
+  String get teamStatusQueue => 'Hàng chờ';
+
+  @override
+  String get teamStatusRejected => 'Bị từ chối';
+
+  @override
+  String get teamStatusWithdrawn => 'Đã rút lui';
+
+  @override
+  String get teamStatusEliminated => 'Đã bị loại';
+
+  @override
+  String get tournamentWorkspacePendingPairing => 'Chờ xác định cặp đấu';
+
+  @override
+  String get chatTypeConversation => 'Cuộc trò chuyện';
+
+  @override
+  String get paymentStatusPending => 'Chờ thanh toán';
+
+  @override
+  String get paymentStatusCancelled => 'Đã huỷ';
+
+  @override
+  String get paymentStatusExpired => 'Đã hết hạn';
+
+  @override
+  String get paymentMethodBankTransfer => 'Chuyển khoản';
+
+  @override
+  String get apiPostInvalid => 'Bài đăng không hợp lệ';
+
+  @override
+  String get apiCommentInvalid => 'Bình luận không hợp lệ';
+
+  @override
+  String get apiUploadImageInvalid => 'Ảnh tải lên không hợp lệ';
+
+  @override
+  String get apiCreateTeamInvalid => 'Phản hồi tạo đội không hợp lệ.';
+
+  @override
+  String get apiTeamLogoInvalid => 'Ảnh logo không hợp lệ.';
+
+  @override
+  String get apiRegistrationResponseInvalid => 'Phản hồi đăng ký không hợp lệ.';
+
+  @override
+  String get apiInviteCodeInvalid => 'Mã tham gia giải không hợp lệ.';
+
+  @override
+  String get apiFootballRosterResponseInvalid =>
+      'Phản hồi roster bóng đá không hợp lệ.';
+
+  @override
+  String get apiFootballRosterUpdateInvalid =>
+      'Phản hồi cập nhật roster không hợp lệ.';
+
+  @override
+  String get authTokenInvalid => 'Token không hợp lệ hoặc đã hết hạn';
+
+  @override
+  String get authTokenValidationFailed =>
+      'Xác thực token thất bại. Vui lòng thử lại.';
+
+  @override
+  String get authLoginFailed => 'Đăng nhập thất bại. Vui lòng thử lại.';
+
+  @override
+  String get authGoogleLoginFailed =>
+      'Đăng nhập Google thất bại. Vui lòng thử lại.';
+
+  @override
+  String get authAppleLoginFailed =>
+      'Đăng nhập Apple thất bại. Vui lòng thử lại.';
+
+  @override
+  String get authFacebookLoginFailed =>
+      'Đăng nhập Facebook thất bại. Vui lòng thử lại.';
+
+  @override
+  String get authRegisterFailed =>
+      'Đăng ký thất bại. Vui lòng kiểm tra thông tin và thử lại.';
+
+  @override
+  String get authSessionExpired =>
+      'Phiên đăng nhập đã hết hạn hoặc mã truy cập đã được đổi.';
+
+  @override
+  String get communityFeedCreatePostError =>
+      'Đăng bài thất bại. Vui lòng thử lại.';
+
+  @override
+  String get paymentStatusCompleted => 'Hoàn thành';
+
+  @override
+  String get paymentStatusFailed => 'Thất bại';
+
+  @override
+  String get paymentStatusRefunded => 'Đã hoàn tiền';
+
+  @override
+  String get paymentGatewayTransfer => 'Chuyển khoản';
+
+  @override
+  String get teamApprovalApproved => 'Đã duyệt';
+
+  @override
+  String get teamApprovalPendingPartner => 'Chờ đồng đội';
+
+  @override
+  String get teamApprovalPending => 'Đang duyệt';
+
+  @override
+  String get teamApprovalWaitlisted => 'Hàng chờ';
+
+  @override
+  String get teamApprovalRejected => 'Bị từ chối';
+
+  @override
+  String get teamApprovalWithdrawn => 'Đã rút lui';
+
+  @override
+  String get teamApprovalKicked => 'Đã bị loại';
+
+  @override
+  String get workspaceDefaultTournament => 'Giải đấu';
+
+  @override
+  String workspaceMatchLabel(Object order) {
+    return 'Trận $order';
+  }
+
+  @override
+  String get workspaceWaitingPair => 'Chờ xác định cặp đấu';
+
+  @override
+  String get workspaceWaitingTeam1 => 'Chờ đội 1';
+
+  @override
+  String get workspaceWaitingTeam2 => 'Chờ đội 2';
+
+  @override
+  String get chatParticipantFallback => 'Người dùng';
+
+  @override
+  String get chatClubFallback => 'Câu lạc bộ';
+
+  @override
+  String get chatConversationFallback => 'Cuộc trò chuyện';
+
+  @override
+  String get userGuestFallback => 'Khách';
+
+  @override
+  String get matchRoundWinnersFinal => 'CK nhánh thắng';
+
+  @override
+  String get matchRoundWinnersSemifinal => 'BK nhánh thắng';
+
+  @override
+  String get matchRoundWinnersQuarterfinal => 'Tứ kết nhánh thắng';
+
+  @override
+  String matchRoundWinnersRoundOf(Object size) {
+    return 'Vòng $size nhánh thắng';
+  }
+
+  @override
+  String get matchRoundWinnersQualifying => 'Vòng loại nhánh thắng';
+
+  @override
+  String get matchRoundLosersFinal => 'CK nhánh thua';
+
+  @override
+  String get matchRoundLosersSemifinal => 'BK nhánh thua';
+
+  @override
+  String matchRoundLosersRound(Object round) {
+    return 'Lượt nhánh thua $round';
+  }
+
+  @override
+  String get matchRoundGrandFinal => 'Chung kết tổng';
+
+  @override
+  String get matchRoundGrandFinalReset => 'Chung kết tổng (đấu lại)';
+
+  @override
+  String matchRoundLosersMatch(Object round) {
+    return 'Nhánh thua - Lượt $round';
+  }
+
+  @override
+  String matchRoundWinnersMatch(Object base) {
+    return 'Nhánh thắng - $base';
+  }
+
+  @override
+  String get communityPostInvalid => 'Bài đăng không hợp lệ';
+
+  @override
+  String get communityCommentInvalid => 'Bình luận không hợp lệ';
+
+  @override
+  String get communityMediaInvalid => 'Ảnh tải lên không hợp lệ';
+
+  @override
+  String get teamCreateResponseInvalid => 'Phản hồi tạo đội không hợp lệ.';
+
+  @override
+  String get teamLogoInvalid => 'Ảnh logo không hợp lệ.';
+
+  @override
+  String teamFallbackName(Object id) {
+    return 'Đội $id';
+  }
+
+  @override
+  String get teamMemberFallback => 'VĐV';
+
+  @override
+  String get tournamentRegistrationResponseInvalid =>
+      'Phản hồi đăng ký không hợp lệ.';
+
+  @override
+  String get tournamentInviteCodeInvalid => 'Mã tham gia giải không hợp lệ.';
+
+  @override
+  String get footballRosterResponseInvalid =>
+      'Phản hồi roster bóng đá không hợp lệ.';
+
+  @override
+  String get footballRosterUpdateResponseInvalid =>
+      'Phản hồi cập nhật roster không hợp lệ.';
+
+  @override
+  String get rankingUnrankedFallback => 'Chưa xếp hạng';
+
+  @override
+  String get rankingLoadError =>
+      'Không thể tải thông tin xếp hạng của người dùng';
+
+  @override
+  String get teamTournamentMissing => 'Không tìm thấy thông tin giải đấu.';
+
+  @override
+  String get teamTournamentLocked =>
+      'Không thể thay đổi danh sách đội khi giải đấu đang diễn ra hoặc đã kết thúc.';
+
+  @override
+  String get rankingRequestFailed => 'Yêu cầu bảng xếp hạng thất bại';
+
+  @override
+  String get rankingEloTiersLoadError => 'Không thể tải danh sách bậc ELO';
+
+  @override
+  String get statusLabelDraft => 'Nháp';
+
+  @override
+  String get statusLabelUpcoming => 'Sắp diễn ra';
+
+  @override
+  String get statusLabelRegistration => 'Đang mở đăng ký';
+
+  @override
+  String get statusLabelRegistrationClosed => 'Đã đóng đăng ký';
+
+  @override
+  String get statusLabelDrawing => 'Bốc thăm';
+
+  @override
+  String get statusLabelInProgress => 'Đang thi đấu';
+
+  @override
+  String get statusLabelCompleted => 'Đã kết thúc';
+
+  @override
+  String get statusLabelCancelled => 'Đã hủy';
+
+  @override
+  String get statusLabelScheduled => 'Chưa thi đấu';
+
+  @override
+  String get statusLabelLive => 'Đang thi đấu';
+
+  @override
+  String get statusLabelWalkover => 'Bỏ cuộc';
+
+  @override
+  String get club_joinPendingApproval =>
+      'Đã gửi yêu cầu tham gia. Vui lòng chờ Ban chủ nhiệm xét duyệt!';
+
+  @override
+  String get memberTagMenu => 'Gán tag';
+
+  @override
+  String get memberTagAssignTitle => 'Gán tag cho thành viên';
+
+  @override
+  String get memberTagAssignDesc =>
+      'Tag hiển thị cạnh tên trong danh sách thành viên (tối đa 3 tag).';
+
+  @override
+  String get memberTagAddHint => 'Nhập tag mới...';
+
+  @override
+  String get memberTagAdd => 'Thêm';
+
+  @override
+  String get memberTagSave => 'Lưu tag';
+
+  @override
+  String get memberTagSaving => 'Đang lưu...';
+
+  @override
+  String get memberTagMaxReached => 'Đã đạt tối đa 3 tag';
+
+  @override
+  String get memberTagEmpty => 'Chưa có tag nào. Thêm tag bên dưới để bắt đầu.';
+
+  @override
+  String get memberTagTooLong => 'Mỗi tag tối đa 15 ký tự.';
+
+  @override
+  String get memberTagInvalid =>
+      'Tag chỉ được chứa chữ cái, số, khoảng trắng, gạch dưới (_) và gạch ngang (-).';
+
+  @override
+  String get memberTagDuplicate => 'Tag này đã tồn tại.';
+
+  @override
+  String get memberTagRemove => 'Xoá tag';
+
+  @override
+  String get memberTagSaveError => 'Không thể lưu tag. Vui lòng thử lại.';
+
+  @override
+  String memberTagCounter(int used, int max) {
+    return 'Đã dùng $used/$max tag.';
+  }
+
+  @override
+  String get roleAdminDisplay => '👑 Ban Tổ Chức (Admin)';
+
+  @override
+  String get roleRefereeDisplay => '⚖️ Trọng Tài (Referee)';
+
+  @override
+  String get roleViewerDisplay => '👀 Khán Giả (Viewer)';
+
+  @override
+  String get roleAdminShort => 'Admin';
+
+  @override
+  String get roleRefereeShort => 'Trọng Tài';
+
+  @override
+  String get roleViewerShort => 'Viewer';
+
+  @override
+  String get excelMatchProtocolTitle => 'BIÊN BẢN TRẬN ĐẤU';
+
+  @override
+  String excelResultsTitle(String tournamentName) {
+    return 'TỔNG HỢP KẾT QUẢ GIẢI ĐẤU: $tournamentName';
+  }
+
+  @override
+  String get excelOverviewSheet => 'Tổng quan';
+
+  @override
+  String get excelTimelineSheet => 'Lịch sử sự kiện';
+
+  @override
+  String get excelResultsSheet => 'Kết quả toàn giải';
+
+  @override
+  String get excelStatus => 'Trạng thái:';
+
+  @override
+  String get excelRound => 'Vòng:';
+
+  @override
+  String get excelMatchNumber => 'Trận số:';
+
+  @override
+  String get excelStartTime => 'Thời gian bắt đầu:';
+
+  @override
+  String get excelEndTime => 'Thời gian kết thúc:';
+
+  @override
+  String get excelNotStarted => 'Chưa bắt đầu';
+
+  @override
+  String get excelNotEnded => 'Chưa kết thúc';
+
+  @override
+  String get excelTeam1 => 'Đội 1';
+
+  @override
+  String get excelTeam2 => 'Đội 2';
+
+  @override
+  String get excelScore => 'Điểm số';
+
+  @override
+  String get excelWinner => 'Đội thắng cuộc:';
+
+  @override
+  String get excelUndetermined => 'Chưa xác định';
+
+  @override
+  String get excelTime => 'Thời gian';
+
+  @override
+  String get excelTeam => 'Đội';
+
+  @override
+  String get excelEvent => 'Sự kiện';
+
+  @override
+  String get excelPointsChanged => 'Điểm thay đổi';
+
+  @override
+  String get excelNotes => 'Ghi chú';
+
+  @override
+  String get excelOtherEvent => 'Khác';
+
+  @override
+  String get excelScoreEvent => 'Ghi điểm';
+
+  @override
+  String get excelFoulEvent => 'Lỗi';
+
+  @override
+  String get excelYellowCardEvent => 'Thẻ vàng';
+
+  @override
+  String get excelRedCardEvent => 'Thẻ đỏ';
+
+  @override
+  String get excelInjuryEvent => 'Y tế/Chấn thương';
+
+  @override
+  String get excelPenaltyEvent => 'Thẻ phạt';
+
+  @override
+  String get excelWinnerHeader => 'Đội thắng';
+
+  @override
+  String get excelStatusHeader => 'Trạng thái';
+
+  @override
+  String get excelEndTimeHeader => 'Thời gian kết thúc';
+
+  @override
+  String get excelReferee => 'Trọng tài';
+
+  @override
+  String get excelMatchProtocolShare => 'Biên bản trận đấu';
+
+  @override
+  String excelResultsShare(String tournamentName) {
+    return 'Kết quả giải đấu $tournamentName';
+  }
+
+  @override
+  String get excelMatchProtocolFilePrefix => 'BienBan';
+
+  @override
+  String get excelResultsFilePrefix => 'KetQua';
+
+  @override
+  String get excelScore1 => 'Điểm 1';
+
+  @override
+  String get excelScore2 => 'Điểm 2';
+
+  @override
+  String get bracketDiagramZoomHint => 'Kéo & thu phóng';
+
+  @override
+  String get bracketDiagramEmptyTitle => 'Chưa có sơ đồ thi đấu';
+
+  @override
+  String get bracketDiagramEmptyHint => 'Hãy hoàn tất bốc thăm để tạo sơ đồ';
+
+  @override
+  String get authCredentialsMissingResponse =>
+      'Không tìm thấy thông tin xác thực trong phản hồi';
+
+  @override
+  String get authRegisterResponseInvalid =>
+      'Đăng ký không thành công. Vui lòng thử lại.';
+
+  @override
+  String get authGoogleCredentialsMissing =>
+      'Không tìm thấy thông tin xác thực Google';
+
+  @override
+  String get authAppleCredentialsMissing =>
+      'Không tìm thấy thông tin xác thực Apple';
+
+  @override
+  String get authFacebookCredentialsMissing =>
+      'Không tìm thấy thông tin xác thực Facebook';
+
+  @override
+  String get networkConnectionFailed => 'Lỗi kết nối đến máy chủ';
+
+  @override
+  String get userProfileLoadFailed => 'Không thể lấy thông tin người dùng';
+
+  @override
+  String get userProfileUpdateFailed => 'Cập nhật thông tin thất bại';
+
+  @override
+  String get userAvatarUploadFailed => 'Tải ảnh đại diện thất bại';
+
+  @override
+  String get userCoverUploadFailed => 'Tải ảnh bìa thất bại';
+
+  @override
+  String get userPublicProfileLoadFailed =>
+      'Không thể tải thông tin người dùng';
+
+  @override
+  String get userPasswordChangeFailed => 'Đổi mật khẩu thất bại';
+
+  @override
+  String get userAccountDeleteFailed => 'Xóa tài khoản thất bại';
+
+  @override
+  String get userChangeRequestFailed => 'Gửi yêu cầu thất bại';
+
+  @override
+  String get communityMembersLoadFailed => 'Lỗi lấy thành viên CLB';
+
+  @override
+  String get communityJoinFailed => 'Không thể tham gia CLB';
+
+  @override
+  String get reportHistoryLoadFailed => 'Không thể tải lịch sử báo cáo';
+
+  @override
+  String get tournamentCreateApiFailed => 'Không thể tạo giải đấu qua API';
+
+  @override
+  String get tournamentInfoTimeout => 'Quá thời gian tải thông tin giải đấu.';
+
+  @override
+  String get profileTierSNotRanked => 'Chưa được xếp hạng ở bậc S';
+
+  @override
+  String get drawService_minTeams => 'Cần ít nhất 2 đội để bốc thăm.';
+
+  @override
+  String get communityUpdateFailed => 'Cập nhật CLB thất bại';
+
+  @override
+  String matchUnexpectedResponse(String statusCode) {
+    return 'Phản hồi trận đấu không hợp lệ: $statusCode';
+  }
+
+  @override
+  String get teamCreateRegisterApiFailed => 'Không thể tạo/đăng ký đội qua API';
+
+  @override
+  String get tokenRegenerateApiFailed => 'Không thể cấp lại token qua API';
+
+  @override
+  String tournamentUnsupportedSport(String sport) {
+    return 'Môn thể thao không được hỗ trợ: $sport';
+  }
+
+  @override
+  String get tournamentDivisionIdRequired =>
+      'divisionId là bắt buộc để cập nhật ô bracket';
+
+  @override
+  String tournamentBracketSlotsUpdateFailed(String statusCode) {
+    return 'Cập nhật ô bracket thất bại ($statusCode)';
+  }
+
+  @override
+  String get reportFileLinkMissing => 'Không nhận được liên kết tệp';
+
+  @override
+  String get matchCreateUnsupported =>
+      'Ứng dụng di động không thể tạo trận trực tiếp. Trận được tạo từ bracket backend.';
+
+  @override
+  String get matchBatchCreateUnsupported =>
+      'Ứng dụng di động không thể tạo hàng loạt trận trực tiếp.';
+
+  @override
+  String get tokenCreateUnsupported =>
+      'Ứng dụng di động không thể tạo token trực tiếp.';
+
+  @override
+  String get tokenCreateTournamentUnsupported =>
+      'Ứng dụng di động không thể tạo token giải đấu trực tiếp.';
+
+  @override
+  String get tokenDeactivateUnsupported =>
+      'Ứng dụng di động không thể vô hiệu hóa token.';
+
+  @override
+  String get tournamentCategoryUnknown =>
+      'Không tìm thấy bộ môn không xác định trên hệ thống.';
+
+  @override
+  String tournamentCategoryNotFound(String sport) {
+    return 'Không tìm thấy bộ môn \"$sport\" trên hệ thống.';
+  }
+
+  @override
+  String reportDefaultReason(String reason) {
+    return 'Báo cáo: $reason';
+  }
+
+  @override
+  String get customErrorDisplay => 'Đã có lỗi hiển thị';
+
+  @override
+  String scoreServingIndicator(String team, int number) {
+    return 'Giao bóng: $team · Giao $number';
+  }
+
+  @override
+  String get sportoHeaderLoginRegister => 'Đăng nhập / Đăng ký';
+
+  @override
+  String get sportoHeaderNationalRank => 'Xếp hạng Quốc gia';
+
+  @override
+  String get sportoHeaderMatches => 'Trận';
+
+  @override
+  String get sportoHeaderWins => 'Thắng';
+
+  @override
+  String get sportoHeaderRate => 'Tỷ lệ';
+
+  @override
+  String get bracketStatusUpcoming => 'SẮP ĐẤU';
+
+  @override
+  String get bracketStatusLive => 'LIVE';
+
+  @override
+  String get bracketStatusCompleted => 'XONG';
+
+  @override
+  String get bracketStatusChampion => 'VÔ ĐỊCH';
+
+  @override
+  String get bracketBye => 'Miễn đấu';
+
+  @override
+  String get bracketScoreAction => 'Tính điểm →';
+
+  @override
+  String get bracketViewAction => 'Xem →';
+
+  @override
+  String get tokenTournamentCodeTitle => 'Nhập mã Giải đấu';
+
+  @override
+  String get tokenTournamentCodeDescription =>
+      'Nhập mã truy cập giải đấu của bạn để tiếp tục với vai trò tương ứng.';
+
+  @override
+  String get tournamentRegistrationSheetTitle => 'Đăng ký tham gia';
+
+  @override
+  String get tournamentRegistrationSheetDescription =>
+      'Tiếp tục sang luồng đăng ký đầy đủ để hệ thống kiểm tra hồ sơ, hạng mục, ELO, mã mời và thanh toán.';
+
+  @override
+  String get tournamentRegistrationSheetContinue => 'Tiếp tục đăng ký';
+
+  @override
+  String tournamentTeamMemberCount(int count) {
+    return '$count thành viên';
+  }
+
+  @override
+  String tournamentTeamSeed(int seed) {
+    return 'Hạt giống #$seed';
+  }
+
+  @override
+  String get tournamentTeamMembersTitle => 'THÀNH VIÊN';
+
+  @override
+  String get tournamentTeamNoMembers => 'Chưa có thông tin thành viên';
+
+  @override
+  String get tournamentTeamCaptain => 'Trưởng nhóm';
+
+  @override
+  String get tournamentTeamWaitlisted => 'Đội đang trong hàng chờ';
+
+  @override
+  String get tournamentTeamPendingPartner => 'Đội đang chờ đồng đội';
+
+  @override
+  String get tournamentTeamPendingApproval => 'Đội đang duyệt';
+
+  @override
+  String get tournamentAthleteInfo => 'Thông tin VĐV';
+
+  @override
+  String get tennisScorePointsGuide => '15 • 30 • 40';
+
+  @override
+  String get tennisScoreSetLabel => 'Set';
+
+  @override
+  String get tennisScoreFormatLabel => 'Format';
+
+  @override
+  String tennisScoreSetsToWin(int sets) {
+    return 'Thắng $sets set';
+  }
+
+  @override
+  String get tennisScoreStatusLabel => 'Trạng thái';
+
+  @override
+  String get tennisScoreTiebreakHelp =>
+      'Set đang vào tiebreak, điểm hiển thị theo số thực.';
+
+  @override
+  String get tennisScoreGameHelp =>
+      'Chấm theo game tennis của giải, hệ thống tự xử lý deuce và advantage.';
+
+  @override
+  String get tennisScoreVs => 'VS';
+
+  @override
+  String get rankingChartEmpty => 'Chưa có dữ liệu biểu đồ ELO';
+
+  @override
+  String get rankingProgressTitle => 'TIẾN TRÌNH ELO';
+
+  @override
+  String get rankingPodiumTitle => 'Top 100 Vận động viên';
+
+  @override
+  String get rankingTierSystemTitle => 'Hệ thống phân hạng ELO';
+
+  @override
+  String get rankingTierSystemDescription =>
+      'Điểm ELO tích lũy sau mỗi trận đấu chính thức sẽ xếp người chơi vào các Tier trình độ tương ứng. Chi tiết dải điểm:';
+
+  @override
+  String get rankingTierLevelsTitle => 'HỆ THỐNG BẬC TRÌNH ĐỘ (TIERS)';
+
+  @override
+  String get rankingEloRulesTitle => 'QUY LUẬT & TÍNH ĐIỂM ELO';
+
+  @override
+  String get rankingYouLabel => 'BẠN';
+
+  @override
+  String get officialScoreCancel => 'Hủy';
+
+  @override
+  String get bracketEmptyTitle => 'Chưa có sơ đồ';
+
+  @override
+  String get imageViewerZoomHint => 'Chụm tay hoặc chạm 2 lần để phóng to';
+
+  @override
+  String get rankingRuleNewbie => 'Người mới bắt đầu từ 1000 ELO.';
+
+  @override
+  String get rankingRuleOfficialComplete =>
+      'ELO chỉ thay đổi sau trận đấu chính thức đã hoàn tất.';
+
+  @override
+  String get rankingRuleDoublesAverage =>
+      'Đánh đôi: ELO được tính theo sức mạnh trung bình hai đội rồi phân bổ cho từng người.';
+
+  @override
+  String get rankingRuleDecay =>
+      'Không thi đấu trong 1 tháng liên tục: dưới 1400 ELO giữ nguyên; từ 1400 trở lên giảm theo tier: 2%, 3%, 4% hoặc 5% mỗi tháng.';
+
+  @override
+  String get rankingRuleShield =>
+      'Khiên ELO bảo vệ khi decay làm rơi qua mốc: giữ mốc một lần rồi tiêu thụ khiên.';
+
+  @override
+  String get rankingRuleDoublesPair =>
+      'Đánh đôi có rank riêng cho từng cặp, bắt đầu từ 1000 ELO; không lấy trung bình ELO cá nhân.';
+
+  @override
+  String get rankingRuleDecayReset =>
+      'Khi thi đấu lại, mốc giảm ELO được tính lại từ đầu; không trừ dồn các tháng trước.';
+
+  @override
+  String get rankingRuleAutoTier =>
+      'Tier được cập nhật tự động khi ELO thay đổi.';
+
+  @override
+  String get rankingEloChartNoData => 'Chưa có dữ liệu biểu đồ ELO';
+
+  @override
+  String get rankingTop100Athletes => 'Top 100 Vận động viên';
+
+  @override
+  String rankingSeason(Object year) {
+    return 'Mùa $year';
+  }
+
+  @override
+  String get tournamentTeamsEmptyTitle => 'Chưa có VĐV đăng ký';
+
+  @override
+  String get tournamentTeamsEmptySubtitle =>
+      'Hãy kiểm tra lại sau khi giải đấu mở đăng ký';
+
+  @override
+  String get commonErrorPrefix => 'Lỗi';
+
+  @override
+  String get rankingDefaultElo => '1000 ELO';
+
+  @override
+  String get communityTournamentCreateFailed => 'Tạo giải đấu thất bại';
+
+  @override
+  String get routerDefaultCommunity => 'Cộng đồng';
+
+  @override
+  String get routerDefaultUser => 'Người dùng';
+
+  @override
+  String get devicePairingTitle => 'Ghép nối thiết bị camera';
+
+  @override
+  String get devicePairingInstruction =>
+      'Quét mã QR do ban tổ chức giải cung cấp.';
+
+  @override
+  String get devicePairingScanAgain => 'Quét lại';
+
+  @override
+  String get devicePairingSuccess => 'Đã ghép nối camera thành công';
+
+  @override
+  String get devicePairingInvalidCode =>
+      'Mã QR này không phải mã ghép nối camera hợp lệ.';
+
+  @override
+  String get devicePairingFingerprintUnavailable =>
+      'Không thể xác định thiết bị này.';
+
+  @override
+  String get devicePairingCameraPermission =>
+      'Cần cấp quyền camera để quét mã ghép nối.';
+
+  @override
+  String get devicePairingClose => 'Đóng';
 }

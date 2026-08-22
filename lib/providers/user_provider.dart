@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
@@ -40,7 +42,8 @@ final provincesProvider = FutureProvider<List<Province>>((ref) async {
 final userProfileProvider = FutureProvider<UserProfile>((ref) async {
   final authState = ref.watch(authProvider);
   if (!authState.isAuthenticated) {
-    return const UserProfile(id: '', fullName: 'Khách', email: '');
+    final l10n = lookupAppLocalizations(ref.read(localeProvider));
+    return UserProfile(id: '', fullName: l10n.userGuestFallback, email: '');
   }
 
   try {
@@ -55,25 +58,28 @@ final userProfileProvider = FutureProvider<UserProfile>((ref) async {
 
 /// Provider lấy hồ sơ công khai của người dùng khác.
 /// GET /users/:id/public — dùng cho trang xem profile người khác.
-final userPublicProfileProvider = FutureProvider.family<UserPublicProfile, String>((ref, userId) async {
-  final repo = ref.read(userRepositoryProvider);
-  return repo.getPublicProfile(userId);
-});
+final userPublicProfileProvider =
+    FutureProvider.family<UserPublicProfile, String>((ref, userId) async {
+      final repo = ref.read(userRepositoryProvider);
+      return repo.getPublicProfile(userId);
+    });
 
 /// Trận đấu công khai của hồ sơ, dùng cùng endpoint với web.
-final publicUserMatchesProvider = FutureProvider.family<List<MatchModel>, String>((ref, userId) async {
-  final response = await ref.read(dioProvider).get('/matches', queryParameters: {
-    'userId': userId,
-    'limit': 10,
-  });
-  final raw = response.data;
-  final payload = raw is Map<String, dynamic> ? (raw['data'] ?? raw) : raw;
-  final list = payload is Map<String, dynamic> ? (payload['data'] as List<dynamic>? ?? []) : (payload as List<dynamic>? ?? []);
-  return list.whereType<Map<String, dynamic>>().map((item) {
-    final id = item['id']?.toString() ?? '';
-    return MatchModel.fromJson(item, id);
-  }).toList();
-});
+final publicUserMatchesProvider =
+    FutureProvider.family<List<MatchModel>, String>((ref, userId) async {
+      final response = await ref
+          .read(dioProvider)
+          .get('/matches', queryParameters: {'userId': userId, 'limit': 10});
+      final raw = response.data;
+      final payload = raw is Map<String, dynamic> ? (raw['data'] ?? raw) : raw;
+      final list = payload is Map<String, dynamic>
+          ? (payload['data'] as List<dynamic>? ?? [])
+          : (payload as List<dynamic>? ?? []);
+      return list.whereType<Map<String, dynamic>>().map((item) {
+        final id = item['id']?.toString() ?? '';
+        return MatchModel.fromJson(item, id);
+      }).toList();
+    });
 
 /// Gọi GET /api/v1/rankings/user/:userId
 /// BE trả về { data: { publicRanks: [...], communityRanks: [...] } }
@@ -106,7 +112,9 @@ final userRankingsProvider = FutureProvider<List<PlayerRanking>>((ref) async {
 
 /// Các đội bóng người dùng đang tham gia, dùng để hiển thị ELO đội cao nhất
 /// trong dashboard cá nhân. Backend trả rank theo category đang hoạt động.
-final myFootballTeamsProvider = FutureProvider<List<FootballTeamSummary>>((ref) async {
+final myFootballTeamsProvider = FutureProvider<List<FootballTeamSummary>>((
+  ref,
+) async {
   final authState = ref.watch(authProvider);
   if (!authState.isAuthenticated) return const [];
   return ref.read(footballTeamApiProvider).listMyFootballTeams();

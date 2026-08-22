@@ -14,7 +14,9 @@ class PaymentResultScreen extends StatelessWidget {
     final isSuccess = extra?['status'] == 'success';
     final tournamentId = extra?['tournamentId'] ?? '';
     final amount = (extra?['amount'] ?? 0).toDouble();
-    final fmt = NumberFormat('#,###', 'vi_VN');
+    final fmt = NumberFormat.decimalPattern(
+      Localizations.localeOf(context).toLanguageTag(),
+    );
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(

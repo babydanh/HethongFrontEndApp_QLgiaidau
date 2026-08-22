@@ -23,6 +23,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 const List<String> _kQuickReactions = ['❤️', '👍', '😂', '😮', '😢', '🔥'];
 
@@ -72,6 +73,13 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
   late final ChatSocketService _chatSocket;
   bool _socketConnected = false;
+  final Map<String, Future<ChatLinkPreviewModel?>> _linkPreviewRequests = {};
+  final Map<String, ChatLinkPreviewModel?> _linkPreviewCache = {};
+
+  static final RegExp _urlPattern = RegExp(
+    r'https?://[^\s<>()]+',
+    caseSensitive: false,
+  );
 
   @override
   void initState() {
@@ -265,6 +273,56 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       }
     };
     _chatSocket.connect(widget.roomId);
+  }
+
+  String? _extractFirstUrl(String text) {
+    final match = _urlPattern.firstMatch(text);
+    if (match == null) return null;
+    final raw = match.group(0)?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    return raw.replaceFirst(RegExp(r'[.,!?;:]+$'), '');
+  }
+
+  Future<ChatLinkPreviewModel?> _loadLinkPreview(String url) {
+    if (_linkPreviewCache.containsKey(url)) {
+      return Future.value(_linkPreviewCache[url]);
+    }
+    return _linkPreviewRequests[url] ??= _requestLinkPreview(url);
+  }
+
+  Future<ChatLinkPreviewModel?> _requestLinkPreview(String url) async {
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      final response = await dio.get(
+        '/chat/link-preview',
+        queryParameters: {'url': url},
+      );
+      final raw = response.data is Map
+          ? (response.data['data'] ?? response.data)
+          : null;
+      if (raw is Map) {
+        final preview = ChatLinkPreviewModel.fromJson(
+          Map<String, dynamic>.from(raw),
+        );
+        if (preview.hasContent) {
+          _linkPreviewCache[url] = preview;
+          return preview;
+        }
+      }
+      _linkPreviewCache[url] = null;
+      return null;
+    } catch (_) {
+      _linkPreviewCache[url] = null;
+      return null;
+    } finally {
+      _linkPreviewRequests.remove(url);
+    }
+  }
+
+  Future<void> _openLink(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null || !uri.hasScheme) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   Future<void> _loadRoomDetails() async {
@@ -1945,6 +2003,11 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                               if (msg.poll != null)
                                 _buildPollCard(msg, msg.poll!, colors, isMine),
 
+                              // OpenGraph link preview. The URL remains in the
+                              // message text for accessibility and copy support.
+                              if (!msg.isRevoked && textContent.isNotEmpty)
+                                _buildLinkPreview(msg, colors, isMine),
+
                               // Text Content
                               if (textContent.isNotEmpty)
                                 Text(
@@ -2051,6 +2114,126 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLinkPreview(
+    ChatMessageModel msg,
+    AppColorsExtension colors,
+    bool isMine,
+  ) {
+    final url = _extractFirstUrl(msg.content);
+    if (url == null) return const SizedBox.shrink();
+
+    final inlinePreview = msg.linkPreview;
+    if (inlinePreview != null && inlinePreview.hasContent) {
+      return _buildLinkPreviewCard(inlinePreview, colors, isMine);
+    }
+
+    return FutureBuilder<ChatLinkPreviewModel?>(
+      future: _loadLinkPreview(url),
+      builder: (context, snapshot) {
+        final preview = snapshot.data;
+        if (preview == null || !preview.hasContent) {
+          return const SizedBox.shrink();
+        }
+        return _buildLinkPreviewCard(preview, colors, isMine);
+      },
+    );
+  }
+
+  Widget _buildLinkPreviewCard(
+    ChatLinkPreviewModel preview,
+    AppColorsExtension colors,
+    bool isMine,
+  ) {
+    final title = preview.title?.trim();
+    final description = preview.description?.trim();
+    final siteName = preview.siteName?.trim();
+    final image = preview.image?.trim();
+    final fallbackHost = Uri.tryParse(preview.url)?.host;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 7),
+      child: GestureDetector(
+        onTap: () => _openLink(preview.url),
+        child: Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(maxWidth: 340),
+          decoration: BoxDecoration(
+            color: isMine
+                ? Colors.black.withValues(alpha: 0.18)
+                : colors.bgSurface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isMine
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : colors.borderLight,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (image != null && image.isNotEmpty)
+                Image.network(
+                  image,
+                  width: double.infinity,
+                  height: 132,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(11, 9, 11, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      siteName?.isNotEmpty == true
+                          ? siteName!
+                          : (fallbackHost ?? preview.url),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: isMine ? Colors.white70 : colors.textMuted,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (title != null && title.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          height: 1.2,
+                          fontWeight: FontWeight.w700,
+                          color: isMine ? Colors.white : colors.textPrimary,
+                        ),
+                      ),
+                    ],
+                    if (description != null && description.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          height: 1.25,
+                          color: isMine ? Colors.white70 : colors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

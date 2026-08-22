@@ -47,6 +47,7 @@ import 'package:app_quanly_giaidau/features/admin/screens/transactions_screen.da
 import 'package:app_quanly_giaidau/features/admin/screens/verification_screen.dart';
 import 'package:app_quanly_giaidau/features/referee/screens/referee_invites_screen.dart';
 import 'package:app_quanly_giaidau/features/live/screens/live_match_screen.dart';
+import 'package:app_quanly_giaidau/features/live/screens/device_pairing_screen.dart';
 import 'package:app_quanly_giaidau/features/football_team/screens/football_teams_screen.dart';
 
 import 'package:app_quanly_giaidau/features/register/screens/tournament_register_screen.dart';
@@ -93,6 +94,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (!isAuth &&
           (currentPath.startsWith('/referee') ||
               currentPath.startsWith('/admin'))) {
+        return '/login';
+      }
+
+      // Camera pairing is an operator-only flow; it must not inherit the public live-viewer allowlist.
+      if (!isAuth && currentPath.startsWith('/live/device-pairing')) {
         return '/login';
       }
 
@@ -213,7 +219,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'social',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
-              final name = state.uri.queryParameters['name'] ?? 'Cộng đồng';
+              final l10n = AppLocalizations.of(context)!;
+              final name =
+                  state.uri.queryParameters['name'] ??
+                  l10n.routerDefaultCommunity;
               return CommunitySocialScreen(
                 communityId: id,
                 communityName: name,
@@ -225,7 +234,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'chat',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
-              final name = state.uri.queryParameters['name'] ?? 'Cộng đồng';
+              final l10n = AppLocalizations.of(context)!;
+              final name =
+                  state.uri.queryParameters['name'] ??
+                  l10n.routerDefaultCommunity;
               return ClubChatScreen(communityId: id, communityName: name);
             },
           ),
@@ -386,6 +398,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
+      // ─── Camera Device Pairing Route ───
+      GoRoute(
+        path: '/live/device-pairing/:communityId',
+        builder: (context, state) {
+          final communityId = state.pathParameters['communityId']!;
+          return DevicePairingScreen(communityId: communityId);
+        },
+      ),
+
       // ─── Public Live Match Viewer Route ───
       GoRoute(
         path: '/live/:matchId',
@@ -461,7 +482,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'chat',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
-              final name = state.uri.queryParameters['name'] ?? 'Cộng đồng';
+              final l10n = AppLocalizations.of(context)!;
+              final name =
+                  state.uri.queryParameters['name'] ??
+                  l10n.routerDefaultCommunity;
               return ClubChatScreen(communityId: id, communityName: name);
             },
           ),
@@ -507,7 +531,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'chat',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
-              final name = state.uri.queryParameters['name'] ?? 'Cộng đồng';
+              final l10n = AppLocalizations.of(context)!;
+              final name =
+                  state.uri.queryParameters['name'] ??
+                  l10n.routerDefaultCommunity;
               return ClubChatScreen(communityId: id, communityName: name);
             },
           ),
@@ -515,7 +542,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'social',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
-              final name = state.uri.queryParameters['name'] ?? 'Cộng đồng';
+              final l10n = AppLocalizations.of(context)!;
+              final name =
+                  state.uri.queryParameters['name'] ??
+                  l10n.routerDefaultCommunity;
               return CommunitySocialScreen(
                 communityId: id,
                 communityName: name,
@@ -580,7 +610,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, ref, _) {
                   final profile = ref.watch(userProfileProvider).asData?.value;
                   final userId = profile?.id ?? '';
-                  final userName = profile?.fullName ?? 'Người dùng';
+                  final l10n = AppLocalizations.of(context)!;
+                  final userName = profile?.fullName ?? l10n.routerDefaultUser;
                   final avatarUrl = profile?.avatarUrl;
                   return EloHistoryScreen(
                     userId: userId,
@@ -819,13 +850,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
-              AppLocalizations.of(context)?.tournamentNotFound ?? 'Page not found',
+              AppLocalizations.of(context)!.tournamentNotFound,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => context.go('/'),
-              child: Text(AppLocalizations.of(context)?.coreBackToHome ?? 'Back to home'),
+              child: Text(AppLocalizations.of(context)!.coreBackToHome),
             ),
           ],
         ),

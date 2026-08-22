@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:go_router/go_router.dart';
@@ -23,18 +24,19 @@ class MatchCardDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isLive = match.status == AppConstants.matchLive;
     final isCompleted = match.status == AppConstants.matchCompleted;
     final scheduleText = match.scheduledTime != null
         ? DateFormatterUtils.formatDateTime(match.scheduledTime!.toLocal())
-        : 'Chưa xếp lịch';
-    final venueText = _venueText(match);
+        : l10n.liveNotScheduled;
+    final venueText = _venueText(match, l10n);
     final tournamentText = (match.tournamentName ?? '').trim().isNotEmpty
         ? match.tournamentName!.trim()
-        : 'Giải đấu';
+        : l10n.publicProfileTournamentFallback;
     final refereeText = (match.refereeName ?? '').trim().isNotEmpty
         ? match.refereeName!.trim()
-        : 'Chưa có';
+        : l10n.liveUnknownValue;
 
     return GestureDetector(
       onTap: match.hasTeams
@@ -79,7 +81,7 @@ class MatchCardDetail extends StatelessWidget {
                       topRight: Radius.circular(AppTheme.radiusMedium - 1),
                     ),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
@@ -89,8 +91,8 @@ class MatchCardDetail extends StatelessWidget {
                       ),
                       SizedBox(width: 4),
                       Text(
-                        'LIVE',
-                        style: TextStyle(
+                        l10n.matchTableLive,
+                        style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
@@ -117,7 +119,7 @@ class MatchCardDetail extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _roundLabel(match),
+                      _roundLabel(match, l10n),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
@@ -153,21 +155,21 @@ class MatchCardDetail extends StatelessWidget {
                     _infoRow(
                       context,
                       Icons.schedule_rounded,
-                      'Thời gian',
+                      l10n.liveScheduledTimeLabel,
                       scheduleText,
                     ),
                     const SizedBox(height: 8),
                     _infoRow(
                       context,
                       Icons.location_on_rounded,
-                      'Địa điểm',
+                      l10n.matchesFilterLocation,
                       venueText,
                     ),
                     const SizedBox(height: 8),
                     _infoRow(
                       context,
                       Icons.verified_user_rounded,
-                      'Trọng tài',
+                      l10n.infoReferee,
                       refereeText,
                     ),
                     if (match.sets.isNotEmpty) ...[
@@ -175,7 +177,7 @@ class MatchCardDetail extends StatelessWidget {
                       _infoRow(
                         context,
                         Icons.sports_score_rounded,
-                        'Điểm theo Set',
+                        l10n.liveSetScoresTitle,
                         match.sets
                             .asMap()
                             .entries
@@ -217,10 +219,10 @@ class MatchCardDetail extends StatelessWidget {
                         ),
                         label: Text(
                           isLive
-                              ? 'Xem Trực Tiếp (LIVE)'
+                              ? l10n.liveOpenScoreboardShort
                               : (isReferee
-                                    ? 'Tính Điểm Trận Đấu'
-                                    : 'Xem Trang Trực Tiếp & Tỷ Số'),
+                                    ? l10n.officialScoreScoringTab
+                                    : l10n.liveOpenScoreboardShort),
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
@@ -285,22 +287,22 @@ class MatchCardDetail extends StatelessWidget {
     );
   }
 
-  String _roundLabel(MatchModel match) {
+  String _roundLabel(MatchModel match, AppLocalizations l10n) {
     final branch = match.bracketPosition.bracket.toLowerCase();
     final round = match.round;
-    if (branch == 'losers') return 'Nhánh thua - Vòng $round';
-    if (branch == 'grand_final') return 'Chung kết tổng';
-    if (branch == 'grand_final_reset') return 'Chung kết tổng (đấu lại)';
-    return 'Nhánh thắng - Vòng $round';
+    if (branch == 'losers') return l10n.matchTableLosersRoundOf(round);
+    if (branch == 'grand_final') return l10n.matchTableGrandFinal;
+    if (branch == 'grand_final_reset') return l10n.matchTableGrandFinalReset;
+    return l10n.matchTableWinnersRoundOf(round);
   }
 
-  String _venueText(MatchModel match) {
+  String _venueText(MatchModel match, AppLocalizations l10n) {
     final location = TournamentLocationFormatter.matchFullLocationFromConfig(
       courtName: match.court,
       courtAddress: match.courtAddress,
       tournamentConfig: match.tournamentConfig,
     );
-    return location.isEmpty ? 'Chưa xếp sân' : location;
+    return location.isEmpty ? l10n.matchTableUnassignedCourt : location;
   }
 
   Widget _buildTeamRow(

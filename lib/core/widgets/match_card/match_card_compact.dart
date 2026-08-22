@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class MatchCardCompact extends StatelessWidget {
   final MatchModel match;
@@ -14,6 +15,7 @@ class MatchCardCompact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -33,7 +35,7 @@ class MatchCardCompact extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
             ),
             child: Center(
-              child: Text('V${match.round}',
+              child: Text(l10n.matchRound(match.round),
                   style: TextStyle(
                       fontSize: 10, fontWeight: FontWeight.w700,
                       color: context.colors.textMuted)),

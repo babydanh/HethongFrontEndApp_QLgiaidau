@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 class SportPill extends StatelessWidget {
   final String sportKey;
@@ -9,7 +11,8 @@ class SportPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sportName = AppConstants.sportNames[sportKey] ?? sportKey;
+    final l10n = AppLocalizations.of(context)!;
+    final sportName = l10n.sportDisplayName(sportKey);
     final icon = AppConstants.sportIcons[sportKey] ?? "🏆";
     final colors = context.colors;
 

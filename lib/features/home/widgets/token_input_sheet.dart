@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -28,9 +29,10 @@ class _TokenInputSheetState extends ConsumerState<TokenInputSheet> {
   }
 
   Future<void> _submitToken() async {
+    final l10n = AppLocalizations.of(context)!;
     final token = _tokenController.text.trim().toUpperCase();
     if (token.isEmpty) {
-      setState(() => _tokenError = 'Vui lòng nhập mã token');
+      setState(() => _tokenError = l10n.tokenInputRequired);
       return;
     }
 
@@ -47,14 +49,17 @@ class _TokenInputSheetState extends ConsumerState<TokenInputSheet> {
       ref.invalidate(userProfileProvider);
       ref.invalidate(userRankingsProvider);
       final auth = ref.read(authProvider);
-      final route = NavigationHelper.getTournamentRoute(auth.role, auth.tournamentId!);
+      final route = NavigationHelper.getTournamentRoute(
+        auth.role,
+        auth.tournamentId!,
+      );
       Navigator.pop(context); // Close bottom sheet
       context.go(route);
     } else {
       final auth = ref.read(authProvider);
       setState(() {
         _isSubmittingToken = false;
-        _tokenError = auth.errorMessage ?? 'Mã không hợp lệ';
+        _tokenError = auth.errorMessage ?? l10n.tokenInputInvalid;
       });
     }
   }
@@ -65,7 +70,7 @@ class _TokenInputSheetState extends ConsumerState<TokenInputSheet> {
       controller: _tokenController,
       textAlign: TextAlign.center,
       textCapitalization: TextCapitalization.characters,
-      hint: 'ABC-XXXX',
+      hint: AppLocalizations.of(context)!.tokenInputHint,
       onChanged: (val) {
         if (_tokenError != null) {
           setState(() => _tokenError = null);
@@ -119,7 +124,7 @@ class _TokenInputSheetState extends ConsumerState<TokenInputSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Nhập mã Giải đấu',
+                  AppLocalizations.of(context)!.tokenTournamentCodeTitle,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
@@ -135,7 +140,7 @@ class _TokenInputSheetState extends ConsumerState<TokenInputSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Nhập mã truy cập giải đấu của bạn để tiếp tục với vai trò tương ứng.',
+              AppLocalizations.of(context)!.tokenTournamentCodeDescription,
               style: TextStyle(
                 fontSize: 13,
                 color: context.colors.textSecondary.withValues(alpha: 0.8),
@@ -183,7 +188,9 @@ class _TokenInputSheetState extends ConsumerState<TokenInputSheet> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppTheme.primary.withValues(alpha: 0.4),
+                  disabledBackgroundColor: AppTheme.primary.withValues(
+                    alpha: 0.4,
+                  ),
                   shadowColor: Colors.transparent,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -199,8 +206,8 @@ class _TokenInputSheetState extends ConsumerState<TokenInputSheet> {
                           strokeWidth: 2.5,
                         ),
                       )
-                    : const Text(
-                        'Xác nhận',
+                    : Text(
+                        AppLocalizations.of(context)!.lite_confirmButton,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,

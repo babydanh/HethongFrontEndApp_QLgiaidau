@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
@@ -22,14 +23,15 @@ class PodiumView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
 
     final p1 = rankings.isNotEmpty ? rankings[0] : null;
     final p2 = rankings.length >= 2 ? rankings[1] : null;
     final p3 = rankings.length >= 3 ? rankings[2] : null;
 
     final subtitleText = (formatLabel != null && formatLabel!.isNotEmpty)
-        ? '$formatLabel • Mùa 2026'
-        : 'Mùa giải 2026';
+        ? '$formatLabel • ${l10n.rankingSeason(2026)}'
+        : l10n.rankingSeason(2026);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -52,7 +54,7 @@ class PodiumView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Top 100 Vận động viên',
+                l10n.rankingTop100Athletes,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
@@ -80,7 +82,9 @@ class PodiumView extends StatelessWidget {
                 child: _PodiumSlot(
                   ranking: p2,
                   rankNumber: '2',
-                  tier: p2 != null ? TierPalette.matchTier(p2.eloPoints, tiers) : null,
+                  tier: p2 != null
+                      ? TierPalette.matchTier(p2.eloPoints, tiers)
+                      : null,
                   podiumHeight: 52,
                   podiumColor: const Color(0xFF94A3B8),
                   avatarBg: const Color(0xFF94A3B8),
@@ -98,7 +102,9 @@ class PodiumView extends StatelessWidget {
                 child: _PodiumSlot(
                   ranking: p1,
                   rankNumber: '1',
-                  tier: p1 != null ? TierPalette.matchTier(p1.eloPoints, tiers) : null,
+                  tier: p1 != null
+                      ? TierPalette.matchTier(p1.eloPoints, tiers)
+                      : null,
                   podiumHeight: 82,
                   podiumColor: const Color(0xFFF59E0B),
                   avatarBg: const Color(0xFFF59E0B),
@@ -117,7 +123,9 @@ class PodiumView extends StatelessWidget {
                 child: _PodiumSlot(
                   ranking: p3,
                   rankNumber: '3',
-                  tier: p3 != null ? TierPalette.matchTier(p3.eloPoints, tiers) : null,
+                  tier: p3 != null
+                      ? TierPalette.matchTier(p3.eloPoints, tiers)
+                      : null,
                   podiumHeight: 44,
                   podiumColor: const Color(0xFFF97316),
                   avatarBg: const Color(0xFFF97316),
@@ -163,7 +171,8 @@ class _PodiumSlot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final name = ranking?.fullName ?? 'Chưa xếp hạng';
+    final l10n = AppLocalizations.of(context)!;
+    final name = ranking?.fullName ?? l10n.ranking_unranked;
     final eloStr = ranking != null ? '${ranking!.eloPoints} ELO' : '-- ELO';
 
     return GestureDetector(
@@ -175,7 +184,11 @@ class _PodiumSlot extends StatelessWidget {
           if (isKing)
             const Padding(
               padding: EdgeInsets.only(bottom: 4),
-              child: Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 24),
+              child: Icon(
+                Icons.emoji_events_rounded,
+                color: Color(0xFFF59E0B),
+                size: 24,
+              ),
             )
           else
             const SizedBox(height: 28),
@@ -198,7 +211,9 @@ class _PodiumSlot extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: ranking != null ? const Color(0xFF2563EB) : colors.textMuted,
+              color: ranking != null
+                  ? const Color(0xFF2563EB)
+                  : colors.textMuted,
             ),
           ),
           const SizedBox(height: 8),
@@ -242,8 +257,10 @@ class _PodiumSlot extends StatelessWidget {
 
   Widget _buildPodiumAvatar(dynamic colors, String name) {
     final nameParts = name.split('/');
-    final isDoublesFormat = (formatLabel != null && formatLabel!.toLowerCase().contains('đôi')) ||
-        (ranking?.matchType != null && ranking!.matchType!.toLowerCase().contains('double'));
+    final isDoublesFormat =
+        (formatLabel != null && formatLabel!.toLowerCase().contains('đôi')) ||
+        (ranking?.matchType != null &&
+            ranking!.matchType!.toLowerCase().contains('double'));
     final size = isKing ? 58.0 : 50.0;
     final subSize = size * 0.75;
 
@@ -263,7 +280,9 @@ class _PodiumSlot extends StatelessWidget {
                 width: subSize,
                 height: subSize,
                 decoration: BoxDecoration(
-                  color: ranking != null ? const Color(0xFF2563EB) : colors.border.withValues(alpha: 0.6),
+                  color: ranking != null
+                      ? const Color(0xFF2563EB)
+                      : colors.border.withValues(alpha: 0.6),
                   shape: BoxShape.circle,
                   border: Border.all(color: colors.bgCard, width: 2),
                 ),
@@ -286,13 +305,17 @@ class _PodiumSlot extends StatelessWidget {
                 width: subSize,
                 height: subSize,
                 decoration: BoxDecoration(
-                  color: ranking != null ? const Color(0xFF10B981) : colors.border.withValues(alpha: 0.6),
+                  color: ranking != null
+                      ? const Color(0xFF10B981)
+                      : colors.border.withValues(alpha: 0.6),
                   shape: BoxShape.circle,
                   border: Border.all(color: colors.bgCard, width: 2),
                 ),
                 child: Center(
                   child: Text(
-                    ranking != null ? (name2.isNotEmpty ? _initials(name2) : '+1') : '?',
+                    ranking != null
+                        ? (name2.isNotEmpty ? _initials(name2) : '+1')
+                        : '?',
                     style: TextStyle(
                       fontSize: isKing ? 13 : 11,
                       fontWeight: FontWeight.w900,
@@ -311,7 +334,9 @@ class _PodiumSlot extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: ranking != null ? avatarBg : colors.border.withValues(alpha: 0.5),
+        color: ranking != null
+            ? avatarBg
+            : colors.border.withValues(alpha: 0.5),
         shape: BoxShape.circle,
         boxShadow: ranking != null
             ? [

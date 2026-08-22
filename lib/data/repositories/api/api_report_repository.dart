@@ -1,14 +1,20 @@
+import 'dart:ui';
+
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/domain/entities/violation_report.dart';
 import 'package:app_quanly_giaidau/domain/repositories/report_repository.dart';
 import 'package:dio/dio.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class ApiReportRepository implements IReportRepository {
   static const _log = AppLogger('ApiReportRepository');
   final DioClient _dioClient;
 
   ApiReportRepository(this._dioClient);
+
+  AppLocalizations get _l10n =>
+      lookupAppLocalizations(PlatformDispatcher.instance.locale);
 
   @override
   Future<ViolationReportPage> getMine({String? cursor, int limit = 10}) async {
@@ -27,7 +33,7 @@ class ApiReportRepository implements IReportRepository {
 
       final raw = response.data;
       if (response.statusCode != 200 || raw is! Map) {
-        throw Exception('Không thể tải lịch sử báo cáo');
+        throw Exception(_l10n.reportHistoryLoadFailed);
       }
 
       final data = raw['data'];
@@ -59,7 +65,7 @@ class ApiReportRepository implements IReportRepository {
         throw Exception(
           _parseNestJsError(
             error.response?.data,
-            error.message ?? 'Lỗi kết nối đến máy chủ',
+            error.message ?? _l10n.networkConnectionFailed,
           ),
         );
       }

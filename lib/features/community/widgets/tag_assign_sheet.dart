@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
@@ -66,23 +67,24 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
   }
 
   void _addTag() {
+    final l10n = AppLocalizations.of(context)!;
     final value = _controller.text.trim();
     if (value.isEmpty) return;
 
     if (_tags.length >= AppConstants.memberTagMax) {
-      setState(() => _error = AppConstants.memberTagMaxReached);
+      setState(() => _error = l10n.memberTagMaxReached);
       return;
     }
     if (value.length > AppConstants.memberTagMaxLength) {
-      setState(() => _error = AppConstants.memberTagTooLong);
+      setState(() => _error = l10n.memberTagTooLong);
       return;
     }
     if (!_tagPattern.hasMatch(value)) {
-      setState(() => _error = AppConstants.memberTagInvalid);
+      setState(() => _error = l10n.memberTagInvalid);
       return;
     }
     if (_tags.any((t) => t.toLowerCase() == value.toLowerCase())) {
-      setState(() => _error = AppConstants.memberTagDuplicate);
+      setState(() => _error = l10n.memberTagDuplicate);
       return;
     }
 
@@ -99,6 +101,7 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_saving) return;
     setState(() => _saving = true);
     try {
@@ -106,7 +109,7 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       if (mounted) {
-        setState(() => _error = AppConstants.memberTagSaveError);
+        setState(() => _error = l10n.memberTagSaveError);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -115,8 +118,16 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final maxReached = _tags.length >= AppConstants.memberTagMax;
+    final suggestedTags = <String>[
+      l10n.memberTagSuggestionFunny,
+      l10n.memberTagSuggestionGoodOdds,
+      l10n.memberTagSuggestionWeeklyMvp,
+      l10n.memberTagSuggestionInForm,
+      l10n.memberTagSuggestionToughMatch,
+    ];
 
     return Padding(
       padding: EdgeInsets.only(
@@ -156,7 +167,7 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    AppConstants.memberTagAssignTitle,
+                    l10n.memberTagAssignTitle,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -176,8 +187,7 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              '${AppConstants.memberTagAssignDesc} '
-              '(${widget.memberName})',
+              '${l10n.memberTagAssignDesc} (${widget.memberName})',
               style: TextStyle(fontSize: 12, color: colors.textSecondary),
             ),
             const SizedBox(height: 12),
@@ -186,7 +196,7 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
-                  AppConstants.memberTagEmpty,
+                  l10n.memberTagEmpty,
                   style: TextStyle(fontSize: 13, color: colors.textMuted),
                 ),
               )
@@ -199,22 +209,25 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       MemberTagChip(label: tag, kind: MemberTagChipKind.bqt),
-                      InkWell(
-                        onTap: _saving
-                            ? null
-                            : () => setState(() {
-                                _tags.remove(tag);
-                                _error = null;
-                              }),
-                        borderRadius: BorderRadius.circular(
-                          AppTheme.radiusMedium,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: Icon(
-                            Icons.close_rounded,
-                            size: 12,
-                            color: colors.textMuted,
+                      Tooltip(
+                        message: l10n.memberTagRemove,
+                        child: InkWell(
+                          onTap: _saving
+                              ? null
+                              : () => setState(() {
+                                  _tags.remove(tag);
+                                  _error = null;
+                                }),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusMedium,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(
+                              Icons.close_rounded,
+                              size: 12,
+                              color: colors.textMuted,
+                            ),
                           ),
                         ),
                       ),
@@ -228,24 +241,33 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
                 spacing: 6,
                 runSpacing: 6,
                 children: [
-                  ...widget.presets.map((preset) => ActionChip(
-                    avatar: CircleAvatar(backgroundColor: _parseColor(preset.color), radius: 7),
-                    label: Text(preset.name),
-                    onPressed: _saving ? null : () => _addSuggestedTag(preset.name),
-                  )),
-                  ...AppConstants.memberTagSuggestions
-                    .where(
-                      (tag) => !_tags.any(
-                        (current) => current.toLowerCase() == tag.toLowerCase(),
+                  ...widget.presets.map(
+                    (preset) => ActionChip(
+                      avatar: CircleAvatar(
+                        backgroundColor: _parseColor(preset.color),
+                        radius: 7,
                       ),
-                    )
-                    .map(
-                      (tag) => ActionChip(
-                        label: Text(tag),
-                        onPressed: _saving ? null : () => _addSuggestedTag(tag),
+                      label: Text(preset.name),
+                      onPressed: _saving
+                          ? null
+                          : () => _addSuggestedTag(preset.name),
+                    ),
+                  ),
+                  ...suggestedTags
+                      .where(
+                        (tag) => !_tags.any(
+                          (current) =>
+                              current.toLowerCase() == tag.toLowerCase(),
+                        ),
+                      )
+                      .map(
+                        (tag) => ActionChip(
+                          label: Text(tag),
+                          onPressed: _saving
+                              ? null
+                              : () => _addSuggestedTag(tag),
+                        ),
                       ),
-                    )
-                    ,
                 ],
               ),
             if (!maxReached) const SizedBox(height: 12),
@@ -261,8 +283,8 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
                     onChanged: (_) => setState(() => _error = null),
                     decoration: InputDecoration(
                       hintText: maxReached
-                          ? AppConstants.memberTagMaxReached
-                          : AppConstants.memberTagAddHint,
+                          ? l10n.memberTagMaxReached
+                          : l10n.memberTagAddHint,
                       hintStyle: TextStyle(
                         fontSize: 13,
                         color: colors.textMuted,
@@ -314,7 +336,7 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
                       ),
                     ),
                     child: Text(
-                      AppConstants.memberTagAdd,
+                      l10n.memberTagAdd,
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -336,10 +358,7 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
               )
             else
               Text(
-                AppConstants.memberTagCounter(
-                  _tags.length,
-                  AppConstants.memberTagMax,
-                ),
+                l10n.memberTagCounter(_tags.length, AppConstants.memberTagMax),
                 style: TextStyle(fontSize: 11, color: colors.textMuted),
               ),
             const SizedBox(height: 12),
@@ -356,9 +375,7 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
                   ),
                 ),
                 child: Text(
-                  _saving
-                      ? AppConstants.memberTagSaving
-                      : AppConstants.memberTagSave,
+                  _saving ? l10n.memberTagSaving : l10n.memberTagSave,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -375,5 +392,8 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
 
 Color _parseColor(String value) {
   final hex = value.replaceFirst('#', '');
-  return Color(int.tryParse('FF${hex.length == 6 ? hex : '3B82F6'}', radix: 16) ?? 0xFF3B82F6);
+  return Color(
+    int.tryParse('FF${hex.length == 6 ? hex : '3B82F6'}', radix: 16) ??
+        0xFF3B82F6,
+  );
 }

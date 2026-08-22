@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/features/match/widgets/table_tennis_score_pan
 import 'package:app_quanly_giaidau/features/match/widgets/football_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/set_history_bar.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
+import 'package:app_quanly_giaidau/features/match/utils/score_validation_localizer.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -140,7 +141,7 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                     children: [
                       Expanded(
                         child: Text(
-                          '${widget.match.team1Name} vs ${widget.match.team2Name}',
+                          '${widget.match.team1Name} ${l10n.matchVsLabel} ${widget.match.team2Name}',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -410,8 +411,8 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                                                                 dialogContext,
                                                                 false,
                                                               ),
-                                                          child: const Text(
-                                                            'Hủy',
+                                                          child: Text(
+                                                            l10n.officialScoreCancel,
                                                           ),
                                                         ),
                                                         FilledButton(
@@ -598,7 +599,12 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
               }
               return Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: ScoreWarningBox(message: state.errorMessage!),
+                child: ScoreWarningBox(
+                  message: formatScoreValidationError(
+                    AppLocalizations.of(context)!,
+                    state.errorMessage!,
+                  ),
+                ),
               );
             },
           ),
@@ -1082,7 +1088,7 @@ void _showMatchInfoDialog(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${match.team1Name} vs ${match.team2Name}',
+            '${match.team1Name} ${l10n.matchVsLabel} ${match.team2Name}',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,

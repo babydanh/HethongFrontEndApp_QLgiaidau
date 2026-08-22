@@ -68,7 +68,9 @@ class PickleballPanel extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Đội giao bóng: ${pb.isTeam1Serving ? team1Name : team2Name}',
+                        l10n.pickleballServingTeam(
+                          pb.isTeam1Serving ? team1Name : team2Name,
+                        ),
                         style: const TextStyle(
                           color: Color(0xFFFFA500),
                           fontSize: 13,
@@ -86,7 +88,7 @@ class PickleballPanel extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'Lượt #${pb.serverNumber}',
+                        l10n.pickleballServerNumber(pb.serverNumber),
                         style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,

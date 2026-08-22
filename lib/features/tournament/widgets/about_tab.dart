@@ -152,17 +152,33 @@ class AboutTab extends StatelessWidget {
                 const SizedBox(height: 12),
                 _buildInfoRow(
                   label: l10n.sportLabel,
-                  value:
-                      AppConstants.sportNames[tournament.sport] ??
-                      tournament.sport,
+                  value: switch (tournament.sport) {
+                    AppConstants.sportFootball =>
+                      l10n.createClubTournament_sportFootball,
+                    AppConstants.sportBadminton =>
+                      l10n.createClubTournament_sportBadminton,
+                    AppConstants.sportTennis =>
+                      l10n.createClubTournament_sportTennis,
+                    AppConstants.sportPickleball =>
+                      l10n.createClubTournament_sportPickleball,
+                    AppConstants.sportTableTennis =>
+                      l10n.createClubTournament_sportTableTennis,
+                    _ => tournament.sport,
+                  },
                   colors: colors,
                 ),
                 const SizedBox(height: 12),
                 _buildInfoRow(
                   label: l10n.formatLabel,
-                  value:
-                      AppConstants.formatNames[tournament.format] ??
-                      tournament.format.replaceAll('_', ' '),
+                  value: switch (tournament.format) {
+                    AppConstants.formatSingles =>
+                      l10n.createClubTournament_formatSingles,
+                    AppConstants.formatDoubles =>
+                      l10n.createClubTournament_formatDoubles,
+                    AppConstants.formatMixedDoubles =>
+                      l10n.createClubTournament_formatMixedDoubles,
+                    _ => tournament.format.replaceAll('_', ' '),
+                  },
                   colors: colors,
                 ),
                 if (TournamentLocationFormatter.tournamentShortLocation(
@@ -180,9 +196,17 @@ class AboutTab extends StatelessWidget {
                 const SizedBox(height: 12),
                 _buildInfoRow(
                   label: l10n.bracketTypeLabel,
-                  value:
-                      AppConstants.bracketTypeNames[tournament.bracketType] ??
-                      tournament.bracketType,
+                  value: switch (tournament.bracketType) {
+                    AppConstants.bracketSingleElimination =>
+                      l10n.createClubTournament_bracketSingleElimination,
+                    AppConstants.bracketDoubleElimination =>
+                      l10n.createClubTournament_bracketDoubleElimination,
+                    AppConstants.bracketRoundRobin =>
+                      l10n.createClubTournament_bracketRoundRobin,
+                    AppConstants.bracketGroupStageKnockout =>
+                      l10n.createClubTournament_bracketGroupStageKnockout,
+                    _ => tournament.bracketType,
+                  },
                   colors: colors,
                 ),
                 if (tournament.bracketType !=

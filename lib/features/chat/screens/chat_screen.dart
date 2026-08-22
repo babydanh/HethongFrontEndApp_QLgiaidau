@@ -211,14 +211,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     }
   }
 
-  String _formatRoomTime(DateTime dt) {
+  String _formatRoomTime(DateTime dt, String localeName) {
     final now = DateTime.now();
     if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
       return DateFormat('HH:mm').format(dt);
     }
     final diff = now.difference(dt);
     if (diff.inDays < 7) {
-      return DateFormat('EEEE', 'vi_VN').format(dt);
+      return DateFormat('EEEE', localeName).format(dt);
     }
     return DateFormat('dd/MM').format(dt);
   }
@@ -520,7 +520,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      _formatRoomTime(room.updatedAt),
+                                      _formatRoomTime(
+                                        room.updatedAt,
+                                        Localizations.localeOf(
+                                          context,
+                                        ).languageCode,
+                                      ),
                                       style: TextStyle(
                                         fontSize: 11.5,
                                         color: hasUnread

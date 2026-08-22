@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_info_dialog.dart';
 import 'package:app_quanly_giaidau/core/strategy/penalty_strategy.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class PenaltyInputDialog extends StatefulWidget {
   final String sportType;
@@ -44,15 +44,17 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
   }
 
   void _showRulesDialog() {
+    final l10n = AppLocalizations.of(context)!;
     AppInfoDialog.show(
       context,
-      title: AppConstants.textPenaltyRules,
+      title: l10n.penaltyDialogRulesTitle,
       content: _strategy.getRulesDescription(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final canSubmit =
         _selectedOption != null &&
         _selectedTeam != null &&
@@ -91,7 +93,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              AppConstants.textRecordPenalty,
+              l10n.penaltyDialogTitle,
               style: TextStyle(color: context.colors.textPrimary, fontSize: 16),
             ),
           ),
@@ -115,7 +117,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                AppConstants.textOffendingTeam,
+                l10n.penaltyDialogOffendingTeam,
                 style: TextStyle(
                   color: context.colors.textSecondary,
                   fontWeight: FontWeight.bold,
@@ -132,7 +134,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
               ),
               const SizedBox(height: 16),
               Text(
-                AppConstants.textPenaltyType,
+                l10n.penaltyDialogType,
                 style: TextStyle(
                   color: context.colors.textSecondary,
                   fontWeight: FontWeight.bold,
@@ -147,7 +149,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
               ),
               const SizedBox(height: 16),
               Text(
-                AppConstants.textReasonRequired,
+                l10n.penaltyDialogReasonRequired,
                 style: TextStyle(
                   color: context.colors.textSecondary,
                   fontWeight: FontWeight.bold,
@@ -160,7 +162,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
                 style: TextStyle(color: context.colors.textPrimary),
                 maxLines: 2,
                 decoration: InputDecoration(
-                  hintText: 'Nhập lý do vi phạm...',
+                  hintText: l10n.penaltyDialogReasonHint,
                   filled: true,
                   fillColor: context.colors.bgSurface,
                   border: OutlineInputBorder(
@@ -178,7 +180,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(
-            AppConstants.textCancel,
+            l10n.commonCancel,
             style: TextStyle(color: context.colors.textMuted),
           ),
         ),
@@ -196,7 +198,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
           style: ElevatedButton.styleFrom(
             backgroundColor: _selectedOption?.color ?? context.colors.error,
           ),
-          child: const Text(AppConstants.textConfirm),
+          child: Text(l10n.penaltyDialogConfirm),
         ),
       ],
     );

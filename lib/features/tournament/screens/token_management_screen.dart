@@ -98,7 +98,7 @@ class _TokenCard extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  token.role.toRoleDisplayName(),
+                  token.role.toRoleDisplayName(l10n),
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppTheme.primary,
@@ -198,14 +198,13 @@ class _TokenCard extends ConsumerWidget {
     );
   }
 
-
-
   Future<void> _regenerateToken(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
     final confirm = await showConfirmDialog(
       context: context,
       title: l10n.confirmRefreshTitle,
-      content: '${l10n.confirmRefreshContent} ${token.role.toRoleDisplayName()}?\n\n'
+      content:
+          '${l10n.confirmRefreshContent} ${token.role.toRoleDisplayName(l10n)}?\n\n'
           '${l10n.confirmRefreshNote}',
       confirmText: l10n.confirmRefreshButton,
     );
@@ -216,9 +215,9 @@ class _TokenCard extends ConsumerWidget {
           .regenerateToken(token.role);
 
       if (success && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.tokenRefreshed)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.tokenRefreshed)));
       }
     }
   }
@@ -229,7 +228,7 @@ class _TokenCard extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(
-          '${l10n.qrCodeTitle} ${token.role.toRoleDisplayName()}',
+          '${l10n.qrCodeTitle} ${token.role.toRoleDisplayName(l10n)}',
           textAlign: TextAlign.center,
         ),
         content: Column(

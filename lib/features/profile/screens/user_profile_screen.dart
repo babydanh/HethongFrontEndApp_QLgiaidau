@@ -71,6 +71,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     UserPublicProfile profile,
     AppColorsExtension colors,
   ) {
+    final playedRanks = profile.ranks.where((rank) => rank.hasPlayed).toList();
+
     return NestedScrollView(
       headerSliverBuilder: (context, innerBoxIsScrolled) => [
         SliverAppBar(
@@ -172,11 +174,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 // Xếp hạng theo môn
                 _sectionTitle(colors, l10n.publicProfileRankBySport),
                 const SizedBox(height: 12),
-                if (profile.ranks.isEmpty)
+                if (playedRanks.isEmpty)
                   _buildNoRank(colors)
                 else
-                  ...profile.ranks.map(
-                    (rank) => _buildRankCard(context, profile, rank, colors),
+                  ...playedRanks.map(
+                    (rank) =>
+                        _buildStandardRankCard(context, profile, rank, colors),
                   ),
                 const SizedBox(height: 24),
               ],
@@ -329,7 +332,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${match.team1Name}  vs  ${match.team2Name}',
+                  '${match.team1Name} ${l10n.matchVsLabel} ${match.team2Name}',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: colors.textPrimary,
@@ -829,17 +832,28 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   }
 
   // ─── RANK CARD ──────────────────────────────────────────────
-  Widget _buildRankCard(
+  Widget _buildStandardRankCard(
     BuildContext context,
     UserPublicProfile profile,
     UserPublicRank rank,
     AppColorsExtension colors,
   ) {
     final palette = TierPalette.fromElo(rank.eloPoints, rank.tierName);
-    final wr = rank.matchesPlayed > 0
+    final winRate = rank.matchesPlayed > 0
         ? (rank.matchesWon / rank.matchesPlayed * 100).round()
         : 0;
-
+    final isDoubles = rank.isDoubles;
+    final streakType = rank.currentStreakType?.toUpperCase();
+    final streakColor = streakType == 'WIN'
+        ? const Color(0xFF2563EB)
+        : streakType == 'LOSS'
+        ? const Color(0xFFDC2626)
+        : colors.textMuted;
+    final streakText = streakType == 'WIN'
+        ? l10n.publicProfileWinStreak(rank.currentStreakCount)
+        : streakType == 'LOSS'
+        ? l10n.publicProfileLossStreak(rank.currentStreakCount)
+        : l10n.publicProfileNoStreak;
     final userName = profile.fullName.isNotEmpty
         ? profile.fullName
         : l10n.publicProfileUserFallback;
@@ -871,6 +885,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   tierName: rank.tierName,
                   categoryId: rank.categoryId,
                   categoryName: rank.categoryName,
+                  initialScope: 'PUBLIC',
+                  matchType: rank.matchType,
+                  genderRestriction: rank.genderRestriction ?? '__NONE__',
+                  partnerId: rank.partnerId,
+                  lockRatingScope: true,
                 ),
               ),
             );
@@ -884,27 +903,47 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 Row(
                   children: [
                     Container(
-                      width: 32,
-                      height: 32,
+                      width: 34,
+                      height: 34,
                       decoration: BoxDecoration(
                         color: AppTheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(
-                        Icons.sports_tennis_rounded,
+                      child: Icon(
+                        isDoubles
+                            ? Icons.people_alt_rounded
+                            : Icons.person_rounded,
                         size: 18,
                         color: AppTheme.primary,
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        rank.categoryName,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textPrimary,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            rank.categoryName.isEmpty
+                                ? l10n.publicProfileUserFallback
+                                : rank.categoryName,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            _scopeLabel(rank),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textMuted,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     Container(
@@ -928,7 +967,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4),
                     Icon(
                       Icons.chevron_right_rounded,
                       size: 18,
@@ -936,6 +975,30 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     ),
                   ],
                 ),
+                if (isDoubles &&
+                    rank.partnerName != null &&
+                    rank.partnerName!.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.handshake_rounded,
+                        size: 15,
+                        color: colors.textMuted,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${l10n.publicProfilePartner}: ${rank.partnerName}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 14),
                 Row(
                   children: [
@@ -969,29 +1032,77 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       colors,
                     ),
                     _statBox(l10n.infoWin, '${rank.matchesWon}', colors),
-                    _statBox(l10n.publicProfileWinRateShort, '$wr%', colors),
+                    _statBox(
+                      l10n.publicProfileWinRateShort,
+                      '$winRate%',
+                      colors,
+                    ),
                   ],
                 ),
-                if (rank.matchesPlayed > 0) ...[
-                  const SizedBox(height: 10),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(3),
-                    child: LinearProgressIndicator(
-                      value: (wr / 100).clamp(0.0, 1.0),
-                      minHeight: 5,
-                      backgroundColor: colors.border,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        wr >= 60 ? colors.success : palette.color,
-                      ),
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: LinearProgressIndicator(
+                    value: (winRate / 100).clamp(0.0, 1.0),
+                    minHeight: 5,
+                    backgroundColor: colors.border,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      winRate >= 60 ? colors.success : palette.color,
                     ),
                   ),
-                ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: streakColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: streakColor.withValues(alpha: 0.18),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        streakType == 'NONE'
+                            ? Icons.remove_circle_outline_rounded
+                            : Icons.local_fire_department_rounded,
+                        size: 18,
+                        color: streakColor,
+                      ),
+                      const SizedBox(width: 7),
+                      Text(
+                        '${l10n.publicProfileCurrentStreak}: $streakText',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: streakColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  String _scopeLabel(UserPublicRank rank) {
+    switch (rank.matchType) {
+      case 'DOUBLES':
+        return l10n.publicProfileScopeDoubles;
+      case 'MIXED_DOUBLES':
+        return l10n.publicProfileScopeMixedDoubles;
+      default:
+        return l10n.publicProfileScopeSingles;
+    }
   }
 
   Widget _statBox(String label, String value, AppColorsExtension colors) {
@@ -1021,6 +1132,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   }
 
   // ─── EMPTY / PLACEHOLDER ────────────────────────────────────
+
   Widget _buildNoRank(AppColorsExtension colors) {
     return Center(
       child: Padding(

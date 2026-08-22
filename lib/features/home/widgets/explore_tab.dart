@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'dart:math' as math;
@@ -496,7 +497,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '1000 ELO',
+                    l10n.rankingDefaultElo,
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
@@ -1246,7 +1247,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final m = widget.match;
     final isT1Tbd =
         m.team1Name.trim().toUpperCase() == 'TBD' ||
@@ -1257,23 +1258,22 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
     final isByeMatch = m.isBye || isT1Tbd || isT2Tbd;
 
     final statusText = m.isLive
-        ? (l10n!.exploreMatchStatusLive(m.round))
+        ? (l10n.exploreMatchStatusLive(m.round))
         : m.isCompleted
-        ? (l10n!.exploreMatchStatusCompleted(m.round))
-        : (l10n!.exploreMatchStatusScheduled(m.round));
+        ? (l10n.exploreMatchStatusCompleted(m.round))
+        : (l10n.exploreMatchStatusScheduled(m.round));
     final bracketText =
         m.stageName ??
         (m.bracketPosition.bracket == 'losers'
-            ? (l10n!.exploreBracketLosers)
-            : (l10n!.exploreBracketKnockout));
-    final sportText =
-        AppConstants.sportNames[m.sportKey ?? widget.tournament?.sport] ??
-        m.sportKey ??
-        widget.tournament?.sport ??
-        'Pickleball';
+            ? (l10n.exploreBracketLosers)
+            : (l10n.exploreBracketKnockout));
+    final sportKey = m.sportKey ?? widget.tournament?.sport;
+    final sportText = sportKey == null || sportKey.trim().isEmpty
+        ? l10n.createClubTournament_sportPickleball
+        : l10n.sportDisplayName(sportKey);
     final courtText = m.court.isNotEmpty
         ? m.court
-        : (l10n!.exploreCourtNotAssigned);
+        : (l10n.exploreCourtNotAssigned);
 
     List<String> getInitials(String name) {
       final parts = name
@@ -1435,7 +1435,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        l10n!.exploreByeAdvance,
+                        l10n.exploreByeAdvance,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -1490,7 +1490,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        l10n!.exploreByeAdvance,
+                        l10n.exploreByeAdvance,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -1597,8 +1597,8 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                         const SizedBox(width: 6),
                         Text(
                           cheerCount > 0
-                              ? '${l10n!.exploreCheer} ($cheerCount)'
-                              : (l10n!.exploreCheer),
+                              ? '${l10n.exploreCheer} ($cheerCount)'
+                              : (l10n.exploreCheer),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -1638,7 +1638,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          l10n!.exploreDetails,
+                          l10n.exploreDetails,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -1658,15 +1658,16 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                   onTap: () {
                     AppShareModal.show(
                       context: context,
-                      title: '${m.team1Name} VS ${m.team2Name}',
-                      subtitle: l10n!.exploreShareSubtitle(
-                        m.tournamentName ?? 'Giao hữu',
+                      title:
+                          '${m.team1Name} ${l10n.matchVsLabel} ${m.team2Name}',
+                      subtitle: l10n.exploreShareSubtitle(
+                        m.tournamentName ?? l10n.exploreFriendlyTournament,
                         m.court.isNotEmpty ? m.court : l10n.matchLiveTitle,
                       ),
                       webUrl: 'https://sporto.asia/live/${m.id}',
                       badgeText: m.isLive
-                          ? (l10n!.exploreLiveBadge)
-                          : (l10n!.exploreMatchBadge),
+                          ? (l10n.exploreLiveBadge)
+                          : (l10n.exploreMatchBadge),
                     );
                   },
                   borderRadius: BorderRadius.circular(10),
@@ -1683,7 +1684,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                         Icon(Icons.reply_rounded, size: 15, color: colors.info),
                         const SizedBox(width: 6),
                         Text(
-                          l10n!.share,
+                          l10n.share,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -1784,7 +1785,7 @@ class _RecentCompletedMatches extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final completedTournaments = <Tournament>[];
     var hasLoadingMatches = false;
     var hasMatchError = false;
@@ -1816,13 +1817,13 @@ class _RecentCompletedMatches extends ConsumerWidget {
     if (completedTournaments.isEmpty && hasLoadingMatches) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Center(child: Text(l10n!.exploreRecentResultsLoading)),
+        child: Center(child: Text(l10n.exploreRecentResultsLoading)),
       );
     }
     if (completedTournaments.isEmpty && hasMatchError) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Center(child: Text(l10n!.exploreRecentResultsLoadError)),
+        child: Center(child: Text(l10n.exploreRecentResultsLoadError)),
       );
     }
     if (completedTournaments.isEmpty) {
@@ -1830,7 +1831,7 @@ class _RecentCompletedMatches extends ConsumerWidget {
         padding: EdgeInsets.symmetric(vertical: 16),
         child: Center(
           child: Text(
-            l10n!.exploreRecentResultsEmpty,
+            l10n.exploreRecentResultsEmpty,
             style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
           ),
         ),

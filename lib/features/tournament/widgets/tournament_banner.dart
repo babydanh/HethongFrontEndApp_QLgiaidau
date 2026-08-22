@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sport_pill.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
 import 'package:app_quanly_giaidau/shared/widgets/app_image_viewer.dart';
 
@@ -272,9 +273,9 @@ class _HeaderBadges extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final bracketLabel =
-        AppConstants.bracketTypeNames[tournament.bracketType] ??
-        tournament.bracketType.replaceAll('_', ' ').toUpperCase();
+    final bracketLabel = l10n
+        .bracketDisplayName(tournament.bracketType)
+        .toUpperCase();
 
     return Wrap(
       spacing: 6,

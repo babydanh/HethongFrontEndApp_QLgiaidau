@@ -1,5 +1,8 @@
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'dart:ui';
+
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/ranking_query_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
@@ -35,18 +38,37 @@ class ApiRankingRepository implements IRankingRepository {
       for (var page = 0; page < 50; page++) {
         final pageQuery = <String, dynamic>{...queryParams, 'limit': pageSize};
         if (cursor != null && cursor.isNotEmpty) pageQuery['cursor'] = cursor;
-        final response = await _dioClient.dio.get('/rankings', queryParameters: pageQuery);
-        if (response.statusCode != 200) throw Exception('Ranking request failed');
+        final response = await _dioClient.dio.get(
+          '/rankings',
+          queryParameters: pageQuery,
+        );
+        if (response.statusCode != 200) {
+          throw Exception(
+            lookupAppLocalizations(
+              PlatformDispatcher.instance.locale,
+            ).rankingRequestFailed,
+          );
+        }
         final raw = response.data;
         final List<dynamic> dataList = raw is Map<String, dynamic>
             ? (raw['data'] as List<dynamic>? ?? [])
             : (raw as List<dynamic>? ?? []);
-        rankings.addAll(dataList.map((json) => PlayerRanking.fromJson(json as Map<String, dynamic>)));
+        rankings.addAll(
+          dataList.map(
+            (json) => PlayerRanking.fromJson(json as Map<String, dynamic>),
+          ),
+        );
         final meta = raw is Map<String, dynamic> && raw['meta'] is Map
             ? Map<String, dynamic>.from(raw['meta'] as Map)
             : const <String, dynamic>{};
         final next = meta['nextCursor']?.toString();
-        if (meta['hasMore'] != true || next == null || next.isEmpty || next == cursor || dataList.isEmpty) break;
+        if (meta['hasMore'] != true ||
+            next == null ||
+            next.isEmpty ||
+            next == cursor ||
+            dataList.isEmpty) {
+          break;
+        }
         cursor = next;
       }
       final enriched = <PlayerRanking>[];
@@ -54,7 +76,6 @@ class ApiRankingRepository implements IRankingRepository {
         enriched.add(rankings[i].copyWith(rank: i + 1));
       }
       return enriched;
-
     } catch (e, stack) {
       _log.error('Lỗi tải bảng xếp hạng', e, stack);
       rethrow;
@@ -83,7 +104,11 @@ class ApiRankingRepository implements IRankingRepository {
         return tiers;
       }
 
-      throw Exception('Không thể tải danh sách bậc ELO');
+      throw Exception(
+        lookupAppLocalizations(
+          PlatformDispatcher.instance.locale,
+        ).rankingEloTiersLoadError,
+      );
     } catch (e, stack) {
       _log.error('Lỗi tải danh sách bậc ELO', e, stack);
       rethrow;
@@ -91,20 +116,21 @@ class ApiRankingRepository implements IRankingRepository {
   }
 
   @override
-  Future<UserRankResponse> getUserRank(
-    String userId,
-    String categoryId,
-  ) async {
+  Future<UserRankResponse> getUserRank(String userId, String categoryId) async {
     _log.info('Tải rank của user: $userId trong category: $categoryId');
     try {
       final response = await _dioClient.dio.get(
         '/rankings/user/$userId',
-        queryParameters: categoryId.isNotEmpty ? {'categoryId': categoryId} : null,
+        queryParameters: categoryId.isNotEmpty
+            ? {'categoryId': categoryId}
+            : null,
       );
 
       if (response.statusCode == 200) {
         final raw = response.data;
-        final data = raw['data'] as Map<String, dynamic>? ?? raw as Map<String, dynamic>?;
+        final data =
+            raw['data'] as Map<String, dynamic>? ??
+            raw as Map<String, dynamic>?;
         // API trả về { publicRanks: [...], communityRanks: [...] }
         // Tìm rank trong publicRanks theo categoryId
         if (data != null) {
@@ -112,14 +138,28 @@ class ApiRankingRepository implements IRankingRepository {
           for (final r in publicRanks) {
             final rank = PlayerRanking.fromJson(r as Map<String, dynamic>);
             if (rank.categoryId == categoryId || categoryId.isEmpty) {
-              return UserRankResponse(eloPoints: rank.eloPoints, tierName: rank.tierName, categoryId: rank.categoryId);
+              return UserRankResponse(
+                eloPoints: rank.eloPoints,
+                tierName: rank.tierName,
+                categoryId: rank.categoryId,
+              );
             }
           }
-          return UserRankResponse(eloPoints: 1000, tierName: 'Chưa xếp hạng', categoryId: categoryId);
+          return UserRankResponse(
+            eloPoints: 1000,
+            tierName: lookupAppLocalizations(
+              PlatformDispatcher.instance.locale,
+            ).rankingUnrankedFallback,
+            categoryId: categoryId,
+          );
         }
       }
 
-      throw Exception('Không thể tải thông tin xếp hạng của người dùng');
+      throw Exception(
+        lookupAppLocalizations(
+          PlatformDispatcher.instance.locale,
+        ).rankingLoadError,
+      );
     } catch (e, stack) {
       _log.error('Lỗi tải user rank', e, stack);
       rethrow;

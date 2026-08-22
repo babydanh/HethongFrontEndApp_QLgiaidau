@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.
 import 'package:app_quanly_giaidau/features/lite/widgets/football_registration_groups.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 class LiteManagementScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -230,16 +231,27 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     final l10n = AppLocalizations.of(context)!;
     final tournament = state.tournament;
     final sportLabel = tournament != null
-        ? (AppConstants.sportNames[tournament.sport] ?? tournament.sport)
+        ? l10n.sportDisplayName(tournament.sport)
         : '--';
     final formatLabel = tournament != null
-        ? (AppConstants.formatNames[tournament.format] ??
-              AppConstants.categoryNames[tournament.format] ??
-              tournament.format)
+        ? switch (tournament.format.trim().toLowerCase()) {
+            AppConstants.formatSingles ||
+            AppConstants.formatDoubles ||
+            AppConstants.formatMixedDoubles => l10n.formatDisplayName(
+              tournament.format,
+            ),
+            AppConstants.categoryMenSingles ||
+            AppConstants.categoryWomenSingles ||
+            AppConstants.categoryMenDoubles ||
+            AppConstants.categoryWomenDoubles ||
+            AppConstants.categoryMixedDoubles => l10n.categoryDisplayName(
+              tournament.format,
+            ),
+            _ => tournament.format.replaceAll('_', ' '),
+          }
         : '--';
     final bracketLabel = tournament != null
-        ? (AppConstants.bracketTypeNames[tournament.bracketType] ??
-              tournament.bracketType)
+        ? l10n.bracketDisplayName(tournament.bracketType)
         : '--';
 
     return RefreshIndicator(
@@ -495,8 +507,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               const SizedBox(width: 6),
               Text(
                 tournament != null
-                    ? (AppConstants.sportNames[tournament.sport] ??
-                          tournament.sport)
+                    ? l10n.sportDisplayName(tournament.sport)
                     : '--',
                 style: TextStyle(fontSize: 13, color: colors.textSecondary),
               ),
@@ -768,7 +779,9 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(l10n.lite_rosterConfirmedSuccess),
+                                    content: Text(
+                                      l10n.lite_rosterConfirmedSuccess,
+                                    ),
                                   ),
                                 );
                               }
@@ -1156,10 +1169,12 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(
-          replacingExisting ? l10n.lite_recreateBracketTitle : l10n.lite_createBracketTitle,
+          replacingExisting
+              ? l10n.lite_recreateBracketTitle
+              : l10n.lite_createBracketTitle,
         ),
         content: Text(
-replacingExisting
+          replacingExisting
               ? l10n.lite_recreateBracketConfirm
               : l10n.lite_createBracketConfirm,
         ),
@@ -1171,7 +1186,9 @@ replacingExisting
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
-              replacingExisting ? l10n.lite_recreateBracket : l10n.lite_createBracket,
+              replacingExisting
+                  ? l10n.lite_recreateBracket
+                  : l10n.lite_createBracket,
             ),
           ),
         ],
@@ -1190,7 +1207,7 @@ replacingExisting
           SnackBar(
             content: Text(
               replacingExisting
-? l10n.lite_recreatedBracket
+                  ? l10n.lite_recreatedBracket
                   : l10n.lite_bracketCreated,
             ),
           ),
@@ -1376,8 +1393,9 @@ replacingExisting
   ) {
     final l10n = AppLocalizations.of(context)!;
     final selected = state.selectedIds.contains(participant.id);
-    final firstMember =
-        participant.members.isNotEmpty ? participant.members.first : null;
+    final firstMember = participant.members.isNotEmpty
+        ? participant.members.first
+        : null;
     final subtitle = participant.members.map((m) => m.fullName).join(', ');
 
     return Container(
@@ -1490,8 +1508,9 @@ replacingExisting
 
   Widget _singlesTile(AppColorsExtension colors, LiteParticipant participant) {
     final l10n = AppLocalizations.of(context)!;
-    final firstMember =
-        participant.members.isNotEmpty ? participant.members.first : null;
+    final firstMember = participant.members.isNotEmpty
+        ? participant.members.first
+        : null;
     final subtitle = participant.members.map((m) => m.fullName).join(', ');
 
     return Container(
@@ -1583,8 +1602,9 @@ replacingExisting
     LiteParticipant participant,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final firstMember =
-        participant.members.isNotEmpty ? participant.members.first : null;
+    final firstMember = participant.members.isNotEmpty
+        ? participant.members.first
+        : null;
     final subtitle = participant.members.map((m) => m.fullName).join(', ');
 
     return Container(
@@ -1617,7 +1637,11 @@ replacingExisting
                           color: colors.success,
                         ),
                       )
-                    : Icon(Icons.group_rounded, size: 20, color: colors.success),
+                    : Icon(
+                        Icons.group_rounded,
+                        size: 20,
+                        color: colors.success,
+                      ),
               ),
             ),
           ),

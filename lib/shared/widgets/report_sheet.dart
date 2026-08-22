@@ -13,21 +13,12 @@ class ReportReason {
   final String key;
   final IconData icon;
 
-  const ReportReason({
-    required this.key,
-    required this.icon,
-  });
+  const ReportReason({required this.key, required this.icon});
 }
 
 const _reportReasons = [
-  ReportReason(
-    key: 'spam',
-    icon: Icons.campaign_rounded,
-  ),
-  ReportReason(
-    key: 'inappropriate',
-    icon: Icons.block_rounded,
-  ),
+  ReportReason(key: 'spam', icon: Icons.campaign_rounded),
+  ReportReason(key: 'inappropriate', icon: Icons.block_rounded),
   ReportReason(key: 'cheating', icon: Icons.gavel_rounded),
   ReportReason(key: 'other', icon: Icons.more_horiz_rounded),
 ];
@@ -112,7 +103,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
           'targetType': widget.targetType.toUpperCase(),
           'category': _categoryForReason(_selectedReason),
           'reason': description.isEmpty
-              ? 'Báo cáo: $_selectedReason'
+              ? l10n.reportDefaultReason(_selectedReason)
               : description,
           'evidenceUrls': _evidenceUrls,
         },
@@ -168,7 +159,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
           );
       final url = response.data['url']?.toString();
       if (url == null || url.isEmpty) {
-        throw Exception('Không nhận được liên kết tệp');
+        throw Exception(l10n.reportFileLinkMissing);
       }
       if (mounted) setState(() => _evidenceUrls.add(url));
     } catch (_) {

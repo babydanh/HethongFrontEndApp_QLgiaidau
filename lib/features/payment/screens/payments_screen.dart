@@ -73,7 +73,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline_rounded, size: 48, color: colors.error),
+                Icon(
+                  Icons.error_outline_rounded,
+                  size: 48,
+                  color: colors.error,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   '${l10n.payments_loadError} $e',
@@ -340,7 +344,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     );
   }
 
-  Widget _buildPaymentCard(BuildContext context, PaymentModel payment, AppLocalizations l10n) {
+  Widget _buildPaymentCard(
+    BuildContext context,
+    PaymentModel payment,
+    AppLocalizations l10n,
+  ) {
     final colors = context.colors;
     final dateStr = DateFormat('dd/MM/yyyy HH:mm').format(payment.createdAt);
     Color statusColor;
@@ -360,7 +368,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       statusIcon = Icons.replay_rounded;
     }
 
-    final fmt = NumberFormat('#,###', 'vi_VN');
+    final fmt = NumberFormat.decimalPattern(
+      Localizations.localeOf(context).toLanguageTag(),
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -401,7 +411,8 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            payment.tournamentName ?? l10n.payments_defaultTournamentName,
+                            payment.tournamentName ??
+                                l10n.payments_defaultTournamentName,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
@@ -412,7 +423,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${payment.gatewayLabel} • $dateStr',
+                            '${payment.localizedGatewayLabel(l10n)} • $dateStr',
                             style: TextStyle(
                               fontSize: 11,
                               color: colors.textMuted,
@@ -425,7 +436,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          '${fmt.format(payment.amount.ceil())}đ',
+                          '${fmt.format(payment.amount.ceil())}${l10n.registerFeeUnit}',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w900,
@@ -447,7 +458,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                             ),
                           ),
                           child: Text(
-                            payment.statusLabel,
+                            payment.localizedStatusLabel(l10n),
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
@@ -481,7 +492,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            l10n.payments_transactionRef(payment.transactionReference!),
+                            l10n.payments_transactionRef(
+                              payment.transactionReference!,
+                            ),
                             style: TextStyle(
                               fontSize: 11,
                               fontFamily: 'monospace',
@@ -516,9 +529,15 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     ).animate().fadeIn(duration: 250.ms);
   }
 
-  void _showPaymentDetailsSheet(BuildContext context, PaymentModel payment, AppLocalizations l10n) {
+  void _showPaymentDetailsSheet(
+    BuildContext context,
+    PaymentModel payment,
+    AppLocalizations l10n,
+  ) {
     final colors = context.colors;
-    final fmt = NumberFormat('#,###', 'vi_VN');
+    final fmt = NumberFormat.decimalPattern(
+      Localizations.localeOf(context).toLanguageTag(),
+    );
     final dateStr = DateFormat('dd/MM/yyyy HH:mm:ss').format(payment.createdAt);
 
     Color statusColor;
@@ -588,7 +607,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              payment.statusLabel,
+                              payment.localizedStatusLabel(l10n),
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w900,
@@ -606,7 +625,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         ),
                       ),
                       Text(
-                        '${fmt.format(payment.amount.ceil())}đ',
+                        '${fmt.format(payment.amount.ceil())}${l10n.registerFeeUnit}',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w900,
@@ -626,11 +645,15 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                     payment.tournamentName ?? l10n.payments_detailUnknown,
                   ),
                   if (payment.teamName != null && payment.teamName!.isNotEmpty)
-                    _buildDetailRow(colors, l10n.payments_detailTeamName, payment.teamName!),
+                    _buildDetailRow(
+                      colors,
+                      l10n.payments_detailTeamName,
+                      payment.teamName!,
+                    ),
                   _buildDetailRow(
                     colors,
                     l10n.payments_detailGateway,
-                    payment.gatewayLabel,
+                    payment.localizedGatewayLabel(l10n),
                   ),
                   if (payment.transactionReference != null &&
                       payment.transactionReference!.isNotEmpty)
@@ -943,12 +966,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              ErrorParser.parse(
-                e,
-                l10n.payments_createLinkError,
-              ),
-            ),
+            content: Text(ErrorParser.parse(e, l10n.payments_createLinkError)),
           ),
         );
       }

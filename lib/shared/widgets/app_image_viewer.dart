@@ -61,7 +61,8 @@ class AppImageViewer extends StatefulWidget {
 class _AppImageViewerState extends State<AppImageViewer> {
   late final PageController _pageController;
   late int _currentIndex;
-  final TransformationController _transformController = TransformationController();
+  final TransformationController _transformController =
+      TransformationController();
   double _currentScale = 1.0;
 
   @override
@@ -93,7 +94,11 @@ class _AppImageViewerState extends State<AppImageViewer> {
 
   void _zoomIn() {
     final newScale = (_currentScale * 1.4).clamp(1.0, 5.0);
-    _transformController.value = Matrix4.diagonal3Values(newScale, newScale, 1.0);
+    _transformController.value = Matrix4.diagonal3Values(
+      newScale,
+      newScale,
+      1.0,
+    );
   }
 
   void _zoomOut() {
@@ -101,7 +106,11 @@ class _AppImageViewerState extends State<AppImageViewer> {
     if (newScale <= 1.05) {
       _resetZoom();
     } else {
-      _transformController.value = Matrix4.diagonal3Values(newScale, newScale, 1.0);
+      _transformController.value = Matrix4.diagonal3Values(
+        newScale,
+        newScale,
+        1.0,
+      );
     }
   }
 
@@ -155,18 +164,28 @@ class _AppImageViewerState extends State<AppImageViewer> {
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
                         return const Center(
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
                         );
                       },
                       errorBuilder: (_, _, _) => Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.broken_image_rounded, color: Colors.white60, size: 54),
+                            const Icon(
+                              Icons.broken_image_rounded,
+                              color: Colors.white60,
+                              size: 54,
+                            ),
                             const SizedBox(height: 12),
                             Text(
                               l10n.chatImageLoadError,
-                              style: const TextStyle(color: Colors.white70, fontSize: 14),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
                             ),
                           ],
                         ),
@@ -209,7 +228,11 @@ class _AppImageViewerState extends State<AppImageViewer> {
                         color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                     tooltip: l10n.close,
                     onPressed: () => Navigator.pop(context),
@@ -247,15 +270,28 @@ class _AppImageViewerState extends State<AppImageViewer> {
                   if (_currentScale > 1.05)
                     TextButton.icon(
                       onPressed: _resetZoom,
-                      icon: const Icon(Icons.restart_alt_rounded, color: Colors.white, size: 18),
+                      icon: const Icon(
+                        Icons.restart_alt_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                       label: Text(
                         '${(_currentScale * 100).toInt()}%',
-                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       style: TextButton.styleFrom(
                         backgroundColor: Colors.white.withValues(alpha: 0.2),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
                     ),
                 ],
@@ -285,7 +321,11 @@ class _AppImageViewerState extends State<AppImageViewer> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.zoom_out_rounded, color: Colors.white, size: 22),
+                    icon: const Icon(
+                      Icons.zoom_out_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                     tooltip: l10n.imageViewerZoomOut,
                     onPressed: _zoomOut,
                   ),
@@ -295,7 +335,11 @@ class _AppImageViewerState extends State<AppImageViewer> {
                     color: Colors.white.withValues(alpha: 0.2),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.zoom_in_rounded, color: Colors.white, size: 22),
+                    icon: const Icon(
+                      Icons.zoom_in_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                     tooltip: l10n.imageViewerZoomIn,
                     onPressed: _zoomIn,
                   ),
@@ -314,13 +358,13 @@ class _AppImageViewerState extends State<AppImageViewer> {
                 color: Colors.black.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.pinch_rounded, color: Colors.white70, size: 16),
                   SizedBox(width: 6),
                   Text(
-                    'Chụm tay hoặc chạm 2 lần để phóng to',
+                    l10n.imageViewerZoomHint,
                     style: TextStyle(color: Colors.white70, fontSize: 11),
                   ),
                 ],

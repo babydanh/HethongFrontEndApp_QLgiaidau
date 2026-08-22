@@ -1,5 +1,8 @@
 import 'package:app_quanly_giaidau/core/utils/bracket_generator.dart';
+import 'dart:ui';
+
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 
 class DrawService {
@@ -12,7 +15,11 @@ class DrawService {
     int roundCount = 1,
   }) {
     if (teams.length < 2) {
-      throw ArgumentError('Cần ít nhất 2 đội để bốc thăm.');
+      throw ArgumentError(
+        lookupAppLocalizations(
+          PlatformDispatcher.instance.locale,
+        ).drawService_minTeams,
+      );
     }
 
     final generator = BracketFactory.getGenerator(bracketType);

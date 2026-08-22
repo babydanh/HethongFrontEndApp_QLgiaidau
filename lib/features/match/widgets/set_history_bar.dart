@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 
@@ -20,6 +21,7 @@ class SetHistoryBar extends StatelessWidget {
     if (finishedSets.isEmpty) return const SizedBox.shrink();
 
     final colors = Theme.of(context).extension<AppColorsExtension>();
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       height: 32,
       child: ListView.separated(
@@ -43,7 +45,7 @@ class SetHistoryBar extends StatelessWidget {
               border: Border.all(color: accent.withValues(alpha: 0.4)),
             ),
             child: Text(
-              'S${index + 1}: ${score.score1}-${score.score2}',
+              '${l10n.tennisInfoSet} ${index + 1}: ${score.score1}-${score.score2}',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,

@@ -145,7 +145,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Future<void> _updateNotifMode(ChatNotificationMode mode) async {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _notifMode = mode);
 
     try {
@@ -169,10 +169,10 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           SnackBar(
             content: Text(
               mode == ChatNotificationMode.muted
-                  ? (l10n!.chatRoomNotificationsMutedAction)
+                  ? (l10n.chatRoomNotificationsMutedAction)
                   : mode == ChatNotificationMode.mentionsOnly
-                  ? (l10n!.chatRoomNotificationsMentionsAction)
-                  : (l10n!.chatRoomNotificationsAllAction),
+                  ? (l10n.chatRoomNotificationsMentionsAction)
+                  : (l10n.chatRoomNotificationsAllAction),
             ),
             behavior: SnackBarBehavior.floating,
             backgroundColor: const Color(0xFF059669),
@@ -185,19 +185,19 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Future<void> _updateRoomNameDialog() async {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(text: _currentRoomName);
     final newName = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(
-          l10n!.chatRoomRenameTitle,
+          l10n.chatRoomRenameTitle,
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         content: TextField(
           controller: controller,
           decoration: InputDecoration(
-            hintText: l10n!.chatRoomRenameHint,
+            hintText: l10n.chatRoomRenameHint,
             border: const OutlineInputBorder(),
           ),
           autofocus: true,
@@ -205,11 +205,11 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n!.commonCancel),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: Text(l10n!.chatRoomSave),
+            child: Text(l10n.chatRoomSave),
           ),
         ],
       ),
@@ -223,7 +223,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Future<void> _pickAndUploadAvatar() async {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     try {
       final picker = ImagePicker();
       final picked = await picker.pickImage(
@@ -252,7 +252,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n!.chatRoomUploadAvatarError)),
+          SnackBar(content: Text(l10n.chatRoomUploadAvatarError)),
         );
       }
     } finally {
@@ -261,7 +261,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Future<void> _saveAdminSettings(Map<String, dynamic> payload) async {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isUpdatingAdminSettings = true);
     try {
       final dio = ref.read(dioClientProvider).dio;
@@ -269,7 +269,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n!.chatRoomSettingsUpdated),
+            content: Text(l10n.chatRoomSettingsUpdated),
             backgroundColor: Color(0xFF059669),
             behavior: SnackBarBehavior.floating,
           ),
@@ -279,7 +279,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n!.chatRoomSettingsUpdateError),
+            content: Text(l10n.chatRoomSettingsUpdateError),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -290,23 +290,23 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Future<void> _clearChatHistory() async {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n!.chatRoomClearHistoryTitle),
-        content: Text(l10n!.chatRoomClearHistoryDescription),
+        title: Text(l10n.chatRoomClearHistoryTitle),
+        content: Text(l10n.chatRoomClearHistoryDescription),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n!.commonCancel),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: Text(l10n!.chatRoomClearHistoryAction),
+            child: Text(l10n.chatRoomClearHistoryAction),
           ),
         ],
       ),
@@ -320,7 +320,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(l10n!.chatRoomClearHistorySuccess),
+              content: Text(l10n.chatRoomClearHistorySuccess),
               backgroundColor: Color(0xFF059669),
             ),
           );
@@ -331,7 +331,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   void _showParticipantActions(ChatParticipant participant) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final currentUserId = ref.read(userProfileProvider).asData?.value.id;
     if (participant.id == currentUserId) return;
 
@@ -361,12 +361,12 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 participant.fullName,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: Text(participant.role ?? (l10n!.chatRoomRoleMember)),
+              subtitle: Text(participant.role ?? (l10n.chatRoomRoleMember)),
             ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.person_outline_rounded),
-              title: Text(l10n!.chatRoomViewProfile),
+              title: Text(l10n.chatRoomViewProfile),
               onTap: () {
                 final router = GoRouter.of(context);
                 Navigator.pop(sheetCtx);
@@ -381,7 +381,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 Icons.chat_bubble_outline_rounded,
                 color: AppTheme.primary,
               ),
-              title: Text(l10n!.chatRoomPrivateMessage),
+              title: Text(l10n.chatRoomPrivateMessage),
               onTap: () async {
                 Navigator.pop(sheetCtx);
                 Navigator.pop(context);
@@ -407,7 +407,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
             ListTile(
               leading: Icon(Icons.block_rounded, color: context.colors.error),
               title: Text(
-                l10n!.chatRoomBlockUser,
+                l10n.chatRoomBlockUser,
                 style: TextStyle(color: context.colors.error),
               ),
               onTap: () async {
@@ -419,7 +419,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          l10n!.chatRoomBlockedUser(participant.fullName),
+                          l10n.chatRoomBlockedUser(participant.fullName),
                         ),
                       ),
                     );
@@ -446,7 +446,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
@@ -478,7 +478,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 const SizedBox(width: 40),
                 Expanded(
                   child: Text(
-                    l10n!.chatRoomSettingsTitle,
+                    l10n.chatRoomSettingsTitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
@@ -512,7 +512,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 // ── Room Admin Management (For Owner / Admin) ──
                 if (_isRoomAdmin) ...[
                   _buildSectionHeader(
-                    l10n!.chatRoomAdminSection,
+                    l10n.chatRoomAdminSection,
                     Icons.admin_panel_settings_outlined,
                     colors,
                   ),
@@ -523,7 +523,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
                 // ── Notification Settings Section ──
                 _buildSectionHeader(
-                  l10n!.chatRoomNotificationsSection,
+                  l10n.chatRoomNotificationsSection,
                   Icons.notifications_active_outlined,
                   colors,
                 ),
@@ -538,7 +538,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                         widget.pinnedMessage!.mediaUrls.isNotEmpty ||
                         widget.pinnedMessage!.poll != null)) ...[
                   _buildSectionHeader(
-                    l10n!.chatRoomPinnedSection,
+                    l10n.chatRoomPinnedSection,
                     Icons.push_pin_outlined,
                     colors,
                   ),
@@ -549,7 +549,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
                 // ── Shared Media Section ──
                 _buildSectionHeader(
-                  l10n!.chatRoomSharedMediaSection(_allSharedMedia.length),
+                  l10n.chatRoomSharedMediaSection(_allSharedMedia.length),
                   Icons.photo_library_outlined,
                   colors,
                 ),
@@ -559,7 +559,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
                 // ── Members Section ──
                 _buildSectionHeader(
-                  l10n!.chatRoomMembersSection(
+                  l10n.chatRoomMembersSection(
                     _participants.isNotEmpty ? _participants.length : 1,
                   ),
                   Icons.people_alt_outlined,
@@ -571,7 +571,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
                 // ── Danger / Clear Actions ──
                 _buildSectionHeader(
-                  l10n!.chatRoomOtherOptionsSection,
+                  l10n.chatRoomOtherOptionsSection,
                   Icons.settings_outlined,
                   colors,
                 ),
@@ -609,7 +609,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildProfileBanner(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final avatar = _currentRoomAvatar;
     return Container(
       padding: const EdgeInsets.all(16),
@@ -703,8 +703,8 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 ),
                 child: Text(
                   widget.roomType == 'CLUB'
-                      ? (l10n!.chatRoomClubType)
-                      : (l10n!.chatRoomDirectType),
+                      ? (l10n.chatRoomClubType)
+                      : (l10n.chatRoomDirectType),
                   style: const TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,
@@ -731,7 +731,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        l10n!.chatRoomViewClub,
+                        l10n.chatRoomViewClub,
                         style: TextStyle(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w700,
@@ -751,7 +751,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildQuickActions(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
@@ -760,8 +760,8 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 ? Icons.notifications_off_rounded
                 : Icons.notifications_active_rounded,
             label: _notifMode == ChatNotificationMode.muted
-                ? (l10n!.chatRoomMutedTitle)
-                : (l10n!.chatRoomNotificationsSection),
+                ? (l10n.chatRoomMutedTitle)
+                : (l10n.chatRoomNotificationsSection),
             color: _notifMode == ChatNotificationMode.muted
                 ? colors.error
                 : AppTheme.primary,
@@ -780,7 +780,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           Expanded(
             child: _buildActionButton(
               icon: Icons.groups_rounded,
-              label: l10n!.chatRoomViewClub,
+              label: l10n.chatRoomViewClub,
               color: const Color(0xFF059669),
               onTap: () {
                 Navigator.pop(context);
@@ -829,7 +829,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildAdminManagementCard(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: colors.bgCard,
@@ -853,7 +853,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               ),
             ),
             title: Text(
-              l10n!.chatRoomRenameTitle,
+              l10n.chatRoomRenameTitle,
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
             ),
             subtitle: Text(
@@ -880,11 +880,11 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               ),
             ),
             title: Text(
-              l10n!.chatRoomChangeAvatarTitle,
+              l10n.chatRoomChangeAvatarTitle,
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
             ),
             subtitle: Text(
-              l10n!.chatRoomChangeAvatarSubtitle,
+              l10n.chatRoomChangeAvatarSubtitle,
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
             trailing: _isUpdatingAdminSettings
@@ -913,11 +913,11 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               ),
             ),
             title: Text(
-              l10n!.chatRoomAnnouncementOnlyTitle,
+              l10n.chatRoomAnnouncementOnlyTitle,
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
             ),
             subtitle: Text(
-              l10n!.chatRoomAnnouncementOnlySubtitle,
+              l10n.chatRoomAnnouncementOnlySubtitle,
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
             value: _isAnnouncementOnly,
@@ -944,13 +944,13 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               ),
             ),
             title: Text(
-              l10n!.chatRoomSlowModeTitle,
+              l10n.chatRoomSlowModeTitle,
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
             ),
             subtitle: Text(
               _slowModeSeconds > 0
-                  ? (l10n!.chatRoomSlowModeWait(_slowModeSeconds))
-                  : (l10n!.chatRoomSlowModeOffSubtitle),
+                  ? (l10n.chatRoomSlowModeWait(_slowModeSeconds))
+                  : (l10n.chatRoomSlowModeOffSubtitle),
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
             trailing: DropdownButton<int>(
@@ -959,12 +959,24 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               items: [
                 DropdownMenuItem(
                   value: 0,
-                  child: Text(l10n!.chatRoomSlowModeOff),
+                  child: Text(l10n.chatRoomSlowModeOff),
                 ),
-                const DropdownMenuItem(value: 5, child: Text('5s')),
-                const DropdownMenuItem(value: 15, child: Text('15s')),
-                const DropdownMenuItem(value: 30, child: Text('30s')),
-                const DropdownMenuItem(value: 60, child: Text('1m')),
+                DropdownMenuItem(
+                  value: 5,
+                  child: Text(l10n.chatRoomSlowModeDuration(5)),
+                ),
+                DropdownMenuItem(
+                  value: 15,
+                  child: Text(l10n.chatRoomSlowModeDuration(15)),
+                ),
+                DropdownMenuItem(
+                  value: 30,
+                  child: Text(l10n.chatRoomSlowModeDuration(30)),
+                ),
+                DropdownMenuItem(
+                  value: 60,
+                  child: Text(l10n.chatRoomSlowModeDuration(60)),
+                ),
               ],
               onChanged: (val) async {
                 if (val != null) {
@@ -980,7 +992,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildNotificationCard(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: colors.bgCard,
@@ -991,8 +1003,8 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
         children: [
           // Radio 1: All notifications
           _buildRadioTile(
-            title: l10n!.chatRoomAllNotificationsTitle,
-            subtitle: l10n!.chatRoomAllNotificationsSubtitle,
+            title: l10n.chatRoomAllNotificationsTitle,
+            subtitle: l10n.chatRoomAllNotificationsSubtitle,
             icon: Icons.notifications_active_outlined,
             selected: _notifMode == ChatNotificationMode.all,
             onTap: () => _updateNotifMode(ChatNotificationMode.all),
@@ -1002,8 +1014,8 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
           // Radio 2: Mentions only
           _buildRadioTile(
-            title: l10n!.chatRoomMentionsTitle,
-            subtitle: l10n!.chatRoomMentionsSubtitle,
+            title: l10n.chatRoomMentionsTitle,
+            subtitle: l10n.chatRoomMentionsSubtitle,
             icon: Icons.alternate_email_rounded,
             selected: _notifMode == ChatNotificationMode.mentionsOnly,
             onTap: () => _updateNotifMode(ChatNotificationMode.mentionsOnly),
@@ -1013,8 +1025,8 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
 
           // Radio 3: Muted
           _buildRadioTile(
-            title: l10n!.chatRoomMutedTitle,
-            subtitle: l10n!.chatRoomMutedSubtitle,
+            title: l10n.chatRoomMutedTitle,
+            subtitle: l10n.chatRoomMutedSubtitle,
             icon: Icons.notifications_off_outlined,
             selected: _notifMode == ChatNotificationMode.muted,
             onTap: () => _updateNotifMode(ChatNotificationMode.muted),
@@ -1025,11 +1037,11 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           // Sub-toggle: Reactions
           SwitchListTile(
             title: Text(
-              l10n!.chatRoomReactionsTitle,
+              l10n.chatRoomReactionsTitle,
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              l10n!.chatRoomReactionsSubtitle,
+              l10n.chatRoomReactionsSubtitle,
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
             value: _notifyReactions,
@@ -1044,11 +1056,11 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           // Sub-toggle: Replies
           SwitchListTile(
             title: Text(
-              l10n!.chatRoomRepliesTitle,
+              l10n.chatRoomRepliesTitle,
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              l10n!.chatRoomRepliesSubtitle,
+              l10n.chatRoomRepliesSubtitle,
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
             value: _notifyReplies,
@@ -1063,11 +1075,11 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           // Sub-toggle: Sound
           SwitchListTile(
             title: Text(
-              l10n!.chatRoomSoundTitle,
+              l10n.chatRoomSoundTitle,
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              l10n!.chatRoomSoundSubtitle,
+              l10n.chatRoomSoundSubtitle,
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
             value: _soundEnabled,
@@ -1133,7 +1145,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildPinnedCard(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final pin = widget.pinnedMessage!;
     return Container(
       padding: const EdgeInsets.all(14),
@@ -1162,7 +1174,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n!.chatRoomPinnedFrom(pin.senderName),
+                  l10n.chatRoomPinnedFrom(pin.senderName),
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -1173,7 +1185,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 Text(
                   pin.content.isNotEmpty
                       ? pin.content
-                      : (l10n!.chatRoomMediaPlaceholder),
+                      : (l10n.chatRoomMediaPlaceholder),
                   style: TextStyle(fontSize: 13, color: colors.textPrimary),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -1184,7 +1196,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           if (widget.onJumpToMessage != null)
             IconButton(
               icon: const Icon(Icons.arrow_forward_rounded, size: 20),
-              tooltip: l10n!.chatRoomGoToMessage,
+              tooltip: l10n.chatRoomGoToMessage,
               onPressed: () {
                 Navigator.pop(context);
                 widget.onJumpToMessage!(pin.id);
@@ -1196,7 +1208,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildMediaGrid(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final media = _allSharedMedia;
     if (media.isEmpty) {
       return Container(
@@ -1208,7 +1220,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           border: Border.all(color: colors.border),
         ),
         child: Text(
-          l10n!.chatRoomSharedMediaEmpty,
+          l10n.chatRoomSharedMediaEmpty,
           style: TextStyle(fontSize: 12.5, color: colors.textMuted),
         ),
       );
@@ -1241,7 +1253,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildMembersList(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     if (_isLoadingMembers) {
       return const Center(
         child: Padding(
@@ -1265,7 +1277,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                l10n!.chatRoomAllMembersCanChat,
+                l10n.chatRoomAllMembersCanChat,
                 style: TextStyle(fontSize: 12.5, color: colors.textSecondary),
               ),
             ),
@@ -1312,12 +1324,12 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
             ),
             trailing: isOwner
                 ? _buildRoleBadge(
-                    l10n!.chatRoomRoleOwner,
+                    l10n.chatRoomRoleOwner,
                     const Color(0xFFEA580C),
                   )
                 : isAdmin
-                ? _buildRoleBadge(l10n!.chatRoomRoleAdmin, AppTheme.primary)
-                : _buildRoleBadge(l10n!.chatRoomRoleMember, colors.textMuted),
+                ? _buildRoleBadge(l10n.chatRoomRoleAdmin, AppTheme.primary)
+                : _buildRoleBadge(l10n.chatRoomRoleMember, colors.textMuted),
           );
         }).toList(),
       ),
@@ -1325,7 +1337,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   }
 
   Widget _buildDangerCard(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: colors.bgCard,
@@ -1348,7 +1360,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               ),
             ),
             title: Text(
-              l10n!.chatRoomClearHistoryAction,
+              l10n.chatRoomClearHistoryAction,
               style: TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w700,
@@ -1356,7 +1368,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               ),
             ),
             subtitle: Text(
-              l10n!.chatRoomClearHistoryDescription,
+              l10n.chatRoomClearHistoryDescription,
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
             onTap: _clearChatHistory,

@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class EloTierThreshold {
   final int minElo;
@@ -44,31 +45,56 @@ class EloHelpers {
     EloTierThreshold(minElo: 1800, name: 'Tier S'),
   ];
 
-  static String getEloMatchTypeLabel(String? matchType) {
+  static String getEloMatchTypeLabel(
+    String? matchType,
+    AppLocalizations l10n,
+  ) {
     switch (matchType) {
       case 'SINGLES':
-        return 'Đơn';
+        return l10n.ranking_matchTypeSingles;
       case 'DOUBLES':
-        return 'Đôi';
+        return l10n.ranking_matchTypeDoubles;
       case 'MIXED_DOUBLES':
-        return 'Đôi nam nữ';
+        return l10n.ranking_matchTypeMixedDoubles;
       default:
-        return 'Tổng quan';
+        return l10n.ranking_matchTypeOverview;
     }
   }
 
-  static String getRankDisplayName(PlayerRanking ranking) {
+  static String getRankDisplayName(
+    PlayerRanking ranking,
+    AppLocalizations l10n,
+  ) {
     final categoryName = ranking.categoryName?.trim().isNotEmpty == true
         ? ranking.categoryName!.trim()
-        : 'Môn thi đấu';
-    return '$categoryName • ${getEloMatchTypeLabel(ranking.matchType)}';
+        : l10n.ranking_sportFallback;
+    return '$categoryName • ${getEloMatchTypeLabel(ranking.matchType, l10n)}';
   }
 
-  static String getRankTierName(PlayerRanking? ranking) {
-    if (ranking == null || ranking.matchesPlayed <= 0) return 'Chưa xếp hạng';
+  static String getRankTierName(
+    PlayerRanking? ranking,
+    AppLocalizations l10n,
+  ) {
+    if (ranking == null || ranking.matchesPlayed <= 0) {
+      return l10n.ranking_unranked;
+    }
     return ranking.tierName.trim().isNotEmpty
         ? ranking.tierName.trim()
-        : 'Đã xếp hạng';
+        : l10n.ranking_ranked;
+  }
+
+  static String getTierName(int index, AppLocalizations l10n) {
+    return switch (index) {
+      0 => l10n.ranking_tierLowD,
+      1 => l10n.ranking_tierHighD,
+      2 => l10n.ranking_tierLowC,
+      3 => l10n.ranking_tierHighC,
+      4 => l10n.ranking_tierLowB,
+      5 => l10n.ranking_tierHighB,
+      6 => l10n.ranking_tierLowA,
+      7 => l10n.ranking_tierHighA,
+      _ => l10n.ranking_tierS,
+    };
   }
 
   static int getRankWinRate(PlayerRanking? ranking) {
@@ -128,15 +154,19 @@ class EloHelpers {
     return 0;
   }
 
-  static EloProgressInfo getEloProgressInfo(int elo) {
+  static EloProgressInfo getEloProgressInfo(
+    int elo,
+    AppLocalizations l10n,
+  ) {
     final safeElo = elo < 1000 ? 1000 : elo;
     final index = findTierIndex(safeElo);
     if (index == thresholds.length - 1) {
-      return const EloProgressInfo(
+            return EloProgressInfo(
+
         percent: 100,
         currentIndex: 8,
         nextIndex: null,
-        label: '🏆 Đã đạt đỉnh — Tier S',
+        label: l10n.ranking_eloPeakProgress,
       );
     }
 
@@ -146,42 +176,46 @@ class EloHelpers {
     final range = nextMin - currentMin;
     final rawPercent = range > 0 ? ((safeElo - currentMin) / range) * 100 : 0.0;
     final remaining = nextMin - safeElo;
-    final nextName = thresholds[nextIndex].name;
+    final nextName = getTierName(nextIndex, l10n);
 
     return EloProgressInfo(
       percent: rawPercent.clamp(0.0, 100.0),
       currentIndex: index,
       nextIndex: nextIndex,
-      label: remaining <= 0
-          ? 'Còn ${nextMin - currentMin} ELO tới $nextName'
-          : 'Còn $remaining ELO tới $nextName',
+      label: l10n.ranking_eloToNext(
+        remaining <= 0 ? nextMin - currentMin : remaining,
+        nextName,
+      ),
     );
   }
 
-  static ShieldStatus getShieldStatus(PlayerRanking? ranking) {
+  static ShieldStatus getShieldStatus(
+    PlayerRanking? ranking,
+    AppLocalizations l10n,
+  ) {
     final matchesPlayed = ranking?.matchesPlayed ?? 0;
     if (matchesPlayed <= 0) {
-      return const ShieldStatus(
+      return ShieldStatus(
         state: ShieldState.onboarding,
-        copy: 'Đánh 1 trận xếp hạng để mở khóa ELO và khiên rank.',
+        copy: l10n.ranking_shieldOnboarding,
       );
     }
 
     if (ranking?.shieldActive == true) {
-      return const ShieldStatus(
+      return ShieldStatus(
         state: ShieldState.active,
-        copy: 'Khiên còn nguyên — đỡ 1 lần rớt khỏi mốc rank hiện tại.',
+        copy: l10n.ranking_shieldActive,
       );
     }
 
-    return const ShieldStatus(
+    return ShieldStatus(
       state: ShieldState.broken,
-      copy: 'Khiên đã vỡ — cần lên rank hoặc rớt rank để hồi lại khiên.',
+      copy: l10n.ranking_shieldBroken,
     );
   }
 
-  static String getOnboardingCopy() {
-    return 'Đánh 1 trận xếp hạng để bắt đầu tiến trình ELO.';
+  static String getOnboardingCopy(AppLocalizations l10n) {
+    return l10n.ranking_eloOnboarding;
   }
 
   static int _matchTypeOrder(String? type) {

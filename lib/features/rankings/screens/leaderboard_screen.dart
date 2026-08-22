@@ -707,7 +707,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Bạn chưa có hạng trong Top 100. Tham gia giải đấu để được xếp hạng!',
+                l10n.leaderboardNoTop100,
                 style: TextStyle(fontSize: 12, color: colors.textSecondary),
               ),
             ),

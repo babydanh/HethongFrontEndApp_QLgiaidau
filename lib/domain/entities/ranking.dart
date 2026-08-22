@@ -3,6 +3,7 @@ class PlayerRanking {
   final String userId;
   final String fullName;
   final String? avatarUrl;
+  final String? partnerId;
   final String? partnerName;
   final String? partnerAvatarUrl;
   final int eloPoints;
@@ -17,6 +18,8 @@ class PlayerRanking {
   final int? peakElo;
   final bool? shieldActive;
   final int winStreak;
+  final String? currentStreakType;
+  final int currentStreakCount;
   final String? updatedAt;
 
   const PlayerRanking({
@@ -24,6 +27,7 @@ class PlayerRanking {
     required this.userId,
     required this.fullName,
     this.avatarUrl,
+    this.partnerId,
     this.partnerName,
     this.partnerAvatarUrl,
     this.eloPoints = 0,
@@ -38,48 +42,91 @@ class PlayerRanking {
     this.peakElo,
     this.shieldActive,
     this.winStreak = 0,
+    this.currentStreakType,
+    this.currentStreakCount = 0,
     this.updatedAt,
   });
 
   factory PlayerRanking.fromJson(Map<String, dynamic> json) {
-    // Backend PUBLIC scope trả về:
-    //   { id, userId, categoryId, eloPoints, matchesPlayed, matchesWon,
-    //     winStreak, updatedAt, tier: { id, name }, user: { id, fullName, avatarUrl } }
-    final user = json['user'] as Map<String, dynamic>?;
-    final user1 = json['user1'] as Map<String, dynamic>?;
-    final user2 = json['user2'] as Map<String, dynamic>?;
-    final tier = json['tier'] as Map<String, dynamic>?;
-    final category = json['category'] as Map<String, dynamic>?;
+    final user = json['user'] is Map
+        ? Map<String, dynamic>.from(json['user'] as Map)
+        : null;
+    final user1 = json['user1'] is Map
+        ? Map<String, dynamic>.from(json['user1'] as Map)
+        : null;
+    final user2 = json['user2'] is Map
+        ? Map<String, dynamic>.from(json['user2'] as Map)
+        : null;
+    final tier = json['tier'] is Map
+        ? Map<String, dynamic>.from(json['tier'] as Map)
+        : null;
+    final category = json['category'] is Map
+        ? Map<String, dynamic>.from(json['category'] as Map)
+        : null;
+
+    int asInt(dynamic value, [int fallback = 0]) {
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? fallback;
+      return fallback;
+    }
+
+    String? asString(dynamic value) => value?.toString();
+
+    final parsedStreakType = asString(
+      json['currentStreakType'] ?? json['current_streak_type'],
+    )?.toUpperCase();
+
     return PlayerRanking(
-      id: json['id'] as String? ?? '',
-      userId: user?['id'] as String? ?? user1?['id'] as String? ?? json['userId'] as String? ?? '',
-      fullName:
-          user1 != null && user2 != null
-          ? '${user1['fullName'] ?? 'VĐV'} / ${user2['fullName'] ?? 'VĐV'}'
-          : user?['fullName'] as String? ??
-          json['fullName'] as String? ??
-          json['playerName'] as String? ??
+      id: asString(json['id']) ?? '',
+      userId:
+          user?['id']?.toString() ??
+          user1?['id']?.toString() ??
+          asString(json['userId']) ??
           '',
-      avatarUrl: user1?['avatarUrl'] as String? ?? user?['avatarUrl'] as String? ?? json['avatarUrl'] as String?,
-      partnerName: user2?['fullName'] as String?,
-      partnerAvatarUrl: user2?['avatarUrl'] as String?,
-      eloPoints: ((json['eloPoints'] ?? json['elo_points'] ?? 0) as num)
-          .toInt(),
-      tierName: tier?['name'] as String? ?? json['tierName'] as String? ?? '',
-      rank: ((json['rank'] ?? 0) as num).toInt(),
-      matchesPlayed:
-          ((json['matchesPlayed'] ?? json['totalMatches'] ?? 0) as num).toInt(),
-      matchesWon: ((json['matchesWon'] ?? json['wins'] ?? 0) as num).toInt(),
-      winStreak: ((json['winStreak'] ?? json['win_streak'] ?? 0) as num).toInt(),
-      categoryId: json['categoryId'] as String? ?? category?['id'] as String?,
-      categoryName:
-          json['categoryName'] as String? ?? category?['name'] as String?,
-      matchType: json['matchType'] as String?,
-      genderRestriction: json['genderRestriction'] as String?,
-      peakElo: ((json['peakElo'] ?? json['peak_elo']) as num?)?.toInt(),
+      fullName: user1 != null && user2 != null
+          ? '${user1['fullName'] ?? 'VĐV'} / ${user2['fullName'] ?? 'VĐV'}'
+          : user?['fullName']?.toString() ??
+                asString(json['fullName']) ??
+                asString(json['playerName']) ??
+                '',
+      avatarUrl: asString(
+        user1?['avatarUrl'] ?? user?['avatarUrl'] ?? json['avatarUrl'],
+      ),
+      partnerId: asString(
+        json['partnerId'] ?? json['partner_id'] ?? user2?['id'],
+      ),
+      partnerName: asString(
+        json['partnerName'] ?? json['partner_name'] ?? user2?['fullName'],
+      ),
+      partnerAvatarUrl: asString(
+        json['partnerAvatarUrl'] ??
+            json['partner_avatar_url'] ??
+            user2?['avatarUrl'],
+      ),
+      eloPoints: asInt(json['eloPoints'] ?? json['elo_points']),
+      tierName: asString(tier?['name'] ?? json['tierName']) ?? '',
+      rank: asInt(json['rank']),
+      matchesPlayed: asInt(json['matchesPlayed'] ?? json['totalMatches']),
+      matchesWon: asInt(json['matchesWon'] ?? json['wins']),
+      categoryId: asString(json['categoryId'] ?? category?['id']),
+      categoryName: asString(json['categoryName'] ?? category?['name']),
+      matchType: asString(
+        json['matchType'] ?? json['match_type'],
+      )?.toUpperCase(),
+      genderRestriction: asString(
+        json['genderRestriction'] ?? json['gender_restriction'],
+      )?.toUpperCase(),
+      peakElo: json['peakElo'] == null && json['peak_elo'] == null
+          ? null
+          : asInt(json['peakElo'] ?? json['peak_elo']),
       shieldActive:
           json['shieldActive'] as bool? ?? json['shield_active'] as bool?,
-      updatedAt: json['updatedAt'] as String? ?? json['updated_at'] as String?,
+      winStreak: asInt(json['winStreak'] ?? json['win_streak']),
+      currentStreakType: parsedStreakType,
+      currentStreakCount: asInt(
+        json['currentStreakCount'] ?? json['current_streak_count'],
+      ),
+      updatedAt: asString(json['updatedAt'] ?? json['updated_at']),
     );
   }
 
@@ -89,6 +136,9 @@ class PlayerRanking {
       'userId': userId,
       'fullName': fullName,
       'avatarUrl': avatarUrl,
+      if (partnerId != null) 'partnerId': partnerId,
+      if (partnerName != null) 'partnerName': partnerName,
+      if (partnerAvatarUrl != null) 'partnerAvatarUrl': partnerAvatarUrl,
       'eloPoints': eloPoints,
       'tierName': tierName,
       'rank': rank,
@@ -101,6 +151,8 @@ class PlayerRanking {
       if (peakElo != null) 'peakElo': peakElo,
       if (shieldActive != null) 'shieldActive': shieldActive,
       'winStreak': winStreak,
+      if (currentStreakType != null) 'currentStreakType': currentStreakType,
+      'currentStreakCount': currentStreakCount,
       if (updatedAt != null) 'updatedAt': updatedAt,
     };
   }
@@ -110,6 +162,7 @@ class PlayerRanking {
     String? userId,
     String? fullName,
     String? avatarUrl,
+    String? partnerId,
     String? partnerName,
     String? partnerAvatarUrl,
     int? eloPoints,
@@ -124,6 +177,8 @@ class PlayerRanking {
     int? peakElo,
     bool? shieldActive,
     int? winStreak,
+    String? currentStreakType,
+    int? currentStreakCount,
     String? updatedAt,
   }) {
     return PlayerRanking(
@@ -131,6 +186,7 @@ class PlayerRanking {
       userId: userId ?? this.userId,
       fullName: fullName ?? this.fullName,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      partnerId: partnerId ?? this.partnerId,
       partnerName: partnerName ?? this.partnerName,
       partnerAvatarUrl: partnerAvatarUrl ?? this.partnerAvatarUrl,
       eloPoints: eloPoints ?? this.eloPoints,
@@ -145,11 +201,14 @@ class PlayerRanking {
       peakElo: peakElo ?? this.peakElo,
       shieldActive: shieldActive ?? this.shieldActive,
       winStreak: winStreak ?? this.winStreak,
+      currentStreakType: currentStreakType ?? this.currentStreakType,
+      currentStreakCount: currentStreakCount ?? this.currentStreakCount,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
-  int get matchesLost => matchesPlayed - matchesWon;
+  int get matchesLost => (matchesPlayed - matchesWon).clamp(0, 1 << 30);
+
   double get winRate =>
       matchesPlayed > 0 ? (matchesWon / matchesPlayed) * 100 : 0;
 
@@ -166,10 +225,11 @@ class UserRankResponse {
   const UserRankResponse({this.eloPoints, this.tierName, this.categoryId});
 
   factory UserRankResponse.fromJson(Map<String, dynamic> json) {
+    final rawElo = json['eloPoints'];
     return UserRankResponse(
-      eloPoints: json['eloPoints'],
-      tierName: json['tierName'],
-      categoryId: json['categoryId'],
+      eloPoints: rawElo is num ? rawElo.toInt() : int.tryParse('$rawElo'),
+      tierName: json['tierName']?.toString(),
+      categoryId: json['categoryId']?.toString(),
     );
   }
 }

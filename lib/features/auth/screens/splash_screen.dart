@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -79,6 +80,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: context.colors.bgDark,
       body: Center(
@@ -108,7 +110,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                     // Tagline
                     Text(
-                      AppConstants.appTagline,
+                      l10n.appTagline,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,

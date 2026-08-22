@@ -163,7 +163,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
                   Icon(Icons.pinch_rounded, size: 12, color: colors.textMuted),
                   const SizedBox(width: 4),
                   Text(
-                    'Kéo & thu phóng',
+                    l10n.bracketDiagramZoomHint,
                     style: TextStyle(fontSize: 9, color: colors.textMuted),
                   ),
                 ],
@@ -175,9 +175,9 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-          ? _buildEmpty(colors)
+          ? _buildEmpty(colors, l10n)
           : (_bracketMatches == null || _bracketMatches!.isEmpty)
-          ? _buildEmpty(colors)
+          ? _buildEmpty(colors, l10n)
           : _buildDiagram(colors, isRoundRobin, isDouble, isGroupStageKnockout),
     );
   }
@@ -245,7 +245,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
     );
   }
 
-  Widget _buildEmpty(AppColorsExtension colors) {
+  Widget _buildEmpty(AppColorsExtension colors, AppLocalizations l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -257,7 +257,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
           ),
           const SizedBox(height: 20),
           Text(
-            'Chưa có sơ đồ thi đấu',
+            l10n.bracketDiagramEmptyTitle,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -266,7 +266,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Hãy hoàn tất bốc thăm để tạo sơ đồ',
+            l10n.bracketDiagramEmptyHint,
             style: TextStyle(fontSize: 13, color: colors.textMuted),
           ),
         ],

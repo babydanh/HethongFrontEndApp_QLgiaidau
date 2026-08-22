@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_history_log.dart';
 import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_chart.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class EloHistoryScreen extends ConsumerStatefulWidget {
   final String userId;
@@ -14,6 +15,11 @@ class EloHistoryScreen extends ConsumerStatefulWidget {
   final String? tierName;
   final String? categoryId;
   final String? categoryName;
+  final String? initialScope;
+  final String? matchType;
+  final String? genderRestriction;
+  final String? partnerId;
+  final bool lockRatingScope;
 
   const EloHistoryScreen({
     super.key,
@@ -24,6 +30,11 @@ class EloHistoryScreen extends ConsumerStatefulWidget {
     this.tierName,
     this.categoryId,
     this.categoryName,
+    this.initialScope,
+    this.matchType,
+    this.genderRestriction,
+    this.partnerId,
+    this.lockRatingScope = false,
   });
 
   @override
@@ -34,11 +45,20 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
   String? _selectedScope;
   static const _limit = 50;
 
+  @override
+  void initState() {
+    super.initState();
+    _selectedScope = widget.initialScope;
+  }
+
   EloHistoryQuery get _query => (
     userId: widget.userId,
     categoryId: widget.categoryId,
     scope: _selectedScope,
     communityId: null,
+    matchType: widget.matchType,
+    genderRestriction: widget.genderRestriction,
+    partnerId: widget.partnerId,
     limit: _limit,
     cursor: null,
   );
@@ -48,6 +68,8 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
     final colors = context.colors;
     final historyAsync = ref.watch(eloHistoryProvider(_query));
     final history = historyAsync.asData?.value ?? [];
+
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: colors.bgDark,
@@ -60,8 +82,8 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
         ),
         title: Text(
           widget.categoryName != null && widget.categoryName!.isNotEmpty
-              ? 'Lịch sử ELO · ${widget.categoryName}'
-              : 'Lịch sử ELO',
+              ? '${l10n.settingsEloHistory} · ${widget.categoryName}'
+              : l10n.settingsEloHistory,
           style: TextStyle(
             color: colors.textPrimary,
             fontWeight: FontWeight.w700,
@@ -90,6 +112,7 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context)!;
     final initial = widget.userName.isNotEmpty
         ? widget.userName[0].toUpperCase()
         : '?';
@@ -137,7 +160,7 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'ELO hiện tại',
+                  l10n.publicProfileEloAfter,
                   style: TextStyle(
                     color: context.colors.textMuted,
                     fontSize: 11,
@@ -161,7 +184,10 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
               if (widget.tierName != null)
                 Container(
                   margin: const EdgeInsets.only(top: 2),
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(4),
@@ -183,6 +209,7 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
   }
 
   Widget _buildChart(List<EloHistoryLog> history, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     final sorted = List<EloHistoryLog>.from(history)
       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     final peakElo = sorted.fold<int>(
@@ -219,7 +246,7 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Chưa có lịch sử biến động ELO',
+                  l10n.publicProfileNoPlayedElo,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -228,11 +255,8 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Hãy tham gia các trận đấu xếp hạng để ghi nhận điểm ELO',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: colors.textMuted,
-                  ),
+                  l10n.publicProfileNoPlayedEloHint,
+                  style: TextStyle(fontSize: 11, color: colors.textMuted),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -259,7 +283,7 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
           child: Row(
             children: [
               Text(
-                'Peak ELO (Cao nhất)',
+                l10n.publicProfilePeakElo,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -268,7 +292,9 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
               ),
               const Spacer(),
               Text(
-                NumberFormat('#,###', 'vi_VN').format(peakElo),
+                NumberFormat.decimalPattern(
+                  Localizations.localeOf(context).toLanguageTag(),
+                ).format(peakElo),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -304,9 +330,12 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
   }
 
   Widget _buildScopeFilter(AppColorsExtension colors) {
+    if (widget.lockRatingScope) return const SizedBox.shrink();
+
+    final l10n = AppLocalizations.of(context)!;
     final scopes = [
-      (null, 'Tất cả'),
-      ('PUBLIC', 'Công khai'),
+      (null, l10n.infoAll),
+      ('PUBLIC', 'PUBLIC'),
       ('COMMUNITY', 'CLB'),
     ];
 
@@ -320,7 +349,10 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
             child: GestureDetector(
               onTap: () => setState(() => _selectedScope = s.$1),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   color: selected ? AppTheme.primary : colors.bgCard,
                   borderRadius: BorderRadius.circular(20),
@@ -344,7 +376,10 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
     );
   }
 
-  Widget _buildActivityLog(List<EloHistoryLog> history, AppColorsExtension colors) {
+  Widget _buildActivityLog(
+    List<EloHistoryLog> history,
+    AppColorsExtension colors,
+  ) {
     if (history.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -353,7 +388,7 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 12),
           child: Text(
-            'HOẠT ĐỘNG',
+            AppLocalizations.of(context)!.publicProfileActivity,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -368,80 +403,172 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
   }
 
   Widget _buildLogItem(EloHistoryLog log, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     final date = DateTime.tryParse(log.createdAt) ?? DateTime.now();
     final timeStr = DateFormat('dd/MM/yyyy HH:mm').format(date);
-    final gain = log.isGain;
-    final diffStr = gain ? '+${log.eloDiff}' : '${log.eloDiff}';
-    final diffColor = gain ? colors.success : colors.error;
-
-    String reasonLabel;
-    if (log.match?.tournamentName != null) {
-      reasonLabel = log.match!.tournamentName!;
-    } else if (log.reason != null && log.reason!.toLowerCase().contains('decay')) {
-      reasonLabel = 'Suy giảm ELO (không thi đấu)';
-    } else if (log.reason != null) {
-      reasonLabel = log.reason!;
-    } else {
-      reasonLabel = 'Cập nhật ELO';
-    }
+    final match = log.match;
+    final result = match?.result?.toUpperCase();
+    final resultColor = result == 'WIN'
+        ? const Color(0xFF2563EB)
+        : result == 'LOSS'
+        ? const Color(0xFFDC2626)
+        : colors.textMuted;
+    final resultLabel = result == 'WIN'
+        ? l10n.publicProfileResultWin
+        : result == 'LOSS'
+        ? l10n.publicProfileResultLoss
+        : result == 'DRAW'
+        ? l10n.publicProfileResultDraw
+        : null;
+    final diffColor = log.eloDiff >= 0 ? colors.success : colors.error;
+    final diffStr = log.eloDiff >= 0 ? '+${log.eloDiff}' : '${log.eloDiff}';
+    final title = match?.tournamentName?.isNotEmpty == true
+        ? match!.tournamentName!
+        : log.reason?.isNotEmpty == true
+        ? log.reason!
+        : l10n.publicProfileEloChange;
+    final opponent = match?.opponentName ?? l10n.publicProfileUnknownOpponent;
+    final score = match?.p1SetsWon != null && match?.p2SetsWon != null
+        ? '${match!.p1SetsWon} - ${match.p2SetsWon}'
+        : null;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: Border.all(color: colors.border),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: diffColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: diffColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Text(
+                    diffStr,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: diffColor,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      timeStr,
+                      style: TextStyle(fontSize: 10, color: colors.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+              if (resultLabel != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: resultColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  child: Text(
+                    resultLabel,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: resultColor,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (match != null) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(
+                  Icons.person_outline_rounded,
+                  size: 15,
+                  color: colors.textMuted,
+                ),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: Text(
+                    '${l10n.publicProfileOpponent}: $opponent',
+                    style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (score != null) ...[
+                  Icon(
+                    Icons.sports_score_rounded,
+                    size: 15,
+                    color: colors.textMuted,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${l10n.publicProfileScore}: $score',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ],
+              ],
             ),
-            child: Center(
-              child: Text(
-                diffStr,
+          ],
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 12,
+            runSpacing: 4,
+            children: [
+              Text(
+                '${l10n.publicProfileEloBefore}: ${log.previousElo}',
+                style: TextStyle(fontSize: 10, color: colors.textMuted),
+              ),
+              Text(
+                '${l10n.publicProfileEloAfter}: ${log.newElo}',
+                style: TextStyle(fontSize: 10, color: colors.textMuted),
+              ),
+              Text(
+                '${l10n.publicProfileEloChange}: $diffStr',
                 style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
                   color: diffColor,
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  reasonLabel,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: colors.textPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '$timeStr • ${log.previousElo} → ${log.newElo}',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: colors.textMuted,
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
         ],
       ),
     );
   }
 }
-

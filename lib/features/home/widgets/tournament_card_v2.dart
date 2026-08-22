@@ -5,6 +5,8 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_indicator.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 class TournamentCardV2 extends ConsumerWidget {
   final Tournament tournament;
@@ -18,14 +20,18 @@ class TournamentCardV2 extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final sportIcon = AppConstants.sportIcons[tournament.sport] ?? "🏆";
-    final sportName = AppConstants.sportNames[tournament.sport] ?? tournament.sport;
-    final bracketName = AppConstants.bracketTypeNames[tournament.bracketType] ?? "";
-    final formatName = AppConstants.formatNames[tournament.format] ?? "";
-    
+    final sportName = l10n.sportDisplayName(tournament.sport);
+    final bracketName = l10n.bracketDisplayName(tournament.bracketType);
+    final formatName = l10n.formatDisplayName(tournament.format);
+
     final statusColor =
         StatusHelper.getTournamentStatusColor(tournament.status, context);
-    final statusName = StatusHelper.getTournamentStatusLabel(tournament.status);
+    final statusName = StatusHelper.getTournamentStatusLabel(
+      tournament.status,
+      l10n: l10n,
+    );
     final isLive = StatusHelper.isTournamentInProgress(tournament.status);
 
     return GestureDetector(

@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class SportoHeader extends StatelessWidget {
   final bool isLoggedIn;
@@ -34,7 +34,10 @@ class SportoHeader extends StatelessWidget {
           tag: "Sporto_header_bg",
           child: CustomPaint(
             size: const Size(double.infinity, 240),
-            painter: SportoHeaderPainter(isLoggedIn: isLoggedIn, colors: context.colors),
+            painter: SportoHeaderPainter(
+              isLoggedIn: isLoggedIn,
+              colors: context.colors,
+            ),
           ),
         ),
         SafeArea(
@@ -111,7 +114,11 @@ class SportoHeader extends StatelessWidget {
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
-            const Icon(Icons.notifications_outlined, color: Colors.white, size: 22),
+            const Icon(
+              Icons.notifications_outlined,
+              color: Colors.white,
+              size: 22,
+            ),
             if (notificationsCount > 0)
               Positioned(
                 top: -1,
@@ -142,6 +149,7 @@ class SportoHeader extends StatelessWidget {
   }
 
   Widget _buildLoginPill(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: onLoginTap,
       child: Container(
@@ -151,13 +159,13 @@ class SportoHeader extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.login_rounded, color: Colors.white, size: 16),
             SizedBox(width: 6),
             Text(
-              "Đăng nhập / Đăng ký",
+              l10n.sportoHeaderLoginRegister,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 12,
@@ -171,6 +179,7 @@ class SportoHeader extends StatelessWidget {
   }
 
   Widget _buildStatsCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     // Calculated win rate progress value (0.0 to 1.0)
     final progress = (winRate / 100.0).clamp(0.0, 1.0);
 
@@ -183,13 +192,16 @@ class SportoHeader extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.16),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.28), width: 1),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.28),
+              width: 1,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
-              )
+              ),
             ],
           ),
           child: Row(
@@ -219,7 +231,9 @@ class SportoHeader extends StatelessWidget {
                         value: progress > 0 ? progress : 0.05,
                         strokeWidth: 4.5,
                         strokeCap: StrokeCap.round,
-                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)), // Gold / Neon Yellow
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFFFFD700),
+                        ), // Gold / Neon Yellow
                       ),
                     ),
                     // Center Star Icon / Badge
@@ -230,10 +244,7 @@ class SportoHeader extends StatelessWidget {
                         color: Color(0xFFFFB300),
                         shape: BoxShape.circle,
                         boxShadow: [
-                          BoxShadow(
-                            color: Color(0x66FFD700),
-                            blurRadius: 6,
-                          )
+                          BoxShadow(color: Color(0x66FFD700), blurRadius: 6),
                         ],
                       ),
                       child: const Center(
@@ -266,7 +277,7 @@ class SportoHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      rank.isNotEmpty ? rank : "Xếp hạng Quốc gia",
+                      rank.isNotEmpty ? rank : l10n.sportoHeaderNationalRank,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 11,
@@ -281,13 +292,13 @@ class SportoHeader extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildHeaderStatColumn("0", "Trận"),
+                  _buildHeaderStatColumn("0", l10n.sportoHeaderMatches),
                   const SizedBox(width: 14),
-                  _buildHeaderStatColumn("0", "Thắng"),
+                  _buildHeaderStatColumn("0", l10n.sportoHeaderWins),
                   const SizedBox(width: 14),
                   _buildHeaderStatColumn(
                     "${winRate.toStringAsFixed(0)}%",
-                    "Rate",
+                    l10n.sportoHeaderRate,
                     isRate: true,
                   ),
                 ],
@@ -299,7 +310,11 @@ class SportoHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderStatColumn(String value, String label, {bool isRate = false}) {
+  Widget _buildHeaderStatColumn(
+    String value,
+    String label, {
+    bool isRate = false,
+  }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -323,9 +338,6 @@ class SportoHeader extends StatelessWidget {
       ],
     );
   }
-
-  
-
 }
 
 class SportoHeaderPainter extends CustomPainter {
@@ -399,13 +411,25 @@ class SportoHeaderPainter extends CustomPainter {
       ..color = Colors.white.withValues(alpha: _isDark ? 0.12 : 0.22)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0;
-    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(24, 130, 8, 30), const Radius.circular(2)), handlePaint);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(24, 130, 8, 30),
+        const Radius.circular(2),
+      ),
+      handlePaint,
+    );
 
     final Paint capPaint = Paint()
       ..color = Colors.white.withValues(alpha: _isDark ? 0.12 : 0.22)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5;
-    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(23, 160, 10, 4), const Radius.circular(1)), capPaint);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(23, 160, 10, 4),
+        const Radius.circular(1),
+      ),
+      capPaint,
+    );
     canvas.restore();
   }
 

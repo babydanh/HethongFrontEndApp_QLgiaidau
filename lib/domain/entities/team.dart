@@ -1,5 +1,8 @@
 import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
+import 'dart:ui';
+
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class Team {
   final String id;
@@ -93,7 +96,8 @@ class Team {
       group: json['group'] ?? '',
       photoUrl: json['photoUrl'] ?? '',
       qrCode: json['qrCode'] ?? '',
-      approvalStatus: json['approvalStatus']?.toString().toUpperCase() ??
+      approvalStatus:
+          json['approvalStatus']?.toString().toUpperCase() ??
           json['teamStatus']?.toString().toUpperCase() ??
           json['status']?.toString().toUpperCase() ??
           'PENDING_APPROVAL',
@@ -150,26 +154,28 @@ class Team {
   bool get isWaitlisted => approvalStatus == 'WAITLISTED';
   bool get isComplete => approvalStatus == 'COMPLETE';
 
-  String get approvalLabel {
+  String get approvalLabel =>
+      localizedApprovalLabel(lookupAppLocalizations(PlatformDispatcher.instance.locale));
+
+  String localizedApprovalLabel(AppLocalizations l10n) {
     switch (approvalStatus) {
       case 'COMPLETE':
-        return 'Đã duyệt';
-
+        return l10n.teamApprovalApproved;
       case 'PENDING_PARTNER':
-        return 'Chờ đồng đội';
+        return l10n.teamApprovalPendingPartner;
       case 'PENDING_APPROVAL':
       case 'PENDING':
-        return 'Đang duyệt';
+        return l10n.teamApprovalPending;
       case 'WAITLISTED':
-        return 'Hàng chờ';
+        return l10n.teamApprovalWaitlisted;
       case 'REJECTED':
-        return 'Bị từ chối';
+        return l10n.teamApprovalRejected;
       case 'WITHDRAWN':
-        return 'Đã rút lui';
+        return l10n.teamApprovalWithdrawn;
       case 'KICKED':
-        return 'Đã bị loại';
+        return l10n.teamApprovalKicked;
       default:
-        return 'Đang duyệt';
+        return l10n.teamApprovalPending;
     }
   }
 

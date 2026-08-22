@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:ui';
+
 import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
@@ -9,6 +11,7 @@ import 'package:app_quanly_giaidau/data/models/match_event_model.dart';
 import 'package:app_quanly_giaidau/data/models/penalty_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 Map<String, dynamic>? _readSportRules(Map<String, dynamic> json) {
   Map<String, dynamic>? asMap(Object? value) {
@@ -44,11 +47,12 @@ class ApiMatchRepository implements IMatchRepository {
 
   ApiMatchRepository(this._dioClient, this._socketService);
 
+  AppLocalizations get _l10n =>
+      lookupAppLocalizations(PlatformDispatcher.instance.locale);
+
   @override
   Future<MatchModel> create(String tournamentId, MatchModel match) async {
-    throw UnimplementedError(
-      'Mobile app cannot create matches directly. Generated via Backend Bracket.',
-    );
+    throw UnimplementedError(_l10n.matchCreateUnsupported);
   }
 
   @override
@@ -56,9 +60,7 @@ class ApiMatchRepository implements IMatchRepository {
     String tournamentId,
     List<MatchModel> matches,
   ) async {
-    throw UnimplementedError(
-      'Mobile app cannot batch create matches directly.',
-    );
+    throw UnimplementedError(_l10n.matchBatchCreateUnsupported);
   }
 
   final Map<String, List<MatchModel>> _matchesCache = {};
@@ -108,7 +110,9 @@ class ApiMatchRepository implements IMatchRepository {
         queryParameters: query,
       );
       if (response.statusCode != 200) {
-        throw StateError('Unexpected match response: ${response.statusCode}');
+        throw StateError(
+          _l10n.matchUnexpectedResponse(response.statusCode.toString()),
+        );
       }
       final payload = response.data;
       final list = _extractList(payload);
@@ -875,7 +879,7 @@ class ApiMatchRepository implements IMatchRepository {
       throw Exception(
         message?.trim().isNotEmpty == true
             ? message
-            : 'Không thể cập nhật điểm trận đấu.',
+            : _l10n.matchScoreUpdateError,
       );
     }
   }
