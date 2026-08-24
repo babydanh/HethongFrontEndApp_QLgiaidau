@@ -360,116 +360,130 @@ class _HeaderMeta extends StatelessWidget {
     final registeredCount = selected?.participantCount ?? 0;
     final maxCount = selected?.maxParticipants ?? tournament.maxTeams;
 
+    final divisionSelector = divisions.length > 1 && onChangedDivision != null
+        ? Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: AppTheme.primary.withValues(alpha: 0.25),
+              ),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selected?.name ?? selectedDivision,
+                isDense: true,
+                isExpanded: true,
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: AppTheme.primary,
+                  size: 20,
+                ),
+                style: const TextStyle(
+                  color: AppTheme.primary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                ),
+                items: divisions.map((division) {
+                  final divReg = division.participantCount;
+                  final divMax =
+                      division.maxParticipants ?? tournament.maxTeams;
+                  return DropdownMenuItem<String>(
+                    value: division.name,
+                    child: Text(
+                      '${division.name}  •  $divReg/$divMax',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value == null) return;
+                  final div = divisions.firstWhere(
+                    (item) => item.name == value,
+                  );
+                  onChangedDivision!(div);
+                },
+              ),
+            ),
+          )
+        : Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.groups_rounded,
+                  size: 16,
+                  color: AppTheme.primary,
+                ),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    selected != null
+                        ? '${selected.name}  •  $registeredCount/$maxCount'
+                        : '$registeredCount / $maxCount ${l10n.teamsUnit}',
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppTheme.primary,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+        Wrap(
+          spacing: 12,
+          runSpacing: 6,
           children: [
-            Expanded(
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 4,
-                children: [
-                  _HeaderIconText(
-                    icon: Icons.calendar_today_rounded,
-                    text: _formatDateRange(
-                      tournament.registrationStartDate,
-                      tournament.registrationEndDate,
-                      l10n.notUpdated,
-                    ),
-                  ),
-                  _HeaderIconText(
-                    icon: Icons.location_on_outlined,
-                    text:
-                        TournamentLocationFormatter.tournamentShortLocation(
-                          tournament,
-                        ).isNotEmpty
-                        ? TournamentLocationFormatter.tournamentShortLocation(
-                            tournament,
-                          )
-                        : l10n.locationNotUpdated,
-                  ),
-                ],
+            _HeaderIconText(
+              icon: Icons.calendar_today_rounded,
+              text: _formatDateRange(
+                tournament.registrationStartDate,
+                tournament.registrationEndDate,
+                l10n.notUpdated,
               ),
             ),
-            const SizedBox(width: 8),
-            if (divisions.length > 1 && onChangedDivision != null)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: AppTheme.primary.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: selected?.name ?? selectedDivision,
-                    isDense: true,
-                    icon: const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: AppTheme.primary,
-                      size: 20,
-                    ),
-                    style: const TextStyle(
-                      color: AppTheme.primary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                    ),
-                    items: divisions.map((division) {
-                      final divReg = division.participantCount;
-                      final divMax =
-                          division.maxParticipants ?? tournament.maxTeams;
-                      return DropdownMenuItem<String>(
-                        value: division.name,
-                        child: Text(
-                          '${division.name} ($divReg/$divMax)',
-                          style: TextStyle(
-                            color: colors.textPrimary,
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value == null) return;
-                      final div = divisions.firstWhere(
-                        (item) => item.name == value,
-                      );
-                      onChangedDivision!(div);
-                    },
-                  ),
-                ),
-              )
-            else
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  selected != null
-                      ? "${selected.name} ($registeredCount/$maxCount)"
-                      : "$registeredCount / $maxCount ${l10n.teamsUnit}",
-                  style: const TextStyle(
-                    color: AppTheme.primary,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
+            _HeaderIconText(
+              icon: Icons.location_on_outlined,
+              text:
+                  TournamentLocationFormatter.tournamentShortLocation(
+                    tournament,
+                  ).isNotEmpty
+                  ? TournamentLocationFormatter.tournamentShortLocation(
+                      tournament,
+                    )
+                  : l10n.locationNotUpdated,
+            ),
           ],
         ),
+        if (selected != null) ...[
+          const SizedBox(height: 10),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.view_list_rounded, size: 16, color: colors.textMuted),
+              const SizedBox(width: 7),
+              Expanded(child: divisionSelector),
+            ],
+          ),
+        ],
       ],
     );
   }
