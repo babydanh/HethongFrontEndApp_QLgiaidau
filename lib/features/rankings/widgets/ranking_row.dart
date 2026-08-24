@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/sport_rank_badge.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -134,28 +135,7 @@ class RankingRow extends StatelessWidget {
                   ],
                 ),
               ),
-              // ELO Points
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${ranking.eloPoints}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFFB45309),
-                    ),
-                  ),
-                  Text(
-                    l10n.rankingElo,
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFFD97706),
-                    ),
-                  ),
-                ],
-              ),
+              SportRankBadge(ranking: ranking, compact: true),
             ],
           ),
         ),
@@ -238,34 +218,7 @@ class RankingRow extends StatelessWidget {
                 ],
               ),
             ),
-            // ELO Points
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '${ranking.eloPoints}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: isMe ? Colors.white : colors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      l10n.rankingElo,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: isMe ? Colors.white70 : colors.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            SportRankBadge(ranking: ranking, compact: true, dark: isMe),
           ],
         ),
       ),

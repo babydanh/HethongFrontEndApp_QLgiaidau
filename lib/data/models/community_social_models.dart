@@ -107,6 +107,7 @@ class CommunityPostModel {
   final String? tournamentName;
   final String? tournamentInviteCode;
   final String? tournamentStatus;
+  final bool hasBracket;
   final String type;
   final List<String> mediaUrls;
   final List<String> topicTags;
@@ -129,6 +130,7 @@ class CommunityPostModel {
     this.tournamentName,
     this.tournamentInviteCode,
     this.tournamentStatus,
+    this.hasBracket = false,
     this.type = 'NORMAL',
     this.mediaUrls = const [],
     this.topicTags = const [],
@@ -179,6 +181,10 @@ class CommunityPostModel {
             tournament['status'] ??
             tournament['tournamentStatus'],
       ),
+      hasBracket:
+          json['hasBracket'] == true ||
+          tournament['hasBracket'] == true ||
+          tournament['has_bracket'] == true,
       type: _asString(json['type']) ?? 'NORMAL',
       mediaUrls: _asStringList(rawMedia),
       topicTags: _asStringList(rawTopics),

@@ -276,10 +276,16 @@ class CommunityPostCard extends ConsumerWidget {
                 final normalizedStatus = rawStatus == null || rawStatus.isEmpty
                     ? null
                     : StatusHelper.normalizeTournamentStatus(rawStatus);
+                final bracketReady =
+                    post.hasBracket ||
+                    post.type == 'TOURNAMENT_BRACKET' ||
+                    normalizedStatus == AppConstants.statusInProgress ||
+                    normalizedStatus == AppConstants.statusCompleted;
                 final showRegistrationPoll =
-                    normalizedStatus == null ||
-                    normalizedStatus == AppConstants.statusUpcoming ||
-                    normalizedStatus == AppConstants.statusRegistration;
+                    !bracketReady &&
+                    (normalizedStatus == null ||
+                        normalizedStatus == AppConstants.statusUpcoming ||
+                        normalizedStatus == AppConstants.statusRegistration);
 
                 return Column(
                   children: [

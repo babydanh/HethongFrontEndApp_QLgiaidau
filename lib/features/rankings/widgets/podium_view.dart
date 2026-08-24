@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/sport_rank_badge.dart';
 
 /// Bục vinh danh Top 3. Người hạng 1 ở giữa cao nhất, 2 bên trái, 3 bên phải.
 class PodiumView extends StatelessWidget {
@@ -173,7 +174,6 @@ class _PodiumSlot extends StatelessWidget {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
     final name = ranking?.fullName ?? l10n.ranking_unranked;
-    final eloStr = ranking != null ? '${ranking!.eloPoints} ELO' : '-- ELO';
 
     return GestureDetector(
       onTap: onTap,
@@ -206,16 +206,8 @@ class _PodiumSlot extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            eloStr,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: ranking != null
-                  ? const Color(0xFF2563EB)
-                  : colors.textMuted,
-            ),
-          ),
+          if (ranking != null)
+            SportRankBadge(ranking: ranking!, compact: true),
           const SizedBox(height: 8),
           // Khối bục xếp hạng với số
           Container(
