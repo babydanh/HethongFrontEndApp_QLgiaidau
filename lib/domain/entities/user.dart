@@ -285,6 +285,7 @@ class UserPublicRank {
   final String? partnerAvatarUrl;
   final int? peakElo;
   final bool? shieldActive;
+  final bool adminLeaderboardEligible;
   final String? currentStreakType;
   final int currentStreakCount;
 
@@ -302,6 +303,7 @@ class UserPublicRank {
     this.partnerAvatarUrl,
     this.peakElo,
     this.shieldActive,
+    this.adminLeaderboardEligible = false,
     this.currentStreakType,
     this.currentStreakCount = 0,
   });
@@ -348,6 +350,15 @@ class UserPublicRank {
           : asInt(json['peakElo'] ?? json['peak_elo']),
       shieldActive:
           json['shieldActive'] as bool? ?? json['shield_active'] as bool?,
+      adminLeaderboardEligible:
+          json['adminLeaderboardEligible'] == true ||
+          json['admin_leaderboard_eligible'] == true ||
+          json['adminLeaderboardEligible'] == 1 ||
+          json['admin_leaderboard_eligible'] == 1 ||
+          json['adminLeaderboardEligible']?.toString().toLowerCase() ==
+              'true' ||
+          json['admin_leaderboard_eligible']?.toString().toLowerCase() ==
+              'true',
       currentStreakType: streakType,
       currentStreakCount: asInt(
         json['currentStreakCount'] ?? json['current_streak_count'],
@@ -358,6 +369,8 @@ class UserPublicRank {
   bool get isDoubles => matchType == 'DOUBLES' || matchType == 'MIXED_DOUBLES';
 
   bool get hasPlayed => matchesPlayed > 0;
+
+  bool get isLeaderboardEligible => hasPlayed || adminLeaderboardEligible;
 }
 
 /// Kết quả tìm kiếm người dùng (GET /users/search).

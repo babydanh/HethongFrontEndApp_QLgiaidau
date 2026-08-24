@@ -283,6 +283,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get infoAll => 'All';
 
   @override
+  String get eloHistoryPublicScope => 'Public';
+
+  @override
+  String get eloHistoryCommunityScope => 'Club';
+
+  @override
   String get infoUnranked => 'Unranked';
 
   @override

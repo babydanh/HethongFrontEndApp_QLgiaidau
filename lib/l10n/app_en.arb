@@ -94,6 +94,8 @@
   "infoEmailVerified": "Verified",
   "infoEmailUnverified": "Unverified",
   "infoAll": "All",
+  "eloHistoryPublicScope": "Public",
+  "eloHistoryCommunityScope": "Club",
   "infoUnranked": "Unranked",
   "infoPlayer": "Player",
   "infoAdmin": "Admin",

@@ -15,6 +15,7 @@ class EloHistoryScreen extends ConsumerStatefulWidget {
   final String? tierName;
   final String? categoryId;
   final String? categoryName;
+  final String? communityId;
   final String? initialScope;
   final String? matchType;
   final String? genderRestriction;
@@ -30,6 +31,7 @@ class EloHistoryScreen extends ConsumerStatefulWidget {
     this.tierName,
     this.categoryId,
     this.categoryName,
+    this.communityId,
     this.initialScope,
     this.matchType,
     this.genderRestriction,
@@ -48,14 +50,17 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedScope = widget.initialScope;
+    _selectedScope =
+        widget.initialScope == 'COMMUNITY' && widget.communityId == null
+        ? null
+        : widget.initialScope;
   }
 
   EloHistoryQuery get _query => (
     userId: widget.userId,
     categoryId: widget.categoryId,
     scope: _selectedScope,
-    communityId: null,
+    communityId: widget.communityId,
     matchType: widget.matchType,
     genderRestriction: widget.genderRestriction,
     partnerId: widget.partnerId,
@@ -333,10 +338,11 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
     if (widget.lockRatingScope) return const SizedBox.shrink();
 
     final l10n = AppLocalizations.of(context)!;
-    final scopes = [
+    final scopes = <(String?, String)>[
       (null, l10n.infoAll),
-      ('PUBLIC', 'PUBLIC'),
-      ('COMMUNITY', 'CLB'),
+      ('PUBLIC', l10n.eloHistoryPublicScope),
+      if (widget.communityId != null)
+        ('COMMUNITY', l10n.eloHistoryCommunityScope),
     ];
 
     return SingleChildScrollView(

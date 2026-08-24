@@ -71,7 +71,24 @@ void main() {
       expect(ranking.matchesPlayed, 0);
       expect(ranking.matchesWon, 0);
       expect(ranking.avatarUrl, null);
+      expect(ranking.adminLeaderboardEligible, false);
     });
+
+    test(
+      'should preserve one-time Admin bootstrap eligibility without a fake match',
+      () {
+        final ranking = PlayerRanking.fromJson({
+          'id': 'rank-1',
+          'userId': 'user-1',
+          'matchesPlayed': 0,
+          'adminLeaderboardEligible': true,
+        });
+
+        expect(ranking.matchesPlayed, 0);
+        expect(ranking.adminLeaderboardEligible, true);
+        expect(ranking.isLeaderboardEligible, true);
+      },
+    );
 
     test('should handle eloPoints as string by falling back to 0', () {
       // Note: fromJson uses ((...) as num).toInt() which throws on String
@@ -113,33 +130,57 @@ void main() {
   group('TC-FLUTTER-RANKING-007: PlayerRanking computed properties', () {
     test('matchesLost = matchesPlayed - matchesWon', () {
       final ranking = PlayerRanking(
-        id: '1', userId: '1', fullName: 'A',
-        matchesPlayed: 20, matchesWon: 15,
+        id: '1',
+        userId: '1',
+        fullName: 'A',
+        matchesPlayed: 20,
+        matchesWon: 15,
       );
       expect(ranking.matchesLost, 5);
     });
 
     test('winRate = (matchesWon / matchesPlayed) * 100', () {
       final ranking = PlayerRanking(
-        id: '1', userId: '1', fullName: 'A',
-        matchesPlayed: 20, matchesWon: 15,
+        id: '1',
+        userId: '1',
+        fullName: 'A',
+        matchesPlayed: 20,
+        matchesWon: 15,
       );
       expect(ranking.winRate, 75.0);
     });
 
     test('winRate is 0 when no matches played', () {
       final ranking = PlayerRanking(
-        id: '1', userId: '1', fullName: 'A',
-        matchesPlayed: 0, matchesWon: 0,
+        id: '1',
+        userId: '1',
+        fullName: 'A',
+        matchesPlayed: 0,
+        matchesWon: 0,
       );
       expect(ranking.winRate, 0.0);
+    });
+
+    test('leaderboard eligibility also accepts explicit Admin bootstrap', () {
+      final ranking = PlayerRanking(
+        id: '1',
+        userId: '1',
+        fullName: 'A',
+        matchesPlayed: 0,
+        adminLeaderboardEligible: true,
+      );
+      expect(ranking.isLeaderboardEligible, true);
+      expect(ranking.matchesLost, 0);
     });
   });
 
   group('PlayerRanking.copyWith', () {
     test('should update specified fields', () {
       final ranking = PlayerRanking(
-        id: '1', userId: '1', fullName: 'A', eloPoints: 1000,
+        id: '1',
+        userId: '1',
+        fullName: 'A',
+        eloPoints: 1000,
       );
       final updated = ranking.copyWith(eloPoints: 1200, fullName: 'B');
       expect(updated.eloPoints, 1200);

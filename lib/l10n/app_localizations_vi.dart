@@ -282,6 +282,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get infoAll => 'Tất cả';
 
   @override
+  String get eloHistoryPublicScope => 'Công khai';
+
+  @override
+  String get eloHistoryCommunityScope => 'Câu lạc bộ';
+
+  @override
   String get infoUnranked => 'Chưa xếp hạng';
 
   @override

@@ -71,7 +71,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     UserPublicProfile profile,
     AppColorsExtension colors,
   ) {
-    final playedRanks = profile.ranks.where((rank) => rank.hasPlayed).toList();
+    final eligibleRanks = profile.ranks
+        .where((rank) => rank.isLeaderboardEligible)
+        .toList();
 
     return NestedScrollView(
       headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -174,10 +176,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 // Xếp hạng theo môn
                 _sectionTitle(colors, l10n.publicProfileRankBySport),
                 const SizedBox(height: 12),
-                if (playedRanks.isEmpty)
+                if (eligibleRanks.isEmpty)
                   _buildNoRank(colors)
                 else
-                  ...playedRanks.map(
+                  ...eligibleRanks.map(
                     (rank) =>
                         _buildStandardRankCard(context, profile, rank, colors),
                   ),
@@ -637,7 +639,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   ) {
     final roleText = _formatUserRole(null); // default fallback
     final featuredRank = profile.ranks
-        .where((rank) => rank.matchesPlayed > 0)
+        .where((rank) => rank.isLeaderboardEligible)
         .fold<UserPublicRank?>(
           null,
           (best, rank) =>

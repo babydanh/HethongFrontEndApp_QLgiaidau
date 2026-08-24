@@ -90,6 +90,8 @@
   "infoEmailVerified": "Đã xác thực",
   "infoEmailUnverified": "Chưa xác thực",
   "infoAll": "Tất cả",
+  "eloHistoryPublicScope": "Công khai",
+  "eloHistoryCommunityScope": "Câu lạc bộ",
   "infoUnranked": "Chưa xếp hạng",
   "infoPlayer": "Vận động viên",
   "infoAdmin": "Quản trị viên",

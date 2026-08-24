@@ -638,6 +638,18 @@ abstract class AppLocalizations {
   /// **'Tất cả'**
   String get infoAll;
 
+  /// No description provided for @eloHistoryPublicScope.
+  ///
+  /// In vi, this message translates to:
+  /// **'Công khai'**
+  String get eloHistoryPublicScope;
+
+  /// No description provided for @eloHistoryCommunityScope.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu lạc bộ'**
+  String get eloHistoryCommunityScope;
+
   /// No description provided for @infoUnranked.
   ///
   /// In vi, this message translates to:

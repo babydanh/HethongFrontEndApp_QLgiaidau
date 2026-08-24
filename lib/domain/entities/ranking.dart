@@ -17,6 +17,7 @@ class PlayerRanking {
   final String? genderRestriction;
   final int? peakElo;
   final bool? shieldActive;
+  final bool adminLeaderboardEligible;
   final int winStreak;
   final String? currentStreakType;
   final int currentStreakCount;
@@ -41,6 +42,7 @@ class PlayerRanking {
     this.genderRestriction,
     this.peakElo,
     this.shieldActive,
+    this.adminLeaderboardEligible = false,
     this.winStreak = 0,
     this.currentStreakType,
     this.currentStreakCount = 0,
@@ -121,6 +123,15 @@ class PlayerRanking {
           : asInt(json['peakElo'] ?? json['peak_elo']),
       shieldActive:
           json['shieldActive'] as bool? ?? json['shield_active'] as bool?,
+      adminLeaderboardEligible:
+          json['adminLeaderboardEligible'] == true ||
+          json['admin_leaderboard_eligible'] == true ||
+          json['adminLeaderboardEligible'] == 1 ||
+          json['admin_leaderboard_eligible'] == 1 ||
+          json['adminLeaderboardEligible']?.toString().toLowerCase() ==
+              'true' ||
+          json['admin_leaderboard_eligible']?.toString().toLowerCase() ==
+              'true',
       winStreak: asInt(json['winStreak'] ?? json['win_streak']),
       currentStreakType: parsedStreakType,
       currentStreakCount: asInt(
@@ -150,6 +161,7 @@ class PlayerRanking {
       if (genderRestriction != null) 'genderRestriction': genderRestriction,
       if (peakElo != null) 'peakElo': peakElo,
       if (shieldActive != null) 'shieldActive': shieldActive,
+      'adminLeaderboardEligible': adminLeaderboardEligible,
       'winStreak': winStreak,
       if (currentStreakType != null) 'currentStreakType': currentStreakType,
       'currentStreakCount': currentStreakCount,
@@ -176,6 +188,7 @@ class PlayerRanking {
     String? genderRestriction,
     int? peakElo,
     bool? shieldActive,
+    bool? adminLeaderboardEligible,
     int? winStreak,
     String? currentStreakType,
     int? currentStreakCount,
@@ -200,12 +213,17 @@ class PlayerRanking {
       genderRestriction: genderRestriction ?? this.genderRestriction,
       peakElo: peakElo ?? this.peakElo,
       shieldActive: shieldActive ?? this.shieldActive,
+      adminLeaderboardEligible:
+          adminLeaderboardEligible ?? this.adminLeaderboardEligible,
       winStreak: winStreak ?? this.winStreak,
       currentStreakType: currentStreakType ?? this.currentStreakType,
       currentStreakCount: currentStreakCount ?? this.currentStreakCount,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  bool get isLeaderboardEligible =>
+      matchesPlayed > 0 || adminLeaderboardEligible;
 
   int get matchesLost => (matchesPlayed - matchesWon).clamp(0, 1 << 30);
 
