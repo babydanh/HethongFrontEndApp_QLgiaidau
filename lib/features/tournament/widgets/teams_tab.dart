@@ -9,6 +9,7 @@ class TeamsTab extends StatefulWidget {
   final List<Team> teams;
   final String selectedDivision;
   final String? selectedDivisionId;
+  final bool isTeamSport;
   final ScrollController? scrollController;
 
   const TeamsTab({
@@ -16,6 +17,7 @@ class TeamsTab extends StatefulWidget {
     required this.teams,
     required this.selectedDivision,
     this.selectedDivisionId,
+    this.isTeamSport = false,
     this.scrollController,
   });
 
@@ -43,7 +45,11 @@ class _TeamsTabState extends State<TeamsTab> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.group_outlined, size: 64, color: colors.textMuted.withValues(alpha: 0.4)),
+            Icon(
+              Icons.group_outlined,
+              size: 64,
+              color: colors.textMuted.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: 16),
             Text(
               l10n.noTeamsJoined,
@@ -54,16 +60,19 @@ class _TeamsTabState extends State<TeamsTab> {
       );
     }
 
-    String getDivision(Team t) => t.group.isNotEmpty ? t.group : l10n.otherDivision;
+    String getDivision(Team t) =>
+        t.group.isNotEmpty ? t.group : l10n.otherDivision;
 
     final matched = widget.teams.where((t) {
-      if (widget.selectedDivisionId != null && widget.selectedDivisionId!.isNotEmpty &&
+      if (widget.selectedDivisionId != null &&
+          widget.selectedDivisionId!.isNotEmpty &&
           t.divisionId.isNotEmpty) {
         return t.divisionId == widget.selectedDivisionId;
       }
       return getDivision(t) == widget.selectedDivision;
     }).toList();
-    final isAllDivisions = widget.selectedDivision == l10n.filterAll ||
+    final isAllDivisions =
+        widget.selectedDivision == l10n.filterAll ||
         widget.selectedDivision == "all" ||
         widget.selectedDivision.isEmpty;
     // Never fall back to another division when the selected division has no teams.
@@ -75,8 +84,14 @@ class _TeamsTabState extends State<TeamsTab> {
         ? divisionTeams
         : divisionTeams.where((t) {
             if (t.name.toLowerCase().contains(query)) return true;
-            if (t.members.any((m) => m.toLowerCase().contains(query))) return true;
-            if (t.memberInfos.any((m) => m.fullName.toLowerCase().contains(query))) return true;
+            if (t.members.any((m) => m.toLowerCase().contains(query))) {
+              return true;
+            }
+            if (t.memberInfos.any(
+              (m) => m.fullName.toLowerCase().contains(query),
+            )) {
+              return true;
+            }
             return false;
           }).toList();
 
@@ -111,10 +126,18 @@ class _TeamsTabState extends State<TeamsTab> {
               decoration: InputDecoration(
                 hintText: l10n.teamsTabSearchHint,
                 hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
-                prefixIcon: Icon(Icons.search, size: 18, color: colors.textMuted),
+                prefixIcon: Icon(
+                  Icons.search,
+                  size: 18,
+                  color: colors.textMuted,
+                ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: Icon(Icons.close, size: 16, color: colors.textMuted),
+                        icon: Icon(
+                          Icons.close,
+                          size: 16,
+                          color: colors.textMuted,
+                        ),
                         onPressed: () {
                           _searchController.clear();
                           setState(() {
@@ -205,17 +228,20 @@ class _TeamsTabState extends State<TeamsTab> {
                     ),
                   ),
                   // Cards with inline expansion for Doubles and direct tap for Singles
-                  ...teamsInDiv.map((team) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: TournamentTeamCard(
-                      team: team,
-                      onMemberTap: (userId, memberName) {
-                        if (userId != null && userId.isNotEmpty) {
-                          context.push('/user/$userId');
-                        }
-                      },
+                  ...teamsInDiv.map(
+                    (team) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: TournamentTeamCard(
+                        team: team,
+                        isTeamSport: widget.isTeamSport,
+                        onMemberTap: (userId, memberName) {
+                          if (userId != null && userId.isNotEmpty) {
+                            context.push('/user/$userId');
+                          }
+                        },
+                      ),
                     ),
-                  )),
+                  ),
                 ],
               );
             }).toList(),

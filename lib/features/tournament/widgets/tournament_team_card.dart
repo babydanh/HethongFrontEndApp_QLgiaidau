@@ -6,9 +6,15 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentTeamCard extends StatefulWidget {
   final Team team;
+  final bool isTeamSport;
   final Function(String? userId, String memberName)? onMemberTap;
 
-  const TournamentTeamCard({super.key, required this.team, this.onMemberTap});
+  const TournamentTeamCard({
+    super.key,
+    required this.team,
+    this.isTeamSport = false,
+    this.onMemberTap,
+  });
 
   @override
   State<TournamentTeamCard> createState() => _TournamentTeamCardState();
@@ -25,6 +31,119 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
     return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 
+  Widget _buildSingleInfoPanel(
+    BuildContext context,
+    Team team,
+    MatchMemberInfo? memberInfo,
+    AppLocalizations l10n,
+  ) {
+    final colors = context.colors;
+    final name = memberInfo?.fullName.trim().isNotEmpty == true
+        ? memberInfo!.fullName
+        : team.name;
+    final elo = memberInfo?.eloPoints ?? team.eloPoints;
+    final avatarUrl = memberInfo?.avatarUrl;
+    final tier = memberInfo?.tierName;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: colors.bgSurface.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: colors.border.withValues(alpha: 0.45)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: AppTheme.primary.withValues(alpha: 0.14),
+            backgroundImage: avatarUrl?.isNotEmpty == true
+                ? NetworkImage(avatarUrl!)
+                : null,
+            child: avatarUrl?.isNotEmpty == true
+                ? null
+                : Text(
+                    _getInitials(name),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.infoPlayer,
+                  style: TextStyle(fontSize: 10.5, color: colors.textMuted),
+                ),
+              ],
+            ),
+          ),
+          if (elo != null) ...[
+            const SizedBox(width: 6),
+            _buildSmallBadge(
+              '${l10n.eloLabel} $elo',
+              const Color(0xFF0284C7),
+              const Color(0xFFF0F9FF),
+              const Color(0xFFBAE6FD),
+            ),
+          ],
+          if (tier != null && tier.trim().isNotEmpty) ...[
+            const SizedBox(width: 4),
+            _buildSmallBadge(
+              tier,
+              const Color(0xFFB45309),
+              const Color(0xFFFEF3C7),
+              const Color(0xFFFDE68A),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSmallBadge(
+    String label,
+    Color foreground,
+    Color background,
+    Color border,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: border),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 9.5,
+          fontWeight: FontWeight.w700,
+          color: foreground,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -33,6 +152,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
 
     // Check if Doubles
     final isDoubles =
+        widget.isTeamSport ||
         team.members.length > 1 ||
         team.name.contains(' - ') ||
         team.name.contains(' / ') ||
@@ -89,107 +209,117 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
             borderRadius: BorderRadius.circular(14),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(width: 2),
+                  Row(
+                    children: [
+                      const SizedBox(width: 2),
 
-                  // Singles cards represent a real participant. Show the
-                  // roster avatar when the API provides it, falling back to
-                  // initials only when the profile has no image.
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
-                    backgroundImage: singleInfo?.avatarUrl?.isNotEmpty == true
-                        ? NetworkImage(singleInfo!.avatarUrl!)
-                        : null,
-                    child: singleInfo?.avatarUrl?.isNotEmpty == true
-                        ? null
-                        : Text(
-                            _getInitials(team.name),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primary,
-                            ),
-                          ),
-                  ),
-                  const SizedBox(width: 10),
-
-                  // Athlete Name + Badges
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          team.name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: colors.textPrimary,
-                            letterSpacing: -0.2,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      // Singles cards represent a real participant. Show the
+                      // roster avatar when the API provides it, falling back to
+                      // initials only when the profile has no image.
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: AppTheme.primary.withValues(
+                          alpha: 0.12,
                         ),
-                        const SizedBox(height: 3),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 1.5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF0F9FF),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: const Color(0xFFBAE6FD),
-                                ),
-                              ),
-                              child: Text(
-                                eloStr,
+                        backgroundImage:
+                            singleInfo?.avatarUrl?.isNotEmpty == true
+                            ? NetworkImage(singleInfo!.avatarUrl!)
+                            : null,
+                        child: singleInfo?.avatarUrl?.isNotEmpty == true
+                            ? null
+                            : Text(
+                                _getInitials(team.name),
                                 style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF0284C7),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.primary,
                                 ),
                               ),
+                      ),
+                      const SizedBox(width: 10),
+
+                      // Athlete Name + Badges
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              team.name,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: colors.textPrimary,
+                                letterSpacing: -0.2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(width: 6),
-                            if (realTierName != null || seedLabel != null)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 1.5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFEFF6FF),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: const Color(0xFFBFDBFE),
+                            const SizedBox(height: 3),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 1.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF0F9FF),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: const Color(0xFFBAE6FD),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    eloStr,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF0284C7),
+                                    ),
                                   ),
                                 ),
-                                child: Text(
-                                  realTierName ?? seedLabel!,
-                                  style: const TextStyle(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF1D4ED8),
+                                const SizedBox(width: 6),
+                                if (realTierName != null || seedLabel != null)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 1.5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEFF6FF),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: const Color(0xFFBFDBFE),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      realTierName ?? seedLabel!,
+                                      style: const TextStyle(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF1D4ED8),
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
+                              ],
+                            ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
 
-                  // Chevron right profile indicator
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: colors.textMuted,
-                    size: 20,
+                      // Chevron right profile indicator
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: colors.textMuted,
+                        size: 20,
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 10),
+                  _buildSingleInfoPanel(context, team, singleInfo, l10n),
                 ],
               ),
             ),
@@ -371,22 +501,26 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                                 backgroundColor: AppTheme.primary.withValues(
                                   alpha: 0.15,
                                 ),
-                                child: (memberAvatar != null && memberAvatar.isNotEmpty)
+                                child:
+                                    (memberAvatar != null &&
+                                        memberAvatar.isNotEmpty)
                                     ? ClipOval(
                                         child: Image.network(
                                           memberAvatar,
                                           fit: BoxFit.cover,
                                           width: 28,
                                           height: 28,
-                                          errorBuilder: (context, error, stackTrace) =>
-                                              Text(
-                                                _getInitials(mName),
-                                                style: const TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: AppTheme.primary,
-                                                ),
-                                              ),
+                                          errorBuilder:
+                                              (context, error, stackTrace) =>
+                                                  Text(
+                                                    _getInitials(mName),
+                                                    style: const TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: AppTheme.primary,
+                                                    ),
+                                                  ),
                                         ),
                                       )
                                     : Text(

@@ -220,6 +220,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       _selectedDivisionId = tournament.divisions.first.id;
     }
     final teamsAsync = ref.watch(introTeamsProvider(widget.tournamentId));
+    final isTeamSport =
+        (tournament.teamSize ?? 0) > 1 ||
+        tournament.sport.toLowerCase() == 'football' ||
+        tournament.sport.toLowerCase() == 'bóng đá';
     final colors = context.colors;
 
     return Stack(
@@ -277,6 +281,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                                 teams: teams,
                                 selectedDivision: _selectedDivision,
                                 selectedDivisionId: _selectedDivisionId,
+                                isTeamSport: isTeamSport,
                               ),
                       ),
                       SingleChildScrollView(
@@ -286,7 +291,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                           key: ValueKey('bracket-$_selectedDivisionId'),
                           tournamentId: widget.tournamentId,
                           selectedDivisionId: _selectedDivisionId,
-                          bracketType: tournament.divisions
+                          bracketType:
+                              tournament.divisions
                                   .where((d) => d.id == _selectedDivisionId)
                                   .firstOrNull
                                   ?.bracketType ??
@@ -478,8 +484,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           : l10n.advancedTournament,
     );
   }
-
-
 
   Widget _buildLiteTeamList(List<Team> teams) {
     final colors = context.colors;
