@@ -248,7 +248,9 @@ class _DoublesRegistrationFlowState
   // Step 3
   double? _entryFee;
   bool _isPaid = false;
+  bool _paymentEligible = false;
   String _teamStatus = '';
+
   String? _partnerContact;
 
   @override
@@ -297,6 +299,7 @@ class _DoublesRegistrationFlowState
               _teamInviteLink = link;
               _entryFee = fee;
               _isPaid = participant['isPaid'] == true;
+              _paymentEligible = regData['paymentEligible'] == true;
               _teamStatus = status;
               _step = 2;
             });
@@ -310,6 +313,7 @@ class _DoublesRegistrationFlowState
               _teamInviteLink = link;
               _entryFee = fee;
               _isPaid = participant['isPaid'] == true;
+              _paymentEligible = regData['paymentEligible'] == true;
               _teamStatus = status;
               _step = 3;
             });
@@ -472,6 +476,7 @@ class _DoublesRegistrationFlowState
       _entryFee =
           double.tryParse(participant['entryFee']?.toString() ?? '') ?? 0;
       _isPaid = participant['isPaid'] == true;
+      _paymentEligible = raw['paymentEligible'] == true;
 
       if (!mounted) return true;
       if (status == 'PENDING_PARTNER') {
@@ -545,6 +550,7 @@ class _DoublesRegistrationFlowState
       _teamStatus = result.teamStatus;
       _entryFee = result.entryFee;
       _isPaid = result.entryFee <= 0;
+      _paymentEligible = result.paymentEligible;
 
       // Fetch registration details to get invite token/link
       try {
@@ -1357,7 +1363,7 @@ class _DoublesRegistrationFlowState
         _entryFee! > 0 &&
         !_isPaid &&
         _participantId != null &&
-        (_teamStatus == 'COMPLETE' || _teamStatus == 'PENDING_APPROVAL');
+        _paymentEligible;
     final isWaitlisted = _teamStatus == 'WAITLISTED';
     final statusLabel = switch (_teamStatus) {
       'PENDING_APPROVAL' => l10n.doublesRegStatusPendingApproval,
@@ -1395,7 +1401,10 @@ class _DoublesRegistrationFlowState
                 AppShareModal.show(
                   context: context,
                   title: l10n.doublesRegJoinTeamShareTitle(_teamNameCtrl.text),
-                  subtitle: l10n.doublesRegPartnerSubtitle(t.name, _partnerContact!),
+                  subtitle: l10n.doublesRegPartnerSubtitle(
+                    t.name,
+                    _partnerContact!,
+                  ),
                   webUrl:
                       inviteLink ??
                       'https://sporto.asia/tournaments/${widget.tournamentId}',

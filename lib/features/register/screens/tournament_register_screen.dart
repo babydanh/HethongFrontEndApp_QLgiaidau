@@ -122,6 +122,7 @@ class _TournamentRegisterScreenState
                 ?.toString();
             _existingTeamStatus = status;
             _existingIsPaid = participant['isPaid'] == true;
+            _existingPaymentEligible = payload['paymentEligible'] == true;
             _checkingRegistration = false;
           });
         }
@@ -158,6 +159,8 @@ class _TournamentRegisterScreenState
   String? _existingDivisionId;
   String? _existingTeamStatus;
   bool _existingIsPaid = false;
+  bool _existingPaymentEligible = false;
+
   bool _rankingConsent = false;
   final Map<String, dynamic> _customResponses = {};
 
@@ -633,9 +636,7 @@ class _TournamentRegisterScreenState
       _registrationTeamStatus = result.teamStatus;
       _registeredDivision = selectedDiv;
       final canProceedToPayment =
-          !result.isWaitlisted &&
-          (result.teamStatus == 'COMPLETE' ||
-              result.teamStatus == 'PENDING_APPROVAL');
+          !result.isWaitlisted && result.paymentEligible;
 
       if (effectiveFee > 0 &&
           result.participantId.isNotEmpty &&
@@ -896,7 +897,8 @@ class _TournamentRegisterScreenState
         !_existingIsPaid &&
         fee > 0 &&
         (_existingParticipantId?.isNotEmpty ?? false) &&
-        (status == 'COMPLETE' || status == 'PENDING_APPROVAL');
+        _existingPaymentEligible;
+
     final statusLabel = switch (status) {
       'PENDING_PARTNER' => l10n.registerStatusPendingPartner,
       'PENDING_APPROVAL' => l10n.registerStatusPendingApproval,

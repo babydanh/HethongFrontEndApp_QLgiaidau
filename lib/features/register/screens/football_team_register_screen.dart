@@ -10,7 +10,16 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class FootballTeamRegisterScreen extends ConsumerStatefulWidget {
-  const FootballTeamRegisterScreen({super.key, required this.tournamentId, this.divisionId, this.categoryId, this.inviteCode, this.participantId, this.teamSize = 7, this.maxReserve = 0});
+  const FootballTeamRegisterScreen({
+    super.key,
+    required this.tournamentId,
+    this.divisionId,
+    this.categoryId,
+    this.inviteCode,
+    this.participantId,
+    this.teamSize = 7,
+    this.maxReserve = 0,
+  });
   final String tournamentId;
   final String? divisionId;
   final String? categoryId;
@@ -20,10 +29,12 @@ class FootballTeamRegisterScreen extends ConsumerStatefulWidget {
   final int maxReserve;
 
   @override
-  ConsumerState<FootballTeamRegisterScreen> createState() => _FootballTeamRegisterScreenState();
+  ConsumerState<FootballTeamRegisterScreen> createState() =>
+      _FootballTeamRegisterScreenState();
 }
 
-class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegisterScreen> {
+class _FootballTeamRegisterScreenState
+    extends ConsumerState<FootballTeamRegisterScreen> {
   final _name = TextEditingController();
   List<FootballTeamSummary> _teams = const [];
   String? _selected;
@@ -36,30 +47,55 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
   bool _rosterAction = false;
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() {
+    super.initState();
+    _load();
+  }
+
   @override
-  void dispose() { _name.dispose(); super.dispose(); }
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
 
   Future<void> _load() async {
     if (widget.participantId != null) {
       try {
-        final status = await ref.read(tournamentRepositoryProvider).getFootballRosterStatus(
-          tournamentId: widget.tournamentId,
-          participantId: widget.participantId!,
-        );
+        final status = await ref
+            .read(tournamentRepositoryProvider)
+            .getFootballRosterStatus(
+              tournamentId: widget.tournamentId,
+              participantId: widget.participantId!,
+            );
         if (mounted) setState(() => _rosterStatus = status);
       } catch (_) {}
     }
     try {
-      final teams = await ref.read(footballTeamApiProvider).listMyFootballTeams();
+      final teams = await ref
+          .read(footballTeamApiProvider)
+          .listMyFootballTeams();
       if (!mounted) return;
-      final filtered = teams.where((team) => widget.categoryId == null || team.categoryId == widget.categoryId).toList();
+      final filtered = teams
+          .where(
+            (team) =>
+                widget.categoryId == null ||
+                team.categoryId == widget.categoryId,
+          )
+          .toList();
       final firstId = filtered.firstOrNull?.id;
-      setState(() { _teams = filtered; _selected = firstId; });
+      setState(() {
+        _teams = filtered;
+        _selected = firstId;
+      });
       if (firstId != null) await _loadMembers(firstId);
     } catch (_) {
-      if (mounted) setState(() { _teams = []; });
-    } finally { if (mounted) setState(() => _loading = false); }
+      if (mounted)
+        setState(() {
+          _teams = [];
+        });
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   Future<void> _respondToRoster(String action) async {
@@ -67,18 +103,29 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
     if (widget.participantId == null || _rosterAction) return;
     setState(() => _rosterAction = true);
     try {
-      await ref.read(tournamentRepositoryProvider).respondFootballRoster(
-        tournamentId: widget.tournamentId,
-        participantId: widget.participantId!,
-        action: action,
-      );
-      final status = await ref.read(tournamentRepositoryProvider).getFootballRosterStatus(
-        tournamentId: widget.tournamentId,
-        participantId: widget.participantId!,
-      );
+      await ref
+          .read(tournamentRepositoryProvider)
+          .respondFootballRoster(
+            tournamentId: widget.tournamentId,
+            participantId: widget.participantId!,
+            action: action,
+          );
+      final status = await ref
+          .read(tournamentRepositoryProvider)
+          .getFootballRosterStatus(
+            tournamentId: widget.tournamentId,
+            participantId: widget.participantId!,
+          );
       if (mounted) setState(() => _rosterStatus = status);
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorParser.parse(error, l10n.register_updateRosterError))));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ErrorParser.parse(error, l10n.register_updateRosterError),
+            ),
+          ),
+        );
     } finally {
       if (mounted) setState(() => _rosterAction = false);
     }
@@ -90,19 +137,39 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
     if (name.isEmpty || widget.categoryId == null) return;
     setState(() => _saving = true);
     try {
-      final team = await ref.read(footballTeamApiProvider).createFootballTeam(name: name, categoryId: widget.categoryId!);
+      final team = await ref
+          .read(footballTeamApiProvider)
+          .createFootballTeam(name: name, categoryId: widget.categoryId!);
       if (!mounted) return;
-      setState(() { _teams = [team, ..._teams]; _selected = team.id; _name.clear(); });
+      setState(() {
+        _teams = [team, ..._teams];
+        _selected = team.id;
+        _name.clear();
+      });
       await _loadMembers(team.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.register_teamCreated)));
-    } catch (error) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorParser.parse(error, l10n.register_createTeamError)))); }
-    finally { if (mounted) setState(() => _saving = false); }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.register_teamCreated)));
+    } catch (error) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ErrorParser.parse(error, l10n.register_createTeamError),
+            ),
+          ),
+        );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   Future<void> _loadMembers(String teamId) async {
     try {
-      final team = await ref.read(footballTeamApiProvider).getFootballTeam(teamId);
+      final team = await ref
+          .read(footballTeamApiProvider)
+          .getFootballTeam(teamId);
       if (!mounted || _selected != teamId) return;
       final members = team.activeMembers;
       String? currentUserId;
@@ -113,28 +180,42 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
       }
       setState(() {
         _members = members;
-        final ids = members.map((member) => member.userId).where((id) => id.isNotEmpty).toList();
+        final ids = members
+            .map((member) => member.userId)
+            .where((id) => id.isNotEmpty)
+            .toList();
         final savedRoster = _rosterStatus?.roster;
         if (savedRoster != null && savedRoster.isNotEmpty) {
           _selectedMemberIds = savedRoster
-              .where((member) => member.role == 'MAIN' && ids.contains(member.userId))
+              .where(
+                (member) =>
+                    member.role == 'MAIN' && ids.contains(member.userId),
+              )
               .map((member) => member.userId)
               .toSet();
           _selectedReserveIds = savedRoster
-              .where((member) => member.role == 'RESERVE' && ids.contains(member.userId))
+              .where(
+                (member) =>
+                    member.role == 'RESERVE' && ids.contains(member.userId),
+              )
               .map((member) => member.userId)
               .toSet();
           return;
         }
         final orderedIds = [
-          if (currentUserId != null && ids.contains(currentUserId)) currentUserId,
+          if (currentUserId != null && ids.contains(currentUserId))
+            currentUserId,
           ...ids.where((id) => id != currentUserId),
         ];
         _selectedMemberIds = orderedIds.take(widget.teamSize).toSet();
         _selectedReserveIds = <String>{};
       });
     } catch (_) {
-      if (mounted && _selected == teamId) setState(() { _members = const []; _selectedMemberIds = <String>{}; });
+      if (mounted && _selected == teamId)
+        setState(() {
+          _members = const [];
+          _selectedMemberIds = <String>{};
+        });
     }
   }
 
@@ -146,32 +227,52 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
     setState(() => _saving = true);
     try {
       if (widget.participantId != null) {
-        final status = await ref.read(tournamentRepositoryProvider).updateFootballRoster(
-          tournamentId: widget.tournamentId,
-          participantId: widget.participantId!,
-          memberIds: _selectedMemberIds.toList(),
-          reserveMemberIds: _selectedReserveIds.toList(),
-        );
+        final status = await ref
+            .read(tournamentRepositoryProvider)
+            .updateFootballRoster(
+              tournamentId: widget.tournamentId,
+              participantId: widget.participantId!,
+              memberIds: _selectedMemberIds.toList(),
+              reserveMemberIds: _selectedReserveIds.toList(),
+            );
         if (!mounted) return;
         setState(() => _rosterStatus = status);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_selectedMemberIds.length < widget.teamSize ? l10n.register_rosterDraftSaved : l10n.register_rosterUpdated)),
+          SnackBar(
+            content: Text(
+              _selectedMemberIds.length < widget.teamSize
+                  ? l10n.register_rosterDraftSaved
+                  : l10n.register_rosterUpdated,
+            ),
+          ),
         );
         return;
       }
-      final result = await ref.read(tournamentRepositoryProvider).registerParticipant(
-        tournamentId: widget.tournamentId,
-        teamName: team.name,
-        footballTeamId: team.id,
-        memberIds: _selectedMemberIds.toList(),
-        reserveMemberIds: _selectedReserveIds.toList(),
-        divisionId: widget.divisionId,
-        inviteCode: widget.inviteCode,
-        rankingConsent: true,
-      );
+      final result = await ref
+          .read(tournamentRepositoryProvider)
+          .registerParticipant(
+            tournamentId: widget.tournamentId,
+            teamName: team.name,
+            footballTeamId: team.id,
+            memberIds: _selectedMemberIds.toList(),
+            reserveMemberIds: _selectedReserveIds.toList(),
+            divisionId: widget.divisionId,
+            inviteCode: widget.inviteCode,
+            rankingConsent: true,
+          );
       if (!mounted) return;
-      if (result.entryFee > 0 && result.participantId.isNotEmpty) {
-        await context.push('/payment/checkout', extra: {'tournamentId': widget.tournamentId, 'participantId': result.participantId, 'divisionId': widget.divisionId, 'amount': result.entryFee});
+      if (result.entryFee > 0 &&
+          result.participantId.isNotEmpty &&
+          result.paymentEligible) {
+        await context.push(
+          '/payment/checkout',
+          extra: {
+            'tournamentId': widget.tournamentId,
+            'participantId': result.participantId,
+            'divisionId': widget.divisionId,
+            'amount': result.entryFee,
+          },
+        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -184,75 +285,198 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
         );
         context.pop();
       }
-    } catch (error) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorParser.parse(error, l10n.register_registrationError)))); }
-    finally { if (mounted) setState(() => _saving = false); }
+    } catch (error) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ErrorParser.parse(error, l10n.register_registrationError),
+            ),
+          ),
+        );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-    appBar: AppBar(title: Text(l10n.register_teamTitle)),
-    body: ListView(padding: const EdgeInsets.all(16), children: [
-      if (_rosterStatus?.currentMember?.confirmationStatus == 'PENDING') Card(
-        color: Colors.amber.shade50,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(l10n.register_invitedBannerTitle, style: const TextStyle(fontWeight: FontWeight.w800)),
+      appBar: AppBar(title: Text(l10n.register_teamTitle)),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          if (_rosterStatus?.currentMember?.confirmationStatus == 'PENDING')
+            Card(
+              color: Colors.amber.shade50,
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.register_invitedBannerTitle,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.register_invitedBannerDescription,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        FilledButton.icon(
+                          onPressed: _rosterAction
+                              ? null
+                              : () => _respondToRoster('CONFIRM'),
+                          icon: const Icon(Icons.check, size: 16),
+                          label: Text(l10n.register_confirmRoster),
+                        ),
+                        const SizedBox(width: 8),
+                        OutlinedButton.icon(
+                          onPressed: _rosterAction
+                              ? null
+                              : () => _respondToRoster('DECLINE'),
+                          icon: const Icon(Icons.close, size: 16),
+                          label: Text(l10n.register_declineRoster),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          Text(
+            l10n.register_chooseExistingTeam,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          if (_loading)
+            const Center(child: CircularProgressIndicator())
+          else if (_teams.isEmpty)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(l10n.register_noMatchingTeams),
+              ),
+            )
+          else
+            RadioGroup<String>(
+              groupValue: _selected,
+              onChanged: (value) {
+                if (widget.participantId != null) return;
+                if (value == null) return;
+                setState(() => _selected = value);
+                _loadMembers(value);
+              },
+              child: Column(
+                children: _teams
+                    .map(
+                      (team) => RadioListTile<String>(
+                        value: team.id,
+                        title: Text(team.name),
+                        subtitle: Text(
+                          team.role == 'PLAYER'
+                              ? l10n.register_teamMember
+                              : l10n.register_canRegister,
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          if (_members.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              l10n.register_rosterTitle,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 4),
-            Text(l10n.register_invitedBannerDescription, style: const TextStyle(fontSize: 12)),
-            const SizedBox(height: 10),
-            Row(children: [
-              FilledButton.icon(onPressed: _rosterAction ? null : () => _respondToRoster('CONFIRM'), icon: const Icon(Icons.check, size: 16), label: Text(l10n.register_confirmRoster)),
+            Text(
+              l10n.register_rosterInstructions(
+                widget.teamSize,
+                widget.maxReserve,
+              ),
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
+            ),
+            ..._members.map(
+              (member) => CheckboxListTile(
+                dense: true,
+                value:
+                    _selectedMemberIds.contains(member.userId) ||
+                    _selectedReserveIds.contains(member.userId),
+                onChanged: _rosterStatus?.entryStatus == 'LOCKED'
+                    ? null
+                    : (_) => _showRosterRolePicker(member),
+                title: Text(
+                  member.userId,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  _selectedMemberIds.contains(member.userId)
+                      ? '${l10n.register_mainPlayer} • ${member.role}'
+                      : _selectedReserveIds.contains(member.userId)
+                      ? '${l10n.register_reservePlayer} • ${member.role}'
+                      : member.role,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          Text(
+            l10n.register_quickCreateTitle,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _name,
+                  decoration: InputDecoration(
+                    hintText: l10n.register_teamNameHint,
+                  ),
+                ),
+              ),
               const SizedBox(width: 8),
-              OutlinedButton.icon(onPressed: _rosterAction ? null : () => _respondToRoster('DECLINE'), icon: const Icon(Icons.close, size: 16), label: Text(l10n.register_declineRoster)),
-            ]),
-          ]),
-        ),
+              FilledButton(
+                onPressed: _saving ? null : _create,
+                child: Text(l10n.register_createTeam),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          if (_rosterStatus?.entryStatus == 'LOCKED')
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(l10n.register_rosterLocked),
+              ),
+            ),
+          FilledButton.icon(
+            onPressed:
+                _saving ||
+                    _loading ||
+                    _rosterStatus?.entryStatus == 'LOCKED' ||
+                    _selected == null ||
+                    _selectedMemberIds.isEmpty ||
+                    _selectedReserveIds.length > widget.maxReserve
+                ? null
+                : _register,
+            icon: const Icon(Icons.check),
+            label: Text(
+              widget.participantId != null
+                  ? l10n.register_updateRoster
+                  : _selectedMemberIds.length < widget.teamSize
+                  ? l10n.register_saveDraft
+                  : l10n.register_selectedTeam,
+            ),
+          ),
+        ],
       ),
-      Text(l10n.register_chooseExistingTeam, style: const TextStyle(fontWeight: FontWeight.w700)),
-      const SizedBox(height: 8),
-      if (_loading) const Center(child: CircularProgressIndicator()) else if (_teams.isEmpty)
-        Card(child: Padding(padding: const EdgeInsets.all(16), child: Text(l10n.register_noMatchingTeams)))
-      else RadioGroup<String>(
-        groupValue: _selected,
-        onChanged: (value) {
-          if (widget.participantId != null) return;
-          if (value == null) return;
-          setState(() => _selected = value);
-          _loadMembers(value);
-        },
-        child: Column(
-          children: _teams.map((team) => RadioListTile<String>(
-            value: team.id,
-            title: Text(team.name),
-            subtitle: Text(team.role == 'PLAYER' ? l10n.register_teamMember : l10n.register_canRegister),
-          )).toList(),
-        ),
-      ),
-      if (_members.isNotEmpty) ...[
-        const SizedBox(height: 12),
-        Text(l10n.register_rosterTitle, style: const TextStyle(fontWeight: FontWeight.w700)),
-        const SizedBox(height: 4),
-        Text(l10n.register_rosterInstructions(widget.teamSize, widget.maxReserve), style: const TextStyle(fontSize: 12, color: Colors.black54)),
-        ..._members.map((member) => CheckboxListTile(
-          dense: true,
-          value: _selectedMemberIds.contains(member.userId) || _selectedReserveIds.contains(member.userId),
-          onChanged: _rosterStatus?.entryStatus == 'LOCKED' ? null : (_) => _showRosterRolePicker(member),
-          title: Text(member.userId, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(_selectedMemberIds.contains(member.userId) ? '${l10n.register_mainPlayer} • ${member.role}' : _selectedReserveIds.contains(member.userId) ? '${l10n.register_reservePlayer} • ${member.role}' : member.role),
-        )),
-      ],
-      const SizedBox(height: 16),
-      Text(l10n.register_quickCreateTitle, style: const TextStyle(fontWeight: FontWeight.w700)),
-      const SizedBox(height: 8),
-      Row(children: [Expanded(child: TextField(controller: _name, decoration: InputDecoration(hintText: l10n.register_teamNameHint))), const SizedBox(width: 8), FilledButton(onPressed: _saving ? null : _create, child: Text(l10n.register_createTeam))]),
-      const SizedBox(height: 20),
-      if (_rosterStatus?.entryStatus == 'LOCKED')
-        Card(child: Padding(padding: const EdgeInsets.all(12), child: Text(l10n.register_rosterLocked))),
-      FilledButton.icon(onPressed: _saving || _loading || _rosterStatus?.entryStatus == 'LOCKED' || _selected == null || _selectedMemberIds.isEmpty || _selectedReserveIds.length > widget.maxReserve ? null : _register, icon: const Icon(Icons.check), label: Text(widget.participantId != null ? l10n.register_updateRoster : _selectedMemberIds.length < widget.teamSize ? l10n.register_saveDraft : l10n.register_selectedTeam)),
-    ]),
     );
   }
 
@@ -261,16 +485,41 @@ class _FootballTeamRegisterScreenState extends ConsumerState<FootballTeamRegiste
     final current = _selectedMemberIds.contains(member.userId)
         ? 'MAIN'
         : _selectedReserveIds.contains(member.userId)
-            ? 'RESERVE'
-            : 'NONE';
+        ? 'RESERVE'
+        : 'NONE';
     final role = await showModalBottomSheet<String>(
       context: context,
       builder: (sheetContext) => SafeArea(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          ListTile(leading: const Icon(Icons.sports_soccer), title: Text(l10n.register_mainPlayer), enabled: current != 'MAIN' && _selectedMemberIds.length >= widget.teamSize ? false : true, onTap: () => Navigator.pop(sheetContext, 'MAIN')),
-          ListTile(leading: const Icon(Icons.event_seat), title: Text(l10n.register_reservePlayer), enabled: current != 'RESERVE' && _selectedReserveIds.length >= widget.maxReserve ? false : true, onTap: () => Navigator.pop(sheetContext, 'RESERVE')),
-          ListTile(leading: const Icon(Icons.remove_circle_outline), title: Text(l10n.register_removeSelection), onTap: () => Navigator.pop(sheetContext, 'NONE')),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.sports_soccer),
+              title: Text(l10n.register_mainPlayer),
+              enabled:
+                  current != 'MAIN' &&
+                      _selectedMemberIds.length >= widget.teamSize
+                  ? false
+                  : true,
+              onTap: () => Navigator.pop(sheetContext, 'MAIN'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.event_seat),
+              title: Text(l10n.register_reservePlayer),
+              enabled:
+                  current != 'RESERVE' &&
+                      _selectedReserveIds.length >= widget.maxReserve
+                  ? false
+                  : true,
+              onTap: () => Navigator.pop(sheetContext, 'RESERVE'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.remove_circle_outline),
+              title: Text(l10n.register_removeSelection),
+              onTap: () => Navigator.pop(sheetContext, 'NONE'),
+            ),
+          ],
+        ),
       ),
     );
     if (!mounted || role == null) return;

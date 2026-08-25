@@ -31,8 +31,7 @@ class TournamentDivisionOption {
     final minElo = json['minElo'] ?? json['min_elo'];
     final maxElo = json['maxElo'] ?? json['max_elo'];
     final entryFee = json['entryFee'] ?? json['entry_fee'];
-    final maxParticipants =
-        json['maxParticipants'] ?? json['max_participants'];
+    final maxParticipants = json['maxParticipants'] ?? json['max_participants'];
     final rawEndDate =
         json['registrationEndDate'] ?? json['registration_end_date'];
     final rawCount = json['_count'] is Map
@@ -41,9 +40,8 @@ class TournamentDivisionOption {
     return TournamentDivisionOption(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
-      genderRestriction: (json['genderRestriction'] ??
-              json['gender_restriction'])
-          ?.toString(),
+      genderRestriction:
+          (json['genderRestriction'] ?? json['gender_restriction'])?.toString(),
       matchType: (json['matchType'] ?? json['match_type'])?.toString(),
       categoryId: (json['categoryId'] ?? json['category_id'])?.toString(),
       minElo: _parseDouble(minElo),
@@ -57,7 +55,6 @@ class TournamentDivisionOption {
       participantCount: _parseInt(rawCount),
     );
   }
-
 }
 
 /// Parse a numeric value that may arrive as `num` or a numeric `String`.
@@ -84,12 +81,14 @@ class TournamentRegistrationResult {
     required this.entryFee,
     required this.teamStatus,
     required this.isWaitlisted,
+    required this.paymentEligible,
   });
 
   final String participantId;
   final double entryFee;
   final String teamStatus;
   final bool isWaitlisted;
+  final bool paymentEligible;
 
   factory TournamentRegistrationResult.fromJson(Map<String, dynamic> json) {
     // Backend trả participantId trong participant.id, fallback top-level id
@@ -110,6 +109,7 @@ class TournamentRegistrationResult {
       teamStatus: json['participant'] is Map
           ? (json['participant']['teamStatus']?.toString() ?? '')
           : '',
+      paymentEligible: json['paymentEligible'] == true,
       isWaitlisted:
           json['isWaitlisted'] == true ||
           (json['participant'] is Map &&
@@ -119,7 +119,14 @@ class TournamentRegistrationResult {
 }
 
 class FootballRosterMember {
-  const FootballRosterMember({required this.id, required this.userId, required this.role, required this.confirmationStatus, this.fullName, this.avatarUrl});
+  const FootballRosterMember({
+    required this.id,
+    required this.userId,
+    required this.role,
+    required this.confirmationStatus,
+    this.fullName,
+    this.avatarUrl,
+  });
   final String id;
   final String userId;
   final String role;
@@ -127,31 +134,50 @@ class FootballRosterMember {
   final String? fullName;
   final String? avatarUrl;
 
-  factory FootballRosterMember.fromJson(Map<String, dynamic> json) => FootballRosterMember(
-    id: json['id']?.toString() ?? '',
-    userId: json['userId']?.toString() ?? json['user_id']?.toString() ?? '',
-    role: json['role']?.toString() ?? 'MAIN',
-    confirmationStatus: json['confirmationStatus']?.toString() ?? json['confirmation_status']?.toString() ?? 'PENDING',
-    fullName: json['fullName']?.toString(),
-    avatarUrl: json['avatarUrl']?.toString() ?? json['avatar_url']?.toString(),
-  );
+  factory FootballRosterMember.fromJson(Map<String, dynamic> json) =>
+      FootballRosterMember(
+        id: json['id']?.toString() ?? '',
+        userId: json['userId']?.toString() ?? json['user_id']?.toString() ?? '',
+        role: json['role']?.toString() ?? 'MAIN',
+        confirmationStatus:
+            json['confirmationStatus']?.toString() ??
+            json['confirmation_status']?.toString() ??
+            'PENDING',
+        fullName: json['fullName']?.toString(),
+        avatarUrl:
+            json['avatarUrl']?.toString() ?? json['avatar_url']?.toString(),
+      );
 }
 
 class FootballRosterStatus {
-  const FootballRosterStatus({required this.entryId, required this.entryStatus, required this.roster, this.currentMember});
+  const FootballRosterStatus({
+    required this.entryId,
+    required this.entryStatus,
+    required this.roster,
+    this.currentMember,
+  });
   final String? entryId;
   final String? entryStatus;
   final List<FootballRosterMember> roster;
   final FootballRosterMember? currentMember;
 
   factory FootballRosterStatus.fromJson(Map<String, dynamic> json) {
-    final entry = json['entry'] is Map ? Map<String, dynamic>.from(json['entry'] as Map) : null;
-    final roster = (json['roster'] is List ? json['roster'] as List : const <dynamic>[])
-        .whereType<Map>()
-        .map((item) => FootballRosterMember.fromJson(Map<String, dynamic>.from(item)))
-        .toList(growable: false);
+    final entry = json['entry'] is Map
+        ? Map<String, dynamic>.from(json['entry'] as Map)
+        : null;
+    final roster =
+        (json['roster'] is List ? json['roster'] as List : const <dynamic>[])
+            .whereType<Map>()
+            .map(
+              (item) => FootballRosterMember.fromJson(
+                Map<String, dynamic>.from(item),
+              ),
+            )
+            .toList(growable: false);
     final current = json['currentMember'] is Map
-        ? FootballRosterMember.fromJson(Map<String, dynamic>.from(json['currentMember'] as Map))
+        ? FootballRosterMember.fromJson(
+            Map<String, dynamic>.from(json['currentMember'] as Map),
+          )
         : null;
     return FootballRosterStatus(
       entryId: entry?['id']?.toString(),
