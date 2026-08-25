@@ -1522,8 +1522,9 @@ class _TournamentRegisterScreenState
               ],
             ),
           ),
-          const SizedBox(height: 24),
-        ],
+          const SizedBox(height: 16),
+          _buildTournamentHighlightsCard(t),
+        ] else ...[
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -1979,9 +1980,9 @@ class _TournamentRegisterScreenState
               ],
             ),
           ),
-        ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
-        const SizedBox(height: 16),
-        _buildTournamentHighlightsCard(t),
+          const SizedBox(height: 16),
+          _buildTournamentHighlightsCard(t),
+        ],
       ],
     );
   }
