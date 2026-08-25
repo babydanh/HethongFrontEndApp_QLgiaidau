@@ -45,14 +45,27 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
         team.name.contains(' / ') ||
         team.name.contains(' & ');
 
-    // Member names: for Doubles always split from team name to get 2 players
-    final List<String> memberNames = isDoubles
-        ? team.name
-              .split(RegExp(r' - | / | & '))
-              .map((e) => e.trim())
-              .where((e) => e.isNotEmpty)
-              .toList()
-        : (team.members.isNotEmpty ? team.members : [team.name]);
+    // Member names:
+    // If team.members is provided (from API roster or members array), use it.
+    // Otherwise, for Doubles/split names, split by " - ", " / ", " & ".
+    final List<String> memberNames = () {
+      if (team.members.isNotEmpty) {
+        return team.members;
+      }
+      if (team.memberInfos.isNotEmpty) {
+        final infoNames = team.memberInfos
+            .map((m) => m.fullName.trim())
+            .where((n) => n.isNotEmpty)
+            .toList();
+        if (infoNames.isNotEmpty) return infoNames;
+      }
+      final split = team.name
+          .split(RegExp(r' - | / | & '))
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+      return split.isNotEmpty ? split : [team.name];
+    }();
 
     final memberInfos = team.memberInfos;
 
@@ -108,12 +121,24 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                     backgroundColor: AppTheme.primary.withValues(
                       alpha: 0.12,
                     ),
-                    backgroundImage:
-                        singleInfo?.avatarUrl?.isNotEmpty == true
-                        ? NetworkImage(singleInfo!.avatarUrl!)
-                        : null,
                     child: singleInfo?.avatarUrl?.isNotEmpty == true
-                        ? null
+                        ? ClipOval(
+                            child: Image.network(
+                              singleInfo!.avatarUrl!,
+                              fit: BoxFit.cover,
+                              width: 36,
+                              height: 36,
+                              errorBuilder:
+                                  (context, error, stackTrace) => Text(
+                                _getInitials(team.name),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.primary,
+                                ),
+                              ),
+                            ),
+                          )
                         : Text(
                             _getInitials(team.name),
                             style: const TextStyle(
@@ -310,6 +335,27 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                                   ),
                                 ),
                               ],
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 1.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: team.isPaid
+                                      ? const Color(0xFF059669)
+                                      : const Color(0xFFD97706),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  team.isPaid ? 'ĐÃ ĐÓNG PHÍ' : 'CHỜ THANH TOÁN',
+                                  style: const TextStyle(
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 2),
@@ -364,9 +410,15 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
               child: Column(
                 children: List.generate(memberNames.length, (idx) {
                   final mName = memberNames[idx];
-                  final MatchMemberInfo? mInfo = idx < memberInfos.length
-                      ? memberInfos[idx]
-                      : null;
+                  final MatchMemberInfo? mInfo = () {
+                    for (final info in memberInfos) {
+                      if (info.fullName.trim().toLowerCase() ==
+                          mName.trim().toLowerCase()) {
+                        return info;
+                      }
+                    }
+                    return idx < memberInfos.length ? memberInfos[idx] : null;
+                  }();
                   final eloVal = mInfo?.eloPoints ?? team.eloPoints ?? 1200;
                   final eloStr = '${l10n.eloLabel} $eloVal';
                   final tierStr = mInfo?.tierName;
