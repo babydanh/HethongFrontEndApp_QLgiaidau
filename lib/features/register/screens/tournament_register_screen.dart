@@ -894,9 +894,10 @@ class _TournamentRegisterScreenState
     final fee = existingDivision?.entryFee ?? tournament.entryFee ?? 0;
     final status = _existingTeamStatus ?? '';
     final canPay =
-        !_existingIsPaid &&
-        fee > 0 &&
-        (_existingParticipantId?.isNotEmpty ?? false);
+        (!_existingIsPaid &&
+            fee > 0 &&
+            (_existingParticipantId?.isNotEmpty ?? false)) ||
+        _existingPaymentEligible;
 
     final statusLabel = switch (status) {
       'PENDING_PARTNER' => l10n.registerStatusPendingPartner,

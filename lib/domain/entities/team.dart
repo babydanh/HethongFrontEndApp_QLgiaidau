@@ -17,6 +17,7 @@ class Team {
   final String approvalStatus;
   final String contactEmail;
   final DateTime createdAt;
+  final bool isPaid;
 
   final int? eloPoints;
 
@@ -32,6 +33,7 @@ class Team {
     this.qrCode = '',
     this.approvalStatus = 'PENDING_APPROVAL',
     this.contactEmail = '',
+    this.isPaid = false,
     this.eloPoints,
     required this.createdAt,
   });
@@ -102,6 +104,9 @@ class Team {
           json['status']?.toString().toUpperCase() ??
           'PENDING_APPROVAL',
       contactEmail: json['contactEmail'] ?? '',
+      isPaid: json['isPaid'] == true ||
+          json['is_paid'] == true ||
+          json['paymentStatus'] == 'COMPLETED',
       eloPoints: topElo,
       createdAt: DateParser.parseDate(json['createdAt']),
     );
