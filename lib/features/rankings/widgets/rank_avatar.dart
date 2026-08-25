@@ -24,9 +24,9 @@ class RankAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ranked = matchesPlayed > 0;
+    final ranked = elo > 0 || (tierName != null && tierName!.isNotEmpty) || matchesPlayed > 0;
     final palette = TierPalette.fromElo(elo < 1000 ? 1000 : elo, tierName);
-    final ringColor = ranked ? palette.badgeBg : Colors.blueGrey.shade400;
+    final ringColor = ranked ? palette.badgeBg : Colors.blueGrey.shade300;
     final innerSize = size - (ringWidth * 2);
 
     return Container(
@@ -37,7 +37,7 @@ class RankAvatar extends StatelessWidget {
         shape: BoxShape.circle,
         color: ringColor,
         boxShadow: ranked
-            ? [BoxShadow(color: ringColor.withValues(alpha: 0.24), blurRadius: 7)]
+            ? [BoxShadow(color: ringColor.withValues(alpha: 0.4), blurRadius: 8, spreadRadius: 1)]
             : null,
       ),
       child: ClipOval(

@@ -655,14 +655,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final rankings =
         ref.watch(userRankingsProvider).asData?.value ??
         const <PlayerRanking>[];
-    final playedRankings = rankings.where((r) => r.matchesPlayed > 0).toList()
+    final allRankings = rankings.toList()
       ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
-    final bestRanking = playedRankings.isEmpty ? null : playedRankings.first;
+    final bestRanking = allRankings.isEmpty ? null : allRankings.first;
     final tierColor =
-        RankTierColors.isRanked(
-          bestRanking?.tierName,
-          matchesPlayed: bestRanking?.matchesPlayed,
-        )
+        RankTierColors.isRanked(bestRanking?.tierName)
         ? RankTierColors.fromTierName(bestRanking?.tierName)
         : colors.border;
     return Stack(

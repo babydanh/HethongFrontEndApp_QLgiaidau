@@ -637,14 +637,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     UserPublicProfile profile,
     AppColorsExtension colors,
   ) {
-    final roleText = _formatUserRole(null); // default fallback
-    final featuredRank = profile.ranks
-        .where((rank) => rank.isLeaderboardEligible)
-        .fold<UserPublicRank?>(
-          null,
-          (best, rank) =>
-              best == null || rank.eloPoints > best.eloPoints ? rank : best,
-        );
+    final featuredRank = profile.ranks.isEmpty
+        ? null
+        : (profile.ranks.where((r) => r.isLeaderboardEligible).isNotEmpty
+            ? profile.ranks.where((r) => r.isLeaderboardEligible).reduce((a, b) => a.eloPoints > b.eloPoints ? a : b)
+            : profile.ranks.reduce((a, b) => a.eloPoints > b.eloPoints ? a : b));
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Row(
