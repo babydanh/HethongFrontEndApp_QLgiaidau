@@ -1980,12 +1980,13 @@ class _TournamentRegisterScreenState
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          _buildTournamentHighlightsCard(t),
-        ],
+        ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
+        const SizedBox(height: 16),
+        _buildTournamentHighlightsCard(t),
       ],
-    );
-  }
+    ],
+  );
+}
 
   Widget _buildTournamentHighlightsCard(Tournament t) {
     final l10n = AppLocalizations.of(context)!;
