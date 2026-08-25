@@ -893,11 +893,11 @@ class _TournamentRegisterScreenState
 
     final fee = existingDivision?.entryFee ?? tournament.entryFee ?? 0;
     final status = _existingTeamStatus ?? '';
-    final canPay =
-        (!_existingIsPaid &&
-            fee > 0 &&
-            (_existingParticipantId?.isNotEmpty ?? false)) ||
-        _existingPaymentEligible;
+    // Backend is the source of truth. Only a COMPLETE, unpaid registration
+    // with a valid positive fee may open checkout. Pending partner/approval,
+    // waitlisted and incomplete football rosters must wait for their status to
+    // become paymentEligible before showing the payment CTA.
+    final canPay = _existingPaymentEligible == true;
 
     final statusLabel = switch (status) {
       'PENDING_PARTNER' => l10n.registerStatusPendingPartner,
