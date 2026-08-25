@@ -64,6 +64,13 @@ final userPublicProfileProvider =
       return repo.getPublicProfile(userId);
     });
 
+bool _isMockInvolvedMatch(MatchModel match) {
+  return match.team1IsMock ||
+      match.team2IsMock ||
+      match.team1MemberInfos.any((member) => member.isMock) ||
+      match.team2MemberInfos.any((member) => member.isMock);
+}
+
 /// Trận đấu công khai của hồ sơ, dùng cùng endpoint với web.
 final publicUserMatchesProvider =
     FutureProvider.family<List<MatchModel>, String>((ref, userId) async {
@@ -78,7 +85,7 @@ final publicUserMatchesProvider =
       return list.whereType<Map<String, dynamic>>().map((item) {
         final id = item['id']?.toString() ?? '';
         return MatchModel.fromJson(item, id);
-      }).toList();
+      }).where((match) => !_isMockInvolvedMatch(match)).toList();
     });
 
 /// Gọi GET /api/v1/rankings/user/:userId

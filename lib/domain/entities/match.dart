@@ -46,14 +46,17 @@ class MatchMemberInfo {
   final String fullName;
   final int? eloPoints;
   final String? tierName;
-  final String? avatarUrl;
+    final String? avatarUrl;
+  final bool isMock;
 
   const MatchMemberInfo({
+
     this.userId,
     required this.fullName,
     this.eloPoints,
     this.tierName,
     this.avatarUrl,
+    this.isMock = false,
   });
 
   factory MatchMemberInfo.fromJson(Map<String, dynamic> json) {
@@ -75,6 +78,7 @@ class MatchMemberInfo {
           ? (json['eloPoints'] as num).toInt()
           : int.tryParse(json['eloPoints']?.toString() ?? ''),
       tierName: json['tierName']?.toString() ?? json['tier_name']?.toString(),
+      isMock: json['isMock'] == true || json['is_mock'] == true,
       avatarUrl:
           json['avatarUrl']?.toString() ??
           json['avatar_url']?.toString() ??
@@ -97,6 +101,7 @@ class MatchMemberInfo {
       if (eloPoints != null) 'eloPoints': eloPoints,
       if (tierName != null) 'tierName': tierName,
       if (avatarUrl != null) 'avatarUrl': avatarUrl,
+      'isMock': isMock,
     };
   }
 }
@@ -154,7 +159,9 @@ class MatchModel {
   final List<String>? team1Members;
   final List<String>? team2Members;
   final List<MatchMemberInfo> team1MemberInfos;
-  final List<MatchMemberInfo> team2MemberInfos;
+    final List<MatchMemberInfo> team2MemberInfos;
+  final bool team1IsMock;
+  final bool team2IsMock;
 
   /// Ranking value for the whole team. For doubles this is pairRanks.eloPoints.
   final int? team1EloPoints;
@@ -211,6 +218,8 @@ class MatchModel {
     this.team2Members = const [],
     this.team1MemberInfos = const [],
     this.team2MemberInfos = const [],
+    this.team1IsMock = false,
+    this.team2IsMock = false,
     this.team1EloPoints,
     this.team2EloPoints,
     this.groupName,
@@ -390,6 +399,12 @@ class MatchModel {
       team2Members: team2MemberInfos.map((m) => m.fullName).toList(),
       team1MemberInfos: team1MemberInfos,
       team2MemberInfos: team2MemberInfos,
+      team1IsMock: json['participant1'] is Map &&
+          ((json['participant1'] as Map)['isMock'] == true ||
+              (json['participant1'] as Map)['is_mock'] == true),
+      team2IsMock: json['participant2'] is Map &&
+          ((json['participant2'] as Map)['isMock'] == true ||
+              (json['participant2'] as Map)['is_mock'] == true),
       team1EloPoints: participantElo(json['participant1']),
       team2EloPoints: participantElo(json['participant2']),
       groupName:
@@ -455,6 +470,8 @@ class MatchModel {
       'team2Members': team2Members,
       'team1MemberInfos': team1MemberInfos.map((m) => m.toJson()).toList(),
       'team2MemberInfos': team2MemberInfos.map((m) => m.toJson()).toList(),
+      'team1IsMock': team1IsMock,
+      'team2IsMock': team2IsMock,
       if (team1EloPoints != null) 'team1EloPoints': team1EloPoints,
       if (team2EloPoints != null) 'team2EloPoints': team2EloPoints,
       if (groupName != null) 'groupName': groupName,
@@ -506,6 +523,8 @@ class MatchModel {
     List<String>? team2Members,
     List<MatchMemberInfo>? team1MemberInfos,
     List<MatchMemberInfo>? team2MemberInfos,
+    bool? team1IsMock,
+    bool? team2IsMock,
     int? team1EloPoints,
     int? team2EloPoints,
     String? groupName,
@@ -555,6 +574,8 @@ class MatchModel {
       team2Members: team2Members ?? this.team2Members,
       team1MemberInfos: team1MemberInfos ?? this.team1MemberInfos,
       team2MemberInfos: team2MemberInfos ?? this.team2MemberInfos,
+      team1IsMock: team1IsMock ?? this.team1IsMock,
+      team2IsMock: team2IsMock ?? this.team2IsMock,
       team1EloPoints: team1EloPoints ?? this.team1EloPoints,
       team2EloPoints: team2EloPoints ?? this.team2EloPoints,
       groupName: groupName ?? this.groupName,
