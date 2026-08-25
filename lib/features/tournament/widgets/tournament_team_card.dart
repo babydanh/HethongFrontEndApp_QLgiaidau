@@ -192,32 +192,54 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                               ),
                             ),
                             const SizedBox(width: 6),
-                            if (realTierName != null || seedLabel != null)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 1.5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFEFF6FF),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: const Color(0xFFBFDBFE),
+                                if (realTierName != null || seedLabel != null) ...[
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 1.5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEFF6FF),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: const Color(0xFFBFDBFE),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      realTierName ?? seedLabel!,
+                                      style: const TextStyle(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF1D4ED8),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                ],
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 1.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: team.isPaid
+                                        ? const Color(0xFF059669)
+                                        : const Color(0xFFD97706),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    team.isPaid ? 'ĐÃ ĐÓNG PHÍ' : 'CHỜ THANH TOÁN',
+                                    style: const TextStyle(
+                                      fontSize: 8.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
-                                child: Text(
-                                  realTierName ?? seedLabel!,
-                                  style: const TextStyle(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF1D4ED8),
-                                  ),
-                                ),
-                              ),
+                              ],
+                            ),
                           ],
                         ),
-                      ],
-                    ),
                   ),
 
                   // Chevron right profile indicator
