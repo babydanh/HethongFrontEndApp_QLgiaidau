@@ -67,18 +67,21 @@ class CommunityTournamentModel {
       if (count != null) teamCount = int.tryParse(count.toString()) ?? 0;
     }
 
-    // isLite = LOẠI GIẢI lite (nhanh). KHÔNG suy từ mode (cách tính điểm LITE/STRICT).
-    bool isLite = json['isLite'] == true;
-    if (!isLite && json['tournamentConfig'] is Map) {
-      final config = json['tournamentConfig'] as Map;
+    // isLite = loại sản phẩm Lite, không phải mode tính điểm. Khi Backend
+    // trả cờ canonical rõ ràng (kể cả false), không được suy ngược từ mode cũ.
+    final rawConfig = json['tournamentConfig'];
+    final config = rawConfig is Map ? rawConfig : null;
+    final hasCanonicalLiteFlag =
+        json.containsKey('isLite') || (config?.containsKey('isLite') ?? false);
+    bool isLite = json['isLite'] == true || config?['isLite'] == true;
+    if (!hasCanonicalLiteFlag && config != null) {
       final mode = config['mode']?.toString().toUpperCase();
-      isLite = config['isLite'] == true ||
-          // Fallback an toàn cho giải lite cũ (trước migration):
-          // mode='LITE' + hideAdvancedSettings=true.
-          (mode == 'LITE' && config['hideAdvancedSettings'] == true);
+      // Fallback cho record Lite cũ trước khi có cờ canonical.
+      isLite = mode == 'LITE' && config['hideAdvancedSettings'] == true;
     }
 
-    final entryFee = int.tryParse(
+    final entryFee =
+        int.tryParse(
           (json['entryFee'] ?? json['registrationFee'] ?? json['fee'] ?? 0)
               .toString(),
         ) ??
@@ -102,7 +105,9 @@ class CommunityTournamentModel {
           .toString()
           .toUpperCase(),
       isRanked: json['isRanked'] == true || json['is_ranked'] == true,
-      parentId: json['parentId']?.toString() ?? json['parentTournamentId']?.toString(),
+      parentId:
+          json['parentId']?.toString() ??
+          json['parentTournamentId']?.toString(),
       categoryName: categoryName,
       entryFee: entryFee,
       endDate: json['endDate']?.toString(),

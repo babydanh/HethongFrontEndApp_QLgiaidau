@@ -3410,7 +3410,14 @@
   "communityPoll_singleHint": "Chỉ được chọn một lựa chọn.",
   "communityPoll_tournamentHint": "Chọn Có để đăng ký; chọn Không để hủy đăng ký.",
   "communityPoll_addOption": "Thêm lựa chọn",
-  "communityPoll_voteCount": "{count} lượt bình chọn",
+    "communityPoll_voteCount": "{count} lượt bình chọn",
+  "communityPoll_registeredMembers": "Đã đăng ký ({count})",
+  "@communityPoll_registeredMembers": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+
   "@communityPoll_voteCount": {
     "placeholders": {
       "count": {}

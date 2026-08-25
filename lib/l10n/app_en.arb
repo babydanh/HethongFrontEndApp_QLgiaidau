@@ -3410,7 +3410,14 @@
   "communityPoll_singleHint": "You can select only one option.",
   "communityPoll_tournamentHint": "Choose Yes to register; choose No to cancel registration.",
   "communityPoll_addOption": "Add option",
-  "communityPoll_voteCount": "{count} votes",
+    "communityPoll_voteCount": "{count} votes",
+  "communityPoll_registeredMembers": "Registered ({count})",
+  "@communityPoll_registeredMembers": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+
   "@communityPoll_voteCount": {
     "placeholders": {
       "count": {}

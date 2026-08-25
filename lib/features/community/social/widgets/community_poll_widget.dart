@@ -196,6 +196,44 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
     }
   }
 
+  Widget _buildRegisteredMembers(
+    BuildContext context,
+    CommunityPollOption option,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    final names = option.voters
+        .take(3)
+        .map((voter) => voter.fullName.trim())
+        .where((name) => name.isNotEmpty)
+        .toList(growable: false);
+    final remaining = option.voters.length - names.length;
+    final suffix = remaining > 0 ? ' +$remaining' : '';
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 12, right: 12, bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.people_alt_outlined, size: 15, color: colors.textMuted),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              '${l10n.communityPoll_registeredMembers(option.voters.length)}: ${names.join(', ')}$suffix',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: colors.textMuted,
+                fontSize: 11,
+                height: 1.25,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -209,16 +247,19 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
         int score(String text) {
           if (text.contains('Có tham gia') ||
               text.contains('Đăng ký') ||
-              text.contains('✅'))
+              text.contains('✅')) {
             return 1;
+          }
           if (text.contains('Chưa chắc chắn') ||
               text.contains('suy nghĩ') ||
-              text.contains('⏳'))
+              text.contains('⏳')) {
             return 2;
+          }
           if (text.contains('Không') ||
               text.contains('Bận') ||
-              text.contains('❌'))
+              text.contains('❌')) {
             return 3;
+          }
           return 2;
         }
 
@@ -271,65 +312,78 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
           const SizedBox(height: AppTheme.spacingSM),
           ...sortedOptions.map((option) {
             final ratio = total == 0 ? 0.0 : option.voteCount / total;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: InkWell(
-                onTap: _busy || _poll.isClosed ? null : () => _vote(option.id),
-                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-                child: Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-                      child: LinearProgressIndicator(
-                        value: ratio,
-                        minHeight: 42,
-                        color: AppTheme.primary.withValues(alpha: .18),
-                        backgroundColor: colors.bgCard,
-                      ),
-                    ),
-                    Positioned.fill(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Row(
-                          children: [
-                            Icon(
-                              option.isVoted
-                                  ? (_poll.allowMultipleAnswers
-                                        ? Icons.check_box
-                                        : Icons.radio_button_checked)
-                                  : (_poll.allowMultipleAnswers
-                                        ? Icons.check_box_outline_blank
-                                        : Icons.radio_button_unchecked),
-                              size: 18,
-                              color: option.isVoted
-                                  ? AppTheme.primary
-                                  : colors.textMuted,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                option.optionText,
-                                style: TextStyle(
-                                  fontWeight: option.isVoted
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              '${option.voteCount}',
-                              style: TextStyle(
-                                color: colors.textMuted,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: InkWell(
+                    onTap: _busy || _poll.isClosed
+                        ? null
+                        : () => _vote(option.id),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusSmall,
+                          ),
+                          child: LinearProgressIndicator(
+                            value: ratio,
+                            minHeight: 42,
+                            color: AppTheme.primary.withValues(alpha: .18),
+                            backgroundColor: colors.bgCard,
+                          ),
                         ),
-                      ),
+                        Positioned.fill(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  option.isVoted
+                                      ? (_poll.allowMultipleAnswers
+                                            ? Icons.check_box
+                                            : Icons.radio_button_checked)
+                                      : (_poll.allowMultipleAnswers
+                                            ? Icons.check_box_outline_blank
+                                            : Icons.radio_button_unchecked),
+                                  size: 18,
+                                  color: option.isVoted
+                                      ? AppTheme.primary
+                                      : colors.textMuted,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    option.optionText,
+                                    style: TextStyle(
+                                      fontWeight: option.isVoted
+                                          ? FontWeight.w600
+                                          : FontWeight.w400,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  '${option.voteCount}',
+                                  style: TextStyle(
+                                    color: colors.textMuted,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                if (widget.tournamentId != null &&
+                    _isPositiveRegistrationOption(option.optionText) &&
+                    option.voters.isNotEmpty)
+                  _buildRegisteredMembers(context, option),
+              ],
             );
           }),
           if (_poll.allowAddOptions && !_poll.isClosed)

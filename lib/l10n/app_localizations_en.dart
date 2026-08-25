@@ -8950,6 +8950,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String communityPoll_registeredMembers(Object count) {
+    return 'Registered ($count)';
+  }
+
+  @override
   String get teamAdd_createTitle => 'Add team / player';
 
   @override

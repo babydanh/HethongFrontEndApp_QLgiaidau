@@ -8932,6 +8932,11 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String communityPoll_registeredMembers(Object count) {
+    return 'Đã đăng ký ($count)';
+  }
+
+  @override
   String get teamAdd_createTitle => 'Thêm đội / VĐV';
 
   @override

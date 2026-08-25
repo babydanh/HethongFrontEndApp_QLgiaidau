@@ -16472,6 +16472,12 @@ abstract class AppLocalizations {
   /// **'{count} lượt bình chọn'**
   String communityPoll_voteCount(Object count);
 
+  /// No description provided for @communityPoll_registeredMembers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đăng ký ({count})'**
+  String communityPoll_registeredMembers(Object count);
+
   /// No description provided for @teamAdd_createTitle.
   ///
   /// In vi, this message translates to:
