@@ -31,32 +31,6 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
     return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 
-  Widget _buildSmallBadge(
-    String label,
-    Color foreground,
-    Color background,
-    Color border,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: border),
-      ),
-      child: Text(
-        label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 9.5,
-          fontWeight: FontWeight.w700,
-          color: foreground,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
