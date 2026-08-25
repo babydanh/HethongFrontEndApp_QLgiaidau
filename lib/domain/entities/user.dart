@@ -193,6 +193,8 @@ class UserPublicProfile {
   final String? coverUrl;
   final String? gender;
   final String? bio;
+  final String? role;
+  final List<String> roles;
   final bool isVerified;
   final List<UserPublicRank> ranks;
   final List<UserPublicAchievement> achievements;
@@ -204,6 +206,8 @@ class UserPublicProfile {
     this.coverUrl,
     this.gender,
     this.bio,
+    this.role,
+    this.roles = const [],
     this.isVerified = false,
     this.ranks = const [],
     this.achievements = const [],
@@ -217,6 +221,8 @@ class UserPublicProfile {
       coverUrl: json['coverUrl'] as String?,
       gender: json['gender'] as String?,
       bio: json['bio'] as String?,
+      role: json['role'] as String? ?? (json['systemRole'] as String?),
+      roles: (json['roles'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       isVerified: json['isVerified'] == true,
       ranks: [
         ...((json['ranks'] as List<dynamic>?)

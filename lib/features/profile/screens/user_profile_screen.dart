@@ -637,6 +637,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     UserPublicProfile profile,
     AppColorsExtension colors,
   ) {
+    final roleText = _formatUserRole(profile.role);
     final featuredRank = profile.ranks.isEmpty
         ? null
         : (profile.ranks.where((r) => r.isLeaderboardEligible).isNotEmpty
