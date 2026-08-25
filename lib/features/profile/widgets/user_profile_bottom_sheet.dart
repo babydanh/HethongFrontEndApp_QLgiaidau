@@ -103,6 +103,28 @@ class _UserProfileBottomSheetState
     setState(() => _isOpeningChat = true);
     try {
       final dio = ref.read(dioClientProvider).dio;
+      final policyResponse = await dio.get(
+        '/chat/direct-policy/${widget.userId}',
+      );
+      final policyEnvelope = policyResponse.data is Map
+          ? Map<String, dynamic>.from(policyResponse.data as Map)
+          : <String, dynamic>{};
+      final policyData = policyEnvelope['data'] is Map
+          ? Map<String, dynamic>.from(policyEnvelope['data'] as Map)
+          : policyEnvelope;
+      if (policyData['canMessage'] != true) {
+        final reasonCode = policyData['reasonCode']?.toString();
+        final reason = switch (reasonCode) {
+          'BLOCKED' =>
+            'Không thể nhắn tin vì một trong hai người đã chặn nhau.',
+          'STRANGER_MESSAGES_DISABLED' =>
+            'Người dùng này không nhận tin nhắn từ người lạ.',
+          'SELF' => 'Bạn không thể tự nhắn tin cho chính mình.',
+          _ => 'Không thể mở cuộc trò chuyện lúc này.',
+        };
+        throw Exception(reason);
+      }
+
       final res = await dio.post(
         '/chat/rooms',
         data: {
