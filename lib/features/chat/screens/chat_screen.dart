@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
@@ -94,6 +95,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     _chatSocket.onMessage = (data) {
       if (mounted) _loadRooms(quiet: true);
     };
+    _chatSocket.onRoomActivity = (data) {
+      if (mounted) _loadRooms(quiet: true);
+    };
+    // Keep the inbox socket connected without joining a specific room. Room
+    // activity notifications are sent to the user's socket directly.
+    unawaited(_chatSocket.connect(''));
   }
 
   Future<void> _loadRooms({bool quiet = false}) async {

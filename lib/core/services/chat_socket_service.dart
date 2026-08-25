@@ -21,6 +21,7 @@ class ChatSocketService {
   void Function(Map<String, dynamic>)? onPinned;
   void Function(Map<String, dynamic>)? onUserStatus;
   void Function(Map<String, dynamic>)? onRoomRead;
+  void Function(Map<String, dynamic>)? onRoomActivity;
   void Function(bool)? onConnection;
 
   ChatSocketService(this.tokenManager);
@@ -34,7 +35,8 @@ class ChatSocketService {
       return;
     }
 
-    var rawBaseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
+    var rawBaseUrl =
+        dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
     if (!kIsWeb && Platform.isAndroid) {
       if (rawBaseUrl.contains('localhost')) {
         rawBaseUrl = rawBaseUrl.replaceAll('localhost', '10.0.2.2');
@@ -44,7 +46,9 @@ class ChatSocketService {
     }
 
     final serverUrl = rawBaseUrl.replaceAll(RegExp(r'/api/v1/?$'), '');
-    _log.info('Connecting to chat socket at $serverUrl/chat for roomId: $roomId');
+    _log.info(
+      'Connecting to chat socket at $serverUrl/chat for roomId: $roomId',
+    );
 
     _socket?.disconnect();
     _socket?.close();
@@ -133,15 +137,32 @@ class ChatSocketService {
       if (map.isNotEmpty) onRoomRead?.call(map);
     });
 
+    _socket!.on('chat:room:created', (data) {
+      final map = _asMap(data);
+      if (map.isNotEmpty) onRoomActivity?.call(map);
+    });
+
+    _socket!.on('chat:room:updated', (data) {
+      final map = _asMap(data);
+      if (map.isNotEmpty) onRoomActivity?.call(map);
+    });
+
     _socket!.connect();
   }
 
-  void checkOnlineUsers(List<String> userIds, void Function(Map<String, dynamic>) callback) {
+  void checkOnlineUsers(
+    List<String> userIds,
+    void Function(Map<String, dynamic>) callback,
+  ) {
     if (isConnected && userIds.isNotEmpty) {
-      _socket!.emitWithAck('checkOnlineUsers', userIds, ack: (data) {
-        final map = _asMap(data);
-        callback(map);
-      });
+      _socket!.emitWithAck(
+        'checkOnlineUsers',
+        userIds,
+        ack: (data) {
+          final map = _asMap(data);
+          callback(map);
+        },
+      );
     }
   }
 

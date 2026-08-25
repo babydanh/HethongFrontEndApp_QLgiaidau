@@ -27,6 +27,18 @@ import 'package:url_launcher/url_launcher.dart';
 
 const List<String> _kQuickReactions = ['❤️', '👍', '😂', '😮', '😢', '🔥'];
 
+class _MessagePageData {
+  final List<Map<String, dynamic>> items;
+  final String? nextCursor;
+  final bool hasMore;
+
+  const _MessagePageData({
+    required this.items,
+    required this.nextCursor,
+    required this.hasMore,
+  });
+}
+
 class ChatDetailScreen extends ConsumerStatefulWidget {
   final String roomId;
   final String? roomName;
@@ -48,7 +60,28 @@ class ChatDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
+  _MessagePageData _parseMessagePage(Object? response) {
+    dynamic body = response;
+    if (body is Map && body['data'] is Map) {
+      body = body['data'];
+    }
+
+    final rawItems = body is Map ? (body['data'] ?? body['items']) : body;
+    final items = rawItems is List
+        ? rawItems.whereType<Map<String, dynamic>>().toList()
+        : <Map<String, dynamic>>[];
+    final rawMeta = body is Map ? body['meta'] : null;
+    final meta = rawMeta is Map ? rawMeta : null;
+
+    return _MessagePageData(
+      items: items,
+      nextCursor: meta?['nextCursor']?.toString(),
+      hasMore: meta?['hasMore'] == true,
+    );
+  }
+
   final _messageController = TextEditingController();
+
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
 
@@ -379,12 +412,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         '/chat/rooms/${widget.roomId}/messages',
         queryParameters: {'limit': 30},
       );
-      final rawList = res.data is Map
-          ? (res.data['data'] ?? res.data['items'] ?? [])
-          : res.data;
-      if (rawList is List && mounted) {
-        final items = rawList
-            .whereType<Map<String, dynamic>>()
+      final page = _parseMessagePage(res.data);
+      if (mounted) {
+        final items = page.items
             .map(
               (json) =>
                   ChatMessageModel.fromJson(json, currentUserId: currentUserId),
@@ -394,8 +424,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         setState(() {
           _messages = items;
-          _hasMore = items.length >= 30;
-          _cursor = items.isNotEmpty ? items.last.id : null;
+          _hasMore = page.hasMore;
+          _cursor = page.nextCursor;
         });
       }
     } catch (_) {
@@ -414,12 +444,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         '/chat/rooms/${widget.roomId}/messages',
         queryParameters: {'limit': 30, 'cursor': _cursor},
       );
-      final rawList = res.data is Map
-          ? (res.data['data'] ?? res.data['items'] ?? [])
-          : res.data;
-      if (rawList is List && mounted) {
-        final older = rawList
-            .whereType<Map<String, dynamic>>()
+      final page = _parseMessagePage(res.data);
+      if (page.items.isNotEmpty && mounted) {
+        final older = page.items
             .map(
               (json) =>
                   ChatMessageModel.fromJson(json, currentUserId: currentUserId),
@@ -428,8 +455,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         older.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         setState(() {
           _messages.addAll(older);
-          _hasMore = older.length >= 30;
-          _cursor = older.isNotEmpty ? older.last.id : null;
+          _hasMore = page.hasMore;
+          _cursor = page.nextCursor;
         });
       }
     } catch (_) {}
@@ -443,19 +470,20 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         '/chat/rooms/${widget.roomId}/messages',
         queryParameters: {'limit': 30},
       );
-      final rawList = res.data is Map
-          ? (res.data['data'] ?? res.data['items'] ?? [])
-          : res.data;
-      if (rawList is List && mounted) {
-        final items = rawList
-            .whereType<Map<String, dynamic>>()
+      final page = _parseMessagePage(res.data);
+      if (mounted) {
+        final items = page.items
             .map(
               (json) =>
                   ChatMessageModel.fromJson(json, currentUserId: currentUserId),
             )
             .toList();
         items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        setState(() => _messages = items);
+        setState(() {
+          _messages = items;
+          _hasMore = page.hasMore;
+          _cursor = page.nextCursor;
+        });
       }
     } catch (_) {}
   }
