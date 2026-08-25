@@ -84,10 +84,7 @@ class MatchTableRow extends StatelessWidget {
     } else if (branch == 'losers') {
       roundLabel = l10n.matchTableLosersRound(match.round);
     } else if (match.groupName != null && match.groupName!.isNotEmpty) {
-      roundLabel = l10n.matchTableGroupMatch(
-        match.groupName!,
-        match.matchNumber,
-      );
+      roundLabel = l10n.crossTableLegTitle(match.groupName!, match.leg ?? 1);
     } else {
       roundLabel = l10n.matchTableRoundMatch(
         _getRoundName(match.round, totalRounds, l10n),

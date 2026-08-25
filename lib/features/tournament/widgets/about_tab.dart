@@ -181,16 +181,17 @@ class AboutTab extends StatelessWidget {
                   },
                   colors: colors,
                 ),
-                if (TournamentLocationFormatter.tournamentShortLocation(
+                if (TournamentLocationFormatter.tournamentFullLocation(
                   tournament,
                 ).isNotEmpty) ...[
                   const SizedBox(height: 12),
                   _buildInfoRow(
                     label: l10n.club_location,
-                    value: TournamentLocationFormatter.tournamentShortLocation(
+                    value: TournamentLocationFormatter.tournamentFullLocation(
                       tournament,
                     ),
                     colors: colors,
+                    maxLines: 6,
                   ),
                 ],
                 const SizedBox(height: 12),
@@ -294,6 +295,7 @@ class AboutTab extends StatelessWidget {
     required String label,
     required String value,
     required AppColorsExtension colors,
+    int maxLines = 3,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,7 +325,7 @@ class AboutTab extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 value,
-                maxLines: 3,
+                maxLines: maxLines,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 13,

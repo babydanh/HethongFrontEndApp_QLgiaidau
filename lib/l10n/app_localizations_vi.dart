@@ -10049,18 +10049,18 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String crossTableLegTitle(Object leg, Object title) {
-    return '$title - Vòng $leg';
+    return '$title - Lượt $leg';
   }
 
   @override
-  String get crossTablePreviousLeg => 'Vòng trước';
+  String get crossTablePreviousLeg => 'Lượt trước';
 
   @override
-  String get crossTableNextLeg => 'Vòng tiếp theo';
+  String get crossTableNextLeg => 'Lượt tiếp theo';
 
   @override
   String crossTableLegIndicator(Object current, Object max) {
-    return 'Vòng $current / $max';
+    return 'Lượt $current / $max';
   }
 
   @override

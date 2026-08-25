@@ -50,6 +50,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
   int _selectedGroupTab = 0;
   String _searchQuery = '';
   int _selectedRound = 0;
+  int _selectedLeg = 0;
   String _matchFilter = '';
   String _selectedBranch = '';
   String _selectedGroup = '';
@@ -138,12 +139,13 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             .firstOrNull
             ?.bracketType;
 
-        final rawType = (widget.bracketType ??
-                divisionBracketType ??
-                tournamentAsync.value?.bracketType ??
-                '')
-            .trim()
-            .toLowerCase();
+        final rawType =
+            (widget.bracketType ??
+                    divisionBracketType ??
+                    tournamentAsync.value?.bracketType ??
+                    '')
+                .trim()
+                .toLowerCase();
 
         final hasDoubleElimMatches = matches.any(isDoubleEliminationMatch);
         final hasGroupMatches = matches.any(isGroupStageMatch);
@@ -180,16 +182,14 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
 
         if (hasGroupStage) {
           return Column(
-            mainAxisSize: widget.isEmbedded ? MainAxisSize.min : MainAxisSize.max,
+            mainAxisSize: widget.isEmbedded
+                ? MainAxisSize.min
+                : MainAxisSize.max,
             children: [
               _buildGroupStageTabBar(l10n),
               const SizedBox(height: 8),
               if (widget.isEmbedded)
-                _buildGroupTabContent(
-                  matches,
-                  effectiveBracketType,
-                  auth,
-                )
+                _buildGroupTabContent(matches, effectiveBracketType, auth)
               else
                 Expanded(
                   child: _buildGroupTabContent(
@@ -524,14 +524,28 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                     .fold(0, (a, b) => a > b ? a : b))
         : totalRounds;
 
-    final groupScopedMatches =
-        isGroupStageKnockout &&
-            _selectedGroup.isNotEmpty &&
-            _selectedGroup != 'all'
-        ? stageScopedMatches
-              .where((m) => m.groupName == _selectedGroup)
-              .toList()
-        : stageScopedMatches;
+    final groupScopedMatches = stageScopedMatches.where((m) {
+      if (_selectedGroup.isNotEmpty &&
+          _selectedGroup != 'all' &&
+          isGroupStageMatch(m) &&
+          m.groupName != _selectedGroup) {
+        return false;
+      }
+      if (_selectedLeg != 0 &&
+          isGroupStageMatch(m) &&
+          (m.leg ?? 1) != _selectedLeg) {
+        return false;
+      }
+      return true;
+    }).toList();
+
+    final configuredLegCount = widget.configuredLegs > 0
+        ? widget.configuredLegs
+        : 1;
+    final availableLegs = <int>{
+      ...stageScopedMatches.where(isGroupStageMatch).map((m) => m.leg ?? 1),
+      ...List<int>.generate(configuredLegCount, (index) => index + 1),
+    }.toList()..sort();
 
     final availableRounds =
         groupScopedMatches.map((m) => m.round).toSet().toList()..sort();
@@ -577,10 +591,17 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       if (_selectedGroup.isNotEmpty &&
           _selectedGroup != 'all' &&
           _selectedBranch != 'knockout' &&
+          isGroupStageMatch(m) &&
           m.groupName != _selectedGroup) {
         return false;
       }
-      // Round filter
+      // Leg filter for round-robin/group-stage encounters.
+      if (_selectedLeg != 0 &&
+          isGroupStageMatch(m) &&
+          (m.leg ?? 1) != _selectedLeg) {
+        return false;
+      }
+      // Round filter is reserved for knockout stages.
       if (_selectedRound != 0 && m.round != _selectedRound) return false;
       // Status filter
       if (_matchFilter.isNotEmpty && _matchFilter != 'all') {
@@ -803,12 +824,21 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             title: l10n.bracketView_stageTitle,
             children: [
               RoundFilterPill(
+                isSelected: _selectedBranch.isEmpty,
+                label:
+                    '${l10n.filterAll} ${l10n.bracketView_stageTitle.toLowerCase()}',
+                onTap: () => setState(() {
+                  _selectedBranch = '';
+                  _selectedGroup = '';
+                  _selectedLeg = 0;
+                  _selectedRound = 0;
+                }),
+              ),
+              RoundFilterPill(
                 isSelected: _selectedBranch == 'group_stage',
                 label: l10n.bracketView_groupStage,
                 onTap: () => setState(() {
-                  _selectedBranch = _selectedBranch == 'group_stage'
-                      ? ''
-                      : 'group_stage';
+                  _selectedBranch = 'group_stage';
                   _selectedRound = 0;
                 }),
               ),
@@ -816,10 +846,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                 isSelected: _selectedBranch == 'knockout',
                 label: l10n.bracketView_knockoutStage,
                 onTap: () => setState(() {
-                  _selectedBranch = _selectedBranch == 'knockout'
-                      ? ''
-                      : 'knockout';
+                  _selectedBranch = 'knockout';
                   _selectedGroup = '';
+                  _selectedLeg = 0;
                   _selectedRound = 0;
                 }),
               ),
@@ -837,30 +866,64 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                   !lower.contains('bracket');
             }).toList();
 
-            if (cleanGroups.length <= 1 || _selectedBranch == 'knockout') {
+            if (cleanGroups.isEmpty || _selectedBranch == 'knockout') {
               return const SizedBox.shrink();
             }
 
             return _buildFilterRow(
               title: l10n.bracketView_groupTitle,
-              children: cleanGroups
-                  .map(
-                    (group) => RoundFilterPill(
-                      isSelected: _selectedGroup == group,
-                      label: group,
-                      onTap: () => setState(() {
-                        _selectedGroup = _selectedGroup == group ? '' : group;
-                        _selectedRound = 0;
-                      }),
-                    ),
-                  )
-                  .toList(),
+              children: [
+                RoundFilterPill(
+                  isSelected: _selectedGroup.isEmpty,
+                  label: l10n.filterAll,
+                  onTap: () => setState(() {
+                    _selectedGroup = '';
+                    _selectedRound = 0;
+                  }),
+                ),
+                ...cleanGroups.map(
+                  (group) => RoundFilterPill(
+                    isSelected: _selectedGroup == group,
+                    label: group,
+                    onTap: () => setState(() {
+                      _selectedGroup = _selectedGroup == group ? '' : group;
+                      _selectedRound = 0;
+                    }),
+                  ),
+                ),
+              ],
             );
           },
         ),
 
-        // ── ROW 4: VÒNG ĐẤU (Toggle Filter) ──
-        if (availableRounds.length > 1)
+        if (availableGroups.isNotEmpty &&
+            availableLegs.isNotEmpty &&
+            _selectedBranch != 'knockout')
+          _buildFilterRow(
+            title: l10n.seriesLegCount,
+            children: [
+              RoundFilterPill(
+                isSelected: _selectedLeg == 0,
+                label: l10n.filterAll,
+                onTap: () => setState(() => _selectedLeg = 0),
+              ),
+              ...availableLegs.map(
+                (leg) => RoundFilterPill(
+                  isSelected: _selectedLeg == leg,
+                  label: l10n.crossTableLegIndicator(leg, availableLegs.length),
+                  onTap: () => setState(() {
+                    _selectedLeg = leg;
+                    _selectedRound = 0;
+                  }),
+                ),
+              ),
+            ],
+          ),
+
+        // ── ROW 4: KNOCKOUT ROUND FILTER ONLY ──
+        if (!isRoundRobin &&
+            (!isGroupStageKnockout || _selectedBranch == 'knockout') &&
+            availableRounds.length > 1)
           _buildFilterRow(
             title: l10n.bracketView_roundTitle,
             children: availableRounds.map((r) {

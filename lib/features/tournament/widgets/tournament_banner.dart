@@ -917,7 +917,8 @@ class _TournamentBannerState extends State<TournamentBanner> {
                               Icons.location_on_outlined,
                               _locationLabel(widget.tournament),
                               colors,
-                              maxTextWidth: 230,
+                              maxTextWidth: 280,
+                              maxLines: 5,
                             ),
                             _iconText(
                               Icons.group_rounded,
@@ -997,6 +998,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
     String text,
     AppColorsExtension colors, {
     double? maxTextWidth,
+    int maxLines = 1,
   }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -1010,7 +1012,8 @@ class _TournamentBannerState extends State<TournamentBanner> {
           child: Text(
             text,
             softWrap: maxTextWidth != null,
-            maxLines: maxTextWidth == null ? 1 : 3,
+            maxLines: maxTextWidth == null ? 1 : maxLines,
+
             overflow: maxTextWidth == null
                 ? TextOverflow.ellipsis
                 : TextOverflow.visible,
@@ -1022,9 +1025,10 @@ class _TournamentBannerState extends State<TournamentBanner> {
   }
 
   String _locationLabel(Tournament tournament) {
-    final location = TournamentLocationFormatter.tournamentShortLocation(
+    final location = TournamentLocationFormatter.tournamentFullLocation(
       tournament,
     );
+
     return location.isEmpty
         ? AppLocalizations.of(context)!.locationNotUpdated
         : location;

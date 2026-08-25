@@ -4005,16 +4005,16 @@
     }
   },
   "crossTableDefaultGroup": "Group A",
-  "crossTableLegTitle": "{title} - Round {leg}",
+  "crossTableLegTitle": "{title} - Leg {leg}",
   "@crossTableLegTitle": {
     "placeholders": {
       "leg": {},
       "title": {}
     }
   },
-  "crossTablePreviousLeg": "Previous round",
-  "crossTableNextLeg": "Next round",
-  "crossTableLegIndicator": "Round {current} / {max}",
+  "crossTablePreviousLeg": "Previous leg",
+  "crossTableNextLeg": "Next leg",
+  "crossTableLegIndicator": "Leg {current} / {max}",
   "@crossTableLegIndicator": {
     "placeholders": {
       "current": {},

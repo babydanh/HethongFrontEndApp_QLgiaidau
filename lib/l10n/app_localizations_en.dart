@@ -10073,18 +10073,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String crossTableLegTitle(Object leg, Object title) {
-    return '$title - Round $leg';
+    return '$title - Leg $leg';
   }
 
   @override
-  String get crossTablePreviousLeg => 'Previous round';
+  String get crossTablePreviousLeg => 'Previous leg';
 
   @override
-  String get crossTableNextLeg => 'Next round';
+  String get crossTableNextLeg => 'Next leg';
 
   @override
   String crossTableLegIndicator(Object current, Object max) {
-    return 'Round $current / $max';
+    return 'Leg $current / $max';
   }
 
   @override

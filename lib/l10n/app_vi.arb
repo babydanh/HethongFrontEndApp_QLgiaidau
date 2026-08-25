@@ -4005,16 +4005,16 @@
     }
   },
   "crossTableDefaultGroup": "Bảng A",
-  "crossTableLegTitle": "{title} - Vòng {leg}",
+  "crossTableLegTitle": "{title} - Lượt {leg}",
   "@crossTableLegTitle": {
     "placeholders": {
       "leg": {},
       "title": {}
     }
   },
-  "crossTablePreviousLeg": "Vòng trước",
-  "crossTableNextLeg": "Vòng tiếp theo",
-  "crossTableLegIndicator": "Vòng {current} / {max}",
+  "crossTablePreviousLeg": "Lượt trước",
+  "crossTableNextLeg": "Lượt tiếp theo",
+  "crossTableLegIndicator": "Lượt {current} / {max}",
   "@crossTableLegIndicator": {
     "placeholders": {
       "current": {},

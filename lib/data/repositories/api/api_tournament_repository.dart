@@ -203,16 +203,19 @@ class ApiTournamentRepository implements ITournamentRepository {
           try {
             final sponsors = await getPublicSponsors(id);
             data['sponsors'] = sponsors
-                .map((sponsor) => {
-                  'id': sponsor.id,
-                  'displayName': sponsor.displayName,
-                  'tier': sponsor.tier,
-                  'logoUrl': sponsor.logoUrl,
-                  if (sponsor.websiteUrl != null) 'websiteUrl': sponsor.websiteUrl,
-                  if (sponsor.shortDescription != null)
-                    'shortDescription': sponsor.shortDescription,
-                  'displayOrder': sponsor.displayOrder,
-                })
+                .map(
+                  (sponsor) => {
+                    'id': sponsor.id,
+                    'displayName': sponsor.displayName,
+                    'tier': sponsor.tier,
+                    'logoUrl': sponsor.logoUrl,
+                    if (sponsor.websiteUrl != null)
+                      'websiteUrl': sponsor.websiteUrl,
+                    if (sponsor.shortDescription != null)
+                      'shortDescription': sponsor.shortDescription,
+                    'displayOrder': sponsor.displayOrder,
+                  },
+                )
                 .toList();
           } catch (_) {
             // Sponsors are optional and must not block tournament detail loading.
@@ -245,15 +248,23 @@ class ApiTournamentRepository implements ITournamentRepository {
   @override
   Future<List<TournamentSponsor>> getPublicSponsors(String tournamentId) async {
     try {
-      final response = await _dioClient.dio.get('/tournaments/$tournamentId/sponsors');
+      final response = await _dioClient.dio.get(
+        '/tournaments/$tournamentId/sponsors',
+      );
       final raw = response.data;
       final data = raw is Map<String, dynamic>
           ? (raw['data'] as List<dynamic>? ?? const [])
           : (raw as List<dynamic>? ?? const []);
       return data
           .whereType<Map>()
-          .map((item) => TournamentSponsor.fromJson(Map<String, dynamic>.from(item)))
-          .where((sponsor) => sponsor.displayName.isNotEmpty && sponsor.logoUrl.isNotEmpty)
+          .map(
+            (item) =>
+                TournamentSponsor.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .where(
+            (sponsor) =>
+                sponsor.displayName.isNotEmpty && sponsor.logoUrl.isNotEmpty,
+          )
           .toList();
     } catch (e, stack) {
       _log.error('Error fetching public sponsors: $tournamentId', e, stack);
@@ -973,6 +984,9 @@ class ApiTournamentRepository implements ITournamentRepository {
     final roundNumber = json['roundNumber'] is num
         ? (json['roundNumber'] as num).toInt()
         : int.tryParse(json['roundNumber']?.toString() ?? '') ?? 1;
+    final leg = json['leg'] is num
+        ? (json['leg'] as num).toInt()
+        : int.tryParse(json['leg']?.toString() ?? '');
     final matchOrder = json['matchOrder'] is num
         ? (json['matchOrder'] as num).toInt()
         : int.tryParse(json['matchOrder']?.toString() ?? '') ?? 1;
@@ -1024,6 +1038,7 @@ class ApiTournamentRepository implements ITournamentRepository {
     return MatchModel(
       id: json['id']?.toString() ?? '',
       round: roundNumber,
+      leg: leg,
       matchNumber: matchOrder,
       team1Id:
           p1?['id']?.toString() ?? json['participant1Id']?.toString() ?? '',

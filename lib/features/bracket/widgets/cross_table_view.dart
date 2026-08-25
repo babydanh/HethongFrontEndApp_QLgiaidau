@@ -38,7 +38,8 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
       )),
     );
 
-    final loadedStandings = standingsAsync.asData?.value ?? standingsAsync.value ?? const [];
+    final loadedStandings =
+        standingsAsync.asData?.value ?? standingsAsync.value ?? const [];
     final standings = loadedStandings.isNotEmpty
         ? loadedStandings
         : _buildFallbackStandingsFromMatches(widget.matches, l10n);
@@ -60,10 +61,7 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
             divisionId: widget.divisionId,
           )),
         )
-        .maybeWhen(
-          data: (matches) => matches,
-          orElse: () => widget.matches,
-        );
+        .maybeWhen(data: (matches) => matches, orElse: () => widget.matches);
     final groupNames = groupedStandings.keys.toList()..sort();
 
     return ListView.builder(
@@ -90,8 +88,7 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
         final currentLeg = (_groupLegs[groupName] ?? 1).clamp(1, maxLeg);
         final groupMatches = allGroupMatches
             .where(
-              (match) =>
-                  _legForMatch(match, groupRows.length) == currentLeg,
+              (match) => _legForMatch(match, groupRows.length) == currentLeg,
             )
             .toList();
 
@@ -107,12 +104,10 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
             currentLeg: currentLeg,
             maxLeg: maxLeg,
             onPrevLeg: currentLeg > 1
-                ? () =>
-                      setState(() => _groupLegs[groupName] = currentLeg - 1)
+                ? () => setState(() => _groupLegs[groupName] = currentLeg - 1)
                 : null,
             onNextLeg: currentLeg < maxLeg
-                ? () =>
-                      setState(() => _groupLegs[groupName] = currentLeg + 1)
+                ? () => setState(() => _groupLegs[groupName] = currentLeg + 1)
                 : null,
           ),
         );
@@ -129,26 +124,22 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
       final grp = (m.groupName != null && m.groupName!.isNotEmpty)
           ? m.groupName!
           : l10n.crossTableDefaultGroup;
-      if (m.team1Name.isNotEmpty && m.team1Name != 'TBD' && m.team1Name != 'BYE') {
+      if (m.team1Name.isNotEmpty &&
+          m.team1Name != 'TBD' &&
+          m.team1Name != 'BYE') {
         final key = m.team1Id.isNotEmpty ? m.team1Id : m.team1Name;
         standingsMap.putIfAbsent(
           key,
-          () => Standing(
-            id: key,
-            teamName: m.team1Name,
-            group: grp,
-          ),
+          () => Standing(id: key, teamName: m.team1Name, group: grp),
         );
       }
-      if (m.team2Name.isNotEmpty && m.team2Name != 'TBD' && m.team2Name != 'BYE') {
+      if (m.team2Name.isNotEmpty &&
+          m.team2Name != 'TBD' &&
+          m.team2Name != 'BYE') {
         final key = m.team2Id.isNotEmpty ? m.team2Id : m.team2Name;
         standingsMap.putIfAbsent(
           key,
-          () => Standing(
-            id: key,
-            teamName: m.team2Name,
-            group: grp,
-          ),
+          () => Standing(id: key, teamName: m.team2Name, group: grp),
         );
       }
     }
@@ -216,6 +207,10 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
   }
 
   int _legForMatch(MatchModel match, int participantCount) {
+    // Prefer the persisted encounter leg. The round-based calculation remains
+    // only for legacy payloads that predate the leg field.
+    if (match.leg != null && match.leg! > 0) return match.leg!;
+
     // Backend stores roundNumber continuously across legs (for example
     // rounds 1..3 are leg 1 and 4..6 are leg 2). Treating roundNumber as the
     // leg made the second leg reuse the first leg's matrix/score selection.

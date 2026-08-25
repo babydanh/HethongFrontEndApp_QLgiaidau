@@ -18441,25 +18441,25 @@ abstract class AppLocalizations {
   /// No description provided for @crossTableLegTitle.
   ///
   /// In vi, this message translates to:
-  /// **'{title} - Vòng {leg}'**
+  /// **'{title} - Lượt {leg}'**
   String crossTableLegTitle(Object leg, Object title);
 
   /// No description provided for @crossTablePreviousLeg.
   ///
   /// In vi, this message translates to:
-  /// **'Vòng trước'**
+  /// **'Lượt trước'**
   String get crossTablePreviousLeg;
 
   /// No description provided for @crossTableNextLeg.
   ///
   /// In vi, this message translates to:
-  /// **'Vòng tiếp theo'**
+  /// **'Lượt tiếp theo'**
   String get crossTableNextLeg;
 
   /// No description provided for @crossTableLegIndicator.
   ///
   /// In vi, this message translates to:
-  /// **'Vòng {current} / {max}'**
+  /// **'Lượt {current} / {max}'**
   String crossTableLegIndicator(Object current, Object max);
 
   /// No description provided for @crossTableTeamCount.

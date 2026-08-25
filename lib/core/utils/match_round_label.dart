@@ -12,7 +12,8 @@ class MatchRoundLabel {
     int totalRounds, {
     AppLocalizations? l10n,
   }) {
-    final strings = l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final strings =
+        l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
     final fromEnd = totalRounds - round;
     if (fromEnd <= 0) return strings.matchTableRoundFinal;
     if (fromEnd == 1) return strings.matchTableRoundSemifinal;
@@ -23,13 +24,22 @@ class MatchRoundLabel {
     return strings.matchTableRoundQualifying;
   }
 
-  static String groupOrRoundRobinName(int round, {AppLocalizations? l10n}) {
-    final strings = l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
-    return strings.matchTableRound(round);
+  static String groupOrRoundRobinName(
+    MatchModel match, {
+    AppLocalizations? l10n,
+  }) {
+    final strings =
+        l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final groupName = match.groupName?.trim();
+    final title = groupName == null || groupName.isEmpty
+        ? strings.bracketView_groupStage
+        : groupName;
+    return strings.crossTableLegTitle(title, match.leg ?? 1);
   }
 
   static String doubleUpperHeader(int fromEnd, {AppLocalizations? l10n}) {
-    final strings = l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final strings =
+        l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
     if (fromEnd <= 0) return strings.matchRoundWinnersFinal;
     if (fromEnd == 1) return strings.matchRoundWinnersSemifinal;
     if (fromEnd == 2) return strings.matchRoundWinnersQuarterfinal;
@@ -44,7 +54,8 @@ class MatchRoundLabel {
     int displayRound, {
     AppLocalizations? l10n,
   }) {
-    final strings = l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final strings =
+        l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
     if (fromEnd <= 0) return strings.matchRoundLosersFinal;
     if (fromEnd == 1) return strings.matchRoundLosersSemifinal;
     return strings.matchRoundLosersRound(displayRound);
@@ -57,7 +68,8 @@ class MatchRoundLabel {
     bool includeBranch = true,
     AppLocalizations? l10n,
   }) {
-    final strings = l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final strings =
+        l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
     final branch = match.bracketPosition.bracket.toLowerCase();
 
     if (branch == 'grand_final' || branch == 'final') {
@@ -68,7 +80,7 @@ class MatchRoundLabel {
     }
 
     if (bracketType == AppConstants.bracketRoundRobin) {
-      return groupOrRoundRobinName(match.round, l10n: strings);
+      return groupOrRoundRobinName(match, l10n: strings);
     }
 
     final resolvedTotalRounds = totalRounds ?? match.round;
@@ -91,7 +103,7 @@ class MatchRoundLabel {
       final isGroupStage =
           branch == 'group' || branch == 'groups' || branch == 'round_robin';
       if (isGroupStage) {
-        return groupOrRoundRobinName(match.round, l10n: strings);
+        return groupOrRoundRobinName(match, l10n: strings);
       }
     }
 

@@ -46,11 +46,10 @@ class MatchMemberInfo {
   final String fullName;
   final int? eloPoints;
   final String? tierName;
-    final String? avatarUrl;
+  final String? avatarUrl;
   final bool isMock;
 
   const MatchMemberInfo({
-
     this.userId,
     required this.fullName,
     this.eloPoints,
@@ -114,6 +113,10 @@ class MatchModel {
   /// tournament sections without issuing one request per tournament.
   final String? tournamentId;
   final int round;
+
+  /// Persisted encounter leg when the tournament has multiple legs.
+  /// Null keeps compatibility with legacy payloads that only expose round.
+  final int? leg;
   final int matchNumber;
   final String team1Id;
   final String team2Id;
@@ -159,7 +162,7 @@ class MatchModel {
   final List<String>? team1Members;
   final List<String>? team2Members;
   final List<MatchMemberInfo> team1MemberInfos;
-    final List<MatchMemberInfo> team2MemberInfos;
+  final List<MatchMemberInfo> team2MemberInfos;
   final bool team1IsMock;
   final bool team2IsMock;
 
@@ -178,6 +181,7 @@ class MatchModel {
     required this.id,
     this.tournamentId,
     required this.round,
+    this.leg,
     required this.matchNumber,
     this.team1Id = '',
     this.team2Id = '',
@@ -323,6 +327,9 @@ class MatchModel {
               ? (json['tournament'] as Map)['id']?.toString()
               : null),
       round: json['round'] ?? 1,
+      leg: json['leg'] is num
+          ? (json['leg'] as num).toInt()
+          : int.tryParse(json['leg']?.toString() ?? ''),
       matchNumber: json['matchNumber'] ?? 1,
       team1Id:
           json['team1Id']?.toString() ??
@@ -399,10 +406,12 @@ class MatchModel {
       team2Members: team2MemberInfos.map((m) => m.fullName).toList(),
       team1MemberInfos: team1MemberInfos,
       team2MemberInfos: team2MemberInfos,
-      team1IsMock: json['participant1'] is Map &&
+      team1IsMock:
+          json['participant1'] is Map &&
           ((json['participant1'] as Map)['isMock'] == true ||
               (json['participant1'] as Map)['is_mock'] == true),
-      team2IsMock: json['participant2'] is Map &&
+      team2IsMock:
+          json['participant2'] is Map &&
           ((json['participant2'] as Map)['isMock'] == true ||
               (json['participant2'] as Map)['is_mock'] == true),
       team1EloPoints: participantElo(json['participant1']),
@@ -418,8 +427,9 @@ class MatchModel {
           json['stage_name']?.toString() ??
           (json['stage'] is Map
               ? (json['stage']['name'] ??
-                  json['stage']['stageName'] ??
-                  json['stage']['type'])?.toString()
+                        json['stage']['stageName'] ??
+                        json['stage']['type'])
+                    ?.toString()
               : json['stage']?.toString()) ??
           (json['group'] is Map && json['group']['stage'] is Map
               ? json['group']['stage']['name']?.toString()
@@ -436,6 +446,7 @@ class MatchModel {
   Map<String, dynamic> toJson() {
     return {
       'round': round,
+      if (leg != null) 'leg': leg,
       'matchNumber': matchNumber,
       'team1Id': team1Id,
       'team2Id': team2Id,
@@ -485,6 +496,7 @@ class MatchModel {
     String? id,
     String? tournamentId,
     int? round,
+    int? leg,
     int? matchNumber,
     String? team1Id,
     String? team2Id,
@@ -536,6 +548,7 @@ class MatchModel {
       id: id ?? this.id,
       tournamentId: tournamentId ?? this.tournamentId,
       round: round ?? this.round,
+      leg: leg ?? this.leg,
       matchNumber: matchNumber ?? this.matchNumber,
       team1Id: team1Id ?? this.team1Id,
       team2Id: team2Id ?? this.team2Id,

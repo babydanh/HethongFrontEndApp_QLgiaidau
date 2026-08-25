@@ -498,15 +498,16 @@ class ApiMatchRepository implements IMatchRepository {
         json['stage_name'] ??
         (json['stage'] is Map
             ? (json['stage']['name'] ??
-                json['stage']['stageName'] ??
-                json['stage']['type'])
+                  json['stage']['stageName'] ??
+                  json['stage']['type'])
             : json['stage']) ??
         (json['group'] is Map && json['group']['stage'] is Map
             ? json['group']['stage']['name']
             : null) ??
         json['stageType'];
     final stageName = rawStage is Map
-        ? (rawStage['name'] ?? rawStage['stageName'] ?? rawStage['type'])?.toString()
+        ? (rawStage['name'] ?? rawStage['stageName'] ?? rawStage['type'])
+              ?.toString()
         : rawStage?.toString();
 
     final nextMatchId = (json['nextMatchId'] ?? '').toString();
@@ -539,7 +540,11 @@ class ApiMatchRepository implements IMatchRepository {
               ? (json['tournament'] as Map)['id']?.toString()
               : null),
       round: json['roundNumber'] ?? json['round'] ?? 1,
+      leg: json['leg'] is num
+          ? (json['leg'] as num).toInt()
+          : int.tryParse(json['leg']?.toString() ?? ''),
       matchNumber: json['matchOrder'] ?? json['matchNumber'] ?? 1,
+
       team1Id:
           json['team1Id']?.toString() ??
           json['participant1Id']?.toString() ??
@@ -871,8 +876,9 @@ class ApiMatchRepository implements IMatchRepository {
     };
     if (winnerId != null) payload['winnerId'] = winnerId;
     if (overrideReason != null) payload['overrideReason'] = overrideReason;
-    if (expectedRevision != null)
+    if (expectedRevision != null) {
       payload['expectedRevision'] = expectedRevision;
+    }
 
     try {
       await _dioClient.dio.patch('/matches/$matchId/score', data: payload);
@@ -1005,8 +1011,9 @@ class ApiMatchRepository implements IMatchRepository {
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         if (data is int) return data;
-        if (data is Map)
+        if (data is Map) {
           return (data['count'] ?? data['cheerCount'] ?? 0) as int;
+        }
       }
     } catch (e) {
       _log.error('Error fetching cheer count for match $matchId', e);
