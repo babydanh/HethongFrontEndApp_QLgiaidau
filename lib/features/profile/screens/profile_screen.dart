@@ -23,6 +23,7 @@ import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
 import 'package:app_quanly_giaidau/core/utils/rank_tier_colors.dart';
@@ -658,8 +659,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final allRankings = rankings.toList()
       ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
     final bestRanking = allRankings.isEmpty ? null : allRankings.first;
-    final tierColor =
-        RankTierColors.isRanked(bestRanking?.tierName)
+    final tierColor = RankTierColors.isRanked(bestRanking?.tierName)
         ? RankTierColors.fromTierName(bestRanking?.tierName)
         : colors.border;
     return Stack(
@@ -1211,6 +1211,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      RankTierBadge(
+                        tierName: ranking.tierName,
+                        elo: ranking.eloPoints,
+                        sportName: ranking.categoryName,
+                      ),
+                      const SizedBox(height: 8),
                       Text(
                         'ELO',
                         style: TextStyle(color: colors.textMuted, fontSize: 10),
