@@ -42,21 +42,37 @@ class AppNotification {
     );
   }
 
-  /// Trích xuất tournamentId từ data payload
+  /// Trích xuất tournamentId từ data payload hoặc redirectUrl
   String? get tournamentId {
-    if (data == null) return null;
-    final val = data!['tournamentId'];
-    if (val is String && val.isNotEmpty) return val;
-    if (val is num) return val.toString();
+    if (data != null) {
+      final val = data!['tournamentId'] ?? data!['tournament_id'];
+      if (val is String && val.isNotEmpty) return val;
+      if (val is num) return val.toString();
+    }
+    final uri = Uri.tryParse(redirectUrl ?? '');
+    final segments = uri?.pathSegments ?? const [];
+    for (final prefix in ['tournaments', 'intro', 'register']) {
+      final idx = segments.indexOf(prefix);
+      if (idx != -1 && idx + 1 < segments.length) {
+        return segments[idx + 1];
+      }
+    }
     return null;
   }
 
-  /// Trích xuất matchId từ data payload
+  /// Trích xuất matchId từ data payload hoặc redirectUrl
   String? get matchId {
-    if (data == null) return null;
-    final val = data!['matchId'];
-    if (val is String && val.isNotEmpty) return val;
-    if (val is num) return val.toString();
+    if (data != null) {
+      final val = data!['matchId'] ?? data!['match_id'];
+      if (val is String && val.isNotEmpty) return val;
+      if (val is num) return val.toString();
+    }
+    final uri = Uri.tryParse(redirectUrl ?? '');
+    final segments = uri?.pathSegments ?? const [];
+    final liveIndex = segments.indexOf('live');
+    if (liveIndex != -1 && liveIndex + 1 < segments.length) {
+      return segments[liveIndex + 1];
+    }
     return null;
   }
 
