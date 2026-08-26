@@ -559,45 +559,85 @@ class _UserProfileBottomSheetState
           ),
           child: Column(
             children: [
-              // ELO & Tier banner
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
+              // ELO & Tier banner for all sports
+              if (profile.ranks.isNotEmpty) ...[
+                for (int i = 0; i < profile.ranks.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 6),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF3B82F6),
-                          shape: BoxShape.circle,
-                        ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF3B82F6),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${profile.ranks[i].categoryName} (${profile.ranks[i].tierName ?? l10n.userProfileRankFallback})',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
                       Text(
-                        featuredRank != null
-                            ? '${featuredRank.categoryName} (${featuredRank.tierName ?? l10n.userProfileRankFallback})'
-                            : l10n.userProfileEloStarting,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textPrimary,
+                        '${profile.ranks[i].eloPoints} ${l10n.userProfileElo}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF2563EB),
                         ),
                       ),
                     ],
                   ),
-                  Text(
-                    featuredRank != null
-                        ? '${featuredRank.eloPoints} ${l10n.userProfileElo}'
-                        : '1,000 ${l10n.userProfileElo}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF2563EB),
-                    ),
-                  ),
                 ],
-              ),
+              ] else ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF3B82F6),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          featuredRank != null
+                              ? '${featuredRank.categoryName} (${featuredRank.tierName ?? l10n.userProfileRankFallback})'
+                              : l10n.userProfileEloStarting,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      featuredRank != null
+                          ? '${featuredRank.eloPoints} ${l10n.userProfileElo}'
+                          : '1,000 ${l10n.userProfileElo}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF2563EB),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 10),
               Divider(height: 1, color: colors.borderLight),
               const SizedBox(height: 10),
