@@ -53,15 +53,32 @@ class Community {
         ? (rawJson['community'] as Map<String, dynamic>)
         : rawJson;
 
-    // 1. Môn thể thao — backend trả `categories` (List<Category>); fallback `sports`
+    // 1. Môn thể thao — backend trả `categories` (List<Category>); fallback `sports`, `communitySports`
     final List<String> parsedSports = [];
-    for (final src in [json['categories'], json['sports']]) {
+    for (final src in [json['categories'], json['sports'], json['communitySports']]) {
       if (src is! List) continue;
       for (final e in src) {
-        String sName = e is Map ? (e['name']?.toString() ?? e['id']?.toString() ?? '') : e.toString();
+        String sName = '';
+        if (e is Map) {
+          if (e['category'] is Map) {
+            sName = e['category']['name']?.toString() ?? e['category']['slug']?.toString() ?? '';
+          } else {
+            sName = e['name']?.toString() ?? e['id']?.toString() ?? '';
+          }
+        } else {
+          sName = e.toString();
+        }
         sName = sName.trim();
         if (sName.isNotEmpty && !parsedSports.contains(sName)) {
           parsedSports.add(sName);
+        }
+      }
+    }
+    if (parsedSports.isEmpty && json['communitySports'] is List) {
+      for (final e in json['communitySports'] as List) {
+        if (e is Map && e['category'] is Map) {
+          final n = e['category']['name']?.toString() ?? '';
+          if (n.isNotEmpty) parsedSports.add(n);
         }
       }
     }

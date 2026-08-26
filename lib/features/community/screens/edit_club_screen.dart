@@ -455,7 +455,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                   AppTextFormField(
                     controller: _rulesCtrl,
                     hint: l10n.editClub_rulesHint,
-                    maxLines: 3,
+                    maxLines: 4,
                     prefixIcon: Icons.gavel_rounded,
                   ),
                 ],
@@ -518,7 +518,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                             children: [
                               Text(
                                 '${entry.key + 1}.',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: AppTheme.primary,
                                   fontSize: 13,
@@ -686,7 +686,6 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     final l10n = AppLocalizations.of(context)!;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(

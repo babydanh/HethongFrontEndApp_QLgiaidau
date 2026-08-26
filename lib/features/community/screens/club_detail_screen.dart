@@ -767,7 +767,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           ),
           _buildAboutTab(club, colors),
           _buildTournamentsTab(colors),
-          _buildMembersTab(colors),
+          _buildMembersTab(club, colors),
           _buildGalleryTab(club, colors),
           _buildRankingsTab(colors, club),
           _buildSettingsTab(club, colors),
@@ -1453,6 +1453,15 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ? l10n.createClubTournament_sportPickleball
         : sportsDisplay;
 
+    String createdDateText = '';
+    if (club.createdAt.isNotEmpty) {
+      final parsedDate = DateTime.tryParse(club.createdAt);
+      if (parsedDate != null) {
+        createdDateText =
+            '${parsedDate.day.toString().padLeft(2, '0')}/${parsedDate.month.toString().padLeft(2, '0')}/${parsedDate.year}';
+      }
+    }
+
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -1489,9 +1498,22 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           child: Column(
             children: [
               _infoRow(
+                club.visibility.toUpperCase() == 'PRIVATE'
+                    ? Icons.lock_outline_rounded
+                    : Icons.public_rounded,
+                'Quyền riêng tư',
+                club.visibility.toUpperCase() == 'PRIVATE'
+                    ? 'Riêng tư (Chỉ thành viên xem được hoạt động)'
+                    : 'Công khai (Mọi người đều có thể xem)',
+                colors,
+              ),
+              _divider(colors),
+              _infoRow(
                 Icons.people_rounded,
                 l10n.club_memberInfo,
-                "${club.memberCount}",
+                club.maxMembers != null
+                    ? "${club.memberCount} / ${club.maxMembers} thành viên tối đa"
+                    : "${club.memberCount} thành viên",
                 colors,
               ),
               _divider(colors),
@@ -1519,22 +1541,106 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 finalSportsText,
                 colors,
               ),
+              if (createdDateText.isNotEmpty) ...[
+                _divider(colors),
+                _infoRow(
+                  Icons.calendar_today_rounded,
+                  'Ngày thành lập',
+                  createdDateText,
+                  colors,
+                ),
+              ],
             ],
           ),
         ),
         const SizedBox(height: 24),
+        _sectionTitle(l10n.clubDetailRulesTitle, colors),
+        const SizedBox(height: 10),
         if (club.rules != null && club.rules!.trim().isNotEmpty) ...[
-          _sectionTitle(l10n.clubDetailRulesTitle, colors),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              club.rules!.trim(),
-              style: TextStyle(
-                fontSize: 13,
-                color: colors.textSecondary,
-                height: 1.6,
-              ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: colors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD97706).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.gavel_rounded,
+                        size: 16,
+                        color: Color(0xFFD97706),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Điều lệ & Quy chế hoạt động',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  club.rules!.trim(),
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    color: colors.textSecondary,
+                    height: 1.6,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+        ] else ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: colors.border),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline_rounded,
+                  size: 20,
+                  color: colors.textMuted,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'CLB chưa cập nhật nội quy riêng. Thành viên vui lòng tuân thủ quy tắc ứng xử chung và tinh thần thể thao văn minh.',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: colors.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+                if (_myMembership?.role == 'OWNER' ||
+                    _myMembership?.role == 'ADMIN') ...[
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () =>
+                        context.push('/club/${widget.clubId}/edit'),
+                    child: const Text('Thêm ngay'),
+                  ),
+                ],
+              ],
             ),
           ),
           const SizedBox(height: 24),
@@ -2540,10 +2646,107 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     );
   }
 
+  Widget _buildPrivateLockView({
+    required IconData icon,
+    required String title,
+    required String description,
+    required Community club,
+    required AppColorsExtension colors,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 36),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: const Color(0xFFD97706).withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(icon, size: 38, color: const Color(0xFFD97706)),
+                  Positioned(
+                    right: 12,
+                    bottom: 12,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.lock_rounded,
+                        size: 14,
+                        color: Color(0xFFD97706),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: colors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              description,
+              style: TextStyle(
+                fontSize: 13,
+                color: colors.textSecondary,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 22),
+            if (!_isMember)
+              FilledButton.icon(
+                onPressed: _isJoinLoading ? null : () => _handleJoinAction(club),
+                icon: Icon(_getJoinIcon(), size: 16),
+                label: Text(_getJoinLabel()),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ════════════════════════════════════
   //  TAB 3: THÀNH VIÊN
   // ════════════════════════════════════
-  Widget _buildMembersTab(AppColorsExtension colors) {
+  Widget _buildMembersTab(Community club, AppColorsExtension colors) {
+    if (club.visibility.toUpperCase() == 'PRIVATE' && !_isMember) {
+      return _buildPrivateLockView(
+        icon: Icons.people_rounded,
+        title: 'Danh sách thành viên riêng tư',
+        description:
+            'CLB này đặt chế độ riêng tư. Hãy tham gia CLB để xem danh sách thành viên và kết nối giao lưu.',
+        club: club,
+        colors: colors,
+      );
+    }
     final l10n = AppLocalizations.of(context)!;
     final membersAsync = ref.watch(communityMembersProvider(widget.clubId));
     final isAdmin =
@@ -3319,6 +3522,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   //  TAB 4: ẢNH (Gallery)
   // ════════════════════════════════════
   Widget _buildGalleryTab(Community club, AppColorsExtension colors) {
+    if (club.visibility.toUpperCase() == 'PRIVATE' && !_isMember) {
+      return _buildPrivateLockView(
+        icon: Icons.photo_library_rounded,
+        title: 'Thư viện hình ảnh riêng tư',
+        description:
+            'Hình ảnh hoạt động và khoảnh khắc của CLB chỉ dành riêng cho thành viên chính thức.',
+        club: club,
+        colors: colors,
+      );
+    }
     final l10n = AppLocalizations.of(context)!;
     final galleryAsync = ref.watch(communityGalleryProvider(widget.clubId));
     final isAdmin =
