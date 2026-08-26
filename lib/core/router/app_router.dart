@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/features/home/screens/home_screen.dart';
@@ -238,7 +240,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               final name =
                   state.uri.queryParameters['name'] ??
                   l10n.routerDefaultCommunity;
-              return ClubChatScreen(communityId: id, communityName: name);
+              final avatar = state.uri.queryParameters['avatar'];
+              return _ClubChatRouteWrapper(
+                communityId: id,
+                communityName: name,
+                communityAvatar: avatar,
+              );
             },
           ),
           GoRoute(
@@ -486,7 +493,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               final name =
                   state.uri.queryParameters['name'] ??
                   l10n.routerDefaultCommunity;
-              return ClubChatScreen(communityId: id, communityName: name);
+              final avatar = state.uri.queryParameters['avatar'];
+              return _ClubChatRouteWrapper(
+                communityId: id,
+                communityName: name,
+                communityAvatar: avatar,
+              );
             },
           ),
           GoRoute(
@@ -535,7 +547,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               final name =
                   state.uri.queryParameters['name'] ??
                   l10n.routerDefaultCommunity;
-              return ClubChatScreen(communityId: id, communityName: name);
+              final avatar = state.uri.queryParameters['avatar'];
+              return _ClubChatRouteWrapper(
+                communityId: id,
+                communityName: name,
+                communityAvatar: avatar,
+              );
             },
           ),
           GoRoute(
@@ -864,3 +881,127 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
   );
 });
+
+class _ClubChatRouteWrapper extends ConsumerStatefulWidget {
+  final String communityId;
+  final String communityName;
+  final String? communityAvatar;
+
+  const _ClubChatRouteWrapper({
+    required this.communityId,
+    required this.communityName,
+    this.communityAvatar,
+  });
+
+  @override
+  ConsumerState<_ClubChatRouteWrapper> createState() =>
+      _ClubChatRouteWrapperState();
+}
+
+class _ClubChatRouteWrapperState extends ConsumerState<_ClubChatRouteWrapper> {
+  String? _roomId;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRoom();
+  }
+
+  Future<void> _loadRoom() async {
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      final res = await dio.get(
+        '/chat/rooms',
+        queryParameters: {
+          'type': 'CLUB',
+          'communityId': widget.communityId,
+        },
+      );
+      final raw = res.data is Map ? (res.data['data'] ?? res.data) : res.data;
+      final room = raw is List
+          ? (raw.isEmpty ? null : raw.first as Map<String, dynamic>)
+          : (raw as Map<String, dynamic>?);
+      final roomId = room?['id']?.toString();
+      if (roomId == null || roomId.isEmpty) {
+        throw Exception('Không tìm thấy phòng chat CLB');
+      }
+      if (mounted) {
+        setState(() {
+          _roomId = roomId;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = e.toString();
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.communityName,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(color: AppTheme.primary),
+        ),
+      );
+    }
+    if (_error != null || _roomId == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.communityName,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.cloud_off_rounded, size: 48, color: Colors.red),
+                const SizedBox(height: 12),
+                Text(
+                  _error ?? 'Không thể tải phòng chat',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () {
+                    setState(() {
+                      _loading = true;
+                      _error = null;
+                    });
+                    _loadRoom();
+                  },
+                  child: const Text('Thử lại'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    return ChatDetailScreen(
+      roomId: _roomId!,
+      roomName: widget.communityName,
+      roomAvatar: widget.communityAvatar,
+      roomType: 'CLUB',
+      communityId: widget.communityId,
+    );
+  }
+}

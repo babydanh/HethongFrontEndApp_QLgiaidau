@@ -99,6 +99,49 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     }
   }
 
+  bool _isOpeningClubChat = false;
+
+  Future<void> _openClubChat(Community club) async {
+    if (_isOpeningClubChat) return;
+    setState(() => _isOpeningClubChat = true);
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      final res = await dio.get(
+        '/chat/rooms',
+        queryParameters: {
+          'type': 'CLUB',
+          'communityId': club.id,
+        },
+      );
+      final raw = res.data is Map ? (res.data['data'] ?? res.data) : res.data;
+      final room = raw is List
+          ? (raw.isEmpty ? null : raw.first as Map<String, dynamic>)
+          : (raw as Map<String, dynamic>?);
+      final roomId = room?['id']?.toString();
+      if (roomId == null || roomId.isEmpty) {
+        throw Exception('Không tìm thấy phòng chat CLB');
+      }
+
+      if (!mounted) return;
+      final name = Uri.encodeComponent(club.name);
+      final avatar = Uri.encodeComponent(club.logoUrl ?? club.bannerUrl ?? '');
+      context.push(
+        '/chat/$roomId?name=$name&avatar=$avatar&type=CLUB&communityId=${club.id}',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Không thể mở chat CLB: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isOpeningClubChat = false);
+    }
+  }
+
   // ─── Follow / Favorite & Notification (P2E.2) ───
   String _notificationPref = 'ALL';
 
@@ -315,16 +358,22 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       children: [
         if (_myMembership?.status == 'JOINED')
           IconButton(
-            onPressed: () {
-              final name = Uri.encodeComponent(club.name);
-              context.push('/club/${club.id}/chat?name=$name');
-            },
+            onPressed: _isOpeningClubChat ? null : () => _openClubChat(club),
             tooltip: l10n.clubDetailChatTooltip,
-            icon: const Icon(
-              Icons.forum_outlined,
-              color: AppTheme.primary,
-              size: 22,
-            ),
+            icon: _isOpeningClubChat
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppTheme.primary,
+                    ),
+                  )
+                : const Icon(
+                    Icons.forum_outlined,
+                    color: AppTheme.primary,
+                    size: 22,
+                  ),
           ),
         IconButton(
           onPressed: () {
