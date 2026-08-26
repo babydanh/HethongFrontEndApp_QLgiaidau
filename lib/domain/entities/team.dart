@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class Team {
   final String id;
+  final String? userId;
   final String name;
   final List<String> members;
   final List<MatchMemberInfo> memberInfos;
@@ -23,6 +24,7 @@ class Team {
 
   const Team({
     required this.id,
+    this.userId,
     required this.name,
     this.members = const [],
     this.memberInfos = const [],
@@ -63,6 +65,19 @@ class Team {
           json['captain']?['elo'],
     );
 
+    final singleUserId = json['userId']?.toString() ??
+        json['registeredBy']?.toString() ??
+        json['user']?['id']?.toString() ??
+        json['captain']?['id']?.toString();
+    final singleAvatar = json['avatarUrl']?.toString() ??
+        json['user']?['avatarUrl']?.toString() ??
+        json['captain']?['avatarUrl']?.toString() ??
+        json['photoUrl']?.toString();
+    final singleName = json['name']?.toString() ??
+        json['teamName']?.toString() ??
+        json['user']?['fullName']?.toString() ??
+        '';
+
     if (rawMembers is List) {
       for (final m in rawMembers) {
         if (m is Map<String, dynamic>) {
@@ -89,14 +104,27 @@ class Team {
       }
     }
 
+    if (parsedMemberInfos.isEmpty && (singleUserId != null || singleName.isNotEmpty)) {
+      parsedMemberInfos.add(
+        MatchMemberInfo(
+          userId: singleUserId,
+          fullName: singleName,
+          avatarUrl: singleAvatar,
+          eloPoints: topElo,
+        ),
+      );
+    }
+
     return Team(
       id: id,
+      userId: singleUserId,
       name: json['name'] ?? '',
       members: parsedMembers,
       memberInfos: parsedMemberInfos,
       seed: json['seed'] ?? 0,
       group: json['group'] ?? '',
-      photoUrl: json['photoUrl'] ?? '',
+      divisionId: json['divisionId']?.toString() ?? json['tournamentDivisionId']?.toString() ?? '',
+      photoUrl: json['photoUrl'] ?? singleAvatar ?? '',
       qrCode: json['qrCode'] ?? '',
       approvalStatus:
           json['approvalStatus']?.toString().toUpperCase() ??

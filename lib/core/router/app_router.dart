@@ -394,6 +394,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      GoRoute(
+        path: '/profile/user/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return UserProfileScreen(
+            userId: id,
+            communityId: state.uri.queryParameters['communityId'],
+          );
+        },
+      ),
 
       // ─── Live Matches Screen ───
       GoRoute(

@@ -227,7 +227,6 @@ class _TeamsTabState extends State<TeamsTab> {
                       ],
                     ),
                   ),
-                  // Cards with inline expansion for Doubles and direct tap for Singles
                   ...teamsInDiv.map(
                     (team) => Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -235,8 +234,20 @@ class _TeamsTabState extends State<TeamsTab> {
                         team: team,
                         isTeamSport: widget.isTeamSport,
                         onMemberTap: (userId, memberName) {
-                          if (userId != null && userId.isNotEmpty) {
-                            context.push('/user/$userId');
+                          final targetId = (userId != null && userId.isNotEmpty)
+                              ? userId
+                              : team.userId;
+                          if (targetId != null && targetId.isNotEmpty) {
+                            context.push('/user/$targetId');
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Hồ sơ của $memberName đang được cập nhật',
+                                ),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
                           }
                         },
                       ),

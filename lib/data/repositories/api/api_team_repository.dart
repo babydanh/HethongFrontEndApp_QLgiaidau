@@ -284,6 +284,36 @@ class ApiTeamRepository implements ITeamRepository {
               .where((member) => member.fullName.isNotEmpty)
               .toList();
 
+          final userMap = json['user'] as Map<String, dynamic>? ??
+              json['registeredByUser'] as Map<String, dynamic>?;
+          final String? singleUserId = json['userId']?.toString() ??
+              json['registeredBy']?.toString() ??
+              userMap?['id']?.toString();
+          final String? singleAvatar = json['avatarUrl']?.toString() ??
+              userMap?['avatarUrl']?.toString() ??
+              json['photoUrl']?.toString();
+          final int? singleElo = int.tryParse(
+            (json['eloPoints'] ??
+                    json['elo'] ??
+                    userMap?['eloPoints'] ??
+                    userMap?['elo'])
+                ?.toString() ??
+                '',
+          );
+
+          if (memberInfos.isEmpty && (singleUserId != null || teamName.isNotEmpty)) {
+            memberInfos.add(
+              MatchMemberInfo(
+                userId: singleUserId,
+                fullName: teamName.isNotEmpty
+                    ? teamName
+                    : (userMap?['fullName']?.toString() ?? ''),
+                avatarUrl: singleAvatar,
+                eloPoints: singleElo,
+              ),
+            );
+          }
+
           final divisionMap =
               json['division'] as Map<String, dynamic>? ??
               json['tournamentDivision'] as Map<String, dynamic>?;
@@ -300,6 +330,7 @@ class ApiTeamRepository implements ITeamRepository {
 
           return Team(
             id: id,
+            userId: singleUserId,
             name: teamName.isNotEmpty
                 ? teamName
                 : lookupAppLocalizations(
@@ -307,6 +338,7 @@ class ApiTeamRepository implements ITeamRepository {
                   ).teamFallbackName(id),
             group: groupName,
             divisionId: divId,
+            photoUrl: singleAvatar ?? json['photoUrl']?.toString() ?? '',
             members: members.isNotEmpty
                 ? members
                 : [

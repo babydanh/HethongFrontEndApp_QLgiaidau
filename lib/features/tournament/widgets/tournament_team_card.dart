@@ -69,19 +69,12 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
 
     final memberInfos = team.memberInfos;
 
-    // Seed or Tier badge
-    final realTierName =
-        (team.group.isNotEmpty &&
-            !team.group.toLowerCase().contains('sơ') &&
-            !team.group.toLowerCase().contains('nâng') &&
-            !team.group.toLowerCase().startsWith('bảng'))
-        ? team.group
-        : null;
     final seedLabel = team.seed > 0 ? '${l10n.seedLabel} #${team.seed}' : null;
 
     if (!isDoubles) {
       // ── SINGLES (ĐƠN) LAYOUT: DIRECT PROFILE TAP, NO EXPANSION ──
       final singleInfo = memberInfos.isNotEmpty ? memberInfos.first : null;
+      final effectiveUserId = singleInfo?.userId ?? team.userId;
       final eloVal = singleInfo?.eloPoints ?? team.eloPoints ?? 1200;
       final eloStr = '${l10n.eloLabel} $eloVal';
 
@@ -104,7 +97,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
           borderRadius: BorderRadius.circular(14),
           child: InkWell(
             onTap: () {
-              widget.onMemberTap?.call(singleInfo?.userId, team.name);
+              widget.onMemberTap?.call(effectiveUserId, team.name);
             },
             borderRadius: BorderRadius.circular(14),
             child: Padding(
@@ -190,55 +183,55 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 6),
-                                if (realTierName != null || seedLabel != null) ...[
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 1.5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFEFF6FF),
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(
-                                        color: const Color(0xFFBFDBFE),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      realTierName ?? seedLabel!,
-                                      style: const TextStyle(
-                                        fontSize: 9.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFF1D4ED8),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                ],
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 1.5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: team.isPaid
-                                        ? const Color(0xFF059669)
-                                        : const Color(0xFFD97706),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    team.isPaid ? 'ĐÃ ĐÓNG PHÍ' : 'CHỜ THANH TOÁN',
-                                    style: const TextStyle(
-                                      fontSize: 8.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
-                                    ),
+                            if (seedLabel != null) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 1.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEFF6FF),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: const Color(0xFFBFDBFE),
                                   ),
                                 ),
-                              ],
+                                child: Text(
+                                  seedLabel,
+                                  style: const TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF1D4ED8),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 1.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: team.isPaid
+                                    ? const Color(0xFF059669)
+                                    : const Color(0xFFD97706),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                team.isPaid ? 'ĐÃ ĐÓNG PHÍ' : 'CHỜ THANH TOÁN',
+                                style: const TextStyle(
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           ],
                         ),
+                      ],
+                    ),
                   ),
 
                   // Chevron right profile indicator
@@ -310,8 +303,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              if (realTierName != null ||
-                                  seedLabel != null) ...[
+                              if (seedLabel != null) ...[
                                 const SizedBox(width: 6),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
@@ -326,7 +318,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                                     ),
                                   ),
                                   child: Text(
-                                    realTierName ?? seedLabel!,
+                                    seedLabel,
                                     style: const TextStyle(
                                       fontSize: 9.5,
                                       fontWeight: FontWeight.w700,
