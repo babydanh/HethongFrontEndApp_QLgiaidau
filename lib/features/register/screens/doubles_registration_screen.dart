@@ -1358,12 +1358,15 @@ class _DoublesRegistrationFlowState
               rawInviteLink.startsWith('https://')
         ? rawInviteLink
         : 'https://sporto.asia${rawInviteLink.startsWith('/') ? '' : '/'}$rawInviteLink';
+    final isComplete = _teamStatus == 'COMPLETE' || _teamStatus == 'CONFIRMED' || _teamStatus == 'APPROVED';
     final canPay =
         _entryFee != null &&
         _entryFee! > 0 &&
         !_isPaid &&
         _participantId != null &&
-        _paymentEligible;
+        (_paymentEligible || isComplete) &&
+        _teamStatus != 'WAITLISTED' &&
+        _teamStatus != 'PENDING_APPROVAL';
     final isWaitlisted = _teamStatus == 'WAITLISTED';
     final statusLabel = switch (_teamStatus) {
       'PENDING_APPROVAL' => l10n.doublesRegStatusPendingApproval,
@@ -1392,7 +1395,34 @@ class _DoublesRegistrationFlowState
             color: colors.textPrimary,
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
+        if (_teamStatus == 'PENDING_APPROVAL') ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Đơn đăng ký đang chờ Ban Tổ Chức xét duyệt. Nút thanh toán sẽ hiển thị sau khi BTC phê duyệt.',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: colors.textPrimary,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         if (_partnerContact != null && _partnerContact!.isNotEmpty) ...[
           SizedBox(
             width: double.infinity,

@@ -40,17 +40,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   ) async {
     final l10n = AppLocalizations.of(context)!;
     final rawDivisionId = widget.divisionId?.trim();
-    if (rawDivisionId != null &&
-        rawDivisionId.isNotEmpty &&
-        !isValidUuid(rawDivisionId)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.checkout_invalidDivision),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      return;
-    }
+    final cleanDivisionId = (rawDivisionId != null &&
+            rawDivisionId.isNotEmpty &&
+            isValidUuid(rawDivisionId))
+        ? rawDivisionId
+        : null;
+
     setState(() => _isSubmitting = true);
     try {
       if (effectiveAmount <= 0) {
@@ -77,7 +72,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             CreatePaymentDto(
               tournamentId: widget.tournamentId,
               participantId: widget.participantId,
-              divisionId: widget.divisionId,
+              divisionId: cleanDivisionId,
             ),
           );
 

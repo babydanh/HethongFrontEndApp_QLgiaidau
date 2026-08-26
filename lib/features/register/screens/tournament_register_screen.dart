@@ -893,16 +893,20 @@ class _TournamentRegisterScreenState
 
     final fee = existingDivision?.entryFee ?? tournament.entryFee ?? 0;
     final status = _existingTeamStatus ?? '';
-    // Backend is the source of truth. Only a COMPLETE, unpaid registration
-    // with a valid positive fee may open checkout. Pending partner/approval,
-    // waitlisted and incomplete football rosters must wait for their status to
-    // become paymentEligible before showing the payment CTA.
-    final canPay = _existingPaymentEligible == true;
+    final isPendingApproval = status == 'PENDING_APPROVAL';
+    final isPendingPartner = status == 'PENDING_PARTNER';
+    final isWaitlisted = status == 'WAITLISTED';
+    final isComplete = status == 'COMPLETE' || status == 'CONFIRMED' || status == 'APPROVED';
+    final canPay = !_existingIsPaid &&
+        fee > 0 &&
+        (_existingPaymentEligible || isComplete) &&
+        !isWaitlisted &&
+        !isPendingApproval &&
+        !isPendingPartner;
 
     final statusLabel = switch (status) {
       'PENDING_PARTNER' => l10n.registerStatusPendingPartner,
       'PENDING_APPROVAL' => l10n.registerStatusPendingApproval,
-
       'WAITLISTED' => l10n.registerStatusWaitlisted,
       'COMPLETE' when _existingIsPaid => l10n.registerStatusCompletePaid,
       'COMPLETE' => l10n.registerStatusCompleteUnpaid,
@@ -934,12 +938,85 @@ class _TournamentRegisterScreenState
               fontWeight: FontWeight.w800,
             ),
           ),
-          if (status == 'WAITLISTED') ...[
-            const SizedBox(height: 8),
-            Text(
-              l10n.registerNoPaymentWaitlisted,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: context.colors.textSecondary),
+          if (isPendingApproval) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Đơn đăng ký đang chờ Ban Tổ Chức xét duyệt. Nút thanh toán sẽ hiển thị sau khi BTC phê duyệt.',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: context.colors.textPrimary,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (isPendingPartner) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.group_add_rounded, color: AppTheme.primary, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Đang chờ đồng đội tham gia. Sau khi đồng đội vào đội, bạn có thể thanh toán lệ phí.',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: context.colors.textPrimary,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (isWaitlisted) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.hourglass_top_rounded, color: Colors.orange, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.registerNoPaymentWaitlisted,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: context.colors.textPrimary,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
           if (existingDivision != null) ...[
@@ -972,6 +1049,7 @@ class _TournamentRegisterScreenState
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
+              height: 48,
               child: FilledButton.icon(
                 onPressed: () => context.push(
                   '/payment/checkout',
@@ -984,7 +1062,10 @@ class _TournamentRegisterScreenState
                   },
                 ),
                 icon: const Icon(Icons.payment_rounded),
-                label: Text(l10n.registerPayNow(_formatAmount(fee))),
+                label: Text(
+                  l10n.registerPayNow(_formatAmount(fee)),
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                ),
               ),
             ),
           ],
@@ -995,9 +1076,6 @@ class _TournamentRegisterScreenState
                 context,
                 tournamentId: tournament.id,
                 divisionId: _existingDivisionId,
-                // `_existingIsPaid` = isPaid, mà backend set isPaid=true khi giải
-                // MIỄN PHÍ (entryFee===0). Vậy chỉ coi "đã đóng tiền" khi có phí
-                // thực sự (>0) + isPaid → mới cần nhập/hoàn bank. (fix #35)
                 hasPaid: _existingIsPaid && fee > 0,
               );
               if (!withdrew || !mounted) return;
@@ -1144,7 +1222,61 @@ class _TournamentRegisterScreenState
                 false,
               ),
             ],
-            const SizedBox(height: 32),
+            if (_registrationTeamStatus == 'PENDING_APPROVAL') ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Đơn đăng ký đang chờ Ban Tổ Chức xét duyệt. Nút thanh toán sẽ hiển thị sau khi BTC phê duyệt.',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: context.colors.textPrimary,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            if (_registeredEntryFee != null &&
+                _registeredEntryFee! > 0 &&
+                _registrationTeamStatus != 'WAITLISTED' &&
+                _registrationTeamStatus != 'PENDING_APPROVAL') ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: () => context.push(
+                    '/payment/checkout',
+                    extra: {
+                      'tournamentId': widget.tournamentId,
+                      'participantId': _existingParticipantId ?? '',
+                      'divisionId': _selectedDiv ?? _existingDivisionId,
+                      'amount': _registeredEntryFee,
+                      'tournamentName': t?.name ?? '',
+                    },
+                  ),
+                  icon: const Icon(Icons.payment_rounded),
+                  label: Text(
+                    l10n.registerPayNow(_formatAmount(_registeredEntryFee!)),
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => context.go('/intro/${widget.tournamentId}'),
               child: Text(l10n.registerViewDetail),
