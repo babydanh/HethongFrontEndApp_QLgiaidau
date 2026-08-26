@@ -13,12 +13,17 @@ abstract class IRankingRepository {
   });
 
   /// Lấy rank tổng hợp của 1 user (public + community).
-  Future<UserRankResponse> getUserRank(
-    String userId,
-    String categoryId,
-  );
+  Future<UserRankResponse> getUserRank(String userId, String categoryId);
+
+  /// Lấy leaderboard ELO football theo đội, không phải theo cầu thủ.
+  Future<List<FootballTeamRanking>> getFootballTeamRankings({
+    required String categoryId,
+    String? communityId,
+    int? limit,
+  });
 
   /// Lấy danh sách các bậc ELO (tier) của 1 môn thể thao.
+
   /// GET /categories/:id/elo-tiers
   Future<List<EloTier>> getEloTiers(String categoryId);
 }

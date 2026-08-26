@@ -251,3 +251,52 @@ class UserRankResponse {
     );
   }
 }
+
+class FootballTeamRanking {
+  final String id;
+  final String teamId;
+  final String teamName;
+  final String? logoUrl;
+  final int eloPoints;
+  final int matchesPlayed;
+  final int matchesWon;
+  final int winStreak;
+  final int? peakElo;
+  final String? tierName;
+
+  const FootballTeamRanking({
+    required this.id,
+    required this.teamId,
+    required this.teamName,
+    this.logoUrl,
+    this.eloPoints = 0,
+    this.matchesPlayed = 0,
+    this.matchesWon = 0,
+    this.winStreak = 0,
+    this.peakElo,
+    this.tierName,
+  });
+
+  factory FootballTeamRanking.fromJson(Map<String, dynamic> json) {
+    int asInt(dynamic value) {
+      if (value is num) return value.toInt();
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+
+    return FootballTeamRanking(
+      id: json['id']?.toString() ?? '',
+      teamId: json['teamId']?.toString() ?? json['team_id']?.toString() ?? '',
+      teamName:
+          json['teamName']?.toString() ?? json['team_name']?.toString() ?? '',
+      logoUrl: json['logoUrl']?.toString() ?? json['logo_url']?.toString(),
+      eloPoints: asInt(json['eloPoints'] ?? json['elo_points']),
+      matchesPlayed: asInt(json['matchesPlayed'] ?? json['matches_played']),
+      matchesWon: asInt(json['matchesWon'] ?? json['matches_won']),
+      winStreak: asInt(json['winStreak'] ?? json['win_streak']),
+      peakElo: json['peakElo'] == null && json['peak_elo'] == null
+          ? null
+          : asInt(json['peakElo'] ?? json['peak_elo']),
+      tierName: json['tierName']?.toString() ?? json['tier_name']?.toString(),
+    );
+  }
+}

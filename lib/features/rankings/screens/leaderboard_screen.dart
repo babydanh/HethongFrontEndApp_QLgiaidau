@@ -107,6 +107,14 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               effectiveCategoryId = found.id;
             }
 
+            final effectiveCategory = categories.firstWhere(
+              (category) => category.id == effectiveCategoryId,
+              orElse: () => categories.first,
+            );
+            final isFootball =
+                effectiveCategory.slug.toLowerCase() == 'football' ||
+                effectiveCategory.name.toLowerCase().contains('bóng đá') ||
+                effectiveCategory.name.toLowerCase().contains('football');
             final query = (
               categoryId: effectiveCategoryId,
               matchType: _selectedMatchType,
@@ -115,6 +123,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             );
 
             final rankingsAsync = ref.watch(rankingsProvider(query));
+            final footballRankingsAsync = ref.watch(
+              footballTeamRankingsProvider(effectiveCategoryId),
+            );
             final tiersAsync = ref.watch(eloTiersProvider(effectiveCategoryId));
 
             final content = SingleChildScrollView(
@@ -123,46 +134,71 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: widget.standalone ? 20 : 160),
-                  _buildRankingFilters(colors),
-                  const SizedBox(height: 10),
-                  _buildProvinceFilter(colors),
+                  if (!isFootball) _buildRankingFilters(colors),
+                  if (!isFootball) const SizedBox(height: 10),
+                  if (!isFootball) _buildProvinceFilter(colors),
                   const SizedBox(height: 12),
-                  tiersAsync.when(
-                    data: (tiers) {
-                      final myElo = rankingsAsync.asData?.value
-                          .where((r) => r.userId == currentUserId)
-                          .firstOrNull
-                          ?.eloPoints;
-                      return TierLegendView(tiers: tiers, highlightElo: myElo);
-                    },
-                    loading: () => const SizedBox(height: 52),
-                    error: (context, error) => const SizedBox(height: 52),
-                  ),
+                  if (!isFootball)
+                    tiersAsync.when(
+                      data: (tiers) {
+                        final myElo = rankingsAsync.asData?.value
+                            .where((r) => r.userId == currentUserId)
+                            .firstOrNull
+                            ?.eloPoints;
+                        return TierLegendView(
+                          tiers: tiers,
+                          highlightElo: myElo,
+                        );
+                      },
+                      loading: () => const SizedBox(height: 52),
+                      error: (context, error) => const SizedBox(height: 52),
+                    ),
                   const SizedBox(height: 8),
-                  rankingsAsync.when(
-                    data: (rankings) => _buildRankingsList(
-                      rankings,
-                      tiersAsync.asData?.value ?? <EloTier>[],
-                      colors,
-                      isAuth,
-                      currentUserId,
-                    ),
-                    loading: () => const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 40),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                    error: (e, _) => _emptyState(
-                      context,
-                      icon: Icons.cloud_off_rounded,
-                      title: l10n.rankingLoadErrorTitle,
-                      subtitle: ErrorParser.parse(
-                        e,
-                        l10n.rankingLoadErrorSubtitle,
-                      ),
-                      onRetry: () =>
-                          ref.refresh(rankingsProvider(_rankingQuery)),
-                    ),
-                  ),
+                  isFootball
+                      ? footballRankingsAsync.when(
+                          data: (teams) =>
+                              _buildFootballTeamList(teams, colors),
+                          loading: () => const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 40),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                          error: (e, _) => _emptyState(
+                            context,
+                            icon: Icons.cloud_off_rounded,
+                            title: l10n.rankingLoadErrorTitle,
+                            subtitle: ErrorParser.parse(
+                              e,
+                              l10n.rankingLoadErrorSubtitle,
+                            ),
+                            onRetry: () => ref.refresh(
+                              footballTeamRankingsProvider(effectiveCategoryId),
+                            ),
+                          ),
+                        )
+                      : rankingsAsync.when(
+                          data: (rankings) => _buildRankingsList(
+                            rankings,
+                            tiersAsync.asData?.value ?? <EloTier>[],
+                            colors,
+                            isAuth,
+                            currentUserId,
+                          ),
+                          loading: () => const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 40),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                          error: (e, _) => _emptyState(
+                            context,
+                            icon: Icons.cloud_off_rounded,
+                            title: l10n.rankingLoadErrorTitle,
+                            subtitle: ErrorParser.parse(
+                              e,
+                              l10n.rankingLoadErrorSubtitle,
+                            ),
+                            onRetry: () =>
+                                ref.refresh(rankingsProvider(_rankingQuery)),
+                          ),
+                        ),
                 ],
               ),
             );
@@ -636,6 +672,127 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             ),
         if (isAuth && currentUserId != null)
           _buildStickyMeCard(rankings, tierList, colors, currentUserId),
+        const SizedBox(height: 100),
+      ],
+    );
+  }
+
+  Widget _buildFootballTeamList(
+    List<FootballTeamRanking> teams,
+    AppColorsExtension colors,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    if (teams.isEmpty) {
+      return _emptyState(
+        context,
+        icon: Icons.sports_soccer_rounded,
+        title: l10n.leaderboardNoRank4To10,
+        subtitle: l10n.leaderboardNoRank11To100,
+        onRetry: () {},
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: Text(
+            l10n.teamHeader,
+            style: TextStyle(
+              color: colors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        ...teams.asMap().entries.map((entry) {
+          final index = entry.key;
+          final team = entry.value;
+          final winRate = team.matchesPlayed > 0
+              ? ((team.matchesWon / team.matchesPlayed) * 100).round()
+              : 0;
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colors.border),
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 32,
+                  child: Text(
+                    '#${index + 1}',
+                    style: TextStyle(
+                      color: colors.textMuted,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                if (team.logoUrl != null && team.logoUrl!.isNotEmpty)
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundImage: NetworkImage(team.logoUrl!),
+                  )
+                else
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: colors.bgCard,
+                    child: Text(
+                      team.teamName.isEmpty
+                          ? '?'
+                          : team.teamName.substring(0, 1).toUpperCase(),
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        team.teamName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colors.textPrimary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '${team.matchesWon}/${team.matchesPlayed} · $winRate%',
+                        style: TextStyle(color: colors.textMuted, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${team.eloPoints} ELO',
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    if (team.tierName != null && team.tierName!.isNotEmpty)
+                      Text(
+                        team.tierName!,
+                        style: TextStyle(color: colors.textMuted, fontSize: 11),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }),
         const SizedBox(height: 100),
       ],
     );

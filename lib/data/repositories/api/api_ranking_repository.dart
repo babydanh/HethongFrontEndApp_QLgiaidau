@@ -83,6 +83,39 @@ class ApiRankingRepository implements IRankingRepository {
   }
 
   @override
+  Future<List<FootballTeamRanking>> getFootballTeamRankings({
+    required String categoryId,
+    String? communityId,
+    int? limit,
+  }) async {
+    final response = await _dioClient.dio.get(
+      '/rankings/football-teams',
+      queryParameters: {
+        'categoryId': categoryId,
+        'limit': limit ?? 100,
+        if (communityId != null && communityId.isNotEmpty)
+          'communityId': communityId,
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        lookupAppLocalizations(
+          PlatformDispatcher.instance.locale,
+        ).rankingRequestFailed,
+      );
+    }
+    final raw = response.data;
+    final list = raw is Map<String, dynamic>
+        ? (raw['data'] as List<dynamic>? ?? [])
+        : (raw as List<dynamic>? ?? []);
+    return list
+        .map(
+          (json) => FootballTeamRanking.fromJson(json as Map<String, dynamic>),
+        )
+        .toList();
+  }
+
+  @override
   Future<List<EloTier>> getEloTiers(String categoryId) async {
     _log.info('Tải danh sách bậc ELO: categoryId=$categoryId');
     try {
