@@ -466,22 +466,26 @@ class _LiveTournamentWithMatchesCardState
                   Flexible(
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+                        horizontal: 8,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF3E8FF),
-                        borderRadius: BorderRadius.circular(4),
+                        color: colors.bgSurface,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: colors.border,
+                          width: 1,
+                        ),
                       ),
                       child: Text(
                         bracketText,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 9.5,
+                        style: TextStyle(
+                          fontSize: 10,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF9333EA),
-                          letterSpacing: 0.2,
+                          color: colors.textPrimary,
+                          letterSpacing: 0.3,
                         ),
                       ),
                     ),
@@ -504,79 +508,80 @@ class _LiveTournamentWithMatchesCardState
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        match.team1Name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.bold,
-                          color: colors.textPrimary,
-                        ),
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              match.team1Name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          if (isByeMatch && isT2Tbd && !isT1Tbd) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                l10n.exploreByeAdvance,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF15803D),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     const SizedBox(width: 8),
-                    if (isByeMatch && isT2Tbd && !isT1Tbd)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFDCFCE7),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          l10n.exploreByeAdvance,
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF15803D),
-                          ),
-                        ),
-                      )
-                    else
-                      Container(
-                        constraints: const BoxConstraints(minWidth: 28),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
+                    Container(
+                      constraints: const BoxConstraints(minWidth: 32),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            (match.sets.isNotEmpty
+                                ? match.sets.last.score1 >
+                                      match.sets.last.score2
+                                : match.score1 > match.score2)
+                            ? AppTheme.primary.withValues(alpha: 0.12)
+                            : colors.bgSurface,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
                           color:
                               (match.sets.isNotEmpty
                                   ? match.sets.last.score1 >
                                         match.sets.last.score2
-                                  : match.score1 > match.score2)
-                              ? AppTheme.primary.withValues(alpha: 0.12)
-                              : colors.bgSurface,
-                          borderRadius: BorderRadius.circular(5),
-                          border: Border.all(
-                            color:
-                                (match.sets.isNotEmpty
-                                    ? match.sets.last.score1 >
-                                          match.sets.last.score2
                                     : match.score1 > match.score2)
                                 ? AppTheme.primary.withValues(alpha: 0.4)
                                 : colors.border,
-                          ),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          '${match.sets.isNotEmpty ? match.sets.last.score1 : match.score1}',
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w900,
-                            color:
-                                (match.sets.isNotEmpty
-                                    ? match.sets.last.score1 >
-                                          match.sets.last.score2
-                                    : match.score1 > match.score2)
-                                ? AppTheme.primary
-                                : colors.textPrimary,
-                          ),
                         ),
                       ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${match.sets.isNotEmpty ? match.sets.last.score1 : match.score1}',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w900,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
 
@@ -592,79 +597,80 @@ class _LiveTournamentWithMatchesCardState
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        match.team2Name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.bold,
-                          color: colors.textPrimary,
-                        ),
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              match.team2Name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          if (isByeMatch && isT1Tbd && !isT2Tbd) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                l10n.exploreByeAdvance,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF15803D),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     const SizedBox(width: 8),
-                    if (isByeMatch && isT1Tbd && !isT2Tbd)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFDCFCE7),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          l10n.exploreByeAdvance,
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF15803D),
-                          ),
-                        ),
-                      )
-                    else
-                      Container(
-                        constraints: const BoxConstraints(minWidth: 28),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
+                    Container(
+                      constraints: const BoxConstraints(minWidth: 32),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            (match.sets.isNotEmpty
+                                ? match.sets.last.score2 >
+                                      match.sets.last.score1
+                                : match.score2 > match.score1)
+                            ? AppTheme.primary.withValues(alpha: 0.12)
+                            : colors.bgSurface,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
                           color:
                               (match.sets.isNotEmpty
                                   ? match.sets.last.score2 >
                                         match.sets.last.score1
-                                  : match.score2 > match.score1)
-                              ? AppTheme.primary.withValues(alpha: 0.12)
-                              : colors.bgSurface,
-                          borderRadius: BorderRadius.circular(5),
-                          border: Border.all(
-                            color:
-                                (match.sets.isNotEmpty
-                                    ? match.sets.last.score2 >
-                                          match.sets.last.score1
                                     : match.score2 > match.score1)
                                 ? AppTheme.primary.withValues(alpha: 0.4)
                                 : colors.border,
-                          ),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          '${match.sets.isNotEmpty ? match.sets.last.score2 : match.score2}',
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w900,
-                            color:
-                                (match.sets.isNotEmpty
-                                    ? match.sets.last.score2 >
-                                          match.sets.last.score1
-                                    : match.score2 > match.score1)
-                                ? AppTheme.primary
-                                : colors.textPrimary,
-                          ),
                         ),
                       ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${match.sets.isNotEmpty ? match.sets.last.score2 : match.score2}',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w900,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ],
