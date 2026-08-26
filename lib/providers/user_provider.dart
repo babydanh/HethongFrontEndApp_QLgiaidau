@@ -64,6 +64,37 @@ final userPublicProfileProvider =
       return repo.getPublicProfile(userId);
     });
 
+class DirectMessagePolicy {
+  final bool canMessage;
+  final String? reasonCode;
+
+  const DirectMessagePolicy({required this.canMessage, this.reasonCode});
+
+  factory DirectMessagePolicy.fromJson(Map<String, dynamic> json) {
+    return DirectMessagePolicy(
+      canMessage: json['canMessage'] == true,
+      reasonCode: json['reasonCode']?.toString(),
+    );
+  }
+}
+
+/// Policy public cho CTA nhắn tin trên Profile người khác.
+/// Fail closed: lỗi policy không được hiển thị CTA rồi để request 403/500.
+final userDirectMessagePolicyProvider =
+    FutureProvider.family<DirectMessagePolicy, String>((ref, userId) async {
+      final response = await ref
+          .read(dioProvider)
+          .get('/chat/direct-policy/$userId');
+      final raw = response.data;
+      final envelope = raw is Map<String, dynamic>
+          ? raw
+          : <String, dynamic>{};
+      final payload = envelope['data'] is Map<String, dynamic>
+          ? envelope['data'] as Map<String, dynamic>
+          : envelope;
+      return DirectMessagePolicy.fromJson(payload);
+    });
+
 bool _isMockInvolvedMatch(MatchModel match) {
   return match.team1IsMock ||
       match.team2IsMock ||

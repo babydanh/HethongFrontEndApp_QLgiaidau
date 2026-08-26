@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
+import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -75,6 +76,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     final eligibleRanks = profile.ranks
         .where((rank) => rank.isLeaderboardEligible)
         .toList();
+    final canMessage = ref
+        .watch(userDirectMessagePolicyProvider(profile.id))
+        .asData
+        ?.value
+        .canMessage ==
+        true;
 
     return NestedScrollView(
       headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -99,8 +106,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             onPressed: () => context.pop(),
           ),
           actions: [
-            IconButton(
-              tooltip: l10n.userProfileMessage,
+            if (canMessage)
+              IconButton(
+                tooltip: l10n.userProfileMessage,
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -113,16 +121,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   size: 20,
                 ),
               ),
-              onPressed: () {
-                UserProfileBottomSheet.show(
-                  context,
-                  userId: profile.id,
-                  communityId: widget.communityId,
-                  initialFullName: profile.fullName,
-                  initialAvatarUrl: profile.avatarUrl,
-                );
-              },
-            ),
+                onPressed: () {
+                  UserProfileBottomSheet.show(
+                    context,
+                    userId: profile.id,
+                    communityId: widget.communityId,
+                    initialFullName: profile.fullName,
+                    initialAvatarUrl: profile.avatarUrl,
+                  );
+                },
+              ),
             IconButton(
               tooltip: l10n.publicProfileShareSubtitle,
               icon: Container(
@@ -972,26 +980,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                         ],
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: palette.soft,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: palette.color.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Text(
-                        rank.tierName ?? l10n.infoUnranked,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: palette.color,
-                        ),
-                      ),
+                    RankTierBadge(
+                      tierName: rank.tierName,
+                      elo: rank.eloPoints,
+                      sportName: rank.categoryName,
                     ),
                     const SizedBox(width: 4),
                     Icon(
