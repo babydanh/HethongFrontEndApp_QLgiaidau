@@ -1262,19 +1262,36 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
         : m.isCompleted
         ? (l10n.exploreMatchStatusCompleted(m.round))
         : (l10n.exploreMatchStatusScheduled(m.round));
-    String? cleanStageName = m.stageName?.trim();
-    if (cleanStageName != null &&
-        (cleanStageName.startsWith('{') || cleanStageName.contains('name:'))) {
-      cleanStageName = cleanStageName.contains('ROUND_ROBIN') ||
-              cleanStageName.contains('Vòng bảng')
-          ? l10n.exploreBracketGroup
-          : l10n.exploreBracketKnockout;
+    String resolveBracketText() {
+      final raw = (m.stageName ?? '').trim();
+      final upper = raw.toUpperCase();
+
+      if (upper.contains('ROUND_ROBIN') ||
+          upper.contains('GROUP') ||
+          upper.contains('VÒNG BẢNG') ||
+          upper.contains('VONG BANG')) {
+        return l10n.exploreBracketGroup;
+      }
+      if (upper.contains('ELIMINATION') ||
+          upper.contains('KNOCKOUT') ||
+          upper.contains('LOẠI TRỰC TIẾP') ||
+          upper.contains('PLAYOFF')) {
+        return l10n.exploreBracketKnockout;
+      }
+      if (upper.contains('LOSER') || upper.contains('THUA')) {
+        return l10n.exploreBracketLosers;
+      }
+      if (raw.isNotEmpty && !raw.startsWith('{') && !raw.contains('name:')) {
+        return raw;
+      }
+
+      if (m.bracketPosition.bracket == 'losers') {
+        return l10n.exploreBracketLosers;
+      }
+      return l10n.exploreBracketKnockout;
     }
-    final bracketText = (cleanStageName != null && cleanStageName.isNotEmpty)
-        ? cleanStageName
-        : (m.bracketPosition.bracket == 'losers'
-            ? (l10n.exploreBracketLosers)
-            : (l10n.exploreBracketKnockout));
+
+    final bracketText = resolveBracketText();
     final sportKey = m.sportKey ?? widget.tournament?.sport;
     final sportText = sportKey == null || sportKey.trim().isEmpty
         ? l10n.createClubTournament_sportPickleball

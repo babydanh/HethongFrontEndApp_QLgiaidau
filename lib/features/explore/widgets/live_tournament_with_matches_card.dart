@@ -356,23 +356,39 @@ class _LiveTournamentWithMatchesCardState
         match.team2Name.trim().toUpperCase() == 'BYE';
     final isByeMatch = match.isBye || isT1Tbd || isT2Tbd;
 
-    String? cleanStageName = match.stageName?.trim();
-    if (cleanStageName != null &&
-        (cleanStageName.startsWith('{') || cleanStageName.contains('name:'))) {
-      cleanStageName = cleanStageName.contains('ROUND_ROBIN') ||
-              cleanStageName.contains('Vòng bảng')
-          ? l10n.exploreBracketGroup
-          : l10n.exploreBracketKnockout;
+    String resolveBracketText() {
+      final raw = (match.stageName ?? '').trim();
+      final upper = raw.toUpperCase();
+
+      if (upper.contains('ROUND_ROBIN') ||
+          upper.contains('GROUP') ||
+          upper.contains('VÒNG BẢNG') ||
+          upper.contains('VONG BANG')) {
+        return l10n.exploreBracketGroup;
+      }
+      if (upper.contains('ELIMINATION') ||
+          upper.contains('KNOCKOUT') ||
+          upper.contains('LOẠI TRỰC TIẾP') ||
+          upper.contains('PLAYOFF')) {
+        return l10n.exploreBracketKnockout;
+      }
+      if (upper.contains('LOSER') || upper.contains('THUA')) {
+        return l10n.exploreBracketLosers;
+      }
+      if (raw.isNotEmpty && !raw.startsWith('{') && !raw.contains('name:')) {
+        return raw;
+      }
+
+      if (match.bracketPosition.bracket == 'losers') {
+        return l10n.exploreBracketLosers;
+      }
+      if (widget.tournament.bracketType == 'round_robin') {
+        return l10n.exploreBracketGroup;
+      }
+      return l10n.exploreBracketKnockout;
     }
 
-    final bracketText =
-        (cleanStageName != null && cleanStageName.isNotEmpty)
-            ? cleanStageName
-            : (match.bracketPosition.bracket == 'losers'
-                ? (l10n.exploreBracketLosers)
-                : (widget.tournament.bracketType == 'round_robin'
-                    ? (l10n.exploreBracketGroup)
-                    : (l10n.exploreBracketKnockout)));
+    final bracketText = resolveBracketText();
     final sportText = l10n.sportDisplayName(
       match.sportKey ?? widget.tournament.sport,
     );
