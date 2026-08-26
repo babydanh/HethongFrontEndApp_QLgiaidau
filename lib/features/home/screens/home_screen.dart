@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/regions_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
+import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_header.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_banner_card.dart';
@@ -640,12 +641,75 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _buildLanguageSwitcherHeader() {
+    final currentLocale = ref.watch(localeProvider);
+    final isVi = currentLocale.languageCode == 'vi';
+
+    return Container(
+      padding: const EdgeInsets.all(2.5),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: () => ref.read(localeProvider.notifier).changeLocale('vi'),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+              decoration: BoxDecoration(
+                color: isVi ? Colors.white : Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(
+                'VI',
+                style: TextStyle(
+                  color: isVi ? const Color(0xFF0284C7) : Colors.white,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () => ref.read(localeProvider.notifier).changeLocale('en'),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+              decoration: BoxDecoration(
+                color: !isVi ? Colors.white : Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(
+                'EN',
+                style: TextStyle(
+                  color: !isVi ? const Color(0xFF0284C7) : Colors.white,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildNotificationBellHeader() {
     final unreadAsync = ref.watch(unreadCountProvider);
     final unread = unreadAsync.value ?? 0;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        _buildLanguageSwitcherHeader(),
+        const SizedBox(width: 8),
         GestureDetector(
           onTap: () {
             final auth = ref.read(authProvider);
