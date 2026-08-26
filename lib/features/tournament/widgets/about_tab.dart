@@ -170,15 +170,24 @@ class AboutTab extends StatelessWidget {
                 const SizedBox(height: 12),
                 _buildInfoRow(
                   label: l10n.formatLabel,
-                  value: switch (tournament.format) {
-                    AppConstants.formatSingles =>
-                      l10n.createClubTournament_formatSingles,
-                    AppConstants.formatDoubles =>
-                      l10n.createClubTournament_formatDoubles,
-                    AppConstants.formatMixedDoubles =>
-                      l10n.createClubTournament_formatMixedDoubles,
-                    _ => tournament.format.replaceAll('_', ' '),
-                  },
+                  value: () {
+                    final raw = tournament.format.trim().toLowerCase().replaceAll('-', '_').replaceAll(' ', '_');
+                    return switch (raw) {
+                      'men_singles' => 'Đơn nam',
+                      'women_singles' => 'Đơn nữ',
+                      'men_doubles' => 'Đôi nam',
+                      'women_doubles' => 'Đôi nữ',
+                      'mixed_doubles' => l10n.createClubTournament_formatMixedDoubles,
+                      'singles' => l10n.createClubTournament_formatSingles,
+                      'doubles' => l10n.createClubTournament_formatDoubles,
+                      'team' || 'team_football' || 'football' => 'Đồng đội',
+                      _ => AppConstants.categoryNames[raw] ??
+                          AppConstants.formatNames[raw] ??
+                          (tournament.format.isNotEmpty
+                              ? tournament.format.replaceAll('_', ' ')
+                              : l10n.notUpdated),
+                    };
+                  }(),
                   colors: colors,
                 ),
                 if (TournamentLocationFormatter.tournamentFullLocation(

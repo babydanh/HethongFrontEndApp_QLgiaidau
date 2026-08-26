@@ -463,10 +463,10 @@ class _HeaderMeta extends StatelessWidget {
             _HeaderIconText(
               icon: Icons.location_on_outlined,
               text:
-                  TournamentLocationFormatter.tournamentShortLocation(
+                  TournamentLocationFormatter.tournamentFullLocation(
                     tournament,
                   ).isNotEmpty
-                  ? TournamentLocationFormatter.tournamentShortLocation(
+                  ? TournamentLocationFormatter.tournamentFullLocation(
                       tournament,
                     )
                   : l10n.locationNotUpdated,

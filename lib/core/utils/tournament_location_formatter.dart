@@ -98,17 +98,85 @@ class TournamentLocationFormatter {
     ]).join(', ');
   }
 
+  static String _normalizeKey(String input) {
+    var s = input.trim().toLowerCase();
+    // Strip trailing punctuation
+    s = s.replaceAll(RegExp(r'[\.,;]+$'), '').trim();
+
+    // Map common Vietnamese metropolitan province names
+    if (s == 'thành phố hồ chí minh' ||
+        s == 'tp. hồ chí minh' ||
+        s == 'tp hồ chí minh' ||
+        s == 'tp.hcm' ||
+        s == 'tp hcm' ||
+        s == 'tphcm' ||
+        s == 'hồ chí minh') {
+      return 'tp_hcm';
+    }
+    if (s == 'thành phố hà nội' ||
+        s == 'tp. hà nội' ||
+        s == 'tp hà nội' ||
+        s == 'tp.hn' ||
+        s == 'tphn' ||
+        s == 'hà nội') {
+      return 'tp_hn';
+    }
+    if (s == 'thành phố đà nẵng' ||
+        s == 'tp. đà nẵng' ||
+        s == 'tp đà nẵng' ||
+        s == 'đà nẵng') {
+      return 'tp_danang';
+    }
+    if (s == 'thành phố hải phòng' ||
+        s == 'tp. hải phòng' ||
+        s == 'hải phòng') {
+      return 'tp_haiphong';
+    }
+    if (s == 'thành phố cần thơ' ||
+        s == 'tp. cần thơ' ||
+        s == 'cần thơ') {
+      return 'tp_cantho';
+    }
+
+    // Strip administrative prefixes for comparison
+    return s
+        .replaceFirst(
+          RegExp(
+            r'^(thành phố|tỉnh|quận|huyện|thị xã|phường|xã|tp\.|tp|q\.|h\.|tx\.|p\.|x\.)\s+',
+          ),
+          '',
+        )
+        .trim();
+  }
+
   static List<String> _uniqueParts(Iterable<String?> values) {
     final result = <String>[];
-    final seen = <String>{};
+    final seenKeys = <String>{};
 
     for (final value in values) {
       if (value == null || value.trim().isEmpty) continue;
       for (final piece in value.split(',')) {
-        final trimmed = piece.trim();
+        var trimmed = piece.trim();
+        // Remove trailing punctuation
+        trimmed = trimmed.replaceAll(RegExp(r'[\.,;]+$'), '').trim();
         if (trimmed.isEmpty) continue;
-        final key = trimmed.toLowerCase();
-        if (seen.add(key)) result.add(trimmed);
+
+        final normKey = _normalizeKey(trimmed);
+        if (normKey.isEmpty) continue;
+
+        if (seenKeys.contains(normKey)) continue;
+
+        // Check if any existing result item already contains this text or vice versa
+        final isSubsumed = result.any((existing) {
+          final normExisting = _normalizeKey(existing);
+          return normExisting == normKey ||
+              normExisting.contains(normKey) && normKey.length > 5;
+        });
+
+        if (!isSubsumed) {
+          seenKeys.add(normKey);
+          result.add(trimmed);
+        }
       }
     }
 
