@@ -90,8 +90,9 @@ class PaymentModel {
     );
   }
 
-  bool get isCompleted => status == 'COMPLETED';
-  bool get isPending => status == 'PENDING';
+  bool get isCompleted =>
+      status == 'COMPLETED' || status == 'PAID' || status == 'SUCCESS';
+  bool get isPending => status == 'PENDING' || status == 'PROCESSING';
   bool get isFailed => status == 'FAILED';
   bool get isRefunded => status == 'REFUNDED';
   bool get isTerminalFailure =>

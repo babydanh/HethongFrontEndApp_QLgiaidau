@@ -67,7 +67,6 @@ import 'package:app_quanly_giaidau/features/series/screens/series_detail_screen.
 import 'package:app_quanly_giaidau/features/match/screens/matches_list_screen.dart';
 import 'package:app_quanly_giaidau/features/chat/screens/chat_screen.dart';
 import 'package:app_quanly_giaidau/features/chat/screens/chat_detail_screen.dart';
-import 'package:app_quanly_giaidau/features/community/social/club_chat_screen.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_social_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -829,12 +828,25 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/payment/checkout',
         builder: (context, state) {
           final extra = state.extra as Map?;
+          final q = state.uri.queryParameters;
+          final tournamentId =
+              extra?['tournamentId']?.toString() ?? q['tournamentId'] ?? '';
+          final participantId =
+              extra?['participantId']?.toString() ?? q['participantId'] ?? '';
+          final divisionId =
+              extra?['divisionId']?.toString() ?? q['divisionId'];
+          final amount = (extra?['amount'] as num?)?.toDouble() ??
+              double.tryParse(q['amount'] ?? '') ??
+              0.0;
+          final tournamentName =
+              extra?['tournamentName']?.toString() ?? q['tournamentName'];
+
           return CheckoutScreen(
-            tournamentId: extra?['tournamentId'] ?? '',
-            participantId: extra?['participantId'] ?? '',
-            divisionId: extra?['divisionId']?.toString(),
-            amount: (extra?['amount'] ?? 0).toDouble(),
-            tournamentName: extra?['tournamentName']?.toString(),
+            tournamentId: tournamentId,
+            participantId: participantId,
+            divisionId: divisionId,
+            amount: amount,
+            tournamentName: tournamentName,
           );
         },
       ),
@@ -842,15 +854,31 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/payment/payos-verify',
         builder: (context, state) {
           final extra = state.extra as Map?;
+          final q = state.uri.queryParameters;
+          final paymentId =
+              extra?['paymentId']?.toString() ?? q['paymentId'] ?? '';
+          final amount = (extra?['amount'] as num?)?.toDouble() ??
+              double.tryParse(q['amount'] ?? '') ??
+              0.0;
+          final tournamentId =
+              extra?['tournamentId']?.toString() ?? q['tournamentId'] ?? '';
+          final tournamentName =
+              extra?['tournamentName']?.toString() ?? q['tournamentName'];
+          final paymentUrl =
+              extra?['paymentUrl']?.toString() ?? q['paymentUrl'];
+          final qrCode = extra?['qrCode']?.toString() ?? q['qrCode'];
+          final expiresAt = extra?['expiresAt']?.toString() ?? q['expiresAt'];
+          final orderCode = extra?['orderCode']?.toString() ?? q['orderCode'];
+
           return PayOSVerifyScreen(
-            paymentId: extra?['paymentId'] ?? '',
-            amount: (extra?['amount'] ?? 0).toDouble(),
-            tournamentId: extra?['tournamentId'] ?? '',
-            tournamentName: extra?['tournamentName']?.toString(),
-            paymentUrl: extra?['paymentUrl']?.toString(),
-            qrCode: extra?['qrCode']?.toString(),
-            expiresAt: extra?['expiresAt']?.toString(),
-            orderCode: extra?['orderCode']?.toString(),
+            paymentId: paymentId,
+            amount: amount,
+            tournamentId: tournamentId,
+            tournamentName: tournamentName,
+            paymentUrl: paymentUrl,
+            qrCode: qrCode,
+            expiresAt: expiresAt,
+            orderCode: orderCode,
           );
         },
       ),

@@ -10,10 +10,15 @@ class PaymentResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final extra = GoRouterState.of(context).extra as Map?;
-    final isSuccess = extra?['status'] == 'success';
-    final tournamentId = extra?['tournamentId'] ?? '';
-    final amount = (extra?['amount'] ?? 0).toDouble();
+    final state = GoRouterState.of(context);
+    final extra = state.extra as Map?;
+    final q = state.uri.queryParameters;
+    final status = extra?['status']?.toString() ?? q['status'] ?? '';
+    final isSuccess = status == 'success' || status == 'PAID' || status == 'COMPLETED';
+    final tournamentId = extra?['tournamentId']?.toString() ?? q['tournamentId'] ?? '';
+    final amount = (extra?['amount'] as num?)?.toDouble() ??
+        double.tryParse(q['amount'] ?? '') ??
+        0.0;
     final fmt = NumberFormat.decimalPattern(
       Localizations.localeOf(context).toLanguageTag(),
     );
