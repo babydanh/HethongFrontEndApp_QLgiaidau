@@ -495,7 +495,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         }.contains(tournament.status.toUpperCase());
 
     if (lifecycleLocked ||
-        (isFootball && normalized != 'DOUBLES') ||
+        (isFootball && normalized != 'SINGLES') ||
         !{'SINGLES', 'DOUBLES', 'MIXED_DOUBLES'}.contains(normalized)) {
       return false;
     }
