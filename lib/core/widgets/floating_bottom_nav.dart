@@ -188,10 +188,7 @@ class FloatingBottomNav extends ConsumerWidget {
           left: 0,
           right: 0,
           child: GestureDetector(
-            onTap: () {
-              onTabSelected(2);
-              onProfileTap();
-            },
+            onTap: onProfileTap,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

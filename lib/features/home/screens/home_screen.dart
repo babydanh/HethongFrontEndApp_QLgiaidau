@@ -451,15 +451,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     AsyncValue<List<Tournament>> tournamentsAsync,
     double headerHeight,
   ) {
-    if (_currentIndex == 2) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('/profile');
-        if (mounted) {
-          setState(() => _currentIndex = 0);
-        }
-      });
-      return const SizedBox.shrink();
-    }
+    
     switch (_currentIndex) {
       case 0:
         return KeyedSubtree(
