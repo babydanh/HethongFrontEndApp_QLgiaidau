@@ -4796,17 +4796,17 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsPrivacyTitle => 'Quyền riêng tư';
 
   @override
-  String get settingsStrangerMessages => 'Tin nhắn từ người lạ';
+  String get settingsStrangerMessages => 'Cho phép người lạ nhắn tin';
 
   @override
   String get settingsStrangerMessagesDescription =>
-      'Cho phép người chưa kết nối với bạn bắt đầu cuộc trò chuyện.';
+      'Chỉ bật khi bạn muốn người chưa từng trò chuyện và không cùng CLB có thể nhắn tin riêng. Mặc định tắt; người lạ sẽ bị chặn.';
 
   @override
   String get settingsStrangerMessagesOn => 'Đang cho phép';
 
   @override
-  String get settingsStrangerMessagesOff => 'Đang chặn';
+  String get settingsStrangerMessagesOff => 'Đang chặn (mặc định)';
 
   @override
   String get settingsStrangerMessagesUpdated =>
@@ -5205,6 +5205,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatDetailSendError => 'Không thể gửi tin nhắn.';
+
+  @override
+  String get chatStrangerMessagesDisabled =>
+      'Người này chưa cho phép người lạ nhắn tin. Bạn chỉ có thể nhắn nếu hai người đã từng trò chuyện hoặc cùng tham gia một CLB.';
 
   @override
   String get chatDetailUploadError => 'Không thể tải ảnh lên.';

@@ -4800,17 +4800,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsPrivacyTitle => 'Privacy';
 
   @override
-  String get settingsStrangerMessages => 'Messages from strangers';
+  String get settingsStrangerMessages => 'Allow messages from strangers';
 
   @override
   String get settingsStrangerMessagesDescription =>
-      'Allow people who are not connected with you to start a conversation.';
+      'Turn this on only if you want people you have never chatted with and do not share a club with to message you privately. Off by default; strangers are blocked.';
 
   @override
   String get settingsStrangerMessagesOn => 'Allowed';
 
   @override
-  String get settingsStrangerMessagesOff => 'Blocked';
+  String get settingsStrangerMessagesOff => 'Blocked (default)';
 
   @override
   String get settingsStrangerMessagesUpdated => 'Message privacy updated';
@@ -5207,6 +5207,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatDetailSendError => 'Could not send the message.';
+
+  @override
+  String get chatStrangerMessagesDisabled =>
+      'This person has not enabled messages from strangers. You can message only if you have chatted before or share a club.';
 
   @override
   String get chatDetailUploadError => 'Could not upload the image.';

@@ -1666,7 +1666,7 @@ class _StrangerMessagesSettingsCardState
           profileAsync.when(
             data: (profile) {
               final currentValue =
-                  _value ?? profile.allowStrangerMessages ?? true;
+                  _value ?? profile.allowStrangerMessages ?? false;
               return SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
                 secondary: Icon(

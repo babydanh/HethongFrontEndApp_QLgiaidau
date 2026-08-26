@@ -9017,13 +9017,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsStrangerMessages.
   ///
   /// In vi, this message translates to:
-  /// **'Tin nhắn từ người lạ'**
+  /// **'Cho phép người lạ nhắn tin'**
   String get settingsStrangerMessages;
 
   /// No description provided for @settingsStrangerMessagesDescription.
   ///
   /// In vi, this message translates to:
-  /// **'Cho phép người chưa kết nối với bạn bắt đầu cuộc trò chuyện.'**
+  /// **'Chỉ bật khi bạn muốn người chưa từng trò chuyện và không cùng CLB có thể nhắn tin riêng. Mặc định tắt; người lạ sẽ bị chặn.'**
   String get settingsStrangerMessagesDescription;
 
   /// No description provided for @settingsStrangerMessagesOn.
@@ -9035,7 +9035,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsStrangerMessagesOff.
   ///
   /// In vi, this message translates to:
-  /// **'Đang chặn'**
+  /// **'Đang chặn (mặc định)'**
   String get settingsStrangerMessagesOff;
 
   /// No description provided for @settingsStrangerMessagesUpdated.
@@ -9745,6 +9745,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Không thể gửi tin nhắn.'**
   String get chatDetailSendError;
+
+  /// No description provided for @chatStrangerMessagesDisabled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người này chưa cho phép người lạ nhắn tin. Bạn chỉ có thể nhắn nếu hai người đã từng trò chuyện hoặc cùng tham gia một CLB.'**
+  String get chatStrangerMessagesDisabled;
 
   /// No description provided for @chatDetailUploadError.
   ///

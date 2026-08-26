@@ -582,9 +582,27 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final responseData = e is DioException && e.response?.data is Map
+            ? Map<String, dynamic>.from(e.response!.data as Map)
+            : null;
+        final rawMessage =
+            responseData?['message']?.toString().toLowerCase() ?? '';
+        final reasonCode =
+            responseData?['code']?.toString() ??
+            responseData?['reasonCode']?.toString();
+        final isPrivacyDenied =
+            reasonCode == 'STRANGER_MESSAGES_DISABLED' ||
+            (e is DioException &&
+                e.response?.statusCode == 403 &&
+                (rawMessage.contains('người lạ') ||
+                    rawMessage.contains('stranger')));
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ErrorParser.parse(e, l10n.chatDetailSendError)),
+            content: Text(
+              isPrivacyDenied
+                  ? l10n.chatStrangerMessagesDisabled
+                  : ErrorParser.parse(e, l10n.chatDetailSendError),
+            ),
           ),
         );
       }

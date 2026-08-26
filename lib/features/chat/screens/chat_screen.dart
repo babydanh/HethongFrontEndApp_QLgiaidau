@@ -103,6 +103,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     unawaited(_chatSocket.connect(''));
   }
 
+  List<ChatRoomModel> _reconcileRooms(List<ChatRoomModel> fetched) {
+    final byId = <String, ChatRoomModel>{
+      for (final room in _rooms)
+        if (room.type == 'DIRECT') room.id: room,
+    };
+    for (final room in fetched) {
+      byId[room.id] = room;
+    }
+    final merged = byId.values.toList()
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    return merged;
+  }
+
   Future<void> _loadRooms({bool quiet = false}) async {
     if (!quiet) setState(() => _isLoadingRooms = true);
     try {
@@ -120,7 +133,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   ChatRoomModel.fromJson(json, currentUserId: currentUserId),
             )
             .toList();
-        setState(() => _rooms = items);
+        setState(() => _rooms = _reconcileRooms(items));
       }
     } catch (_) {}
     if (!quiet && mounted) setState(() => _isLoadingRooms = false);
