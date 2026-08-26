@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
@@ -99,6 +100,31 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           ),
           actions: [
             IconButton(
+              tooltip: l10n.userProfileMessage,
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colors.bgCard.withValues(alpha: 0.8),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.chat_bubble_rounded,
+                  color: colors.textPrimary,
+                  size: 20,
+                ),
+              ),
+              onPressed: () {
+                UserProfileBottomSheet.show(
+                  context,
+                  userId: profile.id,
+                  communityId: widget.communityId,
+                  initialFullName: profile.fullName,
+                  initialAvatarUrl: profile.avatarUrl,
+                );
+              },
+            ),
+            IconButton(
+              tooltip: l10n.publicProfileShareSubtitle,
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
