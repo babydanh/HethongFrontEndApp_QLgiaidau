@@ -861,6 +861,7 @@ class ApiTournamentRepository implements ITournamentRepository {
     String tournamentId, {
     String? divisionId,
     required List<Map<String, dynamic>> operations,
+    bool isLite = false,
   }) async {
     _log.debug(
       'Updating bracket slots for tournament $tournamentId (division: $divisionId)',
@@ -869,8 +870,11 @@ class ApiTournamentRepository implements ITournamentRepository {
       if (divisionId == null || divisionId.isEmpty) {
         throw ArgumentError(_l10n.tournamentDivisionIdRequired);
       }
+      final path = isLite
+          ? '/tournaments/lite/$tournamentId/divisions/$divisionId/bracket/slots'
+          : '/tournaments/$tournamentId/divisions/$divisionId/bracket/slots';
       final response = await _dioClient.dio.patch(
-        '/tournaments/$tournamentId/divisions/$divisionId/bracket/slots',
+        path,
         data: {'operations': operations},
       );
       final statusCode = response.statusCode ?? 0;

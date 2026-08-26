@@ -193,6 +193,10 @@ class LiteManagementState {
       participants.where((p) => p.status == 'COMPLETE').toList();
 
   bool get isDoubles {
+    // Football uses the generic SINGLES match type for team-vs-team.
+    // Legacy football divisions may still carry DOUBLES, so football must
+    // take precedence and never enter the partner-pairing flow.
+    if (isFootball) return false;
     final normalized = matchType?.toUpperCase();
     return normalized == 'DOUBLES' ||
         normalized == 'DOUBLE' ||
@@ -260,10 +264,10 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     final divisions = payload['divisions'];
     if (divisions is List && divisions.isNotEmpty && divisions.first is Map) {
       final division = Map<String, dynamic>.from(divisions.first as Map);
-      final divisionMatchType =
-          division['matchType']?.toString().toUpperCase();
-      final divisionGender =
-          division['genderRestriction']?.toString().toUpperCase();
+      final divisionMatchType = division['matchType']?.toString().toUpperCase();
+      final divisionGender = division['genderRestriction']
+          ?.toString()
+          .toUpperCase();
       if (divisionMatchType == 'MIXED_DOUBLES' ||
           (divisionMatchType == 'DOUBLES' && divisionGender == 'MIXED')) {
         return 'MIXED_DOUBLES';
@@ -275,8 +279,6 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     return payload['matchType']?.toString().toUpperCase() ?? 'SINGLES';
   }
 
-
-
   // ─── Initialize with tournament ID (called from screen) ───
 
   Future<void> init(String tournamentId) async {
@@ -287,7 +289,6 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       await Future.wait([
         _fetchTournament(tournamentId),
         _fetchParticipants(tournamentId),
-
       ]).timeout(const Duration(seconds: 15));
       await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
       _loadInFlight = false;
@@ -326,7 +327,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
           );
           return;
         }
-                final rawMatchType = _canonicalMatchType(
+        final rawMatchType = _canonicalMatchType(
           Map<String, dynamic>.from(payload),
         );
 
@@ -401,7 +402,8 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   }
 
   String? get _liteDivisionId {
-    final divisions = state.tournament?.divisions ?? const <TournamentDivision>[];
+    final divisions =
+        state.tournament?.divisions ?? const <TournamentDivision>[];
     final divisionId = divisions.isNotEmpty ? divisions.first.id.trim() : '';
     return divisionId.isEmpty ? null : divisionId;
   }
@@ -411,7 +413,9 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       final res = await _dio
           .get(
             '/tournaments/$tournamentId/bracket',
-            queryParameters: divisionId == null ? null : {'divisionId': divisionId},
+            queryParameters: divisionId == null
+                ? null
+                : {'divisionId': divisionId},
           )
           .timeout(const Duration(seconds: 12));
       final envelope = res.data;
@@ -456,7 +460,6 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       await Future.wait([
         _fetchTournament(tournamentId),
         _fetchParticipants(tournamentId),
-
       ]).timeout(const Duration(seconds: 15));
       await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
       _loadInFlight = false;
@@ -466,7 +469,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
   }
 
-    Future<void> refreshMatches(String tournamentId) =>
+  Future<void> refreshMatches(String tournamentId) =>
       _fetchMatches(tournamentId);
 
   Future<bool> updateMatchType(String tournamentId, String matchType) async {
@@ -476,22 +479,28 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         : null;
     final normalized = matchType.trim().toUpperCase();
     final isFootball = state.isFootball;
-    final lifecycleLocked = tournament == null ||
+    final lifecycleLocked =
+        tournament == null ||
         division == null ||
         division.id.isEmpty ||
         state.hasBracket ||
         state.rosterConfirmed ||
         state.participants.isNotEmpty ||
         division.participantCount > 0 ||
-        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
-            .contains(tournament.status.toUpperCase());
+        {
+          'IN_PROGRESS',
+          'ONGOING',
+          'COMPLETED',
+          'CANCELLED',
+        }.contains(tournament.status.toUpperCase());
 
     if (lifecycleLocked ||
         (isFootball && normalized != 'DOUBLES') ||
         !{'SINGLES', 'DOUBLES', 'MIXED_DOUBLES'}.contains(normalized)) {
       return false;
     }
-    final currentMatchType = division.matchType.toUpperCase() == 'DOUBLES' &&
+    final currentMatchType =
+        division.matchType.toUpperCase() == 'DOUBLES' &&
             division.genderRestriction?.trim().toUpperCase() == 'MIXED'
         ? 'MIXED_DOUBLES'
         : division.matchType.toUpperCase();
@@ -667,9 +676,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
 
   Future<void> createBracket(String tournamentId) async {
     if (state.bracketEligibleParticipants.length < 2) {
-      throw StateError(
-        _l10n.lite_bracketMinimumParticipants(2),
-      );
+      throw StateError(_l10n.lite_bracketMinimumParticipants(2));
     }
     state = state.copyWith(creatingBracket: true);
     final bType =
@@ -718,9 +725,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     try {
       await _dio.post(
         '/tournaments/lite/$tournamentId/bracket/reset',
-        data: {
-          if (_liteDivisionId != null) 'divisionId': _liteDivisionId,
-        },
+        data: {if (_liteDivisionId != null) 'divisionId': _liteDivisionId},
       );
       await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
       _log.success('Đã reset bracket Lite');

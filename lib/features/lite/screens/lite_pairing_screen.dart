@@ -87,6 +87,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
   bool _loading = true;
   String? _error;
   String? _matchType;
+  bool _isFootball = false;
   String? _tournamentName;
   List<_LiteParticipant> _participants = [];
   List<_LiteParticipant> _pairedParticipants = [];
@@ -102,6 +103,38 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
     _fetchParticipants();
   }
 
+  bool _isFootballPayload(Map<String, dynamic> payload) {
+    final sport = payload['sport']?.toString().trim().toLowerCase() ?? '';
+    final category = payload['category']?.toString().trim().toLowerCase() ?? '';
+    return sport == 'football' ||
+        sport == 'soccer' ||
+        category == 'football' ||
+        category.contains('bóng đá');
+  }
+
+  String _canonicalMatchType(Map<String, dynamic> payload) {
+    final divisions = payload['divisions'];
+    if (divisions is List && divisions.isNotEmpty && divisions.first is Map) {
+      final division = Map<String, dynamic>.from(divisions.first as Map);
+      final divisionMatchType = division['matchType']
+          ?.toString()
+          .trim()
+          .toUpperCase();
+      final divisionGender = division['genderRestriction']
+          ?.toString()
+          .trim()
+          .toUpperCase();
+      if (divisionMatchType == 'MIXED_DOUBLES' ||
+          (divisionMatchType == 'DOUBLES' && divisionGender == 'MIXED')) {
+        return 'MIXED_DOUBLES';
+      }
+      if (divisionMatchType != null && divisionMatchType.isNotEmpty) {
+        return divisionMatchType;
+      }
+    }
+    return payload['matchType']?.toString().trim().toUpperCase() ?? 'SINGLES';
+  }
+
   Future<void> _fetchTournament() async {
     try {
       final dio = ref.read(dioClientProvider).dio;
@@ -109,9 +142,12 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
       final envelope = res.data;
       final payload = envelope is Map ? envelope['data'] : envelope;
       if (mounted && payload is Map) {
+        final payloadMap = Map<String, dynamic>.from(payload);
+        final isFootball = _isFootballPayload(payloadMap);
         setState(() {
-          _matchType = payload['matchType']?.toString().toUpperCase();
-          _tournamentName = payload['name']?.toString();
+          _isFootball = isFootball;
+          _matchType = isFootball ? 'SINGLES' : _canonicalMatchType(payloadMap);
+          _tournamentName = payloadMap['name']?.toString();
         });
       }
     } catch (_) {
@@ -375,7 +411,9 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
       ..._pairedParticipants,
       ..._participants.where((p) => p.isComplete),
     ];
-    final isDoubles = _matchType == 'DOUBLES';
+    final isDoubles =
+        !_isFootball &&
+        (_matchType == 'DOUBLES' || _matchType == 'MIXED_DOUBLES');
 
     return RefreshIndicator(
       onRefresh: _fetchParticipants,
@@ -616,9 +654,9 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
       // The generic endpoint is for advanced tournaments and rejects Lite data.
       await dio.post('/tournaments/lite/${widget.tournamentId}/bracket');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.lite_bracketCreated)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.lite_bracketCreated)));
       }
     } catch (e) {
       if (mounted) {

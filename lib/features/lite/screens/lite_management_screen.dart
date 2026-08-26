@@ -57,7 +57,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     });
   }
 
-    @override
+  @override
   void didUpdateWidget(covariant LiteManagementScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.tournamentId == widget.tournamentId) return;
@@ -71,7 +71,6 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
 
   @override
   void dispose() {
-
     _loadWatchdog?.cancel();
     _tabController.dispose();
     super.dispose();
@@ -216,6 +215,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                                 divisionId: liteDivision?.id,
                                 bracketType: bracketType,
                                 isEmbedded: true,
+                                isLite: true,
                                 canEditBracket:
                                     hasSingleDivision &&
                                     liteDivision?.id.isNotEmpty == true &&
@@ -339,21 +339,26 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     final rawMatchType = (division?.matchType ?? state.matchType ?? 'SINGLES')
         .trim()
         .toUpperCase();
-    final currentMatchType = rawMatchType == 'DOUBLES' &&
+    final currentMatchType =
+        rawMatchType == 'DOUBLES' &&
             division?.genderRestriction?.trim().toUpperCase() == 'MIXED'
         ? 'MIXED_DOUBLES'
         : rawMatchType;
     final isFootball = state.isFootball;
     final status = tournament?.status.toUpperCase() ?? '';
-    final locked = state.hasBracket ||
+    final locked =
+        state.hasBracket ||
         state.rosterConfirmed ||
         state.participants.isNotEmpty ||
         (division?.participantCount ?? 0) > 0 ||
         {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}.contains(status);
+    // Football is persisted as generic SINGLES for team-vs-team. Do not
+    // expose it as DOUBLES in the Lite format control.
     final selected = isFootball
-        ? 'DOUBLES'
+        ? 'SINGLES'
         : (_formatDraft ?? currentMatchType);
-    final canSave = !isFootball &&
+    final canSave =
+        !isFootball &&
         !locked &&
         !state.formatSaving &&
         division != null &&
@@ -422,15 +427,19 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               ),
             ),
             items: [
+              DropdownMenuItem(
+                value: 'SINGLES',
+                child: Text(
+                  isFootball
+                      ? l10n.lite_formatSettingFootball
+                      : l10n.lite_singles,
+                ),
+              ),
               if (!isFootball)
                 DropdownMenuItem(
-                  value: 'SINGLES',
-                  child: Text(l10n.lite_singles),
+                  value: 'DOUBLES',
+                  child: Text(l10n.lite_doubles),
                 ),
-              DropdownMenuItem(
-                value: 'DOUBLES',
-                child: Text(l10n.lite_doubles),
-              ),
               if (!isFootball)
                 DropdownMenuItem(
                   value: 'MIXED_DOUBLES',
@@ -481,11 +490,13 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                           content: Text(l10n.lite_formatSaveConfirm),
                           actions: [
                             TextButton(
-                              onPressed: () => Navigator.pop(dialogContext, false),
+                              onPressed: () =>
+                                  Navigator.pop(dialogContext, false),
                               child: Text(l10n.matchCancel),
                             ),
                             FilledButton(
-                              onPressed: () => Navigator.pop(dialogContext, true),
+                              onPressed: () =>
+                                  Navigator.pop(dialogContext, true),
                               child: Text(l10n.lite_confirmButton),
                             ),
                           ],
@@ -733,7 +744,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               ),
               const SizedBox(width: 6),
               Text(
-                                matchTypeLabel,
+                matchTypeLabel,
 
                 style: TextStyle(fontSize: 13, color: colors.textSecondary),
               ),
@@ -1271,8 +1282,9 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               width: double.infinity,
               height: 48,
               child: FilledButton.icon(
-                onPressed: state.creatingBracket ||
-                    state.bracketEligibleParticipants.length < 2
+                onPressed:
+                    state.creatingBracket ||
+                        state.bracketEligibleParticipants.length < 2
                     ? null
                     : () => _createBracket(colors, notifier),
                 icon: state.creatingBracket
@@ -1520,8 +1532,9 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 width: 200,
                 height: 48,
                 child: FilledButton.icon(
-                  onPressed: state.creatingBracket ||
-                    state.bracketEligibleParticipants.length < 2
+                  onPressed:
+                      state.creatingBracket ||
+                          state.bracketEligibleParticipants.length < 2
                       ? null
                       : () => _createBracket(colors, notifier),
                   icon: state.creatingBracket

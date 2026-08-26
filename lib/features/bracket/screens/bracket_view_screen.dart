@@ -27,6 +27,7 @@ class BracketViewScreen extends ConsumerStatefulWidget {
   final bool isReferee;
   final bool isEmbedded;
   final bool canEditBracket;
+  final bool isLite;
   final ScrollController? scrollController;
 
   const BracketViewScreen({
@@ -38,6 +39,7 @@ class BracketViewScreen extends ConsumerStatefulWidget {
     this.isReferee = false,
     this.isEmbedded = false,
     this.canEditBracket = false,
+    this.isLite = false,
     this.scrollController,
   });
 
@@ -702,6 +704,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                           isReferee: widget.isReferee,
                           isReadOnly: isReadOnly,
                           canEditBracket: widget.canEditBracket,
+                          isLite: widget.isLite,
                         ),
                       ),
                     );

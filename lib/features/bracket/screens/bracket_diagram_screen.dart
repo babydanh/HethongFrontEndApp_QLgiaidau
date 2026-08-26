@@ -24,6 +24,7 @@ class BracketDiagramScreen extends ConsumerStatefulWidget {
   final bool isReferee;
   final bool isReadOnly;
   final bool canEditBracket;
+  final bool isLite;
 
   const BracketDiagramScreen({
     super.key,
@@ -34,6 +35,7 @@ class BracketDiagramScreen extends ConsumerStatefulWidget {
     this.isReferee = false,
     this.isReadOnly = true,
     this.canEditBracket = false,
+    this.isLite = false,
   });
 
   @override
@@ -106,6 +108,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
           'toSlot': target.slot,
         },
       ],
+      isLite: widget.isLite,
     );
     await _fetchBracket();
   }
