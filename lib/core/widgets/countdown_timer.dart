@@ -24,15 +24,19 @@ class CountdownTimer extends StatefulWidget {
 
 class _CountdownTimerState extends State<CountdownTimer> {
   Timer? _timer;
-  String _text = '';
 
   @override
   void initState() {
     super.initState();
-    _update();
     _timer = Timer.periodic(
-      widget.compact ? const Duration(seconds: 60) : const Duration(seconds: 1),
-      (_) => _update(),
+      widget.compact
+          ? const Duration(seconds: 60)
+          : const Duration(seconds: 1),
+      (_) {
+        if (mounted) {
+          setState(() {});
+        }
+      },
     );
   }
 
@@ -42,12 +46,10 @@ class _CountdownTimerState extends State<CountdownTimer> {
     super.dispose();
   }
 
-  void _update() {
-    final l10n = AppLocalizations.of(context);
+  String _formatText(AppLocalizations l10n) {
     final diff = widget.targetDate.difference(DateTime.now());
     if (diff.isNegative) {
-      _setText(l10n!.coreRegistrationOpening);
-      return;
+      return l10n.coreRegistrationOpening;
     }
     final days = diff.inDays;
     final hours = diff.inHours % 24;
@@ -55,29 +57,25 @@ class _CountdownTimerState extends State<CountdownTimer> {
     final secs = diff.inSeconds % 60;
 
     if (widget.compact) {
-      _setText(l10n!.coreCountdownDays(days));
+      return l10n.coreCountdownDays(days);
     } else {
+      final clock =
+          '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
       if (days > 0) {
-        final clock =
-            '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-        _setText(l10n!.coreCountdownTime(days, clock));
+        return l10n.coreCountdownTime(days, clock);
       } else {
-        final clock =
-            '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-        _setText(l10n!.coreCountdownClock(clock));
+        return l10n.coreCountdownClock(clock);
       }
-    }
-  }
-
-  void _setText(String text) {
-    if (mounted && _text != text) {
-      setState(() => _text = text);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_text.isEmpty) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return const SizedBox.shrink();
+
+    final text = _formatText(l10n);
+    if (text.isEmpty) return const SizedBox.shrink();
 
     if (widget.compact) {
       return Container(
@@ -102,7 +100,7 @@ class _CountdownTimerState extends State<CountdownTimer> {
             ),
             const SizedBox(width: 4),
             Text(
-              _text,
+              text,
               style: const TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.w800,
@@ -129,14 +127,14 @@ class _CountdownTimerState extends State<CountdownTimer> {
           Container(
             width: 8,
             height: 8,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFFF59E0B),
+              color: Color(0xFFF59E0B),
             ),
           ),
           const SizedBox(width: 8),
           Text(
-            _text,
+            text,
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w800,
