@@ -11555,6 +11555,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get opsNoParticipants => 'Nội dung này chưa có người tham gia.';
 
   @override
+  String get opsFilterAll => 'Tất cả';
+
+  @override
+  String get opsFilterPaid => 'Đã thanh toán';
+
+  @override
+  String get opsFilterUnpaid => 'Chưa thanh toán';
+
+  @override
+  String get opsFilterKicked => 'Đã loại';
+
+  @override
   String get opsAudit => 'Hoạt động đã ghi nhận';
 
   @override

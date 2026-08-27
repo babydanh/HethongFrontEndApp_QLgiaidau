@@ -11588,6 +11588,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opsNoParticipants => 'No participants in this division yet.';
 
   @override
+  String get opsFilterAll => 'All';
+
+  @override
+  String get opsFilterPaid => 'Paid';
+
+  @override
+  String get opsFilterUnpaid => 'Unpaid';
+
+  @override
+  String get opsFilterKicked => 'Removed';
+
+  @override
   String get opsAudit => 'Audit activity';
 
   @override

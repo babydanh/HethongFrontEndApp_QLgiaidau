@@ -21046,6 +21046,30 @@ abstract class AppLocalizations {
   /// **'Nội dung này chưa có người tham gia.'**
   String get opsNoParticipants;
 
+  /// No description provided for @opsFilterAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get opsFilterAll;
+
+  /// No description provided for @opsFilterPaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thanh toán'**
+  String get opsFilterPaid;
+
+  /// No description provided for @opsFilterUnpaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thanh toán'**
+  String get opsFilterUnpaid;
+
+  /// No description provided for @opsFilterKicked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã loại'**
+  String get opsFilterKicked;
+
   /// No description provided for @opsAudit.
   ///
   /// In vi, this message translates to:

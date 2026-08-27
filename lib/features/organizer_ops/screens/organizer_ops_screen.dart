@@ -21,6 +21,7 @@ class OrganizerOpsScreen extends ConsumerStatefulWidget {
 
 class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
   String? _selectedDivisionId;
+  String _rosterFilter = 'ALL';
   int _selectedTab = 0;
 
   @override
@@ -187,6 +188,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                     selectedDivisionId: selectedDivisionId,
                     onChanged: (value) => setState(() {
                       _selectedDivisionId = value;
+                      _rosterFilter = 'ALL';
                       _selectedTab = 0;
                     }),
                   ),
@@ -300,6 +302,21 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         ),
       ),
       data: (readModel) {
+        final participants = switch (_rosterFilter) {
+          'PAID' =>
+            readModel.participants
+                .where((participant) => participant.isPaid)
+                .toList(growable: false),
+          'UNPAID' =>
+            readModel.participants
+                .where((participant) => !participant.isPaid)
+                .toList(growable: false),
+          'KICKED' =>
+            readModel.participants
+                .where((participant) => participant.isKicked)
+                .toList(growable: false),
+          _ => readModel.participants,
+        };
         if (readModel.participants.isEmpty) {
           return SliverToBoxAdapter(
             child: _OpsReadOnlyNotice(
@@ -310,7 +327,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
           );
         }
         return SliverList.builder(
-          itemCount: readModel.participants.length + 1,
+          itemCount: participants.length + 2,
           itemBuilder: (context, index) {
             if (index == 0) {
               return Padding(
@@ -322,7 +339,13 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 ),
               );
             }
-            final participant = readModel.participants[index - 1];
+            if (index == 1) {
+              return _OpsRosterFilterBar(
+                selectedFilter: _rosterFilter,
+                onChanged: (filter) => setState(() => _rosterFilter = filter),
+              );
+            }
+            final participant = participants[index - 2];
             return _OpsParticipantCard(
               participant: participant,
               onKick: participant.isKicked
@@ -1342,6 +1365,45 @@ class _OpsMatchCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OpsRosterFilterBar extends StatelessWidget {
+  const _OpsRosterFilterBar({
+    required this.selectedFilter,
+    required this.onChanged,
+  });
+
+  final String selectedFilter;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final filters = <(String, String)>[
+      ('ALL', l10n.opsFilterAll),
+      ('PAID', l10n.opsFilterPaid),
+      ('UNPAID', l10n.opsFilterUnpaid),
+      ('KICKED', l10n.opsFilterKicked),
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            for (var index = 0; index < filters.length; index++) ...[
+              if (index > 0) const SizedBox(width: 8),
+              ChoiceChip(
+                selected: selectedFilter == filters[index].$1,
+                onSelected: (_) => onChanged(filters[index].$1),
+                label: Text(filters[index].$2),
+              ),
+            ],
+          ],
         ),
       ),
     );
