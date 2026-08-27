@@ -832,8 +832,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 160),
       children: [
         // ── Diagram Access Banner ──
-        if (!isRoundRobin)
-          Container(
+        Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(

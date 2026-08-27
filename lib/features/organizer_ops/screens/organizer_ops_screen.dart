@@ -420,16 +420,28 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     );
   }
 
-  String _opsMatchBucket(MatchModel match) {
-    if (match.isLive) return 'ongoing';
-    if (match.isCompleted) return 'completed';
-
+  bool _isOpsTerminalMatch(MatchModel match) {
     final status = match.status.trim().toUpperCase();
+    return match.isCompleted ||
+        status == 'FINISHED' ||
+        match.completedAt != null ||
+        match.winnerId.trim().isNotEmpty;
+  }
+
+  String _opsMatchBucket(MatchModel match) {
+    final status = match.status.trim().toUpperCase();
+    final missingOpponent =
+        match.team1Id.trim().isEmpty || match.team2Id.trim().isEmpty;
+    final isDirectAdvance =
+        match.isBye || (match.winnerId.trim().isNotEmpty && missingOpponent);
+
+    if (isDirectAdvance) return 'attention';
+    if (match.isLive) return 'ongoing';
+    if (_isOpsTerminalMatch(match)) return 'completed';
+
     final needsAttention =
         status == 'DISPUTED' ||
-        match.isBye ||
-        match.team1Id.isEmpty ||
-        match.team2Id.isEmpty ||
+        missingOpponent ||
         match.scheduledTime == null ||
         status != 'SCHEDULED';
     return needsAttention ? 'attention' : 'scheduled';
@@ -610,6 +622,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 final match = section.matches[rowIndex];
                 return _OpsMatchCard(
                   match: match,
+                  bucketKey: section.key,
                   isFocused: match.id == focusedMatchId,
                   onTap: readOnly
                       ? null
@@ -1755,24 +1768,47 @@ class _OpsMatchSectionHeader extends StatelessWidget {
 class _OpsMatchCard extends StatelessWidget {
   const _OpsMatchCard({
     required this.match,
+    required this.bucketKey,
     this.isFocused = false,
     this.onTap,
   });
 
   final MatchModel match;
+  final String bucketKey;
   final bool isFocused;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final status = match.status.toUpperCase();
-    final isCompleted = status == 'COMPLETED' || status == 'FINISHED';
+    final isCompleted = bucketKey == 'completed';
+    final statusLabel = switch (bucketKey) {
+      'ongoing' => l10n.opsOngoing,
+      'scheduled' => l10n.opsScheduled,
+      'completed' => l10n.opsCompleted,
+      'attention' => l10n.opsAttention,
+      _ => status,
+    };
     final statusColor = isCompleted
         ? colors.success
-        : status == 'ONGOING' || status == 'LIVE'
+        : bucketKey == 'ongoing'
         ? colors.info
         : colors.warning;
+    final groupName = match.groupName?.trim();
+    final isRoundRobin =
+        groupName?.isNotEmpty == true ||
+        (match.stageType?.toLowerCase().contains('round_robin') ?? false);
+    final contextLabel = isRoundRobin
+        ? groupName?.isNotEmpty == true
+            ? l10n.crossTableLegTitle(groupName!, match.leg ?? 1)
+            : '#${match.matchNumber}'
+        : l10n.organizer_matchTitle(match.round, match.matchNumber);
+    final scheduledLabel = match.scheduledTime == null
+        ? l10n.opsUnscheduled
+        : '${MaterialLocalizations.of(context).formatFullDate(match.scheduledTime!.toLocal())} '
+              '${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(match.scheduledTime!.toLocal()), alwaysUse24HourFormat: true)}';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -1796,7 +1832,7 @@ class _OpsMatchCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'R${match.round} • #${match.matchNumber}',
+                      contextLabel,
                       style: TextStyle(
                         color: colors.textMuted,
                         fontSize: 11,
@@ -1804,7 +1840,7 @@ class _OpsMatchCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  _OpsStatusPill(label: status, color: statusColor),
+                  _OpsStatusPill(label: statusLabel, color: statusColor),
                 ],
               ),
               const SizedBox(height: 12),
@@ -1852,9 +1888,7 @@ class _OpsMatchCard extends StatelessWidget {
                 children: [
                   _OpsMeta(
                     icon: Icons.schedule_rounded,
-                    text: match.scheduledTime == null
-                        ? AppLocalizations.of(context)!.opsUnscheduled
-                        : match.scheduledTime!.toLocal().toString(),
+                    text: scheduledLabel,
                   ),
                   if (match.court.isNotEmpty)
                     _OpsMeta(icon: Icons.place_outlined, text: match.court),
