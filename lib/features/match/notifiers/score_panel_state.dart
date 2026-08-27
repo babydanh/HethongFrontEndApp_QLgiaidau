@@ -171,6 +171,7 @@ class ScorePanelState {
   final RallySetState? rally;
   final FootballLiveState? football;
   final bool isSubmitting;
+  final bool isServerTerminal;
   final String? errorMessage;
   final bool overrideEnabled;
   final String overrideReason;
@@ -184,6 +185,7 @@ class ScorePanelState {
     this.rally,
     this.football,
     this.isSubmitting = false,
+    this.isServerTerminal = false,
     this.errorMessage,
     this.overrideEnabled = false,
     this.overrideReason = '',
@@ -229,6 +231,7 @@ class ScorePanelState {
     RallySetState? rally,
     FootballLiveState? football,
     bool? isSubmitting,
+    bool? isServerTerminal,
     String? errorMessage,
     bool? overrideEnabled,
     String? overrideReason,
@@ -241,6 +244,7 @@ class ScorePanelState {
     rally: rally ?? this.rally,
     football: football ?? this.football,
     isSubmitting: isSubmitting ?? this.isSubmitting,
+    isServerTerminal: isServerTerminal ?? this.isServerTerminal,
     errorMessage: errorMessage,
     overrideEnabled: overrideEnabled ?? this.overrideEnabled,
     overrideReason: overrideReason ?? this.overrideReason,

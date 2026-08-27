@@ -40,7 +40,7 @@ FootballLiveState? _readFootballState(Map<String, dynamic> details) {
   return FootballLiveState(
     team1Goals: _parseFootballInt(raw['team1Goals']),
     team2Goals: _parseFootballInt(raw['team2Goals']),
-    phase: _parseFootballPhase(raw['phase']), ?? 'FIRST_HALF',
+    phase: _parseFootballPhase(raw['phase']) ?? 'FIRST_HALF',
     minute: _parseFootballInt(raw['minute']),
     addedMinute: _parseFootballInt(raw['addedMinute']),
     events: raw['events'] is List
@@ -69,6 +69,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   Timer? _footballSyncTimer;
   FootballLiveState? _pendingFootballSync;
   bool _footballSyncInFlight = false;
+  bool _footballSyncHealthy = true;
   String? _pendingScoreSignature;
   int? _pendingBaseRevision;
   bool _liveSyncPending = false;
@@ -122,6 +123,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     if (pending != null) {
       final isOurEcho = _scoreSignature(hydrated) == pending;
       if (isOurEcho) {
+        _footballSyncHealthy = true;
         _pendingScoreSignature = null;
         _pendingBaseRevision = null;
       } else {
@@ -135,6 +137,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
             remoteRevision <= baseRevision) {
           return;
         }
+        _footballSyncHealthy = true;
         _pendingScoreSignature = null;
         _pendingBaseRevision = null;
       }
@@ -154,7 +157,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         : '${value.tennis!.team1GamePoints}:${value.tennis!.team2GamePoints}:${value.tennis!.isTiebreak}';
     final football = value.football == null
         ? '-'
-        : '${value.football!.team1Goals}:${value.football!.team2Goals}:${value.football!.phase}:${value.football!.minute}:${value.football!.addedMinute}:${value.football!.shootoutTeam1Goals}:${value.football!.shootoutTeam2Goals}:${value.football!.events.length}';
+        : '${value.football!.team1Goals}:${value.football!.team2Goals}:${value.football!.phase}:${value.football!.minute}:${value.football!.addedMinute}:${value.football!.shootoutTeam1Goals}:${value.football!.shootoutTeam2Goals}:${value.football!.events.map((event) => '${event.type}:${event.isTeam1 ? 1 : 2}:${event.minute}:${event.addedMinute}').join('|')}';
     return '$sets#$rally#$tennis#$football';
   }
 
@@ -170,7 +173,11 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       SportRuleKind.fromString(match.sportKey),
     );
     if (details == null) {
-      return current.copyWith(config: config, isLite: _isLiteMatch(match));
+      return current.copyWith(
+        config: config,
+        isLite: _isLiteMatch(match),
+        isServerTerminal: _isServerTerminal(match),
+      );
     }
 
     // 1. Finished Sets
@@ -252,6 +259,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     return current.copyWith(
       config: config,
       isLite: _isLiteMatch(match),
+      isServerTerminal: _isServerTerminal(match),
       finishedSets: finishedSets,
       tennis: tennisState,
       pickleball: pbState,
@@ -271,6 +279,13 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   static bool _isLiteMatch(MatchModel? match) {
     final mode = match?.tournamentConfig?['mode']?.toString().toUpperCase();
     return mode == 'LITE';
+  }
+
+  static bool _isServerTerminal(MatchModel match) {
+    final status = match.status.trim().toLowerCase();
+    return status == 'completed' ||
+        status == 'walkover' ||
+        match.completedAt != null;
   }
 
   bool _canAddRallyPoint(int currentScore) {
@@ -531,6 +546,15 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     final next = current.copyWith(
       team1Goals: isTeam1 ? current.team1Goals + 1 : current.team1Goals,
       team2Goals: isTeam1 ? current.team2Goals : current.team2Goals + 1,
+      events: [
+        ...current.events,
+        FootballEvent(
+          type: 'GOAL',
+          isTeam1: isTeam1,
+          minute: current.minute,
+          addedMinute: current.addedMinute,
+        ),
+      ],
     );
     state = state.copyWith(football: next, errorMessage: null);
     _scheduleFootballSync(next);
@@ -538,6 +562,14 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   void footballRemoveGoal(bool isTeam1) {
     final current = state.football ?? const FootballLiveState();
+    final events = [...current.events];
+    for (var index = events.length - 1; index >= 0; index--) {
+      final event = events[index];
+      if (event.type == 'GOAL' && event.isTeam1 == isTeam1) {
+        events.removeAt(index);
+        break;
+      }
+    }
     final next = current.copyWith(
       team1Goals: isTeam1
           ? (current.team1Goals > 0 ? current.team1Goals - 1 : 0)
@@ -545,6 +577,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       team2Goals: isTeam1
           ? current.team2Goals
           : (current.team2Goals > 0 ? current.team2Goals - 1 : 0),
+      events: events,
     );
     state = state.copyWith(football: next, errorMessage: null);
     _scheduleFootballSync(next);
@@ -614,6 +647,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   void _scheduleFootballSync(FootballLiveState value) {
+    _footballSyncHealthy = true;
     _markLocalScorePending();
     _pendingFootballSync = value;
     _footballSyncTimer?.cancel();
@@ -623,17 +657,18 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     });
   }
 
-  Future<void> _flushFootballSync() async {
-    if (_footballSyncInFlight) return;
+  Future<bool> _flushFootballSync() async {
+    if (_footballSyncInFlight) return true;
     final value = _pendingFootballSync;
-    if (value == null) return;
+    if (value == null) return _footballSyncHealthy;
     _pendingFootballSync = null;
     _footballSyncInFlight = true;
 
     final match = ref.read(singleMatchProvider(arg)).value;
     if (match == null) {
       _footballSyncInFlight = false;
-      return;
+      _footballSyncHealthy = false;
+      return false;
     }
 
     try {
@@ -675,6 +710,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
           );
     } catch (error, stack) {
       _log.error('Football live score sync failed', error, stack);
+      _footballSyncHealthy = false;
       state = state.copyWith(errorMessage: _l10n.scorePanel_footballSyncError);
     } finally {
       _footballSyncInFlight = false;
@@ -682,9 +718,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         unawaited(_flushFootballSync());
       }
     }
+    return _footballSyncHealthy;
   }
 
-  Future<void> _flushPendingFootballSync() async {
+  Future<bool> _flushPendingFootballSync() async {
     _footballSyncTimer?.cancel();
     _footballSyncTimer = null;
     if (_pendingFootballSync != null && !_footballSyncInFlight) {
@@ -696,6 +733,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     if (_pendingFootballSync != null) {
       await _flushFootballSync();
     }
+    return _footballSyncHealthy;
   }
 
   bool canCompleteAs(int winnerTeam) {
@@ -762,7 +800,14 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     state = state.copyWith(isSubmitting: true, errorMessage: null);
     try {
       if (state.football != null) {
-        await _flushPendingFootballSync();
+        final flushed = await _flushPendingFootballSync();
+        if (!flushed) {
+          state = state.copyWith(
+            isSubmitting: false,
+            errorMessage: _l10n.scorePanel_footballSyncError,
+          );
+          return;
+        }
         final football = state.football!;
         final match = ref.read(singleMatchProvider(arg)).value;
         final winnerId = winnerTeam == 1

@@ -23,18 +23,11 @@ class FootballScorePanel extends ConsumerWidget {
     final notifier = ref.read(scorePanelNotifierProvider(params).notifier);
     final l10n = AppLocalizations.of(context)!;
     final score = state.football ?? const FootballLiveState();
-    final phases = <String>[
-      'FIRST_HALF',
-      'HALFTIME',
-      'SECOND_HALF',
-      'STOPPAGE_TIME',
-      'FULL_TIME',
-      'EXTRA_TIME_FIRST_HALF',
-      'EXTRA_TIME_BREAK',
-      'EXTRA_TIME_SECOND_HALF',
-      'PENALTY_SHOOTOUT',
-      'COMPLETED',
-    ];
+    final phases = score.phase == 'COMPLETED'
+        ? const ['COMPLETED']
+        : footballEditablePhases;
+    final isLocked =
+        state.isSubmitting || state.isServerTerminal || score.phase == 'COMPLETED';
     return SingleChildScrollView(
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -51,7 +44,7 @@ class FootballScorePanel extends ConsumerWidget {
                       score: score.team1Goals,
                       onAdd: () => notifier.footballAddGoal(true),
                       onRemove: () => notifier.footballRemoveGoal(true),
-                      disabled: state.isSubmitting,
+                      disabled: isLocked,
                     ),
                   ),
                   const Padding(
@@ -70,7 +63,7 @@ class FootballScorePanel extends ConsumerWidget {
                       score: score.team2Goals,
                       onAdd: () => notifier.footballAddGoal(false),
                       onRemove: () => notifier.footballRemoveGoal(false),
-                      disabled: state.isSubmitting,
+                      disabled: isLocked,
                     ),
                   ),
                 ],
@@ -90,7 +83,7 @@ class FootballScorePanel extends ConsumerWidget {
                       addedMinute: score.addedMinute,
                       onMinuteSubmitted: notifier.footballSetMinute,
                       onAddedMinuteSubmitted: notifier.footballSetAddedMinute,
-                      disabled: state.isSubmitting,
+                      disabled: isLocked,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -113,7 +106,7 @@ class FootballScorePanel extends ConsumerWidget {
                             ),
                           )
                           .toList(),
-                      onChanged: state.isSubmitting
+                      onChanged: isLocked
                           ? null
                           : (value) {
                               if (value != null) {
@@ -132,7 +125,7 @@ class FootballScorePanel extends ConsumerWidget {
               team2Name: team2Name,
               team1Goals: score.shootoutTeam1Goals,
               team2Goals: score.shootoutTeam2Goals,
-              disabled: state.isSubmitting,
+              disabled: isLocked,
               onChanged: (team1Goals, team2Goals) =>
                   notifier.footballSetShootout(
                     team1Goals: team1Goals,
@@ -154,7 +147,7 @@ class FootballScorePanel extends ConsumerWidget {
                     'SUBSTITUTION',
                   ])
                     OutlinedButton.icon(
-                      onPressed: state.isSubmitting
+                      onPressed: isLocked
                           ? null
                           : () => _showTeamPicker(
                               context,
@@ -485,6 +478,11 @@ class _FootballTimeFieldsState extends State<_FootballTimeFields> {
               labelText: l10n.footballScore_minute,
               isDense: true,
             ),
+            readOnly: widget.disabled,
+            onChanged: (value) {
+              final parsed = int.tryParse(value);
+              if (parsed != null) widget.onMinuteSubmitted(parsed);
+            },
             onSubmitted: (value) =>
                 widget.onMinuteSubmitted(int.tryParse(value) ?? widget.minute),
           ),
@@ -498,6 +496,11 @@ class _FootballTimeFieldsState extends State<_FootballTimeFields> {
               labelText: l10n.footballScore_addedMinute,
               isDense: true,
             ),
+            readOnly: widget.disabled,
+            onChanged: (value) {
+              final parsed = int.tryParse(value);
+              if (parsed != null) widget.onAddedMinuteSubmitted(parsed);
+            },
             onSubmitted: (value) => widget.onAddedMinuteSubmitted(
               int.tryParse(value) ?? widget.addedMinute,
             ),
