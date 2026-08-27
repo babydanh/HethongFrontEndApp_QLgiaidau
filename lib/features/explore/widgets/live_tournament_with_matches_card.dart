@@ -105,10 +105,8 @@ class _LiveTournamentWithMatchesCardState
         final currentPageMatches = displayMatches.sublist(startIndex, endIndex);
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-          ),
+          margin: EdgeInsets.zero,
+          decoration: const BoxDecoration(color: Colors.white),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -125,7 +123,10 @@ class _LiveTournamentWithMatchesCardState
                         decoration: BoxDecoration(
                           color: const Color(0xFFF1F5F9),
                           shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                          border: Border.all(
+                            color: const Color(0xFFE2E8F0),
+                            width: 1,
+                          ),
                         ),
                         child: ClipOval(
                           child: resolvedLogoUrl.isNotEmpty
@@ -225,110 +226,169 @@ class _LiveTournamentWithMatchesCardState
                 ),
               ),
 
-              // ── Pagination Controls & Dots Indicator (Mượt mà với AnimatedSwitcher) ──
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                child: totalPages > 1
-                    ? Column(
-                        key: const ValueKey('pagination_visible'),
-                        children: [
-                          const SizedBox(height: 4),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                InkWell(
-                                  onTap: safePageIndex > 0
-                                      ? () =>
-                                            setState(() => _currentMatchIndex--)
-                                      : null,
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: AnimatedOpacity(
-                                    duration: const Duration(milliseconds: 200),
-                                    opacity: safePageIndex > 0 ? 1.0 : 0.4,
-                                    child: Container(
-                                      width: 32,
-                                      height: 32,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFFF1F5F9),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.chevron_left_rounded,
-                                        size: 18,
-                                        color: Color(0xFF475569),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: List.generate(totalPages, (idx) {
-                                    final isSelected = idx == safePageIndex;
-                                    return AnimatedContainer(
-                                      duration: const Duration(
-                                        milliseconds: 250,
-                                      ),
-                                      curve: Curves.easeOutCubic,
-                                      margin: const EdgeInsets.symmetric(
-                                        horizontal: 3,
-                                      ),
-                                      width: isSelected ? 16 : 7,
-                                      height: 7,
-                                      decoration: BoxDecoration(
-                                        color: isSelected
-                                            ? AppTheme.primary
-                                            : const Color(0xFFCBD5E1),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                    );
-                                  }),
-                                ),
-                                const SizedBox(width: 12),
-                                InkWell(
-                                  onTap: safePageIndex < totalPages - 1
-                                      ? () =>
-                                            setState(() => _currentMatchIndex++)
-                                      : null,
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: AnimatedOpacity(
-                                    duration: const Duration(milliseconds: 200),
-                                    opacity: safePageIndex < totalPages - 1
-                                        ? 1.0
-                                        : 0.4,
-                                    child: Container(
-                                      width: 32,
-                                      height: 32,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFFF1F5F9),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.chevron_right_rounded,
-                                        size: 18,
-                                        color: Color(0xFF475569),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      )
-                    : const SizedBox(
-                        key: ValueKey('pagination_hidden'),
-                        height: 6,
-                      ),
-              ),
+              // ── Compact numeric pagination per tournament ──
+              if (displayMatches.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+                  child: _buildPagination(
+                    context,
+                    l10n,
+                    totalMatches: displayMatches.length,
+                    totalPages: totalPages,
+                    currentPage: safePageIndex,
+                  ),
+                ),
+              Container(height: 12, color: context.colors.bgSurface),
             ],
           ),
         );
       },
       loading: () => const SizedBox.shrink(),
       error: (_, stackTrace) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildPagination(
+    BuildContext context,
+    AppLocalizations l10n, {
+    required int totalMatches,
+    required int totalPages,
+    required int currentPage,
+  }) {
+    final colors = context.colors;
+    final visiblePages = <int>{};
+    if (totalPages <= 5) {
+      visiblePages.addAll(List<int>.generate(totalPages, (index) => index));
+    } else {
+      visiblePages.add(0);
+      visiblePages.add(totalPages - 1);
+      visiblePages.add(currentPage);
+      if (currentPage > 0) visiblePages.add(currentPage - 1);
+      if (currentPage < totalPages - 1) visiblePages.add(currentPage + 1);
+    }
+
+    final orderedPages = visiblePages.toList()..sort();
+    final pageItems = <Widget>[];
+    for (var index = 0; index < orderedPages.length; index++) {
+      final page = orderedPages[index];
+      if (index > 0 && page - orderedPages[index - 1] > 1) {
+        pageItems.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Text(
+              '…',
+              style: TextStyle(color: colors.textMuted, fontSize: 13),
+            ),
+          ),
+        );
+      }
+      final selected = page == currentPage;
+      pageItems.add(
+        InkWell(
+          onTap: selected
+              ? null
+              : () => setState(() => _currentMatchIndex = page),
+          borderRadius: BorderRadius.circular(7),
+          child: Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected ? AppTheme.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(7),
+              border: Border.all(
+                color: selected ? AppTheme.primary : colors.border,
+              ),
+            ),
+            child: Text(
+              '${page + 1}',
+              style: TextStyle(
+                color: selected ? Colors.white : colors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '${l10n.userProfileTotalMatches}: $totalMatches',
+              style: TextStyle(
+                color: colors.textMuted,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (totalPages > 1)
+              Text(
+                '${currentPage + 1}/$totalPages',
+                style: TextStyle(
+                  color: colors.textMuted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+          ],
+        ),
+        if (totalPages > 1) ...[
+          const SizedBox(height: 7),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildPageArrow(
+                context,
+                icon: Icons.chevron_left_rounded,
+                enabled: currentPage > 0,
+                onPressed: () => setState(() => _currentMatchIndex--),
+              ),
+              const SizedBox(width: 6),
+              ...pageItems,
+              const SizedBox(width: 6),
+              _buildPageArrow(
+                context,
+                icon: Icons.chevron_right_rounded,
+                enabled: currentPage < totalPages - 1,
+                onPressed: () => setState(() => _currentMatchIndex++),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPageArrow(
+    BuildContext context, {
+    required IconData icon,
+    required bool enabled,
+    required VoidCallback onPressed,
+  }) {
+    final colors = context.colors;
+    return InkWell(
+      onTap: enabled ? onPressed : null,
+      borderRadius: BorderRadius.circular(7),
+      child: Container(
+        width: 30,
+        height: 30,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: enabled ? colors.bgSurface : colors.bgCard,
+          borderRadius: BorderRadius.circular(7),
+          border: Border.all(color: colors.border),
+        ),
+        child: Icon(
+          icon,
+          size: 18,
+          color: enabled ? colors.textPrimary : colors.textMuted,
+        ),
+      ),
     );
   }
 
@@ -410,11 +470,8 @@ class _LiveTournamentWithMatchesCardState
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: const Color(0xFFE2E8F0),
-            width: 1.0,
-          ),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -452,10 +509,7 @@ class _LiveTournamentWithMatchesCardState
                       decoration: BoxDecoration(
                         color: colors.bgSurface,
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: colors.border,
-                          width: 1,
-                        ),
+                        border: Border.all(color: colors.border, width: 1),
                       ),
                       child: Text(
                         bracketText,
@@ -547,9 +601,9 @@ class _LiveTournamentWithMatchesCardState
                               (match.sets.isNotEmpty
                                   ? match.sets.last.score1 >
                                         match.sets.last.score2
-                                    : match.score1 > match.score2)
-                                ? AppTheme.primary.withValues(alpha: 0.4)
-                                : colors.border,
+                                  : match.score1 > match.score2)
+                              ? AppTheme.primary.withValues(alpha: 0.4)
+                              : colors.border,
                         ),
                       ),
                       alignment: Alignment.center,
@@ -636,9 +690,9 @@ class _LiveTournamentWithMatchesCardState
                               (match.sets.isNotEmpty
                                   ? match.sets.last.score2 >
                                         match.sets.last.score1
-                                    : match.score2 > match.score1)
-                                ? AppTheme.primary.withValues(alpha: 0.4)
-                                : colors.border,
+                                  : match.score2 > match.score1)
+                              ? AppTheme.primary.withValues(alpha: 0.4)
+                              : colors.border,
                         ),
                       ),
                       alignment: Alignment.center,
@@ -710,7 +764,7 @@ class _LiveTournamentWithMatchesCardState
                       _cheerInFlight.remove(match.id);
                     }
                   },
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(8),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 13,
@@ -720,7 +774,7 @@ class _LiveTournamentWithMatchesCardState
                       color: isCheered
                           ? const Color(0xFFFEF2F2)
                           : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isCheered
                             ? const Color(0xFFFECACA)
@@ -764,7 +818,8 @@ class _LiveTournamentWithMatchesCardState
                   onTap: () {
                     AppShareModal.show(
                       context: context,
-                      title: '${match.team1Name} ${l10n.matchVsLabel} ${match.team2Name}',
+                      title:
+                          '${match.team1Name} ${l10n.matchVsLabel} ${match.team2Name}',
                       subtitle: l10n.exploreShareSubtitle(
                         widget.tournament.name,
                         match.court.isNotEmpty
@@ -778,13 +833,13 @@ class _LiveTournamentWithMatchesCardState
                           : (l10n.exploreMatchBadge),
                     );
                   },
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(8),
                   child: Container(
                     width: 36,
                     height: 34,
                     decoration: BoxDecoration(
                       color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: const Color(0xFFE2E8F0),
                         width: 1,

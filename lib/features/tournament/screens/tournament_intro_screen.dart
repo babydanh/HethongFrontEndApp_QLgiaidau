@@ -601,16 +601,27 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       return const SizedBox.shrink();
     }
 
+    final isFull = (tournament.maxParticipants != null &&
+        tournament.maxParticipants! > 0 &&
+        (tournament.participantCount ?? 0) >= tournament.maxParticipants!);
+
     final isClosed =
         statusUpper == 'REGISTRATION_CLOSED' ||
         statusUpper == 'CLOSED' ||
         (tournament.registrationEndDate != null &&
             now.isAfter(tournament.registrationEndDate!));
 
+    final isDisabled = isClosed || isFull;
+    final buttonText = isFull
+        ? 'Đã đủ hồ sơ'
+        : isClosed
+            ? l10n.registrationClosed
+            : l10n.register;
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
-        boxShadow: isClosed
+        boxShadow: isDisabled
             ? []
             : [
                 BoxShadow(
@@ -622,19 +633,19 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       ),
       child: FilledButton(
         style: FilledButton.styleFrom(
-          backgroundColor: isClosed ? context.colors.bgCard : AppTheme.primary,
+          backgroundColor: isDisabled ? context.colors.bgCard : AppTheme.primary,
           disabledBackgroundColor: context.colors.bgCard,
-          foregroundColor: isClosed ? context.colors.textMuted : Colors.white,
+          foregroundColor: isDisabled ? context.colors.textMuted : Colors.white,
           disabledForegroundColor: context.colors.textMuted,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
-            side: isClosed
+            side: isDisabled
                 ? BorderSide(color: context.colors.border)
                 : BorderSide.none,
           ),
         ),
-        onPressed: isClosed
+        onPressed: isDisabled
             ? null
             : () {
                 final auth = ref.read(authProvider);
@@ -656,11 +667,11 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 context.push('/register/${tournament.id}$query');
               },
         child: Text(
-          isClosed ? l10n.registrationClosed : l10n.register,
+          buttonText,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 13,
-            color: isClosed ? context.colors.textMuted : Colors.white,
+            color: isDisabled ? context.colors.textMuted : Colors.white,
           ),
         ),
       ),
