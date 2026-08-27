@@ -21046,6 +21046,84 @@ abstract class AppLocalizations {
   /// **'Hoạt động đã ghi nhận'**
   String get opsAudit;
 
+  /// No description provided for @opsSpecialOperation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xử lý đặc biệt'**
+  String get opsSpecialOperation;
+
+  /// No description provided for @opsWalkover.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ cuộc'**
+  String get opsWalkover;
+
+  /// No description provided for @opsNoShow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có mặt'**
+  String get opsNoShow;
+
+  /// No description provided for @opsRetirement.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dừng thi đấu'**
+  String get opsRetirement;
+
+  /// No description provided for @opsDisqualification.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại khỏi giải'**
+  String get opsDisqualification;
+
+  /// No description provided for @opsOverrideResult.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi đè kết quả'**
+  String get opsOverrideResult;
+
+  /// No description provided for @opsPostpone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoãn trận'**
+  String get opsPostpone;
+
+  /// No description provided for @opsAbandon.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy trận'**
+  String get opsAbandon;
+
+  /// No description provided for @opsOperationReason.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lý do bắt buộc'**
+  String get opsOperationReason;
+
+  /// No description provided for @opsOperationReasonHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải thích quyết định này để ghi vào nhật ký.'**
+  String get opsOperationReasonHint;
+
+  /// No description provided for @opsOperationConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng xử lý'**
+  String get opsOperationConfirm;
+
+  /// No description provided for @opsWinner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bên thắng nếu cần'**
+  String get opsWinner;
+
+  /// No description provided for @opsSelectWinner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn bên thắng'**
+  String get opsSelectWinner;
+
   /// No description provided for @opsStageCount.
   ///
   /// In vi, this message translates to:

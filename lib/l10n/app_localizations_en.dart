@@ -11588,6 +11588,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opsAudit => 'Audit activity';
 
   @override
+  String get opsSpecialOperation => 'Special operation';
+
+  @override
+  String get opsWalkover => 'Walkover';
+
+  @override
+  String get opsNoShow => 'No-show';
+
+  @override
+  String get opsRetirement => 'Retirement';
+
+  @override
+  String get opsDisqualification => 'Disqualification';
+
+  @override
+  String get opsOverrideResult => 'Override result';
+
+  @override
+  String get opsPostpone => 'Postpone';
+
+  @override
+  String get opsAbandon => 'Abandon';
+
+  @override
+  String get opsOperationReason => 'Reason (required)';
+
+  @override
+  String get opsOperationReasonHint =>
+      'Explain this decision for the audit log.';
+
+  @override
+  String get opsOperationConfirm => 'Apply operation';
+
+  @override
+  String get opsWinner => 'Winner (if applicable)';
+
+  @override
+  String get opsSelectWinner => 'Select a winner';
+
+  @override
   String get opsStageCount => 'Stages';
 
   @override

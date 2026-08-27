@@ -323,6 +323,11 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
               title: Text(l10n.matchScheduledTime),
               onTap: () => Navigator.pop(sheetContext, 'schedule'),
             ),
+            ListTile(
+              leading: const Icon(Icons.gavel_rounded),
+              title: Text(l10n.opsSpecialOperation),
+              onTap: () => Navigator.pop(sheetContext, 'special'),
+            ),
           ],
         ),
       ),
@@ -338,7 +343,162 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       return;
     }
 
-    await _showScheduleSheet(context, match);
+    if (action == 'schedule') {
+      await _showScheduleSheet(context, match);
+      return;
+    }
+    await _showSpecialOperationSheet(context, match);
+  }
+
+  Future<void> _showSpecialOperationSheet(
+    BuildContext context,
+    MatchModel match,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final reasonController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    var selectedAction = 'WALKOVER';
+    var selectedWinnerId = '';
+    final operations = <String, String>{
+      'WALKOVER': l10n.opsWalkover,
+      'NO_SHOW': l10n.opsNoShow,
+      'RETIREMENT': l10n.opsRetirement,
+      'DISQUALIFICATION': l10n.opsDisqualification,
+      'OVERRIDE_RESULT': l10n.opsOverrideResult,
+      'POSTPONE': l10n.opsPostpone,
+      'ABANDON': l10n.opsAbandon,
+    };
+    final winnerItems = <String, String>{
+      '': l10n.opsSelectWinner,
+      if (match.team1Id.isNotEmpty) match.team1Id: match.team1Name,
+      if (match.team2Id.isNotEmpty) match.team2Id: match.team2Name,
+    };
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+          return Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, bottomInset + 16),
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.opsSpecialOperation,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedAction,
+                    decoration: InputDecoration(
+                      labelText: l10n.opsSpecialOperation,
+                      prefixIcon: const Icon(Icons.tune_rounded),
+                    ),
+                    items: operations.entries
+                        .map(
+                          (entry) => DropdownMenuItem<String>(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setSheetState(() => selectedAction = value);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedWinnerId,
+                    decoration: InputDecoration(
+                      labelText: l10n.opsWinner,
+                      prefixIcon: const Icon(Icons.emoji_events_outlined),
+                    ),
+                    items: winnerItems.entries
+                        .map(
+                          (entry) => DropdownMenuItem<String>(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          ),
+                        )
+                        .toList(),
+                    validator: (value) =>
+                        selectedAction == 'OVERRIDE_RESULT' &&
+                            (value == null || value.isEmpty)
+                        ? l10n.opsSelectWinner
+                        : null,
+                    onChanged: (value) =>
+                        setSheetState(() => selectedWinnerId = value ?? ''),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: reasonController,
+                    minLines: 2,
+                    maxLines: 4,
+                    decoration: InputDecoration(
+                      labelText: l10n.opsOperationReason,
+                      hintText: l10n.opsOperationReasonHint,
+                      alignLabelWithHint: true,
+                      prefixIcon: const Icon(Icons.notes_rounded),
+                    ),
+                    validator: (value) {
+                      if ((value ?? '').trim().length < 5) {
+                        return l10n.opsOperationReason;
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  FilledButton.icon(
+                    onPressed: () async {
+                      if (!formKey.currentState!.validate()) return;
+                      try {
+                        await ref
+                            .read(matchRepositoryProvider)
+                            .matchOperation(
+                              match.id,
+                              action: selectedAction,
+                              reason: reasonController.text.trim(),
+                              winnerId: selectedWinnerId.isEmpty
+                                  ? null
+                                  : selectedWinnerId,
+                            );
+                        if (!context.mounted) return;
+                        Navigator.pop(sheetContext);
+                        ref.invalidate(
+                          matchesWithDivisionProvider((
+                            tournamentId: widget.tournamentId,
+                            divisionId: _selectedDivisionId,
+                          )),
+                        );
+                      } catch (error) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(error.toString())),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.gavel_rounded),
+                    label: Text(l10n.opsOperationConfirm),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    reasonController.dispose();
   }
 
   Future<void> _showScheduleSheet(

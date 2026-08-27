@@ -11555,6 +11555,46 @@ class AppLocalizationsVi extends AppLocalizations {
   String get opsAudit => 'Hoạt động đã ghi nhận';
 
   @override
+  String get opsSpecialOperation => 'Xử lý đặc biệt';
+
+  @override
+  String get opsWalkover => 'Bỏ cuộc';
+
+  @override
+  String get opsNoShow => 'Không có mặt';
+
+  @override
+  String get opsRetirement => 'Dừng thi đấu';
+
+  @override
+  String get opsDisqualification => 'Loại khỏi giải';
+
+  @override
+  String get opsOverrideResult => 'Ghi đè kết quả';
+
+  @override
+  String get opsPostpone => 'Hoãn trận';
+
+  @override
+  String get opsAbandon => 'Hủy trận';
+
+  @override
+  String get opsOperationReason => 'Lý do bắt buộc';
+
+  @override
+  String get opsOperationReasonHint =>
+      'Giải thích quyết định này để ghi vào nhật ký.';
+
+  @override
+  String get opsOperationConfirm => 'Áp dụng xử lý';
+
+  @override
+  String get opsWinner => 'Bên thắng nếu cần';
+
+  @override
+  String get opsSelectWinner => 'Chọn bên thắng';
+
+  @override
   String get opsStageCount => 'Giai đoạn';
 
   @override
