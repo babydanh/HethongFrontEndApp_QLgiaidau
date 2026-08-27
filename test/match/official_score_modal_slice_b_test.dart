@@ -51,4 +51,17 @@ void main() {
       expect(notifier, contains("football.phase != 'PENALTY_SHOOTOUT'"));
     },
   );
+
+  test('football goal controls keep score and event log aligned', () {
+    final notifier = File(
+      'lib/features/match/notifiers/score_panel_notifier.dart',
+    ).readAsStringSync();
+    final panel = File(
+      'lib/features/match/widgets/football_score_panel.dart',
+    ).readAsStringSync();
+
+    expect(notifier, contains("type: 'GOAL'"));
+    expect(notifier, contains("event.type == 'GOAL'"));
+    expect(panel, contains('l10n.footballScore_goal'));
+  });
 }

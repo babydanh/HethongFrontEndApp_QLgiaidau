@@ -3617,7 +3617,9 @@
     }
   },
   "footballScore_status": "Status",
-  "footballScore_events": "Match events",
+    "footballScore_events": "Match events",
+  "footballScore_goal": "Goal",
+  "footballScore_penaltyGoal": "Penalty goal",
   "footballScore_team1": "Team 1",
   "footballScore_team2": "Team 2",
   "footballScore_yellowCard": "Yellow card",

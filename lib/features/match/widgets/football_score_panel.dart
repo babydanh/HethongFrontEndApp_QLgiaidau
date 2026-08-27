@@ -150,6 +150,7 @@ class FootballScorePanel extends ConsumerWidget {
                     'YELLOW_CARD',
                     'RED_CARD',
                     'FOUL',
+                    'PENALTY_GOAL',
                     'SUBSTITUTION',
                   ])
                     OutlinedButton.icon(
@@ -206,6 +207,8 @@ class FootballScorePanel extends ConsumerWidget {
 
   static String _eventLabel(AppLocalizations l10n, String type) =>
       switch (type) {
+        'GOAL' => l10n.footballScore_goal,
+        'PENALTY_GOAL' => l10n.footballScore_penaltyGoal,
         'YELLOW_CARD' => l10n.footballScore_yellowCard,
         'RED_CARD' => l10n.footballScore_redCard,
         'FOUL' => l10n.footballScore_foul,

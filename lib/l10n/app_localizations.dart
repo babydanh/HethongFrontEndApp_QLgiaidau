@@ -17130,6 +17130,18 @@ abstract class AppLocalizations {
   /// **'Diễn biến'**
   String get footballScore_events;
 
+  /// No description provided for @footballScore_goal.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bàn thắng'**
+  String get footballScore_goal;
+
+  /// No description provided for @footballScore_penaltyGoal.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bàn thắng phạt đền'**
+  String get footballScore_penaltyGoal;
+
   /// No description provided for @footballScore_team1.
   ///
   /// In vi, this message translates to:

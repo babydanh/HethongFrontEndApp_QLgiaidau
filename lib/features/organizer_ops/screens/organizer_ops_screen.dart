@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/providers/organizer_ops_provider.dart';
@@ -39,7 +40,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         title: l10n.opsTitle,
         onBack: () => _goBack(context),
         body: _OpsErrorBody(
-          message: '${l10n.opsLoadFailed}\n${error.toString()}',
+          message:
+              '${l10n.opsLoadFailed}\n${ErrorParser.parse(error, l10n.opsLoadFailed, l10n)}',
           onRetry: () =>
               ref.invalidate(tournamentProvider(widget.tournamentId)),
         ),
@@ -68,6 +70,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     Tournament tournament,
   ) {
     final colors = context.colors;
+    final isReadOnly = _isReadOnlyTournament(tournament.status);
     final divisionsAsync = ref.watch(
       tournamentDivisionsProvider(widget.tournamentId),
     );
@@ -103,7 +106,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       body: divisionsAsync.when(
         loading: () => const _OpsLoadingBody(),
         error: (error, _) => _OpsErrorBody(
-          message: '${l10n.opsLoadFailed}\n${error.toString()}',
+          message:
+              '${l10n.opsLoadFailed}\n${ErrorParser.parse(error, l10n.opsLoadFailed, l10n)}',
           onRetry: () =>
               ref.invalidate(tournamentDivisionsProvider(widget.tournamentId)),
         ),
@@ -205,12 +209,14 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                       tournament: tournament,
                       divisions: divisions,
                       matchesAsync: matchesAsync,
+                      readOnly: isReadOnly,
                     ),
                   )
                 else if (_selectedTab == 1)
                   _buildMatchesSliver(
                     context,
                     matchesAsync,
+                    readOnly: isReadOnly,
                     onRetry: () => ref.invalidate(
                       matchesWithDivisionProvider((
                         tournamentId: widget.tournamentId,
@@ -223,10 +229,15 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                     child: _OpsBracketPreview(
                       tournamentId: widget.tournamentId,
                       divisionId: selectedDivisionId,
+                      readOnly: isReadOnly,
                     ),
                   )
                 else if (_selectedTab == 3)
-                  _buildRosterSliver(context, opsReadAsync)
+                  _buildRosterSliver(
+                    context,
+                    opsReadAsync,
+                    readOnly: isReadOnly,
+                  )
                 else if (_selectedTab == 4)
                   _buildActivitySliver(context, opsReadAsync)
                 else
@@ -255,7 +266,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       loading: () => const SliverToBoxAdapter(child: _OpsInlineLoading()),
       error: (error, _) => SliverToBoxAdapter(
         child: _OpsErrorBody(
-          message: error.toString(),
+          message: ErrorParser.parse(error, l10n.opsLoadFailed, l10n),
           onRetry: () => ref.invalidate(
             organizerOpsReadModelProvider((
               tournamentId: widget.tournamentId,
@@ -285,14 +296,15 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
 
   Widget _buildRosterSliver(
     BuildContext context,
-    AsyncValue<OrganizerOpsReadModel> opsAsync,
-  ) {
+    AsyncValue<OrganizerOpsReadModel> opsAsync, {
+    required bool readOnly,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     return opsAsync.when(
       loading: () => const SliverToBoxAdapter(child: _OpsInlineLoading()),
       error: (error, _) => SliverToBoxAdapter(
         child: _OpsErrorBody(
-          message: error.toString(),
+          message: ErrorParser.parse(error, l10n.opsLoadFailed, l10n),
           onRetry: () => ref.invalidate(
             organizerOpsReadModelProvider((
               tournamentId: widget.tournamentId,
@@ -348,7 +360,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
             final participant = participants[index - 2];
             return _OpsParticipantCard(
               participant: participant,
-              onKick: participant.isKicked
+              onKick: readOnly || participant.isKicked
                   ? null
                   : () => _showKickParticipantSheet(context, participant),
             );
@@ -361,12 +373,17 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
   Widget _buildMatchesSliver(
     BuildContext context,
     AsyncValue<List<MatchModel>> matchesAsync, {
+    required bool readOnly,
     required VoidCallback onRetry,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return matchesAsync.when(
       loading: () => const SliverToBoxAdapter(child: _OpsInlineLoading()),
       error: (error, _) => SliverToBoxAdapter(
-        child: _OpsErrorBody(message: error.toString(), onRetry: onRetry),
+        child: _OpsErrorBody(
+          message: ErrorParser.parse(error, l10n.opsLoadFailed, l10n),
+          onRetry: onRetry,
+        ),
       ),
       data: (matches) {
         if (matches.isEmpty) {
@@ -383,7 +400,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
           itemCount: matches.length,
           itemBuilder: (context, index) => _OpsMatchCard(
             match: matches[index],
-            onTap: () => _showMatchActions(context, matches[index]),
+            onTap: readOnly
+                ? null
+                : () => _showMatchActions(context, matches[index]),
           ),
         );
       },
@@ -465,9 +484,13 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                     ).showSnackBar(SnackBar(content: Text(l10n.opsSaved)));
                   } catch (error) {
                     if (!sheetContext.mounted) return;
-                    ScaffoldMessenger.of(
-                      sheetContext,
-                    ).showSnackBar(SnackBar(content: Text(error.toString())));
+                    ScaffoldMessenger.of(sheetContext).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          ErrorParser.parse(error, l10n.opsLoadFailed, l10n),
+                        ),
+                      ),
+                    );
                   }
                 },
                 icon: const Icon(Icons.person_remove_outlined),
@@ -490,6 +513,12 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (match.status.toUpperCase() == 'SCHEDULED')
+              ListTile(
+                leading: const Icon(Icons.play_circle_outline_rounded),
+                title: Text(l10n.matchStartMatch),
+                onTap: () => Navigator.pop(sheetContext, 'start'),
+              ),
             ListTile(
               leading: const Icon(Icons.account_tree_outlined),
               title: Text(l10n.opsOpenBracket),
@@ -525,6 +554,11 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       return;
     }
 
+    if (action == 'start') {
+      await _confirmStartMatch(context, match);
+      return;
+    }
+
     if (action == 'score') {
       if (!context.mounted) return;
       context.push(
@@ -537,6 +571,80 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       return;
     }
     await _showSpecialOperationSheet(context, match);
+  }
+
+  Future<void> _confirmStartMatch(
+    BuildContext context,
+    MatchModel match,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    var submitting = false;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(l10n.matchStartMatch),
+          content: Text(l10n.matchStartHint),
+          actions: [
+            TextButton(
+              onPressed: submitting
+                  ? null
+                  : () => Navigator.pop(dialogContext, false),
+              child: Text(l10n.matchesCancel),
+            ),
+            FilledButton.icon(
+              onPressed: submitting
+                  ? null
+                  : () async {
+                      setState(() => submitting = true);
+                      try {
+                        await ref.read(matchRepositoryProvider).updateLiveState(
+                              widget.tournamentId,
+                              match.id,
+                              status: 'ONGOING',
+                            );
+                        if (!dialogContext.mounted) return;
+                        Navigator.pop(dialogContext, true);
+                      } catch (error) {
+                        if (!dialogContext.mounted) return;
+                        setState(() => submitting = false);
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              ErrorParser.parse(
+                                error,
+                                l10n.opsLoadFailed,
+                                l10n,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                    },
+              icon: submitting
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.play_arrow_rounded),
+              label: Text(l10n.matchStartMatch),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      ref.invalidate(
+        matchesWithDivisionProvider((
+          tournamentId: widget.tournamentId,
+          divisionId: _selectedDivisionId,
+        )),
+      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.opsSaved)));
+    }
   }
 
   Future<void> _showSpecialOperationSheet(
@@ -676,7 +784,15 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                       } catch (error) {
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(error.toString())),
+                          SnackBar(
+                            content: Text(
+                              ErrorParser.parse(
+                                error,
+                                l10n.opsLoadFailed,
+                                l10n,
+                              ),
+                            ),
+                          ),
                         );
                       }
                     },
@@ -802,9 +918,13 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                       );
                     } catch (error) {
                       if (!context.mounted) return;
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(error.toString())));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            ErrorParser.parse(error, l10n.opsLoadFailed, l10n),
+                          ),
+                        ),
+                      );
                     }
                   },
                   icon: const Icon(Icons.save_rounded),
@@ -826,6 +946,16 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       return _selectedDivisionId;
     }
     return divisions.first.id;
+  }
+
+  bool _isReadOnlyTournament(String status) {
+    return {
+      'COMPLETED',
+      'CANCELLED',
+      'CANCELED',
+      'ARCHIVED',
+      'PENDING_DELETE',
+    }.contains(status.trim().toUpperCase());
   }
 
   void _goBack(BuildContext context) {
@@ -1107,11 +1237,13 @@ class _OpsOverview extends StatelessWidget {
     required this.tournament,
     required this.divisions,
     required this.matchesAsync,
+    required this.readOnly,
   });
 
   final Tournament tournament;
   final List<_OpsDivision> divisions;
   final AsyncValue<List<MatchModel>> matchesAsync;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -1150,7 +1282,7 @@ class _OpsOverview extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            l10n.opsReadOnlyHint,
+            readOnly ? l10n.opsReadOnlyHint : l10n.opsContextHint,
             style: TextStyle(color: colors.textMuted, fontSize: 12),
           ),
           const SizedBox(height: 14),
@@ -1192,9 +1324,11 @@ class _OpsOverview extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           _OpsReadOnlyNotice(
-            icon: Icons.lock_outline_rounded,
+            icon: readOnly
+                ? Icons.lock_outline_rounded
+                : Icons.info_outline_rounded,
             title: l10n.opsOrganizerOnly,
-            message: l10n.opsContextHint,
+            message: readOnly ? l10n.opsReadOnlyHint : l10n.opsContextHint,
           ),
         ],
       ),
@@ -1256,10 +1390,10 @@ class _OpsMetric extends StatelessWidget {
 }
 
 class _OpsMatchCard extends StatelessWidget {
-  const _OpsMatchCard({required this.match, required this.onTap});
+  const _OpsMatchCard({required this.match, this.onTap});
 
   final MatchModel match;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -1565,10 +1699,15 @@ class _OpsParticipantCard extends StatelessWidget {
 }
 
 class _OpsBracketPreview extends StatelessWidget {
-  const _OpsBracketPreview({required this.tournamentId, this.divisionId});
+  const _OpsBracketPreview({
+    required this.tournamentId,
+    this.divisionId,
+    required this.readOnly,
+  });
 
   final String tournamentId;
   final String? divisionId;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -1585,14 +1724,16 @@ class _OpsBracketPreview extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
-            onPressed: () {
-              final query = divisionId == null
-                  ? ''
-                  : '?divisionId=${Uri.encodeComponent(divisionId!)}';
-              context.push(
-                '/organizer/tournaments/$tournamentId/ops/bracket$query',
-              );
-            },
+            onPressed: readOnly
+                ? null
+                : () {
+                    final query = divisionId == null
+                        ? ''
+                        : '?divisionId=${Uri.encodeComponent(divisionId!)}';
+                    context.push(
+                      '/organizer/tournaments/$tournamentId/ops/bracket$query',
+                    );
+                  },
             icon: const Icon(Icons.open_in_new_rounded),
             label: Text(l10n.opsOpenBracket),
           ),

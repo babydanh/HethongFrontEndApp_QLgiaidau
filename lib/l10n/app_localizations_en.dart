@@ -9334,6 +9334,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get footballScore_events => 'Match events';
 
   @override
+  String get footballScore_goal => 'Goal';
+
+  @override
+  String get footballScore_penaltyGoal => 'Penalty goal';
+
+  @override
   String get footballScore_team1 => 'Team 1';
 
   @override

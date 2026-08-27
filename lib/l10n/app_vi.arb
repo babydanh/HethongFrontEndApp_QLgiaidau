@@ -3617,7 +3617,9 @@
     }
   },
   "footballScore_status": "Trạng thái",
-  "footballScore_events": "Diễn biến",
+    "footballScore_events": "Diễn biến",
+  "footballScore_goal": "Bàn thắng",
+  "footballScore_penaltyGoal": "Bàn thắng phạt đền",
   "footballScore_team1": "Đội 1",
   "footballScore_team2": "Đội 2",
   "footballScore_yellowCard": "Thẻ vàng",

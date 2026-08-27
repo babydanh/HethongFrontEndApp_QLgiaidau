@@ -146,11 +146,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (currentPath.startsWith('/admin') && auth.role != UserRole.admin) {
           return auth.role == UserRole.referee ? '/referee' : '/viewer';
         }
-        if (currentPath.startsWith('/organizer/tournaments') &&
-            auth.role != UserRole.organizer &&
-            auth.role != UserRole.admin) {
-          return auth.role == UserRole.referee ? '/referee' : '/viewer';
-        }
+        // OP access is tournament-scoped. Authenticated users may enter the
+        // workspace so the protected API can verify owner/co-organizer access;
+        // non-managers must receive a fail-closed 403 state from the screen.
         if (currentPath.startsWith('/referee') &&
             auth.role == UserRole.viewer) {
           return '/viewer';

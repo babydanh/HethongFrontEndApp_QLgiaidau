@@ -9314,6 +9314,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get footballScore_events => 'Diễn biến';
 
   @override
+  String get footballScore_goal => 'Bàn thắng';
+
+  @override
+  String get footballScore_penaltyGoal => 'Bàn thắng phạt đền';
+
+  @override
   String get footballScore_team1 => 'Đội 1';
 
   @override

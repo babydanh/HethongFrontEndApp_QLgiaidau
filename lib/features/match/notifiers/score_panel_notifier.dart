@@ -28,6 +28,11 @@ int? _parseOptionalFootballInt(dynamic value) {
   return parsed < 0 ? null : parsed;
 }
 
+String _parseFootballPhase(dynamic value) {
+  final phase = value?.toString().trim().toUpperCase();
+  return footballPhases.contains(phase) ? phase! : 'FIRST_HALF';
+}
+
 FootballLiveState? _readFootballState(Map<String, dynamic> details) {
   final raw = details['football'];
   if (raw is! Map) return null;
@@ -35,7 +40,7 @@ FootballLiveState? _readFootballState(Map<String, dynamic> details) {
   return FootballLiveState(
     team1Goals: _parseFootballInt(raw['team1Goals']),
     team2Goals: _parseFootballInt(raw['team2Goals']),
-    phase: raw['phase']?.toString().trim().toUpperCase() ?? 'FIRST_HALF',
+    phase: _parseFootballPhase(raw['phase']), ?? 'FIRST_HALF',
     minute: _parseFootballInt(raw['minute']),
     addedMinute: _parseFootballInt(raw['addedMinute']),
     events: raw['events'] is List
@@ -546,8 +551,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   void footballSetPhase(String phase) {
+    final normalized = phase.trim().toUpperCase();
+    if (!footballEditablePhases.contains(normalized)) return;
     final next = (state.football ?? const FootballLiveState()).copyWith(
-      phase: phase,
+      phase: normalized,
     );
     state = state.copyWith(football: next, errorMessage: null);
     _scheduleFootballSync(next);
