@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
@@ -121,6 +122,8 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
     final query = _searchController.text.trim().toLowerCase();
     setState(() {
       _filteredMatches = _allMatches.where((m) {
+        if (!isRenderablePublicMatch(m)) return false;
+
         // Search filter
         if (query.isNotEmpty) {
           final team1 = m.team1Name.toLowerCase();

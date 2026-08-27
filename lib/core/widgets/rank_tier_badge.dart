@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
-import 'package:app_quanly_giaidau/core/utils/rank_tier_colors.dart';
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 
 String getShortTierCode(String? tierName, int? elo) {
   final name = (tierName ?? '').trim();
@@ -51,58 +52,83 @@ class RankTierBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final code = getShortTierCode(tierName, elo);
-    final isRanked = code != '--' && RankTierColors.isRanked(tierName);
-    final color = isRanked
-        ? RankTierColors.fromTierName(tierName)
-        : const Color(0xFF94A3B8);
-    final sportIcon = _sportIcon(sportName);
+    final isRanked =
+        code != '--' && (tierName?.trim().isNotEmpty == true || (elo ?? 0) > 0);
+    final palette = TierPalette.fromElo(elo ?? 0, tierName);
+    final accent = isRanked ? palette.badgeBg : context.colors.border;
+    final textColor = isRanked ? palette.border : context.colors.textMuted;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.55)),
+        color: context.colors.bgDark,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: accent.withValues(alpha: isRanked ? 0.9 : 0.5),
+        ),
+        boxShadow: isRanked
+            ? [BoxShadow(color: accent.withValues(alpha: 0.32), blurRadius: 7)]
+            : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (sportIcon.startsWith('assets/'))
-            Image.asset(sportIcon, width: 15, height: 15)
-          else
-            Text(sportIcon, style: const TextStyle(fontSize: 13)),
-          const SizedBox(width: 4),
+          _SportIcon(sportName: sportName, size: 20),
+          const SizedBox(width: 5),
           Text(
-            code,
+            showLabel && isRanked ? tierName ?? code : code,
             style: TextStyle(
-              color: color,
-              fontSize: 11,
+              color: textColor,
+              fontSize: showLabel ? 10 : 11,
               fontWeight: FontWeight.w900,
-              letterSpacing: 0.3,
+              letterSpacing: 0.2,
+              height: 1,
             ),
           ),
-          if (showLabel && isRanked) ...[
-            const SizedBox(width: 4),
-            Text(
-              tierName ?? '',
-              style: TextStyle(
-                color: color,
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
         ],
       ),
     );
   }
+}
 
-  String _sportIcon(String? name) {
-    final normalized = (name ?? '').trim().toLowerCase();
+class _SportIcon extends StatelessWidget {
+  final String? sportName;
+  final double size;
+
+  const _SportIcon({required this.sportName, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    final normalized = (sportName ?? '').trim().toLowerCase();
     final key = AppConstants.sportNames.entries
         .where((entry) => entry.value.toLowerCase() == normalized)
         .map((entry) => entry.key)
         .firstWhere((value) => true, orElse: () => normalized);
-    return AppConstants.sportIcons[key] ?? '🏅';
+    final visual = AppConstants.sportIcons[key] ?? '🏅';
+
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.95),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.65)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x40000000),
+            blurRadius: 3,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: visual.startsWith('assets/')
+          ? Padding(
+              padding: const EdgeInsets.all(3),
+              child: Image.asset(visual, fit: BoxFit.contain),
+            )
+          : Text(visual, style: TextStyle(fontSize: size * 0.62, height: 1)),
+    );
   }
 }

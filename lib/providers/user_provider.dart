@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
 
@@ -86,21 +87,12 @@ final userDirectMessagePolicyProvider =
           .read(dioProvider)
           .get('/chat/direct-policy/$userId');
       final raw = response.data;
-      final envelope = raw is Map<String, dynamic>
-          ? raw
-          : <String, dynamic>{};
+      final envelope = raw is Map<String, dynamic> ? raw : <String, dynamic>{};
       final payload = envelope['data'] is Map<String, dynamic>
           ? envelope['data'] as Map<String, dynamic>
           : envelope;
       return DirectMessagePolicy.fromJson(payload);
     });
-
-bool _isMockInvolvedMatch(MatchModel match) {
-  return match.team1IsMock ||
-      match.team2IsMock ||
-      match.team1MemberInfos.any((member) => member.isMock) ||
-      match.team2MemberInfos.any((member) => member.isMock);
-}
 
 /// Trận đấu công khai của hồ sơ, dùng cùng endpoint với web.
 final publicUserMatchesProvider =
@@ -113,10 +105,14 @@ final publicUserMatchesProvider =
       final list = payload is Map<String, dynamic>
           ? (payload['data'] as List<dynamic>? ?? [])
           : (payload as List<dynamic>? ?? []);
-      return list.whereType<Map<String, dynamic>>().map((item) {
-        final id = item['id']?.toString() ?? '';
-        return MatchModel.fromJson(item, id);
-      }).where((match) => !_isMockInvolvedMatch(match)).toList();
+      return list
+          .whereType<Map<String, dynamic>>()
+          .map((item) {
+            final id = item['id']?.toString() ?? '';
+            return MatchModel.fromJson(item, id);
+          })
+          .where(isRenderablePublicMatch)
+          .toList();
     });
 
 /// Gọi GET /api/v1/rankings/user/:userId

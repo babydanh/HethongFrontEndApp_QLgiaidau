@@ -166,15 +166,15 @@ class AppTheme {
   );
 
   static const AppColorsExtension _lightColors = AppColorsExtension(
-    bgDark: Color(0xFFF8FAFC),
+    bgDark: Color(0xFFFFFFFF),
     bgCard: Color(0xFFFFFFFF),
-    bgSurface: Color(0xFFF1F5F9),
+    bgSurface: Color(0xFFF8FAFC),
     bgElevated: Color(0xFFFFFFFF),
     textPrimary: Color(0xFF0F172A),
     textSecondary: Color(
       0xFF334155,
     ), // Darker slate (slate-700) for high readability
-    textMuted: Color(0xFF57606a), // Darker muted text for high contrast
+    textMuted: Color(0xFF64748B), // Clear muted slate text
     border: Color(0xFFE2E8F0),
     borderLight: Color(0xFFF1F5F9),
     success: Color(0xFF22C55E),

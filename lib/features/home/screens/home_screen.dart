@@ -3337,7 +3337,7 @@ class _TournamentSectionList extends ConsumerWidget {
             ),
           ),
         SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: EdgeInsets.zero,
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) => LiveTournamentWithMatchesCard(

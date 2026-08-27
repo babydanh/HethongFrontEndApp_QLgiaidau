@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -95,15 +96,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
     List<Map<String, dynamic>> divisions,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final validMatches = matches.where((m) {
-      if (m.status == AppConstants.matchLive ||
-          m.status == AppConstants.matchCompleted) {
-        return true;
-      }
-      final hasTeams =
-          m.team1Name.trim() != 'TBD' && m.team2Name.trim() != 'TBD';
-      return hasTeams;
-    }).toList();
+    final validMatches = matches.where(isRenderablePublicMatch).toList();
 
     if (validMatches.isEmpty) {
       return _buildEmptyState(context, tournamentAsync, divisions);

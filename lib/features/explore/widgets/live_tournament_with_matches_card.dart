@@ -54,7 +54,6 @@ class _LiveTournamentWithMatchesCardState
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
     final matchesAsync = ref.watch(matchesProvider(widget.tournament.id));
     final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl);
@@ -106,21 +105,9 @@ class _LiveTournamentWithMatchesCardState
         final currentPageMatches = displayMatches.sublist(startIndex, endIndex);
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: colors.bgCard,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: colors.border.withValues(alpha: 0.7),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 12,
-                offset: const Offset(0, 3),
-              ),
-            ],
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: const BoxDecoration(
+            color: Colors.white,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,16 +116,16 @@ class _LiveTournamentWithMatchesCardState
               GestureDetector(
                 onTap: () => context.push('/intro/${widget.tournament.id}'),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
                   child: Row(
                     children: [
                       Container(
-                        width: 40,
-                        height: 40,
+                        width: 38,
+                        height: 38,
                         decoration: BoxDecoration(
-                          color: colors.bgSurface,
+                          color: const Color(0xFFF1F5F9),
                           shape: BoxShape.circle,
-                          border: Border.all(color: colors.border, width: 1),
+                          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
                         ),
                         child: ClipOval(
                           child: resolvedLogoUrl.isNotEmpty
@@ -170,23 +157,23 @@ class _LiveTournamentWithMatchesCardState
                           children: [
                             Text(
                               widget.tournament.name.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 14,
+                              style: const TextStyle(
+                                fontSize: 13.5,
                                 fontWeight: FontWeight.w800,
-                                color: colors.textPrimary,
-                                letterSpacing: 0.3,
+                                color: Color(0xFF0F172A),
+                                letterSpacing: 0.2,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 1.5),
                             Text(
                               widget.tournament.isRanked
                                   ? (l10n.exploreRankedTournament)
                                   : (l10n.exploreFriendlyTournament),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 11,
-                                color: colors.textMuted,
+                                color: Color(0xFF64748B),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -221,7 +208,7 @@ class _LiveTournamentWithMatchesCardState
                       },
                   child: Container(
                     key: ValueKey<int>(safePageIndex),
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
                       key: ValueKey<String>(
                         'matches_page_${safePageIndex}_${currentPageMatches.length}',
@@ -229,7 +216,7 @@ class _LiveTournamentWithMatchesCardState
                       children: currentPageMatches.map((match) {
                         return Padding(
                           key: ValueKey<String>(match.id),
-                          padding: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.only(bottom: 8),
                           child: _buildMatchCard(context, match),
                         );
                       }).toList(),
@@ -422,19 +409,12 @@ class _LiveTournamentWithMatchesCardState
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: colors.bgCard,
+          color: const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: colors.border.withValues(alpha: 0.6),
-            width: 1.2,
+            color: const Color(0xFFE2E8F0),
+            width: 1.0,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

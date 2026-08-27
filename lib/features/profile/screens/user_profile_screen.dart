@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
@@ -76,11 +77,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     final eligibleRanks = profile.ranks
         .where((rank) => rank.isLeaderboardEligible)
         .toList();
-    final canMessage = ref
-        .watch(userDirectMessagePolicyProvider(profile.id))
-        .asData
-        ?.value
-        .canMessage ==
+    final canMessage =
+        ref
+            .watch(userDirectMessagePolicyProvider(profile.id))
+            .asData
+            ?.value
+            .canMessage ==
         true;
 
     return NestedScrollView(
@@ -109,18 +111,18 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             if (canMessage)
               IconButton(
                 tooltip: l10n.userProfileMessage,
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colors.bgCard.withValues(alpha: 0.8),
-                  shape: BoxShape.circle,
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colors.bgCard.withValues(alpha: 0.8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.chat_bubble_rounded,
+                    color: colors.textPrimary,
+                    size: 20,
+                  ),
                 ),
-                child: Icon(
-                  Icons.chat_bubble_rounded,
-                  color: colors.textPrimary,
-                  size: 20,
-                ),
-              ),
                 onPressed: () {
                   UserProfileBottomSheet.show(
                     context,
@@ -675,8 +677,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     final featuredRank = profile.ranks.isEmpty
         ? null
         : (profile.ranks.where((r) => r.isLeaderboardEligible).isNotEmpty
-            ? profile.ranks.where((r) => r.isLeaderboardEligible).reduce((a, b) => a.eloPoints > b.eloPoints ? a : b)
-            : profile.ranks.reduce((a, b) => a.eloPoints > b.eloPoints ? a : b));
+              ? profile.ranks
+                    .where((r) => r.isLeaderboardEligible)
+                    .reduce((a, b) => a.eloPoints > b.eloPoints ? a : b)
+              : profile.ranks.reduce(
+                  (a, b) => a.eloPoints > b.eloPoints ? a : b,
+                ));
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Row(
@@ -721,6 +727,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                         color: Color(0xFF22C55E),
                       ),
                     ],
+                    ..._selectPublicProfileBadges(profile.ranks).expand(
+                      (rank) => [
+                        const SizedBox(width: 6),
+                        RankTierBadge(
+                          tierName: rank.tierName,
+                          elo: rank.eloPoints,
+                          sportName: rank.categoryName,
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -789,7 +805,28 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     );
   }
 
+  List<UserPublicRank> _selectPublicProfileBadges(List<UserPublicRank> ranks) {
+    final sorted =
+        ranks
+            .where((rank) => rank.isLeaderboardEligible && rank.eloPoints > 0)
+            .toList()
+          ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
+
+    final seenCategories = <String>{};
+    return sorted
+        .where(
+          (rank) => seenCategories.add(
+            (rank.categoryId.isNotEmpty ? rank.categoryId : rank.categoryName)
+                .trim()
+                .toLowerCase(),
+          ),
+        )
+        .take(2)
+        .toList(growable: false);
+  }
+
   // ─── STATS OVERVIEW ─────────────────────────────────────────
+
   Widget _buildStatsOverview(
     BuildContext context,
     UserPublicProfile profile,

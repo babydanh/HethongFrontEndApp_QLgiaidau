@@ -24,9 +24,12 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
+
 import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
-import 'package:app_quanly_giaidau/core/utils/rank_tier_colors.dart';
+
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
@@ -659,9 +662,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final allRankings = rankings.toList()
       ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
     final bestRanking = allRankings.isEmpty ? null : allRankings.first;
-    final tierColor = RankTierColors.isRanked(bestRanking?.tierName)
-        ? RankTierColors.fromTierName(bestRanking?.tierName)
-        : colors.border;
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -755,44 +756,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               onTap: _pickAndUploadAvatar,
               child: Stack(
                 children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: colors.bgSurface,
-                      border: Border.all(color: tierColor, width: 4),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primary.withValues(alpha: 0.35),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Container(
-                        width: 94,
-                        height: 94,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: colors.bgSurface,
-                        ),
-                        child:
-                            profile.avatarUrl != null &&
-                                profile.avatarUrl!.isNotEmpty
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(47),
-                                child: Image.network(
-                                  profile.avatarUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      _avatarFallback(context, profile),
-                                ),
-                              )
-                            : _avatarFallback(context, profile),
-                      ),
-                    ),
+                  RankAvatar(
+                    imageUrl: profile.avatarUrl,
+                    name: profile.fullName ?? '',
+                    elo: bestRanking?.eloPoints ?? 0,
+                    tierName: bestRanking?.tierName,
+                    matchesPlayed: bestRanking?.matchesPlayed ?? 0,
+                    size: 100,
+                    ringWidth: 4,
                   ),
                   Positioned(
                     bottom: 0,
@@ -839,20 +810,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     ),
   );
 
-  Widget _avatarFallback(BuildContext context, UserProfile profile) {
-    final colors = context.colors;
-    return Center(
-      child: Text(
-        _initials(profile.fullName ?? ''),
-        style: TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-          color: colors.textSecondary,
-        ),
-      ),
-    );
-  }
-
   // ─── USER INFO ──────────────────────────────────────────────────────
   Widget _buildUserInfo(BuildContext context, UserProfile profile) {
     final colors = context.colors;
@@ -871,6 +828,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
 
     final roleText = getRoleText(profile.role);
+    final rankings =
+        ref.watch(userRankingsProvider).asData?.value ??
+        const <PlayerRanking>[];
+    final profileBadges = _selectProfileBadges(rankings);
 
     // Format joined date
     String joinedDateText = '${l10n.infoJoinedAt} 7/2026';
@@ -897,6 +858,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               letterSpacing: -0.3,
             ),
           ),
+          if (profileBadges.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 6,
+              runSpacing: 6,
+              children: profileBadges
+                  .map(
+                    (ranking) => RankTierBadge(
+                      tierName: ranking.tierName,
+                      elo: ranking.eloPoints,
+                      sportName: ranking.categoryName,
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
+          ],
           const SizedBox(height: 6),
 
           // 2. Role Badge (Placed cleanly below name, matching Web brand royal blue style)
@@ -997,33 +975,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  // ─── PROFILE RANK SNAPSHOT ─────────────────────────────────────────
-  // ─── PROFILE RANK SNAPSHOT ─────────────────────────────────────────
-  Color _getTierColor(String tierName) {
-    final name = tierName.toUpperCase();
-    if (name.contains('GRANDMASTER') || name.contains('MASTER')) {
-      return const Color(0xFFA855F7);
-    } else if (name.contains('DIAMOND')) {
-      return const Color(0xFF3B82F6);
-    } else if (name.contains('PLATINUM')) {
-      return const Color(0xFF06B6D4);
-    } else if (name.contains('GOLD')) {
-      return const Color(0xFFEAB308);
-    } else if (name.contains('SILVER')) {
-      return const Color(0xFF94A3B8);
-    } else if (name.contains('BRONZE')) {
-      return const Color(0xFFD97706);
-    } else if (name.contains('RANK A') || name == 'A') {
-      return const Color(0xFFF97316);
-    } else if (name.contains('RANK B') || name == 'B') {
-      return const Color(0xFF3B82F6);
-    } else if (name.contains('RANK C') || name == 'C') {
-      return const Color(0xFF10B981);
-    } else if (name.contains('RANK D') || name == 'D') {
-      return const Color(0xFF8B5CF6);
-    }
-    return const Color(0xFF94A3B8);
+  List<PlayerRanking> _selectProfileBadges(List<PlayerRanking> rankings) {
+    final sorted =
+        rankings
+            .where(
+              (ranking) =>
+                  ranking.isLeaderboardEligible && ranking.eloPoints > 0,
+            )
+            .toList()
+          ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
+
+    final seenCategories = <String>{};
+    return sorted
+        .where((ranking) {
+          final key = (ranking.categoryId ?? ranking.categoryName ?? ranking.id)
+              .trim()
+              .toLowerCase();
+          return seenCategories.add(key);
+        })
+        .take(2)
+        .toList(growable: false);
   }
+
+  // ─── PROFILE RANK SNAPSHOT ─────────────────────────────────────────
 
   Widget _buildRankingsSection(BuildContext context) {
     final colors = context.colors;
@@ -1105,7 +1079,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget _buildPrivateRankCard(BuildContext context, PlayerRanking ranking) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    final tierColor = _getTierColor(ranking.tierName);
+    final tierColor = TierPalette.fromElo(
+      ranking.eloPoints,
+      ranking.tierName,
+    ).badgeBg;
     final winRate = ranking.matchesPlayed > 0
         ? (ranking.matchesWon / ranking.matchesPlayed * 100).round()
         : 0;
@@ -2742,13 +2719,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   // ─── HELPERS ────────────────────────────────────────────────────────
-  String _initials(String name) {
-    final p = name.trim().split(' ');
-    if (p.length >= 2) {
-      return '${p[p.length - 2][0]}${p[p.length - 1][0]}'.toUpperCase();
-    }
-    return name.isNotEmpty ? name[0].toUpperCase() : '?';
-  }
 }
 
 // ─── DATA CLASSES ───────────────────────────────────────────────────
