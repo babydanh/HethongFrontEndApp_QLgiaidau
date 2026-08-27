@@ -11599,6 +11599,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get opsOperationConfirm => 'Áp dụng xử lý';
 
   @override
+  String get opsKick => 'Loại người tham gia';
+
+  @override
+  String get opsKickReason => 'Lý do loại bắt buộc';
+
+  @override
+  String get opsKickConfirm => 'Xác nhận loại';
+
+  @override
   String get opsWinner => 'Bên thắng nếu cần';
 
   @override

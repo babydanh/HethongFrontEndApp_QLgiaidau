@@ -322,8 +322,12 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 ),
               );
             }
+            final participant = readModel.participants[index - 1];
             return _OpsParticipantCard(
-              participant: readModel.participants[index - 1],
+              participant: participant,
+              onKick: participant.isKicked
+                  ? null
+                  : () => _showKickParticipantSheet(context, participant),
             );
           },
         );
@@ -361,6 +365,97 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         );
       },
     );
+  }
+
+  Future<void> _showKickParticipantSheet(
+    BuildContext context,
+    OrganizerOpsParticipant participant,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final reasonController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          16,
+          8,
+          16,
+          MediaQuery.viewInsetsOf(sheetContext).bottom + 16,
+        ),
+        child: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.opsKick,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                participant.teamName,
+                style: TextStyle(color: context.colors.textSecondary),
+              ),
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: reasonController,
+                minLines: 2,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  labelText: l10n.opsKickReason,
+                  prefixIcon: const Icon(Icons.notes_rounded),
+                  alignLabelWithHint: true,
+                ),
+                validator: (value) =>
+                    (value ?? '').trim().length < 5 ? l10n.opsKickReason : null,
+              ),
+              const SizedBox(height: 14),
+              FilledButton.icon(
+                onPressed: () async {
+                  if (!formKey.currentState!.validate()) return;
+                  try {
+                    await ref
+                        .read(tournamentRepositoryProvider)
+                        .kickParticipant(
+                          tournamentId: widget.tournamentId,
+                          participantId: participant.id,
+                          reason: reasonController.text.trim(),
+                        );
+                    if (!sheetContext.mounted) return;
+                    Navigator.pop(sheetContext);
+                    ref.invalidate(
+                      organizerOpsReadModelProvider((
+                        tournamentId: widget.tournamentId,
+                        divisionId: _selectedDivisionId!,
+                      )),
+                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(l10n.opsSaved)));
+                  } catch (error) {
+                    if (!sheetContext.mounted) return;
+                    ScaffoldMessenger.of(
+                      sheetContext,
+                    ).showSnackBar(SnackBar(content: Text(error.toString())));
+                  }
+                },
+                icon: const Icon(Icons.person_remove_outlined),
+                label: Text(l10n.opsKickConfirm),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    reasonController.dispose();
   }
 
   Future<void> _showMatchActions(BuildContext context, MatchModel match) async {
@@ -1299,9 +1394,10 @@ class _OpsActivityCard extends StatelessWidget {
 }
 
 class _OpsParticipantCard extends StatelessWidget {
-  const _OpsParticipantCard({required this.participant});
+  const _OpsParticipantCard({required this.participant, this.onKick});
 
   final OrganizerOpsParticipant participant;
+  final VoidCallback? onKick;
 
   @override
   Widget build(BuildContext context) {
@@ -1378,6 +1474,17 @@ class _OpsParticipantCard extends StatelessWidget {
                   ),
               ],
             ),
+            if (onKick != null) ...[
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton.icon(
+                  onPressed: onKick,
+                  icon: const Icon(Icons.person_remove_outlined, size: 18),
+                  label: Text(l10n.opsKick),
+                ),
+              ),
+            ],
           ],
         ),
       ),

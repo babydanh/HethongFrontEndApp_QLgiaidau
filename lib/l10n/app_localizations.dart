@@ -21130,6 +21130,24 @@ abstract class AppLocalizations {
   /// **'Áp dụng xử lý'**
   String get opsOperationConfirm;
 
+  /// No description provided for @opsKick.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại người tham gia'**
+  String get opsKick;
+
+  /// No description provided for @opsKickReason.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lý do loại bắt buộc'**
+  String get opsKickReason;
+
+  /// No description provided for @opsKickConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận loại'**
+  String get opsKickConfirm;
+
   /// No description provided for @opsWinner.
   ///
   /// In vi, this message translates to:

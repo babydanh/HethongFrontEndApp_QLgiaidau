@@ -11632,6 +11632,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opsOperationConfirm => 'Apply operation';
 
   @override
+  String get opsKick => 'Remove participant';
+
+  @override
+  String get opsKickReason => 'Removal reason (required)';
+
+  @override
+  String get opsKickConfirm => 'Remove participant';
+
+  @override
   String get opsWinner => 'Winner (if applicable)';
 
   @override
