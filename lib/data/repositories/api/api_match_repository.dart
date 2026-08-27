@@ -751,6 +751,26 @@ class ApiMatchRepository implements IMatchRepository {
   }
 
   @override
+  Future<void> updateSchedule(
+    String tournamentId,
+    String matchId, {
+    String? courtName,
+    String? courtAddress,
+    String? refereeId,
+    DateTime? scheduledAt,
+  }) async {
+    await _dioClient.dio.patch(
+      '/matches/$matchId/schedule',
+      data: {
+        'courtName': courtName,
+        'courtAddress': courtAddress,
+        'refereeId': refereeId,
+        'scheduledAt': scheduledAt?.toUtc().toIso8601String(),
+      },
+    );
+  }
+
+  @override
   Future<void> updateLiveState(
     String tournamentId,
     String matchId, {

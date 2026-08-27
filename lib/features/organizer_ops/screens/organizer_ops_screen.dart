@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/providers/organizer_ops_provider.dart';
@@ -294,10 +295,170 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
 
         return SliverList.builder(
           itemCount: matches.length,
-          itemBuilder: (context, index) => _OpsMatchCard(match: matches[index]),
+          itemBuilder: (context, index) => _OpsMatchCard(
+            match: matches[index],
+            onTap: () => _showMatchActions(context, matches[index]),
+          ),
         );
       },
     );
+  }
+
+  Future<void> _showMatchActions(BuildContext context, MatchModel match) async {
+    final l10n = AppLocalizations.of(context)!;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.account_tree_outlined),
+              title: Text(l10n.opsOpenBracket),
+              onTap: () => Navigator.pop(sheetContext, 'bracket'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.schedule_rounded),
+              title: Text(l10n.matchScheduledTime),
+              onTap: () => Navigator.pop(sheetContext, 'schedule'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (!context.mounted || action == null) return;
+    if (action == 'bracket') {
+      final query = _selectedDivisionId == null
+          ? ''
+          : '?divisionId=${Uri.encodeComponent(_selectedDivisionId!)}';
+      if (!context.mounted) return;
+      context.push('/tournament/${widget.tournamentId}/bracket$query');
+      return;
+    }
+
+    await _showScheduleSheet(context, match);
+  }
+
+  Future<void> _showScheduleSheet(
+    BuildContext context,
+    MatchModel match,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final courtController = TextEditingController(text: match.court);
+    DateTime? scheduledAt = match.scheduledTime;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+          return Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, bottomInset + 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.matchScheduledTime,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: courtController,
+                  decoration: InputDecoration(
+                    labelText: l10n.matchCourtLabel,
+                    prefixIcon: const Icon(Icons.place_outlined),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      firstDate: DateTime.now().subtract(
+                        const Duration(days: 1),
+                      ),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      initialDate: scheduledAt ?? DateTime.now(),
+                    );
+                    if (date == null || !context.mounted) return;
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: scheduledAt == null
+                          ? TimeOfDay.now()
+                          : TimeOfDay.fromDateTime(scheduledAt!),
+                    );
+                    if (time == null) return;
+                    setSheetState(() {
+                      scheduledAt = DateTime(
+                        date.year,
+                        date.month,
+                        date.day,
+                        time.hour,
+                        time.minute,
+                      );
+                    });
+                  },
+                  icon: const Icon(Icons.event_rounded),
+                  label: Text(
+                    scheduledAt == null
+                        ? l10n.matchNotScheduled
+                        : scheduledAt!.toLocal().toString(),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                FilledButton.icon(
+                  onPressed: () async {
+                    try {
+                      await ref
+                          .read(matchRepositoryProvider)
+                          .updateSchedule(
+                            widget.tournamentId,
+                            match.id,
+                            courtName: courtController.text.trim().isEmpty
+                                ? null
+                                : courtController.text.trim(),
+                            courtAddress: match.courtAddress.isEmpty
+                                ? null
+                                : match.courtAddress,
+                            refereeId: match.refereeId,
+                            scheduledAt: scheduledAt,
+                          );
+                      if (!context.mounted) return;
+                      Navigator.pop(context);
+                      ref.invalidate(
+                        matchesWithDivisionProvider((
+                          tournamentId: widget.tournamentId,
+                          divisionId: _selectedDivisionId,
+                        )),
+                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(l10n.opsRefresh)));
+                    } catch (error) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(error.toString())));
+                    }
+                  },
+                  icon: const Icon(Icons.save_rounded),
+                  label: Text(l10n.matchSaveChanges),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+    courtController.dispose();
   }
 
   String? _resolveDivisionId(List<_OpsDivision> divisions) {
@@ -737,9 +898,10 @@ class _OpsMetric extends StatelessWidget {
 }
 
 class _OpsMatchCard extends StatelessWidget {
-  const _OpsMatchCard({required this.match});
+  const _OpsMatchCard({required this.match, required this.onTap});
 
   final MatchModel match;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -754,90 +916,95 @@ class _OpsMatchCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: colors.bgSurface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'R${match.round} • #${match.matchNumber}',
-                    style: TextStyle(
-                      color: colors.textMuted,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: colors.bgSurface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: colors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'R${match.round} • #${match.matchNumber}',
+                      style: TextStyle(
+                        color: colors.textMuted,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
-                _OpsStatusPill(label: status, color: statusColor),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    match.team1Name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: colors.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
+                  _OpsStatusPill(label: status, color: statusColor),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      match.team1Name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
-                Text(
-                  '${match.score1} : ${match.score2}',
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    match.team2Name,
-                    textAlign: TextAlign.end,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Text(
+                    '${match.score1} : ${match.score2}',
                     style: TextStyle(
                       color: colors.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 12,
-              runSpacing: 6,
-              children: [
-                _OpsMeta(
-                  icon: Icons.schedule_rounded,
-                  text: match.scheduledTime == null
-                      ? AppLocalizations.of(context)!.opsUnscheduled
-                      : match.scheduledTime!.toLocal().toString(),
-                ),
-                if (match.court.isNotEmpty)
-                  _OpsMeta(icon: Icons.place_outlined, text: match.court),
-                if (match.refereeName != null && match.refereeName!.isNotEmpty)
+                  Expanded(
+                    child: Text(
+                      match.team2Name,
+                      textAlign: TextAlign.end,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 12,
+                runSpacing: 6,
+                children: [
                   _OpsMeta(
-                    icon: Icons.sports_rounded,
-                    text: match.refereeName!,
+                    icon: Icons.schedule_rounded,
+                    text: match.scheduledTime == null
+                        ? AppLocalizations.of(context)!.opsUnscheduled
+                        : match.scheduledTime!.toLocal().toString(),
                   ),
-              ],
-            ),
-          ],
+                  if (match.court.isNotEmpty)
+                    _OpsMeta(icon: Icons.place_outlined, text: match.court),
+                  if (match.refereeName != null &&
+                      match.refereeName!.isNotEmpty)
+                    _OpsMeta(
+                      icon: Icons.sports_rounded,
+                      text: match.refereeName!,
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

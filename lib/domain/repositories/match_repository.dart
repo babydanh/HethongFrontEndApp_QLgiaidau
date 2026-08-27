@@ -6,10 +6,21 @@ import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 abstract class IMatchRepository {
   Future<MatchModel> create(String tournamentId, MatchModel match);
   Future<void> createBatch(String tournamentId, List<MatchModel> matches);
-  Stream<List<MatchModel>> watchByTournament(String tournamentId, {String? divisionId});
+  Stream<List<MatchModel>> watchByTournament(
+    String tournamentId, {
+    String? divisionId,
+  });
   Stream<List<MatchModel>> watchLive(String tournamentId);
   Stream<MatchModel?> watchMatch(String tournamentId, String matchId);
 
+  Future<void> updateSchedule(
+    String tournamentId,
+    String matchId, {
+    String? courtName,
+    String? courtAddress,
+    String? refereeId,
+    DateTime? scheduledAt,
+  });
 
   Future<void> updateLiveState(
     String tournamentId,
@@ -42,7 +53,6 @@ abstract class IMatchRepository {
     required int finalScore2,
   });
 
-
   /// Cập nhật scoreDetails theo đúng backend DTO.
   /// Gửi p1SetsWon, p2SetsWon, scoreDetails.sets, winnerId, overrideReason.
   Future<void> updateScoreDetails(
@@ -72,7 +82,10 @@ abstract class IMatchRepository {
     required String loserId,
   });
 
-  Future<List<MatchModel>> getAllByTournament(String tournamentId, {String? divisionId});
+  Future<List<MatchModel>> getAllByTournament(
+    String tournamentId, {
+    String? divisionId,
+  });
   Future<void> deleteAll(String tournamentId);
   Future<List<MatchModel>> getMatches({String? status, bool? publicOnly});
 
