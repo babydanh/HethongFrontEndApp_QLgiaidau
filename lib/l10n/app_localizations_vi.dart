@@ -11502,4 +11502,84 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get createClubTournament_hideAdvancedOptions => 'Thu gọn';
+
+  @override
+  String get opsTitle => 'Vận hành giải';
+
+  @override
+  String get opsOverview => 'Tổng quan';
+
+  @override
+  String get opsBracket => 'Bracket';
+
+  @override
+  String get opsMatches => 'Trận đấu';
+
+  @override
+  String get opsRoster => 'Danh sách tham gia';
+
+  @override
+  String get opsActivity => 'Hoạt động';
+
+  @override
+  String get opsCamera => 'Camera';
+
+  @override
+  String get opsRefresh => 'Làm mới';
+
+  @override
+  String get opsDivision => 'Nội dung';
+
+  @override
+  String get opsOrganizerOnly => 'Không gian vận hành';
+
+  @override
+  String get opsNoPermission => 'Bạn không có quyền vận hành giải đấu này.';
+
+  @override
+  String get opsLoadFailed => 'Không thể tải dữ liệu vận hành giải.';
+
+  @override
+  String get opsRetry => 'Thử lại';
+
+  @override
+  String get opsEmptyDivision => 'Giải đấu chưa có nội dung nào.';
+
+  @override
+  String get opsNoMatches => 'Nội dung này chưa có trận đấu.';
+
+  @override
+  String get opsStageCount => 'Giai đoạn';
+
+  @override
+  String get opsRoundCount => 'Vòng đấu';
+
+  @override
+  String get opsScheduled => 'Đã xếp lịch';
+
+  @override
+  String get opsOngoing => 'Đang diễn ra';
+
+  @override
+  String get opsCompleted => 'Đã hoàn tất';
+
+  @override
+  String get opsUnscheduled => 'Chưa xếp lịch';
+
+  @override
+  String get opsAttention => 'Cần xử lý';
+
+  @override
+  String get opsOpenBracket => 'Mở bracket';
+
+  @override
+  String get opsOpenScoreboard => 'Mở bảng điểm';
+
+  @override
+  String get opsContextHint =>
+      'Vận hành giải mà không rời khỏi ngữ cảnh hiện tại.';
+
+  @override
+  String get opsReadOnlyHint =>
+      'Một số thao tác chỉ mở khi máy chủ xác nhận quyền của bạn.';
 }

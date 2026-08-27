@@ -20943,6 +20943,162 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thu gọn'**
   String get createClubTournament_hideAdvancedOptions;
+
+  /// No description provided for @opsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vận hành giải'**
+  String get opsTitle;
+
+  /// No description provided for @opsOverview.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổng quan'**
+  String get opsOverview;
+
+  /// No description provided for @opsBracket.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bracket'**
+  String get opsBracket;
+
+  /// No description provided for @opsMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đấu'**
+  String get opsMatches;
+
+  /// No description provided for @opsRoster.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh sách tham gia'**
+  String get opsRoster;
+
+  /// No description provided for @opsActivity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoạt động'**
+  String get opsActivity;
+
+  /// No description provided for @opsCamera.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera'**
+  String get opsCamera;
+
+  /// No description provided for @opsRefresh.
+  ///
+  /// In vi, this message translates to:
+  /// **'Làm mới'**
+  String get opsRefresh;
+
+  /// No description provided for @opsDivision.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung'**
+  String get opsDivision;
+
+  /// No description provided for @opsOrganizerOnly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không gian vận hành'**
+  String get opsOrganizerOnly;
+
+  /// No description provided for @opsNoPermission.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn không có quyền vận hành giải đấu này.'**
+  String get opsNoPermission;
+
+  /// No description provided for @opsLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải dữ liệu vận hành giải.'**
+  String get opsLoadFailed;
+
+  /// No description provided for @opsRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get opsRetry;
+
+  /// No description provided for @opsEmptyDivision.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu chưa có nội dung nào.'**
+  String get opsEmptyDivision;
+
+  /// No description provided for @opsNoMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung này chưa có trận đấu.'**
+  String get opsNoMatches;
+
+  /// No description provided for @opsStageCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giai đoạn'**
+  String get opsStageCount;
+
+  /// No description provided for @opsRoundCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng đấu'**
+  String get opsRoundCount;
+
+  /// No description provided for @opsScheduled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xếp lịch'**
+  String get opsScheduled;
+
+  /// No description provided for @opsOngoing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get opsOngoing;
+
+  /// No description provided for @opsCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hoàn tất'**
+  String get opsCompleted;
+
+  /// No description provided for @opsUnscheduled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xếp lịch'**
+  String get opsUnscheduled;
+
+  /// No description provided for @opsAttention.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần xử lý'**
+  String get opsAttention;
+
+  /// No description provided for @opsOpenBracket.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở bracket'**
+  String get opsOpenBracket;
+
+  /// No description provided for @opsOpenScoreboard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở bảng điểm'**
+  String get opsOpenScoreboard;
+
+  /// No description provided for @opsContextHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vận hành giải mà không rời khỏi ngữ cảnh hiện tại.'**
+  String get opsContextHint;
+
+  /// No description provided for @opsReadOnlyHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Một số thao tác chỉ mở khi máy chủ xác nhận quyền của bạn.'**
+  String get opsReadOnlyHint;
 }
 
 class _AppLocalizationsDelegate

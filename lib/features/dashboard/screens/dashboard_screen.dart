@@ -1058,19 +1058,7 @@ class _TournamentTile extends StatelessWidget {
           if (isClubLite) {
             context.push('/lite-manage/${tournament.id}');
           } else {
-            showDialog<void>(
-              context: context,
-              builder: (dialogContext) => AlertDialog(
-                title: Text(l10n.dashboard_manageAdvancedTitle),
-                content: Text(l10n.dashboard_manageAdvancedContent),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext),
-                    child: Text(l10n.dashboard_gotIt),
-                  ),
-                ],
-              ),
-            );
+            context.push('/organizer/tournaments/${tournament.id}/ops');
           }
         } else {
           context.push('/intro/${tournament.id}');
@@ -1135,7 +1123,7 @@ class _TournamentTile extends StatelessWidget {
                   Text(
                     isClubLite
                         ? l10n.dashboard_liteDesc
-                        : 'Giải nhanh • Quản lý đầy đủ trên web',
+                        : l10n.opsOrganizerOnly,
                     style: TextStyle(
                       fontSize: 9,
                       color: isClubLite

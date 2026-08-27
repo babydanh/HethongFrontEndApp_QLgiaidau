@@ -11534,4 +11534,85 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createClubTournament_hideAdvancedOptions => 'Hide';
+
+  @override
+  String get opsTitle => 'Tournament operations';
+
+  @override
+  String get opsOverview => 'Overview';
+
+  @override
+  String get opsBracket => 'Bracket';
+
+  @override
+  String get opsMatches => 'Matches';
+
+  @override
+  String get opsRoster => 'Roster';
+
+  @override
+  String get opsActivity => 'Activity';
+
+  @override
+  String get opsCamera => 'Camera';
+
+  @override
+  String get opsRefresh => 'Refresh';
+
+  @override
+  String get opsDivision => 'Division';
+
+  @override
+  String get opsOrganizerOnly => 'Organizer workspace';
+
+  @override
+  String get opsNoPermission =>
+      'You do not have permission to operate this tournament.';
+
+  @override
+  String get opsLoadFailed => 'Could not load tournament operations.';
+
+  @override
+  String get opsRetry => 'Retry';
+
+  @override
+  String get opsEmptyDivision => 'This tournament has no divisions yet.';
+
+  @override
+  String get opsNoMatches => 'No matches in this division yet.';
+
+  @override
+  String get opsStageCount => 'Stages';
+
+  @override
+  String get opsRoundCount => 'Rounds';
+
+  @override
+  String get opsScheduled => 'Scheduled';
+
+  @override
+  String get opsOngoing => 'Live';
+
+  @override
+  String get opsCompleted => 'Completed';
+
+  @override
+  String get opsUnscheduled => 'Needs schedule';
+
+  @override
+  String get opsAttention => 'Needs attention';
+
+  @override
+  String get opsOpenBracket => 'Open bracket';
+
+  @override
+  String get opsOpenScoreboard => 'Open scoreboard';
+
+  @override
+  String get opsContextHint =>
+      'Manage the live flow without leaving the tournament context.';
+
+  @override
+  String get opsReadOnlyHint =>
+      'Some actions are read-only until the server confirms your permission.';
 }

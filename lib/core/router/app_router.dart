@@ -62,6 +62,7 @@ import 'package:app_quanly_giaidau/features/lite/screens/lite_pairing_screen.dar
 import 'package:app_quanly_giaidau/features/lite/screens/lite_management_screen.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/features/dashboard/screens/dashboard_screen.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/series/screens/series_screen.dart';
 import 'package:app_quanly_giaidau/features/series/screens/series_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/match/screens/matches_list_screen.dart';
@@ -94,7 +95,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Chưa auth nhưng cố truy cập referee hoặc admin
       if (!isAuth &&
           (currentPath.startsWith('/referee') ||
-              currentPath.startsWith('/admin'))) {
+              currentPath.startsWith('/admin') ||
+              currentPath.startsWith('/organizer/tournaments'))) {
         return '/login';
       }
 
@@ -142,6 +144,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         }
 
         if (currentPath.startsWith('/admin') && auth.role != UserRole.admin) {
+          return auth.role == UserRole.referee ? '/referee' : '/viewer';
+        }
+        if (currentPath.startsWith('/organizer/tournaments') &&
+            auth.role != UserRole.organizer &&
+            auth.role != UserRole.admin) {
           return auth.role == UserRole.referee ? '/referee' : '/viewer';
         }
         if (currentPath.startsWith('/referee') &&
@@ -348,6 +355,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/tournament-create',
         builder: (context, state) => const CreatePublicQuickTournamentScreen(),
+      ),
+
+      // ─── Advanced Organizer Operations ───
+      GoRoute(
+        path: '/organizer/tournaments/:id/ops',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return OrganizerOpsScreen(tournamentId: id);
+        },
       ),
 
       // ─── Public Tournament Intro Screen (Both /intro/:id, /tournament/:id and /tournaments/:id) ───
