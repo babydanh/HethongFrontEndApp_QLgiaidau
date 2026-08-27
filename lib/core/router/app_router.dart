@@ -364,6 +364,19 @@ final routerProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return OrganizerOpsScreen(tournamentId: id);
         },
+        routes: [
+          GoRoute(
+            path: 'match/:matchId',
+            builder: (context, state) {
+              final tournamentId = state.pathParameters['id']!;
+              final matchId = state.pathParameters['matchId']!;
+              return LiveScoreScreen(
+                tournamentId: tournamentId,
+                matchId: matchId,
+              );
+            },
+          ),
+        ],
       ),
 
       // ─── Public Tournament Intro Screen (Both /intro/:id, /tournament/:id and /tournaments/:id) ───
@@ -861,7 +874,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               extra?['participantId']?.toString() ?? q['participantId'] ?? '';
           final divisionId =
               extra?['divisionId']?.toString() ?? q['divisionId'];
-          final amount = (extra?['amount'] as num?)?.toDouble() ??
+          final amount =
+              (extra?['amount'] as num?)?.toDouble() ??
               double.tryParse(q['amount'] ?? '') ??
               0.0;
           final tournamentName =
@@ -883,7 +897,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           final q = state.uri.queryParameters;
           final paymentId =
               extra?['paymentId']?.toString() ?? q['paymentId'] ?? '';
-          final amount = (extra?['amount'] as num?)?.toDouble() ??
+          final amount =
+              (extra?['amount'] as num?)?.toDouble() ??
               double.tryParse(q['amount'] ?? '') ??
               0.0;
           final tournamentId =
@@ -968,10 +983,7 @@ class _ClubChatRouteWrapperState extends ConsumerState<_ClubChatRouteWrapper> {
       final dio = ref.read(dioClientProvider).dio;
       final res = await dio.get(
         '/chat/rooms',
-        queryParameters: {
-          'type': 'CLUB',
-          'communityId': widget.communityId,
-        },
+        queryParameters: {'type': 'CLUB', 'communityId': widget.communityId},
       );
       final raw = res.data is Map ? (res.data['data'] ?? res.data) : res.data;
       final room = raw is List
@@ -1026,7 +1038,11 @@ class _ClubChatRouteWrapperState extends ConsumerState<_ClubChatRouteWrapper> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.cloud_off_rounded, size: 48, color: Colors.red),
+                const Icon(
+                  Icons.cloud_off_rounded,
+                  size: 48,
+                  color: Colors.red,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   _error ?? 'Không thể tải phòng chat',

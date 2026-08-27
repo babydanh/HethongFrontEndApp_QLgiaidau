@@ -478,6 +478,11 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
               onTap: () => Navigator.pop(sheetContext, 'schedule'),
             ),
             ListTile(
+              leading: const Icon(Icons.scoreboard_outlined),
+              title: Text(l10n.opsOpenScoreboard),
+              onTap: () => Navigator.pop(sheetContext, 'score'),
+            ),
+            ListTile(
               leading: const Icon(Icons.gavel_rounded),
               title: Text(l10n.opsSpecialOperation),
               onTap: () => Navigator.pop(sheetContext, 'special'),
@@ -497,6 +502,13 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       return;
     }
 
+    if (action == 'score') {
+      if (!context.mounted) return;
+      context.push(
+        '/organizer/tournaments/${widget.tournamentId}/ops/match/${match.id}',
+      );
+      return;
+    }
     if (action == 'schedule') {
       await _showScheduleSheet(context, match);
       return;
