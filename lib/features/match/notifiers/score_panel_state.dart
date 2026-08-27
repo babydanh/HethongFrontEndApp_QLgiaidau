@@ -53,6 +53,8 @@ class RallySetState {
   );
 }
 
+const Object _footballUnset = Object();
+
 class FootballLiveState {
   final int team1Goals;
   final int team2Goals;
@@ -74,15 +76,51 @@ class FootballLiveState {
     this.shootoutTeam2Goals,
   });
 
-  FootballLiveState copyWith({int? team1Goals, int? team2Goals, String? phase, int? minute, int? addedMinute, List<FootballEvent>? events, int? shootoutTeam1Goals, int? shootoutTeam2Goals}) => FootballLiveState(
+  bool get isDecisivePhase =>
+      const {'FULL_TIME', 'PENALTY_SHOOTOUT', 'COMPLETED'}.contains(phase);
+
+  bool get hasValidShootout =>
+      shootoutTeam1Goals != null &&
+      shootoutTeam2Goals != null &&
+      shootoutTeam1Goals != shootoutTeam2Goals;
+
+  /// 0 = undecidable, 1 = team 1, 2 = team 2.
+  /// A football result is terminal only after a decisive phase. A regulation
+  /// draw needs an unequal penalty shootout result.
+  int get winnerTeam {
+    if (!isDecisivePhase) return 0;
+    if (team1Goals != team2Goals) {
+      if (phase == 'PENALTY_SHOOTOUT') return 0;
+      return team1Goals > team2Goals ? 1 : 2;
+    }
+    if (phase != 'PENALTY_SHOOTOUT' || !hasValidShootout) return 0;
+    return shootoutTeam1Goals! > shootoutTeam2Goals! ? 1 : 2;
+  }
+
+  bool get isMatchComplete => winnerTeam != 0;
+
+  FootballLiveState copyWith({
+    int? team1Goals,
+    int? team2Goals,
+    String? phase,
+    int? minute,
+    int? addedMinute,
+    List<FootballEvent>? events,
+    Object? shootoutTeam1Goals = _footballUnset,
+    Object? shootoutTeam2Goals = _footballUnset,
+  }) => FootballLiveState(
     team1Goals: team1Goals ?? this.team1Goals,
     team2Goals: team2Goals ?? this.team2Goals,
     phase: phase ?? this.phase,
     minute: minute ?? this.minute,
     addedMinute: addedMinute ?? this.addedMinute,
     events: events ?? this.events,
-    shootoutTeam1Goals: shootoutTeam1Goals ?? this.shootoutTeam1Goals,
-    shootoutTeam2Goals: shootoutTeam2Goals ?? this.shootoutTeam2Goals,
+    shootoutTeam1Goals: identical(shootoutTeam1Goals, _footballUnset)
+        ? this.shootoutTeam1Goals
+        : shootoutTeam1Goals as int?,
+    shootoutTeam2Goals: identical(shootoutTeam2Goals, _footballUnset)
+        ? this.shootoutTeam2Goals
+        : shootoutTeam2Goals as int?,
   );
 }
 
@@ -91,7 +129,12 @@ class FootballEvent {
   final bool isTeam1;
   final int minute;
   final int addedMinute;
-  const FootballEvent({required this.type, required this.isTeam1, required this.minute, this.addedMinute = 0});
+  const FootballEvent({
+    required this.type,
+    required this.isTeam1,
+    required this.minute,
+    this.addedMinute = 0,
+  });
 }
 
 /// State tổng thể của ScorePanelNotifier.
@@ -139,12 +182,15 @@ class ScorePanelState {
     return t;
   }
 
-  /// Kiểm tra trận đã kết thúc chưa (số set thắng >= setsToWin).
+  /// Football uses its own phase/goal state instead of finished sets.
   bool get isMatchComplete =>
-      team1SetWins >= config.setsToWin || team2SetWins >= config.setsToWin;
+      football?.isMatchComplete ??
+      (team1SetWins >= config.setsToWin || team2SetWins >= config.setsToWin);
 
   /// Đội thắng (0 = chưa, 1 = Đội 1, 2 = Đội 2).
   int get winnerTeam {
+    final footballWinner = football?.winnerTeam;
+    if (footballWinner != null) return footballWinner;
     if (team1SetWins >= config.setsToWin) return 1;
     if (team2SetWins >= config.setsToWin) return 2;
     return 0;

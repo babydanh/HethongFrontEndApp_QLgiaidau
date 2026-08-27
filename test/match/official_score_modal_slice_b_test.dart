@@ -30,4 +30,25 @@ void main() {
     expect(tableTennis, contains('Bóng bàn'));
     expect(tableTennis, contains('RallyScorePanel'));
   });
+
+  test(
+    'football completion uses football-derived winner instead of set fallback',
+    () {
+      final modal = File(
+        'lib/features/match/widgets/official_score_modal.dart',
+      ).readAsStringSync();
+      final state = File(
+        'lib/features/match/notifiers/score_panel_state.dart',
+      ).readAsStringSync();
+      final notifier = File(
+        'lib/features/match/notifiers/score_panel_notifier.dart',
+      ).readAsStringSync();
+
+      expect(modal, contains('state.football != null'));
+      expect(modal, contains('selectedWinner != 0'));
+      expect(state, contains('football?.isMatchComplete'));
+      expect(state, contains('football?.winnerTeam'));
+      expect(notifier, contains("football.phase != 'PENALTY_SHOOTOUT'"));
+    },
+  );
 }

@@ -1304,19 +1304,46 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 6),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 4,
+                        Row(
                           children: [
-                            _iconText(
+                            Icon(
                               Icons.location_on_outlined,
-                              club.locationAddress ?? l10n.vietnam,
-                              colors,
+                              size: 14,
+                              color: colors.textMuted,
                             ),
-                            _iconText(
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                club.locationAddress ?? l10n.vietnam,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colors.textSecondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
                               Icons.group_rounded,
-                              l10n.club_memberCount(club.memberCount),
-                              colors,
+                              size: 14,
+                              color: colors.textMuted,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                l10n.club_memberCount(club.memberCount),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colors.textSecondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),
@@ -1395,16 +1422,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     );
   }
 
-  Widget _iconText(IconData icon, String text, AppColorsExtension colors) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: colors.textMuted),
-        const SizedBox(width: 4),
-        Text(text, style: TextStyle(fontSize: 11, color: colors.textSecondary)),
-      ],
-    );
-  }
 
   Widget _bannerGradient(Color c, String emoji) {
     final isDark = Theme.of(context).brightness == Brightness.dark;

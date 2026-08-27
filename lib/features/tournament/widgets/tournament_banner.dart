@@ -77,6 +77,7 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
                       setState(() => _currentPage = index);
                     },
                     showOverlay: showBannerOverlay,
+                    tournament: widget.tournament,
                   ),
                 ),
               ),
@@ -101,21 +102,9 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
                           ],
                         ),
                 ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    _TournamentLogo(
-                      tournament: widget.tournament,
-                      size: compact ? 38 : 54,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _HeaderInfo(
-                        tournament: widget.tournament,
-                        compact: compact,
-                      ),
-                    ),
-                  ],
+                _HeaderInfo(
+                  tournament: widget.tournament,
+                  compact: compact,
                 ),
                 SizedBox(height: compact ? 8 : 10),
                 _HeaderMeta(
@@ -147,6 +136,7 @@ List<String> _collectImages(Tournament tournament) {
 }
 
 class _BannerCarousel extends StatelessWidget {
+  final Tournament tournament;
   final List<String> images;
   final PageController pageController;
   final int currentPage;
@@ -154,6 +144,7 @@ class _BannerCarousel extends StatelessWidget {
   final bool showOverlay;
 
   const _BannerCarousel({
+    required this.tournament,
     required this.images,
     required this.pageController,
     required this.currentPage,
@@ -210,6 +201,12 @@ class _BannerCarousel extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+        if (tournament.logoUrl?.trim().isNotEmpty == true)
+          Positioned(
+            top: 12,
+            right: 12,
+            child: _TournamentLogo(tournament: tournament, size: 58),
           ),
         if (images.length > 1)
           Positioned(
@@ -347,6 +344,7 @@ class _HeaderMeta extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
+    final locationLabel = TournamentLocationFormatter.tournamentFullLocation(tournament);
     final divisions = tournament.divisions;
 
     final selected =
@@ -462,13 +460,8 @@ class _HeaderMeta extends StatelessWidget {
             ),
             _HeaderIconText(
               icon: Icons.location_on_outlined,
-              text:
-                  TournamentLocationFormatter.tournamentFullLocation(
-                    tournament,
-                  ).isNotEmpty
-                  ? TournamentLocationFormatter.tournamentFullLocation(
-                      tournament,
-                    )
+              text: locationLabel.isNotEmpty
+                  ? locationLabel
                   : l10n.locationNotUpdated,
             ),
           ],
@@ -568,7 +561,8 @@ class _TournamentLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final logoUrl = tournament.logoUrl;
+    final logoUrl = tournament.logoUrl?.trim();
+    if (logoUrl == null || logoUrl.isEmpty) return const SizedBox.shrink();
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 140),
@@ -590,33 +584,18 @@ class _TournamentLogo extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(11),
-        child: logoUrl != null && logoUrl.isNotEmpty
-            ? Image.network(
-                _resolveImageUrl(logoUrl),
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    _FallbackLogo(size: size),
-              )
-            : _FallbackLogo(size: size),
+        child: Image.network(
+          _resolveImageUrl(logoUrl),
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) =>
+              const SizedBox.shrink(),
+        ),
       ),
     );
   }
 }
 
-class _FallbackLogo extends StatelessWidget {
-  final double size;
 
-  const _FallbackLogo({required this.size});
-
-  @override
-  Widget build(BuildContext context) {
-    return SvgPicture.network(
-      "https://sporto.asia/sporto_v1.svg",
-      fit: BoxFit.contain,
-      placeholderBuilder: (_) => Icon(Icons.emoji_events, size: size * 0.5),
-    );
-  }
-}
 
 String _resolveImageUrl(String url) {
   if (url.startsWith("http")) return url;

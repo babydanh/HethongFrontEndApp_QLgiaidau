@@ -253,8 +253,11 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
                     );
                     final selectedWinner = state.winnerTeam != 0
                         ? state.winnerTeam
+                        : state.football != null
+                        ? 0
                         : (state.team1SetWins >= state.team2SetWins ? 1 : 2);
-                    final canSaveResult = n.canCompleteAs(selectedWinner);
+                    final canSaveResult =
+                        selectedWinner != 0 && n.canCompleteAs(selectedWinner);
                     return Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,

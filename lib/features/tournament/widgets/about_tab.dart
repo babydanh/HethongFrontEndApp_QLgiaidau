@@ -5,7 +5,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
-import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/core/widgets/countdown_timer.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -190,19 +189,6 @@ class AboutTab extends StatelessWidget {
                   }(),
                   colors: colors,
                 ),
-                if (TournamentLocationFormatter.tournamentFullLocation(
-                  tournament,
-                ).isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  _buildInfoRow(
-                    label: l10n.club_location,
-                    value: TournamentLocationFormatter.tournamentFullLocation(
-                      tournament,
-                    ),
-                    colors: colors,
-                    maxLines: 6,
-                  ),
-                ],
                 const SizedBox(height: 12),
                 _buildInfoRow(
                   label: l10n.bracketTypeLabel,
