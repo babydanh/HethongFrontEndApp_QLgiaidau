@@ -1691,9 +1691,39 @@ class _OpsActivityCard extends StatelessWidget {
 
   final OrganizerOpsAuditEntry entry;
 
+  String _friendlyAction(AppLocalizations l10n) {
+    final source = '${entry.action} ${entry.tableName}'.toUpperCase();
+    if (source.contains('KICK') || source.contains('REMOV')) {
+      return l10n.opsKick;
+    }
+    if (source.contains('SCHEDULE') || source.contains('COURT')) {
+      return l10n.matchScheduledTime;
+    }
+    if (source.contains('BRACKET')) {
+      return l10n.opsOpenBracket;
+    }
+    if (source.contains('REFEREE')) {
+      return l10n.matchMainReferee;
+    }
+    if (source.contains('MATCH') ||
+        source.contains('SCORE') ||
+        source.contains('STATUS')) {
+      return l10n.opsMatches;
+    }
+    return l10n.opsAudit;
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final localTime = entry.createdAt.toLocal();
+    final dateLabel = MaterialLocalizations.of(
+      context,
+    ).formatMediumDate(localTime);
+    final timeLabel = MaterialLocalizations.of(
+      context,
+    ).formatTimeOfDay(TimeOfDay.fromDateTime(localTime));
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Container(
@@ -1713,7 +1743,7 @@ class _OpsActivityCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    entry.action,
+                    _friendlyAction(l10n),
                     style: TextStyle(
                       color: colors.textPrimary,
                       fontWeight: FontWeight.w800,
@@ -1721,16 +1751,14 @@ class _OpsActivityCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    entry.tableName.isEmpty
-                        ? entry.recordId
-                        : '${entry.tableName} • ${entry.recordId}',
+                    l10n.opsContextHint,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(color: colors.textSecondary, fontSize: 12),
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    '${entry.actorName ?? 'System'} • ${entry.createdAt.toLocal()}',
+                    '${entry.actorName ?? l10n.opsOrganizerOnly} • $dateLabel $timeLabel',
                     style: TextStyle(color: colors.textMuted, fontSize: 10),
                   ),
                 ],
