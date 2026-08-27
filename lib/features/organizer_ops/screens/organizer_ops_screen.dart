@@ -832,7 +832,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go('/dashboard');
+      context.go('/home');
     }
   }
 }
