@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/standings_view.dart'
 import 'package:app_quanly_giaidau/features/bracket/widgets/filter_chips.dart'
     show RoundFilterPill;
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
@@ -288,6 +289,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
     }
 
     final finalized = snapshot['finalized'] == true;
+    final tournament = ref.read(tournamentProvider(widget.tournamentId)).value;
     final parsedAwards = rawAwards.whereType<Map>().map((raw) {
       final award = Map<String, dynamic>.from(raw);
       final participant = award['participant'];
@@ -298,13 +300,17 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         rank: (award['rank'] as num?)?.toInt() ?? 0,
         shared: award['shared'] == true,
         hasParticipant: participantMap.isNotEmpty,
+        participant: participantMap,
         name:
             (participantMap['teamName'] ?? l10n.bracketView_unknownParticipant)
                 .toString(),
       );
     }).toList();
     final awards = parsedAwards
-        .where((award) => award.hasParticipant && (finalized || award.rank <= 2))
+        .where(
+          (award) =>
+              award.hasParticipant && (award.rank == 1 || award.rank == 2),
+        )
         .toList();
     if (awards.isEmpty) return const SizedBox.shrink();
 
@@ -320,15 +326,58 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            finalized
-                ? l10n.bracketView_officialResults
-                : l10n.bracketView_currentResults,
-            style: TextStyle(
-              color: context.colors.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  finalized
+                      ? l10n.bracketView_officialResults
+                      : l10n.bracketView_currentResults,
+                  style: TextStyle(
+                    color: context.colors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              if (awards.any((award) => award.rank == 1) &&
+                  awards.any((award) => award.rank == 2))
+                TextButton.icon(
+                  onPressed: () {
+                    final topOne = awards.firstWhere(
+                      (award) => award.rank == 1,
+                    );
+                    final topTwo = awards.firstWhere(
+                      (award) => award.rank == 2,
+                    );
+                    final shareUrl = StringBuffer(
+                      'https://sporto.asia/tournaments/${widget.tournamentId}?tab=results&share=results',
+                    );
+                    if (widget.divisionId != null &&
+                        widget.divisionId!.isNotEmpty) {
+                      shareUrl.write(
+                        '&divisionId=${Uri.encodeComponent(widget.divisionId!)}',
+                      );
+                    }
+                    AppShareModal.show(
+                      context: context,
+                      title: finalized
+                          ? l10n.bracketView_officialResults
+                          : l10n.bracketView_currentResults,
+                      subtitle:
+                          '${l10n.bracketView_rank(1)}: ${topOne.name} • ${l10n.bracketView_rank(2)}: ${topTwo.name}',
+                      webUrl: shareUrl.toString(),
+                      imageUrl: tournament?.logoUrl ?? tournament?.bannerUrl,
+                    );
+                  },
+                  icon: const Icon(Icons.ios_share_rounded, size: 16),
+                  label: Text(l10n.share),
+                  style: TextButton.styleFrom(
+                    foregroundColor: context.colors.textSecondary,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -354,21 +403,13 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                     Text(
                       label,
                       style: TextStyle(
-                        color: AppTheme.primary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                        color: context.colors.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      award.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: context.colors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    const SizedBox(height: 8),
+                    _buildAwardIdentity(award.participant, award.name),
                   ],
                 ),
               );
@@ -376,6 +417,138 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAwardIdentity(
+    Map<String, dynamic> participant,
+    String fallbackName,
+  ) {
+    final teamName = (participant['teamName'] ?? fallbackName)
+        .toString()
+        .trim();
+    final rawMembers = participant['members'];
+    final members = rawMembers is List
+        ? rawMembers
+              .whereType<Map>()
+              .map((raw) => Map<String, dynamic>.from(raw))
+              .where((member) {
+                final name = (member['fullName'] ?? '').toString().trim();
+                final avatar = (member['avatarUrl'] ?? '').toString().trim();
+                return name.isNotEmpty || avatar.isNotEmpty;
+              })
+              .take(2)
+              .toList()
+        : <Map<String, dynamic>>[];
+    final memberNames = members
+        .map((member) => (member['fullName'] ?? '').toString().trim())
+        .where((name) => name.isNotEmpty)
+        .join(' / ');
+
+    String initials(String value) {
+      final words = value
+          .trim()
+          .split(RegExp(r'\s+'))
+          .where((word) => word.isNotEmpty)
+          .toList();
+      if (words.length > 1) {
+        return '${words.first[0]}${words.last[0]}'.toUpperCase();
+      }
+      return words.isEmpty ? '?' : words.first[0].toUpperCase();
+    }
+
+    Widget avatar(Map<String, dynamic> member, int index) {
+      final name = (member['fullName'] ?? teamName).toString().trim();
+      final avatarUrl = (member['avatarUrl'] ?? '').toString().trim();
+      return Positioned(
+        left: index * 18,
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: context.colors.bgSurface,
+            shape: BoxShape.circle,
+            border: Border.all(color: context.colors.bgCard, width: 2),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: avatarUrl.isNotEmpty
+              ? Image.network(
+                  avatarUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => Center(
+                    child: Text(
+                      initials(name),
+                      style: TextStyle(
+                        color: context.colors.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                )
+              : Center(
+                  child: Text(
+                    initials(name),
+                    style: TextStyle(
+                      color: context.colors.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+        ),
+      );
+    }
+
+    final avatarWidth = members.length > 1 ? 56.0 : 38.0;
+    return Row(
+      children: [
+        SizedBox(
+          width: avatarWidth,
+          height: 38,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              if (members.isNotEmpty)
+                ...members.asMap().entries.map(
+                  (entry) => avatar(entry.value, entry.key),
+                )
+              else
+                avatar({'fullName': teamName}, 0),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                teamName,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: context.colors.textPrimary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (memberNames.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  memberNames,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: context.colors.textMuted,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 
