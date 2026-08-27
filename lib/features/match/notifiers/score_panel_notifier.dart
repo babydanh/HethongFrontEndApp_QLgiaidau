@@ -40,7 +40,7 @@ FootballLiveState? _readFootballState(Map<String, dynamic> details) {
   return FootballLiveState(
     team1Goals: _parseFootballInt(raw['team1Goals']),
     team2Goals: _parseFootballInt(raw['team2Goals']),
-    phase: _parseFootballPhase(raw['phase']) ?? 'FIRST_HALF',
+    phase: _parseFootballPhase(raw['phase']),
     minute: _parseFootballInt(raw['minute']),
     addedMinute: _parseFootballInt(raw['addedMinute']),
     events: raw['events'] is List
@@ -85,7 +85,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       _liveSyncTimer?.cancel();
       _footballSyncTimer?.cancel();
       if (_pendingFootballSync != null) {
-        unawaited(_flushFootballSync());
+        unawaited(_flushFootballSync().then<void>((_) {}));
       }
       // Do not lose the last tap when the scoring panel is popped before the
       // 250ms debounce fires. The request is best-effort and is protected by
@@ -653,7 +653,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     _footballSyncTimer?.cancel();
     _footballSyncTimer = Timer(const Duration(milliseconds: 250), () {
       _footballSyncTimer = null;
-      unawaited(_flushFootballSync());
+      unawaited(_flushFootballSync().then<void>((_) {}));
     });
   }
 
@@ -715,7 +715,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     } finally {
       _footballSyncInFlight = false;
       if (_pendingFootballSync != null) {
-        unawaited(_flushFootballSync());
+        unawaited(_flushFootballSync().then<void>((_) {}));
       }
     }
     return _footballSyncHealthy;
@@ -737,6 +737,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   bool canCompleteAs(int winnerTeam) {
+    if (state.isServerTerminal) return false;
     if (winnerTeam != 1 && winnerTeam != 2) return false;
     if (state.football != null) {
       final football = state.football!;

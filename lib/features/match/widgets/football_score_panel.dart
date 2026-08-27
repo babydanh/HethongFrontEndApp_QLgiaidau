@@ -27,7 +27,9 @@ class FootballScorePanel extends ConsumerWidget {
         ? const ['COMPLETED']
         : footballEditablePhases;
     final isLocked =
-        state.isSubmitting || state.isServerTerminal || score.phase == 'COMPLETED';
+        state.isSubmitting ||
+        state.isServerTerminal ||
+        score.phase == 'COMPLETED';
     return SingleChildScrollView(
       padding: const EdgeInsets.all(12),
       child: Column(
