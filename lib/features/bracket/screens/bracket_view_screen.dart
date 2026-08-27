@@ -741,58 +741,85 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           ..sort();
 
     // Filter logic
-    final filteredMatches = stageScopedMatches.where((m) {
-      // Search query filter
-      if (_searchQuery.isNotEmpty) {
-        final t1 = m.team1Name.toLowerCase();
-        final t2 = m.team2Name.toLowerCase();
-        if (!t1.contains(_searchQuery) && !t2.contains(_searchQuery)) {
-          return false;
-        }
-      }
-      // Branch filter
-      if (_selectedBranch.isNotEmpty && _selectedBranch != 'all') {
-        if (_selectedBranch == 'winners' &&
-            m.bracketPosition.bracket != 'winners' &&
-            m.bracketPosition.bracket != 'grand_final') {
-          return false;
-        }
-        if (_selectedBranch == 'losers' &&
-            m.bracketPosition.bracket != 'losers') {
-          return false;
-        }
-        if (_selectedBranch == 'group_stage' && !isGroupStageMatch(m)) {
-          return false;
-        }
-        if (_selectedBranch == 'knockout' && !isKnockoutMatch(m)) {
-          return false;
-        }
-      }
-      // Group filter
-      if (_selectedGroup.isNotEmpty &&
-          _selectedGroup != 'all' &&
-          _selectedBranch != 'knockout' &&
-          isGroupStageMatch(m) &&
-          m.groupName != _selectedGroup) {
-        return false;
-      }
-      // Leg filter for round-robin/group-stage encounters.
-      if (_selectedLeg != 0 &&
-          isGroupStageMatch(m) &&
-          (m.leg ?? 1) != _selectedLeg) {
-        return false;
-      }
-      // Round filter is reserved for knockout stages.
-      if (_selectedRound != 0 && m.round != _selectedRound) return false;
-      // Status filter
-      if (_matchFilter.isNotEmpty && _matchFilter != 'all') {
-        if (_matchFilter == 'live' && !m.isLive) return false;
-        if (_matchFilter == 'scheduled' && !m.isScheduled) return false;
-        if (_matchFilter == 'completed' && !m.isCompleted) return false;
-      }
+    final filteredMatches =
+        stageScopedMatches.where((m) {
+          // Search query filter
+          if (_searchQuery.isNotEmpty) {
+            final t1 = m.team1Name.toLowerCase();
+            final t2 = m.team2Name.toLowerCase();
+            if (!t1.contains(_searchQuery) && !t2.contains(_searchQuery)) {
+              return false;
+            }
+          }
+          // Branch filter
+          if (_selectedBranch.isNotEmpty && _selectedBranch != 'all') {
+            if (_selectedBranch == 'winners' &&
+                m.bracketPosition.bracket != 'winners' &&
+                m.bracketPosition.bracket != 'grand_final') {
+              return false;
+            }
+            if (_selectedBranch == 'losers' &&
+                m.bracketPosition.bracket != 'losers') {
+              return false;
+            }
+            if (_selectedBranch == 'group_stage' && !isGroupStageMatch(m)) {
+              return false;
+            }
+            if (_selectedBranch == 'knockout' && !isKnockoutMatch(m)) {
+              return false;
+            }
+          }
+          // Group filter
+          if (_selectedGroup.isNotEmpty &&
+              _selectedGroup != 'all' &&
+              _selectedBranch != 'knockout' &&
+              isGroupStageMatch(m) &&
+              m.groupName != _selectedGroup) {
+            return false;
+          }
+          // Leg filter for round-robin/group-stage encounters.
+          if (_selectedLeg != 0 &&
+              isGroupStageMatch(m) &&
+              (m.leg ?? 1) != _selectedLeg) {
+            return false;
+          }
+          // Round filter is reserved for knockout stages.
+          if (_selectedRound != 0 && m.round != _selectedRound) return false;
+          // Status filter
+          if (_matchFilter.isNotEmpty && _matchFilter != 'all') {
+            if (_matchFilter == 'live' && !m.isLive) return false;
+            if (_matchFilter == 'scheduled' && !m.isScheduled) return false;
+            if (_matchFilter == 'completed' && !m.isCompleted) return false;
+          }
 
-      return true;
-    }).toList();
+          return true;
+        }).toList()..sort((a, b) {
+          final aIsGroup = isGroupStageMatch(a);
+          final bIsGroup = isGroupStageMatch(b);
+          if (aIsGroup != bIsGroup) return aIsGroup ? -1 : 1;
+          if (aIsGroup && bIsGroup) {
+            final groupCompare = (a.groupName ?? '').compareTo(
+              b.groupName ?? '',
+            );
+            if (groupCompare != 0) return groupCompare;
+            final legCompare = (a.leg ?? 1).compareTo(b.leg ?? 1);
+            if (legCompare != 0) return legCompare;
+          }
+          return a.id.compareTo(b.id);
+        });
+
+    String sectionKey(MatchModel match) {
+      if (!isGroupStageMatch(match)) return 'KNOCKOUT';
+      return 'GROUP|${match.groupName}|${match.leg ?? 1}';
+    }
+
+    String sectionLabel(MatchModel match) {
+      if (!isGroupStageMatch(match)) return l10n.bracketView_knockoutStage;
+      final groupName = (match.groupName ?? '').trim().isEmpty
+          ? l10n.bracketView_groupTitle
+          : (match.groupName ?? '').trim();
+      return '$groupName • ${l10n.crossTableLegIndicator(match.leg ?? 1, availableLegs.length)}';
+    }
 
     return ListView(
       controller: widget.isEmbedded ? null : widget.scrollController,
@@ -1161,14 +1188,38 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
               ],
             ),
           ),
-        for (final match in filteredMatches)
+        for (var index = 0; index < filteredMatches.length; index++) ...[
+          if (index == 0 ||
+              sectionKey(filteredMatches[index]) !=
+                  sectionKey(filteredMatches[index - 1]))
+            Padding(
+              padding: const EdgeInsets.only(top: 6, bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(child: Divider(color: colors.border)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(
+                      sectionLabel(filteredMatches[index]),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: colors.border)),
+                ],
+              ),
+            ),
           MatchTableRow(
-            match: match,
+            match: filteredMatches[index],
             isReadOnly: isReadOnly,
             totalRounds: effectiveTotalRounds,
             tournamentId: widget.tournamentId,
             isReferee: widget.isReferee,
           ),
+        ],
       ],
     );
   }
