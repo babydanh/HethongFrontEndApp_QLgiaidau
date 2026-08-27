@@ -601,9 +601,15 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       return const SizedBox.shrink();
     }
 
-    final isFull = (tournament.maxParticipants != null &&
-        tournament.maxParticipants! > 0 &&
-        (tournament.participantCount ?? 0) >= tournament.maxParticipants!);
+    final selectedDivision = tournament.divisions
+        .where((division) => division.id == _selectedDivisionId)
+        .firstOrNull ??
+        (tournament.divisions.isNotEmpty ? tournament.divisions.first : null);
+    final divisionCapacity = selectedDivision?.maxParticipants;
+    final divisionParticipantCount = selectedDivision?.participantCount ?? 0;
+    final isFull = divisionCapacity != null &&
+        divisionCapacity > 0 &&
+        divisionParticipantCount >= divisionCapacity;
 
     final isClosed =
         statusUpper == 'REGISTRATION_CLOSED' ||
