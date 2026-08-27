@@ -20992,6 +20992,12 @@ abstract class AppLocalizations {
   /// **'Làm mới'**
   String get opsRefresh;
 
+  /// No description provided for @opsSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu thành công'**
+  String get opsSaved;
+
   /// No description provided for @opsDivision.
   ///
   /// In vi, this message translates to:

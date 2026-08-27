@@ -11528,6 +11528,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get opsRefresh => 'Làm mới';
 
   @override
+  String get opsSaved => 'Đã lưu thành công';
+
+  @override
   String get opsDivision => 'Nội dung';
 
   @override

@@ -11560,6 +11560,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opsRefresh => 'Refresh';
 
   @override
+  String get opsSaved => 'Saved successfully';
+
+  @override
   String get opsDivision => 'Division';
 
   @override

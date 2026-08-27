@@ -88,6 +88,12 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                   divisionId: _selectedDivisionId,
                 )),
               );
+              ref.invalidate(
+                organizerOpsReadModelProvider((
+                  tournamentId: widget.tournamentId,
+                  divisionId: _selectedDivisionId!,
+                )),
+              );
             }
           },
           icon: const Icon(Icons.refresh_rounded),
@@ -149,6 +155,12 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
               ref.invalidate(tournamentDivisionsProvider(widget.tournamentId));
               ref.invalidate(
                 matchesWithDivisionProvider((
+                  tournamentId: widget.tournamentId,
+                  divisionId: selectedDivisionId,
+                )),
+              );
+              ref.invalidate(
+                organizerOpsReadModelProvider((
                   tournamentId: widget.tournamentId,
                   divisionId: selectedDivisionId,
                 )),
@@ -522,6 +534,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                             );
                         if (!context.mounted) return;
                         Navigator.pop(sheetContext);
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text(l10n.opsSaved)));
                         ref.invalidate(
                           matchesWithDivisionProvider((
                             tournamentId: widget.tournamentId,
@@ -648,7 +663,13 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                       );
                       ScaffoldMessenger.of(
                         context,
-                      ).showSnackBar(SnackBar(content: Text(l10n.opsRefresh)));
+                      ).showSnackBar(SnackBar(content: Text(l10n.opsSaved)));
+                      ref.invalidate(
+                        organizerOpsReadModelProvider((
+                          tournamentId: widget.tournamentId,
+                          divisionId: _selectedDivisionId!,
+                        )),
+                      );
                     } catch (error) {
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(

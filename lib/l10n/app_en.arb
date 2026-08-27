@@ -4806,6 +4806,7 @@
   "opsActivity": "Activity",
   "opsCamera": "Camera",
   "opsRefresh": "Refresh",
+  "opsSaved": "Saved successfully",
   "opsDivision": "Division",
   "opsOrganizerOnly": "Organizer workspace",
   "opsNoPermission": "You do not have permission to operate this tournament.",
