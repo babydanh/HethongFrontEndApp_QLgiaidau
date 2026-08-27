@@ -23,6 +23,7 @@ class OrganizerOpsScreen extends ConsumerStatefulWidget {
 class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
   String? _selectedDivisionId;
   String _rosterFilter = 'ALL';
+  String _rosterQuery = '';
   int _selectedTab = 0;
 
   @override
@@ -329,6 +330,19 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 .toList(growable: false),
           _ => readModel.participants,
         };
+        final query = _rosterQuery.trim().toLowerCase();
+        final visibleParticipants = query.isEmpty
+            ? participants
+            : participants
+                  .where(
+                    (participant) =>
+                        participant.teamName.toLowerCase().contains(query) ||
+                        participant.members.any(
+                          (member) =>
+                              member.fullName.toLowerCase().contains(query),
+                        ),
+                  )
+                  .toList(growable: false);
         if (readModel.participants.isEmpty) {
           return SliverToBoxAdapter(
             child: _OpsReadOnlyNotice(
@@ -339,7 +353,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
           );
         }
         return SliverList.builder(
-          itemCount: participants.length + 2,
+          itemCount: visibleParticipants.isEmpty
+              ? 3
+              : visibleParticipants.length + 2,
           itemBuilder: (context, index) {
             if (index == 0) {
               return Padding(
@@ -354,10 +370,22 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
             if (index == 1) {
               return _OpsRosterFilterBar(
                 selectedFilter: _rosterFilter,
+                onSearchChanged: (query) =>
+                    setState(() => _rosterQuery = query),
                 onChanged: (filter) => setState(() => _rosterFilter = filter),
               );
             }
-            final participant = participants[index - 2];
+            if (visibleParticipants.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                child: _OpsReadOnlyNotice(
+                  icon: Icons.search_off_rounded,
+                  title: l10n.opsRoster,
+                  message: l10n.opsNoFilteredParticipants,
+                ),
+              );
+            }
+            final participant = visibleParticipants[index - 2];
             return _OpsParticipantCard(
               participant: participant,
               onKick: readOnly || participant.isKicked
@@ -1606,10 +1634,12 @@ class _OpsMatchCard extends StatelessWidget {
 class _OpsRosterFilterBar extends StatelessWidget {
   const _OpsRosterFilterBar({
     required this.selectedFilter,
+    required this.onSearchChanged,
     required this.onChanged,
   });
 
   final String selectedFilter;
+  final ValueChanged<String> onSearchChanged;
   final ValueChanged<String> onChanged;
 
   @override
@@ -1623,20 +1653,34 @@ class _OpsRosterFilterBar extends StatelessWidget {
     ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            for (var index = 0; index < filters.length; index++) ...[
-              if (index > 0) const SizedBox(width: 8),
-              ChoiceChip(
-                selected: selectedFilter == filters[index].$1,
-                onSelected: (_) => onChanged(filters[index].$1),
-                label: Text(filters[index].$2),
-              ),
-            ],
-          ],
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            onChanged: onSearchChanged,
+            decoration: InputDecoration(
+              hintText: l10n.opsSearchRoster,
+              prefixIcon: const Icon(Icons.search_rounded),
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (var index = 0; index < filters.length; index++) ...[
+                  if (index > 0) const SizedBox(width: 8),
+                  ChoiceChip(
+                    selected: selectedFilter == filters[index].$1,
+                    onSelected: (_) => onChanged(filters[index].$1),
+                    label: Text(filters[index].$2),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

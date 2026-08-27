@@ -11561,6 +11561,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get opsNoParticipants => 'Nội dung này chưa có người tham gia.';
 
   @override
+  String get opsSearchRoster => 'Tìm theo tên đội hoặc vận động viên';
+
+  @override
+  String get opsNoFilteredParticipants =>
+      'Không có kết quả phù hợp với bộ lọc hiện tại';
+
+  @override
   String get opsFilterAll => 'Tất cả';
 
   @override

@@ -11594,6 +11594,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opsNoParticipants => 'No participants in this division yet.';
 
   @override
+  String get opsSearchRoster => 'Search by team or player name';
+
+  @override
+  String get opsNoFilteredParticipants =>
+      'No participants match the current filter';
+
+  @override
   String get opsFilterAll => 'All';
 
   @override

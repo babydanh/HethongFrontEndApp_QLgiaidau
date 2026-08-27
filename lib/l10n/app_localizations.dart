@@ -21058,6 +21058,18 @@ abstract class AppLocalizations {
   /// **'Nội dung này chưa có người tham gia.'**
   String get opsNoParticipants;
 
+  /// No description provided for @opsSearchRoster.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm theo tên đội hoặc vận động viên'**
+  String get opsSearchRoster;
+
+  /// No description provided for @opsNoFilteredParticipants.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có kết quả phù hợp với bộ lọc hiện tại'**
+  String get opsNoFilteredParticipants;
+
   /// No description provided for @opsFilterAll.
   ///
   /// In vi, this message translates to:

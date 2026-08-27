@@ -4817,6 +4817,8 @@
   "opsEmptyDivision": "This tournament has no divisions yet.",
   "opsNoMatches": "No matches in this division yet.",
   "opsNoParticipants": "No participants in this division yet.",
+  "opsSearchRoster": "Search by team or player name",
+  "opsNoFilteredParticipants": "No participants match the current filter",
   "opsFilterAll": "All",
   "opsFilterPaid": "Paid",
   "opsFilterUnpaid": "Unpaid",

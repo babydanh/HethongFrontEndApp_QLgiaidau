@@ -4817,6 +4817,8 @@
   "opsEmptyDivision": "Giải đấu chưa có nội dung nào.",
   "opsNoMatches": "Nội dung này chưa có trận đấu.",
   "opsNoParticipants": "Nội dung này chưa có người tham gia.",
+  "opsSearchRoster": "Tìm theo tên đội hoặc vận động viên",
+  "opsNoFilteredParticipants": "Không có kết quả phù hợp với bộ lọc hiện tại",
   "opsFilterAll": "Tất cả",
   "opsFilterPaid": "Đã thanh toán",
   "opsFilterUnpaid": "Chưa thanh toán",
