@@ -48,7 +48,15 @@ void main() {
       expect(modal, contains('selectedWinner != 0'));
       expect(state, contains('football?.isMatchComplete'));
       expect(state, contains('football?.winnerTeam'));
-      expect(notifier, contains("football.phase != 'PENALTY_SHOOTOUT'"));
+      expect(
+        state,
+        contains('The phase and match clock are informational only.'),
+      );
+      expect(
+        notifier,
+        contains('Football intentionally follows Lite-style completion'),
+      );
+      expect(notifier, isNot(contains("football.phase != 'PENALTY_SHOOTOUT'")));
     },
   );
 

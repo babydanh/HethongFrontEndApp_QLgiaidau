@@ -742,19 +742,13 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     if (state.football != null) {
       final football = state.football!;
       final match = ref.read(singleMatchProvider(arg)).value;
-      if (!football.isDecisivePhase ||
-          match?.team1Id.isNotEmpty != true ||
+      if (match?.team1Id.isNotEmpty != true ||
           match?.team2Id.isNotEmpty != true) {
         return false;
       }
 
-      final isRegulationDraw = football.team1Goals == football.team2Goals;
-      if (isRegulationDraw && football.phase != 'PENALTY_SHOOTOUT') {
-        return false;
-      }
-      if (!isRegulationDraw && football.phase == 'PENALTY_SHOOTOUT') {
-        return false;
-      }
+      // Football intentionally follows Lite-style completion: the clock and
+      // phase are informational. A draw still requires a valid shootout.
       return football.winnerTeam == winnerTeam;
     }
     if (state.isLite) {

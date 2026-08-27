@@ -11645,19 +11645,22 @@ class AppLocalizationsVi extends AppLocalizations {
   String get opsRoundCount => 'Vòng đấu';
 
   @override
-  String get opsScheduled => 'Đã xếp lịch';
+  String get opsScheduled => 'Sắp đấu';
 
   @override
-  String get opsOngoing => 'Đang diễn ra';
+  String get opsOngoing => 'Đang đấu';
 
   @override
-  String get opsCompleted => 'Đã hoàn tất';
+  String get opsCompleted => 'Hoàn thành';
 
   @override
   String get opsUnscheduled => 'Chưa xếp lịch';
 
   @override
   String get opsAttention => 'Cần xử lý';
+
+  @override
+  String get opsFilteredNoMatches => 'Không có trận trong nhóm này.';
 
   @override
   String get opsOpenBracket => 'Mở bracket';

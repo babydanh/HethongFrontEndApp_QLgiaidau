@@ -101,8 +101,9 @@ class FootballLiveState {
     this.shootoutTeam2Goals,
   });
 
-  bool get isDecisivePhase =>
-      const {'FULL_TIME', 'PENALTY_SHOOTOUT', 'COMPLETED'}.contains(phase);
+  /// Compatibility getter: a decisive Football result is score-based now.
+  /// The phase and match clock do not participate in completion readiness.
+  bool get isDecisivePhase => isMatchComplete;
 
   bool get hasValidShootout =>
       shootoutTeam1Goals != null &&
@@ -110,15 +111,13 @@ class FootballLiveState {
       shootoutTeam1Goals != shootoutTeam2Goals;
 
   /// 0 = undecidable, 1 = team 1, 2 = team 2.
-  /// A football result is terminal only after a decisive phase. A regulation
-  /// draw needs an unequal penalty shootout result.
+  /// Football completion is based on goals; a draw needs an unequal shootout.
+  /// The phase and match clock are informational only.
   int get winnerTeam {
-    if (!isDecisivePhase) return 0;
     if (team1Goals != team2Goals) {
-      if (phase == 'PENALTY_SHOOTOUT') return 0;
       return team1Goals > team2Goals ? 1 : 2;
     }
-    if (phase != 'PENALTY_SHOOTOUT' || !hasValidShootout) return 0;
+    if (!hasValidShootout) return 0;
     return shootoutTeam1Goals! > shootoutTeam2Goals! ? 1 : 2;
   }
 

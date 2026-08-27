@@ -2,6 +2,14 @@ import 'dart:ui';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
+Map<String, dynamic>? _chatMap(dynamic value) {
+  if (value is Map<String, dynamic>) return value;
+  if (value is Map) {
+    return value.map((key, value) => MapEntry(key.toString(), value));
+  }
+  return null;
+}
+
 class ChatParticipant {
   final String id;
   final String fullName;
@@ -105,9 +113,13 @@ class ChatPollModel {
     final optionsList = <ChatPollOptionModel>[];
     if (rawOptions is List) {
       for (final opt in rawOptions) {
-        if (opt is Map<String, dynamic>) {
+        final optionMap = _chatMap(opt);
+        if (optionMap != null) {
           optionsList.add(
-            ChatPollOptionModel.fromJson(opt, currentUserId: currentUserId),
+            ChatPollOptionModel.fromJson(
+              optionMap,
+              currentUserId: currentUserId,
+            ),
           );
         }
       }
@@ -124,7 +136,8 @@ class ChatPollModel {
     return ChatPollModel(
       id: (json['id'] ?? '').toString(),
       question: (json['question'] ?? '').toString(),
-      allowMultipleAnswers: json['allowMultipleAnswers'] == true,
+      allowMultipleAnswers:
+          json['allowMultipleAnswers'] == true || json['allowMultiple'] == true,
       isClosed: json['isClosed'] == true,
       expiresAt: DateTime.tryParse(json['expiresAt']?.toString() ?? ''),
       totalVotes: total,
@@ -309,18 +322,27 @@ class ChatMessageModel {
       );
     }
 
+    final metadataMap = _chatMap(rawMetadata);
+    final directPollMap = _chatMap(json['poll']);
+    final nestedPollMap = _chatMap(metadataMap?['poll']);
+    final messageType = (json['type'] ?? json['messageType'] ?? '')
+        .toString()
+        .toUpperCase();
+    final metadataIsPoll =
+        metadataMap != null &&
+        metadataMap['question'] != null &&
+        metadataMap['options'] is List;
+
     ChatPollModel? poll;
-    if (json['poll'] is Map<String, dynamic>) {
-      poll = ChatPollModel.fromJson(
-        json['poll'] as Map<String, dynamic>,
-        currentUserId: currentUserId,
-      );
-    } else if (json['metadata'] is Map &&
-        (json['metadata'] as Map)['poll'] is Map) {
-      poll = ChatPollModel.fromJson(
-        (json['metadata'] as Map)['poll'] as Map<String, dynamic>,
-        currentUserId: currentUserId,
-      );
+    final pollMap =
+        directPollMap ??
+        nestedPollMap ??
+        (messageType == 'POLL' && metadataIsPoll ? metadataMap : null) ??
+        (messageType == 'POLL' ? _chatMap(json) : null);
+    if (pollMap != null &&
+        pollMap['question'] != null &&
+        pollMap['options'] is List) {
+      poll = ChatPollModel.fromJson(pollMap, currentUserId: currentUserId);
     }
 
     final rawReactions = json['reactions'];

@@ -240,6 +240,33 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         }
       }
     };
+    _chatSocket.onPollVoted = (data) {
+      if (!mounted || data['roomId']?.toString() != widget.roomId) return;
+      final messageId = data['messageId']?.toString();
+      final currentUserId = ref.read(userProfileProvider).asData?.value.id;
+      final rawMetadata = data['metadata'];
+      final rawPoll =
+          data['poll'] ??
+          (rawMetadata is Map && rawMetadata['poll'] is Map
+              ? rawMetadata['poll']
+              : rawMetadata);
+      final pollMap = rawPoll is Map<String, dynamic>
+          ? rawPoll
+          : rawPoll is Map
+          ? Map<String, dynamic>.from(rawPoll)
+          : null;
+      if (messageId == null || pollMap == null) return;
+      final updatedPoll = ChatPollModel.fromJson(
+        pollMap,
+        currentUserId: currentUserId,
+      );
+      setState(() {
+        final idx = _messages.indexWhere((m) => m.id == messageId);
+        if (idx != -1) {
+          _messages[idx] = _messages[idx].copyWith(poll: updatedPoll);
+        }
+      });
+    };
     _chatSocket.onRevoked = (data) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
@@ -1623,6 +1650,16 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     ),
                     tooltip: l10n!.chatDetailTakePhoto,
                     onPressed: () => _pickImage(ImageSource.camera),
+                  ),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(
+                      Icons.poll_outlined,
+                      color: AppTheme.primary,
+                      size: 22,
+                    ),
+                    tooltip: l10n!.chatDetailPollTooltip,
+                    onPressed: _isSending ? null : _openCreatePollDialog,
                   ),
 
                   // Pill TextField

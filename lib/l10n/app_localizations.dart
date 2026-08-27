@@ -21223,19 +21223,19 @@ abstract class AppLocalizations {
   /// No description provided for @opsScheduled.
   ///
   /// In vi, this message translates to:
-  /// **'Đã xếp lịch'**
+  /// **'Sắp đấu'**
   String get opsScheduled;
 
   /// No description provided for @opsOngoing.
   ///
   /// In vi, this message translates to:
-  /// **'Đang diễn ra'**
+  /// **'Đang đấu'**
   String get opsOngoing;
 
   /// No description provided for @opsCompleted.
   ///
   /// In vi, this message translates to:
-  /// **'Đã hoàn tất'**
+  /// **'Hoàn thành'**
   String get opsCompleted;
 
   /// No description provided for @opsUnscheduled.
@@ -21249,6 +21249,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Cần xử lý'**
   String get opsAttention;
+
+  /// No description provided for @opsFilteredNoMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có trận trong nhóm này.'**
+  String get opsFilteredNoMatches;
 
   /// No description provided for @opsOpenBracket.
   ///

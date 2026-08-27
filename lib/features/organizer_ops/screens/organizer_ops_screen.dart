@@ -24,7 +24,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
   String? _selectedDivisionId;
   String _rosterFilter = 'ALL';
   String _rosterQuery = '';
-  int _selectedTab = 0;
+  int _selectedTab = 1;
+  String _opsMatchFilter = 'ongoing';
 
   @override
   Widget build(BuildContext context) {
@@ -194,7 +195,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                     onChanged: (value) => setState(() {
                       _selectedDivisionId = value;
                       _rosterFilter = 'ALL';
-                      _selectedTab = 0;
+                      _selectedTab = 1;
+                      _opsMatchFilter = 'ongoing';
                     }),
                   ),
                 ),
@@ -218,6 +220,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                     context,
                     matchesAsync,
                     readOnly: isReadOnly,
+                    selectedFilter: _opsMatchFilter,
+                    onFilterChanged: (value) => setState(() => _opsMatchFilter = value),
                     onRetry: () => ref.invalidate(
                       matchesWithDivisionProvider((
                         tournamentId: widget.tournamentId,
@@ -398,10 +402,100 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     );
   }
 
+  String _opsMatchBucket(MatchModel match) {
+    if (match.isLive) return 'ongoing';
+    if (match.isCompleted) return 'completed';
+
+    final status = match.status.trim().toUpperCase();
+    final needsAttention = status == 'DISPUTED' ||
+        match.isBye ||
+        match.team1Id.isEmpty ||
+        match.team2Id.isEmpty ||
+        match.scheduledTime == null ||
+        status != 'SCHEDULED';
+    return needsAttention ? 'attention' : 'scheduled';
+  }
+
+  List<MatchModel> _sortOpsMatches(
+    List<MatchModel> matches,
+    String selectedFilter,
+  ) {
+    const priority = <String, int>{
+      'ongoing': 0,
+      'scheduled': 1,
+      'completed': 2,
+      'attention': 3,
+    };
+    final visible = selectedFilter == 'all'
+        ? List<MatchModel>.of(matches)
+        : matches.where((match) => _opsMatchBucket(match) == selectedFilter).toList();
+    visible.sort((a, b) {
+      final bucketCompare = (priority[_opsMatchBucket(a)] ?? 9)
+          .compareTo(priority[_opsMatchBucket(b)] ?? 9);
+      if (bucketCompare != 0) return bucketCompare;
+      final groupCompare = (a.groupName ?? '').compareTo(b.groupName ?? '');
+      if (groupCompare != 0) return groupCompare;
+      final legCompare = (a.leg ?? 1).compareTo(b.leg ?? 1);
+      if (legCompare != 0) return legCompare;
+      return a.id.compareTo(b.id);
+    });
+    return visible;
+  }
+
+  Widget _buildOpsMatchFilterBar(
+    BuildContext context,
+    AppLocalizations l10n,
+    String selectedFilter,
+    ValueChanged<String> onChanged,
+  ) {
+    final colors = context.colors;
+    final filters = <({String value, String label})>[
+      (value: 'ongoing', label: l10n.opsOngoing),
+      (value: 'scheduled', label: l10n.opsScheduled),
+      (value: 'completed', label: l10n.opsCompleted),
+      (value: 'attention', label: l10n.opsAttention),
+      (value: 'all', label: l10n.filterAll),
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: colors.bgSurface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: colors.border),
+        ),
+        child: Wrap(
+          spacing: 4,
+          runSpacing: 4,
+          children: filters.map((filter) {
+            final selected = selectedFilter == filter.value;
+            return ChoiceChip(
+              label: Text(filter.label),
+              selected: selected,
+              onSelected: (_) => onChanged(filter.value),
+              labelStyle: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: selected ? Colors.white : colors.textSecondary,
+              ),
+              selectedColor: AppTheme.primary,
+              backgroundColor: colors.bgCard,
+              side: BorderSide(color: selected ? AppTheme.primary : colors.border),
+              visualDensity: VisualDensity.compact,
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMatchesSliver(
     BuildContext context,
     AsyncValue<List<MatchModel>> matchesAsync, {
     required bool readOnly,
+    required String selectedFilter,
+    required ValueChanged<String> onFilterChanged,
     required VoidCallback onRetry,
   }) {
     final l10n = AppLocalizations.of(context)!;
@@ -417,21 +511,44 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         if (matches.isEmpty) {
           return SliverToBoxAdapter(
             child: _OpsReadOnlyNotice(
-              icon: Icons.sports_score_rounded,
+              icon: Icons.sports_score_outlined,
               title: AppLocalizations.of(context)!.opsMatches,
               message: AppLocalizations.of(context)!.opsNoMatches,
             ),
           );
         }
 
+        final visibleMatches = _sortOpsMatches(matches, selectedFilter);
+        final itemCount = visibleMatches.isEmpty ? 2 : visibleMatches.length + 1;
         return SliverList.builder(
-          itemCount: matches.length,
-          itemBuilder: (context, index) => _OpsMatchCard(
-            match: matches[index],
-            onTap: readOnly
-                ? null
-                : () => _showMatchActions(context, matches[index]),
-          ),
+          itemCount: itemCount,
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return _buildOpsMatchFilterBar(
+                context,
+                l10n,
+                selectedFilter,
+                onFilterChanged,
+              );
+            }
+            if (visibleMatches.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: _OpsReadOnlyNotice(
+                  icon: Icons.filter_alt_off_outlined,
+                  title: l10n.opsMatches,
+                  message: l10n.opsFilteredNoMatches,
+                ),
+              );
+            }
+            final match = visibleMatches[index - 1];
+            return _OpsMatchCard(
+              match: match,
+              onTap: readOnly
+                  ? null
+                  : () => _showMatchActions(context, match),
+            );
+          },
         );
       },
     );

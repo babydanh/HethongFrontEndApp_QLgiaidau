@@ -11678,10 +11678,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opsRoundCount => 'Rounds';
 
   @override
-  String get opsScheduled => 'Scheduled';
+  String get opsScheduled => 'Upcoming';
 
   @override
-  String get opsOngoing => 'Live';
+  String get opsOngoing => 'In progress';
 
   @override
   String get opsCompleted => 'Completed';
@@ -11691,6 +11691,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get opsAttention => 'Needs attention';
+
+  @override
+  String get opsFilteredNoMatches => 'No matches in this group.';
 
   @override
   String get opsOpenBracket => 'Open bracket';

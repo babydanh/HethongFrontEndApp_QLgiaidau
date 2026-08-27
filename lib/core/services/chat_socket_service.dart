@@ -17,6 +17,7 @@ class ChatSocketService {
   void Function(Map<String, dynamic>)? onMessage;
   void Function(Map<String, dynamic>)? onTyping;
   void Function(Map<String, dynamic>)? onReaction;
+  void Function(Map<String, dynamic>)? onPollVoted;
   void Function(Map<String, dynamic>)? onRevoked;
   void Function(Map<String, dynamic>)? onPinned;
   void Function(Map<String, dynamic>)? onUserStatus;
@@ -115,6 +116,11 @@ class ChatSocketService {
     _socket!.on('chat:message:reaction', (data) {
       final map = _asMap(data);
       if (map.isNotEmpty) onReaction?.call(map);
+    });
+
+    _socket!.on('chat:poll:voted', (data) {
+      final map = _asMap(data);
+      if (map.isNotEmpty) onPollVoted?.call(map);
     });
 
     _socket!.on('chat:message:revoked', (data) {

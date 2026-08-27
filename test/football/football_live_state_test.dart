@@ -2,52 +2,55 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 
 void main() {
-  group('FootballLiveState terminal semantics', () {
-    test('does not complete before a decisive phase', () {
+  group('FootballLiveState simplified terminal semantics', () {
+    test('completes a non-draw result without a decisive phase', () {
       const state = FootballLiveState(
         team1Goals: 1,
         team2Goals: 0,
         phase: 'FIRST_HALF',
+        minute: 0,
       );
 
-      expect(state.isDecisivePhase, isFalse);
-      expect(state.isMatchComplete, isFalse);
-      expect(state.winnerTeam, 0);
+      expect(state.isMatchComplete, isTrue);
+      expect(state.winnerTeam, 1);
+      expect(state.isDecisivePhase, isTrue);
     });
 
-    test('completes a non-draw result at full time with the higher scorer', () {
+    test('does not require time or phase for either scoring direction', () {
       const team1 = FootballLiveState(
         team1Goals: 1,
         team2Goals: 0,
-        phase: 'FULL_TIME',
+        phase: 'HALFTIME',
+        minute: 12,
       );
       const team2 = FootballLiveState(
         team1Goals: 0,
         team2Goals: 2,
-        phase: 'COMPLETED',
+        phase: 'FIRST_HALF',
+        minute: 0,
       );
 
-      expect(team1.isMatchComplete, isTrue);
       expect(team1.winnerTeam, 1);
-      expect(team2.isMatchComplete, isTrue);
+      expect(team1.isMatchComplete, isTrue);
       expect(team2.winnerTeam, 2);
+      expect(team2.isMatchComplete, isTrue);
     });
 
-    test('requires penalty shootout for a regulation draw', () {
+    test('a draw remains incomplete until unequal shootout values exist', () {
       const noShootout = FootballLiveState(
-        phase: 'FULL_TIME',
+        phase: 'FIRST_HALF',
         team1Goals: 0,
         team2Goals: 0,
       );
       const tiedShootout = FootballLiveState(
-        phase: 'PENALTY_SHOOTOUT',
+        phase: 'FIRST_HALF',
         team1Goals: 0,
         team2Goals: 0,
         shootoutTeam1Goals: 3,
         shootoutTeam2Goals: 3,
       );
       const validShootout = FootballLiveState(
-        phase: 'PENALTY_SHOOTOUT',
+        phase: 'HALFTIME',
         team1Goals: 0,
         team2Goals: 0,
         shootoutTeam1Goals: 4,
@@ -62,16 +65,19 @@ void main() {
       expect(validShootout.winnerTeam, 1);
     });
 
-    test('does not treat regulation goals as valid during shootout phase', () {
-      const state = FootballLiveState(
-        phase: 'PENALTY_SHOOTOUT',
-        team1Goals: 1,
-        team2Goals: 0,
-      );
+    test(
+      'regulation goals determine winner even when phase is shootout metadata',
+      () {
+        const state = FootballLiveState(
+          phase: 'PENALTY_SHOOTOUT',
+          team1Goals: 1,
+          team2Goals: 0,
+        );
 
-      expect(state.isMatchComplete, isFalse);
-      expect(state.winnerTeam, 0);
-    });
+        expect(state.isMatchComplete, isTrue);
+        expect(state.winnerTeam, 1);
+      },
+    );
 
     test('copyWith can clear one shootout field when input is empty', () {
       const state = FootballLiveState(

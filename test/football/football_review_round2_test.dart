@@ -10,6 +10,19 @@ void main() {
     expect(footballEditablePhases, contains('PENALTY_SHOOTOUT'));
   });
 
+  test('Football completion semantics do not require time or phase', () {
+    const state = FootballLiveState(
+      team1Goals: 2,
+      team2Goals: 1,
+      phase: 'FIRST_HALF',
+      minute: 0,
+      addedMinute: 0,
+    );
+
+    expect(state.isMatchComplete, isTrue);
+    expect(state.winnerTeam, 1);
+  });
+
   test('ScorePanelState preserves server terminal signal independently', () {
     const config = SportConfig(
       kind: SportRuleKind.football,
