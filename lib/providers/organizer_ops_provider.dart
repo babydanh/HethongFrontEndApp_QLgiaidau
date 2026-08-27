@@ -25,11 +25,12 @@ final organizerOpsReadModelProvider = FutureProvider.autoDispose
           params.tournamentId,
           divisionId: params.divisionId,
         ),
-        tournamentRepo.getTournamentReferees(params.tournamentId),
-        tournamentRepo.getOpsAuditLogs(
-          params.tournamentId,
-          divisionId: params.divisionId,
-        ),
+        tournamentRepo
+            .getTournamentReferees(params.tournamentId)
+            .catchError((_) => const <OrganizerOpsReferee>[]),
+        tournamentRepo
+            .getOpsAuditLogs(params.tournamentId, divisionId: params.divisionId)
+            .catchError((_) => const <OrganizerOpsAuditEntry>[]),
       ]);
 
       return OrganizerOpsReadModel(
