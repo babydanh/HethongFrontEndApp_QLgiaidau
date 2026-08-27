@@ -12,9 +12,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class OrganizerOpsScreen extends ConsumerStatefulWidget {
-  const OrganizerOpsScreen({super.key, required this.tournamentId});
+  const OrganizerOpsScreen({
+    super.key,
+    required this.tournamentId,
+    this.initialDivisionId,
+    this.initialFocusMatchId,
+  });
 
   final String tournamentId;
+  final String? initialDivisionId;
+  final String? initialFocusMatchId;
 
   @override
   ConsumerState<OrganizerOpsScreen> createState() => _OrganizerOpsScreenState();
@@ -26,6 +33,15 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
   String _rosterQuery = '';
   int _selectedTab = 1;
   String _opsMatchFilter = 'ongoing';
+  String? _focusedMatchId;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDivisionId = widget.initialDivisionId;
+    _focusedMatchId = widget.initialFocusMatchId;
+    if (_focusedMatchId != null) _opsMatchFilter = 'all';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -221,7 +237,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                     matchesAsync,
                     readOnly: isReadOnly,
                     selectedFilter: _opsMatchFilter,
-                    onFilterChanged: (value) => setState(() => _opsMatchFilter = value),
+                    focusedMatchId: _focusedMatchId,
+                    onFilterChanged: (value) =>
+                        setState(() => _opsMatchFilter = value),
                     onRetry: () => ref.invalidate(
                       matchesWithDivisionProvider((
                         tournamentId: widget.tournamentId,
@@ -407,7 +425,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     if (match.isCompleted) return 'completed';
 
     final status = match.status.trim().toUpperCase();
-    final needsAttention = status == 'DISPUTED' ||
+    final needsAttention =
+        status == 'DISPUTED' ||
         match.isBye ||
         match.team1Id.isEmpty ||
         match.team2Id.isEmpty ||
@@ -428,10 +447,13 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     };
     final visible = selectedFilter == 'all'
         ? List<MatchModel>.of(matches)
-        : matches.where((match) => _opsMatchBucket(match) == selectedFilter).toList();
+        : matches
+              .where((match) => _opsMatchBucket(match) == selectedFilter)
+              .toList();
     visible.sort((a, b) {
-      final bucketCompare = (priority[_opsMatchBucket(a)] ?? 9)
-          .compareTo(priority[_opsMatchBucket(b)] ?? 9);
+      final bucketCompare = (priority[_opsMatchBucket(a)] ?? 9).compareTo(
+        priority[_opsMatchBucket(b)] ?? 9,
+      );
       if (bucketCompare != 0) return bucketCompare;
       final groupCompare = (a.groupName ?? '').compareTo(b.groupName ?? '');
       if (groupCompare != 0) return groupCompare;
@@ -440,6 +462,28 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       return a.id.compareTo(b.id);
     });
     return visible;
+  }
+
+  List<_OpsMatchSectionData> _buildOpsMatchSections(
+    List<MatchModel> matches,
+    String selectedFilter,
+  ) {
+    const order = ['ongoing', 'scheduled', 'completed', 'attention'];
+    final keys = selectedFilter == 'all' ? order : [selectedFilter];
+    return [
+      for (final key in keys)
+        _OpsMatchSectionData(key: key, matches: _sortOpsMatches(matches, key)),
+    ];
+  }
+
+  String _opsSectionTitle(AppLocalizations l10n, String key) {
+    return switch (key) {
+      'ongoing' => l10n.opsOngoing,
+      'scheduled' => l10n.opsScheduled,
+      'completed' => l10n.opsCompleted,
+      'attention' => l10n.opsAttention,
+      _ => l10n.opsMatches,
+    };
   }
 
   Widget _buildOpsMatchFilterBar(
@@ -481,7 +525,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
               ),
               selectedColor: AppTheme.primary,
               backgroundColor: colors.bgCard,
-              side: BorderSide(color: selected ? AppTheme.primary : colors.border),
+              side: BorderSide(
+                color: selected ? AppTheme.primary : colors.border,
+              ),
               visualDensity: VisualDensity.compact,
             );
           }).toList(),
@@ -495,6 +541,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     AsyncValue<List<MatchModel>> matchesAsync, {
     required bool readOnly,
     required String selectedFilter,
+    required String? focusedMatchId,
     required ValueChanged<String> onFilterChanged,
     required VoidCallback onRetry,
   }) {
@@ -518,10 +565,18 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
           );
         }
 
-        final visibleMatches = _sortOpsMatches(matches, selectedFilter);
-        final itemCount = visibleMatches.isEmpty ? 2 : visibleMatches.length + 1;
+        final sections = _buildOpsMatchSections(matches, selectedFilter);
+        final hasMatches = sections.any(
+          (section) => section.matches.isNotEmpty,
+        );
+        final rowCount = hasMatches
+            ? sections.fold<int>(
+                0,
+                (count, section) => count + 1 + section.matches.length,
+              )
+            : 1;
         return SliverList.builder(
-          itemCount: itemCount,
+          itemCount: rowCount + 1,
           itemBuilder: (context, index) {
             if (index == 0) {
               return _buildOpsMatchFilterBar(
@@ -531,7 +586,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 onFilterChanged,
               );
             }
-            if (visibleMatches.isEmpty) {
+            if (!hasMatches) {
               return Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                 child: _OpsReadOnlyNotice(
@@ -541,13 +596,29 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 ),
               );
             }
-            final match = visibleMatches[index - 1];
-            return _OpsMatchCard(
-              match: match,
-              onTap: readOnly
-                  ? null
-                  : () => _showMatchActions(context, match),
-            );
+
+            var rowIndex = index - 1;
+            for (final section in sections) {
+              if (rowIndex == 0) {
+                return _OpsMatchSectionHeader(
+                  title: _opsSectionTitle(l10n, section.key),
+                  count: section.matches.length,
+                );
+              }
+              rowIndex -= 1;
+              if (rowIndex < section.matches.length) {
+                final match = section.matches[rowIndex];
+                return _OpsMatchCard(
+                  match: match,
+                  isFocused: match.id == focusedMatchId,
+                  onTap: readOnly
+                      ? null
+                      : () => _showMatchActions(context, match),
+                );
+              }
+              rowIndex -= section.matches.length;
+            }
+            return const SizedBox.shrink();
           },
         );
       },
@@ -1186,6 +1257,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
 
   String? _resolveDivisionId(List<_OpsDivision> divisions) {
     if (divisions.isEmpty) return null;
+    if (_selectedDivisionId == null && widget.initialDivisionId != null) {
+      _selectedDivisionId = widget.initialDivisionId;
+    }
     if (_selectedDivisionId != null &&
         divisions.any((division) => division.id == _selectedDivisionId)) {
       return _selectedDivisionId;
@@ -1634,10 +1708,59 @@ class _OpsMetric extends StatelessWidget {
   }
 }
 
+class _OpsMatchSectionData {
+  const _OpsMatchSectionData({required this.key, required this.matches});
+
+  final String key;
+  final List<MatchModel> matches;
+}
+
+class _OpsMatchSectionHeader extends StatelessWidget {
+  const _OpsMatchSectionHeader({required this.title, required this.count});
+
+  final String title;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          Text(
+            '$count',
+            style: TextStyle(
+              color: colors.textMuted,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _OpsMatchCard extends StatelessWidget {
-  const _OpsMatchCard({required this.match, this.onTap});
+  const _OpsMatchCard({
+    required this.match,
+    this.isFocused = false,
+    this.onTap,
+  });
 
   final MatchModel match;
+  final bool isFocused;
   final VoidCallback? onTap;
 
   @override
@@ -1661,7 +1784,10 @@ class _OpsMatchCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: colors.bgSurface,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: colors.border),
+            border: Border.all(
+              color: isFocused ? AppTheme.primary : colors.border,
+              width: isFocused ? 2 : 1,
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

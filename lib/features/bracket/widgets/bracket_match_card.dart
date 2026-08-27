@@ -19,6 +19,7 @@ class BracketMatchCard extends StatelessWidget {
   final BracketSlotDragData? selectedSlot;
   final ValueChanged<BracketSlotDragData>? onSlotTap;
   final BracketSlotDropCallback? onSlotDrop;
+  final ValueChanged<MatchModel>? onDoubleTapMatch;
 
   const BracketMatchCard({
     super.key,
@@ -31,6 +32,7 @@ class BracketMatchCard extends StatelessWidget {
     this.selectedSlot,
     this.onSlotTap,
     this.onSlotDrop,
+    this.onDoubleTapMatch,
   });
 
   void _onTap(BuildContext context) {
@@ -205,6 +207,9 @@ class BracketMatchCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: isSlotEditable ? null : () => _onTap(context),
+      onDoubleTap: onDoubleTapMatch == null
+          ? null
+          : () => onDoubleTapMatch!(match),
       child: Container(
         decoration: BoxDecoration(
           color: cardBgColor,

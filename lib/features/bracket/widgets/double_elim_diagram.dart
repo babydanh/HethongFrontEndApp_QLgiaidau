@@ -28,6 +28,7 @@ class DoubleElimDiagram extends StatefulWidget {
   final bool isReadOnly;
   final bool isEditable;
   final BracketSlotDropCallback? onSlotDrop;
+  final ValueChanged<MatchModel>? onDoubleTapMatch;
 
   const DoubleElimDiagram({
     super.key,
@@ -37,6 +38,7 @@ class DoubleElimDiagram extends StatefulWidget {
     this.isReadOnly = true,
     this.isEditable = false,
     this.onSlotDrop,
+    this.onDoubleTapMatch,
   });
 
   @override
@@ -65,7 +67,9 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.singleElimUpdateError(error.toString()),
+              AppLocalizations.of(
+                context,
+              )!.singleElimUpdateError(error.toString()),
             ),
           ),
         );
@@ -321,7 +325,8 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                           isSlotEditable: widget.isEditable && !_isUpdating,
                           selectedSlot: _selectedSlot,
                           onSlotTap: _handleSlotTap,
-                          onSlotDrop: _handleSlotDrop,
+                          onSlotDrop: widget.onSlotDrop,
+                          onDoubleTapMatch: widget.onDoubleTapMatch,
                         ),
                       );
                     }),

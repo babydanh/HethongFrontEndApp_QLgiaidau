@@ -360,7 +360,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/organizer/tournaments/:id/ops',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return OrganizerOpsScreen(tournamentId: id);
+          return OrganizerOpsScreen(
+            tournamentId: id,
+            initialDivisionId: state.uri.queryParameters['divisionId'],
+            initialFocusMatchId: state.uri.queryParameters['focusMatchId'],
+          );
         },
         routes: [
           GoRoute(

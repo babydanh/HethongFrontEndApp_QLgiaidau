@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
@@ -86,6 +88,20 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         });
       }
     }
+  }
+
+  void _handleDoubleTapMatch(MatchModel match) {
+    if (!widget.canEditBracket) return;
+    final queryParameters = <String, String>{
+      'focusMatchId': match.id,
+      if (widget.divisionId != null && widget.divisionId!.isNotEmpty)
+        'divisionId': widget.divisionId!,
+    };
+    final opsPath = Uri(
+      path: '/organizer/tournaments/${widget.tournamentId}/ops',
+      queryParameters: queryParameters,
+    ).toString();
+    context.go(opsPath);
   }
 
   Future<void> _updateBracketSlots(
@@ -208,6 +224,10 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         child: CrossTableView(
           matches: matches,
           tournamentId: widget.tournamentId,
+          divisionId: widget.divisionId,
+          onDoubleTapMatch: widget.canEditBracket
+              ? _handleDoubleTapMatch
+              : null,
         ),
       );
     }
@@ -220,6 +240,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         isReadOnly: widget.isReadOnly,
         isEditable: widget.canEditBracket,
         onSlotDrop: _updateBracketSlots,
+        onDoubleTapMatch: widget.canEditBracket ? _handleDoubleTapMatch : null,
       );
     }
 
@@ -238,6 +259,9 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
           isReadOnly: widget.isReadOnly,
           isEditable: widget.canEditBracket,
           onSlotDrop: _updateBracketSlots,
+          onDoubleTapMatch: widget.canEditBracket
+              ? _handleDoubleTapMatch
+              : null,
         );
       }
       return SingleElimDiagram(
@@ -247,6 +271,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         isReadOnly: widget.isReadOnly,
         isEditable: widget.canEditBracket,
         onSlotDrop: _updateBracketSlots,
+        onDoubleTapMatch: widget.canEditBracket ? _handleDoubleTapMatch : null,
       );
     }
 
@@ -258,6 +283,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
       isReadOnly: widget.isReadOnly,
       isEditable: widget.canEditBracket,
       onSlotDrop: _updateBracketSlots,
+      onDoubleTapMatch: widget.canEditBracket ? _handleDoubleTapMatch : null,
     );
   }
 

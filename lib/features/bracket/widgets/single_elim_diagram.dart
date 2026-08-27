@@ -22,6 +22,7 @@ class SingleElimDiagram extends StatefulWidget {
     BracketSlotDragData target,
   )?
   onSlotDrop;
+  final ValueChanged<MatchModel>? onDoubleTapMatch;
 
   const SingleElimDiagram({
     super.key,
@@ -31,6 +32,7 @@ class SingleElimDiagram extends StatefulWidget {
     this.isReadOnly = true,
     this.isEditable = false,
     this.onSlotDrop,
+    this.onDoubleTapMatch,
   });
 
   @override
@@ -294,7 +296,8 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
                           isSlotEditable: widget.isEditable && !_isUpdating,
                           selectedSlot: _selectedSlot,
                           onSlotTap: _handleSlotTap,
-                          onSlotDrop: _handleSlotDrop,
+                          onSlotDrop: widget.onSlotDrop,
+                          onDoubleTapMatch: widget.onDoubleTapMatch,
                         ),
                       );
                     }),

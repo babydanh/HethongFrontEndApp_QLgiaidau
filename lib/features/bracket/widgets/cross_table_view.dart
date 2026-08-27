@@ -12,6 +12,7 @@ class CrossTableView extends ConsumerStatefulWidget {
   final String tournamentId;
   final String? divisionId;
   final int configuredLegs;
+  final ValueChanged<MatchModel>? onDoubleTapMatch;
 
   const CrossTableView({
     super.key,
@@ -19,6 +20,7 @@ class CrossTableView extends ConsumerStatefulWidget {
     required this.tournamentId,
     this.divisionId,
     this.configuredLegs = 1,
+    this.onDoubleTapMatch,
   });
 
   @override
@@ -109,6 +111,7 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
             onNextLeg: currentLeg < maxLeg
                 ? () => setState(() => _groupLegs[groupName] = currentLeg + 1)
                 : null,
+            onDoubleTapMatch: widget.onDoubleTapMatch,
           ),
         );
       },
@@ -252,6 +255,7 @@ class _GroupCrossTable extends StatelessWidget {
   final int maxLeg;
   final VoidCallback? onPrevLeg;
   final VoidCallback? onNextLeg;
+  final ValueChanged<MatchModel>? onDoubleTapMatch;
 
   const _GroupCrossTable({
     required this.l10n,
@@ -262,6 +266,7 @@ class _GroupCrossTable extends StatelessWidget {
     this.maxLeg = 1,
     this.onPrevLeg,
     this.onNextLeg,
+    this.onDoubleTapMatch,
   });
 
   @override
@@ -445,6 +450,7 @@ class _GroupCrossTable extends StatelessWidget {
                   cellWidth,
                   isLastRow,
                   isLastCol,
+                  onDoubleTapMatch,
                 );
               }),
             ],
@@ -557,6 +563,7 @@ class _GroupCrossTable extends StatelessWidget {
     double width,
     bool isLastRow,
     bool isLastCol,
+    ValueChanged<MatchModel>? onDoubleTapMatch,
   ) {
     final colors = context.colors;
     final bgColor = switch (score?.result) {
@@ -572,30 +579,35 @@ class _GroupCrossTable extends StatelessWidget {
       null => colors.textMuted,
     };
 
-    return Container(
-      width: width,
-      height: 46,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: isLastRow && isLastCol
-            ? const BorderRadius.only(
-                bottomRight: Radius.circular(AppTheme.radiusXL),
-              )
-            : null,
-        border: Border(
-          right: BorderSide(color: colors.border),
-          bottom: BorderSide(
-            color: isLastRow ? colors.border : Colors.transparent,
+    return GestureDetector(
+      onDoubleTap: score?.match == null || onDoubleTapMatch == null
+          ? null
+          : () => onDoubleTapMatch(score!.match!),
+      child: Container(
+        width: width,
+        height: 46,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: isLastRow && isLastCol
+              ? const BorderRadius.only(
+                  bottomRight: Radius.circular(AppTheme.radiusXL),
+                )
+              : null,
+          border: Border(
+            right: BorderSide(color: colors.border),
+            bottom: BorderSide(
+              color: isLastRow ? colors.border : Colors.transparent,
+            ),
           ),
         ),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        score?.label ?? '-',
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: score == null ? FontWeight.w500 : FontWeight.w800,
-          color: textColor,
+        alignment: Alignment.center,
+        child: Text(
+          score?.label ?? '-',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: score == null ? FontWeight.w500 : FontWeight.w800,
+            color: textColor,
+          ),
         ),
       ),
     );
@@ -625,10 +637,12 @@ class _GroupCrossTable extends StatelessWidget {
       cells['${match.team1Id}_${match.team2Id}'] = _ScoreCell(
         p1Label,
         p1Result,
+        match,
       );
       cells['${match.team2Id}_${match.team1Id}'] = _ScoreCell(
         p2Label,
         p2Result,
+        match,
       );
     }
 
@@ -672,8 +686,9 @@ class _GroupCrossTable extends StatelessWidget {
 class _ScoreCell {
   final String label;
   final _MatchResult result;
+  final MatchModel? match;
 
-  const _ScoreCell(this.label, this.result);
+  const _ScoreCell(this.label, this.result, [this.match]);
 }
 
 enum _MatchResult { win, loss, draw }
