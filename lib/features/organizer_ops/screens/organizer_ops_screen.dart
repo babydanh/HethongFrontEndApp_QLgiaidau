@@ -1589,7 +1589,9 @@ class _OpsBracketPreview extends StatelessWidget {
               final query = divisionId == null
                   ? ''
                   : '?divisionId=${Uri.encodeComponent(divisionId!)}';
-              context.push('/tournament/$tournamentId/bracket$query');
+              context.push(
+                '/organizer/tournaments/$tournamentId/ops/bracket$query',
+              );
             },
             icon: const Icon(Icons.open_in_new_rounded),
             label: Text(l10n.opsOpenBracket),

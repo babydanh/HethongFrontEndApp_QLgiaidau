@@ -366,6 +366,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
         routes: [
           GoRoute(
+            path: 'bracket',
+            builder: (context, state) {
+              final tournamentId = state.pathParameters['id']!;
+              return BracketViewScreen(
+                tournamentId: tournamentId,
+                divisionId: state.uri.queryParameters['divisionId'],
+                canEditBracket: true,
+              );
+            },
+          ),
+          GoRoute(
             path: 'match/:matchId',
             builder: (context, state) {
               final tournamentId = state.pathParameters['id']!;
