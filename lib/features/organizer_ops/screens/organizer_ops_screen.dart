@@ -416,87 +416,104 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final reasonController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    var submitting = false;
 
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          16,
-          8,
-          16,
-          MediaQuery.viewInsetsOf(sheetContext).bottom + 16,
-        ),
-        child: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l10n.opsKick,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) => Padding(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            8,
+            16,
+            MediaQuery.viewInsetsOf(sheetContext).bottom + 16,
+          ),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.opsKick,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                participant.teamName,
-                style: TextStyle(color: context.colors.textSecondary),
-              ),
-              const SizedBox(height: 14),
-              TextFormField(
-                controller: reasonController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  labelText: l10n.opsKickReason,
-                  prefixIcon: const Icon(Icons.notes_rounded),
-                  alignLabelWithHint: true,
+                const SizedBox(height: 6),
+                Text(
+                  participant.teamName,
+                  style: TextStyle(color: context.colors.textSecondary),
                 ),
-                validator: (value) =>
-                    (value ?? '').trim().length < 5 ? l10n.opsKickReason : null,
-              ),
-              const SizedBox(height: 14),
-              FilledButton.icon(
-                onPressed: () async {
-                  if (!formKey.currentState!.validate()) return;
-                  try {
-                    await ref
-                        .read(tournamentRepositoryProvider)
-                        .kickParticipant(
-                          tournamentId: widget.tournamentId,
-                          participantId: participant.id,
-                          reason: reasonController.text.trim(),
-                        );
-                    if (!sheetContext.mounted) return;
-                    Navigator.pop(sheetContext);
-                    ref.invalidate(
-                      organizerOpsReadModelProvider((
-                        tournamentId: widget.tournamentId,
-                        divisionId: _selectedDivisionId!,
-                      )),
-                    );
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(l10n.opsSaved)));
-                  } catch (error) {
-                    if (!sheetContext.mounted) return;
-                    ScaffoldMessenger.of(sheetContext).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          ErrorParser.parse(error, l10n.opsLoadFailed, l10n),
-                        ),
-                      ),
-                    );
-                  }
-                },
-                icon: const Icon(Icons.person_remove_outlined),
-                label: Text(l10n.opsKickConfirm),
-              ),
-            ],
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: reasonController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    labelText: l10n.opsKickReason,
+                    prefixIcon: const Icon(Icons.notes_rounded),
+                    alignLabelWithHint: true,
+                  ),
+                  validator: (value) => (value ?? '').trim().length < 5
+                      ? l10n.opsKickReason
+                      : null,
+                ),
+                const SizedBox(height: 14),
+                FilledButton.icon(
+                  onPressed: submitting
+                      ? null
+                      : () async {
+                          if (!formKey.currentState!.validate()) return;
+                          setSheetState(() => submitting = true);
+                          try {
+                            await ref
+                                .read(tournamentRepositoryProvider)
+                                .kickParticipant(
+                                  tournamentId: widget.tournamentId,
+                                  participantId: participant.id,
+                                  reason: reasonController.text.trim(),
+                                );
+                            if (!sheetContext.mounted) return;
+                            Navigator.pop(sheetContext);
+                            ref.invalidate(
+                              organizerOpsReadModelProvider((
+                                tournamentId: widget.tournamentId,
+                                divisionId: _selectedDivisionId!,
+                              )),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.opsSaved)),
+                            );
+                          } catch (error) {
+                            if (!sheetContext.mounted) return;
+                            setSheetState(() => submitting = false);
+                            ScaffoldMessenger.of(sheetContext).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  ErrorParser.parse(
+                                    error,
+                                    l10n.opsLoadFailed,
+                                    l10n,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                  icon: submitting
+                      ? const SizedBox.square(
+                          dimension: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.person_remove_outlined),
+                  label: Text(l10n.opsKickConfirm),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -598,7 +615,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                   : () async {
                       setState(() => submitting = true);
                       try {
-                        await ref.read(matchRepositoryProvider).updateLiveState(
+                        await ref
+                            .read(matchRepositoryProvider)
+                            .updateLiveState(
                               widget.tournamentId,
                               match.id,
                               status: 'ONGOING',
@@ -656,6 +675,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     final formKey = GlobalKey<FormState>();
     var selectedAction = 'WALKOVER';
     var selectedWinnerId = '';
+    var submitting = false;
     final operations = <String, String>{
       'WALKOVER': l10n.opsWalkover,
       'NO_SHOW': l10n.opsNoShow,
@@ -757,46 +777,55 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                   ),
                   const SizedBox(height: 14),
                   FilledButton.icon(
-                    onPressed: () async {
-                      if (!formKey.currentState!.validate()) return;
-                      try {
-                        await ref
-                            .read(matchRepositoryProvider)
-                            .matchOperation(
-                              match.id,
-                              action: selectedAction,
-                              reason: reasonController.text.trim(),
-                              winnerId: selectedWinnerId.isEmpty
-                                  ? null
-                                  : selectedWinnerId,
-                            );
-                        if (!context.mounted) return;
-                        Navigator.pop(sheetContext);
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text(l10n.opsSaved)));
-                        ref.invalidate(
-                          matchesWithDivisionProvider((
-                            tournamentId: widget.tournamentId,
-                            divisionId: _selectedDivisionId,
-                          )),
-                        );
-                      } catch (error) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              ErrorParser.parse(
-                                error,
-                                l10n.opsLoadFailed,
-                                l10n,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.gavel_rounded),
+                    onPressed: submitting
+                        ? null
+                        : () async {
+                            if (!formKey.currentState!.validate()) return;
+                            setSheetState(() => submitting = true);
+                            try {
+                              await ref
+                                  .read(matchRepositoryProvider)
+                                  .matchOperation(
+                                    match.id,
+                                    action: selectedAction,
+                                    reason: reasonController.text.trim(),
+                                    winnerId: selectedWinnerId.isEmpty
+                                        ? null
+                                        : selectedWinnerId,
+                                  );
+                              if (!context.mounted) return;
+                              Navigator.pop(sheetContext);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(l10n.opsSaved)),
+                              );
+                              ref.invalidate(
+                                matchesWithDivisionProvider((
+                                  tournamentId: widget.tournamentId,
+                                  divisionId: _selectedDivisionId,
+                                )),
+                              );
+                            } catch (error) {
+                              if (!context.mounted) return;
+                              setSheetState(() => submitting = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    ErrorParser.parse(
+                                      error,
+                                      l10n.opsLoadFailed,
+                                      l10n,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                    icon: submitting
+                        ? const SizedBox.square(
+                            dimension: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.gavel_rounded),
                     label: Text(l10n.opsOperationConfirm),
                   ),
                 ],
@@ -816,6 +845,37 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final courtController = TextEditingController(text: match.court);
     DateTime? scheduledAt = match.scheduledTime;
+    var submitting = false;
+    var selectedRefereeId = match.refereeId;
+    final readModel = _selectedDivisionId == null
+        ? null
+        : ref
+              .read(
+                organizerOpsReadModelProvider((
+                  tournamentId: widget.tournamentId,
+                  divisionId: _selectedDivisionId!,
+                )),
+              )
+              .asData
+              ?.value;
+    final referees = <OrganizerOpsReferee>[
+      ...?readModel?.referees.where(
+        (referee) => referee.status?.toUpperCase() == 'ACCEPTED',
+      ),
+    ];
+    if (selectedRefereeId != null &&
+        selectedRefereeId.isNotEmpty &&
+        !referees.any((referee) => referee.id == selectedRefereeId)) {
+      referees.insert(
+        0,
+        OrganizerOpsReferee(
+          id: selectedRefereeId,
+          userId: selectedRefereeId,
+          fullName: match.refereeName ?? l10n.matchMainReferee,
+          status: 'ACCEPTED',
+        ),
+      );
+    }
 
     await showModalBottomSheet<void>(
       context: context,
@@ -881,53 +941,91 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                         : scheduledAt!.toLocal().toString(),
                   ),
                 ),
+                if (referees.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedRefereeId,
+                    decoration: InputDecoration(
+                      labelText: l10n.matchMainReferee,
+                      prefixIcon: const Icon(Icons.sports_outlined),
+                    ),
+                    items: referees
+                        .map(
+                          (referee) => DropdownMenuItem<String>(
+                            value: referee.id,
+                            child: Text(
+                              referee.email == null || referee.email!.isEmpty
+                                  ? referee.fullName
+                                  : '${referee.fullName} · ${referee.email}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) =>
+                        setSheetState(() => selectedRefereeId = value),
+                  ),
+                ],
                 const SizedBox(height: 14),
                 FilledButton.icon(
-                  onPressed: () async {
-                    try {
-                      await ref
-                          .read(matchRepositoryProvider)
-                          .updateSchedule(
-                            widget.tournamentId,
-                            match.id,
-                            courtName: courtController.text.trim().isEmpty
-                                ? null
-                                : courtController.text.trim(),
-                            courtAddress: match.courtAddress.isEmpty
-                                ? null
-                                : match.courtAddress,
-                            refereeId: match.refereeId,
-                            scheduledAt: scheduledAt,
-                          );
-                      if (!context.mounted) return;
-                      Navigator.pop(context);
-                      ref.invalidate(
-                        matchesWithDivisionProvider((
-                          tournamentId: widget.tournamentId,
-                          divisionId: _selectedDivisionId,
-                        )),
-                      );
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(l10n.opsSaved)));
-                      ref.invalidate(
-                        organizerOpsReadModelProvider((
-                          tournamentId: widget.tournamentId,
-                          divisionId: _selectedDivisionId!,
-                        )),
-                      );
-                    } catch (error) {
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            ErrorParser.parse(error, l10n.opsLoadFailed, l10n),
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.save_rounded),
+                  onPressed: submitting
+                      ? null
+                      : () async {
+                          setSheetState(() => submitting = true);
+                          try {
+                            await ref
+                                .read(matchRepositoryProvider)
+                                .updateSchedule(
+                                  widget.tournamentId,
+                                  match.id,
+                                  courtName: courtController.text.trim().isEmpty
+                                      ? null
+                                      : courtController.text.trim(),
+                                  courtAddress: match.courtAddress.isEmpty
+                                      ? null
+                                      : match.courtAddress,
+                                  refereeId: selectedRefereeId,
+                                  scheduledAt: scheduledAt,
+                                );
+                            if (!context.mounted) return;
+                            Navigator.pop(context);
+                            ref.invalidate(
+                              matchesWithDivisionProvider((
+                                tournamentId: widget.tournamentId,
+                                divisionId: _selectedDivisionId,
+                              )),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.opsSaved)),
+                            );
+                            ref.invalidate(
+                              organizerOpsReadModelProvider((
+                                tournamentId: widget.tournamentId,
+                                divisionId: _selectedDivisionId!,
+                              )),
+                            );
+                          } catch (error) {
+                            if (!context.mounted) return;
+                            setSheetState(() => submitting = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  ErrorParser.parse(
+                                    error,
+                                    l10n.opsLoadFailed,
+                                    l10n,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                  icon: submitting
+                      ? const SizedBox.square(
+                          dimension: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.save_rounded),
                   label: Text(l10n.matchSaveChanges),
                 ),
               ],
