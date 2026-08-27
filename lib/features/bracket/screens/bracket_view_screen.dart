@@ -71,6 +71,21 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
     }
   }
 
+  void _handleDoubleTapMatch(MatchModel match) {
+    if (!widget.canEditBracket) return;
+    final queryParameters = <String, String>{
+      'focusMatchId': match.id,
+      if (widget.divisionId != null && widget.divisionId!.isNotEmpty)
+        'divisionId': widget.divisionId!,
+    };
+    context.push(
+      Uri(
+        path: '/organizer/tournaments/${widget.tournamentId}/ops',
+        queryParameters: queryParameters,
+      ).toString(),
+    );
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -623,6 +638,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             tournamentId: widget.tournamentId,
             divisionId: widget.divisionId,
             configuredLegs: widget.configuredLegs,
+            onDoubleTapMatch: widget.canEditBracket
+                ? _handleDoubleTapMatch
+                : null,
           ),
         );
       case 1:
