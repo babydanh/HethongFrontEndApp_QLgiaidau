@@ -567,7 +567,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
           ? ''
           : '?divisionId=${Uri.encodeComponent(_selectedDivisionId!)}';
       if (!context.mounted) return;
-      context.push('/tournament/${widget.tournamentId}/bracket$query');
+      context.push(
+        '/organizer/tournaments/${widget.tournamentId}/ops/bracket$query',
+      );
       return;
     }
 
