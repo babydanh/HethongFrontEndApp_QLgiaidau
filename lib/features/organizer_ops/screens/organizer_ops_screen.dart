@@ -333,9 +333,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
               return Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: _OpsReadOnlyNotice(
-                  icon: Icons.lock_outline_rounded,
+                  icon: Icons.info_outline_rounded,
                   title: l10n.opsRoster,
-                  message: l10n.opsReadOnlyHint,
+                  message: l10n.opsContextHint,
                 ),
               );
             }
@@ -1194,9 +1194,7 @@ class _OpsOverview extends StatelessWidget {
           _OpsReadOnlyNotice(
             icon: Icons.lock_outline_rounded,
             title: l10n.opsOrganizerOnly,
-            message: tournament.isLite
-                ? l10n.opsReadOnlyHint
-                : l10n.opsContextHint,
+            message: l10n.opsContextHint,
           ),
         ],
       ),
