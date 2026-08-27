@@ -4813,6 +4813,8 @@
   "opsRetry": "Thử lại",
   "opsEmptyDivision": "Giải đấu chưa có nội dung nào.",
   "opsNoMatches": "Nội dung này chưa có trận đấu.",
+  "opsNoParticipants": "Nội dung này chưa có người tham gia.",
+  "opsAudit": "Hoạt động đã ghi nhận",
   "opsStageCount": "Giai đoạn",
   "opsRoundCount": "Vòng đấu",
   "opsScheduled": "Đã xếp lịch",

@@ -21034,6 +21034,18 @@ abstract class AppLocalizations {
   /// **'Nội dung này chưa có trận đấu.'**
   String get opsNoMatches;
 
+  /// No description provided for @opsNoParticipants.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung này chưa có người tham gia.'**
+  String get opsNoParticipants;
+
+  /// No description provided for @opsAudit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoạt động đã ghi nhận'**
+  String get opsAudit;
+
   /// No description provided for @opsStageCount.
   ///
   /// In vi, this message translates to:

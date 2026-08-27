@@ -1,6 +1,8 @@
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
+import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
+
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 
@@ -17,7 +19,22 @@ abstract class ITournamentRepository {
     required String refereeId,
     required String action,
   });
+  Future<List<OrganizerOpsParticipant>> getOrganizerParticipants(
+    String tournamentId, {
+    String? divisionId,
+  });
+  Future<List<OrganizerOpsReferee>> getTournamentReferees(String tournamentId);
+  Future<List<OrganizerOpsAuditEntry>> getOpsAuditLogs(
+    String tournamentId, {
+    String? divisionId,
+  });
+  Future<void> kickParticipant({
+    required String tournamentId,
+    required String participantId,
+    required String reason,
+  });
   Future<List<TournamentDivisionOption>> getDivisions(String tournamentId);
+
   Future<TournamentRegistrationResult> registerParticipant({
     required String tournamentId,
     required String teamName,

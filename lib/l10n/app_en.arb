@@ -4813,6 +4813,8 @@
   "opsRetry": "Retry",
   "opsEmptyDivision": "This tournament has no divisions yet.",
   "opsNoMatches": "No matches in this division yet.",
+  "opsNoParticipants": "No participants in this division yet.",
+  "opsAudit": "Audit activity",
   "opsStageCount": "Stages",
   "opsRoundCount": "Rounds",
   "opsScheduled": "Scheduled",

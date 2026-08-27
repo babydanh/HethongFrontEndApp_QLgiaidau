@@ -1,5 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
+import 'package:app_quanly_giaidau/providers/organizer_ops_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -133,6 +135,12 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
               divisionId: selectedDivisionId,
             )),
           );
+          final opsReadAsync = ref.watch(
+            organizerOpsReadModelProvider((
+              tournamentId: widget.tournamentId,
+              divisionId: selectedDivisionId!,
+            )),
+          );
 
           return RefreshIndicator(
             onRefresh: () async {
@@ -203,19 +211,63 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                     ),
                   )
                 else
-                  SliverToBoxAdapter(
-                    child: _OpsReadOnlyNotice(
-                      icon: Icons.people_alt_outlined,
-                      title: l10n.opsRoster,
-                      message: l10n.opsReadOnlyHint,
-                    ),
-                  ),
+                  _buildRosterSliver(context, opsReadAsync),
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildRosterSliver(
+    BuildContext context,
+    AsyncValue<OrganizerOpsReadModel> opsAsync,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    return opsAsync.when(
+      loading: () => const SliverToBoxAdapter(child: _OpsInlineLoading()),
+      error: (error, _) => SliverToBoxAdapter(
+        child: _OpsErrorBody(
+          message: error.toString(),
+          onRetry: () => ref.invalidate(
+            organizerOpsReadModelProvider((
+              tournamentId: widget.tournamentId,
+              divisionId: _selectedDivisionId!,
+            )),
+          ),
+        ),
+      ),
+      data: (readModel) {
+        if (readModel.participants.isEmpty) {
+          return SliverToBoxAdapter(
+            child: _OpsReadOnlyNotice(
+              icon: Icons.people_alt_outlined,
+              title: l10n.opsRoster,
+              message: l10n.opsNoParticipants,
+            ),
+          );
+        }
+        return SliverList.builder(
+          itemCount: readModel.participants.length + 1,
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: _OpsReadOnlyNotice(
+                  icon: Icons.lock_outline_rounded,
+                  title: l10n.opsRoster,
+                  message: l10n.opsReadOnlyHint,
+                ),
+              );
+            }
+            return _OpsParticipantCard(
+              participant: readModel.participants[index - 1],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -782,6 +834,93 @@ class _OpsMatchCard extends StatelessWidget {
                   _OpsMeta(
                     icon: Icons.sports_rounded,
                     text: match.refereeName!,
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OpsParticipantCard extends StatelessWidget {
+  const _OpsParticipantCard({required this.participant});
+
+  final OrganizerOpsParticipant participant;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final statusColor = participant.isKicked
+        ? colors.error
+        : participant.isDisciplined
+        ? colors.warning
+        : colors.success;
+    final memberNames = participant.members
+        .map((member) => member.fullName)
+        .where((name) => name.trim().isNotEmpty)
+        .join(' • ');
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: colors.bgSurface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    participant.teamName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                _OpsStatusPill(
+                  label: participant.teamStatus,
+                  color: statusColor,
+                ),
+              ],
+            ),
+            if (memberNames.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                memberNames,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: colors.textSecondary, fontSize: 12),
+              ),
+            ],
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 6,
+              children: [
+                _OpsMeta(
+                  icon: participant.isPaid
+                      ? Icons.verified_rounded
+                      : Icons.pending_outlined,
+                  text: participant.isPaid
+                      ? l10n.payments_statusSuccess
+                      : l10n.payments_statusPending,
+                ),
+                if (participant.seed != null)
+                  _OpsMeta(
+                    icon: Icons.numbers_rounded,
+                    text: 'Seed ${participant.seed}',
                   ),
               ],
             ),

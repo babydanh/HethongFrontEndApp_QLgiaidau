@@ -11549,6 +11549,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get opsNoMatches => 'Nội dung này chưa có trận đấu.';
 
   @override
+  String get opsNoParticipants => 'Nội dung này chưa có người tham gia.';
+
+  @override
+  String get opsAudit => 'Hoạt động đã ghi nhận';
+
+  @override
   String get opsStageCount => 'Giai đoạn';
 
   @override

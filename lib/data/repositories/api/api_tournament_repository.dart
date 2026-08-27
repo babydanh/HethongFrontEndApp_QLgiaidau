@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
+import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:dio/dio.dart';
@@ -319,6 +320,89 @@ class ApiTournamentRepository implements ITournamentRepository {
     await _dioClient.dio.patch(
       '/tournaments/$tournamentId/referees/$refereeId/respond',
       data: {'action': action},
+    );
+  }
+
+  @override
+  Future<List<OrganizerOpsParticipant>> getOrganizerParticipants(
+    String tournamentId, {
+    String? divisionId,
+  }) async {
+    final response = await _dioClient.dio.get(
+      '/tournaments/$tournamentId/manage/participants',
+      queryParameters: {
+        if (divisionId != null && divisionId.isNotEmpty)
+          'divisionId': divisionId,
+        '_t': DateTime.now().millisecondsSinceEpoch,
+      },
+    );
+    final raw = response.data;
+    final data = raw is Map<String, dynamic> ? raw['data'] : raw;
+    if (data is! List) return const [];
+    return data
+        .whereType<Map>()
+        .map(
+          (item) =>
+              OrganizerOpsParticipant.fromJson(Map<String, dynamic>.from(item)),
+        )
+        .where((participant) => participant.id.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<OrganizerOpsReferee>> getTournamentReferees(
+    String tournamentId,
+  ) async {
+    final response = await _dioClient.dio.get(
+      '/tournaments/$tournamentId/referees',
+    );
+    final raw = response.data;
+    final data = raw is Map<String, dynamic> ? raw['data'] : raw;
+    if (data is! List) return const [];
+    return data
+        .whereType<Map>()
+        .map(
+          (item) =>
+              OrganizerOpsReferee.fromJson(Map<String, dynamic>.from(item)),
+        )
+        .where((referee) => referee.id.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<OrganizerOpsAuditEntry>> getOpsAuditLogs(
+    String tournamentId, {
+    String? divisionId,
+  }) async {
+    final response = await _dioClient.dio.get(
+      '/tournaments/$tournamentId/ops-audit-logs',
+      queryParameters: {
+        if (divisionId != null && divisionId.isNotEmpty)
+          'divisionId': divisionId,
+      },
+    );
+    final raw = response.data;
+    final data = raw is Map<String, dynamic> ? raw['data'] : raw;
+    if (data is! List) return const [];
+    return data
+        .whereType<Map>()
+        .map(
+          (item) =>
+              OrganizerOpsAuditEntry.fromJson(Map<String, dynamic>.from(item)),
+        )
+        .where((entry) => entry.id.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> kickParticipant({
+    required String tournamentId,
+    required String participantId,
+    required String reason,
+  }) async {
+    await _dioClient.dio.post(
+      '/tournaments/$tournamentId/participants/$participantId/kick',
+      data: {'reason': reason.trim()},
     );
   }
 

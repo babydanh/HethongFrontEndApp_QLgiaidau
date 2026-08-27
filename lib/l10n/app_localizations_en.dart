@@ -11582,6 +11582,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opsNoMatches => 'No matches in this division yet.';
 
   @override
+  String get opsNoParticipants => 'No participants in this division yet.';
+
+  @override
+  String get opsAudit => 'Audit activity';
+
+  @override
   String get opsStageCount => 'Stages';
 
   @override
