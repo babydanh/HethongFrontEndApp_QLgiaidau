@@ -8673,7 +8673,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bracketView_statusTitle => 'STATUS:';
 
   @override
-  String get bracketView_live => 'Live';
+  String get bracketView_live => 'In progress';
 
   @override
   String get bracketView_scheduled => 'Not started';
@@ -8746,6 +8746,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bracketView_unknownParticipant => 'Unknown';
+
+  @override
+  String get bracketView_currentResults => 'Current results';
 
   @override
   String get bracketView_officialResults => 'Official results';

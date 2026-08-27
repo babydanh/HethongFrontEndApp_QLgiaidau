@@ -8654,7 +8654,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bracketView_statusTitle => 'TRẠNG THÁI:';
 
   @override
-  String get bracketView_live => 'Trực tiếp';
+  String get bracketView_live => 'Đang diễn ra';
 
   @override
   String get bracketView_scheduled => 'Chưa đấu';
@@ -8727,6 +8727,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bracketView_unknownParticipant => 'Chưa xác định';
+
+  @override
+  String get bracketView_currentResults => 'Kết quả hiện tại';
 
   @override
   String get bracketView_officialResults => 'Kết quả chính thức';

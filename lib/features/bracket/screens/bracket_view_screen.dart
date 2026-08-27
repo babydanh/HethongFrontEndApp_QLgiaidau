@@ -280,16 +280,15 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
   Widget _buildResultAwards(AsyncValue<Map<String, dynamic>> resultAsync) {
     final l10n = AppLocalizations.of(context)!;
     final snapshot = resultAsync.value;
-    if (snapshot == null || snapshot['finalized'] != true) {
-      return const SizedBox.shrink();
-    }
+    if (snapshot == null) return const SizedBox.shrink();
 
     final rawAwards = snapshot['awards'];
     if (rawAwards is! List || rawAwards.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final awards = rawAwards.whereType<Map>().map((raw) {
+    final finalized = snapshot['finalized'] == true;
+    final parsedAwards = rawAwards.whereType<Map>().map((raw) {
       final award = Map<String, dynamic>.from(raw);
       final participant = award['participant'];
       final participantMap = participant is Map
@@ -298,11 +297,16 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       return (
         rank: (award['rank'] as num?)?.toInt() ?? 0,
         shared: award['shared'] == true,
+        hasParticipant: participantMap.isNotEmpty,
         name:
             (participantMap['teamName'] ?? l10n.bracketView_unknownParticipant)
                 .toString(),
       );
     }).toList();
+    final awards = parsedAwards
+        .where((award) => award.hasParticipant && (finalized || award.rank <= 2))
+        .toList();
+    if (awards.isEmpty) return const SizedBox.shrink();
 
     return Container(
       width: double.infinity,
@@ -317,7 +321,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.bracketView_officialResults,
+            finalized
+                ? l10n.bracketView_officialResults
+                : l10n.bracketView_currentResults,
             style: TextStyle(
               color: context.colors.textPrimary,
               fontSize: 15,

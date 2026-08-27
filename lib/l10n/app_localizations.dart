@@ -15971,7 +15971,7 @@ abstract class AppLocalizations {
   /// No description provided for @bracketView_live.
   ///
   /// In vi, this message translates to:
-  /// **'Trực tiếp'**
+  /// **'Đang diễn ra'**
   String get bracketView_live;
 
   /// No description provided for @bracketView_scheduled.
@@ -16111,6 +16111,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chưa xác định'**
   String get bracketView_unknownParticipant;
+
+  /// No description provided for @bracketView_currentResults.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết quả hiện tại'**
+  String get bracketView_currentResults;
 
   /// No description provided for @bracketView_officialResults.
   ///
