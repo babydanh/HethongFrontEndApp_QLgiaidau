@@ -11555,6 +11555,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get opsAudit => 'Hoạt động đã ghi nhận';
 
   @override
+  String get opsNoActivity => 'Chưa có hoạt động vận hành nào.';
+
+  @override
+  String get opsCameraNotReady =>
+      'App chưa có contract gán camera cho giải này.';
+
+  @override
   String get opsSpecialOperation => 'Xử lý đặc biệt';
 
   @override

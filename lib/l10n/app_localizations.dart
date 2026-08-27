@@ -21046,6 +21046,18 @@ abstract class AppLocalizations {
   /// **'Hoạt động đã ghi nhận'**
   String get opsAudit;
 
+  /// No description provided for @opsNoActivity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có hoạt động vận hành nào.'**
+  String get opsNoActivity;
+
+  /// No description provided for @opsCameraNotReady.
+  ///
+  /// In vi, this message translates to:
+  /// **'App chưa có contract gán camera cho giải này.'**
+  String get opsCameraNotReady;
+
   /// No description provided for @opsSpecialOperation.
   ///
   /// In vi, this message translates to:

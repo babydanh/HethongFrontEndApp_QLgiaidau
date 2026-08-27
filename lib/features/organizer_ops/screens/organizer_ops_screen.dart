@@ -211,14 +211,61 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                       divisionId: selectedDivisionId,
                     ),
                   )
+                else if (_selectedTab == 3)
+                  _buildRosterSliver(context, opsReadAsync)
+                else if (_selectedTab == 4)
+                  _buildActivitySliver(context, opsReadAsync)
                 else
-                  _buildRosterSliver(context, opsReadAsync),
+                  SliverToBoxAdapter(
+                    child: _OpsReadOnlyNotice(
+                      icon: Icons.videocam_outlined,
+                      title: l10n.opsCamera,
+                      message: l10n.opsCameraNotReady,
+                    ),
+                  ),
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildActivitySliver(
+    BuildContext context,
+    AsyncValue<OrganizerOpsReadModel> opsAsync,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    return opsAsync.when(
+      loading: () => const SliverToBoxAdapter(child: _OpsInlineLoading()),
+      error: (error, _) => SliverToBoxAdapter(
+        child: _OpsErrorBody(
+          message: error.toString(),
+          onRetry: () => ref.invalidate(
+            organizerOpsReadModelProvider((
+              tournamentId: widget.tournamentId,
+              divisionId: _selectedDivisionId!,
+            )),
+          ),
+        ),
+      ),
+      data: (readModel) {
+        if (readModel.auditEntries.isEmpty) {
+          return SliverToBoxAdapter(
+            child: _OpsReadOnlyNotice(
+              icon: Icons.history_rounded,
+              title: l10n.opsAudit,
+              message: l10n.opsNoActivity,
+            ),
+          );
+        }
+        return SliverList.builder(
+          itemCount: readModel.auditEntries.length,
+          itemBuilder: (context, index) =>
+              _OpsActivityCard(entry: readModel.auditEntries[index]),
+        );
+      },
     );
   }
 
@@ -877,6 +924,8 @@ class _OpsTabBar extends StatelessWidget {
       (l10n.opsMatches, Icons.sports_score_outlined),
       (l10n.opsBracket, Icons.account_tree_outlined),
       (l10n.opsRoster, Icons.people_alt_outlined),
+      (l10n.opsActivity, Icons.history_rounded),
+      (l10n.opsCamera, Icons.videocam_outlined),
     ];
 
     return Padding(
@@ -1165,6 +1214,63 @@ class _OpsMatchCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OpsActivityCard extends StatelessWidget {
+  const _OpsActivityCard({required this.entry});
+
+  final OrganizerOpsAuditEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: colors.bgSurface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.history_rounded, color: colors.info, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.action,
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    entry.tableName.isEmpty
+                        ? entry.recordId
+                        : '${entry.tableName} • ${entry.recordId}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: colors.textSecondary, fontSize: 12),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    '${entry.actorName ?? 'System'} • ${entry.createdAt.toLocal()}',
+                    style: TextStyle(color: colors.textMuted, fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

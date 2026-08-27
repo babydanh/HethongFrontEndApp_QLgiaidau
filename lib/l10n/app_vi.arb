@@ -4815,6 +4815,8 @@
   "opsNoMatches": "Nội dung này chưa có trận đấu.",
   "opsNoParticipants": "Nội dung này chưa có người tham gia.",
   "opsAudit": "Hoạt động đã ghi nhận",
+  "opsNoActivity": "Chưa có hoạt động vận hành nào.",
+  "opsCameraNotReady": "App chưa có contract gán camera cho giải này.",
   "opsSpecialOperation": "Xử lý đặc biệt",
   "opsWalkover": "Bỏ cuộc",
   "opsNoShow": "Không có mặt",

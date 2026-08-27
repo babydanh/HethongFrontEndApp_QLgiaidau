@@ -11588,6 +11588,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opsAudit => 'Audit activity';
 
   @override
+  String get opsNoActivity => 'No operational activity yet.';
+
+  @override
+  String get opsCameraNotReady =>
+      'Camera assignment is not available in the App yet.';
+
+  @override
   String get opsSpecialOperation => 'Special operation';
 
   @override
