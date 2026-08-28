@@ -584,41 +584,23 @@ class _LiveTournamentWithMatchesCardState
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Container(
-                      constraints: const BoxConstraints(minWidth: 32),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
+                    if (match.sets.isNotEmpty)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: match.sets.map((s) {
+                          return _buildScoreBox(
+                            score: s.score1,
+                            opponentScore: s.score2,
+                            colors: colors,
+                          );
+                        }).toList(),
+                      )
+                    else
+                      _buildScoreBox(
+                        score: match.score1,
+                        opponentScore: match.score2,
+                        colors: colors,
                       ),
-                      decoration: BoxDecoration(
-                        color:
-                            (match.sets.isNotEmpty
-                                ? match.sets.last.score1 >
-                                      match.sets.last.score2
-                                : match.score1 > match.score2)
-                            ? AppTheme.primary.withValues(alpha: 0.12)
-                            : colors.bgSurface,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color:
-                              (match.sets.isNotEmpty
-                                  ? match.sets.last.score1 >
-                                        match.sets.last.score2
-                                  : match.score1 > match.score2)
-                              ? AppTheme.primary.withValues(alpha: 0.4)
-                              : colors.border,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        '${match.sets.isNotEmpty ? match.sets.last.score1 : match.score1}',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w900,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
 
@@ -673,41 +655,23 @@ class _LiveTournamentWithMatchesCardState
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Container(
-                      constraints: const BoxConstraints(minWidth: 32),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
+                    if (match.sets.isNotEmpty)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: match.sets.map((s) {
+                          return _buildScoreBox(
+                            score: s.score2,
+                            opponentScore: s.score1,
+                            colors: colors,
+                          );
+                        }).toList(),
+                      )
+                    else
+                      _buildScoreBox(
+                        score: match.score2,
+                        opponentScore: match.score1,
+                        colors: colors,
                       ),
-                      decoration: BoxDecoration(
-                        color:
-                            (match.sets.isNotEmpty
-                                ? match.sets.last.score2 >
-                                      match.sets.last.score1
-                                : match.score2 > match.score1)
-                            ? AppTheme.primary.withValues(alpha: 0.12)
-                            : colors.bgSurface,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color:
-                              (match.sets.isNotEmpty
-                                  ? match.sets.last.score2 >
-                                        match.sets.last.score1
-                                  : match.score2 > match.score1)
-                              ? AppTheme.primary.withValues(alpha: 0.4)
-                              : colors.border,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        '${match.sets.isNotEmpty ? match.sets.last.score2 : match.score2}',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w900,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ],
@@ -860,6 +824,40 @@ class _LiveTournamentWithMatchesCardState
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScoreBox({
+    required int score,
+    required int opponentScore,
+    required AppColorsExtension colors,
+  }) {
+    final isWinning = score > opponentScore;
+    return Container(
+      constraints: const BoxConstraints(minWidth: 28),
+      margin: const EdgeInsets.only(left: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: isWinning
+            ? AppTheme.primary.withValues(alpha: 0.12)
+            : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isWinning
+              ? AppTheme.primary.withValues(alpha: 0.4)
+              : const Color(0xFFE2E8F0),
+          width: 1,
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        '$score',
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: isWinning ? FontWeight.w900 : FontWeight.w700,
+          color: isWinning ? AppTheme.primary : colors.textPrimary,
         ),
       ),
     );
