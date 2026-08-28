@@ -39,6 +39,7 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
 
     final offset = renderBox.localToGlobal(Offset.zero);
     final size = renderBox.size;
+    final colors = context.colors;
 
     HapticFeedback.lightImpact();
 
@@ -52,10 +53,11 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colors.border, width: 1),
       ),
-      color: Colors.white,
+      color: colors.bgElevated,
       elevation: 8,
-      shadowColor: Colors.black.withValues(alpha: 0.12),
+      shadowColor: Colors.black.withValues(alpha: 0.16),
       items: items.map((item) {
         final isSelected = item.$1 == widget.activeSport;
         return PopupMenuItem<String>(
@@ -70,7 +72,7 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
                   style: TextStyle(
                     color: isSelected
                         ? AppTheme.webPrimary
-                        : context.colors.textPrimary,
+                        : colors.textPrimary,
                     fontSize: 14,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   ),
@@ -97,6 +99,7 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
     final authState = ref.watch(authProvider);
     final userProfile = ref.watch(userProfileProvider).asData?.value;
     final notificationsCount = ref.watch(unreadCountProvider).value ?? 0;
@@ -121,17 +124,17 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white, // Header màu trắng
+        color: colors.bgDark,
         border: Border(
           bottom: BorderSide(
-            color: context.colors.border.withValues(alpha: 0.35),
+            color: colors.border.withValues(alpha: 0.35),
             width: 1.0,
           ),
         ),
       ),
       child: Row(
         children: [
-          // ─── Nút Dropdown Thể loại: Màu trắng / Không viền / Chỉ là chữ + mũi tên ───
+          // ─── Nút Dropdown Thể loại: Theme-aware / Không viền / Chỉ là chữ + mũi tên ───
           Semantics(
             button: true,
             label: l10n.filterSport,
@@ -147,7 +150,7 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
                     Text(
                       selectedLabel,
                       style: TextStyle(
-                        color: context.colors.textPrimary,
+                        color: colors.textPrimary,
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.4,
@@ -156,7 +159,7 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
                     const SizedBox(width: 4),
                     Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      color: context.colors.textPrimary,
+                      color: colors.textPrimary,
                       size: 24,
                     ),
                   ],
@@ -167,7 +170,7 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
 
           const Spacer(),
 
-          // ─── Nút Chuông Thông Báo (Không viền) ───
+          // ─── Nút Chuông Thông Báo (Theme-aware) ───
           Semantics(
             button: true,
             label: l10n.notification_title,
@@ -182,7 +185,7 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: context.colors.border.withValues(alpha: 0.25),
+                  color: colors.border.withValues(alpha: 0.25),
                   shape: BoxShape.circle,
                 ),
                 child: Stack(
@@ -191,7 +194,7 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
                   children: [
                     Icon(
                       Icons.notifications_none_rounded,
-                      color: context.colors.textPrimary,
+                      color: colors.textPrimary,
                       size: 20,
                     ),
                     if (notificationsCount > 0)
@@ -215,7 +218,7 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
 
           const SizedBox(width: 10),
 
-          // ─── Avatar Người Dùng / Đăng Nhập (Không viền) ───
+          // ─── Avatar Người Dùng / Đăng Nhập (Theme-aware) ───
           Semantics(
             button: true,
             label: 'Profile',
@@ -233,7 +236,7 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
                 height: 38,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: context.colors.border.withValues(alpha: 0.25),
+                  color: colors.border.withValues(alpha: 0.25),
                 ),
                 child: ClipOval(
                   child:
@@ -244,13 +247,13 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
                               fit: BoxFit.cover,
                               errorBuilder: (_, _, _) => Icon(
                                 Icons.person,
-                                color: context.colors.textPrimary,
+                                color: colors.textPrimary,
                                 size: 20,
                               ),
                             )
                           : Icon(
                               Icons.person_outline_rounded,
-                              color: context.colors.textPrimary,
+                              color: colors.textPrimary,
                               size: 20,
                             ),
                 ),

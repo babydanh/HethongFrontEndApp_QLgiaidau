@@ -55,6 +55,7 @@ class _LiveTournamentWithMatchesCardState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
     final matchesAsync = ref.watch(matchesProvider(widget.tournament.id));
     final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl);
 
@@ -106,7 +107,7 @@ class _LiveTournamentWithMatchesCardState
 
         return Container(
           margin: EdgeInsets.zero,
-          decoration: const BoxDecoration(color: Colors.white),
+          decoration: BoxDecoration(color: colors.bgDark),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -121,10 +122,10 @@ class _LiveTournamentWithMatchesCardState
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: colors.bgSurface,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: const Color(0xFFE2E8F0),
+                            color: colors.border,
                             width: 1,
                           ),
                         ),
@@ -158,10 +159,10 @@ class _LiveTournamentWithMatchesCardState
                           children: [
                             Text(
                               widget.tournament.name.toUpperCase(),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F172A),
+                                color: colors.textPrimary,
                                 letterSpacing: 0.2,
                               ),
                               maxLines: 1,
@@ -170,11 +171,11 @@ class _LiveTournamentWithMatchesCardState
                             const SizedBox(height: 1.5),
                             Text(
                               widget.tournament.isRanked
-                                  ? (l10n.exploreRankedTournament)
+                                   ? (l10n.exploreRankedTournament)
                                   : (l10n.exploreFriendlyTournament),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
-                                color: Color(0xFF64748B),
+                                color: colors.textMuted,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -468,7 +469,7 @@ class _LiveTournamentWithMatchesCardState
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.bgDark,
           border: Border(
             bottom: BorderSide(
               color: colors.border.withValues(alpha: 0.35),
@@ -841,13 +842,13 @@ class _LiveTournamentWithMatchesCardState
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: isWinning
-            ? AppTheme.primary.withValues(alpha: 0.12)
-            : const Color(0xFFF8FAFC),
+            ? AppTheme.primary.withValues(alpha: 0.15)
+            : colors.bgSurface,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: isWinning
-              ? AppTheme.primary.withValues(alpha: 0.4)
-              : const Color(0xFFE2E8F0),
+              ? AppTheme.primary.withValues(alpha: 0.45)
+              : colors.border,
           width: 1,
         ),
       ),

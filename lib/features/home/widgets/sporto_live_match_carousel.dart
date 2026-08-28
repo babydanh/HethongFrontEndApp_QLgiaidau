@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class _TeamDisplayData {
   final bool isDoubles;
@@ -43,10 +44,10 @@ class SportoLiveMatchCarousel extends StatelessWidget {
     return tournaments.where((item) => item.id == tournamentId).firstOrNull;
   }
 
-  String _getTournamentName(MatchModel match) {
+  String _getTournamentName(MatchModel match, AppLocalizations l10n) {
     return _getTournament(match.tournamentId)?.name ??
         match.tournamentName ??
-        'Giải đấu';
+        l10n.matchTournament;
   }
 
   String _resolveImageUrl(String? url) {
@@ -75,7 +76,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
   }
 
   String _getTeamAbbr(String? name) {
-    if (name == null || name.trim().isEmpty) return 'ĐỘI';
+    if (name == null || name.trim().isEmpty) return 'T';
     final words = name.trim().split(RegExp(r'\s+'));
     if (words.length == 1) {
       return words[0].substring(0, words[0].length.clamp(0, 3)).toUpperCase();
@@ -90,7 +91,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
   /// Nếu tên từ 3 từ trở lên thì chỉ hiển thị 2 từ cuối cùng
   String _formatDisplayName(String name) {
     final trimmed = name.trim();
-    if (trimmed.isEmpty) return 'Đội';
+    if (trimmed.isEmpty) return '';
     final words = trimmed.split(RegExp(r'\s+'));
     if (words.length > 2) {
       return words.sublist(words.length - 2).join(' ');
@@ -102,7 +103,10 @@ class SportoLiveMatchCarousel extends StatelessWidget {
     required String rawName,
     required String? teamLogoUrl,
     required List<MatchMemberInfo> memberInfos,
+    required String fallbackName,
   }) {
+    final effectiveName = rawName.isNotEmpty ? rawName : fallbackName;
+
     if (memberInfos.length >= 2) {
       final m1 = memberInfos[0];
       final m2 = memberInfos[1];
@@ -118,13 +122,13 @@ class SportoLiveMatchCarousel extends StatelessWidget {
       );
     }
 
-    if (rawName.contains(' / ') ||
-        rawName.contains(' - ') ||
-        rawName.contains(' + ')) {
-      final delimiter = rawName.contains(' / ')
+    if (effectiveName.contains(' / ') ||
+        effectiveName.contains(' - ') ||
+        effectiveName.contains(' + ')) {
+      final delimiter = effectiveName.contains(' / ')
           ? ' / '
-          : (rawName.contains(' - ') ? ' - ' : ' + ');
-      final parts = rawName.split(delimiter);
+          : (effectiveName.contains(' - ') ? ' - ' : ' + ');
+      final parts = effectiveName.split(delimiter);
       if (parts.length >= 2) {
         final p1 = parts[0].trim();
         final p2 = parts[1].trim();
@@ -142,32 +146,34 @@ class SportoLiveMatchCarousel extends StatelessWidget {
     return _TeamDisplayData(
       isDoubles: false,
       avatar1: teamLogoUrl,
-      abbr1: _getTeamAbbr(rawName),
+      abbr1: _getTeamAbbr(effectiveName),
       abbr2: '',
-      displayName: _formatDisplayName(rawName),
+      displayName: _formatDisplayName(effectiveName),
     );
   }
 
   Widget _buildSingleAvatarCircle({
+    required BuildContext context,
     required double size,
     required String? logoUrl,
     required String abbr,
     double fontSize = 13,
   }) {
+    final colors = context.colors;
     final resolvedUrl = _resolveImageUrl(logoUrl);
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFFF1F5F9),
+        color: colors.bgSurface,
         border: Border.all(
-          color: Colors.white,
-          width: 2.0,
+          color: colors.border,
+          width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -203,12 +209,14 @@ class SportoLiveMatchCarousel extends StatelessWidget {
 
   /// Avatar đội: Nếu đánh đôi thì Đội 1 là `Oo` (To bên trái đè Nhỏ bên phải), Đội 2 là `oO` (Nhỏ bên trái đè To bên phải)
   Widget _buildTeamAvatarSection({
+    required BuildContext context,
     required _TeamDisplayData teamData,
     required bool isTeam1,
   }) {
     if (!teamData.isDoubles) {
       // Đánh đơn (1 VĐV): Avatar to tròn 52x52
       return _buildSingleAvatarCircle(
+        context: context,
         size: 52,
         logoUrl: teamData.avatar1,
         abbr: teamData.abbr1,
@@ -230,6 +238,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
               left: 0,
               top: 0,
               child: _buildSingleAvatarCircle(
+                context: context,
                 size: 42,
                 logoUrl: teamData.avatar1,
                 abbr: teamData.abbr1,
@@ -241,6 +250,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
               right: 0,
               bottom: 0,
               child: _buildSingleAvatarCircle(
+                context: context,
                 size: 32,
                 logoUrl: teamData.avatar2,
                 abbr: teamData.abbr2,
@@ -263,6 +273,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
               left: 0,
               bottom: 0,
               child: _buildSingleAvatarCircle(
+                context: context,
                 size: 32,
                 logoUrl: teamData.avatar1,
                 abbr: teamData.abbr1,
@@ -274,6 +285,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
               right: 0,
               top: 0,
               child: _buildSingleAvatarCircle(
+                context: context,
                 size: 42,
                 logoUrl: teamData.avatar2,
                 abbr: teamData.abbr2,
@@ -288,6 +300,9 @@ class SportoLiveMatchCarousel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+
     if (liveMatches.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -308,9 +323,9 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                   const _PulsingLiveDot(size: 8),
                   const SizedBox(width: 8),
                   Text(
-                    'Đang diễn ra',
+                    l10n.matchesStatusLive,
                     style: TextStyle(
-                      color: context.colors.textPrimary,
+                      color: colors.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.3,
@@ -323,9 +338,9 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                   HapticFeedback.lightImpact();
                   onSeeMore != null ? onSeeMore!() : context.push('/live');
                 },
-                child: const Text(
-                  'Xem thêm',
-                  style: TextStyle(
+                child: Text(
+                  l10n.viewAll,
+                  style: const TextStyle(
                     color: AppTheme.webSecondary,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -338,7 +353,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
 
         const SizedBox(height: 4),
 
-        // ─── Live Match Cards Carousel (Borderless / White card with beautiful subtle border) ───
+        // ─── Live Match Cards Carousel (Theme-aware with crisp card borders) ───
         SizedBox(
           height: 155,
           child: ListView.separated(
@@ -350,24 +365,19 @@ class SportoLiveMatchCarousel extends StatelessWidget {
             itemBuilder: (context, index) {
               final match = liveMatches[index];
               final tournament = _getTournament(match.tournamentId);
-              final tournamentName = _getTournamentName(match);
-
-              final rawTeam1Name = match.team1Name.isNotEmpty
-                  ? match.team1Name
-                  : 'Đội 1';
-              final rawTeam2Name = match.team2Name.isNotEmpty
-                  ? match.team2Name
-                  : 'Đội 2';
+              final tournamentName = _getTournamentName(match, l10n);
 
               final team1Data = _parseTeamData(
-                rawName: rawTeam1Name,
+                rawName: match.team1Name,
                 teamLogoUrl: match.team1LogoUrl,
                 memberInfos: match.team1MemberInfos,
+                fallbackName: 'Đội 1',
               );
               final team2Data = _parseTeamData(
-                rawName: rawTeam2Name,
+                rawName: match.team2Name,
                 teamLogoUrl: match.team2LogoUrl,
                 memberInfos: match.team2MemberInfos,
+                fallbackName: 'Đội 2',
               );
 
               final score1 = match.score1;
@@ -383,7 +393,9 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                 onTap: () {
                   HapticFeedback.selectionClick();
                   final tId = match.tournamentId ?? '';
-                  context.push('/live/${match.id}${tId.isNotEmpty ? '?tournamentId=$tId' : ''}');
+                  context.push(
+                    '/live/${match.id}${tId.isNotEmpty ? '?tournamentId=$tId' : ''}',
+                  );
                 },
               );
             },
@@ -402,18 +414,20 @@ class SportoLiveMatchCarousel extends StatelessWidget {
     String? logoUrl,
     required VoidCallback onTap,
   }) {
+    final colors = context.colors;
+
     return Container(
       width: 295,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: const Color(0xFFE2E8F0),
+          color: colors.border,
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -448,7 +462,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: context.colors.textPrimary,
+                          color: colors.textPrimary,
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),
@@ -470,6 +484,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           _buildTeamAvatarSection(
+                            context: context,
                             teamData: team1Data,
                             isTeam1: true,
                           ),
@@ -480,7 +495,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: context.colors.textPrimary,
+                              color: colors.textPrimary,
                               fontSize: 11.5,
                               fontWeight: FontWeight.w600,
                             ),
@@ -495,7 +510,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                       child: Text(
                         scoreText,
                         style: TextStyle(
-                          color: context.colors.textPrimary,
+                          color: colors.textPrimary,
                           fontSize: scoreText == 'LIVE' ? 20 : 28,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1,
@@ -509,6 +524,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           _buildTeamAvatarSection(
+                            context: context,
                             teamData: team2Data,
                             isTeam1: false,
                           ),
@@ -519,7 +535,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: context.colors.textPrimary,
+                              color: colors.textPrimary,
                               fontSize: 11.5,
                               fontWeight: FontWeight.w600,
                             ),
