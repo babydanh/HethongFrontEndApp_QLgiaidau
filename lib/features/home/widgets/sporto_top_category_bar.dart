@@ -47,20 +47,20 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
       position: RelativeRect.fromLTRB(
         offset.dx,
         offset.dy + size.height + 6,
-        offset.dx + size.width,
-        offset.dy + size.height + 450,
+        offset.dx + 220,
+        offset.dy + size.height + 400,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
       color: context.colors.bgSurface,
       elevation: 8,
-      shadowColor: Colors.black.withValues(alpha: 0.2),
+      shadowColor: Colors.black.withValues(alpha: 0.15),
       items: items.map((item) {
         final isSelected = item.$1 == widget.activeSport;
         return PopupMenuItem<String>(
           value: item.$1,
-          height: 46,
+          height: 44,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
@@ -119,72 +119,65 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
         .$2;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: context.colors.bgSurface,
+        color: const Color(0xFFF1F5F9), // Nền xám nhạt hiện đại
         border: Border(
           bottom: BorderSide(
-            color: context.colors.border.withValues(alpha: 0.5),
+            color: context.colors.border.withValues(alpha: 0.4),
             width: 1.0,
           ),
         ),
       ),
       child: Row(
         children: [
-          // ─── Nút Dropdown Thể loại (Bỏ icon môn, chỉ hiện tên + mũi tên trỏ xuống) ───
-          Expanded(
-            child: Semantics(
-              button: true,
-              label: l10n.filterSport,
-              child: GestureDetector(
-                key: _buttonKey,
-                onTap: () => _showCategoryDropdown(context, items),
-                child: Container(
-                  height: 42,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.webPrimary,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.webPrimary.withValues(alpha: 0.25),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      // Tên môn thể thao
-                      Expanded(
-                        child: Text(
-                          selectedLabel,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.2,
-                          ),
-                        ),
-                      ),
-                      // Mũi tên trỏ xuống sát bên phải
-                      const Icon(
-                        Icons.keyboard_arrow_down_rounded,
+          // ─── Nút Dropdown Thể loại nhỏ gọn bé bé, không viền ───
+          Semantics(
+            button: true,
+            label: l10n.filterSport,
+            child: GestureDetector(
+              key: _buttonKey,
+              onTap: () => _showCategoryDropdown(context, items),
+              child: Container(
+                height: 36,
+                padding: const EdgeInsets.only(left: 14, right: 10),
+                decoration: BoxDecoration(
+                  color: AppTheme.webPrimary,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.webPrimary.withValues(alpha: 0.2),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      selectedLabel,
+                      style: const TextStyle(
                         color: Colors.white,
-                        size: 22,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
 
-          const SizedBox(width: 12),
+          const Spacer(),
 
-          // ─── Nút Chuông Thông Báo ───
+          // ─── Nút Chuông Thông Báo (Không viền) ───
           Semantics(
             button: true,
             label: l10n.notification_title,
@@ -196,11 +189,18 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
                     : context.push('/notifications');
               },
               child: Container(
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(
-                  color: AppTheme.webPrimaryLight,
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Colors.white,
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
                 ),
                 child: Stack(
                   alignment: Alignment.center,
@@ -209,15 +209,15 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
                     const Icon(
                       Icons.notifications_none_rounded,
                       color: AppTheme.webPrimary,
-                      size: 21,
+                      size: 19,
                     ),
                     if (notificationsCount > 0)
                       Positioned(
-                        top: 7,
-                        right: 7,
+                        top: 6,
+                        right: 6,
                         child: Container(
-                          width: 8,
-                          height: 8,
+                          width: 7,
+                          height: 7,
                           decoration: const BoxDecoration(
                             color: Color(0xFFEF4444),
                             shape: BoxShape.circle,
@@ -232,7 +232,7 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
 
           const SizedBox(width: 10),
 
-          // ─── Avatar Người Dùng / Đăng Nhập ───
+          // ─── Avatar Người Dùng / Đăng Nhập (Không viền) ───
           Semantics(
             button: true,
             label: 'Profile',
@@ -246,14 +246,18 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
                 }
               },
               child: Container(
-                width: 40,
-                height: 40,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.webPrimaryLight,
-                  border: authState.isAuthenticated
-                      ? Border.all(color: AppTheme.webSecondary, width: 1.5)
-                      : null,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
                 ),
                 child: ClipOval(
                   child:
@@ -265,15 +269,13 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
                               errorBuilder: (_, _, _) => const Icon(
                                 Icons.person,
                                 color: AppTheme.webPrimary,
-                                size: 21,
+                                size: 19,
                               ),
                             )
-                          : Icon(
+                          : const Icon(
                               Icons.person_outline_rounded,
-                              color: authState.isAuthenticated
-                                  ? AppTheme.webSecondary
-                                  : AppTheme.webPrimary,
-                              size: 21,
+                              color: AppTheme.webPrimary,
+                              size: 19,
                             ),
                 ),
               ),
