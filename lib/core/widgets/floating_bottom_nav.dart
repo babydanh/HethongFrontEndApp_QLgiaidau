@@ -240,7 +240,7 @@ class FloatingBottomNav extends ConsumerWidget {
 
         // ─── Profile Avatar (center) ───
         Positioned(
-          top: isIOS ? -14 : -22,
+          top: isIOS ? -14 : -18,
           left: 0,
           right: 0,
           child: GestureDetector(

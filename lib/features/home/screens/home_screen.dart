@@ -1868,7 +1868,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               );
             }
             return SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
+              padding: const EdgeInsets.only(bottom: 120),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, i) => _buildClubCardPremium(display[i]),
@@ -2004,23 +2004,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final bool hasBanner = club.bannerUrl != null && club.bannerUrl!.isNotEmpty;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.only(bottom: 12.0),
       child: GestureDetector(
         onTap: () => context.push("/club/${club.id}"),
         child: Container(
           decoration: BoxDecoration(
             color: context.colors.bgCard,
-            borderRadius: BorderRadius.circular(20.0),
-            border: Border.all(color: context.colors.border),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+            border: Border(
+              bottom: BorderSide(
+                color: context.colors.border,
+                width: 1.0,
               ),
-            ],
+            ),
           ),
-          clipBehavior: Clip.antiAlias,
           child: Stack(
             children: [
               Column(
@@ -2101,7 +2097,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   // ─── Content Area ───
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 32, 14, 14),
+                    padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -2221,7 +2217,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               // Floating Circular Logo — centered over bottom edge of banner (top: 157)
               Positioned(
                 top: 157,
-                left: 14,
+                left: 16,
                 child: Container(
                   width: 56,
                   height: 56,
