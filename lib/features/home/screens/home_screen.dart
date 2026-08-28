@@ -1715,27 +1715,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        const SliverToBoxAdapter(child: SizedBox(height: 8)),
         SliverPersistentHeader(
           pinned: true,
           delegate: _StatusFilterDelegate(
-            child: Container(
-              color: context.colors.bgDark,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: StatusSegment(
-                selected: _tournamentStatus,
-                onChanged: (s) => setState(() => _tournamentStatus = s),
-                items: [
-                  (key: "all", label: l10n.filterAll),
-                  (key: "registration", label: l10n.matchesFilterRegistration),
-                  (key: "upcoming", label: l10n.matchesFilterScheduled),
-                  (key: "in_progress", label: l10n.homeInProgressStatus),
-                  (key: "completed", label: l10n.matchesStatusCompleted),
-                ],
-              ),
+            child: StatusSegment(
+              selected: _tournamentStatus,
+              onChanged: (s) => setState(() => _tournamentStatus = s),
+              items: [
+                (key: "all", label: l10n.filterAll),
+                (key: "registration", label: l10n.matchesFilterRegistration),
+                (key: "upcoming", label: l10n.matchesFilterScheduled),
+                (key: "in_progress", label: l10n.homeInProgressStatus),
+                (key: "completed", label: l10n.matchesStatusCompleted),
+              ],
             ),
           ),
         ),
+        const SliverToBoxAdapter(child: SizedBox(height: 12)),
         if (displayList.isEmpty)
           SliverFillRemaining(
             child: Center(
@@ -2401,10 +2397,10 @@ class _StatusFilterDelegate extends SliverPersistentHeaderDelegate {
   _StatusFilterDelegate({required this.child});
 
   @override
-  double get minExtent => 52.0;
+  double get minExtent => 44.0;
 
   @override
-  double get maxExtent => 52.0;
+  double get maxExtent => 44.0;
 
   @override
   Widget build(

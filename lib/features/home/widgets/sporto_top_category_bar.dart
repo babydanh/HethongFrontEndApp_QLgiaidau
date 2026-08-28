@@ -127,7 +127,7 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
         color: colors.bgDark,
         border: Border(
           bottom: BorderSide(
-            color: colors.border.withValues(alpha: 0.35),
+            color: colors.border,
             width: 1.0,
           ),
         ),
