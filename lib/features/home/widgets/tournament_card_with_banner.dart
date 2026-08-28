@@ -239,30 +239,20 @@ class _TournamentCardWithBannerState
     return GestureDetector(
       onTap: widget.onTap,
       child: Container(
-        margin:
-            widget.margin ??
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        margin: widget.margin ?? const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: colors.bgCard,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: colors.border.withValues(alpha: 0.7),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+          border: Border(
+            bottom: BorderSide(
+              color: colors.border,
+              width: 1,
             ),
-          ],
+          ),
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Stack(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Banner Header (tăng height ráo & cao ráo lên 185px)
                   SizedBox(
@@ -577,7 +567,6 @@ class _TournamentCardWithBannerState
             ],
           ),
         ),
-      ),
-    );
+      );
+    }
   }
-}
