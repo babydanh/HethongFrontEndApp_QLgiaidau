@@ -149,17 +149,17 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
                   children: [
                     Text(
                       selectedLabel,
-                      style: TextStyle(
-                        color: colors.textPrimary,
+                      style: const TextStyle(
+                        color: AppTheme.webPrimary,
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.4,
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Icon(
+                    const Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      color: colors.textPrimary,
+                      color: AppTheme.webPrimary,
                       size: 24,
                     ),
                   ],
