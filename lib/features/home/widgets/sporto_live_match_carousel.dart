@@ -5,7 +5,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
-import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 
@@ -30,22 +29,6 @@ class SportoLiveMatchCarousel extends StatelessWidget {
     return _getTournament(match.tournamentId)?.name ??
         match.tournamentName ??
         'Giải đấu';
-  }
-
-  void _shareMatch(BuildContext context, MatchModel match) {
-    final tournament = _getTournament(match.tournamentId);
-    final tournamentId = match.tournamentId;
-    if (tournamentId == null || tournamentId.isEmpty) return;
-
-    AppShareModal.show(
-      context: context,
-      title: tournament?.name ?? match.tournamentName ?? 'Giải đấu',
-      subtitle:
-          '${match.team1Name} ${match.score1} - ${match.score2} ${match.team2Name}',
-      webUrl: '${AppConstants.appDomain}/tournaments/$tournamentId',
-      imageUrl: tournament?.bannerUrl ?? tournament?.logoUrl,
-      badgeText: 'Đang diễn ra',
-    );
   }
 
   String _resolveImageUrl(String? url) {
@@ -84,6 +67,17 @@ class SportoLiveMatchCarousel extends StatelessWidget {
         .take(3)
         .join()
         .toUpperCase();
+  }
+
+  /// Nếu tên từ 3 từ trở lên thì chỉ hiển thị 2 từ cuối cùng
+  String _formatDisplayName(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return 'Đội';
+    final words = trimmed.split(RegExp(r'\s+'));
+    if (words.length > 2) {
+      return words.sublist(words.length - 2).join(' ');
+    }
+    return trimmed;
   }
 
   Widget _buildTeamAvatar({
@@ -151,15 +145,8 @@ class SportoLiveMatchCarousel extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFEF4444),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
+                  const _PulsingLiveDot(size: 8),
+                  const SizedBox(width: 8),
                   Text(
                     'Đang diễn ra',
                     style: TextStyle(
@@ -204,16 +191,18 @@ class SportoLiveMatchCarousel extends StatelessWidget {
               final match = liveMatches[index];
               final tournament = _getTournament(match.tournamentId);
               final tournamentName = _getTournamentName(match);
-              final team1Name = match.team1Name.isNotEmpty
+              final rawTeam1Name = match.team1Name.isNotEmpty
                   ? match.team1Name
                   : 'Đội 1';
-              final team2Name = match.team2Name.isNotEmpty
+              final rawTeam2Name = match.team2Name.isNotEmpty
                   ? match.team2Name
                   : 'Đội 2';
+              final displayTeam1Name = _formatDisplayName(rawTeam1Name);
+              final displayTeam2Name = _formatDisplayName(rawTeam2Name);
               final score1 = match.score1;
               final score2 = match.score2;
-              final team1Abbr = _getTeamAbbr(team1Name);
-              final team2Abbr = _getTeamAbbr(team2Name);
+              final team1Abbr = _getTeamAbbr(rawTeam1Name);
+              final team2Abbr = _getTeamAbbr(rawTeam2Name);
 
               final team1Avatar = match.team1LogoUrl ??
                   (match.team1MemberInfos.isNotEmpty
@@ -228,17 +217,13 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                 context: context,
                 title: tournamentName,
                 team1Abbr: team1Abbr,
-                team1Name: team1Name,
+                team1Name: displayTeam1Name,
                 team1LogoUrl: team1Avatar,
                 team2Abbr: team2Abbr,
-                team2Name: team2Name,
+                team2Name: displayTeam2Name,
                 team2LogoUrl: team2Avatar,
                 scoreText: '$score1 - $score2',
                 logoUrl: tournament?.logoUrl ?? tournament?.bannerUrl,
-                onShare:
-                    match.tournamentId != null && match.tournamentId!.isNotEmpty
-                        ? () => _shareMatch(context, match)
-                        : null,
                 onTap: () {
                   HapticFeedback.selectionClick();
                   if (match.tournamentId != null) {
@@ -266,7 +251,6 @@ class SportoLiveMatchCarousel extends StatelessWidget {
     String? team2LogoUrl,
     required String scoreText,
     String? logoUrl,
-    VoidCallback? onShare,
     required VoidCallback onTap,
   }) {
     return Container(
@@ -296,7 +280,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Top: Tournament Name + Share + Chấm Live đỏ tinh tế (Bỏ chữ LIVE)
+                // Top: Tournament Name + Chấm Live đỏ ẩn hiện từ từ (Bỏ nút chia sẻ & bỏ chữ LIVE)
                 Row(
                   children: [
                     Container(
@@ -321,39 +305,9 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (onShare != null)
-                      IconButton(
-                        onPressed: onShare,
-                        icon: Icon(
-                          Icons.share_outlined,
-                          color: context.colors.textSecondary,
-                          size: 16,
-                        ),
-                        tooltip: 'Chia sẻ',
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints.tightFor(
-                          width: 24,
-                          height: 24,
-                        ),
-                      ),
-                    const SizedBox(width: 4),
-                    // Chấm Live đỏ phát sáng tinh tế
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEF4444),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFEF4444).withValues(alpha: 0.45),
-                            blurRadius: 4,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                    ),
+                    const SizedBox(width: 6),
+                    // Chấm Live đỏ ẩn hiện mượt mà
+                    const _PulsingLiveDot(size: 8),
                   ],
                 ),
 
@@ -361,7 +315,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    // Team 1
+                    // Team 1 (hiển thị 2 từ cuối nếu tên từ 3 từ trở lên)
                     Expanded(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -402,7 +356,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                       ),
                     ),
 
-                    // Team 2
+                    // Team 2 (hiển thị 2 từ cuối nếu tên từ 3 từ trở lên)
                     Expanded(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -433,6 +387,62 @@ class SportoLiveMatchCarousel extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Chấm Live đỏ hiệu ứng thở (ẩn hiện từ từ mượt mà)
+class _PulsingLiveDot extends StatefulWidget {
+  final double size;
+  const _PulsingLiveDot({this.size = 8.0});
+
+  @override
+  State<_PulsingLiveDot> createState() => _PulsingLiveDotState();
+}
+
+class _PulsingLiveDotState extends State<_PulsingLiveDot>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+
+    _opacityAnimation = Tween<double>(begin: 0.25, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacityAnimation,
+      child: Container(
+        width: widget.size,
+        height: widget.size,
+        decoration: BoxDecoration(
+          color: const Color(0xFFEF4444),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFEF4444).withValues(alpha: 0.5),
+              blurRadius: 5,
+              spreadRadius: 1.2,
+            ),
+          ],
         ),
       ),
     );
