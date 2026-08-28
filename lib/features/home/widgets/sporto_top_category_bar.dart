@@ -46,16 +46,16 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
       context: context,
       position: RelativeRect.fromLTRB(
         offset.dx,
-        offset.dy + size.height + 6,
+        offset.dy + size.height + 4,
         offset.dx + 220,
         offset.dy + size.height + 400,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      color: context.colors.bgSurface,
+      color: Colors.white,
       elevation: 8,
-      shadowColor: Colors.black.withValues(alpha: 0.15),
+      shadowColor: Colors.black.withValues(alpha: 0.12),
       items: items.map((item) {
         final isSelected = item.$1 == widget.activeSport;
         return PopupMenuItem<String>(
@@ -119,55 +119,39 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
         .$2;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9), // Nền xám nhạt hiện đại
-        border: Border(
-          bottom: BorderSide(
-            color: context.colors.border.withValues(alpha: 0.4),
-            width: 1.0,
-          ),
-        ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: const BoxDecoration(
+        color: Colors.white, // Header màu trắng
       ),
       child: Row(
         children: [
-          // ─── Nút Dropdown Thể loại nhỏ gọn bé bé, không viền ───
+          // ─── Nút Dropdown Thể loại: Màu trắng / Không viền / Chỉ là chữ + mũi tên ───
           Semantics(
             button: true,
             label: l10n.filterSport,
             child: GestureDetector(
               key: _buttonKey,
               onTap: () => _showCategoryDropdown(context, items),
-              child: Container(
-                height: 36,
-                padding: const EdgeInsets.only(left: 14, right: 10),
-                decoration: BoxDecoration(
-                  color: AppTheme.webPrimary,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.webPrimary.withValues(alpha: 0.2),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       selectedLabel,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(
+                    Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      color: Colors.white,
-                      size: 20,
+                      color: context.colors.textPrimary,
+                      size: 24,
                     ),
                   ],
                 ),
@@ -189,32 +173,25 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
                     : context.push('/notifications');
               },
               child: Container(
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.colors.border.withValues(alpha: 0.25),
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
                 ),
                 child: Stack(
                   alignment: Alignment.center,
                   clipBehavior: Clip.none,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.notifications_none_rounded,
-                      color: AppTheme.webPrimary,
-                      size: 19,
+                      color: context.colors.textPrimary,
+                      size: 20,
                     ),
                     if (notificationsCount > 0)
                       Positioned(
-                        top: 6,
-                        right: 6,
+                        top: 7,
+                        right: 7,
                         child: Container(
                           width: 7,
                           height: 7,
@@ -246,18 +223,11 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
                 }
               },
               child: Container(
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
+                  color: context.colors.border.withValues(alpha: 0.25),
                 ),
                 child: ClipOval(
                   child:
@@ -266,16 +236,16 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
                           ? Image.network(
                               userProfile.avatarUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) => const Icon(
+                              errorBuilder: (_, _, _) => Icon(
                                 Icons.person,
-                                color: AppTheme.webPrimary,
-                                size: 19,
+                                color: context.colors.textPrimary,
+                                size: 20,
                               ),
                             )
-                          : const Icon(
+                          : Icon(
                               Icons.person_outline_rounded,
-                              color: AppTheme.webPrimary,
-                              size: 19,
+                              color: context.colors.textPrimary,
+                              size: 20,
                             ),
                 ),
               ),
