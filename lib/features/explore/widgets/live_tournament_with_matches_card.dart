@@ -215,9 +215,8 @@ class _LiveTournamentWithMatchesCardState
                         'matches_page_${safePageIndex}_${currentPageMatches.length}',
                       ),
                       children: currentPageMatches.map((match) {
-                        return Padding(
+                        return KeyedSubtree(
                           key: ValueKey<String>(match.id),
-                          padding: const EdgeInsets.only(bottom: 8),
                           child: _buildMatchCard(context, match),
                         );
                       }).toList(),
@@ -467,18 +466,15 @@ class _LiveTournamentWithMatchesCardState
     return GestureDetector(
       onTap: () => context.push('/live/${match.id}'),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+          border: Border(
+            bottom: BorderSide(
+              color: colors.border.withValues(alpha: 0.35),
+              width: 1.0,
             ),
-          ],
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
