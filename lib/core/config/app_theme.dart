@@ -115,15 +115,15 @@ extension AppThemeContext on BuildContext {
 class AppTheme {
   // ─── Brand Colors ───
   // Keep Flutter aligned with the web design tokens.
-  static const Color primary = Color(0xFF3AB5F6);
-  static const Color primaryLight = Color(0xFFE8F7FF);
-  static const Color primaryDark = Color(0xFF07549A);
+  static const Color primary = Color(0xFF002E7C);
+  static const Color primaryLight = Color(0xFFEFF4FC);
+  static const Color primaryDark = Color(0xFF001A45);
 
-  static const Color secondary = Color(0xFF0F172A);
-  static const Color secondaryLight = Color(0xFF1E293B);
-  static const Color secondaryDark = Color(0xFF020617);
+  static const Color secondary = Color(0xFF3AB5F6);
+  static const Color secondaryLight = Color(0xFFE8F7FF);
+  static const Color secondaryDark = Color(0xFF07549A);
 
-  static const Color accent = Color(0xFF22C55E);
+  static const Color accent = Color(0xFF16A34A);
   static const Color accentDark = Color(0xFF15803D);
 
   // Exact Web SportO tokens used by public Home surfaces.
@@ -183,10 +183,10 @@ class AppTheme {
     textMuted: Color(0xFF64748B), // Clear muted slate text
     border: Color(0xFFE2E8F0),
     borderLight: Color(0xFFF1F5F9),
-    success: Color(0xFF22C55E),
-    warning: Color(0xFFF59E0B),
-    error: Color(0xFFEF4444),
-    info: Color(0xFF3B82F6),
+    success: Color(0xFF16A34A),
+    warning: Color(0xFFD97706),
+    error: Color(0xFFDC2626),
+    info: Color(0xFF002E7C),
   );
 
   static ThemeData _buildTheme(
