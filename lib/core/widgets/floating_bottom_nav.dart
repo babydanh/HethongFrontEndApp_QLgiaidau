@@ -166,7 +166,7 @@ class FloatingBottomNav extends ConsumerWidget {
     const double navBarHeight = 70.0;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    const activeColor = AppTheme.webSecondary;
+    const activeColor = AppTheme.webPrimary;
     final inactiveColor = isDark
         ? Colors.white.withValues(alpha: 0.4)
         : const Color(0xFF94A3B8);
@@ -284,12 +284,12 @@ class FloatingBottomNav extends ConsumerWidget {
                   height: 3,
                   width: currentIndex == 2 ? 14 : 0,
                   decoration: BoxDecoration(
-                    color: AppTheme.webSecondary,
+                    color: AppTheme.webPrimary,
 
                     borderRadius: BorderRadius.circular(2),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.webSecondary.withValues(alpha: 0.5),
+                        color: AppTheme.webPrimary.withValues(alpha: 0.5),
                         blurRadius: 4,
                       ),
                     ],

@@ -341,7 +341,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                 child: Text(
                   l10n.viewAll,
                   style: const TextStyle(
-                    color: AppTheme.webSecondary,
+                    color: AppTheme.webPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),

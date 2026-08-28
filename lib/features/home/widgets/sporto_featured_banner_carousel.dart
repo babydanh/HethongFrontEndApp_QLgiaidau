@@ -86,7 +86,7 @@ class _SportoFeaturedBannerCarouselState
                 child: Text(
                   l10n.viewAll,
                   style: TextStyle(
-                    color: AppTheme.webSecondary,
+                    color: AppTheme.webPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
@@ -143,7 +143,7 @@ class _SportoFeaturedBannerCarouselState
                 height: 6,
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppTheme.webSecondary
+                      ? AppTheme.webPrimary
                       : context.colors.textMuted.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(100),
                 ),

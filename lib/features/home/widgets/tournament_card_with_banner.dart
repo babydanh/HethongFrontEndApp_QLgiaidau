@@ -454,7 +454,7 @@ class _TournamentCardWithBannerState
                                     style: const TextStyle(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.bold,
-                                      color: AppTheme.webSecondary,
+                                      color: AppTheme.webPrimary,
                                     ),
                                   ),
                                   Text(
