@@ -120,8 +120,14 @@ class _SportoTopCategoryBarState extends ConsumerState<SportoTopCategoryBar> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white, // Header màu trắng
+        border: Border(
+          bottom: BorderSide(
+            color: context.colors.border.withValues(alpha: 0.35),
+            width: 1.0,
+          ),
+        ),
       ),
       child: Row(
         children: [

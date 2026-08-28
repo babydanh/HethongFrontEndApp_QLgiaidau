@@ -8,6 +8,24 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 
+class _TeamDisplayData {
+  final bool isDoubles;
+  final String? avatar1;
+  final String abbr1;
+  final String? avatar2;
+  final String abbr2;
+  final String displayName;
+
+  const _TeamDisplayData({
+    required this.isDoubles,
+    this.avatar1,
+    required this.abbr1,
+    this.avatar2,
+    required this.abbr2,
+    required this.displayName,
+  });
+}
+
 class SportoLiveMatchCarousel extends StatelessWidget {
   final List<MatchModel> liveMatches;
   final List<Tournament> tournaments;
@@ -80,23 +98,80 @@ class SportoLiveMatchCarousel extends StatelessWidget {
     return trimmed;
   }
 
-  Widget _buildTeamAvatar({
-    required BuildContext context,
+  _TeamDisplayData _parseTeamData({
+    required String rawName,
+    required String? teamLogoUrl,
+    required List<MatchMemberInfo> memberInfos,
+  }) {
+    if (memberInfos.length >= 2) {
+      final m1 = memberInfos[0];
+      final m2 = memberInfos[1];
+      final name1 = _formatDisplayName(m1.fullName);
+      final name2 = _formatDisplayName(m2.fullName);
+      return _TeamDisplayData(
+        isDoubles: true,
+        avatar1: m1.avatarUrl ?? teamLogoUrl,
+        abbr1: _getTeamAbbr(m1.fullName),
+        avatar2: m2.avatarUrl,
+        abbr2: _getTeamAbbr(m2.fullName),
+        displayName: '$name1 / $name2',
+      );
+    }
+
+    if (rawName.contains(' / ') ||
+        rawName.contains(' - ') ||
+        rawName.contains(' + ')) {
+      final delimiter = rawName.contains(' / ')
+          ? ' / '
+          : (rawName.contains(' - ') ? ' - ' : ' + ');
+      final parts = rawName.split(delimiter);
+      if (parts.length >= 2) {
+        final p1 = parts[0].trim();
+        final p2 = parts[1].trim();
+        return _TeamDisplayData(
+          isDoubles: true,
+          avatar1: teamLogoUrl,
+          abbr1: _getTeamAbbr(p1),
+          avatar2: null,
+          abbr2: _getTeamAbbr(p2),
+          displayName: '${_formatDisplayName(p1)} / ${_formatDisplayName(p2)}',
+        );
+      }
+    }
+
+    return _TeamDisplayData(
+      isDoubles: false,
+      avatar1: teamLogoUrl,
+      abbr1: _getTeamAbbr(rawName),
+      abbr2: '',
+      displayName: _formatDisplayName(rawName),
+    );
+  }
+
+  Widget _buildSingleAvatarCircle({
+    required double size,
     required String? logoUrl,
-    required String teamName,
-    required String teamAbbr,
+    required String abbr,
+    double fontSize = 13,
   }) {
     final resolvedUrl = _resolveImageUrl(logoUrl);
     return Container(
-      width: 52,
-      height: 52,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: const Color(0xFFF1F5F9),
         border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1.5,
+          color: Colors.white,
+          width: 2.0,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       clipBehavior: Clip.antiAlias,
       alignment: Alignment.center,
@@ -104,26 +179,111 @@ class SportoLiveMatchCarousel extends StatelessWidget {
           ? Image.network(
               resolvedUrl,
               fit: BoxFit.cover,
-              width: 52,
-              height: 52,
+              width: size,
+              height: size,
               errorBuilder: (_, _, _) => Text(
-                teamAbbr,
-                style: const TextStyle(
+                abbr,
+                style: TextStyle(
                   color: AppTheme.webPrimary,
-                  fontSize: 15,
+                  fontSize: fontSize,
                   fontWeight: FontWeight.w800,
                 ),
               ),
             )
           : Text(
-              teamAbbr,
-              style: const TextStyle(
+              abbr,
+              style: TextStyle(
                 color: AppTheme.webPrimary,
-                fontSize: 15,
+                fontSize: fontSize,
                 fontWeight: FontWeight.w800,
               ),
             ),
     );
+  }
+
+  /// Avatar đội: Nếu đánh đôi thì Đội 1 là `Oo` (To bên trái đè Nhỏ bên phải), Đội 2 là `oO` (Nhỏ bên trái đè To bên phải)
+  Widget _buildTeamAvatarSection({
+    required _TeamDisplayData teamData,
+    required bool isTeam1,
+  }) {
+    if (!teamData.isDoubles) {
+      // Đánh đơn (1 VĐV): Avatar to tròn 52x52
+      return _buildSingleAvatarCircle(
+        size: 52,
+        logoUrl: teamData.avatar1,
+        abbr: teamData.abbr1,
+        fontSize: 15,
+      );
+    }
+
+    // Đánh đôi: Xếp lồng dạng `Oo` (Đội 1) hoặc `oO` (Đội 2)
+    if (isTeam1) {
+      // Đội 1: Oo (Avatar 1 to bên trái 42x42, Avatar 2 nhỏ 32x32 đè góc dưới phải)
+      return SizedBox(
+        width: 62,
+        height: 52,
+        child: Stack(
+          alignment: Alignment.centerLeft,
+          children: [
+            // Avatar chính (To)
+            Positioned(
+              left: 0,
+              top: 0,
+              child: _buildSingleAvatarCircle(
+                size: 42,
+                logoUrl: teamData.avatar1,
+                abbr: teamData.abbr1,
+                fontSize: 12,
+              ),
+            ),
+            // Avatar phụ (Nhỏ) đè lên phía dưới bên phải
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: _buildSingleAvatarCircle(
+                size: 32,
+                logoUrl: teamData.avatar2,
+                abbr: teamData.abbr2,
+                fontSize: 9.5,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Đội 2: oO (Avatar 1 nhỏ 32x32 bên trái, Avatar 2 to 42x42 đè lên bên phải)
+      return SizedBox(
+        width: 62,
+        height: 52,
+        child: Stack(
+          alignment: Alignment.centerRight,
+          children: [
+            // Avatar phụ (Nhỏ) bên trái
+            Positioned(
+              left: 0,
+              bottom: 0,
+              child: _buildSingleAvatarCircle(
+                size: 32,
+                logoUrl: teamData.avatar1,
+                abbr: teamData.abbr1,
+                fontSize: 9.5,
+              ),
+            ),
+            // Avatar chính (To) đè lên phía trên bên phải
+            Positioned(
+              right: 0,
+              top: 0,
+              child: _buildSingleAvatarCircle(
+                size: 42,
+                logoUrl: teamData.avatar2,
+                abbr: teamData.abbr2,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override
@@ -180,7 +340,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
 
         // ─── Live Match Cards Carousel (Borderless / White card with beautiful subtle border) ───
         SizedBox(
-          height: 150,
+          height: 155,
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             scrollDirection: Axis.horizontal,
@@ -191,37 +351,33 @@ class SportoLiveMatchCarousel extends StatelessWidget {
               final match = liveMatches[index];
               final tournament = _getTournament(match.tournamentId);
               final tournamentName = _getTournamentName(match);
+
               final rawTeam1Name = match.team1Name.isNotEmpty
                   ? match.team1Name
                   : 'Đội 1';
               final rawTeam2Name = match.team2Name.isNotEmpty
                   ? match.team2Name
                   : 'Đội 2';
-              final displayTeam1Name = _formatDisplayName(rawTeam1Name);
-              final displayTeam2Name = _formatDisplayName(rawTeam2Name);
+
+              final team1Data = _parseTeamData(
+                rawName: rawTeam1Name,
+                teamLogoUrl: match.team1LogoUrl,
+                memberInfos: match.team1MemberInfos,
+              );
+              final team2Data = _parseTeamData(
+                rawName: rawTeam2Name,
+                teamLogoUrl: match.team2LogoUrl,
+                memberInfos: match.team2MemberInfos,
+              );
+
               final score1 = match.score1;
               final score2 = match.score2;
-              final team1Abbr = _getTeamAbbr(rawTeam1Name);
-              final team2Abbr = _getTeamAbbr(rawTeam2Name);
-
-              final team1Avatar = match.team1LogoUrl ??
-                  (match.team1MemberInfos.isNotEmpty
-                      ? match.team1MemberInfos.first.avatarUrl
-                      : null);
-              final team2Avatar = match.team2LogoUrl ??
-                  (match.team2MemberInfos.isNotEmpty
-                      ? match.team2MemberInfos.first.avatarUrl
-                      : null);
 
               return _buildCard(
                 context: context,
                 title: tournamentName,
-                team1Abbr: team1Abbr,
-                team1Name: displayTeam1Name,
-                team1LogoUrl: team1Avatar,
-                team2Abbr: team2Abbr,
-                team2Name: displayTeam2Name,
-                team2LogoUrl: team2Avatar,
+                team1Data: team1Data,
+                team2Data: team2Data,
                 scoreText: '$score1 - $score2',
                 logoUrl: tournament?.logoUrl ?? tournament?.bannerUrl,
                 onTap: () {
@@ -243,18 +399,14 @@ class SportoLiveMatchCarousel extends StatelessWidget {
   Widget _buildCard({
     required BuildContext context,
     required String title,
-    required String team1Abbr,
-    required String team1Name,
-    String? team1LogoUrl,
-    required String team2Abbr,
-    required String team2Name,
-    String? team2LogoUrl,
+    required _TeamDisplayData team1Data,
+    required _TeamDisplayData team2Data,
     required String scoreText,
     String? logoUrl,
     required VoidCallback onTap,
   }) {
     return Container(
-      width: 290,
+      width: 295,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
@@ -280,7 +432,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Top: Tournament Name + Chấm Live đỏ ẩn hiện từ từ (Bỏ nút chia sẻ & bỏ chữ LIVE)
+                // Top: Tournament Name + Chấm Live đỏ ẩn hiện từ từ
                 Row(
                   children: [
                     Container(
@@ -311,30 +463,28 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                   ],
                 ),
 
-                // Middle: Teams với Avatar tròn to đẹp & Tỷ số rõ ràng
+                // Middle: Teams với Avatar xếp kiểu Oo vs oO cho đánh đôi & Tỷ số rõ ràng
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    // Team 1 (hiển thị 2 từ cuối nếu tên từ 3 từ trở lên)
+                    // Team 1 (Oo cho đánh đôi)
                     Expanded(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _buildTeamAvatar(
-                            context: context,
-                            logoUrl: team1LogoUrl,
-                            teamName: team1Name,
-                            teamAbbr: team1Abbr,
+                          _buildTeamAvatarSection(
+                            teamData: team1Data,
+                            isTeam1: true,
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            team1Name,
+                            team1Data.displayName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: context.colors.textPrimary,
-                              fontSize: 12,
+                              fontSize: 11.5,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -344,7 +494,7 @@ class SportoLiveMatchCarousel extends StatelessWidget {
 
                     // Tỷ số trận đấu lớn & rõ ràng
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         scoreText,
                         style: TextStyle(
@@ -356,26 +506,24 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                       ),
                     ),
 
-                    // Team 2 (hiển thị 2 từ cuối nếu tên từ 3 từ trở lên)
+                    // Team 2 (oO cho đánh đôi)
                     Expanded(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _buildTeamAvatar(
-                            context: context,
-                            logoUrl: team2LogoUrl,
-                            teamName: team2Name,
-                            teamAbbr: team2Abbr,
+                          _buildTeamAvatarSection(
+                            teamData: team2Data,
+                            isTeam1: false,
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            team2Name,
+                            team2Data.displayName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: context.colors.textPrimary,
-                              fontSize: 12,
+                              fontSize: 11.5,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
