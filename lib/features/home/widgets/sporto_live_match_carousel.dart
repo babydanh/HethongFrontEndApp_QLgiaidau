@@ -382,11 +382,8 @@ class SportoLiveMatchCarousel extends StatelessWidget {
                 logoUrl: tournament?.logoUrl ?? tournament?.bannerUrl,
                 onTap: () {
                   HapticFeedback.selectionClick();
-                  if (match.tournamentId != null) {
-                    context.push(
-                      '/tournaments/${match.tournamentId}/matches/${match.id}',
-                    );
-                  }
+                  final tId = match.tournamentId ?? '';
+                  context.push('/live/${match.id}${tId.isNotEmpty ? '?tournamentId=$tId' : ''}');
                 },
               );
             },

@@ -456,6 +456,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
+      // ─── Live Hub Route ───
+      GoRoute(
+        path: '/live',
+        builder: (context, state) => const MatchesListScreen(),
+      ),
+
       // ─── Camera Device Pairing Route ───
       GoRoute(
         path: '/live/device-pairing/:communityId',
@@ -470,8 +476,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/live/:matchId',
         builder: (context, state) {
           final matchId = state.pathParameters['matchId']!;
+          final tournamentId = state.uri.queryParameters['tournamentId'] ?? '';
           return LiveScoreScreen(
-            tournamentId: '',
+            tournamentId: tournamentId,
             matchId: matchId,
             isViewer: true,
           );
