@@ -106,23 +106,16 @@ class _LiveTournamentWithMatchesCardState
         final currentPageMatches = displayMatches.sublist(startIndex, endIndex);
 
         return Container(
-          margin: const EdgeInsets.fromLTRB(14, 4, 14, 16),
+          margin: EdgeInsets.zero,
           decoration: BoxDecoration(
             color: colors.bgCard,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: colors.border.withValues(alpha: 0.8),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
+            border: Border(
+              bottom: BorderSide(
+                color: colors.border.withValues(alpha: 0.6),
+                width: 1,
               ),
-            ],
+            ),
           ),
-          clipBehavior: Clip.antiAlias,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -273,6 +266,7 @@ class _LiveTournamentWithMatchesCardState
                     currentPage: safePageIndex,
                   ),
                 ),
+              Container(height: 8, color: colors.bgSurface),
             ],
           ),
         );
