@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,19 +8,17 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
-import 'package:app_quanly_giaidau/providers/notification_provider.dart';
-import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/regions_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
-import 'package:app_quanly_giaidau/core/widgets/sporto_header.dart';
-import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_banner_card.dart';
+import 'package:app_quanly_giaidau/features/home/widgets/sporto_top_category_bar.dart';
+import 'package:app_quanly_giaidau/features/home/widgets/sporto_live_match_carousel.dart';
+import 'package:app_quanly_giaidau/features/home/widgets/sporto_featured_banner_carousel.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
-import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -29,8 +26,6 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:intl/intl.dart';
-
-import 'dart:ui';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
@@ -69,6 +64,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _searchControllers[_currentIndex] ?? _searchControllers[0]!;
 
   // ─── Per-tab filter state ───
+  int _matchSubTab = 1; // 0: Sắp diễn ra, 1: Tỷ số, 2: Yêu thích
   String _exploreSport = 'all';
   String _exploreStatus = 'all';
   String _exploreContent = 'all';
@@ -125,23 +121,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   final ScrollController _scrollController = ScrollController();
-  double _headerScrollProgress = 0.0;
-  bool _isAnimatingToTop = false;
-
-  PageController? _carouselController;
-  Timer? _carouselTimer;
-  int _carouselCurrentPage = 0;
-
-  double get _safeAreaTop => MediaQuery.of(context).padding.top;
-  double get _maxHeaderHeight => 240.0 + _safeAreaTop;
-  double get _minHeaderHeight => 90.0 + _safeAreaTop;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialTab;
-    _scrollController.addListener(_onScroll);
-    _carouselController = PageController(viewportFraction: 1.0);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(authProvider.notifier).init();
     });
@@ -149,56 +133,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Home supports landscape/tablet layouts; do not force portrait here.
   }
 
-  void _startCarouselTimer(int itemCount) {
-    _carouselTimer?.cancel();
-    if (itemCount <= 1) return;
-    _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_carouselController == null ||
-          !_carouselController!.hasClients ||
-          _carouselController!.positions.length != 1) {
-        return;
-      }
-      _carouselCurrentPage = (_carouselCurrentPage + 1) % itemCount;
-      _carouselController!.animateToPage(
-        _carouselCurrentPage,
-        duration: const Duration(milliseconds: 600),
-        curve: Curves.easeInOut,
-      );
-    });
-  }
-
-  void _onScroll() {
-    if (!_scrollController.hasClients || _isAnimatingToTop) return;
-    final double offset = _scrollController.offset;
-    if (offset > 10.0 && _headerScrollProgress == 0.0) {
-      setState(() => _headerScrollProgress = 1.0);
-    }
-  }
-
-  void _expandHeader() async {
-    if (_headerScrollProgress == 1.0) {
-      setState(() {
-        _headerScrollProgress = 0.0;
-        _isAnimatingToTop = true;
-      });
-      await _scrollController.animateTo(
-        0.0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-      if (mounted) {
-        setState(() {
-          _isAnimatingToTop = false;
-        });
-      }
-    }
-  }
-
   @override
   void dispose() {
-    _carouselTimer?.cancel();
-    _carouselController?.dispose();
-    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     for (final controller in _searchControllers.values) {
       controller.dispose();
@@ -232,21 +168,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final tournamentsAsync = ref.watch(tournamentsProvider);
-    final screenSize = MediaQuery.of(context).size;
-    final double safeAreaTop = MediaQuery.of(context).padding.top;
-    final isHomeTab = _currentIndex == 0;
-    final double p = isHomeTab ? _headerScrollProgress : 1.0;
-    final double currentHeaderHeight = isHomeTab
-        ? lerpDouble(_maxHeaderHeight, _minHeaderHeight, p)!
-        : _minHeaderHeight;
-    final double iconsTop = isHomeTab
-        ? lerpDouble(safeAreaTop + 4.0, safeAreaTop + 16.0, p)!
-        : safeAreaTop + 16.0;
-    final double subtitleOpacity = isHomeTab ? (1.0 - p).clamp(0.0, 1.0) : 0.0;
-    final double headerDetailsY = lerpDouble(60.0, 16.0, p)!;
-    final activeHeaderHeight = currentHeaderHeight;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -256,187 +178,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Scaffold(
         backgroundColor: context.colors.bgDark,
         extendBody: true,
-        body: Stack(
-          children: [
-            // Body Content filling top to bottom
-            Positioned.fill(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1280),
-                  child: _buildCurrentTabContent(
-                    tournamentsAsync,
-                    activeHeaderHeight,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              // ─── Modern Top Category Bar (replaces old wave header) ───
+              SportoTopCategoryBar(
+                activeSport: _activeSportFilter,
+                onSportSelected: _setActiveSportFilter,
+
+                onNotificationTap: () => context.push('/notifications'),
+              ),
+
+              // ─── Search Bar (when active / focused) ───
+              if (_shouldShowSearchBar &&
+                  (_searchFocusNode.hasFocus || _activeSearchQuery.isNotEmpty))
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                  child: _buildSearchBar(),
+                ),
+
+              // ─── Main Content ───
+              Expanded(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1280),
+                    child: _buildCurrentTabContent(tournamentsAsync, 0),
                   ),
                 ),
               ),
-            ),
-            // Shared Floating Top Header Stack
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: currentHeaderHeight,
-              child: GestureDetector(
-                onTap: isHomeTab && _headerScrollProgress == 1.0
-                    ? _expandHeader
-                    : null,
-                behavior: HitTestBehavior.translucent,
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Hero(
-                        tag: "Sporto_header_bg",
-                        child: CustomPaint(
-                          size: Size(screenSize.width, currentHeaderHeight),
-                          painter: SportoHeaderPainter(
-                            isLoggedIn: ref.watch(authProvider).isAuthenticated,
-                            colors: context.colors,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: iconsTop,
-                      left: 16.0,
-                      right: 16.0,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Left: Dropdown
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: PopupMenuButton<String>(
-                              onSelected: _setActiveSportFilter,
-                              offset: const Offset(0, 40),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              color: context.colors.bgSurface,
-                              elevation: 8,
-                              itemBuilder: (context) => [
-                                if (_currentIndex != 4)
-                                  _buildPopupMenuItem(l10n.filterAll, 'all'),
-                                ..._activeSportFilterItems(l10n)
-                                    .where((item) => item.$1 != 'all')
-                                    .map(
-                                      (item) =>
-                                          _buildPopupMenuItem(item.$2, item.$1),
-                                    ),
-                              ],
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.18),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.35),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      _activeSportFilter == 'all'
-                                          ? l10n.filterAll
-                                          : AppConstants
-                                                    .sportNames[_activeSportFilter] ??
-                                                _activeSportFilter,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Icon(
-                                      Icons.keyboard_arrow_down_rounded,
-                                      color: Colors.white,
-                                      size: 18,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          // Center: Title for sub-tabs
-                          if (!isHomeTab)
-                            Center(
-                              child: Text(
-                                _currentIndex == 1
-                                    ? l10n.navTournaments
-                                    : _currentIndex == 3
-                                    ? l10n.homeClubTab
-                                    : _currentIndex == 4
-                                    ? l10n.homeRankingsTab
-                                    : l10n.sporto,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 18,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-
-                          // Right: Notification Bell
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: _buildNotificationBellHeader(),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (isHomeTab && subtitleOpacity > 0)
-                      Positioned(
-                        top: safeAreaTop + headerDetailsY,
-                        left: 16.0,
-                        right: 16.0,
-                        child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 180),
-                          curve: Curves.easeOut,
-                          opacity: subtitleOpacity,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (ref.watch(authProvider).isAuthenticated)
-                                GestureDetector(
-                                  onTap: () {
-                                    if (_headerScrollProgress == 1.0) {
-                                      _expandHeader();
-                                    } else {
-                                      _switchTab(2);
-                                    }
-                                  },
-                                  behavior: HitTestBehavior.translucent,
-                                  child: _buildLoggedInHeaderDetails(),
-                                )
-                              else
-                                _buildLoginPillHeader(),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            // Floating Sticky Search Bar pinned directly below collapsed Header
-            if (_shouldShowSearchBar &&
-                (!isHomeTab || _headerScrollProgress > 0.0))
-              Positioned(
-                top: currentHeaderHeight + 4.0,
-                left: 16.0,
-                right: 16.0,
-                child: Opacity(
-                  opacity: isHomeTab ? _headerScrollProgress : 1.0,
-                  child: _buildSearchBar(),
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
         bottomNavigationBar: FloatingBottomNav(
           currentIndex: _currentIndex,
@@ -447,11 +219,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _buildMatchFilterTabs() {
+    final tabs = ['Sắp diễn ra', 'Tỷ số', 'Yêu thích'];
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: List.generate(tabs.length, (idx) {
+          final isSelected = _matchSubTab == idx;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                setState(() => _matchSubTab = idx);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppTheme.webPrimary : null,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  tabs[idx],
+                  style: TextStyle(
+                    color: isSelected
+                        ? Colors.white
+                        : context.colors.textSecondary,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
   Widget _buildCurrentTabContent(
     AsyncValue<List<Tournament>> tournamentsAsync,
     double headerHeight,
   ) {
-    
     switch (_currentIndex) {
       case 0:
         return KeyedSubtree(
@@ -486,6 +301,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   // ═══════════════════════════════════════════════════════
   Widget _buildExploreTab(AsyncValue<List<Tournament>> tournamentsAsync) {
     final l10n = AppLocalizations.of(context)!;
+    final liveMatchesAsync = ref.watch(liveMatchesProvider);
     return Stack(
       children: [
         Positioned.fill(
@@ -518,8 +334,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       tSport == selSport ||
                       tSport.contains(selSport) ||
                       selSport.contains(tSport);
-                  // Search on the match rows below, not only on tournament
-                  // names. This lets users find a player/team inside a group.
                   return sportMatch;
                 }).toList();
 
@@ -540,74 +354,85 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   controller: _scrollController,
                   physics: const BouncingScrollPhysics(),
                   slivers: [
+                    const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+                    // ─── SECTION 1: Đang diễn ra (Live Matches) ───
                     SliverToBoxAdapter(
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        curve: Curves.easeInOut,
-                        height: _headerScrollProgress == 1.0
-                            ? (_minHeaderHeight + 58.0)
-                            : (_maxHeaderHeight + 8.0),
+                      child: SportoLiveMatchCarousel(
+                        liveMatches:
+                            liveMatchesAsync.asData?.value ??
+                            const <MatchModel>[],
+                        tournaments: allTournaments,
+                        onSeeMore: () => context.push('/live'),
                       ),
                     ),
+
+                    // ─── SECTION 2: Giải đấu nổi bật (Featured Banners) ───
                     if (featuredTournaments.isNotEmpty) ...[
                       SliverToBoxAdapter(
-                        child: _buildSectionTitle(
-                          title: l10n.featuredTournaments,
-                          actionLabel: l10n.viewAll,
-                          onAction: () => _switchTab(1),
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          child: KeyedSubtree(
-                            key: ValueKey("featured_$_exploreSport"),
-                            child: _buildTournamentCarousel(
-                              featuredTournaments,
-                            ),
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 6),
+                          child: SportoFeaturedBannerCarousel(
+                            tournaments: featuredTournaments,
+                            onSeeAll: () => _switchTab(1),
                           ),
                         ),
                       ),
                     ],
-                    _TournamentSectionList(
-                      tournaments: allTournaments,
-                      sectionTitle: l10n.liveMatches,
-                      isLive: true,
-                      filterStatus: 'live',
-                      searchQuery: _searchQueries[0] ?? '',
-                      contentFilter: _exploreContent,
-                      bracketFilter: _exploreBracket,
-                      rankedFilter: _exploreRanked,
-                      enabled:
-                          _exploreStatus == 'all' || _exploreStatus == 'live',
-                      emptyMessage: l10n.noLiveMatches,
-                    ),
-                    _TournamentSectionList(
-                      tournaments: allTournaments,
-                      sectionTitle: l10n.upcomingMatches,
-                      filterStatus: 'scheduled',
-                      searchQuery: _searchQueries[0] ?? '',
-                      contentFilter: _exploreContent,
-                      bracketFilter: _exploreBracket,
-                      rankedFilter: _exploreRanked,
-                      enabled:
-                          _exploreStatus == 'all' ||
-                          _exploreStatus == 'scheduled',
-                      emptyMessage: l10n.noUpcomingMatches,
-                    ),
-                    _TournamentSectionList(
-                      tournaments: allTournaments,
-                      sectionTitle: l10n.homeCompletedMatches,
-                      filterStatus: 'completed',
-                      searchQuery: _searchQueries[0] ?? '',
-                      contentFilter: _exploreContent,
-                      bracketFilter: _exploreBracket,
-                      rankedFilter: _exploreRanked,
-                      enabled:
-                          _exploreStatus == 'all' ||
-                          _exploreStatus == 'completed',
-                      emptyMessage: l10n.homeNoCompletedMatches,
-                    ),
+
+                    // ─── SECTION 3: Filter Tabs (Sắp diễn ra | Tỷ số | Yêu thích) ───
+                    SliverToBoxAdapter(child: _buildMatchFilterTabs()),
+
+                    // ─── SECTION 4: Grouped Matches & Tournaments ───
+                    if (_matchSubTab == 0) // Sắp diễn ra
+                      _TournamentSectionList(
+                        tournaments: allTournaments,
+                        sectionTitle: l10n.upcomingMatches,
+                        filterStatus: 'scheduled',
+                        searchQuery: _searchQueries[0] ?? '',
+                        contentFilter: _exploreContent,
+                        bracketFilter: _exploreBracket,
+                        rankedFilter: _exploreRanked,
+                        enabled: true,
+                        emptyMessage: l10n.noUpcomingMatches,
+                      )
+                    else if (_matchSubTab == 1) // Tỷ số (Live + Completed)
+                    ...[
+                      _TournamentSectionList(
+                        tournaments: allTournaments,
+                        sectionTitle: l10n.liveMatches,
+                        isLive: true,
+                        filterStatus: 'live',
+                        searchQuery: _searchQueries[0] ?? '',
+                        contentFilter: _exploreContent,
+                        bracketFilter: _exploreBracket,
+                        rankedFilter: _exploreRanked,
+                        enabled: true,
+                        emptyMessage: l10n.noLiveMatches,
+                      ),
+                      _TournamentSectionList(
+                        tournaments: allTournaments,
+                        sectionTitle: l10n.homeCompletedMatches,
+                        filterStatus: 'completed',
+                        searchQuery: _searchQueries[0] ?? '',
+                        contentFilter: _exploreContent,
+                        bracketFilter: _exploreBracket,
+                        rankedFilter: _exploreRanked,
+                        enabled: true,
+                        emptyMessage: l10n.homeNoCompletedMatches,
+                      ),
+                    ] else // Yêu thích
+                      _TournamentSectionList(
+                        tournaments: allTournaments,
+                        sectionTitle: 'Giải đấu theo dõi',
+                        filterStatus: 'all',
+                        searchQuery: _searchQueries[0] ?? '',
+                        contentFilter: _exploreContent,
+                        bracketFilter: _exploreBracket,
+                        rankedFilter: _exploreRanked,
+                        enabled: true,
+                        emptyMessage: 'Chưa có giải đấu yêu thích nào',
+                      ),
 
                     if (allTournaments.isEmpty)
                       SliverFillRemaining(child: _buildEmpty()),
@@ -615,420 +440,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
                 );
               },
-              loading: () => CustomScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  SliverToBoxAdapter(child: SizedBox(height: _maxHeaderHeight)),
-                  const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                ],
-              ),
-              error: (e, st) => CustomScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  SliverToBoxAdapter(child: SizedBox(height: _maxHeaderHeight)),
-                  SliverFillRemaining(child: _buildErrorState(e)),
-                ],
-              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, st) => Center(child: _buildErrorState(e)),
             ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNotificationBellHeader() {
-    final unreadAsync = ref.watch(unreadCountProvider);
-    final unread = unreadAsync.value ?? 0;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GestureDetector(
-          onTap: () {
-            final auth = ref.read(authProvider);
-            if (!auth.isAuthenticated) {
-              context.push('/login');
-            } else {
-              context.push('/chat');
-            }
-          },
-          child: Container(
-            width: 36.0,
-            height: 36.0,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-            ),
-            alignment: Alignment.center,
-            child: const Icon(
-              Icons.forum_outlined,
-              color: Colors.white,
-              size: 19,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: () => context.push("/notifications"),
-          child: Container(
-            width: 36.0,
-            height: 36.0,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(
-                  Icons.notifications_none_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                if (unread > 0)
-                  Positioned(
-                    top: -2.0,
-                    right: -2.0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 1.5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEF4444),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.white, width: 1.5),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        unread > 99 ? "99+" : "$unread",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 8.5,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  PopupMenuItem<String> _buildPopupMenuItem(String label, String key) {
-    final activeSport = _activeSportFilter;
-    final isSelected =
-        activeSport == key || (key == '' && activeSport == 'all');
-    return PopupMenuItem<String>(
-      value: key,
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? AppTheme.primary : context.colors.textPrimary,
-              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-              fontSize: 13,
-            ),
-          ),
-          if (isSelected) ...[
-            const Spacer(),
-            const Icon(Icons.check_rounded, color: AppTheme.primary, size: 16),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoginPillHeader() {
-    final l10n = AppLocalizations.of(context)!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.homeWelcomeTitle,
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
-            fontSize: 18.0,
-            letterSpacing: -0.3,
-          ),
-        ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () => context.go("/login"),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(20.0),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.login_rounded, color: Colors.white, size: 14),
-                SizedBox(width: 6),
-                Text(
-                  l10n.homeLoginForStats,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLoggedInHeaderDetails() {
-    final l10n = AppLocalizations.of(context)!;
-    final profileAsync = ref.watch(userProfileProvider);
-    final rankingsAsync = ref.watch(userRankingsProvider);
-    final provincesAsync = ref.watch(provincesProvider);
-    return profileAsync.when(
-      data: (profile) {
-        String fullName =
-            profile.fullName ?? profile.email ?? l10n.homeDefaultUser;
-        final provinces = provincesAsync.value ?? [];
-        final province = provinces.firstWhere(
-          (p) => p.code == profile.provinceCode,
-          orElse: () => Province(code: '', name: ''),
-        );
-        final city = province.name.isNotEmpty
-            ? province.name
-            : (profile.provinceCode != null && profile.provinceCode!.isNotEmpty
-                  ? profile.provinceCode!
-                  : l10n.notUpdated);
-
-        return rankingsAsync.when(
-          data: (rankings) {
-            // Lấy môn có số trận thi đấu nhiều nhất / ELO cao nhất
-            final playedRankings =
-                rankings.where((r) => r.matchesPlayed > 0).toList()
-                  ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
-
-            final bestRank = playedRankings.isNotEmpty
-                ? playedRankings.first
-                : null;
-            final hasPlayed = bestRank != null && bestRank.matchesPlayed > 0;
-
-            final sportName = hasPlayed
-                ? (bestRank.categoryName?.trim().isNotEmpty == true
-                      ? bestRank.categoryName!.trim()
-                      : l10n.ranking_sportFallback)
-                : (_activeSportFilter != 'all'
-                      ? l10n.sportDisplayName(_activeSportFilter)
-                      : l10n.ranking_sportFallback);
-
-            final tierName = EloHelpers.getRankTierName(bestRank, l10n);
-            final elo = hasPlayed ? bestRank.eloPoints : 1000;
-            final wins = hasPlayed ? bestRank.matchesWon : 0;
-            final totalMatches = hasPlayed ? bestRank.matchesPlayed : 0;
-            final winRate = totalMatches > 0
-                ? ((wins / totalMatches) * 100).round()
-                : 0;
-
-            final progressInfo = EloHelpers.getEloProgressInfo(elo, l10n);
-            final progressPercent = hasPlayed
-                ? (progressInfo.percent / 100.0).clamp(0.0, 1.0)
-                : 0.0;
-            final progressLabel = hasPlayed
-                ? progressInfo.label
-                : l10n.homeEloStartHint;
-
-            final subtitleText = "$sportName • $city";
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  fullName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  subtitleText,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                ),
-                const SizedBox(height: 6),
-                // 3D Glassmorphism Card (Xích lên cao, gọn gàng)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 9,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.32),
-                      width: 1.2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "$elo ELO",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: -0.3,
-                                ),
-                              ),
-                              Text(
-                                tierName,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Spacer(),
-                          _buildStatTableRow(
-                            l10n.homeMatchesStat,
-                            "$totalMatches",
-                            Colors.white,
-                          ),
-                          const SizedBox(width: 14),
-                          _buildStatTableRow(
-                            l10n.infoWin,
-                            "$wins",
-                            Colors.white,
-                          ),
-                          const SizedBox(width: 14),
-                          _buildStatTableRow(
-                            l10n.homeWinRateStat,
-                            "$winRate%",
-                            const Color(0xFF4ADE80),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 7),
-                      // Progress bar ELO (0% nếu chưa có trận đấu xếp hạng nào)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: progressPercent,
-                          backgroundColor: Colors.white.withValues(alpha: 0.2),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Color(0xFFFFD700),
-                          ),
-                          minHeight: 4,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        progressLabel,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: Colors.white),
-          ),
-          error: (e, _) => _buildHeaderErrorState(e.toString()),
-        );
-      },
-      loading: () =>
-          const Center(child: CircularProgressIndicator(color: Colors.white)),
-      error: (e, _) => _buildHeaderErrorState(e.toString()),
-    );
-  }
-
-  Widget _buildHeaderErrorState(String error) {
-    final l10n = AppLocalizations.of(context)!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Sporto",
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w900,
-            fontSize: 20,
-            letterSpacing: 1.2,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          error.contains("ThrottlerException") ||
-                  error.contains("Too Many Requests")
-              ? l10n.homeBusyMessage
-              : l10n.homeFindTournamentsSubtitle,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 11.5,
-            fontWeight: FontWeight.w500,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatTableRow(String label, String value, Color valueColor) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            color: valueColor,
-            fontSize: 14.0,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.6),
-            fontSize: 10.0,
           ),
         ),
       ],
@@ -2127,153 +1541,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildSectionTitle({
-    required String title,
-
-    bool isLive = false,
-    String? badge,
-    String? actionLabel,
-    VoidCallback? onAction,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18.0,
-              fontWeight: FontWeight.bold,
-              color: context.colors.textPrimary,
-              letterSpacing: -0.3,
-            ),
-          ),
-          if (isLive) ...[
-            const SizedBox(width: 6),
-            Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: Color(0xFFEF4444),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ],
-          if (badge != null) ...[
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEF4444),
-                borderRadius: BorderRadius.circular(6.0),
-              ),
-              child: Text(
-                badge,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 9.0,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            _PulsingDot(),
-          ],
-          const Spacer(),
-          if (actionLabel != null && onAction != null)
-            GestureDetector(
-              onTap: onAction,
-              child: Row(
-                children: [
-                  Text(
-                    actionLabel,
-                    style: const TextStyle(
-                      color: AppTheme.primary,
-                      fontSize: 13.0,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(width: 2),
-                  const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 12.0,
-                    color: AppTheme.primary,
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTournamentCarousel(List<Tournament> items) {
-    if (items.isEmpty) return const SizedBox.shrink();
-
-    // Khởi động timer chuyển trang tự động nếu chưa có
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_carouselTimer == null) {
-        _startCarouselTimer(items.length);
-      }
-    });
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final cardWidth = constraints.maxWidth - 32.0; // padding 16 hai bên
-            final cardHeight = cardWidth / (16 / 9);
-            return SizedBox(
-              height: cardHeight,
-              child: PageView.builder(
-                controller: _carouselController,
-                physics: const BouncingScrollPhysics(),
-                itemCount: items.length,
-                onPageChanged: (index) {
-                  setState(() {
-                    _carouselCurrentPage = index;
-                  });
-                },
-                itemBuilder: (context, i) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: FeaturedTournamentBannerCard(
-                      tournament: items[i],
-                      onTap: () => context.push("/intro/${items[i].id}"),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(items.length, (index) {
-            final isSelected = _carouselCurrentPage == index;
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              width: isSelected ? 16 : 6,
-              height: 6,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppTheme.primary
-                    : context.colors.textMuted.withValues(alpha: 0.35),
-                borderRadius: BorderRadius.circular(100),
-              ),
-            );
-          }),
-        ),
-      ],
-    );
-  }
-
   Widget _buildEmpty() {
     final l10n = AppLocalizations.of(context)!;
     return Center(
@@ -2448,7 +1715,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        SliverToBoxAdapter(child: SizedBox(height: _minHeaderHeight + 58.0)),
+        const SliverToBoxAdapter(child: SizedBox(height: 8)),
         SliverPersistentHeader(
           pinned: true,
           delegate: _StatusFilterDelegate(
@@ -2527,8 +1794,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        SliverToBoxAdapter(child: SizedBox(height: _minHeaderHeight + 58.0)),
-        SliverToBoxAdapter(child: const SizedBox(height: 8)),
+        const SliverToBoxAdapter(child: SizedBox(height: 8)),
         communitiesAsync.when(
           data: (clubs) {
             final filtered = clubs.where((c) {
@@ -2680,7 +1946,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return const Color(0xFFEA580C);
     }
     if (n.contains('pickleball')) {
-      return const Color(0xFF059669);
+      return AppTheme.webSecondary;
     }
     if (n.contains('table tennis') ||
         n.contains('bóng bàn') ||
@@ -2688,7 +1954,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return const Color(0xFFDC2626);
     }
     if (n.contains('bóng đá') || n.contains('football')) {
-      return const Color(0xFF16A34A);
+      return AppTheme.webPrimary;
     }
     if (n.contains('bơi') || n.contains('swim')) return const Color(0xFF2563EB);
     if (n.contains('cờ') || n.contains('chess')) return const Color(0xFF7C3AED);
@@ -2725,7 +1991,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       case 'APPROVAL':
         return const Color(0xFFF59E0B);
       default:
-        return const Color(0xFF059669);
+        return AppTheme.webSecondary;
     }
   }
 
@@ -2781,23 +2047,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         else
                           _buildCardBannerFallback(sportColor, emoji),
 
-                        // Gradient overlay
+                        // Flat Web navy overlay keeps the banner readable without a gradient.
                         Positioned(
                           bottom: 0,
                           left: 0,
                           right: 0,
                           child: Container(
                             height: 60,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.transparent,
-                                  Colors.black.withValues(alpha: 0.55),
-                                ],
-                              ),
-                            ),
+                            color: AppTheme.webPrimary.withValues(alpha: 0.78),
                           ),
                         ),
 
@@ -3017,17 +2274,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildCardBannerFallback(Color sportColor, String emoji) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? const [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF0F172A)]
-              : const [Color(0xFFF8FAFC), Color(0xFFEFF6FF), Color(0xFFE0E7FF)],
-        ),
-      ),
+      color: AppTheme.webPrimary,
       child: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),

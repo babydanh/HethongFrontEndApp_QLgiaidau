@@ -126,6 +126,12 @@ class AppTheme {
   static const Color accent = Color(0xFF22C55E);
   static const Color accentDark = Color(0xFF15803D);
 
+  // Exact Web SportO tokens used by public Home surfaces.
+  static const Color webPrimary = Color(0xFF002E7C);
+  static const Color webSecondary = Color(0xFF3AB5F6);
+  static const Color webPrimaryLight = Color(0xFFEFF4FC);
+  static const Color webAccent = Color(0xFFD6E2F7);
+
   // ─── Role Colors ───
   static const Color adminColor = Color(0xFFEF4444);
   static const Color refereeColor = Color(0xFFF59E0B);

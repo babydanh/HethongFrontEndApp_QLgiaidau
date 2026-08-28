@@ -231,5 +231,10 @@ final viewerCountProvider = StreamProvider.autoDispose.family<int, String>((
 
   return socketService.onViewerCount
       .where((data) => data['matchId'] == matchId)
-      .map((data) => (data['viewerCount'] as num?)?.toInt() ?? 1);
+      .map((data) {
+        final rawCount = data['viewerCount'];
+        if (rawCount is! num || !rawCount.isFinite) return 0;
+        final count = rawCount.toInt();
+        return count < 0 ? 0 : count;
+      });
 });

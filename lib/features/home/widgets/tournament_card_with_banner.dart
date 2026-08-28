@@ -276,16 +276,7 @@ class _TournamentCardWithBannerState
                             resolvedBannerUrl,
                             fit: BoxFit.cover,
                             errorBuilder: (_, _, _) => Container(
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    AppTheme.primary,
-                                    AppTheme.primaryDark,
-                                  ],
-                                ),
-                              ),
+                              color: AppTheme.webPrimary,
                               child: Center(
                                 child: Image.asset(
                                   "assets/images/sporto_v1_with_text.png",
@@ -297,16 +288,7 @@ class _TournamentCardWithBannerState
                           )
                         else
                           Container(
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  AppTheme.primary,
-                                  AppTheme.primaryDark,
-                                ],
-                              ),
-                            ),
+                            color: AppTheme.webPrimary,
                             child: Center(
                               child: Image.asset(
                                 "assets/images/sporto_v1_with_text.png",
@@ -472,7 +454,7 @@ class _TournamentCardWithBannerState
                                     style: const TextStyle(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF10B981),
+                                      color: AppTheme.webSecondary,
                                     ),
                                   ),
                                   Text(

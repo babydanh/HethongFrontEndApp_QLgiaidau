@@ -20,14 +20,20 @@ class BottomNavClipper extends CustomClipper<Path> {
     path.quadraticBezierTo(0, 0, 24, 0);
     path.lineTo(centerX - radius - 12, 0);
     path.cubicTo(
-      centerX - radius + 2, 0,
-      centerX - radius + 2, radius + 2,
-      centerX, radius + 2,
+      centerX - radius + 2,
+      0,
+      centerX - radius + 2,
+      radius + 2,
+      centerX,
+      radius + 2,
     );
     path.cubicTo(
-      centerX + radius - 2, radius + 2,
-      centerX + radius - 2, 0,
-      centerX + radius + 12, 0,
+      centerX + radius - 2,
+      radius + 2,
+      centerX + radius - 2,
+      0,
+      centerX + radius + 12,
+      0,
     );
     path.lineTo(w - 24, 0);
     path.quadraticBezierTo(w, 0, w, 24);
@@ -72,14 +78,20 @@ class BottomNavCurvePainter extends CustomPainter {
     path.quadraticBezierTo(0, 0, 24, 0);
     path.lineTo(centerX - radius - 12, 0);
     path.cubicTo(
-      centerX - radius + 2, 0,
-      centerX - radius + 2, radius + 2,
-      centerX, radius + 2,
+      centerX - radius + 2,
+      0,
+      centerX - radius + 2,
+      radius + 2,
+      centerX,
+      radius + 2,
     );
     path.cubicTo(
-      centerX + radius - 2, radius + 2,
-      centerX + radius - 2, 0,
-      centerX + radius + 12, 0,
+      centerX + radius - 2,
+      radius + 2,
+      centerX + radius - 2,
+      0,
+      centerX + radius + 12,
+      0,
     );
     path.lineTo(w - 24, 0);
     path.quadraticBezierTo(w, 0, w, 24);
@@ -94,14 +106,20 @@ class BottomNavCurvePainter extends CustomPainter {
       ..quadraticBezierTo(0, 0, 24, 0)
       ..lineTo(centerX - radius - 12, 0)
       ..cubicTo(
-        centerX - radius + 2, 0,
-        centerX - radius + 2, radius + 2,
-        centerX, radius + 2,
+        centerX - radius + 2,
+        0,
+        centerX - radius + 2,
+        radius + 2,
+        centerX,
+        radius + 2,
       )
       ..cubicTo(
-        centerX + radius - 2, radius + 2,
-        centerX + radius - 2, 0,
-        centerX + radius + 12, 0,
+        centerX + radius - 2,
+        radius + 2,
+        centerX + radius - 2,
+        0,
+        centerX + radius + 12,
+        0,
       )
       ..lineTo(w - 24, 0)
       ..quadraticBezierTo(w, 0, w, 24);
@@ -136,7 +154,11 @@ class FloatingBottomNav extends ConsumerWidget {
     final playedRankings = rankings.where((r) => r.matchesPlayed > 0).toList()
       ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
     final bestRanking = playedRankings.isEmpty ? null : playedRankings.first;
-    final tierColor = RankTierColors.isRanked(bestRanking?.tierName, matchesPlayed: bestRanking?.matchesPlayed)
+    final tierColor =
+        RankTierColors.isRanked(
+          bestRanking?.tierName,
+          matchesPlayed: bestRanking?.matchesPlayed,
+        )
         ? RankTierColors.fromTierName(bestRanking?.tierName)
         : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0));
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
@@ -144,10 +166,16 @@ class FloatingBottomNav extends ConsumerWidget {
     const double navBarHeight = 70.0;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    const activeColor = AppTheme.primary;
-    final inactiveColor = isDark ? Colors.white.withValues(alpha: 0.4) : const Color(0xFF94A3B8);
-    final bgColor = isDark ? const Color(0xFF0A0A0A).withValues(alpha: 0.92) : Colors.white.withValues(alpha: 0.92);
-    final borderSide = isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.06);
+    const activeColor = AppTheme.webSecondary;
+    final inactiveColor = isDark
+        ? Colors.white.withValues(alpha: 0.4)
+        : const Color(0xFF94A3B8);
+    final bgColor = isDark
+        ? const Color(0xFF0A0A0A).withValues(alpha: 0.92)
+        : Colors.white.withValues(alpha: 0.92);
+    final borderSide = isDark
+        ? Colors.white.withValues(alpha: 0.06)
+        : Colors.black.withValues(alpha: 0.06);
 
     return Stack(
       clipBehavior: Clip.none,
@@ -170,11 +198,39 @@ class FloatingBottomNav extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildNavItem(0, Icons.explore_outlined, Icons.explore_rounded, l10n.navExplore, activeColor, inactiveColor),
-                    _buildNavItem(1, Icons.emoji_events_outlined, Icons.emoji_events_rounded, l10n.navTournaments, activeColor, inactiveColor),
+                    _buildNavItem(
+                      0,
+                      Icons.explore_outlined,
+                      Icons.explore_rounded,
+                      l10n.navExplore,
+                      activeColor,
+                      inactiveColor,
+                    ),
+                    _buildNavItem(
+                      1,
+                      Icons.emoji_events_outlined,
+                      Icons.emoji_events_rounded,
+                      l10n.navTournaments,
+                      activeColor,
+                      inactiveColor,
+                    ),
                     const SizedBox(width: 52),
-                    _buildNavItem(3, Icons.people_outline_rounded, Icons.people_rounded, l10n.navClubs, activeColor, inactiveColor),
-                    _buildNavItem(4, Icons.leaderboard_outlined, Icons.leaderboard_rounded, l10n.navRankings, activeColor, inactiveColor),
+                    _buildNavItem(
+                      3,
+                      Icons.people_outline_rounded,
+                      Icons.people_rounded,
+                      l10n.navClubs,
+                      activeColor,
+                      inactiveColor,
+                    ),
+                    _buildNavItem(
+                      4,
+                      Icons.leaderboard_outlined,
+                      Icons.leaderboard_rounded,
+                      l10n.navRankings,
+                      activeColor,
+                      inactiveColor,
+                    ),
                   ],
                 ),
               ),
@@ -201,22 +257,25 @@ class FloatingBottomNav extends ConsumerWidget {
                     height: 52,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: currentIndex == 2
-                          ? const LinearGradient(colors: [AppTheme.primaryDark, AppTheme.primary])
-                          : null,
-                      color: currentIndex == 2 ? null : (isDark ? const Color(0xFF1A1A1A) : Colors.white),
+                      color: currentIndex == 2
+                          ? AppTheme.webPrimary
+                          : (isDark ? const Color(0xFF1A1A1A) : Colors.white),
                       border: Border.all(color: tierColor, width: 3),
                       boxShadow: [
                         BoxShadow(
                           color: currentIndex == 2
-                              ? AppTheme.primary.withValues(alpha: 0.35)
+                              ? AppTheme.webSecondary.withValues(alpha: 0.35)
                               : Colors.black.withValues(alpha: 0.06),
                           blurRadius: currentIndex == 2 ? 12 : 6,
                           offset: const Offset(0, 3),
                         ),
                       ],
                     ),
-                    child: _buildAvatarContent(isLoggedIn, avatarUrl, currentIndex == 2),
+                    child: _buildAvatarContent(
+                      isLoggedIn,
+                      avatarUrl,
+                      currentIndex == 2,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -225,11 +284,12 @@ class FloatingBottomNav extends ConsumerWidget {
                   height: 3,
                   width: currentIndex == 2 ? 14 : 0,
                   decoration: BoxDecoration(
-                    color: AppTheme.primary,
+                    color: AppTheme.webSecondary,
+
                     borderRadius: BorderRadius.circular(2),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primary.withValues(alpha: 0.5),
+                        color: AppTheme.webSecondary.withValues(alpha: 0.5),
                         blurRadius: 4,
                       ),
                     ],
@@ -243,7 +303,14 @@ class FloatingBottomNav extends ConsumerWidget {
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label, Color activeColor, Color inactiveColor) {
+  Widget _buildNavItem(
+    int index,
+    IconData icon,
+    IconData activeIcon,
+    String label,
+    Color activeColor,
+    Color inactiveColor,
+  ) {
     final isSelected = currentIndex == index;
 
     return GestureDetector(
@@ -295,7 +362,12 @@ class FloatingBottomNav extends ConsumerWidget {
                 color: activeColor,
                 borderRadius: BorderRadius.circular(2),
                 boxShadow: isSelected
-                    ? [BoxShadow(color: activeColor.withValues(alpha: 0.4), blurRadius: 3)]
+                    ? [
+                        BoxShadow(
+                          color: activeColor.withValues(alpha: 0.4),
+                          blurRadius: 3,
+                        ),
+                      ]
                     : null,
               ),
             ),
@@ -305,23 +377,41 @@ class FloatingBottomNav extends ConsumerWidget {
     );
   }
 
-  Widget _buildAvatarContent(bool isLoggedIn, String? avatarUrl, bool isActive) {
+  Widget _buildAvatarContent(
+    bool isLoggedIn,
+    String? avatarUrl,
+    bool isActive,
+  ) {
     if (!isLoggedIn) {
-      return Icon(Icons.person_rounded, color: isActive ? Colors.white : Colors.grey, size: 24);
+      return Icon(
+        Icons.person_rounded,
+        color: isActive ? Colors.white : Colors.grey,
+        size: 24,
+      );
     }
     if (avatarUrl != null && avatarUrl.isNotEmpty) {
       return ClipOval(
         child: Image.network(
           avatarUrl,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => Icon(Icons.person_rounded, color: isActive ? Colors.white : Colors.grey, size: 24),
+          errorBuilder: (context, error, stackTrace) => Icon(
+            Icons.person_rounded,
+            color: isActive ? Colors.white : Colors.grey,
+            size: 24,
+          ),
           loadingBuilder: (context, child, progress) {
             if (progress == null) return child;
-            return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+            return const Center(
+              child: CircularProgressIndicator(strokeWidth: 2),
+            );
           },
         ),
       );
     }
-    return Icon(Icons.person_rounded, color: isActive ? Colors.white : Colors.grey, size: 24);
+    return Icon(
+      Icons.person_rounded,
+      color: isActive ? Colors.white : Colors.grey,
+      size: 24,
+    );
   }
 }

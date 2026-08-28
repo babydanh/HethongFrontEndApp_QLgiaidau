@@ -59,7 +59,7 @@ class LiveScoreScreen extends ConsumerStatefulWidget {
 }
 
 class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final _maxScoreController = TextEditingController(text: '21');
   final _timeLimitController = TextEditingController();
   bool _winByTwo = true;
@@ -142,6 +142,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 2, vsync: this);
 
     _livePulseCtrl = AnimationController(
@@ -159,7 +160,18 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final socketService = ref.read(matchSocketServiceProvider);
+    if (state == AppLifecycleState.resumed) {
+      socketService.connect(widget.matchId);
+    } else {
+      socketService.leave(widget.matchId);
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _maxScoreController.dispose();
     _timeLimitController.dispose();
     _tabController.dispose();
