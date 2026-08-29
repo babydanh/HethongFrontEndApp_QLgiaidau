@@ -284,91 +284,23 @@ class _LiveTournamentWithMatchesCardState
     required int currentPage,
   }) {
     final colors = context.colors;
-    final visiblePages = <int>{};
-    if (totalPages <= 5) {
-      visiblePages.addAll(List<int>.generate(totalPages, (index) => index));
-    } else {
-      visiblePages.add(0);
-      visiblePages.add(totalPages - 1);
-      visiblePages.add(currentPage);
-      if (currentPage > 0) visiblePages.add(currentPage - 1);
-      if (currentPage < totalPages - 1) visiblePages.add(currentPage + 1);
-    }
+    final startIndex = currentPage * _pageSize + 1;
+    final endIndex = ((currentPage + 1) * _pageSize).clamp(1, totalMatches);
 
-    final orderedPages = visiblePages.toList()..sort();
-    final pageItems = <Widget>[];
-    for (var index = 0; index < orderedPages.length; index++) {
-      final page = orderedPages[index];
-      if (index > 0 && page - orderedPages[index - 1] > 1) {
-        pageItems.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Text(
-              '…',
-              style: TextStyle(color: colors.textMuted, fontSize: 13),
-            ),
-          ),
-        );
-      }
-      final selected = page == currentPage;
-      pageItems.add(
-        InkWell(
-          onTap: selected
-              ? null
-              : () => setState(() => _currentMatchIndex = page),
-          borderRadius: BorderRadius.circular(7),
-          child: Container(
-            width: 30,
-            height: 30,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: selected ? AppTheme.primary : Colors.transparent,
-              borderRadius: BorderRadius.circular(7),
-              border: Border.all(
-                color: selected ? AppTheme.primary : colors.border,
-              ),
-            ),
-            child: Text(
-              '${page + 1}',
-              style: TextStyle(
-                color: selected ? Colors.white : colors.textSecondary,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Column(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              '${l10n.userProfileTotalMatches}: $totalMatches',
-              style: TextStyle(
-                color: colors.textMuted,
-                fontSize: 11.5,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            if (totalPages > 1)
-              Text(
-                '${currentPage + 1}/$totalPages',
-                style: TextStyle(
-                  color: colors.textMuted,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-          ],
+        Text(
+          'Trận $startIndex - $endIndex / $totalMatches',
+          style: TextStyle(
+            color: colors.textMuted,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        if (totalPages > 1) ...[
-          const SizedBox(height: 8),
+        if (totalPages > 1)
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               _buildPageArrow(
                 context,
@@ -376,9 +308,17 @@ class _LiveTournamentWithMatchesCardState
                 enabled: currentPage > 0,
                 onPressed: () => setState(() => _currentMatchIndex--),
               ),
-              const SizedBox(width: 6),
-              ...pageItems,
-              const SizedBox(width: 6),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Text(
+                  '${currentPage + 1} / $totalPages',
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
               _buildPageArrow(
                 context,
                 icon: Icons.chevron_right_rounded,
@@ -387,7 +327,6 @@ class _LiveTournamentWithMatchesCardState
               ),
             ],
           ),
-        ],
       ],
     );
   }
