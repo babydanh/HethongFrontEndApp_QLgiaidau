@@ -85,17 +85,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   DateTime? _tournamentEndDate;
 
   // ─── Server-side Cursor Pagination states (Tab 1: Giải đấu) ───
-  final Map<int, List<Tournament>> _serverTournaments = {};
-  final Map<int, String?> _serverTournamentCursors = {0: null};
-  int _serverTournamentPageIndex = 0;
-  bool _isTournamentServerLoading = false;
+  final List<Tournament> _serverTournamentsList = [];
+  String? _serverTournamentNextCursor;
+  bool _isTournamentInitialLoading = true;
+  bool _isTournamentLoadingMore = false;
   bool _serverTournamentHasMore = false;
 
   // ─── Server-side Cursor Pagination states (Tab 3: Câu lạc bộ) ───
-  final Map<int, List<Community>> _serverClubs = {};
-  final Map<int, String?> _serverClubCursors = {0: null};
-  int _serverClubPageIndex = 0;
-  bool _isClubServerLoading = false;
+  final List<Community> _serverClubsList = [];
+  String? _serverClubNextCursor;
+  bool _isClubInitialLoading = true;
+  bool _isClubLoadingMore = false;
   bool _serverClubHasMore = false;
   static const int _clubsPageSize = 6;
 
@@ -128,18 +128,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _resetClubCursorPagination();
   }
 
-  Future<void> _fetchServerTournamentPage(int pageIndex) async {
-    if (_serverTournaments.containsKey(pageIndex)) {
-      setState(() => _serverTournamentPageIndex = pageIndex);
-      return;
+  Future<void> _fetchServerTournamentPage({bool isLoadMore = false}) async {
+    if (isLoadMore) {
+      if (_isTournamentLoadingMore ||
+          !_serverTournamentHasMore ||
+          _serverTournamentNextCursor == null) {
+        return;
+      }
+      setState(() => _isTournamentLoadingMore = true);
+    } else {
+      setState(() => _isTournamentInitialLoading = true);
     }
-    if (_isTournamentServerLoading) return;
-    setState(() => _isTournamentServerLoading = true);
 
     try {
       final repo = ref.read(tournamentRepositoryProvider);
       final result = await repo.getPublicTournamentsPaged(
-        cursor: _serverTournamentCursors[pageIndex],
+        cursor: isLoadMore ? _serverTournamentNextCursor : null,
         limit: 6,
         sport: _tournamentSport,
         status: _tournamentStatus,
@@ -155,45 +159,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
       if (mounted) {
         setState(() {
-          _serverTournaments[pageIndex] = result.tournaments;
-          _serverTournamentHasMore = result.hasMore;
-          if (result.nextCursor != null && result.nextCursor!.isNotEmpty) {
-            _serverTournamentCursors[pageIndex + 1] = result.nextCursor;
+          if (isLoadMore) {
+            final existingIds =
+                _serverTournamentsList.map((t) => t.id).toSet();
+            final uniqueNew = result.tournaments
+                .where((t) => !existingIds.contains(t.id));
+            _serverTournamentsList.addAll(uniqueNew);
+          } else {
+            _serverTournamentsList.clear();
+            _serverTournamentsList.addAll(result.tournaments);
           }
-          _serverTournamentPageIndex = pageIndex;
-          _isTournamentServerLoading = false;
+          _serverTournamentNextCursor = result.nextCursor;
+          _serverTournamentHasMore =
+              result.hasMore && (result.nextCursor?.isNotEmpty ?? false);
+          _isTournamentInitialLoading = false;
+          _isTournamentLoadingMore = false;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isTournamentServerLoading = false);
+        setState(() {
+          _isTournamentInitialLoading = false;
+          _isTournamentLoadingMore = false;
+        });
       }
     }
   }
 
   void _resetTournamentCursorPagination() {
-    setState(() {
-      _serverTournaments.clear();
-      _serverTournamentCursors.clear();
-      _serverTournamentCursors[0] = null;
-      _serverTournamentPageIndex = 0;
-      _serverTournamentHasMore = false;
-    });
-    _fetchServerTournamentPage(0);
+    _fetchServerTournamentPage(isLoadMore: false);
   }
 
-  Future<void> _fetchServerClubPage(int pageIndex) async {
-    if (_serverClubs.containsKey(pageIndex)) {
-      setState(() => _serverClubPageIndex = pageIndex);
-      return;
+  Future<void> _fetchServerClubPage({bool isLoadMore = false}) async {
+    if (isLoadMore) {
+      if (_isClubLoadingMore ||
+          !_serverClubHasMore ||
+          _serverClubNextCursor == null) {
+        return;
+      }
+      setState(() => _isClubLoadingMore = true);
+    } else {
+      setState(() => _isClubInitialLoading = true);
     }
-    if (_isClubServerLoading) return;
-    setState(() => _isClubServerLoading = true);
 
     try {
       final repo = ref.read(communityRepositoryProvider);
       final result = await repo.getCommunitiesPaged(
-        cursor: _serverClubCursors[pageIndex],
+        cursor: isLoadMore ? _serverClubNextCursor : null,
         limit: _clubsPageSize,
         search: _searchQueries[3]?.trim(),
         provinceCode: _clubProvinceCode,
@@ -202,31 +214,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
       if (mounted) {
         setState(() {
-          _serverClubs[pageIndex] = result.communities;
-          _serverClubHasMore = result.hasMore;
-          if (result.nextCursor != null && result.nextCursor!.isNotEmpty) {
-            _serverClubCursors[pageIndex + 1] = result.nextCursor;
+          if (isLoadMore) {
+            final existingIds = _serverClubsList.map((c) => c.id).toSet();
+            final uniqueNew = result.communities
+                .where((c) => !existingIds.contains(c.id));
+            _serverClubsList.addAll(uniqueNew);
+          } else {
+            _serverClubsList.clear();
+            _serverClubsList.addAll(result.communities);
           }
-          _serverClubPageIndex = pageIndex;
-          _isClubServerLoading = false;
+          _serverClubNextCursor = result.nextCursor;
+          _serverClubHasMore =
+              result.hasMore && (result.nextCursor?.isNotEmpty ?? false);
+          _isClubInitialLoading = false;
+          _isClubLoadingMore = false;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isClubServerLoading = false);
+        setState(() {
+          _isClubInitialLoading = false;
+          _isClubLoadingMore = false;
+        });
       }
     }
   }
 
   void _resetClubCursorPagination() {
-    setState(() {
-      _serverClubs.clear();
-      _serverClubCursors.clear();
-      _serverClubCursors[0] = null;
-      _serverClubPageIndex = 0;
-      _serverClubHasMore = false;
-    });
-    _fetchServerClubPage(0);
+    _fetchServerClubPage(isLoadMore: false);
   }
 
   List<(String, String)> _activeSportFilterItems(AppLocalizations l10n) {
@@ -251,8 +266,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     _currentIndex = widget.initialTab;
     _carouselController = PageController(viewportFraction: 1.0);
-    _fetchServerTournamentPage(0);
-    _fetchServerClubPage(0);
+    _fetchServerTournamentPage(isLoadMore: false);
+    _fetchServerClubPage(isLoadMore: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(authProvider.notifier).init();
     });
@@ -305,10 +320,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       _currentIndex = index;
     });
-    if (index == 1 && _serverTournaments.isEmpty) {
-      _fetchServerTournamentPage(0);
-    } else if (index == 3 && _serverClubs.isEmpty) {
-      _fetchServerClubPage(0);
+    if (index == 1 && _serverTournamentsList.isEmpty) {
+      _fetchServerTournamentPage(isLoadMore: false);
+    } else if (index == 3 && _serverClubsList.isEmpty) {
+      _fetchServerClubPage(isLoadMore: false);
     }
   }
 
@@ -2209,7 +2224,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const SizedBox(height: 16),
           Text(
             l10n.homeNoTournaments,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16.0,
               fontWeight: FontWeight.bold,
               color: Color(0xFF0F172A),
@@ -2218,7 +2233,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const SizedBox(height: 6),
           Text(
             l10n.homeNoTournamentsHint,
-            style: TextStyle(fontSize: 13.0, color: Color(0xFF94A3B8)),
+            style: const TextStyle(fontSize: 13.0, color: Color(0xFF94A3B8)),
           ),
         ],
       ),
@@ -2226,18 +2241,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════
-  //  TAB 1: GIẢI ĐẤU (Tournaments) — Server-Side Cursor Pagination
+  //  TAB 1: GIẢI ĐẤU (Tournaments) — Server-Side Cursor Stream (Load More)
   // ═══════════════════════════════════════════════════════
   Widget _buildTournamentsTab() {
     final l10n = AppLocalizations.of(context)!;
-    final currentList =
-        _serverTournaments[_serverTournamentPageIndex] ?? const [];
-    final canPrev =
-        _serverTournamentPageIndex > 0 && !_isTournamentServerLoading;
-    final canNext =
-        (_serverTournamentHasMore ||
-            _serverTournaments.containsKey(_serverTournamentPageIndex + 1)) &&
-        !_isTournamentServerLoading;
+    final currentList = _serverTournamentsList;
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
@@ -2266,7 +2274,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
         ),
-        if (_isTournamentServerLoading && currentList.isEmpty)
+        if (_isTournamentInitialLoading && currentList.isEmpty)
           const SliverFillRemaining(
             child: Center(
               child: CircularProgressIndicator(color: AppTheme.primary),
@@ -2309,19 +2317,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
           SliverToBoxAdapter(
-            child: _buildCursorPaginationBar(
-              currentPage: _serverTournamentPageIndex,
-              isLoading: _isTournamentServerLoading,
-              canPrev: canPrev,
-              canNext: canNext,
-              onPrev: canPrev
-                  ? () =>
-                      _fetchServerTournamentPage(_serverTournamentPageIndex - 1)
-                  : null,
-              onNext: canNext
-                  ? () =>
-                      _fetchServerTournamentPage(_serverTournamentPageIndex + 1)
-                  : null,
+            child: _buildCursorLoadMoreBar(
+              isLoadingMore: _isTournamentLoadingMore,
+              hasMore: _serverTournamentHasMore,
+              loadMoreLabel: 'Xem thêm giải đấu',
+              allLoadedLabel: 'Đã hiển thị tất cả giải đấu',
+              onLoadMore: () =>
+                  _fetchServerTournamentPage(isLoadMore: true),
             ),
           ),
         ],
@@ -2329,142 +2331,86 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildCursorPaginationBar({
-    required int currentPage,
-    required bool isLoading,
-    required bool canPrev,
-    required bool canNext,
-    required VoidCallback? onPrev,
-    required VoidCallback? onNext,
+  Widget _buildCursorLoadMoreBar({
+    required bool isLoadingMore,
+    required bool hasMore,
+    required String loadMoreLabel,
+    required String allLoadedLabel,
+    required VoidCallback? onLoadMore,
   }) {
     final colors = context.colors;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.border.withValues(alpha: 0.6)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Text(
-                  'Trang ${currentPage + 1}',
-                  style: TextStyle(
-                    color: colors.textMuted,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+      child: Center(
+        child: hasMore
+            ? SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonal(
+                  onPressed: isLoadingMore ? null : onLoadMore,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colors.bgCard,
+                    foregroundColor: AppTheme.primary,
+                    side: BorderSide(
+                        color: colors.border.withValues(alpha: 0.8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
+                  child: isLoadingMore
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            color: AppTheme.primary,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.expand_more_rounded, size: 20),
+                            const SizedBox(width: 6),
+                            Text(
+                              loadMoreLabel,
+                              style: const TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
-                if (isLoading) ...[
-                  const SizedBox(width: 8),
-                  const SizedBox(
-                    width: 12,
-                    height: 12,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppTheme.primary,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            Row(
-              children: [
-                InkWell(
-                  onTap: onPrev,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: canPrev ? colors.bgSurface : colors.bgDark,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: canPrev
-                            ? colors.border
-                            : colors.border.withValues(alpha: 0.3),
+              )
+            : Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Divider(
+                        color: colors.border.withValues(alpha: 0.5),
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.chevron_left_rounded,
-                          size: 16,
-                          color: canPrev
-                              ? colors.textPrimary
-                              : colors.textMuted.withValues(alpha: 0.4),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        allLoadedLabel,
+                        style: TextStyle(
+                          color: colors.textMuted.withValues(alpha: 0.6),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(width: 2),
-                        Text(
-                          'Trước',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: canPrev
-                                ? colors.textPrimary
-                                : colors.textMuted.withValues(alpha: 0.4),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                InkWell(
-                  onTap: onNext,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: canNext ? AppTheme.primary : colors.bgDark,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: canNext
-                            ? AppTheme.primary
-                            : colors.border.withValues(alpha: 0.3),
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Sau',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: canNext
-                                ? Colors.white
-                                : colors.textMuted.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        const SizedBox(width: 2),
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          size: 16,
-                          color: canNext
-                              ? Colors.white
-                              : colors.textMuted.withValues(alpha: 0.4),
-                        ),
-                      ],
+                    Expanded(
+                      child: Divider(
+                        color: colors.border.withValues(alpha: 0.5),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
       ),
     );
   }
@@ -2481,18 +2427,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildClubListWithApi() {
     final l10n = AppLocalizations.of(context)!;
-    final currentList = _serverClubs[_serverClubPageIndex] ?? const [];
-    final canPrev = _serverClubPageIndex > 0 && !_isClubServerLoading;
-    final canNext = (_serverClubHasMore ||
-            _serverClubs.containsKey(_serverClubPageIndex + 1)) &&
-        !_isClubServerLoading;
+    final currentList = _serverClubsList;
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(child: SizedBox(height: _headerHeight + 52.0)),
         SliverToBoxAdapter(child: const SizedBox(height: 8)),
-        if (_isClubServerLoading && currentList.isEmpty)
+        if (_isClubInitialLoading && currentList.isEmpty)
           const SliverFillRemaining(
             child: Center(
               child: CircularProgressIndicator(color: AppTheme.primary),
@@ -2553,17 +2495,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               SliverToBoxAdapter(
-                child: _buildCursorPaginationBar(
-                  currentPage: _serverClubPageIndex,
-                  isLoading: _isClubServerLoading,
-                  canPrev: canPrev,
-                  canNext: canNext,
-                  onPrev: canPrev
-                      ? () => _fetchServerClubPage(_serverClubPageIndex - 1)
-                      : null,
-                  onNext: canNext
-                      ? () => _fetchServerClubPage(_serverClubPageIndex + 1)
-                      : null,
+                child: _buildCursorLoadMoreBar(
+                  isLoadingMore: _isClubLoadingMore,
+                  hasMore: _serverClubHasMore,
+                  loadMoreLabel: 'Xem thêm câu lạc bộ',
+                  allLoadedLabel: 'Đã hiển thị tất cả câu lạc bộ',
+                  onLoadMore: () =>
+                      _fetchServerClubPage(isLoadMore: true),
                 ),
               ),
             ],
