@@ -64,6 +64,24 @@ abstract class ITournamentRepository {
   });
   Stream<Tournament?> watch(String id);
   Stream<List<Tournament>> watchAll();
+  Future<({
+    List<Tournament> tournaments,
+    String? nextCursor,
+    bool hasMore,
+  })> getPublicTournamentsPaged({
+    String? cursor,
+    int limit = 6,
+    String? sport,
+    String? status,
+    String? search,
+    String? content,
+    String? bracket,
+    String? ranked,
+    String? province,
+    String? ward,
+    DateTime? startDate,
+    DateTime? endDate,
+  });
   Future<void> update(String id, Map<String, dynamic> data);
   Future<void> updateStatus(String id, String status);
   Future<void> updateToken(String id, String role, String newToken);

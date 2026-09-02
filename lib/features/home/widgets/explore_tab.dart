@@ -191,6 +191,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
 
   List<Tournament> get _liveTournaments => _filtered
       .where((t) => t.status == AppConstants.statusInProgress)
+      .take(6)
       .toList();
 
   @override
@@ -277,18 +278,24 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
               title: l10n.exploreUpcomingTitle,
             ),
           ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate((ctx, i) {
-              final list = widget.tournaments.isNotEmpty
-                  ? widget.tournaments
-                  : _filtered;
-              if (list.isEmpty) return const SizedBox.shrink();
-              return LiveTournamentWithMatchesCard(
-                tournament: list[i % list.length],
-                filterStatus: 'scheduled',
-              );
-            }, childCount: widget.tournaments.isNotEmpty ? 1 : 0),
-          ),
+            SliverList(
+              delegate: SliverChildBuilderDelegate((ctx, i) {
+                final list = widget.tournaments.isNotEmpty
+                    ? widget.tournaments
+                    : _filtered;
+                if (list.isEmpty) return const SizedBox.shrink();
+                return LiveTournamentWithMatchesCard(
+                  tournament: list[i],
+                  filterStatus: 'scheduled',
+                );
+              },
+                  childCount: math.min(
+                    widget.tournaments.isNotEmpty
+                        ? widget.tournaments.length
+                        : _filtered.length,
+                    6,
+                  )),
+            ),
 
           // ── Empty State ──
           if (_filtered.isEmpty)
@@ -1860,7 +1867,7 @@ class _RecentCompletedMatches extends ConsumerWidget {
                 match.completedAt != null);
       });
       if (hasCompleted) completedTournaments.add(tournament);
-      if (completedTournaments.length == 3) break;
+      if (completedTournaments.length == 6) break;
     }
 
     if (completedTournaments.isEmpty && hasLoadingMatches) {

@@ -1058,6 +1058,50 @@ class ApiMatchRepository implements IMatchRepository {
   }
 
   @override
+  Future<({List<MatchModel> matches, String? nextCursor, bool hasMore, int total})>
+  getTournamentMatchesPaged({
+    required String tournamentId,
+    String? status,
+    String? cursor,
+    int limit = 4,
+  }) async {
+    final query = <String, dynamic>{
+      'tournamentId': tournamentId,
+      'limit': limit,
+    };
+    if (status != null && status.isNotEmpty) {
+      query['status'] = status.toUpperCase();
+    }
+    if (cursor != null && cursor.isNotEmpty) {
+      query['cursor'] = cursor;
+    }
+    final response = await _dioClient.dio.get('/matches', queryParameters: query);
+    final payload = response.data;
+    final list = _extractList(payload);
+    final matches = list
+        .whereType<Map>()
+        .map((json) => _parseMatch(Map<String, dynamic>.from(json)))
+        .toList();
+    final nextCursor = _extractNextCursor(payload);
+    final meta = payload is Map && payload['meta'] is Map
+        ? Map<String, dynamic>.from(payload['meta'] as Map)
+        : null;
+    final hasMore = meta?['hasMore'] == true ||
+        (nextCursor != null && nextCursor.isNotEmpty);
+    final total = meta?['total'] is num
+        ? (meta!['total'] as num).toInt()
+        : (meta?['totalCount'] is num
+            ? (meta!['totalCount'] as num).toInt()
+            : matches.length);
+    return (
+      matches: matches,
+      nextCursor: nextCursor,
+      hasMore: hasMore,
+      total: total,
+    );
+  }
+
+  @override
   Future<void> walkover(
     String tournamentId,
     String matchId, {

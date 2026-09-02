@@ -89,6 +89,14 @@ abstract class IMatchRepository {
   Future<void> deleteAll(String tournamentId);
   Future<List<MatchModel>> getMatches({String? status, bool? publicOnly});
 
+  Future<({List<MatchModel> matches, String? nextCursor, bool hasMore, int total})>
+  getTournamentMatchesPaged({
+    required String tournamentId,
+    String? status,
+    String? cursor,
+    int limit = 4,
+  });
+
   /// Gửi cheer (cổ vũ) cho trận đấu — POST /matches/:id/cheer.
   /// Guest cheer là public, không yêu cầu fake UUID.
   Future<void> cheerMatch(String matchId);

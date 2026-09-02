@@ -56,6 +56,27 @@ class TournamentLocationFormatter {
 
   static String matchCourtLabel(String? courtName) => courtName?.trim() ?? '';
 
+  /// Formats a neat, compact court/venue name for match card badges.
+  static String matchShortCourt(String? courtName, {String? venueName}) {
+    final raw = (courtName != null && courtName.trim().isNotEmpty)
+        ? courtName.trim()
+        : (venueName?.trim() ?? '');
+    if (raw.isEmpty) return '';
+
+    var clean = raw;
+    // Clean long common prefixes
+    clean = clean.replaceAll(RegExp(r'\bNhà thi đấu\b', caseSensitive: false), 'NTĐ');
+    clean = clean.replaceAll(RegExp(r'\bSân vận động\b', caseSensitive: false), 'SVĐ');
+    clean = clean.replaceAll(RegExp(r'\bCâu lạc bộ\b', caseSensitive: false), 'CLB');
+    clean = clean.replaceAll(RegExp(r'\bTrung tâm TDTT\b', caseSensitive: false), 'TT TDTT');
+
+    // If text has address parts separated by commas, only keep the first 1-2 parts
+    if (clean.contains(',')) {
+      clean = clean.split(',').first.trim();
+    }
+    return clean;
+  }
+
   static String matchFullLocation({
     required Tournament tournament,
     String? courtName,

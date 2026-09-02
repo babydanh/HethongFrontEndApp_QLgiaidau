@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
+import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -147,16 +149,21 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          l10n.matchRound(widget.match.round),
+                          MatchRoundLabel.formatRound(
+                            match: widget.match,
+                            short: true,
+                            l10n: l10n,
+                          ),
                           style: TextStyle(
                             fontSize: 10,
+                            fontWeight: FontWeight.w600,
                             color: context.colors.textMuted,
                           ),
                         ),
-                        if (widget.match.court.isNotEmpty) ...[
+                        if (TournamentLocationFormatter.matchShortCourt(widget.match.court).isNotEmpty) ...[
                           const SizedBox(height: 2),
                           Text(
-                            widget.match.court,
+                            TournamentLocationFormatter.matchShortCourt(widget.match.court),
                             style: TextStyle(
                               fontSize: 9,
                               color: context.colors.textMuted,
@@ -417,147 +424,118 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
       );
     }
 
-    if (displayMembers.length < 2) {
-      return avatar(url: teamLogoUrl, initial: fallbackInitial);
+    if (displayMembers.length == 2) {
+      final m1 = displayMembers[0];
+      final m2 = displayMembers[1];
+      return SizedBox(
+        width: 52,
+        height: 32,
+        child: Stack(
+          alignment: alignment == CrossAxisAlignment.start
+              ? Alignment.centerLeft
+              : Alignment.centerRight,
+          children: [
+            Positioned(
+              left: alignment == CrossAxisAlignment.start ? 0 : null,
+              right: alignment == CrossAxisAlignment.end ? 0 : null,
+              child: avatar(
+                url: m1.avatarUrl,
+                initial: m1.fullName.isNotEmpty ? m1.fullName[0].toUpperCase() : '?',
+              ),
+            ),
+            Positioned(
+              left: alignment == CrossAxisAlignment.start ? 20 : null,
+              right: alignment == CrossAxisAlignment.end ? 20 : null,
+              child: avatar(
+                url: m2.avatarUrl,
+                initial: m2.fullName.isNotEmpty ? m2.fullName[0].toUpperCase() : '?',
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
-    return SizedBox(
-      width: 64,
-      height: 36,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            left: alignment == CrossAxisAlignment.end ? 0 : 28,
-            child: avatar(
-              url: displayMembers[0].avatarUrl,
-              initial: displayMembers[0].fullName.trim().isNotEmpty
-                  ? displayMembers[0].fullName.trim()[0].toUpperCase()
-                  : fallbackInitial,
-            ),
-          ),
-          Positioned(
-            left: alignment == CrossAxisAlignment.end ? 28 : 0,
-            child: avatar(
-              url: displayMembers[1].avatarUrl,
-              initial: displayMembers[1].fullName.trim().isNotEmpty
-                  ? displayMembers[1].fullName.trim()[0].toUpperCase()
-                  : fallbackInitial,
-            ),
-          ),
-        ],
-      ),
+    return avatar(
+      url: teamLogoUrl,
+      initial: fallbackInitial,
     );
-  }
-
-  String _lastNameWord(String value) {
-    final words = value.trim().split(RegExp(r'\s+')).where((word) => word.isNotEmpty).toList(growable: false);
-    return words.isEmpty ? '' : words.last;
   }
 
   Widget _buildSetScores(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: context.colors.bgSurface,
+        border: Border(
+          top: BorderSide(
+            color: context.colors.border.withValues(alpha: 0.5),
+          ),
+        ),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: widget.match.sets.map((set) {
-          final isSet1Winner = set.score1 > set.score2;
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 3),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: context.colors.bgSurface,
-              borderRadius: BorderRadius.circular(6),
+        children: [
+          for (int i = 0; i < widget.match.sets.length; i++) ...[
+            if (i > 0) const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: context.colors.bgCard,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: context.colors.border.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Text(
+                'S${i + 1}: ${widget.match.sets[i].score1}-${widget.match.sets[i].score2}',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: context.colors.textSecondary,
+                ),
+              ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '${set.score1}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: isSet1Winner
-                        ? FontWeight.w800
-                        : FontWeight.w500,
-                    color: isSet1Winner
-                        ? context.colors.success
-                        : context.colors.textSecondary,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3),
-                  child: Text(
-                    '-',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: context.colors.textMuted,
-                    ),
-                  ),
-                ),
-                Text(
-                  '${set.score2}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: !isSet1Winner
-                        ? FontWeight.w800
-                        : FontWeight.w500,
-                    color: !isSet1Winner
-                        ? context.colors.success
-                        : context.colors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
+          ],
+        ],
       ),
     );
   }
 
   Widget _buildBottomInfo(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: context.colors.border.withValues(alpha: 0.5)),
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          if (widget.match.refereeName != null &&
-              widget.match.refereeName!.isNotEmpty) ...[
-            Icon(
-              Icons.person_outline_rounded,
-              size: 12,
-              color: context.colors.textMuted,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              widget.match.refereeName!,
-              style: TextStyle(fontSize: 10, color: context.colors.textMuted),
-            ),
-            const SizedBox(width: 12),
-          ],
-          if (widget.match.scheduledTime != null) ...[
-            Icon(
-              Icons.access_time_rounded,
-              size: 12,
-              color: context.colors.textMuted,
-            ),
-            const SizedBox(width: 4),
+          if (widget.match.scheduledTime != null)
             Text(
               '${widget.match.scheduledTime!.hour.toString().padLeft(2, '0')}:${widget.match.scheduledTime!.minute.toString().padLeft(2, '0')}',
-              style: TextStyle(fontSize: 10, color: context.colors.textMuted),
-            ),
-          ],
-          const Spacer(),
-          Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 12,
-            color: context.colors.textMuted,
-          ),
+              style: TextStyle(
+                fontSize: 11,
+                color: context.colors.textMuted,
+              ),
+            )
+          else
+            const SizedBox.shrink(),
+          if (widget.match.refereeName != null)
+            Text(
+              'TT: ${widget.match.refereeName}',
+              style: TextStyle(
+                fontSize: 11,
+                color: context.colors.textMuted,
+              ),
+            )
+          else
+            const SizedBox.shrink(),
         ],
       ),
     );
+  }
+
+  String _lastNameWord(String fullName) {
+    final words = fullName.trim().split(' ');
+    return words.isNotEmpty ? words.last : fullName;
   }
 }

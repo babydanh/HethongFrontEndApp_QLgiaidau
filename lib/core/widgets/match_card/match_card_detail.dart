@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
+import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -288,12 +289,10 @@ class MatchCardDetail extends StatelessWidget {
   }
 
   String _roundLabel(MatchModel match, AppLocalizations l10n) {
-    final branch = match.bracketPosition.bracket.toLowerCase();
-    final round = match.round;
-    if (branch == 'losers') return l10n.matchTableLosersRoundOf(round);
-    if (branch == 'grand_final') return l10n.matchTableGrandFinal;
-    if (branch == 'grand_final_reset') return l10n.matchTableGrandFinalReset;
-    return l10n.matchTableWinnersRoundOf(round);
+    return MatchRoundLabel.formatRound(
+      match: match,
+      l10n: l10n,
+    );
   }
 
   String _venueText(MatchModel match, AppLocalizations l10n) {

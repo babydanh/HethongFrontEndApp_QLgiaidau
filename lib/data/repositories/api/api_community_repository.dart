@@ -238,6 +238,91 @@ class ApiCommunityRepository implements ICommunityRepository {
   }
 
   @override
+  Future<({
+    List<CommunityTournamentModel> tournaments,
+    String? nextCursor,
+    bool hasMore,
+    int total,
+  })> getTournamentsPaged(
+    String communityId, {
+    String? cursor,
+    int limit = 6,
+    String? status,
+    String? search,
+  }) async {
+    _log.info(
+      'Lấy giải đấu CLB paged: $communityId, cursor: $cursor, limit: $limit, status: $status',
+    );
+    try {
+      final response = await _dioClient.dio.get(
+        '/tournaments',
+        queryParameters: {
+          'communityId': communityId,
+          'limit': limit,
+          if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+          if (status != null && status != 'ALL' && status.isNotEmpty)
+            'status': status,
+          if (search != null && search.trim().isNotEmpty)
+            'search': search.trim(),
+        },
+      );
+      if (response.statusCode == 200) {
+        final raw = response.data;
+        final list = raw is Map
+            ? (raw['data'] as List<dynamic>? ?? [])
+            : (raw as List<dynamic>? ?? []);
+        final tournaments = list
+            .map(
+              (e) =>
+                  CommunityTournamentModel.fromJson(e as Map<String, dynamic>),
+            )
+            .toList();
+
+        final meta = raw is Map ? raw['meta'] as Map<String, dynamic>? : null;
+        final nextCursor = meta?['nextCursor']?.toString() ??
+            (raw is Map ? raw['nextCursor']?.toString() : null);
+        final hasMore =
+            meta?['hasNext'] == true ||
+            (nextCursor != null && nextCursor.isNotEmpty);
+        final total = meta?['total'] is int
+            ? meta!['total'] as int
+            : (raw is Map && raw['total'] is int
+                ? raw['total'] as int
+                : tournaments.length);
+
+        return (
+          tournaments: tournaments,
+          nextCursor: nextCursor,
+          hasMore: hasMore,
+          total: total,
+        );
+      }
+
+      // Fallback
+      final fallback = await getTournaments(communityId);
+      return (
+        tournaments: fallback,
+        nextCursor: null,
+        hasMore: false,
+        total: fallback.length,
+      );
+    } catch (e, stack) {
+      _log.error(
+        'Lỗi lấy giải đấu CLB paged, fallback sang getTournaments',
+        e,
+        stack,
+      );
+      final fallback = await getTournaments(communityId);
+      return (
+        tournaments: fallback,
+        nextCursor: null,
+        hasMore: false,
+        total: fallback.length,
+      );
+    }
+  }
+
+  @override
   Future<CommunityTournamentModel?> createTournament(
     String communityId,
     Map<String, dynamic> data,

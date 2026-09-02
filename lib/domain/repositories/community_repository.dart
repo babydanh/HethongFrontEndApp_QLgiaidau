@@ -29,6 +29,18 @@ abstract class ICommunityRepository {
   });
   Future<bool> leaveCommunity(String communityId, String userId);
   Future<List<CommunityTournamentModel>> getTournaments(String communityId);
+  Future<({
+    List<CommunityTournamentModel> tournaments,
+    String? nextCursor,
+    bool hasMore,
+    int total,
+  })> getTournamentsPaged(
+    String communityId, {
+    String? cursor,
+    int limit = 6,
+    String? status,
+    String? search,
+  });
   Future<CommunityTournamentModel?> createTournament(
     String communityId,
     Map<String, dynamic> data,

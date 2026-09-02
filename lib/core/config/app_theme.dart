@@ -115,15 +115,16 @@ extension AppThemeContext on BuildContext {
 class AppTheme {
   // ─── Brand Colors ───
   // Keep Flutter aligned with the web design tokens.
-  static const Color primary = Color(0xFF3AB5F6);
-  static const Color primaryLight = Color(0xFFE8F7FF);
-  static const Color primaryDark = Color(0xFF07549A);
+  static const Color primary = Color(0xFF1D8EF8); // Web Primary rgb(29, 142, 248) #1D8EF8
+  static const Color primaryHover = Color(0xFF0B76D8); // Primary Hover
+  static const Color primaryLight = Color(0xFFB2CFFD); // Primary Light / Tint #B2CFFD
+  static const Color primaryDark = Color(0xFF0F5AA6); // Primary Dark Blue
 
-  static const Color secondary = Color(0xFF0F172A);
-  static const Color secondaryLight = Color(0xFF1E293B);
-  static const Color secondaryDark = Color(0xFF020617);
+  static const Color secondary = Color(0xFF3AB5F6); // SportO Cyan Accent #3AB5F6
+  static const Color secondaryLight = Color(0xFFE0F2FE);
+  static const Color secondaryDark = Color(0xFF0284C7);
 
-  static const Color accent = Color(0xFF22C55E);
+  static const Color accent = Color(0xFF16A34A); // Success Green
   static const Color accentDark = Color(0xFF15803D);
 
   // ─── Role Colors ───

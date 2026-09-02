@@ -762,6 +762,99 @@ class ApiTournamentRepository implements ITournamentRepository {
   }
 
   @override
+  Future<({
+    List<Tournament> tournaments,
+    String? nextCursor,
+    bool hasMore,
+  })> getPublicTournamentsPaged({
+    String? cursor,
+    int limit = 6,
+    String? sport,
+    String? status,
+    String? search,
+    String? content,
+    String? bracket,
+    String? ranked,
+    String? province,
+    String? ward,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    _log.info(
+      'getPublicTournamentsPaged: cursor=$cursor, limit=$limit, status=$status, sport=$sport',
+    );
+    try {
+      String? backendStatus;
+      if (status != null && status != 'all') {
+        final s = status.toLowerCase();
+        if (s == 'registration') {
+          backendStatus = 'REGISTRATION';
+        } else if (s == 'upcoming') {
+          backendStatus = 'UPCOMING';
+        } else if (s == 'in_progress') {
+          backendStatus = 'IN_PROGRESS';
+        } else if (s == 'completed') {
+          backendStatus = 'COMPLETED';
+        } else {
+          backendStatus = status.toUpperCase();
+        }
+      }
+
+      final Map<String, dynamic> qParams = {
+        'limit': limit,
+        if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+        if (sport != null && sport != 'all') 'sport': sport,
+        ...?backendStatus == null ? null : {'status': backendStatus},
+        if (search != null && search.isNotEmpty) 'search': search,
+        if (bracket != null && bracket != 'all')
+          'bracketType': bracket.toUpperCase(),
+        if (ranked == 'ranked') 'isRanked': true,
+        if (ranked == 'unranked') 'isRanked': false,
+        if (province != null && province.isNotEmpty) 'region': province,
+        if (startDate != null) 'startDate': startDate.toIso8601String(),
+        if (endDate != null) 'endDate': endDate.toIso8601String(),
+      };
+
+      dynamic response;
+      try {
+        response = await _dioClient.dio.get(
+          '/tournaments/public',
+          queryParameters: qParams,
+        );
+      } catch (_) {
+        response = await _dioClient.dio.get(
+          '/tournaments',
+          queryParameters: qParams,
+        );
+      }
+
+      if (response.statusCode == 200) {
+        final parsed = _parseTournamentList(response.data);
+        final raw = response.data;
+        final meta = raw is Map && raw['meta'] is Map
+            ? Map<String, dynamic>.from(raw['meta'] as Map)
+            : const <String, dynamic>{};
+        final nextCursor = meta['nextCursor']?.toString() ??
+            (raw is Map ? raw['nextCursor']?.toString() : null);
+        final hasMore =
+            meta['hasNext'] == true ||
+            meta['hasMore'] == true ||
+            (nextCursor != null && nextCursor.isNotEmpty);
+
+        return (
+          tournaments: parsed,
+          nextCursor: nextCursor,
+          hasMore: hasMore,
+        );
+      }
+      return (tournaments: <Tournament>[], nextCursor: null, hasMore: false);
+    } catch (e, stack) {
+      _log.error('getPublicTournamentsPaged error', e, stack);
+      return (tournaments: <Tournament>[], nextCursor: null, hasMore: false);
+    }
+  }
+
+  @override
   Future<void> update(String id, Map<String, dynamic> data) async {
     _log.info('Updating tournament $id via API: $data');
     await _dioClient.dio.patch('/tournaments/$id', data: data);
