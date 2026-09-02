@@ -267,9 +267,9 @@ class CommunityPostCard extends ConsumerWidget {
             ),
 
           // ── Tournament Announcement State ──
-          // Before bracket is generated & registration is open, show the
-          // CommunityTournamentRosterWidget (avatar slot confirmation grid).
-          // Once bracket is generated or tournament starts, show CommunityTournamentPreview.
+          // CHỈ áp dụng CommunityTournamentRosterWidget (lưới 16 slot tròn)
+          // cho giải SIÊU SIÊU LITE (post.isTournamentLite == true).
+          // Mọi giải Nâng cao / Public / Chuẩn khác hiển thị CommunityTournamentPreview.
           if (post.tournamentId != null) ...[
             Builder(
               builder: (context) {
@@ -283,7 +283,8 @@ class CommunityPostCard extends ConsumerWidget {
                     normalizedStatus == AppConstants.statusInProgress ||
                     normalizedStatus == AppConstants.statusCompleted;
 
-                if (!bracketReady &&
+                if (post.isTournamentLite &&
+                    !bracketReady &&
                     (normalizedStatus == null ||
                         normalizedStatus == AppConstants.statusUpcoming ||
                         normalizedStatus == AppConstants.statusRegistration)) {

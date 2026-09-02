@@ -108,6 +108,7 @@ class CommunityPostModel {
   final String? tournamentInviteCode;
   final String? tournamentStatus;
   final bool hasBracket;
+  final bool isTournamentLite;
   final String type;
   final List<String> mediaUrls;
   final List<String> topicTags;
@@ -131,6 +132,7 @@ class CommunityPostModel {
     this.tournamentInviteCode,
     this.tournamentStatus,
     this.hasBracket = false,
+    this.isTournamentLite = false,
     this.type = 'NORMAL',
     this.mediaUrls = const [],
     this.topicTags = const [],
@@ -185,6 +187,12 @@ class CommunityPostModel {
           json['hasBracket'] == true ||
           tournament['hasBracket'] == true ||
           tournament['has_bracket'] == true,
+      isTournamentLite:
+          json['isTournamentLite'] == true ||
+          json['isLite'] == true ||
+          tournament['isLite'] == true ||
+          (tournament['tournamentConfig'] is Map &&
+              tournament['tournamentConfig']['isLite'] == true),
       type: _asString(json['type']) ?? 'NORMAL',
       mediaUrls: _asStringList(rawMedia),
       topicTags: _asStringList(rawTopics),
