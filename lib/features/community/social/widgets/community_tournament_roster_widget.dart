@@ -31,6 +31,7 @@ class CommunityTournamentRosterWidget extends ConsumerStatefulWidget {
   final String? inviteCode;
   final int? maxParticipants;
   final DateTime? startDate;
+  final bool showTopBar;
 
   const CommunityTournamentRosterWidget({
     super.key,
@@ -42,6 +43,7 @@ class CommunityTournamentRosterWidget extends ConsumerStatefulWidget {
     this.inviteCode,
     this.maxParticipants,
     this.startDate,
+    this.showTopBar = true,
   });
 
   @override
@@ -317,85 +319,90 @@ class _CommunityTournamentRosterWidgetState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Top Bar: MANG ĐẾN BỞI + Tournament Name + Link to Details ──
-          GestureDetector(
-            onTap: () => context.push('/intro/${widget.tournamentId}'),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-                border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        "assets/images/sporto_v1_with_text.png",
-                        fit: BoxFit.contain,
+          if (widget.showTopBar)
+            GestureDetector(
+              onTap: () {
+                if (widget.tournamentId.isNotEmpty) {
+                  context.push('/tournaments/${widget.tournamentId}');
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+                  border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                      ),
+                      child: ClipOval(
+                        child: Image.asset(
+                          "assets/images/sporto_v1_with_text.png",
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'MANG ĐẾN BỞI',
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF94A3B8),
-                            letterSpacing: 0.3,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'MANG ĐẾN BỞI',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF94A3B8),
+                              letterSpacing: 0.3,
+                            ),
                           ),
-                        ),
-                        Text(
-                          tournamentName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: colors.textPrimary,
+                          Text(
+                            tournamentName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: colors.textPrimary,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Xem giải',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Xem giải',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        SizedBox(width: 3),
-                        Icon(Icons.arrow_outward_rounded, size: 13, color: Colors.white),
-                      ],
+                          SizedBox(width: 3),
+                          Icon(Icons.arrow_outward_rounded, size: 13, color: Colors.white),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
 
           // ── Main Content Area ──
           Padding(

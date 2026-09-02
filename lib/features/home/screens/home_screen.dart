@@ -91,7 +91,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _isTournamentServerLoading = false;
   bool _serverTournamentHasMore = false;
 
-  int _clubPageIndex = 0;
+  // ─── Server-side Cursor Pagination states (Tab 3: Câu lạc bộ) ───
+  final Map<int, List<Community>> _serverClubs = {};
+  final Map<int, String?> _serverClubCursors = {0: null};
+  int _serverClubPageIndex = 0;
+  bool _isClubServerLoading = false;
+  bool _serverClubHasMore = false;
   static const int _clubsPageSize = 6;
 
   // Khám phá (tab 0) CÓ thanh search — nhưng gõ tìm sẽ lọc tại chỗ trong tab,
@@ -118,9 +123,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _tournamentSport = key;
       _clubSport = key;
       _rankingsSport = key == 'all' ? 'pickleball' : key;
-      _clubPageIndex = 0;
     });
     _resetTournamentCursorPagination();
+    _resetClubCursorPagination();
   }
 
   Future<void> _fetchServerTournamentPage(int pageIndex) async {
@@ -177,6 +182,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _fetchServerTournamentPage(0);
   }
 
+  Future<void> _fetchServerClubPage(int pageIndex) async {
+    if (_serverClubs.containsKey(pageIndex)) {
+      setState(() => _serverClubPageIndex = pageIndex);
+      return;
+    }
+    if (_isClubServerLoading) return;
+    setState(() => _isClubServerLoading = true);
+
+    try {
+      final repo = ref.read(communityRepositoryProvider);
+      final result = await repo.getCommunitiesPaged(
+        cursor: _serverClubCursors[pageIndex],
+        limit: _clubsPageSize,
+        search: _searchQueries[3]?.trim(),
+        provinceCode: _clubProvinceCode,
+        categoryId: _clubSport != 'all' ? _clubSport : null,
+      );
+
+      if (mounted) {
+        setState(() {
+          _serverClubs[pageIndex] = result.communities;
+          _serverClubHasMore = result.hasMore;
+          if (result.nextCursor != null && result.nextCursor!.isNotEmpty) {
+            _serverClubCursors[pageIndex + 1] = result.nextCursor;
+          }
+          _serverClubPageIndex = pageIndex;
+          _isClubServerLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isClubServerLoading = false);
+      }
+    }
+  }
+
+  void _resetClubCursorPagination() {
+    setState(() {
+      _serverClubs.clear();
+      _serverClubCursors.clear();
+      _serverClubCursors[0] = null;
+      _serverClubPageIndex = 0;
+      _serverClubHasMore = false;
+    });
+    _fetchServerClubPage(0);
+  }
+
   List<(String, String)> _activeSportFilterItems(AppLocalizations l10n) {
     final categories =
         ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
@@ -200,6 +252,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _currentIndex = widget.initialTab;
     _carouselController = PageController(viewportFraction: 1.0);
     _fetchServerTournamentPage(0);
+    _fetchServerClubPage(0);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(authProvider.notifier).init();
     });
@@ -254,6 +307,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
     if (index == 1 && _serverTournaments.isEmpty) {
       _fetchServerTournamentPage(0);
+    } else if (index == 3 && _serverClubs.isEmpty) {
+      _fetchServerClubPage(0);
     }
   }
 
@@ -261,6 +316,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _searchFocusNode.unfocus();
     if (_currentIndex == 1) {
       _resetTournamentCursorPagination();
+    } else if (_currentIndex == 3) {
+      _resetClubCursorPagination();
     }
   }
 
@@ -1735,6 +1792,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             _clubSport = localSport;
                             _clubProvinceCode = localProvinceCode;
                           });
+                          _resetClubCursorPagination();
                           Navigator.pop(ctx);
                         },
                         style: FilledButton.styleFrom(
@@ -2415,133 +2473,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildPaginationBar({
-    required int currentPage,
-    required int totalPages,
-    required int totalItems,
-    required String itemLabel,
-    required VoidCallback? onPrev,
-    required VoidCallback? onNext,
-  }) {
-    final colors = context.colors;
-    final canPrev = onPrev != null;
-    final canNext = onNext != null;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.border.withValues(alpha: 0.6)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Trang ${currentPage + 1} / $totalPages • $totalItems $itemLabel',
-              style: TextStyle(
-                color: colors.textMuted,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            Row(
-              children: [
-                InkWell(
-                  onTap: onPrev,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: canPrev ? colors.bgSurface : colors.bgDark,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: canPrev
-                            ? colors.border
-                            : colors.border.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.chevron_left_rounded,
-                          size: 16,
-                          color: canPrev
-                              ? colors.textPrimary
-                              : colors.textMuted.withValues(alpha: 0.4),
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          'Trước',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: canPrev
-                                ? colors.textPrimary
-                                : colors.textMuted.withValues(alpha: 0.4),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                InkWell(
-                  onTap: onNext,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: canNext ? AppTheme.primary : colors.bgDark,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: canNext
-                            ? AppTheme.primary
-                            : colors.border.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Sau',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: canNext
-                                ? Colors.white
-                                : colors.textMuted.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        const SizedBox(width: 2),
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          size: 16,
-                          color: canNext
-                              ? Colors.white
-                              : colors.textMuted.withValues(alpha: 0.4),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ─── HELPERS ───
 
   // ═══════════════════════════════════════════════════════
@@ -2554,180 +2485,93 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildClubListWithApi() {
     final l10n = AppLocalizations.of(context)!;
-    final communitiesAsync = ref.watch(
-      communitiesProvider((search: null, provinceCode: _clubProvinceCode)),
-    );
+    final currentList = _serverClubs[_serverClubPageIndex] ?? const [];
+    final canPrev = _serverClubPageIndex > 0 && !_isClubServerLoading;
+    final canNext = (_serverClubHasMore ||
+            _serverClubs.containsKey(_serverClubPageIndex + 1)) &&
+        !_isClubServerLoading;
+
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(child: SizedBox(height: _headerHeight + 52.0)),
         SliverToBoxAdapter(child: const SizedBox(height: 8)),
-        communitiesAsync.when(
-          data: (clubs) {
-            final filtered = clubs.where((c) {
-              if (_clubSport != 'all') {
-                final hasSport = c.sports.any((s) {
-                  final name = s.toLowerCase();
-                  if (_clubSport == 'badminton' &&
-                      (name.contains('badminton') ||
-                          name.contains('cầu lông') ||
-                          name.contains('cau long'))) {
-                    return true;
-                  }
-                  if (_clubSport == 'tennis' && name.contains('tennis')) {
-                    return true;
-                  }
-                  if (_clubSport == 'pickleball' &&
-                      name.contains('pickleball')) {
-                    return true;
-                  }
-                  return name.contains(_clubSport);
-                });
-                if (!hasSport) return false;
-              }
-              final q = _normalizedQuery(_searchQueries[3]);
-              if (q.isNotEmpty &&
-                  !c.name.toLowerCase().contains(q) &&
-                  !(c.description ?? '').toLowerCase().contains(q)) {
-                return false;
-              }
-              return true;
-            }).toList();
-
-            final totalPages = (filtered.length / _clubsPageSize).ceil();
-            final effectiveTotalPages = totalPages > 0 ? totalPages : 1;
-            if (_clubPageIndex >= effectiveTotalPages) {
-              _clubPageIndex = effectiveTotalPages - 1;
-            }
-            if (_clubPageIndex < 0) _clubPageIndex = 0;
-
-            final display = filtered
-                .skip(_clubPageIndex * _clubsPageSize)
-                .take(_clubsPageSize)
-                .toList();
-
-            if (filtered.isEmpty) {
-              return SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 72.0,
-                        height: 72.0,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(20.0),
-                        ),
-                        child: const Icon(
-                          Icons.group_off_rounded,
-                          size: 36,
-                          color: Color(0xFFB0BEC5),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.homeNoClubs,
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        l10n.homeNoClubsHint,
-                        style: TextStyle(
-                          fontSize: 13.0,
-                          color: Color(0xFF94A3B8),
-                        ),
-                      ),
-                      const SizedBox(height: 80),
-                    ],
-                  ),
-                ),
-              );
-            }
-            return SliverMainAxisGroup(
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, i) => _buildClubCardPremium(display[i]),
-                      childCount: display.length,
+        if (_isClubServerLoading && currentList.isEmpty)
+          const SliverFillRemaining(
+            child: Center(
+              child: CircularProgressIndicator(color: AppTheme.primary),
+            ),
+          )
+        else if (currentList.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 72.0,
+                    height: 72.0,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    child: const Icon(
+                      Icons.group_off_rounded,
+                      size: 36,
+                      color: Color(0xFFB0BEC5),
                     ),
                   ),
-                ),
-                SliverToBoxAdapter(
-                  child: _buildPaginationBar(
-                    currentPage: _clubPageIndex,
-                    totalPages: effectiveTotalPages,
-                    totalItems: filtered.length,
-                    itemLabel: 'CLB',
-                    onPrev: _clubPageIndex > 0
-                        ? () => setState(() => _clubPageIndex--)
-                        : null,
-                    onNext: _clubPageIndex < effectiveTotalPages - 1
-                        ? () => setState(() => _clubPageIndex++)
-                        : null,
-                  ),
-                ),
-              ],
-            );
-          },
-          loading: () => SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-            sliver: SliverToBoxAdapter(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(color: AppTheme.primary),
-                    const SizedBox(height: 12),
-                    Text(
-                      l10n.homeLoading,
-                      style: TextStyle(color: context.colors.textSecondary),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.homeNoClubs,
+                    style: const TextStyle(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.homeNoClubsHint,
+                    style: const TextStyle(
+                      fontSize: 13.0,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ),
+                  const SizedBox(height: 80),
+                ],
               ),
             ),
-          ),
-          error: (e, st) => SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-            sliver: SliverToBoxAdapter(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.cloud_off_rounded,
-                      size: 48,
-                      color: context.colors.textMuted,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      l10n.homeClubsLoadError,
-                      style: TextStyle(color: context.colors.textSecondary),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: () => ref.refresh(
-                        communitiesProvider((
-                          search: null,
-                          provinceCode: _clubProvinceCode,
-                        )),
-                      ),
-                      child: Text(l10n.matchesRetry),
-                    ),
-                  ],
+          )
+        else
+          SliverMainAxisGroup(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) => _buildClubCardPremium(currentList[i]),
+                    childCount: currentList.length,
+                  ),
                 ),
               ),
-            ),
+              SliverToBoxAdapter(
+                child: _buildCursorPaginationBar(
+                  currentPage: _serverClubPageIndex,
+                  isLoading: _isClubServerLoading,
+                  canPrev: canPrev,
+                  canNext: canNext,
+                  onPrev: canPrev
+                      ? () => _fetchServerClubPage(_serverClubPageIndex - 1)
+                      : null,
+                  onNext: canNext
+                      ? () => _fetchServerClubPage(_serverClubPageIndex + 1)
+                      : null,
+                ),
+              ),
+            ],
           ),
-        ),
       ],
     );
   }

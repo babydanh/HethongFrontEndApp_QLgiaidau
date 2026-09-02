@@ -78,6 +78,97 @@ class ApiCommunityRepository implements ICommunityRepository {
   }
 
   @override
+  Future<({
+    List<Community> communities,
+    String? nextCursor,
+    bool hasMore,
+    int total,
+  })> getCommunitiesPaged({
+    String? cursor,
+    int limit = 6,
+    String? search,
+    String? provinceCode,
+    String? categoryId,
+  }) async {
+    _log.info(
+      'Lấy danh sách CLB paged: search=$search, provinceCode=$provinceCode, categoryId=$categoryId, cursor=$cursor, limit=$limit',
+    );
+    try {
+      final params = <String, dynamic>{'limit': limit};
+      if (cursor != null && cursor.isNotEmpty) params['cursor'] = cursor;
+      if (search != null && search.trim().isNotEmpty) {
+        params['search'] = search.trim();
+      }
+      if (provinceCode != null && provinceCode.isNotEmpty) {
+        params['provinceCode'] = provinceCode;
+      }
+      if (categoryId != null &&
+          categoryId != 'all' &&
+          categoryId.isNotEmpty) {
+        params['categoryId'] = categoryId;
+      }
+
+      final response = await _dioClient.dio.get(
+        '/communities',
+        queryParameters: params,
+      );
+      if (response.statusCode == 200) {
+        final raw = response.data;
+        final payload =
+            raw is Map && raw.containsKey('data') ? raw['data'] : raw;
+        final meta = raw is Map && raw.containsKey('meta')
+            ? raw['meta'] as Map<String, dynamic>?
+            : null;
+        final list = payload is List
+            ? payload
+            : (payload is Map && payload.containsKey('items')
+                ? payload['items'] as List
+                : const []);
+        final communities = list
+            .map((e) => Community.fromJson(e as Map<String, dynamic>))
+            .where(
+              (c) =>
+                  c.status.toUpperCase() == 'ACTIVE' &&
+                  c.visibility.toUpperCase() != 'PRIVATE',
+            )
+            .toList();
+        final nextCursor = meta?['nextCursor']?.toString() ??
+            (raw is Map ? raw['nextCursor']?.toString() : null);
+        final hasMore = meta?['hasMore'] == true ||
+            (nextCursor != null && nextCursor.isNotEmpty);
+        final total = meta?['total'] is int
+            ? meta!['total'] as int
+            : communities.length;
+        return (
+          communities: communities,
+          nextCursor: nextCursor,
+          hasMore: hasMore,
+          total: total,
+        );
+      }
+      return (
+        communities: <Community>[],
+        nextCursor: null,
+        hasMore: false,
+        total: 0,
+      );
+    } catch (e, stack) {
+      _log.error('Lỗi getCommunitiesPaged, fallback sang getCommunities', e, stack);
+      final fallback = await getCommunities(
+        search: search,
+        provinceCode: provinceCode,
+      );
+      return (
+        communities: fallback,
+        nextCursor: null,
+        hasMore: false,
+        total: fallback.length,
+      );
+    }
+  }
+
+
+  @override
   Future<List<Community>> getMyCommunities() async {
     _log.info('Lấy CLB của tôi');
     try {

@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
 
 class OverviewTab extends StatefulWidget {
   final Tournament tournament;
@@ -133,6 +134,18 @@ class _OverviewTabState extends State<OverviewTab> {
     return '${fmt.format(amount)} đ';
   }
 
+  String _resolveFormatBadge(Tournament t) {
+    final formatStr = (t.format).toLowerCase();
+    final sportStr = (t.sport).toLowerCase();
+    final isFootball = sportStr.contains('bóng đá') || sportStr.contains('football');
+
+    if (isFootball) {
+      return 'Bóng đá 7 người';
+    }
+    final isDoubles = formatStr.contains('doubles') || formatStr.contains('đôi');
+    return isDoubles ? 'Đánh Đôi' : 'Đánh Đơn';
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = widget.tournament;
@@ -146,6 +159,7 @@ class _OverviewTabState extends State<OverviewTab> {
             : 'Chưa cập nhật thời gian');
     final locationStr = TournamentLocationFormatter.tournamentFullLocation(t);
     final desc = t.description.trim();
+    final isLite = t.isClubLite || (t.isLite == true) || (t.communityId != null && t.communityId!.isNotEmpty);
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -153,23 +167,41 @@ class _OverviewTabState extends State<OverviewTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ─── 1. BANNER TRÀN VIỀN ───
-          SizedBox(
-            height: 195,
-            width: double.infinity,
-            child: _buildBannerView(t),
-          ),
+          // ─── 1. BANNER TRÀN VIỀN (Chỉ hiển thị cho giải lớn truyền thống) ───
+          if (!isLite)
+            SizedBox(
+              height: 195,
+              width: double.infinity,
+              child: _buildBannerView(t),
+            ),
 
           // ─── 2. NỘI DUNG TỔNG QUAN ───
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+            padding: EdgeInsets.fromLTRB(16, isLite ? 16 : 14, 16, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Badges + Ban tổ chức Row
+                // Badges + Thể thức + Ban tổ chức Row
                 Row(
                   children: [
                     _buildSportBadge(t.sport),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: const Color(0xFFDBEAFE), width: 0.8),
+                      ),
+                      child: Text(
+                        _resolveFormatBadge(t),
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF2563EB),
+                        ),
+                      ),
+                    ),
                     const SizedBox(width: 6),
                     _buildStatusBadge(t.status),
                     if (t.isRanked) ...[
@@ -232,7 +264,7 @@ class _OverviewTabState extends State<OverviewTab> {
                 ),
                 const SizedBox(height: 12),
 
-                // Thông tin nhanh
+                // Thông tin nhanh (Thời gian, Địa điểm, Lệ phí)
                 _buildInlineInfo(
                   icon: Icons.calendar_today_outlined,
                   label: 'Thời gian:',
@@ -246,6 +278,13 @@ class _OverviewTabState extends State<OverviewTab> {
                   value: locationStr.isNotEmpty
                       ? locationStr
                       : 'Chưa cập nhật địa điểm',
+                  colors: colors,
+                ),
+                const SizedBox(height: 6),
+                _buildInlineInfo(
+                  icon: Icons.payments_outlined,
+                  label: 'Lệ phí:',
+                  value: _formatCurrency(t.entryFee),
                   colors: colors,
                 ),
                 const SizedBox(height: 12),
@@ -293,96 +332,105 @@ class _OverviewTabState extends State<OverviewTab> {
                   const SizedBox(height: 12),
                 ],
 
-                // Action Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.icon(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 11),
+                // Action Buttons (Chỉ hiển thị cho giải truyền thống)
+                if (!isLite) ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 11),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () {
+                            if (widget.onNavigateToMatches != null) {
+                              widget.onNavigateToMatches!();
+                            }
+                          },
+                          icon: const Icon(
+                            Icons.calendar_month_rounded,
+                            size: 16,
+                          ),
+                          label: const Text(
+                            'Xem Lịch thi đấu',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: colors.textPrimary,
+                          side: BorderSide(color: colors.border),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 11,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                         onPressed: () {
-                          if (widget.onNavigateToMatches != null) {
-                            widget.onNavigateToMatches!();
+                          if (widget.onToggleFollow != null) {
+                            widget.onToggleFollow!();
                           }
                         },
-                        icon: const Icon(
-                          Icons.calendar_month_rounded,
+                        icon: Icon(
+                          widget.isFollowing
+                              ? Icons.bookmark_rounded
+                              : Icons.bookmark_border_rounded,
                           size: 16,
+                          color: widget.isFollowing
+                              ? AppTheme.primary
+                              : colors.textMuted,
                         ),
-                        label: const Text(
-                          'Xem Lịch thi đấu',
-                          style: TextStyle(
+                        label: Text(
+                          widget.isFollowing ? 'Đã lưu' : 'Lưu',
+                          style: const TextStyle(
                             fontSize: 13,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: colors.textPrimary,
-                        side: BorderSide(color: colors.border),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 11,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      onPressed: () {
-                        if (widget.onToggleFollow != null) {
-                          widget.onToggleFollow!();
-                        }
-                      },
-                      icon: Icon(
-                        widget.isFollowing
-                            ? Icons.bookmark_rounded
-                            : Icons.bookmark_border_rounded,
-                        size: 16,
-                        color: widget.isFollowing
-                            ? AppTheme.primary
-                            : colors.textMuted,
-                      ),
-                      label: Text(
-                        widget.isFollowing ? 'Đã lưu' : 'Lưu',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
-                const SizedBox(height: 16),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
+                  const SizedBox(height: 16),
+                ],
+
+                // ─── LƯỚI XÁC NHẬN THAM GIA 16 SLOT (DÀNH CHO GIẢI SIÊU LITE CLB) ───
+                if (isLite) ...[
+                  CommunityTournamentRosterWidget(
+                    tournamentId: t.id,
+                    communityId: t.communityId,
+                    initialTournamentName: t.name,
+                    categoryName: t.sport,
+                    status: t.status,
+                    inviteCode: t.inviteCode,
+                    maxParticipants: t.maxTeams,
+                    startDate: t.startDate,
+                    showTopBar: false,
+                  ),
+                  const SizedBox(height: 12),
+                ],
 
                 // ─── 3. DANH SÁCH NỘI DUNG / PHÂN HẠNG THI ĐẤU (CHUẨN WEB) ───
-                _buildSectionHeader('NỘI DUNG THI ĐẤU (${t.divisions.length})'),
-                const SizedBox(height: 10),
-                if (t.divisions.isEmpty)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: colors.bgSurface,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      'Chưa có phân hạng thi đấu',
-                      style: TextStyle(fontSize: 13, color: colors.textMuted),
-                    ),
-                  )
-                else
+                if (t.divisions.isNotEmpty) ...[
+                  _buildSectionHeader('NỘI DUNG THI ĐẤU (${t.divisions.length})'),
+                  const SizedBox(height: 10),
                   ...t.divisions.map((div) => _buildDivisionItem(div, colors)),
+                  const SizedBox(height: 20),
+                  Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
+                  const SizedBox(height: 16),
+                ],
 
                 const SizedBox(height: 20),
                 Divider(color: colors.border.withValues(alpha: 0.6), height: 1),

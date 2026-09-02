@@ -14,6 +14,18 @@ abstract class ICommunityRepository {
     String? provinceCode,
     int limit = 20,
   });
+  Future<({
+    List<Community> communities,
+    String? nextCursor,
+    bool hasMore,
+    int total,
+  })> getCommunitiesPaged({
+    String? cursor,
+    int limit = 6,
+    String? search,
+    String? provinceCode,
+    String? categoryId,
+  });
   Future<List<Community>> getMyCommunities();
   Future<Community?> getCommunityById(String id);
   Future<List<CommunityMemberModel>> getMembers(
