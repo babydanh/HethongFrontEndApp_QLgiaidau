@@ -869,10 +869,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     };
   }
 
-  String _normalizedQuery(String? q) {
-    return (q ?? '').toLowerCase().trim().replaceAll(RegExp(r'\s+'), ' ');
-  }
-
   int _activeFilterCountForTab() {
     switch (_currentIndex) {
       case 0:
