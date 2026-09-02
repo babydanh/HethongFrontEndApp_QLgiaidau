@@ -36,6 +36,7 @@ class _OverviewTabState extends State<OverviewTab> {
   Timer? _countdownTimer;
   Duration _remainingTime = Duration.zero;
   String _countdownLabel = '';
+  String? _expandedDivisionId;
 
   @override
   void initState() {
@@ -481,85 +482,155 @@ class _OverviewTabState extends State<OverviewTab> {
     final maxP = div.maxParticipants ?? 0;
     final curP = div.participantCount;
     final isFull = maxP > 0 && curP >= maxP;
+    final isExpanded = _expandedDivisionId == div.id;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: colors.bgSurface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: colors.border.withValues(alpha: 0.6)),
+        border: Border.all(
+          color: isExpanded ? AppTheme.primary : colors.border.withValues(alpha: 0.6),
+          width: isExpanded ? 1.5 : 1,
+        ),
       ),
-      child: InkWell(
-        onTap: () {
-          if (widget.onSelectDivision != null) {
-            widget.onSelectDivision!(div);
-          }
-        },
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 20,
-                color: colors.textMuted,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  div.name,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
-                ),
-              ),
-              if (isFull) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.bgDark,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: colors.border),
-                  ),
-                  child: Text(
-                    'Đã đủ',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textMuted,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-              ],
-              Row(
-                mainAxisSize: MainAxisSize.min,
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                _expandedDivisionId = isExpanded ? null : div.id;
+              });
+            },
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
                 children: [
                   Icon(
-                    Icons.people_alt_outlined,
-                    size: 14,
-                    color: colors.textMuted,
+                    isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                    size: 20,
+                    color: isExpanded ? AppTheme.primary : colors.textMuted,
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    maxP > 0 ? '$curP / $maxP' : '$curP VĐV',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textSecondary,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      div.name,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: isExpanded ? AppTheme.primary : colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  if (isFull) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.bgDark,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: colors.border),
+                      ),
+                      child: Text(
+                        'Đã đủ',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textMuted,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.people_alt_outlined,
+                        size: 14,
+                        color: colors.textMuted,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        maxP > 0 ? '$curP / $maxP' : '$curP VĐV',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isExpanded) ...[
+            Divider(color: colors.border.withValues(alpha: 0.5), height: 1),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInlineInfo(
+                    icon: Icons.sports_score_rounded,
+                    label: 'Thể thức:',
+                    value: div.bracketType ?? 'Loại trực tiếp',
+                    colors: colors,
+                  ),
+                  const SizedBox(height: 6),
+                  _buildInlineInfo(
+                    icon: Icons.people_outline_rounded,
+                    label: 'Định dạng:',
+                    value: div.matchType == 'DOUBLES' ? 'Đánh Đôi' : 'Đánh Đơn',
+                    colors: colors,
+                  ),
+                  if (div.genderRestriction != null && div.genderRestriction!.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    _buildInlineInfo(
+                      icon: Icons.wc_rounded,
+                      label: 'Giới tính:',
+                      value: div.genderRestriction!,
+                      colors: colors,
+                    ),
+                  ],
+                  const SizedBox(height: 6),
+                  _buildInlineInfo(
+                    icon: Icons.group_outlined,
+                    label: 'Quy mô:',
+                    value: maxP > 0 ? '$curP / $maxP VĐV (đội)' : '$curP VĐV',
+                    colors: colors,
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: () {
+                        if (widget.onSelectDivision != null) {
+                          widget.onSelectDivision!(div);
+                        }
+                      },
+                      icon: const Icon(Icons.account_tree_outlined, size: 16),
+                      label: const Text(
+                        'Xem Bảng đấu phân hạng này',
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
+            ),
+          ],
+        ],
       ),
     );
   }

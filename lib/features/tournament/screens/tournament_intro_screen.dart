@@ -12,7 +12,6 @@ import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/live_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_tab.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/matches_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sponsors_tab.dart';
@@ -336,11 +335,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final int bracketIndex = tabHeaders.length;
     tabHeaders.add(const Tab(height: 34, text: 'Bảng đấu'));
 
-    // 6. Tab [Lịch thi đấu]
-    final int matchesIndex = tabHeaders.length;
-    tabHeaders.add(const Tab(height: 34, text: 'Lịch thi đấu'));
-
-    // 7. Tab [Tài trợ] (nếu có)
+    // 6. Tab [Tài trợ] (nếu có)
     if (hasSponsors) {
       tabHeaders.add(Tab(height: 34, text: l10n.tabSponsors));
     }
@@ -356,7 +351,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         teamCount: teamsAsync.value?.length ?? 0,
         resolveImageUrl: _resolveImageUrl,
         onNavigateToMatches: () {
-          controller.animateTo(matchesIndex);
+          controller.animateTo(bracketIndex);
         },
         onSelectDivision: (div) {
           setState(() {
@@ -415,16 +410,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             ),
           ],
         ),
-      ),
-    );
-
-    // Lịch thi đấu (MatchesTab)
-    tabViews.add(
-      MatchesTab(
-        key: ValueKey('matches-$_selectedDivisionId'),
-        tournamentId: widget.tournamentId,
-        selectedDivisionId: _selectedDivisionId,
-        selectedDivision: _selectedDivision,
       ),
     );
 
