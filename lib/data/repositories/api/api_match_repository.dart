@@ -176,7 +176,7 @@ class ApiMatchRepository implements IMatchRepository {
           tournamentId,
           divisionId: divisionId,
           forceRefresh: forceRefresh,
-          usePublicSnapshot: true,
+          usePublicSnapshot: false,
         );
         _matchesCache[cacheKey] = updated;
         if (!controller.isClosed) controller.add(updated);

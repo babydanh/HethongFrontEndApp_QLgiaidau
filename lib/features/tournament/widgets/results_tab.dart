@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
+import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 
 class ResultsTab extends ConsumerWidget {
   final String tournamentId;
   final String? selectedDivisionId;
   final String? selectedDivision;
+  final List<MatchModel> completedMatches;
 
   const ResultsTab({
     super.key,
     required this.tournamentId,
     this.selectedDivisionId,
     this.selectedDivision,
+    this.completedMatches = const [],
   });
 
   @override
@@ -134,6 +139,37 @@ class ResultsTab extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
               ],
+
+              // ── 3. DANH SÁCH TRẬN ĐẤU (nếu có) ──
+              if (completedMatches.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Divider(color: colors.border.withValues(alpha: 0.5), height: 1),
+                const SizedBox(height: 16),
+                Text(
+                  'TRẬN ĐẤU ĐÃ HOÀN THÀNH (${completedMatches.length})',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textMuted,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ...completedMatches.map(
+                  (match) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: LiveMatchCardV2(
+                      match: match,
+                      isCompleted: true,
+                      onTap: () {
+                        context.push(
+                          '/tournaments/${match.tournamentId}/matches/${match.id}/official-score',
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         );
@@ -141,11 +177,58 @@ class ResultsTab extends ConsumerWidget {
       loading: () => const Center(
         child: CircularProgressIndicator(color: AppTheme.primary),
       ),
-      error: (e, _) => Center(
-        child: Text(
-          'Không thể tải kết quả: $e',
-          style: TextStyle(color: colors.textSecondary),
+      error: (e, _) => _buildCompletedMatchesOnly(context, colors),
+    );
+  }
+
+  // Fallback khi API /results lỗi: chỉ hiện danh sách trận đã kết thúc
+  Widget _buildCompletedMatchesOnly(BuildContext context, dynamic colors) {
+    if (completedMatches.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.emoji_events_outlined, size: 40, color: colors.textMuted.withValues(alpha: 0.4)),
+            const SizedBox(height: 12),
+            Text(
+              'Chưa có kết quả chính thức',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.textPrimary),
+            ),
+          ],
         ),
+      );
+    }
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 140),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'TRẬN ĐẤU ĐÃ HOÀN THÀNH (${completedMatches.length})',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: colors.textMuted,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...completedMatches.map(
+            (match) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: LiveMatchCardV2(
+                match: match,
+                isCompleted: true,
+                onTap: () {
+                  context.push(
+                    '/tournaments/${match.tournamentId}/matches/${match.id}/official-score',
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

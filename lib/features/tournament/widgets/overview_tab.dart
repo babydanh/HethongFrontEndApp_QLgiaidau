@@ -193,6 +193,8 @@ class _OverviewTabState extends State<OverviewTab> {
     final desc = t.description.trim();
     final isClubLite = t.isClubLite;
 
+    final hasCustomLogo = t.logoUrl != null && t.logoUrl!.trim().isNotEmpty;
+
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 140),
@@ -241,7 +243,7 @@ class _OverviewTabState extends State<OverviewTab> {
                       _buildRankingBadge(true),
                     ],
                     const Spacer(),
-                    if (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty)
+                    if (!hasCustomLogo && (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty))
                       Row(
                         children: [
                           CircleAvatar(
@@ -626,6 +628,68 @@ class _OverviewTabState extends State<OverviewTab> {
                   _buildSectionHeader('CƠ CẤU GIẢI THƯỞNG'),
                   const SizedBox(height: 10),
                   _buildDescriptionContent(t.prizeDescription!),
+                ],
+
+                // ─── 7. NGƯỜI SÁNG LẬP GIẢI ĐẤU (ĐẶT Ở CUỐI KHI GIẢI CÓ LOGO) ───
+                if (hasCustomLogo && (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty)) ...[
+                  const SizedBox(height: 20),
+                  Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
+                  const SizedBox(height: 16),
+                  _buildSectionHeader('NGƯỜI SÁNG LẬP GIẢI ĐẤU'),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colors.bgSurface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                          backgroundImage: resolvedAvatar.isNotEmpty
+                              ? NetworkImage(resolvedAvatar)
+                              : null,
+                          child: resolvedAvatar.isEmpty
+                              ? Text(
+                                  creatorName.isNotEmpty ? creatorName[0].toUpperCase() : 'B',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primary,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                creatorName,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                              Text(
+                                'Ban tổ chức giải đấu',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: colors.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ],
             ),

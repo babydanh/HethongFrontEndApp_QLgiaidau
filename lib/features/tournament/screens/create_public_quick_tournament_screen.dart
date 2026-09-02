@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
+import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -32,13 +33,12 @@ class _CreatePublicQuickTournamentScreenState
   final _maxTeamsController = TextEditingController(text: '16');
 
   String _sport = AppConstants.sportBadminton;
-  String _format = AppConstants.formatSingles;
+  String _formatKey = 'MALE_DOUBLES'; // MALE_SINGLES, FEMALE_SINGLES, MALE_DOUBLES, FEMALE_DOUBLES, MIXED_DOUBLES, FOOTBALL_MALE, FOOTBALL_FEMALE, FOOTBALL_MIXED
   String _bracket = AppConstants.bracketSingleElimination;
   String _visibility = 'PUBLIC';
   String _registrationMode = 'APPROVAL';
   DateTime? _startDate;
   TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
-  bool _isRanked = false;
   bool _isSubmitting = false;
 
   AppLocalizations get l10n => AppLocalizations.of(context)!;
@@ -172,9 +172,25 @@ class _CreatePublicQuickTournamentScreenState
     return Scaffold(
       backgroundColor: colors.bgDark,
       appBar: AppBar(
-        title: Text(isClub ? 'Tạo Giải Nhanh Trong CLB' : l10n.quickCreateTitle),
-        centerTitle: true,
+        title: Text(isClub ? 'Tạo Giải Nhanh' : l10n.quickCreateTitle),
+        centerTitle: false,
         elevation: 0,
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              final query = widget.communityId != null
+                  ? '?communityId=${widget.communityId}'
+                  : '';
+              context.pushReplacement('/tournaments/create-advanced$query');
+            },
+            icon: const Icon(Icons.tune_rounded, size: 16),
+            label: const Text(
+              'Nâng cao',
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Form(
         key: _formKey,
@@ -327,6 +343,7 @@ class _CreatePublicQuickTournamentScreenState
                       const SizedBox(height: 6),
                       DropdownButtonFormField<String>(
                         initialValue: _visibility,
+                        isExpanded: true,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: colors.bgSurface,
@@ -334,16 +351,24 @@ class _CreatePublicQuickTournamentScreenState
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(color: colors.border),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                         ),
                         items: const [
                           DropdownMenuItem(
                             value: 'PUBLIC',
-                            child: Text('Công khai (Mọi người)'),
+                            child: Text(
+                              'Công khai',
+                              style: TextStyle(fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 'PRIVATE',
-                            child: Text('Nội bộ (Cần mã mời)'),
+                            child: Text(
+                              'Nội bộ',
+                              style: TextStyle(fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                         onChanged: (val) {
@@ -545,13 +570,39 @@ class _CreatePublicQuickTournamentScreenState
       );
 
   Widget _buildSportGrid(AppColorsExtension colors) {
-    final sports = [
-      (AppConstants.sportBadminton, 'Cầu lông', Icons.sports_tennis_rounded),
-      (AppConstants.sportPickleball, 'Pickleball', Icons.sports_baseball_rounded),
-      (AppConstants.sportTennis, 'Tennis', Icons.sports_tennis_outlined),
-      (AppConstants.sportTableTennis, 'Bóng bàn', Icons.sports_cricket_rounded),
-      (AppConstants.sportFootball, 'Bóng đá', Icons.sports_soccer_rounded),
-    ];
+    final activeCategories = ref.watch(categoriesProvider).value ?? const [];
+
+    final sportsMeta = {
+      'badminton': ('Cầu lông', Icons.sports_tennis_rounded),
+      'pickleball': ('Pickleball', Icons.sports_baseball_rounded),
+      'tennis': ('Tennis', Icons.sports_tennis_outlined),
+      'table_tennis': ('Bóng bàn', Icons.sports_cricket_rounded),
+      'football': ('Bóng đá', Icons.sports_soccer_rounded),
+    };
+
+    // Chỉ hiển thị các môn thể thao đang ACTIVE từ backend, tuyệt đối không fallback hiển thị môn đã tắt
+    final sports = activeCategories.where((cat) => cat.isActive).map((cat) {
+      final slug = cat.slug.toLowerCase();
+      final metaKey = sportsMeta.keys.firstWhere(
+        (k) => slug.contains(k) || k.contains(slug),
+        orElse: () => 'badminton',
+      );
+      final meta = sportsMeta[metaKey] ?? (cat.name, Icons.sports_rounded);
+      return (metaKey, cat.name.isNotEmpty ? cat.name : meta.$1, meta.$2);
+    }).toList();
+
+    if (sports.isNotEmpty && !sports.any((s) => s.$1 == _sport)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _sport = sports.first.$1);
+      });
+    }
+
+    if (sports.isEmpty) {
+      return const SizedBox(
+        height: 60,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
 
     return Row(
       children: sports.map((s) {

@@ -1127,7 +1127,7 @@
   "dashboard_collapse": "Thu gọn",
   "dashboard_showMore": "Xem thêm ({count} giải khác)",
   "dashboard_quickActions": "Tiện ích nhanh",
-  "dashboard_createLite": "Tạo giải nhanh (Lite)",
+  "dashboard_createLite": "Tạo giải nhanh",
   "dashboard_createLiteSub": "Tạo nhanh trong câu lạc bộ của bạn",
   "dashboard_notificationsSub": "Xem mời giải, cập nhật và nhắc việc",
   "dashboard_clubInvites": "Lời mời câu lạc bộ",

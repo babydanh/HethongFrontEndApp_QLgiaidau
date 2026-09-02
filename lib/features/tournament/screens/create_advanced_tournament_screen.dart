@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -277,9 +278,25 @@ class _CreateAdvancedTournamentScreenState
     return Scaffold(
       backgroundColor: colors.bgDark,
       appBar: AppBar(
-        title: Text(isClub ? 'Tạo Giải Nâng Cao CLB' : 'Tạo Giải Đấu Nâng Cao'),
-        centerTitle: true,
+        title: Text(isClub ? 'Tạo Giải Nâng Cao' : 'Tạo Giải Đấu Nâng Cao'),
+        centerTitle: false,
         elevation: 0,
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              final query = widget.communityId != null
+                  ? '?communityId=${widget.communityId}'
+                  : '';
+              context.pushReplacement('/tournaments/create$query');
+            },
+            icon: const Icon(Icons.flash_on_rounded, size: 16),
+            label: const Text(
+              'Tạo nhanh',
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Column(
         children: [
@@ -821,13 +838,39 @@ class _CreateAdvancedTournamentScreenState
   }
 
   Widget _buildSportGrid(AppColorsExtension colors) {
-    final sports = [
-      (AppConstants.sportPickleball, 'Pickleball', Icons.sports_baseball_rounded),
-      (AppConstants.sportBadminton, 'Cầu lông', Icons.sports_tennis_rounded),
-      (AppConstants.sportTennis, 'Tennis', Icons.sports_tennis_outlined),
-      (AppConstants.sportTableTennis, 'Bóng bàn', Icons.sports_cricket_rounded),
-      (AppConstants.sportFootball, 'Bóng đá', Icons.sports_soccer_rounded),
-    ];
+    final activeCategories = ref.watch(categoriesProvider).value ?? const [];
+
+    final sportsMeta = {
+      'pickleball': ('Pickleball', Icons.sports_baseball_rounded),
+      'badminton': ('Cầu lông', Icons.sports_tennis_rounded),
+      'tennis': ('Tennis', Icons.sports_tennis_outlined),
+      'table_tennis': ('Bóng bàn', Icons.sports_cricket_rounded),
+      'football': ('Bóng đá', Icons.sports_soccer_rounded),
+    };
+
+    // Chỉ hiển thị các môn thể thao đang ACTIVE từ backend, tuyệt đối không fallback môn đã tắt
+    final sports = activeCategories.where((cat) => cat.isActive).map((cat) {
+      final slug = cat.slug.toLowerCase();
+      final metaKey = sportsMeta.keys.firstWhere(
+        (k) => slug.contains(k) || k.contains(slug),
+        orElse: () => 'pickleball',
+      );
+      final meta = sportsMeta[metaKey] ?? (cat.name, Icons.sports_rounded);
+      return (metaKey, cat.name.isNotEmpty ? cat.name : meta.$1, meta.$2);
+    }).toList();
+
+    if (sports.isNotEmpty && !sports.any((s) => s.$1 == _sport)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _sport = sports.first.$1);
+      });
+    }
+
+    if (sports.isEmpty) {
+      return const SizedBox(
+        height: 60,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
 
     return Row(
       children: sports.map((s) {

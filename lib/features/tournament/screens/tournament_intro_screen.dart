@@ -339,9 +339,34 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     // 2. Tab [🏆 Kết quả] CHỈ HIỆN KHI ĐÃ CÓ KẾT QUẢ / TRẬN ĐẤU HOÀN THÀNH
     if (hasResults) {
       tabHeaders.add(
-        const Tab(
+        Tab(
           height: 34,
-          text: 'Kết quả',
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.emoji_events_rounded, size: 14),
+              const SizedBox(width: 5),
+              const Text('Kết quả'),
+              if (completedMatches.isNotEmpty) ...[
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF64748B),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${completedMatches.length}',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       );
       tabViews.add(
@@ -396,18 +421,18 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
     // Đội tham gia
     tabViews.add(
-      SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 160),
-        child: tournament.isClubLite
-            ? _buildLiteTeamList(teamsAsync.value ?? const [])
-            : TeamsTab(
-                teams: teamsAsync.value ?? const [],
-                selectedDivision: _selectedDivision,
-                selectedDivisionId: _selectedDivisionId,
-                isTeamSport: isTeamSport,
-              ),
-      ),
+      tournament.isClubLite
+          ? SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.only(bottom: 160),
+              child: _buildLiteTeamList(teamsAsync.value ?? const []),
+            )
+          : TeamsTab(
+              teams: teamsAsync.value ?? const [],
+              selectedDivision: _selectedDivision,
+              selectedDivisionId: _selectedDivisionId,
+              isTeamSport: isTeamSport,
+            ),
     );
 
     // Bảng đấu (BracketTab with divisions selector)

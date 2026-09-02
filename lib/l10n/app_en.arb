@@ -1127,7 +1127,7 @@
   "dashboard_collapse": "Collapse",
   "dashboard_showMore": "Show more ({count} more tournaments)",
   "dashboard_quickActions": "Quick Actions",
-  "dashboard_createLite": "Create Quick Tournament (Lite)",
+  "dashboard_createLite": "Create Quick Tournament",
   "dashboard_createLiteSub": "Quickly create in your club",
   "dashboard_notificationsSub": "View invites, updates and reminders",
   "dashboard_clubInvites": "Club Invites",
