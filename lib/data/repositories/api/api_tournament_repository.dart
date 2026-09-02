@@ -240,6 +240,18 @@ class ApiTournamentRepository implements ITournamentRepository {
       return null;
     } catch (e, stack) {
       _log.error('Error fetching tournament by id', e, stack);
+      if (e is DioException) {
+        final statusCode = e.response?.statusCode;
+        if (statusCode == 403) {
+          final serverMsg = e.response?.data is Map
+              ? e.response?.data['message']?.toString()
+              : null;
+          throw TournamentAccessDeniedException(
+            message: serverMsg ??
+                'Giải đấu nội bộ chỉ dành cho thành viên của Câu Lạc Bộ.',
+          );
+        }
+      }
       // Rate limits and transient network errors must not turn an existing
       // tournament into a false "not found" screen.
       return _tournamentCache[id];

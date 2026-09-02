@@ -17,6 +17,7 @@ class StatusBadge extends StatelessWidget {
     );
     final bgColor = StatusHelper.getTournamentStatusColor(statusKey, context);
     final isLive = statusKey == AppConstants.statusInProgress;
+    final isCompleted = statusKey.toUpperCase() == AppConstants.statusCompleted.toUpperCase() || statusKey.toUpperCase() == 'COMPLETED';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -37,6 +38,13 @@ class StatusBadge extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 5),
+          ] else if (isCompleted) ...[
+            const Icon(
+              Icons.check_circle_rounded,
+              size: 12,
+              color: Colors.white,
+            ),
+            const SizedBox(width: 4),
           ],
           Text(
             isLive ? l10n.matchTableLive : statusName.toUpperCase(),

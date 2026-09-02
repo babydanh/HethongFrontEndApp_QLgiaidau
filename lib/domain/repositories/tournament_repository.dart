@@ -125,3 +125,16 @@ abstract class ITournamentRepository {
     String? divisionId,
   });
 }
+
+class TournamentAccessDeniedException implements Exception {
+  final String message;
+  final String? communityId;
+
+  const TournamentAccessDeniedException({
+    required this.message,
+    this.communityId,
+  });
+
+  @override
+  String toString() => message;
+}
