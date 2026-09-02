@@ -82,13 +82,15 @@ class _LiveTournamentWithMatchesCardState
 
       if (mounted) {
         setState(() {
-          _pageMatches[pageIndex] = result.matches;
+          if (result.matches.isNotEmpty) {
+            _pageMatches[pageIndex] = result.matches;
+            _currentPageIndex = pageIndex;
+          }
           _hasMore = result.hasMore;
           _totalMatches = result.total;
           if (result.nextCursor != null && result.nextCursor!.isNotEmpty) {
             _pageCursors[pageIndex + 1] = result.nextCursor;
           }
-          _currentPageIndex = pageIndex;
           _isLoading = false;
         });
       }
@@ -122,9 +124,6 @@ class _LiveTournamentWithMatchesCardState
 
     final currentMatches = _pageMatches[_currentPageIndex] ?? const <MatchModel>[];
 
-    if (currentMatches.isEmpty && !_isLoading && _pageMatches.isNotEmpty) {
-      return const SizedBox.shrink();
-    }
     if (currentMatches.isEmpty && !_isLoading && _pageMatches.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -292,9 +291,7 @@ class _LiveTournamentWithMatchesCardState
           Row(
             children: [
               Text(
-                _totalMatches > 0
-                    ? '${l10n.userProfileTotalMatches}: $_totalMatches'
-                    : 'Trang ${_currentPageIndex + 1}',
+                'Trang ${_currentPageIndex + 1}',
                 style: TextStyle(
                   color: colors.textMuted,
                   fontSize: 11.5,
@@ -998,34 +995,17 @@ class _LiveTournamentWithMatchesCardState
                       ),
                     ),
 
-                    // Big Score & Set Breakdown
+                    // Big Score (Set hiện tại)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '${match.score1} - ${match.score2}',
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF0F172A),
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          if (match.sets.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                match.sets.map((s) => '${s.score1}-${s.score2}').join('  '),
-                                style: const TextStyle(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF64748B),
-                                ),
-                              ),
-                            ),
-                        ],
+                      child: Text(
+                        '${match.score1} - ${match.score2}',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF0F172A),
+                          letterSpacing: 1.2,
+                        ),
                       ),
                     ),
 

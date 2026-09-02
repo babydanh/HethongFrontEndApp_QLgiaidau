@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
 
 class OverviewTab extends StatefulWidget {
@@ -127,6 +131,33 @@ class _OverviewTabState extends State<OverviewTab> {
   String _formatDate(DateTime? date) {
     if (date == null) return 'Chưa cập nhật';
     return DateFormat('dd/MM/yyyy').format(date);
+  }
+
+  final GlobalKey _divisionsKey = GlobalKey();
+
+  IconData _getBracketFormatIcon(String? bracketType) {
+    final type = (bracketType ?? '').toUpperCase();
+    if (type.contains('ROUND_ROBIN') || type.contains('ROBIN') || type.contains('VÒNG TRÒN')) {
+      return Icons.sync_rounded;
+    }
+    if (type.contains('GROUP_STAGE') || type.contains('GROUP') || type.contains('BẢNG')) {
+      return Icons.alt_route_rounded;
+    }
+    if (type.contains('DOUBLE_ELIMINATION') || type.contains('DOUBLE_ELIM') || type.contains('NHÁNH KÉP')) {
+      return Icons.call_split_rounded;
+    }
+    return Icons.account_tree_outlined;
+  }
+
+  void _scrollToDivisions() {
+    final targetContext = _divisionsKey.currentContext;
+    if (targetContext != null) {
+      Scrollable.ensureVisible(
+        targetContext,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOutCubic,
+      );
+    }
   }
 
   String _formatCurrency(double? amount) {
@@ -333,6 +364,103 @@ class _OverviewTabState extends State<OverviewTab> {
                   const SizedBox(height: 12),
                 ],
 
+                // ─── Banner Quản lý giải đấu dành riêng cho Ban Tổ Chức (Chuẩn Web) ───
+                Consumer(
+                  builder: (context, ref, _) {
+                    final authState = ref.watch(authProvider);
+                    final userProfile = ref.watch(userProfileProvider).value;
+                    final isCreator = userProfile != null &&
+                        userProfile.id.isNotEmpty &&
+                        userProfile.id == t.creatorId;
+                    final canManage = authState.isAdmin ||
+                        authState.isOrganizer ||
+                        isCreator;
+
+                    if (!canManage) return const SizedBox.shrink();
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppTheme.primary.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.admin_panel_settings_rounded,
+                              color: AppTheme.primary,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Bạn là Ban tổ chức',
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                Text(
+                                  t.isLite
+                                      ? 'Quản lý danh sách VĐV, tạo nhánh đấu'
+                                      : 'Bốc thăm, điều hành trận & cập nhật tỉ số',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: colors.textMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppTheme.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: () {
+                              if (t.isLite) {
+                                context.push('/lite-manage/${t.id}');
+                              } else {
+                                context.push('/organizer/tournaments/${t.id}/ops');
+                              }
+                            },
+                            icon: const Icon(Icons.settings_suggest_rounded, size: 16),
+                            label: const Text(
+                              'Quản lý',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+
                 // Action Buttons (Hiển thị cho giải truyền thống / nâng cao / công khai)
                 if (!isClubLite) ...[
                   Row(
@@ -357,7 +485,7 @@ class _OverviewTabState extends State<OverviewTab> {
                             size: 16,
                           ),
                           label: const Text(
-                            'Xem Lịch thi đấu',
+                            'Lịch thi đấu',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
@@ -365,13 +493,43 @@ class _OverviewTabState extends State<OverviewTab> {
                           ),
                         ),
                       ),
+                      if (t.divisions.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.primary,
+                            side: BorderSide(
+                              color: AppTheme.primary.withValues(alpha: 0.4),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 11,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: _scrollToDivisions,
+                          icon: const Icon(
+                            Icons.layers_outlined,
+                            size: 16,
+                          ),
+                          label: const Text(
+                            'Nội dung',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(width: 8),
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
                           foregroundColor: colors.textPrimary,
                           side: BorderSide(color: colors.border),
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
+                            horizontal: 12,
                             vertical: 11,
                           ),
                           shape: RoundedRectangleBorder(
@@ -423,19 +581,18 @@ class _OverviewTabState extends State<OverviewTab> {
                   const SizedBox(height: 12),
                 ],
 
-                // ─── 3. DANH SÁCH NỘI DUNG / PHÂN HẠNG THI ĐẤU (CHUẨN WEB) ───
+                // ─── 3. DANH SÁCH NỘI DUNG / PHÂN HẠNG THI ĐẤU (CHUẨN WEB & TASTE SKILL) ───
                 if (t.divisions.isNotEmpty) ...[
-                  _buildSectionHeader('NỘI DUNG THI ĐẤU (${t.divisions.length})'),
+                  KeyedSubtree(
+                    key: _divisionsKey,
+                    child: _buildSectionHeader('NỘI DUNG THI ĐẤU (${t.divisions.length})'),
+                  ),
                   const SizedBox(height: 10),
                   ...t.divisions.map((div) => _buildDivisionItem(div, colors)),
                   const SizedBox(height: 20),
                   Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
                   const SizedBox(height: 16),
                 ],
-
-                const SizedBox(height: 20),
-                Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
-                const SizedBox(height: 16),
 
                 // ─── 4. THÔNG TIN ĐĂNG KÝ & LỆ PHÍ ───
                 _buildSectionHeader('THỜI GIAN ĐĂNG KÝ & LỆ PHÍ'),
@@ -483,14 +640,15 @@ class _OverviewTabState extends State<OverviewTab> {
     final curP = div.participantCount;
     final isFull = maxP > 0 && curP >= maxP;
     final isExpanded = _expandedDivisionId == div.id;
+    final formatIcon = _getBracketFormatIcon(div.bracketType);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isExpanded ? AppTheme.primary : colors.border.withValues(alpha: 0.6),
+          color: isExpanded ? AppTheme.primary : colors.border.withValues(alpha: 0.7),
           width: isExpanded ? 1.5 : 1,
         ),
       ),
@@ -502,17 +660,33 @@ class _OverviewTabState extends State<OverviewTab> {
                 _expandedDivisionId = isExpanded ? null : div.id;
               });
             },
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Row(
                 children: [
-                  Icon(
-                    isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
-                    size: 20,
-                    color: isExpanded ? AppTheme.primary : colors.textMuted,
+                  // Ô icon thể thức thi đấu (chuẩn Web getBracketFormatIcon)
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: isExpanded
+                          ? AppTheme.primary
+                          : AppTheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isExpanded
+                            ? AppTheme.primary
+                            : AppTheme.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Icon(
+                      formatIcon,
+                      size: 17,
+                      color: isExpanded ? Colors.white : AppTheme.primary,
+                    ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       div.name,
@@ -523,24 +697,39 @@ class _OverviewTabState extends State<OverviewTab> {
                       ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   if (isFull) ...[
+                    // Badge Đã kết thúc / Đã đủ theo style Muted Web
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 7,
-                        vertical: 2,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: colors.bgDark,
+                        color: colors.bgSurface,
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: colors.border),
-                      ),
-                      child: Text(
-                        'Đã đủ',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textMuted,
+                        border: Border.all(
+                          color: colors.border.withValues(alpha: 0.8),
                         ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 11,
+                            color: colors.textMuted,
+                          ),
+                          const SizedBox(width: 3.5),
+                          Text(
+                            'Đã kết thúc',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textMuted,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -555,7 +744,7 @@ class _OverviewTabState extends State<OverviewTab> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        maxP > 0 ? '$curP / $maxP' : '$curP VĐV',
+                        maxP > 0 ? '$curP/$maxP' : '$curP VĐV',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -564,6 +753,12 @@ class _OverviewTabState extends State<OverviewTab> {
                       ),
                     ],
                   ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                    size: 18,
+                    color: isExpanded ? AppTheme.primary : colors.textMuted,
+                  ),
                 ],
               ),
             ),
@@ -571,7 +766,7 @@ class _OverviewTabState extends State<OverviewTab> {
           if (isExpanded) ...[
             Divider(color: colors.border.withValues(alpha: 0.5), height: 1),
             Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

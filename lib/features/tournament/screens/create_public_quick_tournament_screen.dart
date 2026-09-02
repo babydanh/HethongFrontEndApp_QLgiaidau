@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-/// Tạo nhanh Public trên app. Không nhận communityId; quản lý chi tiết mở trên web.
+/// Tạo giải nhanh (Quick Lite) trên mobile app.
+/// Hỗ trợ cả tạo Công khai ngoài Public và tạo gắn liền với CLB (communityId).
 class CreatePublicQuickTournamentScreen extends ConsumerStatefulWidget {
-  const CreatePublicQuickTournamentScreen({super.key});
+  final String? communityId;
+
+  const CreatePublicQuickTournamentScreen({super.key, this.communityId});
 
   @override
   ConsumerState<CreatePublicQuickTournamentScreen> createState() =>
@@ -21,97 +26,126 @@ class CreatePublicQuickTournamentScreen extends ConsumerStatefulWidget {
 class _CreatePublicQuickTournamentScreenState
     extends ConsumerState<CreatePublicQuickTournamentScreen> {
   static const _log = AppLogger('CreatePublicQuickTournament');
+  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _descController = TextEditingController();
   final _maxTeamsController = TextEditingController(text: '16');
+
   String _sport = AppConstants.sportBadminton;
   String _format = AppConstants.formatSingles;
   String _bracket = AppConstants.bracketSingleElimination;
   String _visibility = 'PUBLIC';
-  static const _registrationMode = 'APPROVAL';
+  String _registrationMode = 'APPROVAL';
+  DateTime? _startDate;
+  TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
+  bool _isRanked = false;
   bool _isSubmitting = false;
+
   AppLocalizations get l10n => AppLocalizations.of(context)!;
 
-  Map<String, String> _sportOptions() => {
-    AppConstants.sportFootball: l10n.createClubTournament_sportFootball,
-    AppConstants.sportPickleball: l10n.createClubTournament_sportPickleball,
-    AppConstants.sportBadminton: l10n.createClubTournament_sportBadminton,
-    AppConstants.sportTennis: l10n.createClubTournament_sportTennis,
-    AppConstants.sportTableTennis: l10n.createClubTournament_sportTableTennis,
-  };
-
-  Map<String, String> _formatOptions() => {
-    AppConstants.formatSingles: l10n.quickCreateFormatSingles,
-    AppConstants.formatDoubles: l10n.quickCreateFormatDoubles,
-    AppConstants.formatMixedDoubles: l10n.quickCreateFormatMixedDoubles,
-  };
-
-  Map<String, String> _bracketOptions() => {
-    AppConstants.bracketSingleElimination: l10n.quickCreateBracketSingle,
-    AppConstants.bracketDoubleElimination: l10n.quickCreateBracketDouble,
-    AppConstants.bracketRoundRobin: l10n.quickCreateBracketRoundRobin,
-    AppConstants.bracketGroupStageKnockout: l10n.quickCreateBracketGroup,
-  };
+  @override
+  void initState() {
+    super.initState();
+    if (widget.communityId != null && widget.communityId!.isNotEmpty) {
+      _visibility = 'PRIVATE';
+    }
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _descController.dispose();
     _maxTeamsController.dispose();
     super.dispose();
   }
 
+  String _mapSportSlug() {
+    switch (_sport) {
+      case AppConstants.sportBadminton:
+        return 'badminton';
+      case AppConstants.sportTennis:
+        return 'tennis';
+      case AppConstants.sportPickleball:
+        return 'pickleball';
+      case AppConstants.sportTableTennis:
+        return 'table_tennis';
+      case AppConstants.sportFootball:
+        return 'football';
+      default:
+        return 'badminton';
+    }
+  }
+
   Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
     final name = _nameController.text.trim();
-    final maxTeams = int.tryParse(_maxTeamsController.text.trim());
-    if (name.isEmpty) {
-      _showError(l10n.quickCreateNameRequired);
-      return;
-    }
-    if (maxTeams == null || maxTeams < 2 || maxTeams > 32) {
-      _showError(l10n.quickCreateMaxTeamsInvalid);
-      return;
-    }
+    final maxTeams = int.tryParse(_maxTeamsController.text.trim()) ?? 16;
 
     setState(() => _isSubmitting = true);
     try {
+      final payload = <String, dynamic>{
+        'name': name,
+        if (widget.communityId != null && widget.communityId!.isNotEmpty)
+          'communityId': widget.communityId,
+        'sport': _mapSportSlug(),
+        'format': _sport == AppConstants.sportFootball
+            ? AppConstants.formatDoubles
+            : _format,
+        if (_format == AppConstants.formatMixedDoubles)
+          'genderRestriction': 'MIXED',
+        'bracketType': _bracket,
+        'maxTeams': maxTeams,
+        'visibility': _visibility,
+        'registrationMode': _registrationMode,
+        'isRanked': _isRanked,
+        if (_descController.text.trim().isNotEmpty)
+          'description': _descController.text.trim(),
+        if (_startDate != null) ...{
+          'startDate': DateTime(
+            _startDate!.year,
+            _startDate!.month,
+            _startDate!.day,
+            _startTime.hour,
+            _startTime.minute,
+          ).toIso8601String(),
+          'startTime':
+              '${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}',
+        },
+      };
+
+      _log.info('Gửi yêu cầu tạo giải nhanh: $name');
       final response = await ref
           .read(dioClientProvider)
           .dio
-          .post(
-            '/tournaments/lite',
-            data: {
-              'name': name,
-              'sport': _sport,
-              'format': _format,
-              if (_format == AppConstants.formatMixedDoubles)
-                'genderRestriction': 'MIXED',
-              'bracketType': _bracket,
-              'maxTeams': maxTeams,
-              'visibility': _visibility,
-              'registrationMode': _registrationMode,
-              'isRanked': false,
-            },
-          );
+          .post('/tournaments/lite', data: payload);
+
       final raw = response.data;
-      final payload =
-          raw is Map<String, dynamic> && raw['data'] is Map<String, dynamic>
-          ? raw['data'] as Map<String, dynamic>
-          : raw is Map<String, dynamic>
-          ? raw
+      final dataJson = raw is Map<String, dynamic>
+          ? (raw['data'] as Map<String, dynamic>? ?? raw)
           : <String, dynamic>{};
-      final tournamentId = payload['id']?.toString() ?? '';
-      if (tournamentId.isEmpty) {
-        throw FormatException(l10n.quickCreateMissingId);
+
+      final result = LiteTournamentCreateResult.fromJson(dataJson);
+      _log.info('Tạo giải nhanh thành công ID: ${result.id}');
+
+      if (widget.communityId != null && widget.communityId!.isNotEmpty) {
+        ref.invalidate(communityTournamentsProvider(widget.communityId!));
+        ref.invalidate(communityDetailProvider(widget.communityId!));
       }
-      _log.info('Tạo Public Quick thành công: $tournamentId');
-      await _openWebManagement(tournamentId);
+
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.quickCreateCreated)));
-        context.pop();
+        // Tự động điều hướng thẳng vào trang quản lý giải đấu ngay khi tạo thành công
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Tạo giải đấu "${result.name}" thành công!'),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        context.pushReplacement('/lite-manage/${result.id}');
       }
     } catch (error, stack) {
-      _log.error('Không thể tạo Public Quick', error, stack);
+      _log.error('Lỗi khi tạo giải nhanh', error, stack);
       if (mounted) {
         _showError(ErrorParser.parse(error, l10n.quickCreateSubmitError));
       }
@@ -120,231 +154,610 @@ class _CreatePublicQuickTournamentScreenState
     }
   }
 
-  Future<void> _openWebManagement(String tournamentId) async {
-    final uri = Uri.parse(
-      '${AppConstants.appDomain}/organizer/tournaments/$tournamentId/manage',
-    );
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      throw FormatException(l10n.quickCreateOpenWebError);
-    }
-  }
-
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: context.colors.error),
+      SnackBar(
+        content: Text(message),
+        backgroundColor: context.colors.error,
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final isClub = widget.communityId != null && widget.communityId!.isNotEmpty;
+
     return Scaffold(
       backgroundColor: colors.bgDark,
-      appBar: AppBar(title: Text(l10n.quickCreateTitle), centerTitle: true),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Text(
-            l10n.quickCreateHeading,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: colors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l10n.quickCreateDescription,
-            style: TextStyle(color: colors.textMuted, height: 1.35),
-          ),
-          const SizedBox(height: 20),
-          _label(l10n.quickCreateNameLabel, colors),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _nameController,
-            decoration: InputDecoration(hintText: l10n.quickCreateNameHint),
-          ),
-          const SizedBox(height: 18),
-          _label(l10n.quickCreateSportLabel, colors),
-          const SizedBox(height: 6),
-          DropdownButtonFormField<String>(
-            initialValue: _sport,
-            items: _sportOptions().entries
-                .map(
-                  (entry) => DropdownMenuItem(
-                    value: entry.key,
-                    child: Text(entry.value),
+      appBar: AppBar(
+        title: Text(isClub ? 'Tạo Giải Nhanh Trong CLB' : l10n.quickCreateTitle),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
+          children: [
+            // ─── Banner Thông tin ───
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.25),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.bolt_rounded,
+                      color: Color(0xFF2563EB),
+                      size: 22,
+                    ),
                   ),
-                )
-                .toList(),
-            onChanged: (value) => setState(() => _sport = value ?? _sport),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Expanded(
-                child: _dropdown(
-                  l10n.quickCreateFormatLabel,
-                  _format,
-                  _formatOptions(),
-                  (value) => setState(() => _format = value),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isClub
+                              ? 'Tạo nhanh giải đấu nội bộ cho câu lạc bộ'
+                              : 'Khởi tạo giải đấu công khai trong 30 giây',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Sơ đồ nhánh đấu và danh sách thi đấu sẽ được tự động thiết lập.',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: colors.textSecondary,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // ─── Tên giải đấu ───
+            _sectionLabel('Tên giải đấu *', colors),
+            const SizedBox(height: 6),
+            TextFormField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                hintText: 'VD: Giải Giao Lưu Mùa Hè 2026',
+                prefixIcon: const Icon(Icons.emoji_events_outlined, size: 20),
+                filled: true,
+                fillColor: colors.bgSurface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.border),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _dropdown(
-                  l10n.quickCreateBracketLabel,
-                  _bracket,
-                  _bracketOptions(),
-                  (value) => setState(() => _bracket = value),
-                ),
-              ),
+              validator: (val) {
+                if (val == null || val.trim().isEmpty) {
+                  return l10n.quickCreateNameRequired;
+                }
+                if (val.trim().length < 3) {
+                  return 'Tên giải đấu phải có ít nhất 3 ký tự';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 18),
+
+            // ─── Môn thể thao ───
+            _sectionLabel('Môn thể thao *', colors),
+            const SizedBox(height: 8),
+            _buildSportGrid(colors),
+            const SizedBox(height: 18),
+
+            // ─── Thể thức thi đấu ───
+            _sectionLabel('Sơ đồ thi đấu *', colors),
+            const SizedBox(height: 8),
+            _buildBracketSelector(colors),
+            const SizedBox(height: 18),
+
+            // ─── Nội dung thi đấu ───
+            if (_sport != AppConstants.sportFootball) ...[
+              _sectionLabel('Định dạng thi đấu', colors),
+              const SizedBox(height: 8),
+              _buildFormatPills(colors),
+              const SizedBox(height: 18),
             ],
-          ),
-          const SizedBox(height: 18),
-          _label(l10n.quickCreateMaxTeamsLabel, colors),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _maxTeamsController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(hintText: l10n.quickCreateMaxTeamsHint),
-          ),
-          const SizedBox(height: 18),
-          _choiceGroup(
-            l10n.quickCreateVisibilityLabel,
-            {
-              'PUBLIC': l10n.quickCreateVisibilityPublic,
-              'PRIVATE': l10n.quickCreateVisibilityPrivate,
-            },
-            _visibility,
-            (value) => setState(() => _visibility = value),
-          ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colors.bgSurface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colors.border),
+
+            // ─── Quy mô & Giới hạn số đội ───
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _sectionLabel('Số đội / VĐV tối đa', colors),
+                      const SizedBox(height: 6),
+                      TextFormField(
+                        controller: _maxTeamsController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          hintText: '16',
+                          prefixIcon: const Icon(Icons.people_outline_rounded, size: 20),
+                          filled: true,
+                          fillColor: colors.bgSurface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: colors.border),
+                          ),
+                        ),
+                        validator: (val) {
+                          final n = int.tryParse(val?.trim() ?? '');
+                          if (n == null || n < 2 || n > 64) {
+                            return 'Số đội từ 2 đến 64';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _sectionLabel('Quyền riêng tư', colors),
+                      const SizedBox(height: 6),
+                      DropdownButtonFormField<String>(
+                        initialValue: _visibility,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: colors.bgSurface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: colors.border),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'PUBLIC',
+                            child: Text('Công khai (Mọi người)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'PRIVATE',
+                            child: Text('Nội bộ (Cần mã mời)'),
+                          ),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) setState(() => _visibility = val);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            child: Text(
-              l10n.quickCreateRegistrationNote,
-              style: TextStyle(
-                fontSize: 12,
-                color: colors.textSecondary,
-                height: 1.35,
+            const SizedBox(height: 18),
+
+            // ─── Thời gian diễn ra ───
+            _sectionLabel('Ngày & Giờ khai mạc', colors),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: InkWell(
+                    onTap: _pickStartDate,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: colors.bgSurface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colors.border),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_today_rounded, size: 18, color: colors.textMuted),
+                          const SizedBox(width: 8),
+                          Text(
+                            _startDate != null
+                                ? DateFormat('dd/MM/yyyy').format(_startDate!)
+                                : 'Chọn ngày thi đấu',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: _startDate != null ? colors.textPrimary : colors.textMuted,
+                              fontWeight: _startDate != null ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: InkWell(
+                    onTap: _pickStartTime,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: colors.bgSurface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colors.border),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.access_time_rounded, size: 18, color: colors.textMuted),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+
+            // ─── Chế độ xét duyệt đăng ký ───
+            _sectionLabel('Chế độ đăng ký tham gia', colors),
+            const SizedBox(height: 6),
+            DropdownButtonFormField<String>(
+              initialValue: _registrationMode,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: colors.bgSurface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: 'APPROVAL',
+                  child: Text('Ban tổ chức duyệt đơn đăng ký'),
+                ),
+                DropdownMenuItem(
+                  value: 'OPEN',
+                  child: Text('Đăng ký tự do (Vào thẳng nhánh đấu)'),
+                ),
+                DropdownMenuItem(
+                  value: 'INVITE_ONLY',
+                  child: Text('Chỉ nhận người có mã mời'),
+                ),
+              ],
+              onChanged: (val) {
+                if (val != null) setState(() => _registrationMode = val);
+              },
+            ),
+            const SizedBox(height: 14),
+
+            // ─── Tính điểm ELO Xếp hạng ───
+            Container(
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.border),
+              ),
+              child: SwitchListTile(
+                title: const Text(
+                  'Tính điểm xếp hạng ELO',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                ),
+                subtitle: Text(
+                  'Cộng/trừ điểm xếp hạng người chơi sau mỗi trận đấu',
+                  style: TextStyle(fontSize: 11.5, color: colors.textMuted),
+                ),
+                value: _isRanked,
+                activeThumbColor: AppTheme.primary,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                onChanged: (val) => setState(() => _isRanked = val),
               ),
             ),
-          ),
-          const SizedBox(height: 18),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colors.bgSurface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colors.border),
-            ),
-            child: Text(
-              l10n.quickCreateClubNote,
-              style: TextStyle(
-                fontSize: 12,
-                color: colors.textSecondary,
-                height: 1.35,
+            const SizedBox(height: 18),
+
+            // ─── Ghi chú / Điều lệ tóm tắt ───
+            _sectionLabel('Ghi chú hoặc địa điểm thi đấu (Tùy chọn)', colors),
+            const SizedBox(height: 6),
+            TextFormField(
+              controller: _descController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                hintText: 'VD: Sân Cầu Lông Kỳ Hòa, Quận 10. Lệ phí 50k/người...',
+                filled: true,
+                fillColor: colors.bgSurface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.border),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _isSubmitting ? null : _submit,
-            child: Text(
-              _isSubmitting
-                  ? l10n.quickCreateSubmitting
-                  : l10n.quickCreateSubmit,
+            const SizedBox(height: 28),
+
+            // ─── Nút Tạo giải đấu ───
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: FilledButton.icon(
+                onPressed: _isSubmitting ? null : _submit,
+                icon: _isSubmitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.flash_on_rounded, size: 20),
+                label: Text(
+                  _isSubmitting ? 'Đang tạo giải đấu...' : 'Hoàn Tất & Tạo Giải Đấu',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                ),
+                style: FilledButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _label(String text, AppColorsExtension colors) => Text(
-    text,
-    style: TextStyle(
-      fontSize: 13,
-      fontWeight: FontWeight.w700,
-      color: colors.textSecondary,
-    ),
-  );
-
-  Widget _dropdown(
-    String label,
-    String value,
-    Map<String, String> options,
-    ValueChanged<String> onChanged,
-  ) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        label,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: context.colors.textSecondary,
-        ),
-      ),
-      const SizedBox(height: 6),
-      DropdownButtonFormField<String>(
-        initialValue: value,
-        items: options.entries
-            .map(
-              (entry) => DropdownMenuItem(
-                value: entry.key,
-                child: Text(entry.value, overflow: TextOverflow.ellipsis),
-              ),
-            )
-            .toList(),
-        onChanged: (next) {
-          if (next != null) onChanged(next);
-        },
-      ),
-    ],
-  );
-
-  Widget _choiceGroup(
-    String title,
-    Map<String, String> options,
-    String value,
-    ValueChanged<String> onChanged,
-  ) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
+  Widget _sectionLabel(String title, AppColorsExtension colors) => Text(
         title,
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w700,
-          color: context.colors.textSecondary,
+          color: colors.textSecondary,
         ),
-      ),
-      const SizedBox(height: 8),
-      RadioGroup<String>(
-        groupValue: value,
-        onChanged: (next) {
-          if (next != null) onChanged(next);
-        },
-        child: Column(
-          children: options.entries
-              .map(
-                (entry) => RadioListTile<String>(
-                  value: entry.key,
-                  title: Text(entry.value),
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
+      );
+
+  Widget _buildSportGrid(AppColorsExtension colors) {
+    final sports = [
+      (AppConstants.sportBadminton, 'Cầu lông', Icons.sports_tennis_rounded),
+      (AppConstants.sportPickleball, 'Pickleball', Icons.sports_baseball_rounded),
+      (AppConstants.sportTennis, 'Tennis', Icons.sports_tennis_outlined),
+      (AppConstants.sportTableTennis, 'Bóng bàn', Icons.sports_cricket_rounded),
+      (AppConstants.sportFootball, 'Bóng đá', Icons.sports_soccer_rounded),
+    ];
+
+    return Row(
+      children: sports.map((s) {
+        final selected = _sport == s.$1;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: s != sports.last ? 8 : 0),
+            child: GestureDetector(
+              onTap: () => setState(() {
+                _sport = s.$1;
+                if (s.$1 == AppConstants.sportFootball) {
+                  _format = AppConstants.formatDoubles;
+                }
+              }),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? AppTheme.primary.withValues(alpha: 0.12)
+                      : colors.bgSurface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: selected ? AppTheme.primary : colors.border,
+                    width: selected ? 1.8 : 1,
+                  ),
                 ),
-              )
-              .toList(),
-        ),
+                child: Column(
+                  children: [
+                    Icon(
+                      s.$3,
+                      size: 24,
+                      color: selected ? AppTheme.primary : colors.textSecondary,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      s.$2,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: selected ? AppTheme.primary : colors.textSecondary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildFormatPills(AppColorsExtension colors) {
+    final formats = [
+      (AppConstants.formatSingles, 'Đánh Đơn'),
+      (AppConstants.formatDoubles, 'Đánh Đôi'),
+      (AppConstants.formatMixedDoubles, 'Đôi Nam Nữ'),
+    ];
+
+    return Row(
+      children: formats.map((f) {
+        final selected = _format == f.$1;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: f != formats.last ? 8 : 0),
+            child: GestureDetector(
+              onTap: () => setState(() => _format = f.$1),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 11),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? AppTheme.primary.withValues(alpha: 0.1)
+                      : colors.bgSurface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: selected ? AppTheme.primary : colors.border,
+                    width: selected ? 1.5 : 1,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    f.$2,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: selected ? AppTheme.primary : colors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildBracketSelector(AppColorsExtension colors) {
+    final brackets = [
+      (
+        AppConstants.bracketSingleElimination,
+        'Loại trực tiếp (Knockout)',
+        'Thua 1 trận bị loại ngay. Nhanh gọn, kịch tính.',
+        Icons.account_tree_outlined,
       ),
-    ],
-  );
+      (
+        AppConstants.bracketDoubleElimination,
+        'Nhánh thắng - Nhánh thua',
+        'Có cơ hội sửa sai ở nhánh dưới. Nhiều trận hơn.',
+        Icons.alt_route_rounded,
+      ),
+      (
+        AppConstants.bracketRoundRobin,
+        'Vòng tròn tính điểm',
+        'Tất cả các đội đều gặp nhau. Công bằng tối đa.',
+        Icons.loop_rounded,
+      ),
+      (
+        AppConstants.bracketGroupStageKnockout,
+        'Vòng bảng + Knockout',
+        'Chia bảng đá vòng tròn, lấy đội đầu bảng vào tứ kết/bán kết.',
+        Icons.grid_view_rounded,
+      ),
+    ];
+
+    return Column(
+      children: brackets.map((b) {
+        final selected = _bracket == b.$1;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: InkWell(
+            onTap: () => setState(() => _bracket = b.$1),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: selected
+                    ? AppTheme.primary.withValues(alpha: 0.08)
+                    : colors.bgSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: selected ? AppTheme.primary : colors.border,
+                  width: selected ? 1.6 : 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    selected ? Icons.radio_button_checked : Icons.radio_button_off,
+                    color: selected ? AppTheme.primary : colors.textMuted,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Icon(b.$4, size: 20, color: selected ? AppTheme.primary : colors.textMuted),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          b.$2,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: selected ? AppTheme.primary : colors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          b.$3,
+                          style: TextStyle(fontSize: 11, color: colors.textMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Future<void> _pickStartDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _startDate ?? now,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+    );
+    if (picked != null) {
+      setState(() => _startDate = picked);
+    }
+  }
+
+  Future<void> _pickStartTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _startTime,
+    );
+    if (picked != null) {
+      setState(() => _startTime = picked);
+    }
+  }
 }
+

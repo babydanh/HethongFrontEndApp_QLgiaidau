@@ -88,7 +88,13 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
         ),
         title: Text(
           state.tournamentName ?? l10n.lite_managementTitle,
@@ -1489,9 +1495,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 children: [
                   OutlinedButton.icon(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.lite_bracketComingSoon)),
-                      );
+                      context.push('/tournaments/${widget.tournamentId}');
                     },
                     icon: const Icon(Icons.visibility_rounded, size: 18),
                     label: Text(l10n.viewBracket),

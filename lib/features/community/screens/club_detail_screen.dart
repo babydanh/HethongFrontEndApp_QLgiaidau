@@ -474,8 +474,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   // ─── Helpers ───
   Color _sportColor(String name) {
     final n = name.toLowerCase();
-    if (n.contains('badminton') || n.contains('cầu lông'))
+    if (n.contains('badminton') || n.contains('cầu lông')) {
       return const Color(0xFF0284C7);
+    }
     if (n.contains('tennis')) return const Color(0xFFEA580C);
     if (n.contains('pickleball')) return const Color(0xFF059669);
     return const Color(0xFF0284C7);
@@ -916,6 +917,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       if (!mounted) return;
       if (ok) {
         await _fetchMembership();
+        if (!mounted) return;
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.clubDetailLeftSuccess)));
@@ -1800,9 +1802,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       return StatusHelper.isTournamentUpcoming(status) ||
           StatusHelper.isTournamentRegistration(status);
     }
-    if (filter == 'ONGOING') return StatusHelper.isTournamentInProgress(status);
-    if (filter == 'COMPLETED')
+    if (filter == 'ONGOING') {
+      return StatusHelper.isTournamentInProgress(status);
+    }
+    if (filter == 'COMPLETED') {
       return StatusHelper.isTournamentCompleted(status);
+    }
     return true;
   }
 
@@ -1963,14 +1968,17 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             .toSet()
             .toList();
         final filteredTourneys = tourneys.where((t) {
-          if (!isAdmin && StatusHelper.isTournamentDraft(t.status))
+          if (!isAdmin && StatusHelper.isTournamentDraft(t.status)) {
             return false;
+          }
           if (_tournamentTypeFilter != 'ALL' &&
-              t.tournamentType != _tournamentTypeFilter)
+              t.tournamentType != _tournamentTypeFilter) {
             return false;
+          }
           if (_tournamentSportFilter != 'ALL' &&
-              t.sport != _tournamentSportFilter)
+              t.sport != _tournamentSportFilter) {
             return false;
+          }
           return _matchesTournamentStatus(t.status, _tournamentStatusFilter);
         }).toList();
         return ListView.builder(
@@ -2460,14 +2468,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
             const SizedBox(height: 12),
 
-            // Option 2: Tạo nhanh theo luồng Web, vẫn gắn với CLB.
+            // Option 2: Tạo nhanh theo luồng Native, gắn với CLB.
             InkWell(
-              onTap: () async {
+              onTap: () {
                 Navigator.pop(ctx);
-                final uri = Uri.parse(
-                  'https://sporto.asia/organizer/tournaments/create?communityId=${widget.clubId}',
-                );
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                context.push('/tournaments/create?communityId=${widget.clubId}');
               },
               borderRadius: BorderRadius.circular(16),
               child: Container(
@@ -2519,18 +2524,20 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         ],
                       ),
                     ),
-                    Icon(Icons.open_in_new_rounded, color: colors.textMuted),
+                    Icon(Icons.chevron_right_rounded, color: colors.textMuted),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 12),
 
-            // Option 3: Giải Nâng Cao (Full) - Direct to Web notice
+            // Option 3: Giải Nâng Cao (Full) - Native Mobile Wizard
             InkWell(
               onTap: () {
                 Navigator.pop(ctx);
-                _showAdvancedTournamentWebDialog(context);
+                context.push(
+                  '/tournaments/create-advanced?communityId=${widget.clubId}',
+                );
               },
               borderRadius: BorderRadius.circular(16),
               child: Container(
@@ -2615,50 +2622,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showAdvancedTournamentWebDialog(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            const Icon(
-              Icons.laptop_chromebook_rounded,
-              color: Color(0xFF2563EB),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              l10n.club_createAdvancedTitle,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        content: Text(
-          l10n.club_advancedWebDialog,
-          style: const TextStyle(fontSize: 13, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.close),
-          ),
-          FilledButton.icon(
-            onPressed: () async {
-              final uri = Uri.parse(
-                'https://sporto.asia/organizer/tournaments/create?communityId=${widget.clubId}&mode=advanced',
-              );
-              await launchUrl(uri, mode: LaunchMode.externalApplication);
-              Navigator.pop(ctx);
-            },
-            icon: const Icon(Icons.copy_rounded, size: 16),
-            label: Text(l10n.club_copyWebLink),
-          ),
-        ],
       ),
     );
   }
@@ -3081,13 +3044,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         );
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.clubDetailMemberActionError),
             backgroundColor: Colors.red,
           ),
         );
+      }
     }
   }
 
@@ -3280,7 +3244,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                                 );
                               }
                             } catch (e) {
-                              if (mounted)
+                              if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
@@ -3289,6 +3253,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                                     backgroundColor: Colors.red,
                                   ),
                                 );
+                              }
                             }
                           },
                         );
@@ -3457,13 +3422,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   );
                 }
               } catch (e) {
-                if (mounted)
+                if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(l10n.clubDetailMemberActionError),
                       backgroundColor: Colors.red,
                     ),
                   );
+                }
               }
             },
             child: Container(
@@ -3504,13 +3470,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   );
                 }
               } catch (e) {
-                if (mounted)
+                if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(l10n.clubDetailMemberActionError),
                       backgroundColor: Colors.red,
                     ),
                   );
+                }
               }
             },
             child: Container(
@@ -3809,16 +3776,18 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           .uploadImage(bytes, picked.name);
       await repo.addGalleryItem(widget.clubId, imageUrl: imageUrl);
       ref.invalidate(communityGalleryProvider(widget.clubId));
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.clubDetailGalleryAdded)));
+      }
     } catch (e, stack) {
       _log.error('Lỗi thêm ảnh gallery', e, stack);
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.clubDetailGalleryAddError)));
+      }
     } finally {
       if (mounted) setState(() => _isAddingGalleryImage = false);
     }
@@ -3941,7 +3910,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 width: radius * 2,
                 height: radius * 2,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Center(
+                errorBuilder: (context, error, stackTrace) => Center(
                   child: Text(
                     initial,
                     style: TextStyle(

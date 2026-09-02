@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
@@ -781,15 +779,12 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
               ),
             const SizedBox(height: 12),
 
-            // Option 2: Web Quick Flow
+            // Option 2: Tạo nhanh theo luồng Native, gắn với CLB
             if (canCreateAdvanced)
               InkWell(
-                onTap: () async {
+                onTap: () {
                   Navigator.pop(ctx);
-                  final uri = Uri.parse(
-                    'https://sporto.asia/organizer/tournaments/create?communityId=$clubId',
-                  );
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  context.push('/tournaments/create?communityId=$clubId');
                 },
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
@@ -843,69 +838,20 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
                           ],
                         ),
                       ),
-                      Icon(Icons.open_in_new_rounded, color: colors.textMuted),
+                      Icon(Icons.chevron_right_rounded, color: colors.textMuted),
                     ],
                   ),
                 ),
               ),
             const SizedBox(height: 12),
 
-            // Option 3: Giải Nâng Cao (Full) - Organizer/Admin only
+            // Option 3: Giải Nâng Cao (Full) - Native Mobile Wizard
             if (canCreateAdvanced)
               InkWell(
                 onTap: () {
                   Navigator.pop(ctx);
-                  showDialog(
-                    context: context,
-                    builder: (dialogCtx) => AlertDialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      title: Row(
-                        children: [
-                          const Icon(
-                            Icons.laptop_chromebook_rounded,
-                            color: Color(0xFF2563EB),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            l10n.clubTournamentsAdvancedTitle,
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      content: Text(
-                        l10n.clubTournamentsAdvancedDescription,
-                        style: const TextStyle(fontSize: 13, height: 1.5),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(dialogCtx),
-                          child: Text(l10n.clubTournamentsClose),
-                        ),
-                        FilledButton.icon(
-                          onPressed: () {
-                            Clipboard.setData(
-                              ClipboardData(
-                                text:
-                                    'https://sporto.asia/organizer/tournaments/create?communityId=$clubId&mode=advanced',
-                              ),
-                            );
-                            Navigator.pop(dialogCtx);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(l10n.clubTournamentsLinkCopied),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.copy_rounded, size: 16),
-                          label: Text(l10n.clubTournamentsCopyWebLink),
-                        ),
-                      ],
-                    ),
+                  context.push(
+                    '/tournaments/create-advanced?communityId=$clubId',
                   );
                 },
                 borderRadius: BorderRadius.circular(16),
@@ -983,9 +929,9 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
                           ],
                         ),
                       ),
-                      const Icon(
-                        Icons.open_in_browser_rounded,
-                        color: Color(0xFF2563EB),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: colors.textMuted,
                       ),
                     ],
                   ),

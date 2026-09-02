@@ -485,7 +485,21 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-  /// Danh sách Phân hạng trực quan chuẩn Web (Hình 2)
+  IconData _getBracketFormatIcon(String? bracketType) {
+    final type = (bracketType ?? '').toUpperCase();
+    if (type.contains('ROUND_ROBIN') || type.contains('ROBIN') || type.contains('VÒNG TRÒN')) {
+      return Icons.sync_rounded;
+    }
+    if (type.contains('GROUP_STAGE') || type.contains('GROUP') || type.contains('BẢNG')) {
+      return Icons.alt_route_rounded;
+    }
+    if (type.contains('DOUBLE_ELIMINATION') || type.contains('DOUBLE_ELIM') || type.contains('NHÁNH KÉP')) {
+      return Icons.call_split_rounded;
+    }
+    return Icons.account_tree_outlined;
+  }
+
+  /// Danh sách Phân hạng trực quan chuẩn Web & Taste Skill
   Widget _buildDivisionsSelectorList(
     Tournament tournament,
     AppColorsExtension colors,
@@ -499,18 +513,19 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           final maxP = div.maxParticipants ?? 0;
           final curP = div.participantCount;
           final isFull = maxP > 0 && curP >= maxP;
+          final formatIcon = _getBracketFormatIcon(div.bracketType);
 
           return Container(
-            margin: const EdgeInsets.only(bottom: 6),
+            margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
               color: isSelected
-                  ? AppTheme.primary.withValues(alpha: 0.12)
+                  ? AppTheme.primary.withValues(alpha: 0.08)
                   : colors.bgSurface,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected
                     ? AppTheme.primary
-                    : colors.border.withValues(alpha: 0.6),
+                    : colors.border.withValues(alpha: 0.7),
                 width: isSelected ? 1.5 : 1,
               ),
             ),
@@ -521,20 +536,33 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   _selectedDivision = div.name;
                 });
               },
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 child: Row(
                   children: [
-                    Icon(
-                      isSelected
-                          ? Icons.check_circle_rounded
-                          : Icons.chevron_right_rounded,
-                      size: 18,
-                      color: isSelected ? AppTheme.primary : colors.textMuted,
+                    // Ô icon thể thức thi đấu (chuẩn Web)
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppTheme.primary
+                            : AppTheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppTheme.primary
+                              : AppTheme.primary.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Icon(
+                        formatIcon,
+                        size: 16,
+                        color: isSelected ? Colors.white : AppTheme.primary,
+                      ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         div.name,
@@ -548,24 +576,38 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                         ),
                       ),
                     ),
+                    const SizedBox(width: 8),
                     if (isFull) ...[
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
+                          horizontal: 7,
+                          vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: colors.bgDark,
-                          borderRadius: BorderRadius.circular(5),
-                          border: Border.all(color: colors.border),
-                        ),
-                        child: Text(
-                          'Đã kết thúc / Đủ',
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700,
-                            color: colors.textMuted,
+                          color: colors.bgSurface,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: colors.border.withValues(alpha: 0.8),
                           ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check_circle_rounded,
+                              size: 11,
+                              color: colors.textMuted,
+                            ),
+                            const SizedBox(width: 3.5),
+                            Text(
+                              'Đã kết thúc',
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textMuted,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -580,7 +622,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          maxP > 0 ? '$curP / $maxP' : '$curP',
+                          maxP > 0 ? '$curP/$maxP' : '$curP',
                           style: TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,

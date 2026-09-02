@@ -27,6 +27,7 @@ import 'package:app_quanly_giaidau/features/community/screens/club_tournaments_s
 import 'package:app_quanly_giaidau/features/community/screens/create_club_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/create_club_tournament_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/create_public_quick_tournament_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/create_advanced_tournament_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_management_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_invites_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/edit_club_screen.dart';
@@ -344,15 +345,27 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ─── Create Tournament Standalone (Must be placed before /tournaments/:id) ───
       GoRoute(
         path: '/tournaments/create',
-        builder: (context, state) => const CreatePublicQuickTournamentScreen(),
+        builder: (context, state) => CreatePublicQuickTournamentScreen(
+          communityId: state.uri.queryParameters['communityId'],
+        ),
+      ),
+      GoRoute(
+        path: '/tournaments/create-advanced',
+        builder: (context, state) => CreateAdvancedTournamentScreen(
+          communityId: state.uri.queryParameters['communityId'],
+        ),
       ),
       GoRoute(
         path: '/tournament/create',
-        builder: (context, state) => const CreatePublicQuickTournamentScreen(),
+        builder: (context, state) => CreatePublicQuickTournamentScreen(
+          communityId: state.uri.queryParameters['communityId'],
+        ),
       ),
       GoRoute(
         path: '/tournament-create',
-        builder: (context, state) => const CreatePublicQuickTournamentScreen(),
+        builder: (context, state) => CreatePublicQuickTournamentScreen(
+          communityId: state.uri.queryParameters['communityId'],
+        ),
       ),
 
       // ─── Advanced Organizer Operations ───
