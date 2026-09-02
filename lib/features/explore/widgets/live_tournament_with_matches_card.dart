@@ -225,7 +225,7 @@ class _LiveTournamentWithMatchesCardState
             )
           else if (widget.filterStatus == 'live')
             SizedBox(
-              height: 154,
+              height: 144,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -889,8 +889,8 @@ class _LiveTournamentWithMatchesCardState
     return GestureDetector(
       onTap: () => context.push('/live/${match.id}'),
       child: Container(
-        width: 285,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        width: 275,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
         decoration: BoxDecoration(
           color: colors.bgCard,
           borderRadius: BorderRadius.circular(16),
@@ -905,7 +905,6 @@ class _LiveTournamentWithMatchesCardState
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // Top Row: Round Badge (Left) | LIVE indicator (Right)
             Row(
@@ -966,126 +965,125 @@ class _LiveTournamentWithMatchesCardState
               ],
             ),
 
-            const SizedBox(height: 6),
+            // Middle Row: Centered Team 1 (Avatar + Name) -- Score -- Team 2 (Avatar + Name)
+            Expanded(
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Team 1
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildLargeAvatar(
+                            initials: t1Initials[0],
+                            initials2: t1Initials.length > 1 ? t1Initials[1] : '',
+                            avatarColor: const Color(0xFF0284C7),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            match.team1Name,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
 
-            // Middle Row: Team 1 (Avatar + Name) -- Score -- Team 2 (Avatar + Name)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Team 1
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildLargeAvatar(
-                        initials: t1Initials[0],
-                        initials2: t1Initials.length > 1 ? t1Initials[1] : '',
-                        avatarColor: const Color(0xFF0284C7),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        match.team1Name,
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textPrimary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Big Score & Set Breakdown
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${match.score1} - ${match.score2}',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF0F172A),
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      if (match.sets.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            match.sets.map((s) => '${s.score1}-${s.score2}').join('  '),
+                    // Big Score & Set Breakdown
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${match.score1} - ${match.score2}',
                             style: const TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF64748B),
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF0F172A),
+                              letterSpacing: 1.2,
                             ),
                           ),
-                        ),
-                    ],
-                  ),
-                ),
+                          if (match.sets.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                match.sets.map((s) => '${s.score1}-${s.score2}').join('  '),
+                                style: const TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF64748B),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
 
-                // Team 2
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildLargeAvatar(
-                        initials: t2Initials[0],
-                        initials2: t2Initials.length > 1 ? t2Initials[1] : '',
-                        avatarColor: const Color(0xFF16A34A),
+                    // Team 2
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildLargeAvatar(
+                            initials: t2Initials[0],
+                            initials2: t2Initials.length > 1 ? t2Initials[1] : '',
+                            avatarColor: const Color(0xFF16A34A),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            match.team2Name,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 5),
-                      Text(
-                        match.team2Name,
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textPrimary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
 
             // Bottom Footer: Court Info (Sân thi đấu ở dưới nhỏ gọn)
             if (courtText.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.location_on_outlined,
-                        size: 11,
-                        color: Color(0xFF94A3B8),
-                      ),
-                      const SizedBox(width: 3),
-                      Flexible(
-                        child: Text(
-                          courtText,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF64748B),
-                          ),
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.location_on_outlined,
+                      size: 11,
+                      color: Color(0xFF94A3B8),
+                    ),
+                    const SizedBox(width: 3),
+                    Flexible(
+                      child: Text(
+                        courtText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF64748B),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
           ],

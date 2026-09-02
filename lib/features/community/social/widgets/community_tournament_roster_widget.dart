@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -182,7 +183,7 @@ class _CommunityTournamentRosterWidgetState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().replaceAll('Exception:', '').trim()),
+            content: Text(ErrorParser.parse(e, 'Không thể xác nhận tham gia giải đấu')),
             backgroundColor: const Color(0xFFEF4444),
           ),
         );
@@ -243,7 +244,10 @@ class _CommunityTournamentRosterWidgetState
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Không thể hủy: $e')),
+            SnackBar(
+              content: Text(ErrorParser.parse(e, 'Không thể hủy tham gia')),
+              backgroundColor: const Color(0xFFEF4444),
+            ),
           );
         }
       }
