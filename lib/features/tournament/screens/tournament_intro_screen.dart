@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/results_tab.dart'
 import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sponsors_tab.dart';
+import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -39,6 +40,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   int _currentTabCount = 0;
   String _selectedDivision = "";
   String? _selectedDivisionId;
+  String? _customInviteCode;
 
   void _updateTabController(int count) {
     if (_tabController != null && _currentTabCount == count) return;
@@ -61,10 +63,11 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
   @override
   Widget build(BuildContext context) {
+    final activeInvite = _customInviteCode ?? widget.inviteCode;
     final tournamentAsync = ref.watch(
       tournamentIntroWithInviteProvider((
         id: widget.tournamentId,
-        invite: widget.inviteCode,
+        invite: activeInvite,
       )),
     );
     final divisionsAsync = ref.watch(
@@ -141,6 +144,32 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   Widget _buildErrorState(Object err) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
+    final isAccessDenied = err is TournamentAccessDeniedException ||
+        err.toString().contains('403') ||
+        err.toString().contains('nội bộ') ||
+        err.toString().contains('thành viên');
+
+    if (isAccessDenied) {
+      return SafeArea(
+        child: Stack(
+          children: [
+            Positioned(left: 12, top: 8, child: _backButton(colors)),
+            PrivateTournamentAccessView(
+              message: err is TournamentAccessDeniedException
+                  ? err.message
+                  : 'Đây là giải đấu nội bộ của Câu Lạc Bộ. Bạn cần tham gia Câu Lạc Bộ hoặc nhập mã mời từ Ban tổ chức để xem chi tiết.',
+              onGoHome: () => context.go('/home'),
+              onSubmitInviteCode: (code) {
+                setState(() {
+                  _customInviteCode = code;
+                });
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
     return SafeArea(
       child: Stack(
         children: [
@@ -179,7 +208,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   onPressed: () => ref.invalidate(
                     tournamentIntroWithInviteProvider((
                       id: widget.tournamentId,
-                      invite: widget.inviteCode,
+                      invite: _customInviteCode ?? widget.inviteCode,
                     )),
                   ),
                   child: Text(l10n.infoRetry),

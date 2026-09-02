@@ -69,7 +69,13 @@ class CommunityTournamentPreview extends ConsumerWidget {
         children: [
           // ── Header Bar ──
           InkWell(
-            onTap: () => context.push('/intro/$tournamentId'),
+            onTap: () {
+              final inviteParam = (post.tournamentInviteCode != null &&
+                      post.tournamentInviteCode!.isNotEmpty)
+                  ? '?invite=${Uri.encodeComponent(post.tournamentInviteCode!)}'
+                  : '';
+              context.push('/tournaments/$tournamentId$inviteParam');
+            },
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
@@ -297,11 +303,11 @@ class CommunityTournamentPreview extends ConsumerWidget {
           Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
           InkWell(
             onTap: () {
-              if (hasMatches) {
-                context.push('/tournament/$tournamentId/bracket');
-              } else {
-                context.push('/intro/$tournamentId');
-              }
+              final inviteParam = (post.tournamentInviteCode != null &&
+                      post.tournamentInviteCode!.isNotEmpty)
+                  ? '?invite=${Uri.encodeComponent(post.tournamentInviteCode!)}'
+                  : '';
+              context.push('/tournaments/$tournamentId$inviteParam');
             },
             borderRadius: const BorderRadius.vertical(
               bottom: Radius.circular(12),
