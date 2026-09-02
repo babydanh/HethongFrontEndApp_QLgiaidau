@@ -159,7 +159,7 @@ class _OverviewTabState extends State<OverviewTab> {
             : 'Chưa cập nhật thời gian');
     final locationStr = TournamentLocationFormatter.tournamentFullLocation(t);
     final desc = t.description.trim();
-    final isLite = t.isClubLite || (t.isLite == true) || (t.communityId != null && t.communityId!.isNotEmpty);
+    final isClubLite = t.isClubLite;
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -167,8 +167,8 @@ class _OverviewTabState extends State<OverviewTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ─── 1. BANNER TRÀN VIỀN (Chỉ hiển thị cho giải lớn truyền thống) ───
-          if (!isLite)
+          // ─── 1. BANNER TRÀN VIỀN (Hiển thị cho mọi giải trừ giải Siêu Lite nội bộ CLB) ───
+          if (!isClubLite)
             SizedBox(
               height: 195,
               width: double.infinity,
@@ -177,7 +177,7 @@ class _OverviewTabState extends State<OverviewTab> {
 
           // ─── 2. NỘI DUNG TỔNG QUAN ───
           Padding(
-            padding: EdgeInsets.fromLTRB(16, isLite ? 16 : 14, 16, 0),
+            padding: EdgeInsets.fromLTRB(16, isClubLite ? 16 : 14, 16, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -332,8 +332,8 @@ class _OverviewTabState extends State<OverviewTab> {
                   const SizedBox(height: 12),
                 ],
 
-                // Action Buttons (Chỉ hiển thị cho giải truyền thống)
-                if (!isLite) ...[
+                // Action Buttons (Hiển thị cho giải truyền thống / nâng cao / công khai)
+                if (!isClubLite) ...[
                   Row(
                     children: [
                       Expanded(
@@ -406,8 +406,8 @@ class _OverviewTabState extends State<OverviewTab> {
                   const SizedBox(height: 16),
                 ],
 
-                // ─── LƯỚI XÁC NHẬN THAM GIA 16 SLOT (DÀNH CHO GIẢI SIÊU LITE CLB) ───
-                if (isLite) ...[
+                // ─── LƯỚI XÁC NHẬN THAM GIA 16 SLOT (CHỈ DÀNH RIÊNG CHO GIẢI SIÊU LITE CLB) ───
+                if (isClubLite) ...[
                   CommunityTournamentRosterWidget(
                     tournamentId: t.id,
                     communityId: t.communityId,

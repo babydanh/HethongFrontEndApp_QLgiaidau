@@ -397,21 +397,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/intro/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return TournamentIntroScreen(tournamentId: id);
+          final invite = state.uri.queryParameters['invite'];
+          return TournamentIntroScreen(tournamentId: id, inviteCode: invite);
         },
       ),
       GoRoute(
         path: '/tournament/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return TournamentIntroScreen(tournamentId: id);
+          final invite = state.uri.queryParameters['invite'];
+          return TournamentIntroScreen(tournamentId: id, inviteCode: invite);
         },
       ),
       GoRoute(
         path: '/tournaments/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return TournamentIntroScreen(tournamentId: id);
+          final invite = state.uri.queryParameters['invite'];
+          return TournamentIntroScreen(tournamentId: id, inviteCode: invite);
         },
       ),
 

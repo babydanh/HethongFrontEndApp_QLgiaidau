@@ -21,8 +21,13 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
+  final String? inviteCode;
 
-  const TournamentIntroScreen({super.key, required this.tournamentId});
+  const TournamentIntroScreen({
+    super.key,
+    required this.tournamentId,
+    this.inviteCode,
+  });
 
   @override
   ConsumerState<TournamentIntroScreen> createState() =>
@@ -58,7 +63,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   @override
   Widget build(BuildContext context) {
     final tournamentAsync = ref.watch(
-      tournamentIntroProvider(widget.tournamentId),
+      tournamentIntroWithInviteProvider((
+        id: widget.tournamentId,
+        invite: widget.inviteCode,
+      )),
     );
     final divisionsAsync = ref.watch(
       tournamentDivisionsProvider(widget.tournamentId),
@@ -170,7 +178,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () => ref.invalidate(
-                    tournamentIntroProvider(widget.tournamentId),
+                    tournamentIntroWithInviteProvider((
+                      id: widget.tournamentId,
+                      invite: widget.inviteCode,
+                    )),
                   ),
                   child: Text(l10n.infoRetry),
                 ),

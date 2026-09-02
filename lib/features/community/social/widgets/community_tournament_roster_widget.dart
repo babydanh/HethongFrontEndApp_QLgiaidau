@@ -323,7 +323,10 @@ class _CommunityTournamentRosterWidgetState
             GestureDetector(
               onTap: () {
                 if (widget.tournamentId.isNotEmpty) {
-                  context.push('/tournaments/${widget.tournamentId}');
+                  final inviteParam = (widget.inviteCode != null && widget.inviteCode!.isNotEmpty)
+                      ? '?invite=${widget.inviteCode}'
+                      : '';
+                  context.push('/tournaments/${widget.tournamentId}$inviteParam');
                 }
               },
               child: Container(

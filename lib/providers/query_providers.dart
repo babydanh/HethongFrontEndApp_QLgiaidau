@@ -60,6 +60,17 @@ final tournamentIntroProvider = FutureProvider.family<Tournament?, String>((
       .timeout(const Duration(seconds: 8));
 });
 
+final tournamentIntroWithInviteProvider =
+    FutureProvider.family<Tournament?, ({String id, String? invite})>((
+      ref,
+      params,
+    ) async {
+      return ref
+          .watch(tournamentRepositoryProvider)
+          .getById(params.id, inviteCode: params.invite)
+          .timeout(const Duration(seconds: 8));
+    });
+
 /// Tải thông tin giải cho màn hình đăng ký, kèm mã mời (nếu có).
 /// Mã mời được truyền qua `?invite=` để backend cho phép đọc giải PRIVATE.
 /// Key đổi khi `invite` đổi → tự refetch sau khi người dùng nhập mã mời.
