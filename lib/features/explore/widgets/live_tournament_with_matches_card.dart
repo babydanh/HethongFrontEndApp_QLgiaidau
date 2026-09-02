@@ -225,7 +225,7 @@ class _LiveTournamentWithMatchesCardState
             )
           else if (widget.filterStatus == 'live')
             SizedBox(
-              height: 148,
+              height: 154,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -907,53 +907,29 @@ class _LiveTournamentWithMatchesCardState
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Top Row: Round Badge + Court Info (Left) | LIVE indicator (Right) - (No duplicate logo)
+            // Top Row: Round Badge (Left) | LIVE indicator (Right)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: AppTheme.primary.withValues(alpha: 0.2),
-                          width: 0.8,
-                        ),
-                      ),
-                      child: Text(
-                        roundText.toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.primary,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: AppTheme.primary.withValues(alpha: 0.2),
+                      width: 0.8,
                     ),
-                    if (courtText.isNotEmpty) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
-                        ),
-                        child: Text(
-                          courtText,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF64748B),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
+                  ),
+                  child: Text(
+                    roundText.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.primary,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
                 ),
                 // Live status badge with pulsing red dot
                 Container(
@@ -990,7 +966,7 @@ class _LiveTournamentWithMatchesCardState
               ],
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
 
             // Middle Row: Team 1 (Avatar + Name) -- Score -- Team 2 (Avatar + Name)
             Row(
@@ -1007,11 +983,11 @@ class _LiveTournamentWithMatchesCardState
                         initials2: t1Initials.length > 1 ? t1Initials[1] : '',
                         avatarColor: const Color(0xFF0284C7),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 5),
                       Text(
                         match.team1Name,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w700,
                           color: colors.textPrimary,
                         ),
@@ -1025,17 +1001,17 @@ class _LiveTournamentWithMatchesCardState
 
                 // Big Score & Set Breakdown
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         '${match.score1} - ${match.score2}',
                         style: const TextStyle(
-                          fontSize: 24,
+                          fontSize: 22,
                           fontWeight: FontWeight.w900,
                           color: Color(0xFF0F172A),
-                          letterSpacing: 1.5,
+                          letterSpacing: 1.2,
                         ),
                       ),
                       if (match.sets.isNotEmpty)
@@ -1044,7 +1020,7 @@ class _LiveTournamentWithMatchesCardState
                           child: Text(
                             match.sets.map((s) => '${s.score1}-${s.score2}').join('  '),
                             style: const TextStyle(
-                              fontSize: 10,
+                              fontSize: 9.5,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFF64748B),
                             ),
@@ -1064,11 +1040,11 @@ class _LiveTournamentWithMatchesCardState
                         initials2: t2Initials.length > 1 ? t2Initials[1] : '',
                         avatarColor: const Color(0xFF16A34A),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 5),
                       Text(
                         match.team2Name,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w700,
                           color: colors.textPrimary,
                         ),
@@ -1081,6 +1057,37 @@ class _LiveTournamentWithMatchesCardState
                 ),
               ],
             ),
+
+            // Bottom Footer: Court Info (Sân thi đấu ở dưới nhỏ gọn)
+            if (courtText.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 11,
+                        color: Color(0xFF94A3B8),
+                      ),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          courtText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -1094,44 +1101,62 @@ class _LiveTournamentWithMatchesCardState
   }) {
     if (initials2.isNotEmpty && initials2 != '?') {
       return SizedBox(
-        width: 58,
-        height: 42,
+        width: 54,
+        height: 36,
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: avatarColor.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-                border: Border.all(color: avatarColor.withValues(alpha: 0.3), width: 1),
-              ),
-              child: Center(
-                child: Text(
-                  initials,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: avatarColor,
-                  ),
-                ),
-              ),
-            ),
+            // Partner Avatar (placed first in background at left: 18)
             Positioned(
               left: 18,
+              top: 0,
               child: Container(
-                width: 40,
-                height: 40,
+                width: 34,
+                height: 34,
                 decoration: BoxDecoration(
                   color: avatarColor.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+                  border: Border.all(
+                    color: avatarColor.withValues(alpha: 0.35),
+                    width: 1.2,
+                  ),
                 ),
                 child: Center(
                   child: Text(
                     initials2,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      color: avatarColor,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Primary / Captain Avatar (placed second in FOREGROUND - ĐÈ LÊN 1 CHÚT)
+            Positioned(
+              left: 0,
+              top: 0,
+              child: Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: avatarColor, width: 1.8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 3,
+                      offset: const Offset(1, 1),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    initials,
+                    style: TextStyle(
+                      fontSize: 11,
                       fontWeight: FontWeight.w800,
                       color: avatarColor,
                     ),
@@ -1144,18 +1169,18 @@ class _LiveTournamentWithMatchesCardState
       );
     }
     return Container(
-      width: 44,
-      height: 44,
+      width: 38,
+      height: 38,
       decoration: BoxDecoration(
         color: avatarColor.withValues(alpha: 0.12),
         shape: BoxShape.circle,
-        border: Border.all(color: avatarColor.withValues(alpha: 0.3), width: 1.2),
+        border: Border.all(color: avatarColor, width: 1.5),
       ),
       child: Center(
         child: Text(
           initials,
           style: TextStyle(
-            fontSize: 13.5,
+            fontSize: 12.5,
             fontWeight: FontWeight.w800,
             color: avatarColor,
           ),
