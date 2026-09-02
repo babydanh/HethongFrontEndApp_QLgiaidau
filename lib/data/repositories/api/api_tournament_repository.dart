@@ -527,6 +527,26 @@ class ApiTournamentRepository implements ITournamentRepository {
   }
 
   @override
+  Future<List<OrganizerOpsParticipant>> getPublicParticipants(String tournamentId) async {
+    try {
+      final response = await _dioClient.dio.get(
+        '/tournaments/$tournamentId/participants',
+        queryParameters: {'_t': DateTime.now().millisecondsSinceEpoch},
+      );
+      final raw = response.data;
+      final data = raw is Map<String, dynamic> ? raw['data'] : raw;
+      if (data is! List) return const [];
+      return data
+          .whereType<Map>()
+          .map((item) => OrganizerOpsParticipant.fromJson(Map<String, dynamic>.from(item)))
+          .where((p) => !['WITHDRAWN', 'REJECTED', 'CANCELLED'].contains(p.teamStatus.toUpperCase()))
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  @override
   Future<FootballRosterStatus> getFootballRosterStatus({
     required String tournamentId,
     required String participantId,

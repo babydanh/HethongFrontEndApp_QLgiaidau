@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_poll_widget.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_preview.dart';
+import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_comment_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
@@ -266,9 +267,9 @@ class CommunityPostCard extends ConsumerWidget {
             ),
 
           // ── Tournament Announcement State ──
-          // Match the web behavior: while registration is open, show the
-          // tournament preview and poll; after registration closes, show the
-          // tournament/bracket preview instead of keeping a stale poll visible.
+          // Before bracket is generated & registration is open, show the
+          // CommunityTournamentRosterWidget (avatar slot confirmation grid).
+          // Once bracket is generated or tournament starts, show CommunityTournamentPreview.
           if (post.tournamentId != null) ...[
             Builder(
               builder: (context) {
@@ -281,29 +282,23 @@ class CommunityPostCard extends ConsumerWidget {
                     post.type == 'TOURNAMENT_BRACKET' ||
                     normalizedStatus == AppConstants.statusInProgress ||
                     normalizedStatus == AppConstants.statusCompleted;
-                final showRegistrationPoll =
-                    !bracketReady &&
+
+                if (!bracketReady &&
                     (normalizedStatus == null ||
                         normalizedStatus == AppConstants.statusUpcoming ||
-                        normalizedStatus == AppConstants.statusRegistration);
+                        normalizedStatus == AppConstants.statusRegistration)) {
+                  return CommunityTournamentRosterWidget(
+                    tournamentId: post.tournamentId!,
+                    communityId: communityId,
+                    initialTournamentName: post.tournamentName,
+                    status: post.tournamentStatus,
+                    inviteCode: post.tournamentInviteCode,
+                  );
+                }
 
-                return Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                      child: CommunityTournamentPreview(post: post),
-                    ),
-                    if (showRegistrationPoll && post.poll != null)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                        child: CommunityPollWidget(
-                          communityId: communityId,
-                          poll: post.poll!,
-                          tournamentId: post.tournamentId,
-                          tournamentInviteCode: post.tournamentInviteCode,
-                        ),
-                      ),
-                  ],
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: CommunityTournamentPreview(post: post),
                 );
               },
             ),

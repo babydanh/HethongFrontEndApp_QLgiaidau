@@ -13,6 +13,7 @@ abstract class ITournamentRepository {
   Future<List<TournamentSponsor>> getPublicSponsors(String tournamentId);
 
   Future<void> joinLite(String inviteCode);
+  Future<List<OrganizerOpsParticipant>> getPublicParticipants(String tournamentId);
   Future<TournamentWorkspace> getMyWorkspace();
   Future<void> respondToRefereeInvite({
     required String tournamentId,
