@@ -55,56 +55,33 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
 
   @override
   Widget build(BuildContext context) {
-    final card = _buildCard(context);
-    if (widget.isLive) {
-      return AnimatedBuilder(
-        animation: _pulseAnim,
-        builder: (context, child) =>
-            Transform.scale(scale: _pulseAnim.value, child: child),
-        child: card,
-      );
-    }
-    return card;
+    return _buildCard(context);
   }
 
   Widget _buildCard(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final borderColor = widget.isLive
-        ? context.colors.error
-        : widget.isCompleted
-        ? context.colors.success
-        : context.colors.border;
-    final borderWidth = widget.isLive ? 2.0 : 1.0;
-    final glowColor = widget.isLive
-        ? context.colors.error.withValues(alpha: 0.15)
-        : Colors.transparent;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.colors.bgCard,
-            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-            border: Border.all(color: borderColor, width: borderWidth),
-            boxShadow: [
-              BoxShadow(
-                color: glowColor,
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ─── Status Bar ───
-              if (widget.isLive) _buildLiveBar(context),
-              if (widget.isCompleted) _buildCompletedBar(context),
-              if (!widget.isLive && !widget.isCompleted)
-                _buildScheduledBar(context),
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            decoration: BoxDecoration(
+              color: context.colors.bgSurface,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ─── Status Bar ───
+                if (widget.isLive) _buildLiveBar(context),
+                if (widget.isCompleted) _buildCompletedBar(context),
+                if (!widget.isLive && !widget.isCompleted)
+                  _buildScheduledBar(context),
 
               // ─── Main Score Area ───
               Padding(
@@ -209,41 +186,60 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
     final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      decoration: BoxDecoration(gradient: context.liveGradient),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF2F2),
+        border: Border(
+          bottom: BorderSide(
+            color: const Color(0xFFFEE2E2),
+            width: 1,
+          ),
+        ),
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-                width: 7,
-                height: 7,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEF4444),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 5,
+                  height: 5,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .scaleXY(begin: 0.7, end: 1.1, duration: 800.ms),
+                const SizedBox(width: 4),
+                Text(
+                  l10n.matchLiveStatus,
+                  style: const TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: 1,
+                  ),
                 ),
-              )
-              .animate(onPlay: (c) => c.repeat())
-              .shimmer(
-                duration: 800.ms,
-                color: Colors.white.withValues(alpha: 0.3),
-              ),
-          const SizedBox(width: 6),
-          Text(
-            l10n.matchLiveStatus,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: 2,
+              ],
             ),
           ),
-          if (widget.match.maxScore != null) ...[
-            const SizedBox(width: 12),
+          const Spacer(),
+          if (widget.match.maxScore != null)
             Text(
               l10n.liveMatchMaxScore(widget.match.maxScore!),
-              style: const TextStyle(fontSize: 9, color: Colors.white70),
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFDC2626),
+              ),
             ),
-          ],
         ],
       ),
     );

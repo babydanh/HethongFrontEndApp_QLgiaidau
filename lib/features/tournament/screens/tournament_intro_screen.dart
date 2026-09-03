@@ -446,14 +446,18 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         ),
       );
       tabViews.add(
-        tournament.divisions.length > 1
-            ? Column(
-                children: [
-                  _buildDivisionsSelectorList(tournament, colors),
-                  Expanded(child: LiveTab(liveMatches: liveMatches)),
-                ],
-              )
-            : LiveTab(liveMatches: liveMatches),
+        LiveTab(
+          key: ValueKey('live-$_selectedDivisionId'),
+          liveMatches: liveMatches,
+          divisions: tournament.divisions,
+          selectedDivisionId: _selectedDivisionId,
+          onSelectDivision: (div) {
+            setState(() {
+              _selectedDivisionId = div.id;
+              _selectedDivision = div.name;
+            });
+          },
+        ),
       );
     }
 
@@ -716,18 +720,12 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           final formatIcon = _getBracketFormatIcon(div.bracketType);
 
           return Container(
-            margin: const EdgeInsets.only(bottom: 8),
+            margin: const EdgeInsets.only(bottom: 6),
             decoration: BoxDecoration(
               color: isSelected
-                  ? AppTheme.primary.withValues(alpha: 0.08)
+                  ? AppTheme.primary.withValues(alpha: 0.10)
                   : colors.bgSurface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isSelected
-                    ? AppTheme.primary
-                    : colors.border.withValues(alpha: 0.7),
-                width: isSelected ? 1.5 : 1,
-              ),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: InkWell(
               onTap: () {
@@ -736,9 +734,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   _selectedDivision = div.name;
                 });
               },
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 child: Row(
                   children: [
                     // Ô icon thể thức thi đấu (chuẩn Web)
