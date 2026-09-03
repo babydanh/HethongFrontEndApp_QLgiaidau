@@ -25,33 +25,7 @@ class LiveMatchCardV2 extends StatefulWidget {
   State<LiveMatchCardV2> createState() => _LiveMatchCardV2State();
 }
 
-class _LiveMatchCardV2State extends State<LiveMatchCardV2>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pulseCtrl;
-  late Animation<double> _pulseAnim;
-  bool _hasLiveAnim = false;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.isLive) {
-      _pulseCtrl = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 1200),
-      )..repeat(reverse: true);
-      _pulseAnim = Tween<double>(
-        begin: 0.85,
-        end: 1.0,
-      ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
-      _hasLiveAnim = true;
-    }
-  }
-
-  @override
-  void dispose() {
-    if (_hasLiveAnim) _pulseCtrl.dispose();
-    super.dispose();
-  }
+class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
 
   @override
   Widget build(BuildContext context) {
