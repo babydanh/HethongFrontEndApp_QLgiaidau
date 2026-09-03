@@ -11708,4 +11708,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get opsReadOnlyHint =>
       'Some actions are read-only until the server confirms your permission.';
+
+  @override
+  String get liveDivisionEmpty =>
+      'No matches currently in progress in this division';
+
+  @override
+  String get liveBannerTitle => 'Live Matches in Progress';
+
+  @override
+  String get liveBannerHint => 'Tap on each match to view details';
+
+  @override
+  String get liveNoMatchesRunning => 'No matches currently in progress';
+
+  @override
+  String get liveNoMatchesSubtitle =>
+      'Live matches will appear here once started';
+
+  @override
+  String get matchTypeSingles => 'Singles';
+
+  @override
+  String get matchTypeDoubles => 'Doubles';
 }

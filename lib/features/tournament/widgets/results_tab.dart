@@ -162,9 +162,7 @@ class ResultsTab extends ConsumerWidget {
                       match: match,
                       isCompleted: true,
                       onTap: () {
-                        context.push(
-                          '/tournaments/${match.tournamentId}/matches/${match.id}/official-score',
-                        );
+                        context.push('/live/${match.id}');
                       },
                     ),
                   ),
@@ -221,9 +219,7 @@ class ResultsTab extends ConsumerWidget {
                 match: match,
                 isCompleted: true,
                 onTap: () {
-                  context.push(
-                    '/tournaments/${match.tournamentId}/matches/${match.id}/official-score',
-                  );
+                  context.push('/live/${match.id}');
                 },
               ),
             ),

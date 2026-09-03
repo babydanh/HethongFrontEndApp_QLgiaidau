@@ -3412,14 +3412,13 @@
   "communityPoll_singleHint": "Chỉ được chọn một lựa chọn.",
   "communityPoll_tournamentHint": "Chọn Có để đăng ký; chọn Không để hủy đăng ký.",
   "communityPoll_addOption": "Thêm lựa chọn",
-    "communityPoll_voteCount": "{count} lượt bình chọn",
+  "communityPoll_voteCount": "{count} lượt bình chọn",
   "communityPoll_registeredMembers": "Đã đăng ký ({count})",
   "@communityPoll_registeredMembers": {
     "placeholders": {
       "count": {}
     }
   },
-
   "@communityPoll_voteCount": {
     "placeholders": {
       "count": {}
@@ -3617,7 +3616,7 @@
     }
   },
   "footballScore_status": "Trạng thái",
-    "footballScore_events": "Diễn biến",
+  "footballScore_events": "Diễn biến",
   "footballScore_goal": "Bàn thắng",
   "footballScore_penaltyGoal": "Bàn thắng phạt đền",
   "footballScore_team1": "Đội 1",
@@ -4853,5 +4852,12 @@
   "opsOpenBracket": "Mở bracket",
   "opsOpenScoreboard": "Mở bảng điểm",
   "opsContextHint": "Vận hành giải mà không rời khỏi ngữ cảnh hiện tại.",
-  "opsReadOnlyHint": "Một số thao tác chỉ mở khi máy chủ xác nhận quyền của bạn."
+  "opsReadOnlyHint": "Một số thao tác chỉ mở khi máy chủ xác nhận quyền của bạn.",
+  "liveDivisionEmpty": "Chưa có trận nào đang đấu ở nội dung này",
+  "liveBannerTitle": "Đang diễn ra trực tiếp",
+  "liveBannerHint": "Ấn vào từng trận để xem chi tiết",
+  "liveNoMatchesRunning": "Không có trận nào đang diễn ra",
+  "liveNoMatchesSubtitle": "Các trận trực tiếp sẽ hiện ở đây khi bắt đầu",
+  "matchTypeSingles": "Đánh Đơn",
+  "matchTypeDoubles": "Đánh Đôi"
 }

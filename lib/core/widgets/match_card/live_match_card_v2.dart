@@ -83,99 +83,104 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
                 if (!widget.isLive && !widget.isCompleted)
                   _buildScheduledBar(context),
 
-              // ─── Main Score Area ───
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                child: Row(
-                  children: [
-                    // Team 1
-                    Expanded(
-                      child: _buildTeamSide(
-                        context,
-                        teamName: widget.match.team1Name,
-                        teamLogoUrl: widget.match.team1LogoUrl,
-                        members: widget.match.team1MemberInfos,
-                        score: widget.match.score1,
-                        isWinner:
-                            widget.isCompleted &&
-                            widget.match.winnerId == widget.match.team1Id,
-                        alignment: CrossAxisAlignment.start,
+                // ─── Main Score Area ───
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                  child: Row(
+                    children: [
+                      // Team 1
+                      Expanded(
+                        child: _buildTeamSide(
+                          context,
+                          teamName: widget.match.team1Name,
+                          teamLogoUrl: widget.match.team1LogoUrl,
+                          members: widget.match.team1MemberInfos,
+                          score: widget.match.score1,
+                          isWinner:
+                              widget.isCompleted &&
+                              widget.match.winnerId == widget.match.team1Id,
+                          alignment: CrossAxisAlignment.start,
+                        ),
                       ),
-                    ),
 
-                    // VS Divider
-                    Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: context.colors.bgSurface,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            l10n.matchVsLabel,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: context.colors.textMuted,
+                      // VS Divider
+                      Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: context.colors.bgSurface,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              l10n.matchVsLabel,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: context.colors.textMuted,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          MatchRoundLabel.formatRound(
-                            match: widget.match,
-                            short: true,
-                            l10n: l10n,
-                          ),
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: context.colors.textMuted,
-                          ),
-                        ),
-                        if (TournamentLocationFormatter.matchShortCourt(widget.match.court).isNotEmpty) ...[
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 4),
                           Text(
-                            TournamentLocationFormatter.matchShortCourt(widget.match.court),
+                            MatchRoundLabel.formatRound(
+                              match: widget.match,
+                              short: true,
+                              l10n: l10n,
+                            ),
                             style: TextStyle(
-                              fontSize: 9,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
                               color: context.colors.textMuted,
                             ),
                           ),
+                          if (TournamentLocationFormatter.matchShortCourt(
+                            widget.match.court,
+                          ).isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              TournamentLocationFormatter.matchShortCourt(
+                                widget.match.court,
+                              ),
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: context.colors.textMuted,
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
-
-                    // Team 2
-                    Expanded(
-                      child: _buildTeamSide(
-                        context,
-                        teamName: widget.match.team2Name,
-                        teamLogoUrl: widget.match.team2LogoUrl,
-                        members: widget.match.team2MemberInfos,
-                        score: widget.match.score2,
-                        isWinner:
-                            widget.isCompleted &&
-                            widget.match.winnerId == widget.match.team2Id,
-                        alignment: CrossAxisAlignment.end,
                       ),
-                    ),
-                  ],
+
+                      // Team 2
+                      Expanded(
+                        child: _buildTeamSide(
+                          context,
+                          teamName: widget.match.team2Name,
+                          teamLogoUrl: widget.match.team2LogoUrl,
+                          members: widget.match.team2MemberInfos,
+                          score: widget.match.score2,
+                          isWinner:
+                              widget.isCompleted &&
+                              widget.match.winnerId == widget.match.team2Id,
+                          alignment: CrossAxisAlignment.end,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              // ─── Set Scores (nếu có) ───
-              if (widget.match.sets.isNotEmpty) _buildSetScores(context),
+                // ─── Set Scores (nếu có) ───
+                if (widget.match.sets.isNotEmpty) _buildSetScores(context),
 
-              // ─── Bottom Info ───
-              if (widget.match.scheduledTime != null ||
-                  widget.match.refereeName != null)
-                _buildBottomInfo(context),
-            ],
+                // ─── Bottom Info ───
+                if (widget.match.scheduledTime != null ||
+                    widget.match.refereeName != null)
+                  _buildBottomInfo(context),
+              ],
+            ),
           ),
         ),
       ),
@@ -190,10 +195,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
       decoration: BoxDecoration(
         color: const Color(0xFFFEF2F2),
         border: Border(
-          bottom: BorderSide(
-            color: const Color(0xFFFEE2E2),
-            width: 1,
-          ),
+          bottom: BorderSide(color: const Color(0xFFFEE2E2), width: 1),
         ),
       ),
       child: Row(
@@ -208,13 +210,13 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 5,
-                  height: 5,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                )
+                      width: 5,
+                      height: 5,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    )
                     .animate(onPlay: (c) => c.repeat(reverse: true))
                     .scaleXY(begin: 0.7, end: 1.1, duration: 800.ms),
                 const SizedBox(width: 4),
@@ -324,9 +326,9 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
   }) {
     final memberLabel = members.length == 2
         ? members
-            .map((member) => _lastNameWord(member.fullName))
-            .where((name) => name.isNotEmpty)
-            .join(' / ')
+              .map((member) => _lastNameWord(member.fullName))
+              .where((name) => name.isNotEmpty)
+              .join(' / ')
         : '';
     final displayLabel = members.length == 2 && memberLabel.isNotEmpty
         ? memberLabel
@@ -390,8 +392,12 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
     final displayMembers = members.length == 2
         ? members
         : const <MatchMemberInfo>[];
-    final borderColor = isWinner ? context.colors.success : context.colors.border;
-    final fallbackInitial = teamName.isNotEmpty ? teamName[0].toUpperCase() : '?';
+    final borderColor = isWinner
+        ? context.colors.success
+        : context.colors.border;
+    final fallbackInitial = teamName.isNotEmpty
+        ? teamName[0].toUpperCase()
+        : '?';
 
     Widget avatar({String? url, required String initial}) {
       return Container(
@@ -436,7 +442,9 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
               right: alignment == CrossAxisAlignment.end ? 0 : null,
               child: avatar(
                 url: m1.avatarUrl,
-                initial: m1.fullName.isNotEmpty ? m1.fullName[0].toUpperCase() : '?',
+                initial: m1.fullName.isNotEmpty
+                    ? m1.fullName[0].toUpperCase()
+                    : '?',
               ),
             ),
             Positioned(
@@ -444,7 +452,9 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
               right: alignment == CrossAxisAlignment.end ? 20 : null,
               child: avatar(
                 url: m2.avatarUrl,
-                initial: m2.fullName.isNotEmpty ? m2.fullName[0].toUpperCase() : '?',
+                initial: m2.fullName.isNotEmpty
+                    ? m2.fullName[0].toUpperCase()
+                    : '?',
               ),
             ),
           ],
@@ -452,10 +462,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
       );
     }
 
-    return avatar(
-      url: teamLogoUrl,
-      initial: fallbackInitial,
-    );
+    return avatar(url: teamLogoUrl, initial: fallbackInitial);
   }
 
   Widget _buildSetScores(BuildContext context) {
@@ -465,9 +472,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
       decoration: BoxDecoration(
         color: context.colors.bgSurface,
         border: Border(
-          top: BorderSide(
-            color: context.colors.border.withValues(alpha: 0.5),
-          ),
+          top: BorderSide(color: context.colors.border.withValues(alpha: 0.5)),
         ),
       ),
       child: Row(
@@ -508,20 +513,14 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2>
           if (widget.match.scheduledTime != null)
             Text(
               '${widget.match.scheduledTime!.hour.toString().padLeft(2, '0')}:${widget.match.scheduledTime!.minute.toString().padLeft(2, '0')}',
-              style: TextStyle(
-                fontSize: 11,
-                color: context.colors.textMuted,
-              ),
+              style: TextStyle(fontSize: 11, color: context.colors.textMuted),
             )
           else
             const SizedBox.shrink(),
           if (widget.match.refereeName != null)
             Text(
               'TT: ${widget.match.refereeName}',
-              style: TextStyle(
-                fontSize: 11,
-                color: context.colors.textMuted,
-              ),
+              style: TextStyle(fontSize: 11, color: context.colors.textMuted),
             )
           else
             const SizedBox.shrink(),

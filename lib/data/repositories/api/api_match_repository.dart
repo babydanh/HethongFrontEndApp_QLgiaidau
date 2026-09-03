@@ -622,6 +622,27 @@ class ApiMatchRepository implements IMatchRepository {
       team2Members: team2Members,
       groupName: groupName,
       stageName: stageName,
+      divisionId:
+          json['divisionId']?.toString() ??
+          json['division_id']?.toString() ??
+          (json['stage'] is Map
+              ? (json['stage']['divisionId'] ?? json['stage']['division_id'])
+                  ?.toString()
+              : null) ??
+          (json['group'] is Map
+              ? (json['group']['divisionId'] ?? json['group']['division_id'])
+                  ?.toString()
+              : null) ??
+          (json['scoreDetails'] is Map
+              ? (json['scoreDetails']['division_id'] ??
+                      json['scoreDetails']['divisionId'])
+                  ?.toString()
+              : null) ??
+          (json['tournamentConfig'] is Map
+              ? (json['tournamentConfig']['division_id'] ??
+                      json['tournamentConfig']['divisionId'])
+                  ?.toString()
+              : null),
     );
   }
 
@@ -747,6 +768,7 @@ class ApiMatchRepository implements IMatchRepository {
       // revision cũ → mỗi lần nhập tiếp gửi expectedRevision sai → backend
       // trả 409 → điểm bị drop + màn "kẹt"/desync mãi. (fix #33)
       revision: incoming.revision ?? previous.revision,
+      divisionId: incoming.divisionId ?? previous.divisionId,
     );
   }
 

@@ -21279,6 +21279,48 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Một số thao tác chỉ mở khi máy chủ xác nhận quyền của bạn.'**
   String get opsReadOnlyHint;
+
+  /// No description provided for @liveDivisionEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trận nào đang đấu ở nội dung này'**
+  String get liveDivisionEmpty;
+
+  /// No description provided for @liveBannerTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra trực tiếp'**
+  String get liveBannerTitle;
+
+  /// No description provided for @liveBannerHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ấn vào từng trận để xem chi tiết'**
+  String get liveBannerHint;
+
+  /// No description provided for @liveNoMatchesRunning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có trận nào đang diễn ra'**
+  String get liveNoMatchesRunning;
+
+  /// No description provided for @liveNoMatchesSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các trận trực tiếp sẽ hiện ở đây khi bắt đầu'**
+  String get liveNoMatchesSubtitle;
+
+  /// No description provided for @matchTypeSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh Đơn'**
+  String get matchTypeSingles;
+
+  /// No description provided for @matchTypeDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh Đôi'**
+  String get matchTypeDoubles;
 }
 
 class _AppLocalizationsDelegate

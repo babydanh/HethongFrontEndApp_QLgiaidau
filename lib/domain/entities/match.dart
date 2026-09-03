@@ -173,6 +173,7 @@ class MatchModel {
   final String? groupName;
   final String? stageName;
   final String? stageType;
+  final String? divisionId;
 
   /// True nếu đây là trận BYE (miễn đấu) do backend đánh dấu
   final bool isBye;
@@ -229,6 +230,7 @@ class MatchModel {
     this.groupName,
     this.stageName,
     this.stageType,
+    this.divisionId,
     this.isBye = false,
   });
 
@@ -439,6 +441,19 @@ class MatchModel {
           json['stageType']?.toString() ??
           json['stage_type']?.toString() ??
           (json['stage'] is Map ? json['stage']['type']?.toString() : null),
+      divisionId:
+          json['divisionId']?.toString() ??
+          json['division_id']?.toString() ??
+          (json['stage'] is Map
+              ? (json['stage']['divisionId'] ?? json['stage']['division_id'])
+                  ?.toString()
+              : null) ??
+          (json['group'] is Map
+              ? (json['group']['divisionId'] ?? json['group']['division_id'])
+                  ?.toString()
+              : null) ??
+          scoreDetails?['division_id']?.toString() ??
+          scoreDetails?['divisionId']?.toString(),
       isBye: json['isBye'] ?? json['is_bye'] ?? false,
     );
   }
@@ -488,6 +503,7 @@ class MatchModel {
       if (groupName != null) 'groupName': groupName,
       if (stageName != null) 'stageName': stageName,
       if (stageType != null) 'stageType': stageType,
+      if (divisionId != null) 'divisionId': divisionId,
       'isBye': isBye,
     };
   }
@@ -542,6 +558,7 @@ class MatchModel {
     String? groupName,
     String? stageName,
     String? stageType,
+    String? divisionId,
     bool? isBye,
   }) {
     return MatchModel(
@@ -594,6 +611,7 @@ class MatchModel {
       groupName: groupName ?? this.groupName,
       stageName: stageName ?? this.stageName,
       stageType: stageType ?? this.stageType,
+      divisionId: divisionId ?? this.divisionId,
       isBye: isBye ?? this.isBye,
     );
   }

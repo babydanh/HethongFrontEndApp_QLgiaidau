@@ -11675,4 +11675,26 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get opsReadOnlyHint =>
       'Một số thao tác chỉ mở khi máy chủ xác nhận quyền của bạn.';
+
+  @override
+  String get liveDivisionEmpty => 'Chưa có trận nào đang đấu ở nội dung này';
+
+  @override
+  String get liveBannerTitle => 'Đang diễn ra trực tiếp';
+
+  @override
+  String get liveBannerHint => 'Ấn vào từng trận để xem chi tiết';
+
+  @override
+  String get liveNoMatchesRunning => 'Không có trận nào đang diễn ra';
+
+  @override
+  String get liveNoMatchesSubtitle =>
+      'Các trận trực tiếp sẽ hiện ở đây khi bắt đầu';
+
+  @override
+  String get matchTypeSingles => 'Đánh Đơn';
+
+  @override
+  String get matchTypeDoubles => 'Đánh Đôi';
 }

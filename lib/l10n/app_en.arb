@@ -3412,14 +3412,13 @@
   "communityPoll_singleHint": "You can select only one option.",
   "communityPoll_tournamentHint": "Choose Yes to register; choose No to cancel registration.",
   "communityPoll_addOption": "Add option",
-    "communityPoll_voteCount": "{count} votes",
+  "communityPoll_voteCount": "{count} votes",
   "communityPoll_registeredMembers": "Registered ({count})",
   "@communityPoll_registeredMembers": {
     "placeholders": {
       "count": {}
     }
   },
-
   "@communityPoll_voteCount": {
     "placeholders": {
       "count": {}
@@ -3617,7 +3616,7 @@
     }
   },
   "footballScore_status": "Status",
-    "footballScore_events": "Match events",
+  "footballScore_events": "Match events",
   "footballScore_goal": "Goal",
   "footballScore_penaltyGoal": "Penalty goal",
   "footballScore_team1": "Team 1",
@@ -4853,5 +4852,12 @@
   "opsOpenBracket": "Open bracket",
   "opsOpenScoreboard": "Open scoreboard",
   "opsContextHint": "Manage the live flow without leaving the tournament context.",
-  "opsReadOnlyHint": "Some actions are read-only until the server confirms your permission."
+  "opsReadOnlyHint": "Some actions are read-only until the server confirms your permission.",
+  "liveDivisionEmpty": "No matches currently in progress in this division",
+  "liveBannerTitle": "Live Matches in Progress",
+  "liveBannerHint": "Tap on each match to view details",
+  "liveNoMatchesRunning": "No matches currently in progress",
+  "liveNoMatchesSubtitle": "Live matches will appear here once started",
+  "matchTypeSingles": "Singles",
+  "matchTypeDoubles": "Doubles"
 }
