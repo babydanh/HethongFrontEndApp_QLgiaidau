@@ -10,10 +10,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
-import 'package:app_quanly_giaidau/providers/regions_provider.dart';
-import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
-import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 
 /// Tạo câu lạc bộ mới — form đơn giản
 class CreateClubScreen extends ConsumerStatefulWidget {
@@ -28,7 +25,6 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
-  final _locationCtrl = TextEditingController();
   final _questionCtrl = TextEditingController();
 
   String _selectedSport = AppConstants.sportBadminton;
@@ -42,65 +38,11 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   bool _isUploadingLogo = false;
   bool _isUploadingBanner = false;
   bool _isLoading = false;
-  Timer? _locationDebounce;
-  String? _autoDetectedInfo;
-
-  @override
-  void initState() {
-    super.initState();
-    _locationCtrl.addListener(_onLocationInput);
-  }
-
-  void _onLocationInput() {
-    _locationDebounce?.cancel();
-    _locationDebounce = Timer(const Duration(milliseconds: 300), () async {
-      if (!mounted) return;
-      final text = _locationCtrl.text.trim();
-      if (text.length < 3) {
-        if (_autoDetectedInfo != null) {
-          setState(() => _autoDetectedInfo = null);
-        }
-        return;
-      }
-      final provinces =
-          ref.read(provincesProvider).asData?.value ?? const <Province>[];
-      final detectedProv = VietnamAddressParser.detectProvince<Province>(
-        rawAddress: text,
-        provinces: provinces,
-        getCode: (p) => p.code,
-        getName: (p) => p.name,
-      );
-      if (detectedProv != null) {
-        final provCode = detectedProv.code;
-        final wards = await ref.read(wardsProvider(provCode).future);
-        final detectedWard = VietnamAddressParser.detectWard<Ward>(
-          rawAddress: text,
-          wards: wards,
-          getCode: (w) => w.code,
-          getName: (w) => w.name,
-        );
-        if (mounted) {
-          setState(() {
-            _provinceCode = provCode;
-            if (detectedWard != null) {
-              _wardCode = detectedWard.code;
-              _autoDetectedInfo = '${detectedProv.name} > ${detectedWard.name}';
-            } else {
-              _autoDetectedInfo = detectedProv.name;
-            }
-          });
-        }
-      }
-    });
-  }
 
   @override
   void dispose() {
-    _locationDebounce?.cancel();
-    _locationCtrl.removeListener(_onLocationInput);
     _nameCtrl.dispose();
     _descCtrl.dispose();
-    _locationCtrl.dispose();
     _questionCtrl.dispose();
     super.dispose();
   }
@@ -123,42 +65,16 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
-    if (_provinceCode == null || _provinceCode!.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.createClub_provinceRequired)));
-      return;
-    }
 
     setState(() => _isLoading = true);
     try {
       final dio = ref.read(dioProvider);
 
-      final provinces =
-          ref.read(provincesProvider).asData?.value ?? const <Province>[];
-      final wards = _provinceCode == null
-          ? const <Ward>[]
-          : (await ref.read(wardsProvider(_provinceCode!).future));
-      final provinceName = provinces
-          .where((item) => item.code == _provinceCode)
-          .map((item) => item.name)
-          .firstOrNull;
-      final wardName = wards
-          .where((item) => item.code == _wardCode)
-          .map((item) => item.name)
-          .firstOrNull;
-      final locationParts = [
-        _locationCtrl.text.trim(),
-        wardName,
-        provinceName,
-      ].whereType<String>().where((value) => value.isNotEmpty).toList();
-
       final body = <String, dynamic>{
         'name': _nameCtrl.text.trim(),
         'description': _descCtrl.text.trim(),
-        'locationAddress': locationParts.join(', '),
-        'provinceCode': _provinceCode,
-        'wardCode': _wardCode,
+        if (_provinceCode != null) 'provinceCode': _provinceCode,
+        if (_wardCode != null) 'wardCode': _wardCode,
         // Backend yêu cầu UUID category, không nhận slug như "pickleball".
         'categoryIds': [await _resolveCategoryId()],
         'joinMode': _joinMode,
@@ -426,36 +342,6 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               const SizedBox(height: 20),
 
 
-              _label(l10n.createClub_locationLabel, colors),
-              const SizedBox(height: 6),
-              TextFormField(
-                controller: _locationCtrl,
-                style: TextStyle(color: colors.textPrimary),
-                decoration: InputDecoration(
-                  hintText: l10n.createClub_locationHint,
-                  hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
-                ),
-              ),
-              if (_autoDetectedInfo != null && _provinceCode != null) ...[
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Icon(Icons.auto_awesome, size: 14, color: AppTheme.primary),
-                    const SizedBox(width: 4),
-                    Text(
-                      l10n.createClub_autoDetected(_autoDetectedInfo!),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: 10),
-              _buildRegionSelectors(),
-              const SizedBox(height: 20),
 
               _buildImagePickers(),
               const SizedBox(height: 20),
@@ -526,72 +412,6 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
     );
   }
 
-  Widget _buildRegionSelectors() {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final provincesAsync = ref.watch(provincesProvider);
-    final wardsAsync = _provinceCode == null
-        ? const AsyncData<List<Ward>>([])
-        : ref.watch(wardsProvider(_provinceCode!));
-    return Row(
-      children: [
-        Expanded(
-          child: provincesAsync.when(
-            data: (items) => DropdownButtonFormField<String>(
-              initialValue: _provinceCode,
-              isExpanded: true,
-              decoration: InputDecoration(
-                labelText: l10n.createClub_provinceLabel,
-              ),
-              items: items
-                  .map(
-                    (item) => DropdownMenuItem(
-                      value: item.code,
-                      child: Text(item.name, overflow: TextOverflow.ellipsis),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) => setState(() {
-                _provinceCode = value;
-                _wardCode = null;
-              }),
-            ),
-            loading: () => const LinearProgressIndicator(),
-            error: (e, s) => Text(
-              l10n.createClub_provinceLoadError,
-              style: TextStyle(color: colors.error, fontSize: 11),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: wardsAsync.when(
-            data: (items) => DropdownButtonFormField<String>(
-              initialValue: _wardCode,
-              isExpanded: true,
-              decoration: InputDecoration(labelText: l10n.createClub_wardLabel),
-              items: items
-                  .map(
-                    (item) => DropdownMenuItem(
-                      value: item.code,
-                      child: Text(item.name, overflow: TextOverflow.ellipsis),
-                    ),
-                  )
-                  .toList(),
-              onChanged: _provinceCode == null
-                  ? null
-                  : (value) => setState(() => _wardCode = value),
-            ),
-            loading: () => const LinearProgressIndicator(),
-            error: (e, s) => Text(
-              l10n.createClub_wardLoadError,
-              style: TextStyle(color: colors.error, fontSize: 11),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildImagePickers() {
     final l10n = AppLocalizations.of(context)!;
