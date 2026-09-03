@@ -28,7 +28,6 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
-  final _rulesCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
   final _questionCtrl = TextEditingController();
 
@@ -101,7 +100,6 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
     _locationCtrl.removeListener(_onLocationInput);
     _nameCtrl.dispose();
     _descCtrl.dispose();
-    _rulesCtrl.dispose();
     _locationCtrl.dispose();
     _questionCtrl.dispose();
     super.dispose();
@@ -158,7 +156,6 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
       final body = <String, dynamic>{
         'name': _nameCtrl.text.trim(),
         'description': _descCtrl.text.trim(),
-        'rules': _rulesCtrl.text.trim(),
         'locationAddress': locationParts.join(', '),
         'provinceCode': _provinceCode,
         'wardCode': _wardCode,
@@ -428,19 +425,6 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               ),
               const SizedBox(height: 20),
 
-              _label(l10n.createClub_rulesLabel, colors),
-              const SizedBox(height: 6),
-              TextFormField(
-                controller: _rulesCtrl,
-                maxLines: 4,
-                maxLength: 5000,
-                style: TextStyle(color: colors.textPrimary),
-                decoration: InputDecoration(
-                  hintText: l10n.createClub_rulesHint,
-                  hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
-                ),
-              ),
-              const SizedBox(height: 8),
 
               _label(l10n.createClub_locationLabel, colors),
               const SizedBox(height: 6),
