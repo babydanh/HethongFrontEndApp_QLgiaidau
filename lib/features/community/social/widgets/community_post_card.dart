@@ -277,23 +277,29 @@ class CommunityPostCard extends ConsumerWidget {
                 final normalizedStatus = rawStatus == null || rawStatus.isEmpty
                     ? null
                     : StatusHelper.normalizeTournamentStatus(rawStatus);
-                final bracketReady =
-                    post.hasBracket ||
-                    post.type == 'TOURNAMENT_BRACKET' ||
-                    normalizedStatus == AppConstants.statusInProgress ||
-                    normalizedStatus == AppConstants.statusCompleted;
+                // Registration is the source of truth for the Lite announcement
+                // card. A stale/already-created bracket must not hide the 16
+                // registration slots while the tournament is still open.
+                final isRegistrationPhase =
+                    normalizedStatus == null ||
+                    normalizedStatus == AppConstants.statusUpcoming ||
+                    normalizedStatus == AppConstants.statusRegistration;
 
-                if (post.isTournamentLite &&
-                    !bracketReady &&
-                    (normalizedStatus == null ||
-                        normalizedStatus == AppConstants.statusUpcoming ||
-                        normalizedStatus == AppConstants.statusRegistration)) {
+                // Đồng bộ chuẩn Web: bài viết giải đấu trong CLB ở giai đoạn đăng ký / chuẩn bị
+                // sẽ hiển thị lưới slot tròn xác nhận tham gia trực tiếp.
+                final hasTournament = post.tournamentId != null && post.tournamentId!.isNotEmpty;
+                final shouldShowRoster = hasTournament &&
+                    isRegistrationPhase &&
+                    (post.isTournamentLite || communityId.isNotEmpty || (post.tournamentName != null && post.tournamentName!.isNotEmpty));
+
+                if (shouldShowRoster) {
                   return CommunityTournamentRosterWidget(
                     tournamentId: post.tournamentId!,
                     communityId: communityId,
                     initialTournamentName: post.tournamentName,
                     status: post.tournamentStatus,
                     inviteCode: post.tournamentInviteCode,
+                    maxParticipants: post.tournamentMaxParticipants,
                   );
                 }
 

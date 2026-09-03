@@ -569,8 +569,8 @@ class _OverviewTabState extends State<OverviewTab> {
                   const SizedBox(height: 16),
                 ],
 
-                // ─── LƯỚI XÁC NHẬN THAM GIA 16 SLOT (CHỈ DÀNH RIÊNG CHO GIẢI SIÊU LITE CLB) ───
-                if (isClubLite) ...[
+                // ─── LƯỚI XÁC NHẬN THAM GIA 16/32 SLOT (ĐỒNG BỘ CHUẨN WEB) ───
+                if (isClubLite || ((t.communityId != null && t.communityId!.isNotEmpty) && (t.isLite || t.divisions.isEmpty || t.divisions.length <= 1))) ...[
                   CommunityTournamentRosterWidget(
                     tournamentId: t.id,
                     communityId: t.communityId,
@@ -586,7 +586,7 @@ class _OverviewTabState extends State<OverviewTab> {
                 ],
 
                 // ─── 3. DANH SÁCH NỘI DUNG / PHÂN HẠNG THI ĐẤU (CHUẨN WEB & TASTE SKILL) ───
-                if (t.divisions.isNotEmpty) ...[
+                if (!isClubLite && t.divisions.isNotEmpty) ...[
                   KeyedSubtree(
                     key: _divisionsKey,
                     child: _buildSectionHeader('NỘI DUNG THI ĐẤU (${t.divisions.length})'),
@@ -599,17 +599,19 @@ class _OverviewTabState extends State<OverviewTab> {
                 ],
 
                 // ─── 4. THÔNG TIN ĐĂNG KÝ & LỆ PHÍ ───
-                _buildSectionHeader('THỜI GIAN ĐĂNG KÝ & LỆ PHÍ'),
-                const SizedBox(height: 10),
-                _buildMetaRow('Mở đăng ký:', _formatDate(t.registrationStartDate)),
-                const SizedBox(height: 8),
-                _buildMetaRow('Hạn chót:', _formatDate(t.registrationEndDate)),
-                const SizedBox(height: 8),
-                _buildMetaRow(
-                  'Lệ phí tham gia:',
-                  _formatCurrency(t.entryFee),
-                  isFee: true,
-                ),
+                if (!isClubLite) ...[
+                  _buildSectionHeader('THỜI GIAN ĐĂNG KÝ & LỆ PHÍ'),
+                  const SizedBox(height: 10),
+                  _buildMetaRow('Mở đăng ký:', _formatDate(t.registrationStartDate)),
+                  const SizedBox(height: 8),
+                  _buildMetaRow('Hạn chót:', _formatDate(t.registrationEndDate)),
+                  const SizedBox(height: 8),
+                  _buildMetaRow(
+                    'Lệ phí tham gia:',
+                    _formatCurrency(t.entryFee),
+                    isFee: true,
+                  ),
+                ],
 
                 // ─── 5. GIỚI THIỆU CHI TIẾT ───
                 if (desc.isNotEmpty) ...[
@@ -622,7 +624,8 @@ class _OverviewTabState extends State<OverviewTab> {
                 ],
 
                 // ─── 6. CƠ CẤU GIẢI THƯỞNG ───
-                if (t.prizeDescription != null &&
+                if (!isClubLite &&
+                    t.prizeDescription != null &&
                     t.prizeDescription!.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
@@ -702,6 +705,9 @@ class _OverviewTabState extends State<OverviewTab> {
   }
 
   Widget _buildDivisionItem(TournamentDivision div, AppColorsExtension colors) {
+    final displayName = widget.tournament.isClubLite
+        ? (div.matchType == 'DOUBLES' ? 'Đôi' : 'Đơn')
+        : div.name;
     final maxP = div.maxParticipants ?? 0;
     final curP = div.participantCount;
     final isFull = maxP > 0 && curP >= maxP;
@@ -755,7 +761,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      div.name,
+                      displayName,
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,

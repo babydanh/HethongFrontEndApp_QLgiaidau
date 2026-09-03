@@ -171,7 +171,18 @@ class Tournament {
                 json['bracketType']?.toString() ??
                 '')
             .toLowerCase();
-    int maxTeamsVal = _toInt(config['maxTeams']) ?? json['maxTeams'] ?? 16;
+    int? parsedDivMax;
+    if (json['divisions'] is List && (json['divisions'] as List).isNotEmpty) {
+      final firstDiv = (json['divisions'] as List).first;
+      if (firstDiv is Map) {
+        parsedDivMax = _toInt(firstDiv['maxParticipants']) ?? _toInt(firstDiv['maxTeams']);
+      }
+    }
+    int maxTeamsVal = _toInt(config['maxTeams']) ??
+        _toInt(json['maxParticipants']) ??
+        _toInt(json['maxTeams']) ??
+        parsedDivMax ??
+        16;
     int roundCountVal =
         _toInt(config['roundRobinLegs']) ?? json['roundCount'] ?? 1;
 

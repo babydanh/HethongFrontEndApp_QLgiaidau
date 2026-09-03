@@ -532,6 +532,30 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
   }
 
+  Future<bool> updateLiteDetails(
+    String tournamentId, {
+    required String description,
+    required String locationAddress,
+  }) async {
+    final tournament = state.tournament;
+    if (tournament == null ||
+        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
+            .contains(tournament.status.toUpperCase())) {
+      return false;
+    }
+    try {
+      await _dio.patch('/tournaments/$tournamentId', data: {
+        'description': description.trim(),
+        'locationAddress': locationAddress.trim(),
+      });
+      await _fetchTournament(tournamentId);
+      return true;
+    } catch (e, stack) {
+      _log.error('Lỗi cập nhật thông tin giải Lite', e, stack);
+      return false;
+    }
+  }
+
   Future<void> startMatch(String tournamentId, String matchId) async {
     await ref.read(matchRepositoryProvider).startMatch(tournamentId, matchId);
     await _fetchMatches(tournamentId);

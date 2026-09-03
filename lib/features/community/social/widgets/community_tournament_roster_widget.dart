@@ -260,7 +260,12 @@ class _CommunityTournamentRosterWidgetState
   Widget build(BuildContext context) {
     final colors = context.colors;
     final tournamentName = _tournament?.name ?? widget.initialTournamentName ?? 'Giải đấu';
-    final maxParticipants = _tournament?.maxTeams ?? widget.maxParticipants ?? 16;
+    final effectiveMaxParticipants =
+        _tournament?.divisions.firstOrNull?.maxParticipants ??
+        _tournament?.maxTeams ??
+        widget.maxParticipants ??
+        16;
+    final maxParticipants = effectiveMaxParticipants;
     final userProfile = ref.watch(userProfileProvider).asData?.value;
     final currentUserId = userProfile?.id ?? '';
 

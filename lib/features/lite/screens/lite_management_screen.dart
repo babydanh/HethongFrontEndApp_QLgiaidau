@@ -31,6 +31,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   late TabController _tabController;
   Timer? _loadWatchdog;
   String? _formatDraft;
+  final _descriptionController = TextEditingController();
+  final _locationController = TextEditingController();
 
   @override
   void initState() {
@@ -71,6 +73,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
 
   @override
   void dispose() {
+    _descriptionController.dispose();
+    _locationController.dispose();
     _loadWatchdog?.cancel();
     _tabController.dispose();
     super.dispose();
@@ -306,6 +310,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           const SizedBox(height: 16),
           _buildFormatSettingCard(colors, state, notifier),
           const SizedBox(height: 24),
+          _buildLiteDetailsCard(colors, state, notifier),
+          const SizedBox(height: 24),
 
           // ─── Invite Code ───
           if (state.inviteCode != null && state.inviteCode!.isNotEmpty) ...[
@@ -329,6 +335,74 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildLiteDetailsCard(
+    AppColorsExtension colors,
+    LiteManagementState state,
+    LiteManagementNotifier notifier,
+  ) {
+    final t = state.tournament;
+    if (t == null) return const SizedBox.shrink();
+    if (_descriptionController.text.isEmpty && t.description.isNotEmpty) {
+      _descriptionController.text = t.description;
+    }
+    if (_locationController.text.isEmpty &&
+        (t.locationAddress?.isNotEmpty ?? false)) {
+      _locationController.text = t.locationAddress!;
+    }
+    final locked = {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
+        .contains(t.status.toUpperCase());
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionHeader(colors, 'Thông tin giải', Icons.edit_note_rounded),
+        const SizedBox(height: 10),
+        TextField(
+          controller: _descriptionController,
+          enabled: !locked,
+          maxLines: 4,
+          decoration: InputDecoration(
+            labelText: 'Mô tả giải',
+            hintText: 'Giới thiệu ngắn về giải đấu',
+            filled: true,
+            fillColor: colors.bgDark,
+          ),
+        ),
+        const SizedBox(height: 10),
+        TextField(
+          controller: _locationController,
+          enabled: !locked,
+          decoration: InputDecoration(
+            labelText: 'Địa chỉ thi đấu',
+            hintText: 'Nhập địa điểm tổ chức',
+            filled: true,
+            fillColor: colors.bgDark,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            onPressed: locked
+                ? null
+                : () async {
+                    final ok = await notifier.updateLiteDetails(
+                      widget.tournamentId,
+                      description: _descriptionController.text,
+                      locationAddress: _locationController.text,
+                    );
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(ok ? 'Đã lưu thông tin giải' : 'Không thể lưu thông tin giải')),
+                    );
+                  },
+            icon: const Icon(Icons.save_rounded, size: 16),
+            label: const Text('Lưu thông tin'),
+          ),
+        ),
+      ],
     );
   }
 

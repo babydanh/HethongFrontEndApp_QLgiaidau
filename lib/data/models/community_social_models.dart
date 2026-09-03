@@ -107,6 +107,7 @@ class CommunityPostModel {
   final String? tournamentName;
   final String? tournamentInviteCode;
   final String? tournamentStatus;
+  final int? tournamentMaxParticipants;
   final bool hasBracket;
   final bool isTournamentLite;
   final String type;
@@ -131,6 +132,7 @@ class CommunityPostModel {
     this.tournamentName,
     this.tournamentInviteCode,
     this.tournamentStatus,
+    this.tournamentMaxParticipants,
     this.hasBracket = false,
     this.isTournamentLite = false,
     this.type = 'NORMAL',
@@ -183,6 +185,15 @@ class CommunityPostModel {
             tournament['status'] ??
             tournament['tournamentStatus'],
       ),
+      tournamentMaxParticipants: _asInt(
+        json['tournamentMaxParticipants'] ??
+            tournament['maxParticipants'] ??
+            tournament['maxTeams'] ??
+            (tournament['tournamentConfig'] is Map
+                ? (tournament['tournamentConfig']['maxTeams'] ??
+                    tournament['tournamentConfig']['maxParticipants'])
+                : null),
+      ),
       hasBracket:
           json['hasBracket'] == true ||
           tournament['hasBracket'] == true ||
@@ -190,9 +201,16 @@ class CommunityPostModel {
       isTournamentLite:
           json['isTournamentLite'] == true ||
           json['isLite'] == true ||
+          tournament['isTournamentLite'] == true ||
           tournament['isLite'] == true ||
           (tournament['tournamentConfig'] is Map &&
-              tournament['tournamentConfig']['isLite'] == true),
+              (tournament['tournamentConfig']['isLite'] == true ||
+                  (tournament['tournamentConfig']['mode']
+                              ?.toString()
+                              .toUpperCase() ==
+                          'LITE' &&
+                      tournament['tournamentConfig']['hideAdvancedSettings'] ==
+                          true))),
       type: _asString(json['type']) ?? 'NORMAL',
       mediaUrls: _asStringList(rawMedia),
       topicTags: _asStringList(rawTopics),
