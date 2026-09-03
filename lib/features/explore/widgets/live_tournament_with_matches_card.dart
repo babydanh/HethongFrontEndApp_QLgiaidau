@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:io' show Platform;
 
 import 'package:intl/intl.dart';
 
@@ -16,6 +13,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
+import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
 
 class LiveTournamentWithMatchesCard extends ConsumerStatefulWidget {
   final Tournament tournament;
@@ -101,26 +99,9 @@ class _LiveTournamentWithMatchesCardState
     }
   }
 
-  String _resolveImageUrl(String? url) {
-    if (url == null || url.isEmpty) return '';
-    if (url.startsWith('http')) return url;
-
-    String apiBase = 'http://localhost:3000/api/v1';
-    try {
-      apiBase = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
-      if (!kIsWeb && Platform.isAndroid && apiBase.contains('localhost')) {
-        apiBase = apiBase.replaceAll('localhost', '10.0.2.2');
-      }
-    } catch (_) {}
-
-    final host = apiBase.replaceAll('/api/v1', '');
-    return '$host$url';
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl);
 
     final currentMatches = _pageMatches[_currentPageIndex] ?? const <MatchModel>[];
 
@@ -141,39 +122,11 @@ class _LiveTournamentWithMatchesCardState
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
               child: Row(
                 children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFFE2E8F0),
-                        width: 1,
-                      ),
-                    ),
-                    child: ClipOval(
-                      child: resolvedLogoUrl.isNotEmpty
-                          ? Image.network(
-                              resolvedLogoUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Image.asset(
-                                      "assets/images/sporto_v1_with_text.png",
-                                      fit: BoxFit.contain,
-                                    ),
-                                  ),
-                            )
-                          : Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Image.asset(
-                                "assets/images/sporto_v1_with_text.png",
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                    ),
+                  TournamentAvatar(
+                    imageUrl: widget.tournament.logoUrl,
+                    tournamentName: widget.tournament.name,
+                    sport: widget.tournament.sport,
+                    size: 38,
                   ),
                   const SizedBox(width: 12),
                   Expanded(

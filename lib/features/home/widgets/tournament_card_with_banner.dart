@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
+import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentCardWithBanner extends ConsumerStatefulWidget {
@@ -232,10 +233,6 @@ class _TournamentCardWithBannerState
           ]
         : categoryChips;
 
-    final resolvedLogoUrl = _resolveImageUrl(
-      widget.tournament.logoUrl ?? widget.tournament.creatorAvatarUrl,
-    );
-    final hasLogo = resolvedLogoUrl.isNotEmpty;
     return GestureDetector(
       onTap: widget.onTap,
       child: Container(
@@ -553,12 +550,8 @@ class _TournamentCardWithBannerState
                 top: 163,
                 left: 14,
                 child: Container(
-                  width: 42,
-                  height: 42,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: colors.bgSurface,
-                    border: Border.all(color: colors.bgCard, width: 2.5),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.12),
@@ -567,28 +560,13 @@ class _TournamentCardWithBannerState
                       ),
                     ],
                   ),
-                  child: ClipOval(
-                    child: hasLogo
-                        ? Image.network(
-                            resolvedLogoUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Container(
-                              color: AppTheme.primary.withValues(alpha: 0.1),
-                              padding: const EdgeInsets.all(8),
-                              child: Image.asset(
-                                "assets/images/sporto_v1_with_text.png",
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                          )
-                        : Container(
-                            color: AppTheme.primary.withValues(alpha: 0.1),
-                            padding: const EdgeInsets.all(8),
-                            child: Image.asset(
-                              "assets/images/sporto_v1_with_text.png",
-                              fit: BoxFit.contain,
-                            ),
-                          ),
+                  child: TournamentAvatar(
+                    imageUrl: widget.tournament.logoUrl ?? widget.tournament.creatorAvatarUrl,
+                    tournamentName: widget.tournament.name,
+                    sport: widget.tournament.sport,
+                    size: 42,
+                    borderWidth: 2.5,
+                    borderColor: colors.bgCard,
                   ),
                 ),
               ),
