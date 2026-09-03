@@ -301,7 +301,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
 
     final authState = ref.watch(authProvider);
-    final currentUserId = authState.user?.id;
+    final userProfile = ref.watch(userProfileProvider).value;
+    final currentUserId = userProfile?.id;
     final isCreator = tournament.creatorId == currentUserId;
     final isAdmin = authState.isAdmin;
     final activeInvite = _customInviteCode ?? widget.inviteCode;

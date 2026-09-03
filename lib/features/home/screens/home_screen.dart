@@ -2247,9 +2247,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final l10n = AppLocalizations.of(context)!;
     final currentList = _serverTournamentsList;
 
-    return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
-      slivers: [
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification scrollInfo) {
+        if (!_isTournamentLoadingMore &&
+            _serverTournamentHasMore &&
+            scrollInfo.metrics.pixels >=
+                scrollInfo.metrics.maxScrollExtent - 400) {
+          _fetchServerTournamentPage(isLoadMore: true);
+        }
+        return false;
+      },
+      child: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
         SliverToBoxAdapter(child: SizedBox(height: _headerHeight + 52.0)),
         SliverPersistentHeader(
           pinned: true,
@@ -2328,7 +2338,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ],
-    );
+    ),
+  );
   }
 
   Widget _buildCursorLoadMoreBar({
@@ -2429,9 +2440,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final l10n = AppLocalizations.of(context)!;
     final currentList = _serverClubsList;
 
-    return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
-      slivers: [
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification scrollInfo) {
+        if (!_isClubLoadingMore &&
+            _serverClubHasMore &&
+            scrollInfo.metrics.pixels >=
+                scrollInfo.metrics.maxScrollExtent - 400) {
+          _fetchServerClubPage(isLoadMore: true);
+        }
+        return false;
+      },
+      child: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
         SliverToBoxAdapter(child: SizedBox(height: _headerHeight + 52.0)),
         SliverToBoxAdapter(child: const SizedBox(height: 8)),
         if (_isClubInitialLoading && currentList.isEmpty)
@@ -2507,7 +2528,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
       ],
-    );
+    ),
+  );
   }
 
   /// ─── Helpers ───
