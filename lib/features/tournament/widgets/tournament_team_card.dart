@@ -208,23 +208,29 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                               ),
                             ],
                             const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 1.5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: team.isPaid
-                                    ? const Color(0xFF059669)
-                                    : const Color(0xFFD97706),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                team.isPaid ? 'ĐÃ ĐÓNG PHÍ' : 'CHỜ THANH TOÁN',
-                                style: const TextStyle(
-                                  fontSize: 8.5,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
+                            Tooltip(
+                              message: team.isPaid ? 'Đã đóng phí' : 'Chờ thanh toán',
+                              child: Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  color: team.isPaid
+                                      ? const Color(0xFF059669).withValues(alpha: 0.12)
+                                      : const Color(0xFFD97706).withValues(alpha: 0.12),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: team.isPaid
+                                        ? const Color(0xFF059669).withValues(alpha: 0.4)
+                                        : const Color(0xFFD97706).withValues(alpha: 0.4),
+                                  ),
+                                ),
+                                child: Icon(
+                                  team.isPaid
+                                      ? Icons.check_circle_rounded
+                                      : Icons.access_time_rounded,
+                                  size: 13,
+                                  color: team.isPaid
+                                      ? const Color(0xFF059669)
+                                      : const Color(0xFFD97706),
                                 ),
                               ),
                             ),
@@ -328,23 +334,29 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                                 ),
                               ],
                               const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 1.5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: team.isPaid
-                                      ? const Color(0xFF059669)
-                                      : const Color(0xFFD97706),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  team.isPaid ? 'ĐÃ ĐÓNG PHÍ' : 'CHỜ THANH TOÁN',
-                                  style: const TextStyle(
-                                    fontSize: 8.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
+                              Tooltip(
+                                message: team.isPaid ? 'Đã đóng phí' : 'Chờ thanh toán',
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    color: team.isPaid
+                                        ? const Color(0xFF059669).withValues(alpha: 0.12)
+                                        : const Color(0xFFD97706).withValues(alpha: 0.12),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: team.isPaid
+                                          ? const Color(0xFF059669).withValues(alpha: 0.4)
+                                          : const Color(0xFFD97706).withValues(alpha: 0.4),
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    team.isPaid
+                                        ? Icons.check_circle_rounded
+                                        : Icons.access_time_rounded,
+                                    size: 13,
+                                    color: team.isPaid
+                                        ? const Color(0xFF059669)
+                                        : const Color(0xFFD97706),
                                   ),
                                 ),
                               ),

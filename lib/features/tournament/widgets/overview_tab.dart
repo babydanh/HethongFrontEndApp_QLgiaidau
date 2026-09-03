@@ -20,6 +20,7 @@ class OverviewTab extends StatefulWidget {
   final void Function(TournamentDivision division)? onSelectDivision;
   final bool isFollowing;
   final VoidCallback? onToggleFollow;
+  final String? inviteCode;
 
   const OverviewTab({
     super.key,
@@ -30,6 +31,7 @@ class OverviewTab extends StatefulWidget {
     this.onSelectDivision,
     this.isFollowing = false,
     this.onToggleFollow,
+    this.inviteCode,
   });
 
   @override
@@ -575,7 +577,7 @@ class _OverviewTabState extends State<OverviewTab> {
                     initialTournamentName: t.name,
                     categoryName: t.sport,
                     status: t.status,
-                    inviteCode: t.inviteCode,
+                    inviteCode: widget.inviteCode,
                     maxParticipants: t.maxTeams,
                     startDate: t.startDate,
                     showTopBar: false,

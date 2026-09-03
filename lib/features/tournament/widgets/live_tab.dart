@@ -19,30 +19,32 @@ class LiveTab extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
                 color: colors.bgSurface,
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.sports_tennis_rounded,
-                size: 40,
+                Icons.radio_outlined,
+                size: 26,
                 color: colors.textMuted.withValues(alpha: 0.5),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Text(
-              'Hiện không có trận đấu nào đang diễn ra',
+              'Không có trận nào đang diễn ra',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: colors.textSecondary,
+                color: colors.textPrimary,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Các trận đấu trực tiếp sẽ hiển thị tại đây khi bắt đầu',
+              'Các trận trực tiếp sẽ hiện ở đây khi bắt đầu',
               style: TextStyle(fontSize: 12, color: colors.textMuted),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -51,34 +53,14 @@ class LiveTab extends StatelessWidget {
 
     return ListView.builder(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 140),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 140),
       itemCount: liveMatches.length + 1,
       itemBuilder: (context, index) {
+        // ── Header Banner ──
         if (index == 0) {
           return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFEF4444),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'ĐANG DIỄN RA TRỰC TIẾP (${liveMatches.length})',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFFEF4444),
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
+            padding: const EdgeInsets.only(bottom: 16),
+            child: _LiveHeaderBanner(count: liveMatches.length),
           );
         }
 
@@ -96,6 +78,129 @@ class LiveTab extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+// Header banner đỏ chuẩn web: icon pulse + title + count
+class _LiveHeaderBanner extends StatefulWidget {
+  final int count;
+  const _LiveHeaderBanner({required this.count});
+
+  @override
+  State<_LiveHeaderBanner> createState() => _LiveHeaderBannerState();
+}
+
+class _LiveHeaderBannerState extends State<_LiveHeaderBanner>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+    _pulse = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF1F2),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFFFCDD2), width: 1),
+      ),
+      child: Row(
+        children: [
+          // Pulse dot icon
+          AnimatedBuilder(
+            animation: _pulse,
+            builder: (context, _) => Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color.lerp(
+                  const Color(0xFFEF4444),
+                  const Color(0xFFF87171),
+                  _pulse.value,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFEF4444).withValues(
+                      alpha: _pulse.value * 0.35,
+                    ),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.sensors_rounded, color: Colors.white, size: 20),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Đang diễn ra trực tiếp',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1E1E1E),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${widget.count}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Ấn vào từng trận để xem chi tiết',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: Color(0xFFB91C1C),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

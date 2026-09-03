@@ -2885,7 +2885,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get dashboard_quickActions => 'Tiện ích nhanh';
 
   @override
-  String get dashboard_createLite => 'Tạo giải nhanh (Lite)';
+  String get dashboard_createLite => 'Tạo giải nhanh';
 
   @override
   String get dashboard_createLiteSub => 'Tạo nhanh trong câu lạc bộ của bạn';

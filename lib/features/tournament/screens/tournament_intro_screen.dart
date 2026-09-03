@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -84,6 +85,49 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             if (tournament == null) {
               return NotFoundView(onGoHome: () => context.go('/home'));
             }
+
+            // ─── ACCESS GATE: Giải siêu lite (nội bộ CLB) ───
+            // Nếu là giải lite gắn với CLB và user chưa/không phải member → chặn
+            if (tournament.isClubLite &&
+                tournament.communityId != null &&
+                tournament.communityId!.isNotEmpty &&
+                activeInvite == null) {
+              final membershipAsync = ref.watch(
+                myCommunityMembershipProvider(tournament.communityId!),
+              );
+              final isVerifiedMember = membershipAsync.maybeWhen(
+                data: (m) {
+                  if (m == null) return false;
+                  final s = m.status.toUpperCase();
+                  return s == 'JOINED' || s == 'ADMIN' || s == 'OWNER' || s == 'APPROVED';
+                },
+                orElse: () => false,
+              );
+              if (!isVerifiedMember) {
+                return SafeArea(
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        left: 12,
+                        top: 8,
+                        child: _backButton(context.colors),
+                      ),
+                      PrivateTournamentAccessView(
+                        message:
+                            'Đây là giải đấu nội bộ của Câu Lạc Bộ. Bạn cần tham gia Câu Lạc Bộ hoặc nhập mã mời từ Ban tổ chức để xem chi tiết.',
+                        onGoHome: () => context.go('/home'),
+                        onSubmitInviteCode: (code) {
+                          setState(() {
+                            _customInviteCode = code;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              }
+            }
+
             final divisions = tournament.divisions.isNotEmpty
                 ? tournament.divisions
                 : (divisionsAsync.value ?? const <Map<String, dynamic>>[])
@@ -256,6 +300,72 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       orElse: () => false,
     );
 
+    final authState = ref.watch(authProvider);
+    final currentUserId = authState.user?.id;
+    final isCreator = tournament.creatorId == currentUserId;
+    final isAdmin = authState.isAdmin;
+    final activeInvite = _customInviteCode ?? widget.inviteCode;
+    final hasInvite = activeInvite != null && activeInvite.trim().isNotEmpty;
+
+    // Nếu là giải Siêu Lite nội bộ của CLB: Chỉ thành viên CLB / Chủ giải / Admin / người có link mời mới được xem
+    if (tournament.isClubLite && !isCreator && !isAdmin && !hasInvite) {
+      final membership = tournament.communityId != null && tournament.communityId!.isNotEmpty
+          ? ref.watch(myCommunityMembershipProvider(tournament.communityId!)).value
+          : null;
+      final isMember = membership != null && membership.status.toUpperCase() == 'JOINED';
+      if (!isMember) {
+        return Scaffold(
+          backgroundColor: colors.bgDark,
+          appBar: AppBar(
+            backgroundColor: colors.bgCard,
+            title: Text(tournament.name),
+            leading: _backButton(colors),
+          ),
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: colors.error.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.lock_outline_rounded, size: 36, color: colors.error),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Giải đấu nội bộ câu lạc bộ',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Giải siêu Lite này chỉ dành riêng cho thành viên của câu lạc bộ. Vui lòng tham gia câu lạc bộ để xem và đăng ký.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: colors.textSecondary, height: 1.4),
+                  ),
+                  const SizedBox(height: 24),
+                  if (tournament.communityId != null && tournament.communityId!.isNotEmpty)
+                    FilledButton.icon(
+                      icon: const Icon(Icons.groups_rounded),
+                      label: const Text('Xem câu lạc bộ'),
+                      onPressed: () => context.push('/communities/${tournament.communityId}'),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
     if ((_selectedDivisionId == null || _selectedDivision.isEmpty) &&
         tournament.divisions.isNotEmpty) {
       _selectedDivision = tournament.divisions.first.name;
@@ -333,7 +443,16 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           ),
         ),
       );
-      tabViews.add(LiveTab(liveMatches: liveMatches));
+      tabViews.add(
+        tournament.divisions.length > 1
+            ? Column(
+                children: [
+                  _buildDivisionsSelectorList(tournament, colors),
+                  Expanded(child: LiveTab(liveMatches: liveMatches)),
+                ],
+              )
+            : LiveTab(liveMatches: liveMatches),
+      );
     }
 
     // 2. Tab [🏆 Kết quả] CHỈ HIỆN KHI ĐÃ CÓ KẾT QUẢ / TRẬN ĐẤU HOÀN THÀNH
@@ -370,12 +489,28 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         ),
       );
       tabViews.add(
-        ResultsTab(
-          key: ValueKey('results-$_selectedDivisionId'),
-          tournamentId: widget.tournamentId,
-          selectedDivisionId: _selectedDivisionId,
-          selectedDivision: _selectedDivision,
-        ),
+        tournament.divisions.length > 1
+            ? Column(
+                children: [
+                  _buildDivisionsSelectorList(tournament, colors),
+                  Expanded(
+                    child: ResultsTab(
+                      key: ValueKey('results-$_selectedDivisionId'),
+                      tournamentId: widget.tournamentId,
+                      selectedDivisionId: _selectedDivisionId,
+                      selectedDivision: _selectedDivision,
+                      completedMatches: completedMatches,
+                    ),
+                  ),
+                ],
+              )
+            : ResultsTab(
+                key: ValueKey('results-$_selectedDivisionId'),
+                tournamentId: widget.tournamentId,
+                selectedDivisionId: _selectedDivisionId,
+                selectedDivision: _selectedDivision,
+                completedMatches: completedMatches,
+              ),
       );
     }
 
@@ -416,6 +551,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         },
         isFollowing: isFollowing,
         onToggleFollow: () => _toggleFollow(tournament, isFollowing),
+        inviteCode: activeInvite,
       ),
     );
 
@@ -529,15 +665,52 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     Tournament tournament,
     AppColorsExtension colors,
   ) {
+    final divCount = tournament.divisions.length;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: tournament.divisions.map((div) {
+        children: [
+          // Header NỘI DUNG THI ĐẤU
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: [
+                Text(
+                  'NỘI DUNG THI ĐẤU',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textMuted,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: colors.bgSurface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: colors.border),
+                  ),
+                  child: Text(
+                    '$divCount',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ...tournament.divisions.map((div) {
           final isSelected = div.id == _selectedDivisionId;
           final maxP = div.maxParticipants ?? 0;
           final curP = div.participantCount;
-          final isFull = maxP > 0 && curP >= maxP;
+          final isFull = (maxP > 0 && curP >= maxP) ||
+              tournament.status.toLowerCase() == 'completed';
           final formatIcon = _getBracketFormatIcon(div.bracketType);
 
           return Container(
@@ -604,35 +777,18 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     const SizedBox(width: 8),
                     if (isFull) ...[
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 3,
-                        ),
+                        padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           color: colors.bgSurface,
-                          borderRadius: BorderRadius.circular(6),
+                          shape: BoxShape.circle,
                           border: Border.all(
                             color: colors.border.withValues(alpha: 0.8),
                           ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.check_circle_rounded,
-                              size: 11,
-                              color: colors.textMuted,
-                            ),
-                            const SizedBox(width: 3.5),
-                            Text(
-                              'Đã kết thúc',
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                color: colors.textMuted,
-                              ),
-                            ),
-                          ],
+                        child: Icon(
+                          Icons.check_circle_rounded,
+                          size: 13,
+                          color: colors.textMuted,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -661,7 +817,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               ),
             ),
           );
-        }).toList(),
+        }),
+        ],
       ),
     );
   }

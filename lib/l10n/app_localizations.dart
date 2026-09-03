@@ -5489,7 +5489,7 @@ abstract class AppLocalizations {
   /// No description provided for @dashboard_createLite.
   ///
   /// In vi, this message translates to:
-  /// **'Tạo giải nhanh (Lite)'**
+  /// **'Tạo giải nhanh'**
   String get dashboard_createLite;
 
   /// No description provided for @dashboard_createLiteSub.

@@ -102,160 +102,174 @@ class _TeamsTabState extends State<TeamsTab> {
     }
     final sortedDivisions = grouped.keys.toList()..sort();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
         // Search Bar
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: Container(
-            height: 42,
-            decoration: BoxDecoration(
-              color: colors.bgSurface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colors.borderLight),
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (val) {
-                setState(() {
-                  _searchQuery = val;
-                });
-              },
-              style: TextStyle(fontSize: 13, color: colors.textPrimary),
-              decoration: InputDecoration(
-                hintText: l10n.teamsTabSearchHint,
-                hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
-                prefixIcon: Icon(
-                  Icons.search,
-                  size: 18,
-                  color: colors.textMuted,
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: Container(
+              height: 42,
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.borderLight),
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val;
+                  });
+                },
+                style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                decoration: InputDecoration(
+                  hintText: l10n.teamsTabSearchHint,
+                  hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    size: 18,
+                    color: colors.textMuted,
+                  ),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(
+                            Icons.close,
+                            size: 16,
+                            color: colors.textMuted,
+                          ),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {
+                              _searchQuery = '';
+                            });
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 11),
                 ),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(
-                          Icons.close,
-                          size: 16,
-                          color: colors.textMuted,
-                        ),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {
-                            _searchQuery = '';
-                          });
-                        },
-                      )
-                    : null,
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 11),
               ),
             ),
           ),
         ),
 
         if (filteredTeams.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 16),
-            child: Center(
-              child: Text(
-                _searchQuery.isNotEmpty
-                    ? 'Không tìm thấy kết quả phù hợp với "$_searchQuery"'
-                    : l10n.noTeamsFound,
-                style: TextStyle(color: colors.textSecondary, fontSize: 14),
-                textAlign: TextAlign.center,
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 16),
+              child: Center(
+                child: Text(
+                  _searchQuery.isNotEmpty
+                      ? 'Không tìm thấy kết quả phù hợp với "$_searchQuery"'
+                      : l10n.noTeamsFound,
+                  style: TextStyle(color: colors.textSecondary, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
           )
         else
-          ListView(
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
-            children: sortedDivisions.map((division) {
-              final teamsInDiv = grouped[division]!;
-              final isFemale = division.contains("Nữ");
-              final isMale = division.contains("Nam");
-              final themeColor = isFemale
-                  ? const Color(0xFFE91E63)
-                  : isMale
-                  ? const Color(0xFF2196F3)
-                  : AppTheme.primary;
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 4,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: themeColor,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          division,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.bgSurface,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            "${teamsInDiv.length}",
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ...teamsInDiv.map(
-                    (team) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: TournamentTeamCard(
-                        team: team,
-                        isTeamSport: widget.isTeamSport,
-                        onMemberTap: (userId, memberName) {
-                          final targetId = (userId != null && userId.isNotEmpty)
-                              ? userId
-                              : team.userId;
-                          if (targetId != null && targetId.isNotEmpty) {
-                            context.push('/user/$targetId');
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Hồ sơ của $memberName đang được cập nhật',
-                                ),
-                                duration: const Duration(seconds: 2),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, i) {
+                  // Build division headers + team cards flat
+                  final items = <Widget>[];
+                  for (final division in sortedDivisions) {
+                    final teamsInDiv = grouped[division]!;
+                    final isFemale = division.contains('Nữ');
+                    final isMale = division.contains('Nam');
+                    final themeColor = isFemale
+                        ? const Color(0xFFE91E63)
+                        : isMale
+                        ? const Color(0xFF2196F3)
+                        : AppTheme.primary;
+                    items.add(
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 4,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: themeColor,
+                                borderRadius: BorderRadius.circular(2),
                               ),
-                            );
-                          }
-                        },
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              division,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.bgSurface,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '${teamsInDiv.length}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
+                    );
+                    for (final team in teamsInDiv) {
+                      items.add(
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: TournamentTeamCard(
+                            team: team,
+                            isTeamSport: widget.isTeamSport,
+                            onMemberTap: (userId, memberName) {
+                              final targetId =
+                                  (userId != null && userId.isNotEmpty)
+                                      ? userId
+                                      : team.userId;
+                              if (targetId != null && targetId.isNotEmpty) {
+                                context.push('/user/$targetId');
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Hồ sơ của $memberName đang được cập nhật',
+                                    ),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                  return items[i];
+                },
+                childCount: sortedDivisions.fold<int>(
+                  0,
+                  (sum, div) => sum + 1 + (grouped[div]?.length ?? 0),
+                ),
+              ),
+            ),
           ),
       ],
     );

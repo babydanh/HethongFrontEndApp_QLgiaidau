@@ -345,70 +345,33 @@ class ApiCommunityRepository implements ICommunityRepository {
       'Lấy giải đấu CLB paged: $communityId, cursor: $cursor, limit: $limit, status: $status',
     );
     try {
-      final response = await _dioClient.dio.get(
-        '/tournaments',
-        queryParameters: {
-          'communityId': communityId,
-          'limit': limit,
-          if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
-          if (status != null && status != 'ALL' && status.isNotEmpty)
-            'status': status,
-          if (search != null && search.trim().isNotEmpty)
-            'search': search.trim(),
-        },
-      );
-      if (response.statusCode == 200) {
-        final raw = response.data;
-        final list = raw is Map
-            ? (raw['data'] as List<dynamic>? ?? [])
-            : (raw as List<dynamic>? ?? []);
-        final tournaments = list
-            .map(
-              (e) =>
-                  CommunityTournamentModel.fromJson(e as Map<String, dynamic>),
-            )
+      final all = await getTournaments(communityId);
+      var filtered = all;
+      if (status != null && status != 'ALL' && status.isNotEmpty) {
+        filtered = filtered
+            .where((t) => t.status.toUpperCase() == status.toUpperCase())
             .toList();
-
-        final meta = raw is Map ? raw['meta'] as Map<String, dynamic>? : null;
-        final nextCursor = meta?['nextCursor']?.toString() ??
-            (raw is Map ? raw['nextCursor']?.toString() : null);
-        final hasMore =
-            meta?['hasNext'] == true ||
-            (nextCursor != null && nextCursor.isNotEmpty);
-        final total = meta?['total'] is int
-            ? meta!['total'] as int
-            : (raw is Map && raw['total'] is int
-                ? raw['total'] as int
-                : tournaments.length);
-
-        return (
-          tournaments: tournaments,
-          nextCursor: nextCursor,
-          hasMore: hasMore,
-          total: total,
-        );
+      }
+      if (search != null && search.trim().isNotEmpty) {
+        final query = search.trim().toLowerCase();
+        filtered = filtered
+            .where((t) => t.name.toLowerCase().contains(query))
+            .toList();
       }
 
-      // Fallback
-      final fallback = await getTournaments(communityId);
       return (
-        tournaments: fallback,
+        tournaments: filtered.take(limit).toList(),
         nextCursor: null,
         hasMore: false,
-        total: fallback.length,
+        total: filtered.length,
       );
     } catch (e, stack) {
-      _log.error(
-        'Lỗi lấy giải đấu CLB paged, fallback sang getTournaments',
-        e,
-        stack,
-      );
-      final fallback = await getTournaments(communityId);
+      _log.error('Lỗi lấy giải đấu CLB paged', e, stack);
       return (
-        tournaments: fallback,
+        tournaments: const <CommunityTournamentModel>[],
         nextCursor: null,
         hasMore: false,
-        total: fallback.length,
+        total: 0,
       );
     }
   }

@@ -457,7 +457,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 24),
 
             // My Tournaments Section
-            _buildSectionTitle(colors, l10n.infoMyTournaments),
+            _buildSectionTitle(
+              colors,
+              l10n.infoMyTournaments,
+              trailing: IconButton(
+                onPressed: () => context.push('/tournaments/create'),
+                icon: const Icon(Icons.add_circle_outline_rounded, size: 22),
+                color: AppTheme.primary,
+                tooltip: 'Tạo giải nhanh',
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                padding: EdgeInsets.zero,
+              ),
+            ),
             const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1549,12 +1560,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Center(
               child: Column(
                 children: [
-                  Icon(
-                    Icons.emoji_events_outlined,
-                    size: 40,
-                    color: colors.textMuted,
+                  InkWell(
+                    onTap: () => context.push('/tournaments/create'),
+                    borderRadius: BorderRadius.circular(30),
+                    child: Container(
+                      width: 54,
+                      height: 54,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppTheme.primary.withValues(alpha: 0.3),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.add_rounded,
+                        size: 32,
+                        color: AppTheme.primary,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Text(
                     l10n.profileNoManagedTournaments,
                     style: TextStyle(color: colors.textSecondary, fontSize: 13),
@@ -2654,7 +2681,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   // ─── SECTION TITLE ────────────────────────────────────────────────
-  Widget _buildSectionTitle(AppColorsExtension colors, String title) {
+  Widget _buildSectionTitle(
+    AppColorsExtension colors,
+    String title, {
+    Widget? trailing,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -2668,15 +2699,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ),
           const SizedBox(width: 10),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: colors.textSecondary,
-              letterSpacing: 0.3,
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: colors.textSecondary,
+                letterSpacing: 0.3,
+              ),
             ),
           ),
+          ?trailing,
         ],
       ),
     );

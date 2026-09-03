@@ -84,21 +84,47 @@ class _CreatePublicQuickTournamentScreenState
 
     setState(() => _isSubmitting = true);
     try {
+      String apiFormat = 'doubles';
+      String? genderRestriction;
+
+      if (_formatKey == 'MALE_SINGLES') {
+        apiFormat = 'singles';
+        genderRestriction = 'MALE';
+      } else if (_formatKey == 'FEMALE_SINGLES') {
+        apiFormat = 'singles';
+        genderRestriction = 'FEMALE';
+      } else if (_formatKey == 'MALE_DOUBLES') {
+        apiFormat = 'doubles';
+        genderRestriction = 'MALE';
+      } else if (_formatKey == 'FEMALE_DOUBLES') {
+        apiFormat = 'doubles';
+        genderRestriction = 'FEMALE';
+      } else if (_formatKey == 'MIXED_DOUBLES') {
+        apiFormat = 'doubles';
+        genderRestriction = 'MIXED';
+      } else if (_formatKey == 'FOOTBALL_MALE') {
+        apiFormat = 'doubles';
+        genderRestriction = 'MALE';
+      } else if (_formatKey == 'FOOTBALL_FEMALE') {
+        apiFormat = 'doubles';
+        genderRestriction = 'FEMALE';
+      } else if (_formatKey == 'FOOTBALL_MIXED') {
+        apiFormat = 'doubles';
+        genderRestriction = 'MIXED';
+      }
+
       final payload = <String, dynamic>{
         'name': name,
         if (widget.communityId != null && widget.communityId!.isNotEmpty)
           'communityId': widget.communityId,
         'sport': _mapSportSlug(),
-        'format': _sport == AppConstants.sportFootball
-            ? AppConstants.formatDoubles
-            : _format,
-        if (_format == AppConstants.formatMixedDoubles)
-          'genderRestriction': 'MIXED',
+        'format': apiFormat,
+        'genderRestriction': ?genderRestriction,
         'bracketType': _bracket,
         'maxTeams': maxTeams,
         'visibility': _visibility,
         'registrationMode': _registrationMode,
-        'isRanked': _isRanked,
+        'isRanked': false,
         if (_descController.text.trim().isNotEmpty)
           'description': _descController.text.trim(),
         if (_startDate != null) ...{
@@ -293,13 +319,11 @@ class _CreatePublicQuickTournamentScreenState
             _buildBracketSelector(colors),
             const SizedBox(height: 18),
 
-            // ─── Nội dung thi đấu ───
-            if (_sport != AppConstants.sportFootball) ...[
-              _sectionLabel('Định dạng thi đấu', colors),
-              const SizedBox(height: 8),
-              _buildFormatPills(colors),
-              const SizedBox(height: 18),
-            ],
+            // ─── Nội dung thi đấu (Bao gồm Giới tính) ───
+            _sectionLabel('Nội dung thi đấu & Giới tính', colors),
+            const SizedBox(height: 8),
+            _buildFormatPills(colors),
+            const SizedBox(height: 18),
 
             // ─── Quy mô & Giới hạn số đội ───
             Row(
@@ -485,29 +509,7 @@ class _CreatePublicQuickTournamentScreenState
             ),
             const SizedBox(height: 14),
 
-            // ─── Tính điểm ELO Xếp hạng ───
-            Container(
-              decoration: BoxDecoration(
-                color: colors.bgSurface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colors.border),
-              ),
-              child: SwitchListTile(
-                title: const Text(
-                  'Tính điểm xếp hạng ELO',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-                ),
-                subtitle: Text(
-                  'Cộng/trừ điểm xếp hạng người chơi sau mỗi trận đấu',
-                  style: TextStyle(fontSize: 11.5, color: colors.textMuted),
-                ),
-                value: _isRanked,
-                activeThumbColor: AppTheme.primary,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-                onChanged: (val) => setState(() => _isRanked = val),
-              ),
-            ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 8),
 
             // ─── Ghi chú / Điều lệ tóm tắt ───
             _sectionLabel('Ghi chú hoặc địa điểm thi đấu (Tùy chọn)', colors),
@@ -614,7 +616,9 @@ class _CreatePublicQuickTournamentScreenState
               onTap: () => setState(() {
                 _sport = s.$1;
                 if (s.$1 == AppConstants.sportFootball) {
-                  _format = AppConstants.formatDoubles;
+                  _formatKey = 'FOOTBALL_MALE';
+                } else if (_formatKey.startsWith('FOOTBALL_')) {
+                  _formatKey = 'MALE_DOUBLES';
                 }
               }),
               child: Container(
@@ -657,42 +661,46 @@ class _CreatePublicQuickTournamentScreenState
   }
 
   Widget _buildFormatPills(AppColorsExtension colors) {
-    final formats = [
-      (AppConstants.formatSingles, 'Đánh Đơn'),
-      (AppConstants.formatDoubles, 'Đánh Đôi'),
-      (AppConstants.formatMixedDoubles, 'Đôi Nam Nữ'),
-    ];
+    final isFootball = _sport == AppConstants.sportFootball;
+    final formats = isFootball
+        ? [
+            ('FOOTBALL_MALE', 'Bóng đá Nam'),
+            ('FOOTBALL_FEMALE', 'Bóng đá Nữ'),
+            ('FOOTBALL_MIXED', 'Bóng đá Nam Nữ'),
+          ]
+        : [
+            ('MALE_DOUBLES', 'Đôi Nam'),
+            ('FEMALE_DOUBLES', 'Đôi Nữ'),
+            ('MIXED_DOUBLES', 'Đôi Nam Nữ'),
+            ('MALE_SINGLES', 'Đơn Nam'),
+            ('FEMALE_SINGLES', 'Đơn Nữ'),
+          ];
 
-    return Row(
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: formats.map((f) {
-        final selected = _format == f.$1;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: f != formats.last ? 8 : 0),
-            child: GestureDetector(
-              onTap: () => setState(() => _format = f.$1),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 11),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? AppTheme.primary.withValues(alpha: 0.1)
-                      : colors.bgSurface,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: selected ? AppTheme.primary : colors.border,
-                    width: selected ? 1.5 : 1,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    f.$2,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      color: selected ? AppTheme.primary : colors.textSecondary,
-                    ),
-                  ),
-                ),
+        final selected = _formatKey == f.$1;
+        return GestureDetector(
+          onTap: () => setState(() => _formatKey = f.$1),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: selected
+                  ? AppTheme.primary.withValues(alpha: 0.12)
+                  : colors.bgSurface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: selected ? AppTheme.primary : colors.border,
+                width: selected ? 1.6 : 1,
+              ),
+            ),
+            child: Text(
+              f.$2,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                color: selected ? AppTheme.primary : colors.textPrimary,
               ),
             ),
           ),
