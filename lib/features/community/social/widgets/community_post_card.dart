@@ -344,7 +344,8 @@ class CommunityPostCard extends ConsumerWidget {
             ),
 
           // ── Edge-to-Edge Media / Photo Preview (Full width like Facebook) ──
-          if (post.mediaUrls.isNotEmpty)
+          // Khi đã có thẻ giải đấu (Lưới 16 Slot tròn hoặc Thẻ xem giải đấu), không spam thêm ảnh banner lặp lại bên dưới
+          if (post.mediaUrls.isNotEmpty && post.tournamentId == null)
             GestureDetector(
               onTap: () => _showMediaGallery(context),
               child: AspectRatio(
