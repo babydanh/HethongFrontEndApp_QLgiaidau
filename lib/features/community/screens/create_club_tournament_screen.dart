@@ -32,7 +32,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   final _maxTeamsCtrl = TextEditingController(text: '16');
 
   String _selectedSport = AppConstants.sportBadminton;
-  String _selectedFormat = AppConstants.formatSingles;
+  String _selectedFormat = AppConstants.formatDoubles;
   String _selectedBracket = AppConstants.bracketSingleElimination;
   DateTime? _startDate;
   bool _isRecurring = false;
@@ -42,7 +42,6 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   int _recurringAdvanceDays = 3;
   bool _isLoading = false;
   bool _isRanked = false;
-  bool _isAdvancedOptionsOpen = false;
 
   @override
   void dispose() {
@@ -289,9 +288,8 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
               _buildFormatSelector(),
               const SizedBox(height: 20),
 
-              if (_isAdvancedOptionsOpen) ...[
-                // ─── Thể thức ───
-                _label(l10n.createClubTournament_bracketLabel, colors),
+              // ─── Thể thức ───
+              _label(l10n.createClubTournament_bracketLabel, colors),
               const SizedBox(height: 6),
               _buildBracketSelector(),
               const SizedBox(height: 20),
@@ -490,49 +488,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              ],
-
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  color: colors.bgSurface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: colors.border),
-                ),
-                child: InkWell(
-                  onTap: () => setState(() => _isAdvancedOptionsOpen = !_isAdvancedOptionsOpen),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.createClubTournament_advancedOptions,
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              l10n.createClubTournament_advancedOptionsDescription,
-                              style: TextStyle(fontSize: 11, color: colors.textMuted),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text(
-                        _isAdvancedOptionsOpen
-                            ? l10n.createClubTournament_hideAdvancedOptions
-                            : l10n.createClubTournament_showAdvancedOptions,
-                        style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
               // ─── Nút Submit ───
               SizedBox(
