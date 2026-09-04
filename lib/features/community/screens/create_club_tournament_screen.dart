@@ -90,9 +90,9 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         'sport': clubSport ?? _mapSportSlug(),
         'format': _selectedSport == AppConstants.sportFootball
             ? AppConstants.formatDoubles
-            : _selectedFormat,
-        if (_selectedFormat == AppConstants.formatMixedDoubles)
-          'genderRestriction': 'MIXED',
+            : (_selectedFormat == AppConstants.formatMixedDoubles
+                ? AppConstants.formatDoubles
+                : _selectedFormat),
         'bracketType': _selectedBracket,
         'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
         'description': _descCtrl.text.trim(),
@@ -617,8 +617,6 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         : [
             (AppConstants.formatSingles, l10n.createClubTournament_formatSingles),
             (AppConstants.formatDoubles, l10n.createClubTournament_formatDoubles),
-            if (_isAdvancedOptionsOpen)
-              (AppConstants.formatMixedDoubles, l10n.createClubTournament_formatMixedDoubles),
           ];
     return Row(
       children: formats.map((f) {
