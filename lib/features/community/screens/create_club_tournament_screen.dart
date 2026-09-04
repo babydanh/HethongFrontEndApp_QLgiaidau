@@ -41,7 +41,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   TimeOfDay _recurringTime = const TimeOfDay(hour: 18, minute: 0);
   int _recurringAdvanceDays = 3;
   bool _isLoading = false;
-  bool _isRanked = false;
+  bool _isRanked = true;
 
   @override
   void dispose() {
