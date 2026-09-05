@@ -28,6 +28,8 @@ import 'package:app_quanly_giaidau/features/community/social/community_social_sc
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_activity_tab.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/member_elo_adjust_sheet.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart';
 
 class ClubDetailScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -2680,6 +2682,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final joinRequestsAsync = isAdmin
         ? ref.watch(joinRequestsProvider(widget.clubId))
         : const AsyncValue.data(<CommunityMemberModel>[]);
+    final rankingsAsync = ref.watch(communityRankingsProvider(widget.clubId));
+    final memberEloMap = <String, int>{};
+    rankingsAsync.whenData((rankings) {
+      for (final r in rankings) {
+        if (r.userId.isNotEmpty) {
+          memberEloMap[r.userId] = r.eloPoints;
+        }
+      }
+    });
+
     return membersAsync.when(
       data: (members) {
         if (members.isEmpty) {
@@ -2707,7 +2719,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ],
             if (isAdmin) _buildJoinRequestsSection(joinRequestsAsync, colors),
             if (members.isEmpty) const SizedBox.shrink(),
-            ...members.map((m) => _buildMemberItem(m, colors, isAdmin)),
+            ...members.map((m) => _buildMemberItem(m, colors, isAdmin, memberEloMap[m.userId] ?? 1000)),
           ],
         );
       },
@@ -2751,9 +2763,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     CommunityMemberModel m,
     AppColorsExtension colors,
     bool isAdmin,
+    int memberElo,
   ) {
     final l10n = AppLocalizations.of(context)!;
     final isOwner = m.role == 'OWNER';
+    final isCurrentOwner = _myMembership?.role == 'OWNER';
     final canViewProfile = m.userId.isNotEmpty;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -2794,36 +2808,60 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    m.userFullName ?? l10n.club_membersLabel,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                  if (m.role != 'MEMBER')
-                    Container(
-                      margin: const EdgeInsets.only(top: 2),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 1,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isOwner
-                            ? Colors.amber.withValues(alpha: 0.15)
-                            : Colors.blue.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        isOwner ? l10n.club_owner : l10n.club_admin,
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          color: isOwner ? Colors.amber.shade800 : Colors.blue,
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          m.userFullName ?? l10n.club_membersLabel,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: colors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 6),
+                      EloTierBadge(elo: memberElo, scale: 0.75),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Text(
+                        '$memberElo ELO',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                      if (m.role != 'MEMBER') ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isOwner
+                                ? Colors.amber.withValues(alpha: 0.15)
+                                : Colors.blue.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            isOwner ? l10n.club_owner : l10n.club_admin,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: isOwner ? Colors.amber.shade800 : Colors.blue,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                   // P2C.5 — pills tag BQT (màu preset, tint như web) + streak cạnh tên.
                   if (m.tags.isNotEmpty || !m.streak.isEmpty) ...[
                     const SizedBox(height: 4),
@@ -2870,30 +2908,75 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 size: 20,
               ),
               color: colors.bgSurface,
-              onSelected: (action) => _handleMemberAction(action, m, colors),
+              onSelected: (action) => _handleMemberAction(action, m, colors, memberElo),
               itemBuilder: (_) => [
                 PopupMenuItem(
                   value: 'promote_admin',
-                  child: Text(
-                    l10n.club_setAdmin,
-                    style: const TextStyle(fontSize: 13),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.shield_outlined, size: 16, color: Colors.blue),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.club_setAdmin,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ],
                   ),
                 ),
                 PopupMenuItem(
                   value: 'promote_mod',
-                  child: Text(
-                    l10n.club_setMod,
-                    style: const TextStyle(fontSize: 13),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.security_rounded, size: 16, color: Colors.blue),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.club_setMod,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ],
                   ),
                 ),
                 if (m.role != 'MEMBER')
                   PopupMenuItem(
                     value: 'demote',
-                    child: Text(
-                      l10n.club_demoteToMember,
-                      style: const TextStyle(fontSize: 13),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.person_outline, size: 16, color: Colors.orange),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.club_demoteToMember,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ],
                     ),
                   ),
+                if (isCurrentOwner)
+                  PopupMenuItem(
+                    value: 'transfer_owner',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.workspace_premium_rounded, size: 16, color: Colors.amber),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Chuyển chủ sở hữu',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                PopupMenuItem(
+                  value: 'adjust_elo',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.military_tech_rounded, size: 16, color: AppTheme.primary),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Chỉnh ELO',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
                 PopupMenuItem(
                   value: 'assign_tags',
                   child: Row(
@@ -2914,9 +2997,28 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 const PopupMenuDivider(),
                 PopupMenuItem(
                   value: 'kick',
-                  child: Text(
-                    l10n.club_kickFromClub,
-                    style: const TextStyle(color: Colors.red, fontSize: 13),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.person_remove_rounded, size: 16, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.club_kickFromClub,
+                        style: const TextStyle(color: Colors.red, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'ban',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.block_rounded, size: 16, color: Colors.red),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Cấm khỏi câu lạc bộ',
+                        style: TextStyle(color: Colors.red, fontSize: 13),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -2930,6 +3032,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     String action,
     CommunityMemberModel m,
     AppColorsExtension colors,
+    int currentElo,
   ) async {
     final l10n = AppLocalizations.of(context)!;
     final repo = ref.read(communityRepositoryProvider);
@@ -2956,6 +3059,49 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             'MEMBER',
           );
           break;
+        case 'transfer_owner':
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: colors.bgCard,
+              title: const Text('Chuyển quyền Chủ sở hữu'),
+              content: Text(
+                'Bạn có chắc chắn muốn chuyển quyền Chủ sở hữu CLB cho ${m.userFullName ?? "thành viên này"}? Hành động này sẽ hạ vai trò của bạn xuống Quản trị viên.',
+                style: TextStyle(color: colors.textSecondary),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(l10n.matchesCancel),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber.shade700),
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Xác nhận chuyển', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+          );
+          if (confirm != true) return;
+          await repo.updateMemberRole(
+            widget.clubId,
+            m.id.isNotEmpty ? m.id : m.userId,
+            'OWNER',
+          );
+          break;
+        case 'adjust_elo':
+          await MemberEloAdjustSheet.show(
+            context,
+            communityId: widget.clubId,
+            userId: m.userId,
+            memberName: m.userFullName ?? 'Thành viên',
+            currentElo: currentElo,
+            onSuccess: () {
+              ref.invalidate(communityRankingsProvider(widget.clubId));
+            },
+          );
+          ref.invalidate(communityRankingsProvider(widget.clubId));
+          return;
         case 'kick':
           final confirm = await showDialog<bool>(
             context: context,
@@ -2983,6 +3129,34 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           );
           if (confirm != true) return;
           await repo.removeMember(widget.clubId, m.userId);
+          break;
+        case 'ban':
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: colors.bgCard,
+              title: const Text('Cấm thành viên khỏi CLB'),
+              content: Text(
+                'Bạn có chắc muốn cấm ${m.userFullName ?? "thành viên này"} khỏi câu lạc bộ? Họ sẽ không thể xem hoặc tham gia lại.',
+                style: TextStyle(color: colors.textSecondary),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(l10n.matchesCancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text(
+                    'Cấm thành viên',
+                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          );
+          if (confirm != true) return;
+          await repo.banMember(widget.clubId, m.userId);
           break;
         case 'assign_tags':
           // P2C.5 — gán tag BQT (bottom sheet tự đồng bộ member list sau khi lưu).

@@ -616,12 +616,50 @@ class ApiCommunityRepository implements ICommunityRepository {
   }
 
   @override
+  Future<void> banMember(String communityId, String userId) async {
+    _log.info('Cấm thành viên $userId khỏi CLB $communityId');
+    await _dioClient.dio.post(
+      '/communities/$communityId/members/$userId/ban',
+      data: {},
+    );
+  }
+
+  @override
   Future<void> unbanMember(String communityId, String userId) async {
     _log.info('Gỡ cấm $userId khỏi CLB $communityId');
     // P0.2: Backend là DELETE /communities/:id/members/:userId/ban
     await _dioClient.dio.delete(
       '/communities/$communityId/members/$userId/ban',
     );
+  }
+
+  @override
+  Future<Map<String, dynamic>?> adjustMemberElo(
+    String communityId, {
+    required String userId,
+    required String operation,
+    required int points,
+    required String reason,
+  }) async {
+    _log.info('Điều phối ELO cho user $userId trong CLB $communityId ($operation $points)');
+    try {
+      final response = await _dioClient.dio.post(
+        '/communities/$communityId/members/$userId/elo',
+        data: {
+          'operation': operation,
+          'points': points,
+          'reason': reason,
+        },
+      );
+      final raw = response.data;
+      if (raw is Map && raw['data'] is Map) {
+        return Map<String, dynamic>.from(raw['data'] as Map);
+      }
+      return null;
+    } catch (e, stack) {
+      _log.error('Lỗi điều phối ELO thành viên CLB', e, stack);
+      rethrow;
+    }
   }
 
   @override

@@ -125,9 +125,23 @@ abstract class ICommunityRepository {
   /// POST /communities/:id/invite/:action (ACCEPT | DECLINE)
   Future<void> respondToInvite(String communityId, String action);
 
+  /// Cấm thành viên khỏi CLB.
+  /// POST /communities/:id/members/:userId/ban
+  Future<void> banMember(String communityId, String userId);
+
   /// Gỡ cấm thành viên.
   /// DELETE /communities/:id/members/:userId/ban
   Future<void> unbanMember(String communityId, String userId);
+
+  /// Điều phối ELO thành viên trong CLB (Dành cho OWNER/MODERATOR).
+  /// POST /communities/:id/members/:userId/elo
+  Future<Map<String, dynamic>?> adjustMemberElo(
+    String communityId, {
+    required String userId,
+    required String operation,
+    required int points,
+    required String reason,
+  });
 
   /// Gán/Xoá tag BQT cho thành viên (OWNER/MODERATOR).
   /// PATCH /communities/:id/members/:userId/tags { tags } — replace toàn bộ,

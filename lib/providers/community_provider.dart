@@ -198,3 +198,14 @@ final communitySocialSettingsProvider =
           .watch(communityRepositoryProvider)
           .getSocialSettings(communityId);
     });
+
+/// Provider bảng xếp hạng ELO nội bộ CLB (GET /communities/:id/rankings)
+final communityRankingsProvider =
+    FutureProvider.family<List<CommunityRankingModel>, String>((
+      ref,
+      communityId,
+    ) async {
+      final repo = ref.watch(communityRepositoryProvider);
+      return repo.getRankings(communityId, limit: 200);
+    });
+

@@ -11,6 +11,9 @@ import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/member_elo_adjust_sheet.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart';
+import 'package:app_quanly_giaidau/data/models/community_ranking_model.dart';
 
 /// Màn hình Điều phối CLB — dành cho OWNER/ADMIN/MODERATOR.
 ///
@@ -48,6 +51,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   bool _isSearching = false;
   String _inviteRole = 'MEMBER';
 
+  // ELO Coordination state
+  final _eloSearchCtrl = TextEditingController();
+  Map<String, int> _memberEloMap = {};
+
   @override
   void initState() {
     super.initState();
@@ -57,6 +64,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   @override
   void dispose() {
     _searchCtrl.dispose();
+    _eloSearchCtrl.dispose();
     super.dispose();
   }
 
@@ -71,11 +79,20 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             .read(communitySocialRepositoryProvider)
             .getPendingPosts(widget.clubId),
         ref.read(communitySocialRepositoryProvider).getReports(widget.clubId),
+        repo.getRankings(widget.clubId, limit: 200).catchError((_) => <CommunityRankingModel>[]),
       ]);
       final all = results[0] as List<CommunityMemberModel>;
       final requests = results[1] as List<CommunityMemberModel>;
       final pendingPosts = results[2] as List<CommunityPostModel>;
       final reports = results[3] as List<CommunityReportModel>;
+      final rankings = results[4] as List<CommunityRankingModel>;
+
+      final eloMap = <String, int>{};
+      for (final r in rankings) {
+        if (r.userId.isNotEmpty) {
+          eloMap[r.userId] = r.eloPoints;
+        }
+      }
 
       setState(() {
         _allMembers = all;
@@ -88,6 +105,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
         _bannedMembers = all
             .where((m) => m.status.toUpperCase() == 'BANNED')
             .toList();
+        _memberEloMap = eloMap;
         _isLoading = false;
       });
     } catch (e, stack) {
@@ -153,6 +171,8 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                   ],
                   const SizedBox(height: 16),
                   _buildTournamentsManagementSection(colors),
+                  const SizedBox(height: 16),
+                  _buildEloCoordinationSection(colors),
                   if (_joinRequests.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     _buildJoinRequestsSection(colors),
@@ -977,6 +997,245 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
               style: const TextStyle(color: Colors.red, fontSize: 11),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  // ─── ELO Coordination (Điều phối ELO Thành viên) ──────────────
+  Widget _buildEloCoordinationSection(AppColorsExtension colors) {
+    final joined = _allMembers
+        .where((m) => m.status == 'JOINED' || m.status.isEmpty)
+        .toList();
+    final query = _eloSearchCtrl.text.trim().toLowerCase();
+    final filtered = joined.where((m) {
+      if (query.isEmpty) return true;
+      final name = (m.userFullName ?? '').toLowerCase();
+      final email = (m.userEmail ?? '').toLowerCase();
+      return name.contains(query) || email.contains(query);
+    }).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 3,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Điều phối ELO Thành viên',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textSecondary,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${joined.length} thành viên',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Thêm, bớt, cập nhật điểm ELO nội bộ CLB. Hệ thống tự động tính thứ hạng và tier tương ứng.',
+            style: TextStyle(
+              fontSize: 11.5,
+              color: colors.textMuted,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Search box
+          TextField(
+            controller: _eloSearchCtrl,
+            onChanged: (_) => setState(() {}),
+            style: TextStyle(color: colors.textPrimary, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Tìm thành viên để chỉnh ELO...',
+              hintStyle: TextStyle(color: colors.textMuted, fontSize: 12),
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                color: colors.textMuted,
+                size: 18,
+              ),
+              filled: true,
+              fillColor: colors.bgSurface,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          if (joined.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Center(
+                child: Text(
+                  'Chưa có thành viên nào tham gia CLB.',
+                  style: TextStyle(color: colors.textMuted, fontSize: 12),
+                ),
+              ),
+            )
+          else if (filtered.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Center(
+                child: Text(
+                  'Không tìm thấy thành viên phù hợp.',
+                  style: TextStyle(color: colors.textMuted, fontSize: 12),
+                ),
+              ),
+            )
+          else
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 280),
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: filtered.length,
+                separatorBuilder: (ctx, i) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final m = filtered[index];
+                  final elo = _memberEloMap[m.userId] ?? 1000;
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: colors.bgSurface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: colors.borderLight),
+                    ),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: m.userId.isNotEmpty
+                              ? () => UserProfileBottomSheet.show(
+                                    context,
+                                    userId: m.userId,
+                                    communityId: widget.clubId,
+                                    initialFullName: m.userFullName,
+                                    initialAvatarUrl: m.userAvatarUrl,
+                                  )
+                              : null,
+                          child: CircleAvatar(
+                            radius: 18,
+                            backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
+                            child: Text(
+                              (m.userFullName?.isNotEmpty == true
+                                      ? m.userFullName![0]
+                                      : '?')
+                                  .toUpperCase(),
+                              style: const TextStyle(
+                                color: AppTheme.primary,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                m.userFullName ?? 'Thành viên',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 3),
+                              Row(
+                                children: [
+                                  EloTierBadge(
+                                    elo: elo,
+                                    scale: 0.8,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '$elo ELO',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: colors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton.icon(
+                          onPressed: () {
+                            MemberEloAdjustSheet.show(
+                              context,
+                              communityId: widget.clubId,
+                              userId: m.userId,
+                              memberName: m.userFullName ?? 'Thành viên',
+                              currentElo: elo,
+                              onSuccess: () => _loadData(),
+                            );
+                          },
+                          icon: const Icon(Icons.edit_rounded, size: 14),
+                          label: const Text(
+                            'Chỉnh ELO',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
         ],
       ),
     );
