@@ -4861,5 +4861,21 @@
   "liveNoMatchesRunning": "No matches currently in progress",
   "liveNoMatchesSubtitle": "Live matches will appear here once started",
   "matchTypeSingles": "Singles",
-  "matchTypeDoubles": "Doubles"
+  "matchTypeDoubles": "Doubles",
+  "lite_scheduleCardTitle": "Schedule & Duration",
+  "lite_startDate": "Start date",
+  "lite_startTime": "Start time",
+  "lite_duration": "Expected duration",
+  "lite_hours": "hrs",
+  "lite_minutes": "mins",
+  "lite_venueName": "Venue / Court name",
+  "lite_venueNamePlaceholder": "e.g., Ky Hoa Badminton Club",
+  "lite_venueAddress": "Tournament address",
+  "lite_venueAddressPlaceholder": "Enter tournament location",
+  "lite_autoSaving": "Saving...",
+  "lite_saved": "Saved",
+  "lite_maxParticipantsLimit": "Max participants (2 - 128)",
+  "lite_tournamentDescription": "About & Rules",
+  "lite_tournamentDescPlaceholder": "Brief introduction about the tournament...",
+  "lite_recreateBracketNotice": "💡 When re-pairing or re-seeding, you can tap Recreate Bracket to update the tree diagram."
 }

@@ -33,6 +33,16 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   String? _formatDraft;
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
+  final _venueNameController = TextEditingController();
+  final _maxParticipantsController = TextEditingController();
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
+  int _durationHours = 4;
+  int _durationMinutes = 0;
+  Timer? _descDebounce;
+  Timer? _locationDebounce;
+  Timer? _maxPartDebounce;
+  bool _controllersInitialized = false;
 
   @override
   void initState() {
@@ -73,8 +83,13 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
 
   @override
   void dispose() {
+    _descDebounce?.cancel();
+    _locationDebounce?.cancel();
+    _maxPartDebounce?.cancel();
     _descriptionController.dispose();
     _locationController.dispose();
+    _venueNameController.dispose();
+    _maxParticipantsController.dispose();
     _loadWatchdog?.cancel();
     _tabController.dispose();
     super.dispose();
@@ -86,6 +101,20 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(liteManagementProvider);
     final notifier = ref.read(liteManagementProvider.notifier);
+    if (!_controllersInitialized && state.tournament != null) {
+      _controllersInitialized = true;
+      _descriptionController.text = state.description ?? state.tournament?.description ?? "";
+      _locationController.text = state.locationAddress ?? state.tournament?.locationAddress ?? "";
+      _venueNameController.text = state.venueName ?? state.tournament?.venueName ?? "";
+      _maxParticipantsController.text = (state.maxParticipants ?? state.tournament?.maxTeams ?? 16).toString();
+      if (state.startDate != null) {
+        _selectedDate = state.startDate;
+        _selectedTime = TimeOfDay(hour: state.startDate!.hour, minute: state.startDate!.minute);
+      }
+      final dur = state.durationMinutes ?? 240;
+      _durationHours = dur ~/ 60;
+      _durationMinutes = dur % 60;
+    }
 
     return Scaffold(
       backgroundColor: colors.bgDark,
@@ -308,9 +337,13 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             ),
           ]),
           const SizedBox(height: 16),
+          _buildScheduleCard(colors, state, notifier),
+          const SizedBox(height: 20),
           _buildFormatSettingCard(colors, state, notifier),
-          const SizedBox(height: 24),
-          _buildLiteDetailsCard(colors, state, notifier),
+          const SizedBox(height: 20),
+          _buildVenueAndLocationCard(colors, state, notifier),
+          const SizedBox(height: 20),
+          _buildDescriptionCard(colors, state, notifier),
           const SizedBox(height: 24),
 
           // ─── Invite Code ───
@@ -338,71 +371,457 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     );
   }
 
-  Widget _buildLiteDetailsCard(
+  Widget _buildInlineSaveIndicator(AppColorsExtension colors, String status) {
+    final l10n = AppLocalizations.of(context)!;
+    if (status == 'saving') {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(
+            width: 12,
+            height: 12,
+            child: CircularProgressIndicator(strokeWidth: 1.5),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            l10n.lite_autoSaving,
+            style: TextStyle(fontSize: 11, color: colors.textMuted, fontWeight: FontWeight.w500),
+          ),
+        ],
+      );
+    }
+    if (status == 'saved') {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_circle_rounded, size: 14, color: colors.success),
+          const SizedBox(width: 4),
+          Text(
+            l10n.lite_saved,
+            style: TextStyle(fontSize: 11, color: colors.success, fontWeight: FontWeight.w600),
+          ),
+        ],
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildScheduleCard(
     AppColorsExtension colors,
     LiteManagementState state,
     LiteManagementNotifier notifier,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final t = state.tournament;
-    if (t == null) return const SizedBox.shrink();
-    if (_descriptionController.text.isEmpty && t.description.isNotEmpty) {
-      _descriptionController.text = t.description;
-    }
-    if (_locationController.text.isEmpty &&
-        (t.locationAddress?.isNotEmpty ?? false)) {
-      _locationController.text = t.locationAddress!;
-    }
-    final locked = {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
-        .contains(t.status.toUpperCase());
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionHeader(colors, 'Thông tin giải', Icons.edit_note_rounded),
-        const SizedBox(height: 10),
-        TextField(
-          controller: _descriptionController,
-          enabled: !locked,
-          maxLines: 4,
-          decoration: InputDecoration(
-            labelText: 'Mô tả giải',
-            hintText: 'Giới thiệu ngắn về giải đấu',
-            filled: true,
-            fillColor: colors.bgDark,
+    final locked = t == null ||
+        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
+            .contains(t.status.toUpperCase());
+
+    final now = DateTime.now();
+    final dateDisplay = _selectedDate != null
+        ? '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}'
+        : '--/--/----';
+    final timeDisplay = _selectedTime != null
+        ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
+        : '08:00';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        border: Border.all(color: colors.border.withValues(alpha: 0.8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.calendar_month_rounded, size: 20, color: AppTheme.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.lite_scheduleCardTitle,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
+                  ),
+                ),
+              ),
+              _buildInlineSaveIndicator(colors, state.detailsSaveStatus),
+            ],
           ),
-        ),
-        const SizedBox(height: 10),
-        TextField(
-          controller: _locationController,
-          enabled: !locked,
-          decoration: InputDecoration(
-            labelText: 'Địa chỉ thi đấu',
-            hintText: 'Nhập địa điểm tổ chức',
-            filled: true,
-            fillColor: colors.bgDark,
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: InkWell(
+                  onTap: locked
+                      ? null
+                      : () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedDate ?? now,
+                            firstDate: now.subtract(const Duration(days: 30)),
+                            lastDate: now.add(const Duration(days: 365)),
+                          );
+                          if (picked != null) {
+                            setState(() => _selectedDate = picked);
+                            _autoSaveSchedule(notifier);
+                          }
+                        },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: colors.bgDark,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: colors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.today_rounded, size: 16, color: colors.textSecondary),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.lite_startDate,
+                                style: TextStyle(fontSize: 10, color: colors.textMuted),
+                              ),
+                              Text(
+                                dateDisplay,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 2,
+                child: InkWell(
+                  onTap: locked
+                      ? null
+                      : () async {
+                          final picked = await showTimePicker(
+                            context: context,
+                            initialTime: _selectedTime ?? const TimeOfDay(hour: 8, minute: 0),
+                          );
+                          if (picked != null) {
+                            setState(() => _selectedTime = picked);
+                            _autoSaveSchedule(notifier);
+                          }
+                        },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: colors.bgDark,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: colors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.access_time_rounded, size: 16, color: colors.textSecondary),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.lite_startTime,
+                                style: TextStyle(fontSize: 10, color: colors.textMuted),
+                              ),
+                              Text(
+                                timeDisplay,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 10),
-        Align(
-          alignment: Alignment.centerRight,
-          child: FilledButton.icon(
-            onPressed: locked
-                ? null
-                : () async {
-                    final ok = await notifier.updateLiteDetails(
-                      widget.tournamentId,
-                      description: _descriptionController.text,
-                      locationAddress: _locationController.text,
-                    );
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(ok ? 'Đã lưu thông tin giải' : 'Không thể lưu thông tin giải')),
-                    );
-                  },
-            icon: const Icon(Icons.save_rounded, size: 16),
-            label: const Text('Lưu thông tin'),
+          const SizedBox(height: 12),
+          // Duration selector
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: colors.bgDark,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colors.border),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.timer_outlined, size: 16, color: colors.textSecondary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.lite_duration,
+                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                  ),
+                ),
+                DropdownButton<int>(
+                  value: _durationHours,
+                  underline: const SizedBox.shrink(),
+                  dropdownColor: colors.bgCard,
+                  items: List.generate(24, (i) => i + 1)
+                      .map((h) => DropdownMenuItem(
+                            value: h,
+                            child: Text(
+                              '$h ${l10n.lite_hours}',
+                              style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: locked
+                      ? null
+                      : (val) {
+                          if (val == null) return;
+                          setState(() => _durationHours = val);
+                          _autoSaveSchedule(notifier);
+                        },
+                ),
+                const SizedBox(width: 8),
+                DropdownButton<int>(
+                  value: _durationMinutes,
+                  underline: const SizedBox.shrink(),
+                  dropdownColor: colors.bgCard,
+                  items: [0, 15, 30, 45]
+                      .map((m) => DropdownMenuItem(
+                            value: m,
+                            child: Text(
+                              '$m ${l10n.lite_minutes}',
+                              style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: locked
+                      ? null
+                      : (val) {
+                          if (val == null) return;
+                          setState(() => _durationMinutes = val);
+                          _autoSaveSchedule(notifier);
+                        },
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
+    );
+  }
+
+  void _autoSaveSchedule(LiteManagementNotifier notifier) {
+    if (_selectedDate == null) return;
+    final time = _selectedTime ?? const TimeOfDay(hour: 8, minute: 0);
+    final combined = DateTime(
+      _selectedDate!.year,
+      _selectedDate!.month,
+      _selectedDate!.day,
+      time.hour,
+      time.minute,
+    );
+    final totalMin = (_durationHours * 60) + _durationMinutes;
+    notifier.updateSchedule(
+      widget.tournamentId,
+      startDate: combined,
+      durationMinutes: totalMin > 0 ? totalMin : 240,
+    );
+  }
+
+  Widget _buildVenueAndLocationCard(
+    AppColorsExtension colors,
+    LiteManagementState state,
+    LiteManagementNotifier notifier,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final t = state.tournament;
+    final locked = t == null ||
+        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
+            .contains(t.status.toUpperCase());
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        border: Border.all(color: colors.border.withValues(alpha: 0.8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.location_on_outlined, size: 20, color: AppTheme.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.lite_venueAddress,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
+                  ),
+                ),
+              ),
+              _buildInlineSaveIndicator(colors, state.detailsSaveStatus),
+            ],
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _venueNameController,
+            enabled: !locked,
+            decoration: InputDecoration(
+              labelText: l10n.lite_venueName,
+              hintText: l10n.lite_venueNamePlaceholder,
+              filled: true,
+              fillColor: colors.bgDark,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.border),
+              ),
+            ),
+            onChanged: (text) {
+              _locationDebounce?.cancel();
+              _locationDebounce = Timer(const Duration(milliseconds: 900), () {
+                notifier.updateLocation(
+                  widget.tournamentId,
+                  venueName: _venueNameController.text,
+                  locationAddress: _locationController.text,
+                );
+              });
+            },
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _locationController,
+            enabled: !locked,
+            decoration: InputDecoration(
+              labelText: l10n.lite_venueAddress,
+              hintText: l10n.lite_venueAddressPlaceholder,
+              filled: true,
+              fillColor: colors.bgDark,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.border),
+              ),
+            ),
+            onChanged: (text) {
+              _locationDebounce?.cancel();
+              _locationDebounce = Timer(const Duration(milliseconds: 900), () {
+                notifier.updateLocation(
+                  widget.tournamentId,
+                  venueName: _venueNameController.text,
+                  locationAddress: _locationController.text,
+                );
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDescriptionCard(
+    AppColorsExtension colors,
+    LiteManagementState state,
+    LiteManagementNotifier notifier,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final t = state.tournament;
+    final locked = t == null ||
+        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
+            .contains(t.status.toUpperCase());
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        border: Border.all(color: colors.border.withValues(alpha: 0.8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.notes_rounded, size: 20, color: AppTheme.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.lite_tournamentDescription,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
+                  ),
+                ),
+              ),
+              _buildInlineSaveIndicator(colors, state.detailsSaveStatus),
+            ],
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _descriptionController,
+            enabled: !locked,
+            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: l10n.lite_tournamentDescription,
+              hintText: l10n.lite_tournamentDescPlaceholder,
+              filled: true,
+              fillColor: colors.bgDark,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.border),
+              ),
+            ),
+            onChanged: (text) {
+              _descDebounce?.cancel();
+              _descDebounce = Timer(const Duration(milliseconds: 900), () {
+                notifier.updateLiteDetails(
+                  widget.tournamentId,
+                  description: _descriptionController.text,
+                  locationAddress: _locationController.text,
+                  venueName: _venueNameController.text,
+                );
+              });
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -490,6 +909,40 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             ],
           ),
           const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _maxParticipantsController,
+                  enabled: !locked && !state.hasBracket,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: l10n.lite_maxParticipantsLimit,
+                    filled: true,
+                    fillColor: colors.bgDark,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colors.border),
+                    ),
+                  ),
+                  onChanged: (val) {
+                    final n = int.tryParse(val.trim());
+                    if (n != null && n >= 2 && n <= 128) {
+                      _maxPartDebounce?.cancel();
+                      _maxPartDebounce = Timer(const Duration(milliseconds: 900), () {
+                        notifier.updateMaxParticipants(widget.tournamentId, n);
+                      });
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             initialValue: selected,
             isExpanded: true,
@@ -1041,6 +1494,30 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               child: LinearProgressIndicator(),
             ),
 
+          if (state.hasBracket) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: colors.info.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.info.withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 18, color: colors.info),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.lite_recreateBracketNotice,
+                      style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.35),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           // ─── Roster confirmation ───
           Card(
             margin: const EdgeInsets.only(bottom: 12),
@@ -1355,7 +1832,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           ],
 
           // ─── Bracket generation button ───
-          if (allPaired.isNotEmpty ||
+          if (state.bracketEligibleCount >= 2 ||
+              allPaired.isNotEmpty ||
               (state.participants.isNotEmpty && !isDoubles)) ...[
             const SizedBox(height: 24),
             SizedBox(
@@ -1364,7 +1842,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               child: FilledButton.icon(
                 onPressed:
                     state.creatingBracket ||
-                        state.bracketEligibleParticipants.length < 2
+                        state.bracketEligibleCount < 2
                     ? null
                     : () => _createBracket(colors, notifier),
                 icon: state.creatingBracket
@@ -1390,7 +1868,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 ),
               ),
             ),
-            if (state.bracketEligibleParticipants.length < 2) ...[
+            if (state.bracketEligibleCount < 2) ...[
               const SizedBox(height: 8),
               Text(
                 l10n.lite_bracketMinimumParticipants(2),
@@ -1612,7 +2090,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 child: FilledButton.icon(
                   onPressed:
                       state.creatingBracket ||
-                          state.bracketEligibleParticipants.length < 2
+                          state.bracketEligibleCount < 2
                       ? null
                       : () => _createBracket(colors, notifier),
                   icon: state.creatingBracket
@@ -1638,7 +2116,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   ),
                 ),
               ),
-              if (state.bracketEligibleParticipants.length < 2) ...[
+              if (state.bracketEligibleCount < 2) ...[
                 const SizedBox(height: 8),
                 Text(
                   l10n.lite_bracketMinimumParticipants(2),
@@ -1693,6 +2171,70 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     );
   }
 
+  Widget _buildUserAvatar(
+    AppColorsExtension colors, {
+    required String? avatarUrl,
+    required String displayName,
+    required Color accentColor,
+    VoidCallback? onTap,
+  }) {
+    final initial = displayName.trim().isNotEmpty ? displayName.trim()[0].toUpperCase() : '?';
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              accentColor.withValues(alpha: 0.85),
+              accentColor,
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withValues(alpha: 0.25),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ClipOval(
+          child: avatarUrl != null && avatarUrl.trim().isNotEmpty
+              ? Image.network(
+                  avatarUrl.trim(),
+                  fit: BoxFit.cover,
+                  width: 38,
+                  height: 38,
+                  errorBuilder: (context, error, stackTrace) => Center(
+                    child: Text(
+                      initial,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                )
+              : Center(
+                  child: Text(
+                    initial,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+
   Widget _pendingTile(
     AppColorsExtension colors,
     LiteManagementState state,
@@ -1731,34 +2273,14 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 color: selected ? AppTheme.primary : colors.textMuted,
               ),
               const SizedBox(width: 10),
-              GestureDetector(
+              _buildUserAvatar(
+                colors,
+                avatarUrl: firstMember?.avatarUrl,
+                displayName: participant.displayName,
+                accentColor: colors.warning,
                 onTap: firstMember != null && firstMember.id.isNotEmpty
                     ? () => context.push('/user/${firstMember.id}')
                     : null,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    color: colors.warning.withValues(alpha: 0.1),
-                    child:
-                        firstMember != null && firstMember.avatarUrl.isNotEmpty
-                        ? Image.network(
-                            firstMember.avatarUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Icon(
-                              Icons.person_rounded,
-                              size: 20,
-                              color: colors.warning,
-                            ),
-                          )
-                        : Icon(
-                            Icons.person_rounded,
-                            size: 20,
-                            color: colors.warning,
-                          ),
-                  ),
-                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1831,29 +2353,14 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       ),
       child: Row(
         children: [
-          GestureDetector(
+          _buildUserAvatar(
+            colors,
+            avatarUrl: firstMember?.avatarUrl,
+            displayName: participant.displayName,
+            accentColor: colors.info,
             onTap: firstMember != null && firstMember.id.isNotEmpty
                 ? () => context.push('/user/${firstMember.id}')
                 : null,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: Container(
-                width: 36,
-                height: 36,
-                color: colors.info.withValues(alpha: 0.1),
-                child: firstMember != null && firstMember.avatarUrl.isNotEmpty
-                    ? Image.network(
-                        firstMember.avatarUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Icon(
-                          Icons.person_rounded,
-                          size: 20,
-                          color: colors.info,
-                        ),
-                      )
-                    : Icon(Icons.person_rounded, size: 20, color: colors.info),
-              ),
-            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1925,33 +2432,14 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       ),
       child: Row(
         children: [
-          GestureDetector(
+          _buildUserAvatar(
+            colors,
+            avatarUrl: firstMember?.avatarUrl,
+            displayName: participant.displayName,
+            accentColor: colors.success,
             onTap: firstMember != null && firstMember.id.isNotEmpty
                 ? () => context.push('/user/${firstMember.id}')
                 : null,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: Container(
-                width: 36,
-                height: 36,
-                color: colors.success.withValues(alpha: 0.1),
-                child: firstMember != null && firstMember.avatarUrl.isNotEmpty
-                    ? Image.network(
-                        firstMember.avatarUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Icon(
-                          Icons.group_rounded,
-                          size: 20,
-                          color: colors.success,
-                        ),
-                      )
-                    : Icon(
-                        Icons.group_rounded,
-                        size: 20,
-                        color: colors.success,
-                      ),
-              ),
-            ),
           ),
           const SizedBox(width: 12),
           Expanded(

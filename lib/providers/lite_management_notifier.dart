@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 
@@ -108,6 +109,13 @@ class LiteManagementState {
   final bool rosterConfirmed;
   final List<MatchModel> matches;
   final String? matchesError;
+  final DateTime? startDate;
+  final int? durationMinutes;
+  final int? maxParticipants;
+  final String? venueName;
+  final String? locationAddress;
+  final String? description;
+  final String detailsSaveStatus; // 'idle', 'saving', 'saved'
 
   const LiteManagementState({
     this.loading = true,
@@ -128,6 +136,13 @@ class LiteManagementState {
     this.rosterConfirmed = false,
     this.matches = const [],
     this.matchesError,
+    this.startDate,
+    this.durationMinutes,
+    this.maxParticipants,
+    this.venueName,
+    this.locationAddress,
+    this.description,
+    this.detailsSaveStatus = 'idle',
   });
 
   LiteManagementState copyWith({
@@ -152,6 +167,13 @@ class LiteManagementState {
     List<MatchModel>? matches,
     String? matchesError,
     bool? clearMatchesError,
+    DateTime? startDate,
+    int? durationMinutes,
+    int? maxParticipants,
+    String? venueName,
+    String? locationAddress,
+    String? description,
+    String? detailsSaveStatus,
   }) {
     return LiteManagementState(
       loading: loading ?? this.loading,
@@ -176,6 +198,13 @@ class LiteManagementState {
       matchesError: clearMatchesError == true
           ? null
           : (matchesError ?? this.matchesError),
+      startDate: startDate ?? this.startDate,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
+      maxParticipants: maxParticipants ?? this.maxParticipants,
+      venueName: venueName ?? this.venueName,
+      locationAddress: locationAddress ?? this.locationAddress,
+      description: description ?? this.description,
+      detailsSaveStatus: detailsSaveStatus ?? this.detailsSaveStatus,
     );
   }
 
@@ -191,6 +220,15 @@ class LiteManagementState {
   // bracket-eligible until the registration is approved.
   List<LiteParticipant> get bracketEligibleParticipants =>
       participants.where((p) => p.status == 'COMPLETE').toList();
+
+  /// Total eligible units (singles players or doubles pairs).
+  /// For doubles: paired count + auto-pairable pairs from pending pool.
+  int get bracketEligibleCount {
+    if (isDoubles) {
+      return completeParticipants.length + (pendingParticipants.length ~/ 2);
+    }
+    return participants.length;
+  }
 
   bool get isDoubles {
     // Football uses the generic SINGLES match type for team-vs-team.
@@ -347,6 +385,39 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
           );
         }
 
+        final locConfig = cfgMap['location'] is Map
+            ? Map<String, dynamic>.from(cfgMap['location'] as Map)
+            : payload['location'] is Map
+            ? Map<String, dynamic>.from(payload['location'] as Map)
+            : const <String, dynamic>{};
+        final initialVenue = locConfig['venueName']?.toString() ??
+            (payload['venue'] is Map ? (payload['venue'] as Map)['name']?.toString() : null) ??
+            '';
+        final initialAddress = payload['locationAddress']?.toString() ??
+            locConfig['address']?.toString() ??
+            '';
+        final initialDesc = payload['description']?.toString() ?? '';
+        final initialMaxPart = int.tryParse(payload['maxParticipants']?.toString() ?? '') ??
+            tournament?.maxTeams ??
+            16;
+
+        DateTime? parsedStartDate;
+        int? parsedDurationMinutes;
+        if (payload['startDate'] != null) {
+          parsedStartDate = DateParser.parseDate(payload['startDate']);
+          if (payload['endDate'] != null) {
+            final parsedEndDate = DateParser.parseDate(payload['endDate']);
+            if (parsedEndDate.isAfter(parsedStartDate)) {
+              parsedDurationMinutes = parsedEndDate.difference(parsedStartDate).inMinutes;
+            }
+          } else if (cfgMap['durationMinutes'] != null) {
+            parsedDurationMinutes = int.tryParse(cfgMap['durationMinutes'].toString());
+          } else if (cfgMap['durationHours'] != null) {
+            final dh = double.tryParse(cfgMap['durationHours'].toString()) ?? 4.0;
+            parsedDurationMinutes = (dh * 60).round();
+          }
+        }
+
         state = state.copyWith(
           tournament: tournament,
           matchType: rawMatchType,
@@ -354,6 +425,12 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
           inviteCode: rawInviteCode,
           hasBracket: hasBracket,
           rosterConfirmed: payload['isRegistrationLocked'] == true,
+          startDate: parsedStartDate,
+          durationMinutes: parsedDurationMinutes ?? 240,
+          maxParticipants: initialMaxPart,
+          venueName: initialVenue,
+          locationAddress: initialAddress,
+          description: initialDesc,
         );
       }
     } catch (e, stack) {
@@ -532,9 +609,95 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
   }
 
-  Future<bool> updateLiteDetails(
+  Future<bool> updateSchedule(
     String tournamentId, {
-    required String description,
+    required DateTime startDate,
+    required int durationMinutes,
+  }) async {
+    final tournament = state.tournament;
+    if (tournament == null ||
+        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
+            .contains(tournament.status.toUpperCase())) {
+      return false;
+    }
+    state = state.copyWith(detailsSaveStatus: 'saving');
+    try {
+      final startIso = startDate.toIso8601String();
+      final endIso = startDate.add(Duration(minutes: durationMinutes)).toIso8601String();
+      final totalMinutes = durationMinutes;
+
+      final nextTournamentConfig = {
+        ...(tournament.locationConfig ?? {}),
+        'durationHours': (totalMinutes / 60.0),
+        'durationMinutes': totalMinutes,
+      };
+
+      await _dio.patch('/tournaments/$tournamentId', data: {
+        'startDate': startIso,
+        'endDate': endIso,
+        'tournamentConfig': nextTournamentConfig,
+      });
+
+      state = state.copyWith(
+        startDate: startDate,
+        durationMinutes: durationMinutes,
+        detailsSaveStatus: 'saved',
+      );
+      Future.delayed(const Duration(milliseconds: 2500), () {
+        state = state.copyWith(detailsSaveStatus: 'idle');
+      });
+      return true;
+    } catch (e, stack) {
+      _log.error('Lỗi cập nhật lịch thi đấu Lite', e, stack);
+      state = state.copyWith(detailsSaveStatus: 'idle');
+      return false;
+    }
+  }
+
+  Future<bool> updateMaxParticipants(
+    String tournamentId,
+    int maxParticipants,
+  ) async {
+    final tournament = state.tournament;
+    if (tournament == null ||
+        state.hasBracket ||
+        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
+            .contains(tournament.status.toUpperCase())) {
+      return false;
+    }
+    state = state.copyWith(detailsSaveStatus: 'saving');
+    try {
+      final divisionId = _liteDivisionId;
+      await _dio.patch('/tournaments/$tournamentId', data: {
+        'maxParticipants': maxParticipants,
+      });
+      if (divisionId != null) {
+        try {
+          await _dio.patch(
+            '/tournaments/$tournamentId/divisions/$divisionId/config',
+            data: {'maxParticipants': maxParticipants},
+          );
+        } catch (_) {}
+      }
+
+      state = state.copyWith(
+        maxParticipants: maxParticipants,
+        detailsSaveStatus: 'saved',
+      );
+      Future.delayed(const Duration(milliseconds: 2500), () {
+        state = state.copyWith(detailsSaveStatus: 'idle');
+      });
+      return true;
+    } catch (e, stack) {
+      _log.error('Lỗi cập nhật số lượng người tham gia Lite', e, stack);
+      state = state.copyWith(detailsSaveStatus: 'idle');
+      return false;
+    }
+  }
+
+  Future<bool> updateLocation(
+    String tournamentId, {
+    required String venueName,
     required String locationAddress,
   }) async {
     final tournament = state.tournament;
@@ -543,15 +706,88 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
             .contains(tournament.status.toUpperCase())) {
       return false;
     }
+    state = state.copyWith(detailsSaveStatus: 'saving');
     try {
+      final nextTournamentConfig = {
+        ...(tournament.locationConfig ?? {}),
+        'location': {
+          if (venueName.trim().isNotEmpty) 'venueName': venueName.trim(),
+          if (locationAddress.trim().isNotEmpty) 'address': locationAddress.trim(),
+        },
+      };
+
+      await _dio.patch('/tournaments/$tournamentId', data: {
+        'locationAddress': locationAddress.trim(),
+        'tournamentConfig': nextTournamentConfig,
+      });
+
+      if (venueName.trim().isNotEmpty || locationAddress.trim().isNotEmpty) {
+        try {
+          await _dio.post('/tournaments/$tournamentId/venues', data: {
+            'name': venueName.trim().isNotEmpty ? venueName.trim() : 'Sân thi đấu',
+            'locationAddress': locationAddress.trim(),
+          });
+        } catch (_) {}
+      }
+
+      state = state.copyWith(
+        venueName: venueName.trim(),
+        locationAddress: locationAddress.trim(),
+        detailsSaveStatus: 'saved',
+      );
+      Future.delayed(const Duration(milliseconds: 2500), () {
+        state = state.copyWith(detailsSaveStatus: 'idle');
+      });
+      return true;
+    } catch (e, stack) {
+      _log.error('Lỗi cập nhật địa điểm Lite', e, stack);
+      state = state.copyWith(detailsSaveStatus: 'idle');
+      return false;
+    }
+  }
+
+  Future<bool> updateLiteDetails(
+    String tournamentId, {
+    required String description,
+    required String locationAddress,
+    String? venueName,
+  }) async {
+    final tournament = state.tournament;
+    if (tournament == null ||
+        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
+            .contains(tournament.status.toUpperCase())) {
+      return false;
+    }
+    state = state.copyWith(detailsSaveStatus: 'saving');
+    try {
+      final nextTournamentConfig = {
+        ...(tournament.locationConfig ?? {}),
+        if (venueName != null && venueName.trim().isNotEmpty)
+          'location': {
+            'venueName': venueName.trim(),
+            if (locationAddress.trim().isNotEmpty) 'address': locationAddress.trim(),
+          },
+      };
+
       await _dio.patch('/tournaments/$tournamentId', data: {
         'description': description.trim(),
         'locationAddress': locationAddress.trim(),
+        'tournamentConfig': nextTournamentConfig,
       });
-      await _fetchTournament(tournamentId);
+
+      state = state.copyWith(
+        description: description.trim(),
+        locationAddress: locationAddress.trim(),
+        venueName: venueName?.trim() ?? state.venueName,
+        detailsSaveStatus: 'saved',
+      );
+      Future.delayed(const Duration(milliseconds: 2500), () {
+        state = state.copyWith(detailsSaveStatus: 'idle');
+      });
       return true;
     } catch (e, stack) {
       _log.error('Lỗi cập nhật thông tin giải Lite', e, stack);
+      state = state.copyWith(detailsSaveStatus: 'idle');
       return false;
     }
   }
@@ -699,13 +935,27 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   }
 
   Future<void> createBracket(String tournamentId) async {
-    if (state.bracketEligibleParticipants.length < 2) {
+    if (state.bracketEligibleCount < 2) {
       throw StateError(_l10n.lite_bracketMinimumParticipants(2));
     }
     state = state.copyWith(creatingBracket: true);
     final bType =
         state.tournament?.bracketType.toUpperCase() ?? 'SINGLE_ELIMINATION';
     try {
+      // If tournament is Doubles format and has 2+ unpaired participants,
+      // automatically auto-pair them (RANDOM) before creating bracket (matching Web behavior).
+      if (state.isDoubles && state.pendingParticipants.length >= 2) {
+        try {
+          await _dio.post(
+            '/tournaments/lite/$tournamentId/pairs/generate',
+            data: {'strategy': 'RANDOM'},
+          );
+          await _fetchParticipants(tournamentId);
+        } catch (pairErr) {
+          _log.warning('Tự động ghép cặp trước khi tạo bracket bỏ qua lỗi: $pairErr');
+        }
+      }
+
       try {
         await _dio.post(
           '/tournaments/lite/$tournamentId/bracket',
@@ -737,6 +987,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       _log.success('Tạo bracket thành công');
       state = state.copyWith(creatingBracket: false, hasBracket: true);
       await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
+      await _fetchParticipants(tournamentId);
     } on DioException catch (e) {
       _log.error('Lỗi tạo bracket', e);
       state = state.copyWith(creatingBracket: false);

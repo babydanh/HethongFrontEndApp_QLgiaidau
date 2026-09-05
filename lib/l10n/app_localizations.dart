@@ -21333,6 +21333,102 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đánh Đôi'**
   String get matchTypeDoubles;
+
+  /// No description provided for @lite_scheduleCardTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời gian & Thời lượng'**
+  String get lite_scheduleCardTitle;
+
+  /// No description provided for @lite_startDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày bắt đầu'**
+  String get lite_startDate;
+
+  /// No description provided for @lite_startTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giờ bắt đầu'**
+  String get lite_startTime;
+
+  /// No description provided for @lite_duration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời lượng thi đấu'**
+  String get lite_duration;
+
+  /// No description provided for @lite_hours.
+  ///
+  /// In vi, this message translates to:
+  /// **'giờ'**
+  String get lite_hours;
+
+  /// No description provided for @lite_minutes.
+  ///
+  /// In vi, this message translates to:
+  /// **'phút'**
+  String get lite_minutes;
+
+  /// No description provided for @lite_venueName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên sân / Cụm sân'**
+  String get lite_venueName;
+
+  /// No description provided for @lite_venueNamePlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ: Sân Cầu Lông Kỳ Hòa'**
+  String get lite_venueNamePlaceholder;
+
+  /// No description provided for @lite_venueAddress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ thi đấu'**
+  String get lite_venueAddress;
+
+  /// No description provided for @lite_venueAddressPlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập địa chỉ tổ chức giải'**
+  String get lite_venueAddressPlaceholder;
+
+  /// No description provided for @lite_autoSaving.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang lưu...'**
+  String get lite_autoSaving;
+
+  /// No description provided for @lite_saved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu'**
+  String get lite_saved;
+
+  /// No description provided for @lite_maxParticipantsLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số lượng tối đa (2 - 128)'**
+  String get lite_maxParticipantsLimit;
+
+  /// No description provided for @lite_tournamentDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới thiệu & Thể lệ'**
+  String get lite_tournamentDescription;
+
+  /// No description provided for @lite_tournamentDescPlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới thiệu ngắn gọn về giải đấu...'**
+  String get lite_tournamentDescPlaceholder;
+
+  /// No description provided for @lite_recreateBracketNotice.
+  ///
+  /// In vi, this message translates to:
+  /// **'💡 Khi bốc thăm hoặc ghép lại cặp, bạn có thể bấm Tạo lại nhánh đấu để cập nhật sơ đồ.'**
+  String get lite_recreateBracketNotice;
 }
 
 class _AppLocalizationsDelegate

@@ -11703,4 +11703,54 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get matchTypeDoubles => 'Đánh Đôi';
+
+  @override
+  String get lite_scheduleCardTitle => 'Thời gian & Thời lượng';
+
+  @override
+  String get lite_startDate => 'Ngày bắt đầu';
+
+  @override
+  String get lite_startTime => 'Giờ bắt đầu';
+
+  @override
+  String get lite_duration => 'Thời lượng thi đấu';
+
+  @override
+  String get lite_hours => 'giờ';
+
+  @override
+  String get lite_minutes => 'phút';
+
+  @override
+  String get lite_venueName => 'Tên sân / Cụm sân';
+
+  @override
+  String get lite_venueNamePlaceholder => 'Ví dụ: Sân Cầu Lông Kỳ Hòa';
+
+  @override
+  String get lite_venueAddress => 'Địa chỉ thi đấu';
+
+  @override
+  String get lite_venueAddressPlaceholder => 'Nhập địa chỉ tổ chức giải';
+
+  @override
+  String get lite_autoSaving => 'Đang lưu...';
+
+  @override
+  String get lite_saved => 'Đã lưu';
+
+  @override
+  String get lite_maxParticipantsLimit => 'Số lượng tối đa (2 - 128)';
+
+  @override
+  String get lite_tournamentDescription => 'Giới thiệu & Thể lệ';
+
+  @override
+  String get lite_tournamentDescPlaceholder =>
+      'Giới thiệu ngắn gọn về giải đấu...';
+
+  @override
+  String get lite_recreateBracketNotice =>
+      '💡 Khi bốc thăm hoặc ghép lại cặp, bạn có thể bấm Tạo lại nhánh đấu để cập nhật sơ đồ.';
 }

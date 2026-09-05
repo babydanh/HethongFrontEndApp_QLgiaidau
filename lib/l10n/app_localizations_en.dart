@@ -11737,4 +11737,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get matchTypeDoubles => 'Doubles';
+
+  @override
+  String get lite_scheduleCardTitle => 'Schedule & Duration';
+
+  @override
+  String get lite_startDate => 'Start date';
+
+  @override
+  String get lite_startTime => 'Start time';
+
+  @override
+  String get lite_duration => 'Expected duration';
+
+  @override
+  String get lite_hours => 'hrs';
+
+  @override
+  String get lite_minutes => 'mins';
+
+  @override
+  String get lite_venueName => 'Venue / Court name';
+
+  @override
+  String get lite_venueNamePlaceholder => 'e.g., Ky Hoa Badminton Club';
+
+  @override
+  String get lite_venueAddress => 'Tournament address';
+
+  @override
+  String get lite_venueAddressPlaceholder => 'Enter tournament location';
+
+  @override
+  String get lite_autoSaving => 'Saving...';
+
+  @override
+  String get lite_saved => 'Saved';
+
+  @override
+  String get lite_maxParticipantsLimit => 'Max participants (2 - 128)';
+
+  @override
+  String get lite_tournamentDescription => 'About & Rules';
+
+  @override
+  String get lite_tournamentDescPlaceholder =>
+      'Brief introduction about the tournament...';
+
+  @override
+  String get lite_recreateBracketNotice =>
+      '💡 When re-pairing or re-seeding, you can tap Recreate Bracket to update the tree diagram.';
 }

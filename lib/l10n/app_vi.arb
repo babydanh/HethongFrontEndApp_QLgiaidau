@@ -4861,5 +4861,21 @@
   "liveNoMatchesRunning": "Không có trận nào đang diễn ra",
   "liveNoMatchesSubtitle": "Các trận trực tiếp sẽ hiện ở đây khi bắt đầu",
   "matchTypeSingles": "Đánh Đơn",
-  "matchTypeDoubles": "Đánh Đôi"
+  "matchTypeDoubles": "Đánh Đôi",
+  "lite_scheduleCardTitle": "Thời gian & Thời lượng",
+  "lite_startDate": "Ngày bắt đầu",
+  "lite_startTime": "Giờ bắt đầu",
+  "lite_duration": "Thời lượng thi đấu",
+  "lite_hours": "giờ",
+  "lite_minutes": "phút",
+  "lite_venueName": "Tên sân / Cụm sân",
+  "lite_venueNamePlaceholder": "Ví dụ: Sân Cầu Lông Kỳ Hòa",
+  "lite_venueAddress": "Địa chỉ thi đấu",
+  "lite_venueAddressPlaceholder": "Nhập địa chỉ tổ chức giải",
+  "lite_autoSaving": "Đang lưu...",
+  "lite_saved": "Đã lưu",
+  "lite_maxParticipantsLimit": "Số lượng tối đa (2 - 128)",
+  "lite_tournamentDescription": "Giới thiệu & Thể lệ",
+  "lite_tournamentDescPlaceholder": "Giới thiệu ngắn gọn về giải đấu...",
+  "lite_recreateBracketNotice": "💡 Khi bốc thăm hoặc ghép lại cặp, bạn có thể bấm Tạo lại nhánh đấu để cập nhật sơ đồ."
 }
