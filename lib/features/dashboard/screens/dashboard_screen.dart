@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_card.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_type_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -780,8 +781,7 @@ class _QuickActions extends ConsumerWidget {
   }
 
   void _openLiteCreation(BuildContext context) {
-    // Luồng nhanh của Dashboard là giải riêng; giải trong CLB vẫn tạo từ trang CLB.
-    context.push('/tournaments/create');
+    showPublicTournamentTypeSheet(context);
   }
 }
 

@@ -2475,70 +2475,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
             const SizedBox(height: 12),
 
-            // Option 2: Tạo nhanh theo luồng Native, gắn với CLB.
-            InkWell(
-              onTap: () {
-                Navigator.pop(ctx);
-                context.push('/tournaments/create?communityId=${widget.clubId}');
-              },
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.flash_on_rounded,
-                        color: Color(0xFF10B981),
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.clubDetailQuickWebTitle,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: colors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l10n.clubDetailQuickWebDescription,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colors.textSecondary,
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.chevron_right_rounded, color: colors.textMuted),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Option 3: Giải Nâng Cao (Full) - Native Mobile Wizard
+            // Option 2: Giải Nâng Cao (Full)
             InkWell(
               onTap: () {
                 Navigator.pop(ctx);
@@ -2596,9 +2533,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                                   color: const Color(0xFF2563EB),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: Text(
-                                  l10n.club_createOnWeb,
-                                  style: const TextStyle(
+                                child: const Text(
+                                  'FULL',
+                                  style: TextStyle(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w900,
                                     color: Colors.white,
@@ -2620,8 +2557,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       ),
                     ),
                     Icon(
-                      Icons.open_in_browser_rounded,
-                      color: const Color(0xFF2563EB),
+                      Icons.chevron_right_rounded,
+                      color: colors.textMuted,
                     ),
                   ],
                 ),

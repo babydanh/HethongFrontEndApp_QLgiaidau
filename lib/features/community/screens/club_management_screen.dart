@@ -647,48 +647,12 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                         ),
                         const SizedBox(height: 12),
 
-                        // Option 2: Giải Tiêu chuẩn (Website)
+                        // Option 2: Giải Nâng Cao (Full)
                         InkWell(
                           onTap: () {
                             Navigator.pop(ctx);
-                            showDialog(
-                              context: context,
-                              builder: (dCtx) => AlertDialog(
-                                backgroundColor: colors.bgCard,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                title: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.workspace_premium_rounded,
-                                      color: Color(0xFF3B82F6),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      l10n.club_standardTournamentTitle,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: colors.textPrimary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                content: Text(
-                                  _l10n.dashboard_manageAdvancedContent,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: colors.textSecondary,
-                                    height: 1.5,
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(dCtx),
-                                    child: Text(_l10n.dashboard_gotIt),
-                                  ),
-                                ],
-                              ),
+                            context.push(
+                              '/tournaments/create-advanced?communityId=${widget.clubId}',
                             );
                           },
                           borderRadius: BorderRadius.circular(16),
@@ -745,12 +709,12 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                               vertical: 2,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: const Color(0xFF3B82F6),
+                                              color: const Color(0xFF2563EB),
                                               borderRadius:
                                                   BorderRadius.circular(6),
                                             ),
-                                            child: Text(
-                                              l10n.club_standardCreatedOnWeb,
+                                            child: const Text(
+                                              'FULL',
                                               style: TextStyle(
                                                 fontSize: 9,
                                                 fontWeight: FontWeight.w900,

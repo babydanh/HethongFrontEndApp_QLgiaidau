@@ -34,6 +34,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_type_sheet.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -461,10 +462,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               colors,
               l10n.infoMyTournaments,
               trailing: IconButton(
-                onPressed: () => context.push('/tournaments/create'),
+                onPressed: () => showPublicTournamentTypeSheet(context),
                 icon: const Icon(Icons.add_circle_outline_rounded, size: 22),
                 color: AppTheme.primary,
-                tooltip: 'Tạo giải nhanh',
+                tooltip: 'Tạo giải đấu',
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 padding: EdgeInsets.zero,
               ),
@@ -1561,7 +1562,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: Column(
                 children: [
                   InkWell(
-                    onTap: () => context.push('/tournaments/create'),
+                    onTap: () => showPublicTournamentTypeSheet(context),
                     borderRadius: BorderRadius.circular(30),
                     child: Container(
                       width: 54,

@@ -777,72 +777,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
                   ),
                 ),
               ),
-            const SizedBox(height: 12),
 
-            // Option 2: Tạo nhanh theo luồng Native, gắn với CLB
-            if (canCreateAdvanced)
-              InkWell(
-                onTap: () {
-                  Navigator.pop(ctx);
-                  context.push('/tournaments/create?communityId=$clubId');
-                },
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF10B981,
-                          ).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.flash_on_rounded,
-                          color: Color(0xFF10B981),
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.clubTournamentsWebTitle,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              l10n.clubTournamentsWebDescription,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colors.textSecondary,
-                                height: 1.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(Icons.chevron_right_rounded, color: colors.textMuted),
-                    ],
-                  ),
-                ),
-              ),
             const SizedBox(height: 12),
 
             // Option 3: Giải Nâng Cao (Full) - Native Mobile Wizard
