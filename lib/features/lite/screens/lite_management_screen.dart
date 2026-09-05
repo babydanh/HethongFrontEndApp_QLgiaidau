@@ -1863,76 +1863,77 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             ),
           ],
 
-          // ─── Roster confirmation ───
-          Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  const Icon(Icons.fact_check_outlined, color: Colors.amber),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      l10n.lite_rosterConfirmationDescription,
-                      style: const TextStyle(fontSize: 12),
+          // ─── Roster confirmation (only show when there are participants, matching Web) ───
+          if (state.participants.isNotEmpty)
+            Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.fact_check_outlined, color: Colors.amber),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        l10n.lite_rosterConfirmationDescription,
+                        style: const TextStyle(fontSize: 12),
+                      ),
                     ),
-                  ),
-                  state.rosterConfirmed
-                      ? Chip(label: Text(l10n.lite_rosterConfirmed))
-                      : OutlinedButton(
-                          onPressed: () async {
-                            final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text(l10n.lite_rosterConfirmTitle),
-                                content: Text(l10n.lite_rosterConfirmContent),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: Text(l10n.commonCancel),
-                                  ),
-                                  FilledButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    child: Text(l10n.lite_confirmRosterButton),
-                                  ),
-                                ],
-                              ),
-                            );
-                            if (confirmed != true || !mounted) return;
-                            try {
-                              await notifier.confirmRoster(widget.tournamentId);
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      l10n.lite_rosterConfirmedSuccess,
+                    state.rosterConfirmed
+                        ? Chip(label: Text(l10n.lite_rosterConfirmed))
+                        : OutlinedButton(
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text(l10n.lite_rosterConfirmTitle),
+                                  content: Text(l10n.lite_rosterConfirmContent),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: Text(l10n.commonCancel),
                                     ),
-                                  ),
-                                );
-                              }
-                            } on DioException catch (error) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      error.response?.data?['message']
-                                              ?.toString() ??
-                                          l10n.lite_rosterConfirmError,
+                                    FilledButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: Text(l10n.lite_confirmRosterButton),
                                     ),
-                                  ),
-                                );
+                                  ],
+                                ),
+                              );
+                              if (confirmed != true || !mounted) return;
+                              try {
+                                await notifier.confirmRoster(widget.tournamentId);
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        l10n.lite_rosterConfirmedSuccess,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } on DioException catch (error) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        error.response?.data?['message']
+                                                ?.toString() ??
+                                            l10n.lite_rosterConfirmError,
+                                      ),
+                                    ),
+                                  );
+                                }
                               }
-                            }
-                          },
-                          child: Text(l10n.lite_rosterConfirmAction),
-                        ),
-                ],
+                            },
+                            child: Text(l10n.lite_rosterConfirmAction),
+                          ),
+                  ],
+                ),
               ),
             ),
-          ),
 
           // ─── Mock tools ───
           Row(
