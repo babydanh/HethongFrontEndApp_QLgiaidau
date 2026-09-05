@@ -46,7 +46,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   CommunityMemberModel? _myMembership;
   bool _isJoinLoading = false;
   String _tournamentStatusFilter = 'ALL';
-  String _tournamentTypeFilter = 'ALL';
   String _tournamentSportFilter = 'ALL';
   bool _isAddingGalleryImage = false;
   String? _activitySearchQuery;
@@ -559,7 +558,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 ),
                 tooltip: l10n.clubDetailManageTooltip,
                 onSelected: (val) {
-                  if (val == 'manage') {
+                  if (val == 'create_tournament') {
+                    _showCreateTournamentTypeSheet();
+                  } else if (val == 'manage') {
                     context.push(
                       '/club/${widget.clubId}/manage',
                       extra: _myMembership?.role == 'OWNER',
@@ -570,13 +571,33 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 },
                 itemBuilder: (ctx) => [
                   PopupMenuItem(
-                    value: 'manage',
+                    value: 'create_tournament',
                     child: Row(
                       children: [
                         const Icon(
-                          Icons.tune_rounded,
+                          Icons.add_circle_outline_rounded,
                           size: 18,
                           color: AppTheme.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          l10n.club_createTournament,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'manage',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.tune_rounded,
+                          size: 18,
+                          color: colors.textPrimary,
                         ),
                         const SizedBox(width: 10),
                         Text(
@@ -771,7 +792,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             showHeader: false,
           ),
           _buildAboutTab(club, colors),
-          _buildTournamentsTab(colors),
+          _buildTournamentsTab(club, colors),
           ClubActivityTab(
             communityId: club.id,
             club: club,
@@ -1805,6 +1826,18 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   // ════════════════════════════════════
   //  TAB 2: GIẢI ĐẤU
   // ════════════════════════════════════
+  String _resolveImageUrl(String? url) {
+    if (url == null || url.trim().isEmpty) return '';
+    final trimmed = url.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    if (trimmed.startsWith('/')) {
+      return 'https://sporto.asia$trimmed';
+    }
+    return 'https://sporto.asia/$trimmed';
+  }
+
   bool _matchesTournamentStatus(String status, String filter) {
     if (filter == 'ALL') return true;
     if (filter == 'UPCOMING') {
@@ -1831,104 +1864,64 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     List<String> sports,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    Widget chips(
-      List<(String, String)> options,
-      String selected,
-      ValueChanged<String> onChanged,
-    ) {
-      return SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: options
-              .map(
-                (option) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(
-                      option.$2,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    selected: selected == option.$1,
-                    onSelected: (_) => onChanged(option.$1),
-                    selectedColor: AppTheme.primary.withValues(alpha: 0.14),
-                    side: BorderSide(
-                      color: selected == option.$1
-                          ? AppTheme.primary
-                          : colors.border,
-                    ),
-                    labelStyle: TextStyle(
-                      color: selected == option.$1
-                          ? AppTheme.primary
-                          : colors.textSecondary,
-                    ),
-                  ),
-                ),
-              )
-              .toList(),
+    final options = <(String, String)>[
+      ('ALL', l10n.clubDetailAllStatuses),
+      ('UPCOMING', l10n.clubDetailUpcoming),
+      ('ONGOING', l10n.clubDetailOngoing),
+      ('COMPLETED', l10n.clubDetailCompleted),
+      if (sports.length > 1)
+        ...sports.map(
+          (sport) => ('SPORT_$sport', _tournamentSportLabel(sport, l10n)),
         ),
-      );
-    }
+    ];
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 14, bottom: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              l10n.clubDetailFilterTitle,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: colors.textPrimary,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Row(
+        children: options.map((option) {
+          final isSportOption = option.$1.startsWith('SPORT_');
+          final isSelected = isSportOption
+              ? _tournamentSportFilter == option.$1.substring(6)
+              : (_tournamentStatusFilter == option.$1 && _tournamentSportFilter == 'ALL');
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(
+                option.$2,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              selected: isSelected,
+              onSelected: (_) {
+                setState(() {
+                  if (isSportOption) {
+                    final sportKey = option.$1.substring(6);
+                    _tournamentSportFilter = _tournamentSportFilter == sportKey ? 'ALL' : sportKey;
+                  } else {
+                    _tournamentStatusFilter = option.$1;
+                    _tournamentSportFilter = 'ALL';
+                  }
+                });
+              },
+              selectedColor: AppTheme.primary.withValues(alpha: 0.14),
+              side: BorderSide(
+                color: isSelected ? AppTheme.primary : colors.border,
+              ),
+              labelStyle: TextStyle(
+                color: isSelected ? AppTheme.primary : colors.textSecondary,
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          chips(
-            [
-              ('ALL', l10n.clubDetailAllTournaments),
-              ('CLUB', l10n.clubDetailClubTournaments),
-              ('PUBLIC', l10n.clubDetailOpenTournaments),
-            ],
-            _tournamentTypeFilter,
-            (v) => setState(() => _tournamentTypeFilter = v),
-          ),
-          const SizedBox(height: 4),
-          chips(
-            [
-              ('ALL', l10n.clubDetailAllStatuses),
-              ('UPCOMING', l10n.clubDetailUpcoming),
-              ('ONGOING', l10n.clubDetailOngoing),
-              ('COMPLETED', l10n.clubDetailCompleted),
-            ],
-            _tournamentStatusFilter,
-            (v) => setState(() => _tournamentStatusFilter = v),
-          ),
-          if (sports.length > 1) ...[
-            const SizedBox(height: 4),
-            chips(
-              [
-                ('ALL', l10n.clubDetailAllSports),
-                ...sports.map(
-                  (sport) => (sport, _tournamentSportLabel(sport, l10n)),
-                ),
-              ],
-              _tournamentSportFilter,
-              (v) => setState(() => _tournamentSportFilter = v),
-            ),
-          ],
-        ],
+          );
+        }).toList(),
       ),
     );
   }
 
-  Widget _buildTournamentsTab(AppColorsExtension colors) {
+  Widget _buildTournamentsTab(Community club, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     final tourneysAsync = ref.watch(
       communityTournamentsProvider(widget.clubId),
@@ -1980,10 +1973,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           if (!isAdmin && StatusHelper.isTournamentDraft(t.status)) {
             return false;
           }
-          if (_tournamentTypeFilter != 'ALL' &&
-              t.tournamentType != _tournamentTypeFilter) {
-            return false;
-          }
           if (_tournamentSportFilter != 'ALL' &&
               t.sport != _tournamentSportFilter) {
             return false;
@@ -1991,102 +1980,15 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           return _matchesTournamentStatus(t.status, _tournamentStatusFilter);
         }).toList();
         return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-          itemCount:
-              filteredTourneys.length +
-              (isAdmin ? 2 : 1) +
-              (filteredTourneys.isEmpty ? 1 : 0),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+          itemCount: filteredTourneys.length + 1 + (filteredTourneys.isEmpty ? 1 : 0),
           itemBuilder: (context, i) {
-            if (isAdmin && i == 0) {
-              return Container(
-                margin: const EdgeInsets.only(bottom: 14),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => _showCreateTournamentTypeSheet(),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 11),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primary,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primary.withValues(alpha: 0.25),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.add_rounded,
-                                size: 18,
-                                color: Colors.white,
-                              ),
-                              SizedBox(width: 6),
-                              Text(
-                                l10n.club_createTournament,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () =>
-                            context.push('/club/${widget.clubId}/manage'),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 11),
-                          decoration: BoxDecoration(
-                            color: colors.bgCard,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: colors.border),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.tune_rounded,
-                                size: 16,
-                                color: colors.textPrimary,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                l10n.clubDetailManageTournaments,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: colors.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-            final filterIndex = isAdmin ? 1 : 0;
-            if (i == filterIndex) {
+            if (i == 0) {
               return _buildTournamentFilters(colors, sports);
             }
             if (filteredTourneys.isEmpty) {
               return Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 40),
+                padding: const EdgeInsets.fromLTRB(16, 32, 16, 40),
                 child: Column(
                   children: [
                     Icon(
@@ -2106,7 +2008,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     TextButton(
                       onPressed: () => setState(() {
                         _tournamentStatusFilter = 'ALL';
-                        _tournamentTypeFilter = 'ALL';
                         _tournamentSportFilter = 'ALL';
                       }),
                       child: Text(l10n.clubDetailClearFilters),
@@ -2115,8 +2016,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 ),
               );
             }
-            final index = i - filterIndex - 1;
-            return _buildTourneyCard(filteredTourneys[index], colors);
+            final index = i - 1;
+            return _buildTourneyCard(filteredTourneys[index], club, colors);
           },
         );
       },
@@ -2142,6 +2043,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
   Widget _buildTourneyCard(
     CommunityTournamentModel t,
+    Community club,
     AppColorsExtension colors,
   ) {
     final l10n = AppLocalizations.of(context)!;
@@ -2153,175 +2055,381 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     );
 
     final isQuick = t.isLite;
-    final badgeColor = isQuick ? const Color(0xFFF59E0B) : AppTheme.primary;
+
+    // Ảnh đại diện banner: giải đấu bannerUrl/logoUrl -> fallback sang club bannerUrl/logoUrl
+    final effectiveImageUrl = (t.bannerUrl != null && t.bannerUrl!.trim().isNotEmpty)
+        ? t.bannerUrl!.trim()
+        : ((t.logoUrl != null && t.logoUrl!.trim().isNotEmpty)
+            ? t.logoUrl!.trim()
+            : ((club.bannerUrl != null && club.bannerUrl!.trim().isNotEmpty)
+                ? club.bannerUrl!.trim()
+                : ((club.logoUrl != null && club.logoUrl!.trim().isNotEmpty)
+                    ? club.logoUrl!.trim()
+                    : '')));
+
+    final resolvedImageUrl = _resolveImageUrl(effectiveImageUrl);
+    final hasImage = resolvedImageUrl.isNotEmpty;
+
+    final sportLabel = t.categoryName.isNotEmpty
+        ? t.categoryName
+        : (t.sport.isNotEmpty ? l10n.sportDisplayName(t.sport) : '');
+
+    final formatLabel = t.format.isNotEmpty ? l10n.formatDisplayName(t.format) : '';
 
     return InkWell(
       onTap: () => context.push('/intro/${t.id}'),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(14),
+        margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           color: colors.bgCard,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.border),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.border.withValues(alpha: 0.8)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Icon giải đấu
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: badgeColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                isQuick ? Icons.bolt_rounded : Icons.emoji_events_rounded,
-                color: badgeColor,
-                size: 22,
+            // Banner ảnh phía trên card
+            SizedBox(
+              height: 130,
+              width: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (hasImage)
+                    Image.network(
+                      resolvedImageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => _bannerGradient(AppTheme.primary, '🏆'),
+                    )
+                  else
+                    _bannerGradient(AppTheme.primary, '🏆'),
+                  // Overlay chuyển màu mờ nhẹ để đọc text tốt hơn
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withValues(alpha: 0.28),
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.65),
+                        ],
+                        stops: const [0.0, 0.45, 1.0],
+                      ),
+                    ),
+                  ),
+                  // Badges góc trên trái: Trạng thái & Loại giải
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    right: 10,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: statusColor,
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                statusLabel,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 3.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: (t.tournamentType == 'CLUB'
+                                        ? const Color(0xFFD97706)
+                                        : const Color(0xFF2563EB))
+                                    .withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                t.tournamentType == 'CLUB'
+                                    ? l10n.clubDetailClubTournamentBadge
+                                    : l10n.clubDetailOpenTournamentBadge,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (isQuick)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF59E0B),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.bolt_rounded,
+                                  size: 11,
+                                  color: Colors.black,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  l10n.clubDetailLiteBadge,
+                                  style: const TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  // Bottom strip trên banner: Thể thao / Môn thi
+                  if (sportLabel.isNotEmpty)
+                    Positioned(
+                      left: 10,
+                      bottom: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.65),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.25),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.sports_tennis_rounded,
+                              size: 11,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              sportLabel,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-            const SizedBox(width: 12),
 
-            // Thông tin giải đấu
-            Expanded(
+            // Phần nội dung thông tin chi tiết giải đấu
+            Padding(
+              padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Wrap(
-                    spacing: 5,
-                    runSpacing: 4,
-                    children: [
-                      _tournamentBadge(
-                        t.tournamentType == 'CLUB'
-                            ? l10n.clubDetailClubTournamentBadge
-                            : l10n.clubDetailOpenTournamentBadge,
-                        t.tournamentType == 'CLUB'
-                            ? const Color(0xFFD97706)
-                            : AppTheme.primary,
-                      ),
-                      _tournamentBadge(
-                        t.isRanked
-                            ? l10n.clubDetailRankedBadge
-                            : l10n.clubDetailCasualBadge,
-                        t.isRanked
-                            ? const Color(0xFFB45309)
-                            : colors.textSecondary,
-                      ),
-                      if (t.parentId != null)
-                        _tournamentBadge(
-                          l10n.clubDetailSeriesBadge,
-                          const Color(0xFF2563EB),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 5),
+                  // Tên giải đấu
                   Text(
                     t.name,
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
-                      fontSize: 14,
+                      fontSize: 15,
                       color: colors.textPrimary,
+                      height: 1.25,
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
+
+                  // Tag hình thức / phân hạng
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      if (formatLabel.isNotEmpty)
+                        _tournamentBadge(
+                          formatLabel,
+                          colors.textSecondary,
+                        ),
+                      if (t.isRanked)
+                        _tournamentBadge(
+                          l10n.clubDetailRankedBadge,
+                          const Color(0xFF0284C7),
+                        ),
+                      if (t.parentId != null)
+                        _tournamentBadge(
+                          l10n.clubDetailSeriesBadge,
+                          const Color(0xFF7C3AED),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Ngày thi đấu
                   Row(
                     children: [
-                      Text(
-                        l10n.club_teamCount(t.teamCount, t.maxTeams),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colors.textSecondary,
+                      Icon(
+                        Icons.calendar_today_rounded,
+                        size: 13,
+                        color: colors.textMuted,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          t.startDate != null && t.startDate!.isNotEmpty
+                              ? (t.endDate != null && t.endDate!.isNotEmpty
+                                  ? '${t.startDate} - ${t.endDate}'
+                                  : t.startDate!)
+                              : l10n.club_noTournaments,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (t.startDate != null && t.startDate!.isNotEmpty) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          width: 3,
-                          height: 3,
-                          decoration: BoxDecoration(
-                            color: colors.textMuted,
-                            shape: BoxShape.circle,
-                          ),
+                    ],
+                  ),
+
+                  // Địa điểm thi đấu (nếu có)
+                  if (t.locationAddress != null && t.locationAddress!.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: colors.textMuted,
                         ),
                         const SizedBox(width: 6),
-                        Text(
-                          t.startDate!,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colors.textMuted,
+                        Expanded(
+                          child: Text(
+                            t.locationAddress!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colors.textMuted,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
+                    ),
+                  ],
+
+                  const SizedBox(height: 10),
+                  Divider(height: 1, color: colors.border.withValues(alpha: 0.6)),
+                  const SizedBox(height: 10),
+
+                  // Footer: Số đội / Lệ phí và nút Xem chi tiết
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.groups_rounded,
+                            size: 15,
+                            color: colors.textSecondary,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            l10n.club_teamCount(t.teamCount, t.maxTeams),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            '•',
+                            style: TextStyle(color: colors.textMuted),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            t.entryFee > 0
+                                ? '${t.entryFee.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')} đ'
+                                : l10n.freePrice,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: t.entryFee > 0
+                                  ? const Color(0xFF10B981)
+                                  : colors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.exploreDetails,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 13,
+                            color: AppTheme.primary,
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ],
               ),
-            ),
-            const SizedBox(width: 8),
-            // Nhãn trạng thái & Thẻ loại giải xếp chồng ngăn nắp bên phải
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3.5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    statusLabel,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: badgeColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: badgeColor.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isQuick
-                            ? Icons.bolt_rounded
-                            : Icons.workspace_premium_rounded,
-                        size: 10,
-                        color: badgeColor,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        isQuick ? l10n.clubDetailLiteBadge : l10n.club_advanced,
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          color: badgeColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
             ),
           ],
         ),

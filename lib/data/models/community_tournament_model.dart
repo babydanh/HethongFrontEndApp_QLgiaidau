@@ -10,6 +10,7 @@ class CommunityTournamentModel {
   final String? startDate;
   final String? locationAddress;
   final String? bannerUrl;
+  final String? logoUrl;
   final bool isLite;
   final String tournamentType;
   final bool isRanked;
@@ -31,6 +32,7 @@ class CommunityTournamentModel {
     this.startDate,
     this.locationAddress,
     this.bannerUrl,
+    this.logoUrl,
     this.isLite = false,
     this.tournamentType = 'PUBLIC',
     this.isRanked = false,
@@ -112,6 +114,7 @@ class CommunityTournamentModel {
           json['locationAddress']?.toString() ??
           json['venue']?['locationAddress']?.toString(),
       bannerUrl: json['bannerUrl']?.toString(),
+      logoUrl: json['logoUrl']?.toString() ?? json['logo_url']?.toString(),
       isLite: isLite,
       tournamentType: (json['tournamentType'] ?? json['type'] ?? 'PUBLIC')
           .toString()
