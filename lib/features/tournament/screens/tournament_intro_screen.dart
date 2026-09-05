@@ -18,6 +18,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sponsors_tab.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -778,12 +779,14 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                               : AppTheme.primary.withValues(alpha: 0.2),
                         ),
                       ),
-                      child: Icon(
-                        formatIcon,
-                        size: 16,
+                      child: Center(
+                      child: BracketFormatIcons.getIcon(
+                        div.bracketType,
+                        fallbackBracketType: tournament.bracketType,
+                        size: 17,
                         color: isSelected ? Colors.white : AppTheme.primary,
                       ),
-                    ),
+                    ),  ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(

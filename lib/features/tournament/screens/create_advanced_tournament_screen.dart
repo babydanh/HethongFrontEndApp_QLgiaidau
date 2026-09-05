@@ -8,7 +8,7 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
-import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// DTO cấu hình cho từng phân hạng thi đấu trong giải nâng cao
@@ -567,7 +567,13 @@ class _CreateAdvancedTournamentScreenState
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
                     ),
-                    child: Icon(_getFormatIcon(div.bracketType), color: AppTheme.primary, size: 20),
+                    child: Center(
+                      child: BracketFormatIcons.getIcon(
+                        div.bracketType,
+                        size: 20,
+                        color: AppTheme.primary,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -1020,9 +1026,9 @@ class _CreateAdvancedTournamentScreenState
                       value: AppConstants.bracketSingleElimination,
                       child: Row(
                         children: [
-                          Icon(Icons.account_tree_outlined, size: 18, color: AppTheme.primary),
-                          SizedBox(width: 8),
-                          Text('Loại trực tiếp'),
+                          BracketFormatIcons.getIcon(AppConstants.bracketSingleElimination, size: 18, color: AppTheme.primary),
+                          const SizedBox(width: 8),
+                          const Text('Loại trực tiếp'),
                         ],
                       ),
                     ),
@@ -1030,9 +1036,9 @@ class _CreateAdvancedTournamentScreenState
                       value: AppConstants.bracketDoubleElimination,
                       child: Row(
                         children: [
-                          Icon(Icons.call_split_rounded, size: 18, color: AppTheme.primary),
-                          SizedBox(width: 8),
-                          Text('Nhánh thắng/thua'),
+                          BracketFormatIcons.getIcon(AppConstants.bracketDoubleElimination, size: 18, color: AppTheme.primary),
+                          const SizedBox(width: 8),
+                          const Text('Nhánh thắng/thua'),
                         ],
                       ),
                     ),
@@ -1040,9 +1046,9 @@ class _CreateAdvancedTournamentScreenState
                       value: AppConstants.bracketRoundRobin,
                       child: Row(
                         children: [
-                          Icon(Icons.sync_rounded, size: 18, color: AppTheme.primary),
-                          SizedBox(width: 8),
-                          Text('Vòng tròn tính điểm'),
+                          BracketFormatIcons.getIcon(AppConstants.bracketRoundRobin, size: 18, color: AppTheme.primary),
+                          const SizedBox(width: 8),
+                          const Text('Vòng tròn tính điểm'),
                         ],
                       ),
                     ),
@@ -1050,9 +1056,9 @@ class _CreateAdvancedTournamentScreenState
                       value: AppConstants.bracketGroupStageKnockout,
                       child: Row(
                         children: [
-                          Icon(Icons.grid_view_rounded, size: 18, color: AppTheme.primary),
-                          SizedBox(width: 8),
-                          Text('Vòng bảng + loại trực tiếp'),
+                          BracketFormatIcons.getIcon(AppConstants.bracketGroupStageKnockout, size: 18, color: AppTheme.primary),
+                          const SizedBox(width: 8),
+                          const Text('Vòng bảng + loại trực tiếp'),
                         ],
                       ),
                     ),

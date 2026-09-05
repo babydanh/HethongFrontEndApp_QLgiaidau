@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 
 class OverviewTab extends StatefulWidget {
   final Tournament tournament;
@@ -800,10 +801,13 @@ class _OverviewTabState extends State<OverviewTab> {
                             : AppTheme.primary.withValues(alpha: 0.2),
                       ),
                     ),
-                    child: Icon(
-                      formatIcon,
-                      size: 17,
-                      color: isExpanded ? Colors.white : AppTheme.primary,
+                    child: Center(
+                      child: BracketFormatIcons.getIcon(
+                        div.bracketType,
+                        fallbackBracketType: widget.tournament.bracketType,
+                        size: 18,
+                        color: isExpanded ? Colors.white : AppTheme.primary,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),

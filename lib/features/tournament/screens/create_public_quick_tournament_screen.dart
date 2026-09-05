@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Tạo giải nhanh (Quick Lite) trên mobile app.
@@ -857,10 +858,12 @@ class _CreatePublicQuickTournamentScreenState
                             : AppTheme.primary.withValues(alpha: 0.2),
                       ),
                     ),
-                    child: Icon(
-                      b.$4,
-                      size: 18,
-                      color: selected ? Colors.white : AppTheme.primary,
+                    child: Center(
+                      child: BracketFormatIcons.getIcon(
+                        b.$1,
+                        size: 18,
+                        color: selected ? Colors.white : AppTheme.primary,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
