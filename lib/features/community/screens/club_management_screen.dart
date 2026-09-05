@@ -888,12 +888,53 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 2),
-                                  Text(
-                                    '${t.teamCount}/${t.maxTeams} đội • ${isQuick ? l10n.club_liteTournamentShort : l10n.club_standardTournamentShort}',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: colors.textSecondary,
-                                    ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '${t.teamCount}/${t.maxTeams} đội • ${isQuick ? l10n.club_liteTournamentShort : l10n.club_standardTournamentShort}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: colors.textSecondary,
+                                        ),
+                                      ),
+                                      if (t.isRecurring) ...[
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 5,
+                                            vertical: 1.5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF6366F1)
+                                                .withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(4),
+                                            border: Border.all(
+                                              color: const Color(0xFF6366F1)
+                                                  .withValues(alpha: 0.3),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons.sync_rounded,
+                                                size: 9,
+                                                color: Color(0xFF6366F1),
+                                              ),
+                                              const SizedBox(width: 2),
+                                              Text(
+                                                l10n.communityRecurringBadge,
+                                                style: const TextStyle(
+                                                  fontSize: 8.5,
+                                                  fontWeight: FontWeight.w900,
+                                                  color: Color(0xFF6366F1),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ],
                               ),
