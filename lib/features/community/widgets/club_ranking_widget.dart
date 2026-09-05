@@ -1161,48 +1161,16 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   }
 
   _EloTierInfo _getEloTierInfo(PlayerRanking player) {
-    final colors = context.colors;
     final tier = resolveEloTier(
       elo: player.eloPoints,
       tierName: player.tierName,
     );
-    switch (tier.role) {
-      case EloTierRole.s: // Tier S — amber (AppTheme.warning)
-        return _EloTierInfo(
-          label: tier.label,
-          bgColor: colors.warning.withValues(alpha: 0.15),
-          textColor: colors.warning,
-          borderColor: colors.warning.withValues(alpha: 0.45),
-        );
-      case EloTierRole.a: // Tier A — emerald (AppTheme.success)
-        return _EloTierInfo(
-          label: tier.label,
-          bgColor: colors.success.withValues(alpha: 0.15),
-          textColor: colors.success,
-          borderColor: colors.success.withValues(alpha: 0.45),
-        );
-      case EloTierRole.b: // Tier B — primary (neon)
-        return _EloTierInfo(
-          label: tier.label,
-          bgColor: AppTheme.primary.withValues(alpha: 0.15),
-          textColor: AppTheme.primary,
-          borderColor: AppTheme.primary.withValues(alpha: 0.45),
-        );
-      case EloTierRole.c: // Tier C — slate sáng (textSecondary/bgElevated)
-        return _EloTierInfo(
-          label: tier.label,
-          bgColor: colors.bgElevated,
-          textColor: colors.textSecondary,
-          borderColor: colors.border,
-        );
-      case EloTierRole.d: // Tier D — slate tối (textMuted/bgSurface)
-        return _EloTierInfo(
-          label: tier.label,
-          bgColor: colors.bgSurface,
-          textColor: colors.textMuted,
-          borderColor: colors.border,
-        );
-    }
+    return _EloTierInfo(
+      label: tier.shortCode,
+      bgColor: tier.backgroundColor.withValues(alpha: 0.15),
+      textColor: tier.textColor,
+      borderColor: tier.borderColor.withValues(alpha: 0.45),
+    );
   }
 }
 
