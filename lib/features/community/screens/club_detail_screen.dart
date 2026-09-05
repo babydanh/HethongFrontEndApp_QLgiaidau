@@ -26,6 +26,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/community_social_s
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_social_screen.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/club_activity_tab.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 
 class ClubDetailScreen extends ConsumerStatefulWidget {
@@ -46,13 +47,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   String _tournamentTypeFilter = 'ALL';
   String _tournamentSportFilter = 'ALL';
   bool _isAddingGalleryImage = false;
+  String? _activitySearchQuery;
   // Cache future cho card Trạng thái nhanh — tránh gọi lại API mỗi lần rebuild.
   Future<CommunitySocialSettings>? _socialSettingsFuture;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 7, vsync: this);
+    _tabController = TabController(length: 8, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _fetchMembership());
   }
 
@@ -768,6 +770,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           ),
           _buildAboutTab(club, colors),
           _buildTournamentsTab(colors),
+          ClubActivityTab(
+            communityId: club.id,
+            club: club,
+            initialSearchQuery: _activitySearchQuery,
+          ),
           _buildMembersTab(club, colors),
           _buildGalleryTab(club, colors),
           _buildRankingsTab(colors, club),
@@ -2787,6 +2794,22 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     );
   }
 
+  void _showMemberProfile(String userId, String? fullName, String? avatarUrl) {
+    UserProfileBottomSheet.show(
+      context,
+      userId: userId,
+      communityId: widget.clubId,
+      initialFullName: fullName,
+      initialAvatarUrl: avatarUrl,
+      onFilterMatches: (query) {
+        setState(() {
+          _activitySearchQuery = query;
+        });
+        _tabController.animateTo(3); // Tab 3: Hoạt động
+      },
+    );
+  }
+
   Widget _buildMemberItem(
     CommunityMemberModel m,
     AppColorsExtension colors,
@@ -2807,12 +2830,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         children: [
           GestureDetector(
             onTap: canViewProfile
-                ? () => UserProfileBottomSheet.show(
-                    context,
-                    userId: m.userId,
-                    communityId: widget.clubId,
-                    initialFullName: m.userFullName,
-                    initialAvatarUrl: m.userAvatarUrl,
+                ? () => _showMemberProfile(
+                    m.userId,
+                    m.userFullName,
+                    m.userAvatarUrl,
                   )
                 : null,
             child: _buildUserAvatar(
@@ -2826,12 +2847,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           Expanded(
             child: GestureDetector(
               onTap: canViewProfile
-                  ? () => UserProfileBottomSheet.show(
-                      context,
-                      userId: m.userId,
-                      communityId: widget.clubId,
-                      initialFullName: m.userFullName,
-                      initialAvatarUrl: m.userAvatarUrl,
+                  ? () => _showMemberProfile(
+                      m.userId,
+                      m.userFullName,
+                      m.userAvatarUrl,
                     )
                   : null,
               behavior: HitTestBehavior.opaque,
@@ -4469,6 +4488,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
           Tab(text: l10n.clubDetailFeedTab),
           Tab(text: l10n.club_tabAbout),
           Tab(text: l10n.club_tabTournaments),
+          Tab(text: l10n.club_tabActivity),
           Tab(text: l10n.club_tabMembers),
           Tab(text: l10n.club_tabGallery),
           Tab(text: l10n.club_tabRankings),

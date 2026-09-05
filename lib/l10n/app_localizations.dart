@@ -7496,6 +7496,12 @@ abstract class AppLocalizations {
   /// **'Giải đấu'**
   String get club_tabTournaments;
 
+  /// No description provided for @club_tabActivity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoạt động'**
+  String get club_tabActivity;
+
   /// No description provided for @club_unban.
   ///
   /// In vi, this message translates to:
@@ -9703,6 +9709,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đã xem bởi {name}'**
   String chatDetailSeenBy(Object name);
+
+  /// No description provided for @chatDetailSent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi'**
+  String get chatDetailSent;
 
   /// No description provided for @chatDetailTyping.
   ///

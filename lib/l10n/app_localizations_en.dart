@@ -3992,6 +3992,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get club_tabTournaments => 'Tournaments';
 
   @override
+  String get club_tabActivity => 'Activity';
+
+  @override
   String get club_unban => 'Unban';
 
   @override
@@ -5180,6 +5183,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String chatDetailSeenBy(Object name) {
     return 'Seen by $name';
   }
+
+  @override
+  String get chatDetailSent => 'Sent';
 
   @override
   String chatDetailTyping(Object name) {

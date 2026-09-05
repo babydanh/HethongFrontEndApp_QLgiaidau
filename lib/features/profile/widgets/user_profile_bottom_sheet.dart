@@ -8,6 +8,8 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart';
+import 'package:app_quanly_giaidau/features/community/providers/user_club_rank_provider.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/tag_assign_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -19,6 +21,7 @@ class UserProfileBottomSheet extends ConsumerStatefulWidget {
   final String? communityId;
   final String? initialFullName;
   final String? initialAvatarUrl;
+  final void Function(String query)? onFilterMatches;
 
   const UserProfileBottomSheet({
     super.key,
@@ -26,6 +29,7 @@ class UserProfileBottomSheet extends ConsumerStatefulWidget {
     this.communityId,
     this.initialFullName,
     this.initialAvatarUrl,
+    this.onFilterMatches,
   });
 
   /// Hiển thị UserProfileBottomSheet dạng Modal BottomSheet.
@@ -35,6 +39,7 @@ class UserProfileBottomSheet extends ConsumerStatefulWidget {
     String? communityId,
     String? initialFullName,
     String? initialAvatarUrl,
+    void Function(String query)? onFilterMatches,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -45,6 +50,7 @@ class UserProfileBottomSheet extends ConsumerStatefulWidget {
         communityId: communityId,
         initialFullName: initialFullName,
         initialAvatarUrl: initialAvatarUrl,
+        onFilterMatches: onFilterMatches,
       ),
     );
   }
@@ -294,16 +300,22 @@ class _UserProfileBottomSheetState
                   loading: () => _buildLoadingContent(colors, l10n),
                   error: (err, _) =>
                       _buildErrorContent(colors, err.toString(), l10n),
-                  data: (profile) => _buildProfileContent(
-                    context,
-                    profile,
-                    memberTags,
-                    tagPresets,
-                    clubRole,
-                    isViewerAdmin,
-                    colors,
-                    l10n,
-                  ),
+                  data: (profile) {
+                    final clubRankInfo = communityId != null
+                        ? ref.watch(userClubRankProvider((userId: widget.userId, communityId: communityId))).asData?.value
+                        : null;
+                    return _buildProfileContent(
+                      context,
+                      profile,
+                      memberTags,
+                      tagPresets,
+                      clubRole,
+                      isViewerAdmin,
+                      clubRankInfo,
+                      colors,
+                      l10n,
+                    );
+                  },
                 ),
               ),
 
@@ -362,6 +374,7 @@ class _UserProfileBottomSheetState
     List<CommunityTagPreset>? tagPresets,
     String? clubRole,
     bool isViewerAdmin,
+    UserClubRankInfo? clubRankInfo,
     AppColorsExtension colors,
     AppLocalizations l10n,
   ) {
@@ -402,6 +415,18 @@ class _UserProfileBottomSheetState
     final systemRoleText = _formatSystemRole(l10n, null);
     final systemRoleColor = _systemRoleColor(null);
 
+    final inClubContext = widget.communityId != null;
+    final clubElo = clubRankInfo?.eloPoints ?? 1000;
+    final clubTier = clubRankInfo?.tierName ?? 'Low Tier D';
+    final clubMatchesPlayed = clubRankInfo?.matchesPlayed ?? 0;
+    final clubMatchesWon = clubRankInfo?.matchesWon ?? 0;
+    final clubWinRate = clubMatchesPlayed > 0 ? (clubMatchesWon / clubMatchesPlayed * 100).round() : 0;
+    final clubCategory = clubRankInfo?.categoryName ?? 'Pickleball';
+
+    final effectiveElo = inClubContext ? (clubMatchesPlayed > 0 ? clubElo : 1000) : (featuredRank?.eloPoints ?? 1000);
+    final effectiveTier = inClubContext ? (clubMatchesPlayed > 0 ? clubTier : 'Low Tier D') : (featuredRank?.tierName ?? 'Low Tier D');
+    final effectiveMatchesPlayed = inClubContext ? clubMatchesPlayed : (featuredRank?.matchesPlayed ?? 0);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -417,9 +442,9 @@ class _UserProfileBottomSheetState
                     ? profile.fullName
                     : (widget.initialFullName ??
                           l10n.publicProfileUserFallback),
-                elo: featuredRank?.eloPoints ?? 0,
-                tierName: featuredRank?.tierName,
-                matchesPlayed: featuredRank?.matchesPlayed ?? 0,
+                elo: effectiveElo,
+                tierName: effectiveTier,
+                matchesPlayed: effectiveMatchesPlayed,
                 size: 72,
                 ringWidth: 3,
               ),
@@ -497,8 +522,8 @@ class _UserProfileBottomSheetState
                     child: Text(
                       profile.fullName.isNotEmpty
                           ? profile.fullName
-                          : (widget.initialFullName ??
-                                l10n.publicProfileUserFallback),
+                      : (widget.initialFullName ??
+                            l10n.publicProfileUserFallback),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -548,37 +573,256 @@ class _UserProfileBottomSheetState
           ),
         ),
 
-        // ─── 3. ELO & MATCH STATS CARD ────────────────────────────
-        Container(
-          margin: const EdgeInsets.only(top: 0, bottom: 12),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: colors.bgSurface.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: colors.borderLight),
+        // ─── 3. ELO & MATCH STATS CARD (IN CLUB OR WORLD) ────────────
+        if (inClubContext) ...[
+          // Club Standing HUD (Đồng bộ 100% Web)
+          Container(
+            margin: const EdgeInsets.only(top: 0, bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colors.bgSurface.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: colors.borderLight),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row: Badge + ELO points + Streak
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        EloTierBadge(
+                          elo: clubElo,
+                          tierName: clubTier,
+                          categoryName: clubCategory,
+                          scale: 0.95,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '$clubElo ELO',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            fontFamily: 'monospace',
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (clubRankInfo != null && clubRankInfo.streakCount > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: clubRankInfo.streakType == 'WIN'
+                              ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                              : const Color(0xFFEF4444).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: clubRankInfo.streakType == 'WIN'
+                                ? const Color(0xFF10B981).withValues(alpha: 0.3)
+                                : const Color(0xFFEF4444).withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.local_fire_department_rounded,
+                              size: 13,
+                              color: clubRankInfo.streakType == 'WIN'
+                                  ? const Color(0xFF10B981)
+                                  : const Color(0xFFEF4444),
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              clubRankInfo.streakType == 'WIN'
+                                  ? 'W${clubRankInfo.streakCount}'
+                                  : 'L${clubRankInfo.streakCount}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                fontFamily: 'monospace',
+                                color: clubRankInfo.streakType == 'WIN'
+                                    ? const Color(0xFF10B981)
+                                    : const Color(0xFFEF4444),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                // Telemetry 2 columns
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: colors.bgCard,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: colors.borderLight),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              'TRẬN THẮNG',
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: colors.textMuted,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              '$clubMatchesWon / $clubMatchesPlayed',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                                fontFamily: 'monospace',
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 28,
+                        color: colors.borderLight,
+                      ),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              'TỶ LỆ THẮNG',
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: colors.textMuted,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              '$clubWinRate%',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                                fontFamily: 'monospace',
+                                color: Color(0xFF10B981),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Nút CTA: Xem các trận trong CLB
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      final name = profile.fullName.isNotEmpty ? profile.fullName : (widget.initialFullName ?? '');
+                      if (widget.onFilterMatches != null && name.isNotEmpty) {
+                        widget.onFilterMatches!(name);
+                      }
+                    },
+                    icon: const Icon(Icons.emoji_events_rounded, size: 15, color: Color(0xFF3B82F6)),
+                    label: const Text(
+                      'Xem các trận trong CLB',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF2563EB),
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: colors.bgCard,
+                      side: BorderSide(color: colors.borderLight),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          child: Column(
-            children: [
-              // ELO & Tier banner for all sports
-              if (profile.ranks.isNotEmpty) ...[
-                for (int i = 0; i < profile.ranks.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 6),
+        ] else ...[
+          // World Standing Card
+          Container(
+            margin: const EdgeInsets.only(top: 0, bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colors.bgSurface.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: colors.borderLight),
+            ),
+            child: Column(
+              children: [
+                if (profile.ranks.isNotEmpty) ...[
+                  for (int i = 0; i < profile.ranks.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            EloTierBadge(
+                              elo: profile.ranks[i].eloPoints,
+                              tierName: profile.ranks[i].tierName,
+                              categoryName: profile.ranks[i].categoryName,
+                              scale: 0.9,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              profile.ranks[i].categoryName.isNotEmpty
+                                  ? profile.ranks[i].categoryName
+                                  : 'Thể thao',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          '${profile.ranks[i].eloPoints} ${l10n.userProfileElo}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            fontFamily: 'monospace',
+                            color: Color(0xFF2563EB),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ] else ...[
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF3B82F6),
-                              shape: BoxShape.circle,
-                            ),
+                          EloTierBadge(
+                            elo: featuredRank?.eloPoints ?? 1000,
+                            tierName: featuredRank?.tierName ?? 'Low Tier D',
+                            categoryName: featuredRank?.categoryName,
+                            scale: 0.9,
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '${profile.ranks[i].categoryName} (${profile.ranks[i].tierName ?? l10n.userProfileRankFallback})',
+                            featuredRank?.categoryName ?? l10n.userProfileEloStarting,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -588,90 +832,51 @@ class _UserProfileBottomSheetState
                         ],
                       ),
                       Text(
-                        '${profile.ranks[i].eloPoints} ${l10n.userProfileElo}',
+                        '${featuredRank?.eloPoints ?? 1000} ${l10n.userProfileElo}',
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
+                          fontFamily: 'monospace',
                           color: Color(0xFF2563EB),
                         ),
                       ),
                     ],
                   ),
                 ],
-              ] else ...[
+                const SizedBox(height: 10),
+                Divider(height: 1, color: colors.borderLight),
+                const SizedBox(height: 10),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF3B82F6),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          featuredRank != null
-                              ? '${featuredRank.categoryName} (${featuredRank.tierName ?? l10n.userProfileRankFallback})'
-                              : l10n.userProfileEloStarting,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                      ],
+                    _statItem(
+                      colors,
+                      '$totalMatches',
+                      l10n.userProfileTotalMatches,
                     ),
-                    Text(
-                      featuredRank != null
-                          ? '${featuredRank.eloPoints} ${l10n.userProfileElo}'
-                          : '1,000 ${l10n.userProfileElo}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF2563EB),
-                      ),
+                    _statItem(
+                      colors,
+                      '$totalWins',
+                      l10n.userProfileWins,
+                      valueColor: const Color(0xFF10B981),
+                    ),
+                    _statItem(
+                      colors,
+                      '$totalLosses',
+                      l10n.userProfileLosses,
+                      valueColor: const Color(0xFFEF4444),
+                    ),
+                    _statItem(
+                      colors,
+                      '$winRate%',
+                      l10n.userProfileWinRate,
+                      valueColor: const Color(0xFF3B82F6),
                     ),
                   ],
                 ),
               ],
-              const SizedBox(height: 10),
-              Divider(height: 1, color: colors.borderLight),
-              const SizedBox(height: 10),
-              // Match Counts
-              Row(
-                children: [
-                  _statItem(
-                    colors,
-                    '$totalMatches',
-                    l10n.userProfileTotalMatches,
-                  ),
-                  _statItem(
-                    colors,
-                    '$totalWins',
-                    l10n.userProfileWins,
-                    valueColor: const Color(0xFF10B981),
-                  ),
-                  _statItem(
-                    colors,
-                    '$totalLosses',
-                    l10n.userProfileLosses,
-                    valueColor: const Color(0xFFEF4444),
-                  ),
-                  _statItem(
-                    colors,
-                    '$winRate%',
-                    l10n.userProfileWinRate,
-                    valueColor: const Color(0xFF3B82F6),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
 
         // ─── 4. CLUB TITLES / TAGS SECTION ─────────────────────────
         if (widget.communityId != null) ...[

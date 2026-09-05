@@ -3985,6 +3985,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_tabTournaments => 'Giải đấu';
 
   @override
+  String get club_tabActivity => 'Hoạt động';
+
+  @override
   String get club_unban => 'Bỏ cấm';
 
   @override
@@ -5178,6 +5181,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String chatDetailSeenBy(Object name) {
     return 'Đã xem bởi $name';
   }
+
+  @override
+  String get chatDetailSent => 'Đã gửi';
 
   @override
   String chatDetailTyping(Object name) {

@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
+import 'package:app_quanly_giaidau/features/chat/read_receipt_state.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_poll_dialog.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_room_settings_sheet.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_reaction_detail_sheet.dart';
@@ -91,7 +92,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   final List<String> _pendingMedia = [];
   List<ChatParticipant> _participants = [];
   final Set<String> _onlineUserIds = {};
-  final Map<String, DateTime> _userReadTimestamps = {};
+  final ChatReadReceiptState _readReceipts = ChatReadReceiptState();
   bool _showScrollToBottom = false;
   String? _highlightedMessageId;
   Timer? _highlightTimer;
@@ -305,15 +306,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       }
     };
     _chatSocket.onRoomRead = (data) {
-      if (mounted) {
-        final uid = data['userId']?.toString();
-        final readAtStr = data['readAt']?.toString();
-        if (uid != null && readAtStr != null) {
-          final dt = DateTime.tryParse(readAtStr);
-          if (dt != null) {
-            setState(() => _userReadTimestamps[uid] = dt);
-          }
-        }
+      if (mounted &&
+          _readReceipts.applyRoomReadEvent(data, roomId: widget.roomId)) {
+        setState(() {});
       }
     };
     _chatSocket.onTyping = (data) {
@@ -399,10 +394,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               .toList();
           setState(() {
             _participants = list;
+            _readReceipts.replaceParticipants(list);
             for (final p in list) {
-              if (p.lastReadAt != null) {
-                _userReadTimestamps[p.id] = p.lastReadAt!;
-              }
               if (p.isOnline) {
                 _onlineUserIds.add(p.id);
               }
@@ -1382,16 +1375,10 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                               .asData
                               ?.value
                               .id;
-                          final readers = _participants.where((p) {
-                            if (p.id == currentUserId) return false;
-                            final readAt = _userReadTimestamps[p.id];
-                            if (readAt == null) return false;
-                            final isAfterThis = !readAt.isBefore(msg.createdAt);
-                            final isBeforeNewer =
-                                newerMsg == null ||
-                                readAt.isBefore(newerMsg.createdAt);
-                            return isAfterThis && isBeforeNewer;
-                          }).toList();
+                          final readers = _readReceipts.viewersFor(
+                            msg,
+                            currentUserId: currentUserId,
+                          );
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1439,7 +1426,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                     const <String>[],
                                 tagPresets: tagPresets,
                               ),
-                              if (readers.isNotEmpty)
+                              if (msg.isMine)
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: Padding(
@@ -1448,53 +1435,68 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                       right: 8,
                                       bottom: 4,
                                     ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: readers.map((p) {
-                                        return Padding(
-                                          padding: const EdgeInsets.only(
-                                            left: 3,
-                                          ),
-                                          child: Tooltip(
-                                            message: l10n!.chatDetailSeenBy(
-                                              p.fullName,
+                                    child: readers.isEmpty
+                                        ? Text(
+                                            l10n!.chatDetailSent,
+                                            style: TextStyle(
+                                              color: colors.textMuted,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w500,
                                             ),
-                                            child: CircleAvatar(
-                                              radius: 7.5,
-                                              backgroundColor:
-                                                  AppTheme.primaryLight,
-                                              backgroundImage:
-                                                  p.avatarUrl != null &&
-                                                      p.avatarUrl!.isNotEmpty
-                                                  ? NetworkImage(
-                                                      _resolveMediaUrl(
-                                                        p.avatarUrl!,
+                                          )
+                                        : Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: readers.map((p) {
+                                              final avatarUrl =
+                                                  p.avatarUrl?.trim() ?? '';
+                                              final displayName =
+                                                  p.fullName.trim().isEmpty
+                                                  ? l10n!
+                                                        .chatParticipantFallback
+                                                  : p.fullName.trim();
+                                              final initial = displayName
+                                                  .characters
+                                                  .first
+                                                  .toUpperCase();
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                  left: 3,
+                                                ),
+                                                child: Tooltip(
+                                                  message: l10n!
+                                                      .chatDetailSeenBy(
+                                                        displayName,
                                                       ),
-                                                    )
-                                                  : null,
-                                              child:
-                                                  p.avatarUrl == null ||
-                                                      p.avatarUrl!.isEmpty
-                                                  ? Text(
-                                                      p
-                                                          .fullName
-                                                          .characters
-                                                          .first
-                                                          .toUpperCase(),
-                                                      style: const TextStyle(
-                                                        fontSize: 7,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: AppTheme
-                                                            .primaryDark,
-                                                      ),
-                                                    )
-                                                  : null,
-                                            ),
+                                                  child: CircleAvatar(
+                                                    radius: 7.5,
+                                                    backgroundColor:
+                                                        AppTheme.primaryLight,
+                                                    backgroundImage:
+                                                        avatarUrl.isNotEmpty
+                                                        ? NetworkImage(
+                                                            _resolveMediaUrl(
+                                                              avatarUrl,
+                                                            ),
+                                                          )
+                                                        : null,
+                                                    child: avatarUrl.isEmpty
+                                                        ? Text(
+                                                            initial,
+                                                            style: const TextStyle(
+                                                              fontSize: 7,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color: AppTheme
+                                                                  .primaryDark,
+                                                            ),
+                                                          )
+                                                        : null,
+                                                  ),
+                                                ),
+                                              );
+                                            }).toList(),
                                           ),
-                                        );
-                                      }).toList(),
-                                    ),
                                   ),
                                 ),
                             ],
