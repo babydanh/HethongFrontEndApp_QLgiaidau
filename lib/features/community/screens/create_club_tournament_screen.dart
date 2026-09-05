@@ -99,12 +99,13 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         'description': _descCtrl.text.trim(),
         'isRanked': _isRanked,
         if (_startDate != null) ...{
-          'startDate': _startDate!.toIso8601String(),
+          'startDate': _startDate!.toUtc().toIso8601String(),
           'startTime':
               '${_startDate!.hour.toString().padLeft(2, '0')}:${_startDate!.minute.toString().padLeft(2, '0')}',
           'durationMinutes': (_durationHours * 60) + _durationMinutes,
           'endDate': _startDate!
               .add(Duration(minutes: (_durationHours * 60) + _durationMinutes))
+              .toUtc()
               .toIso8601String(),
         },
         if (_isRecurring) ...{

@@ -73,6 +73,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   void didUpdateWidget(covariant LiteManagementScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.tournamentId == widget.tournamentId) return;
+    _controllersInitialized = false;
     _formatDraft = null;
     _loadWatchdog?.cancel();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -585,7 +586,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   value: _durationHours,
                   underline: const SizedBox.shrink(),
                   dropdownColor: colors.bgCard,
-                  items: List.generate(24, (i) => i + 1)
+                  items: List.generate(24, (i) => i)
                       .map((h) => DropdownMenuItem(
                             value: h,
                             child: Text(
@@ -598,7 +599,12 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       ? null
                       : (val) {
                           if (val == null) return;
-                          setState(() => _durationHours = val);
+                          setState(() {
+                            _durationHours = val;
+                            if (_durationHours == 0 && _durationMinutes < 15) {
+                              _durationMinutes = 15;
+                            }
+                          });
                           _autoSaveSchedule(notifier);
                         },
                 ),
@@ -620,7 +626,12 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       ? null
                       : (val) {
                           if (val == null) return;
-                          setState(() => _durationMinutes = val);
+                          setState(() {
+                            _durationMinutes = val;
+                            if (_durationHours == 0 && _durationMinutes < 15) {
+                              _durationMinutes = 15;
+                            }
+                          });
                           _autoSaveSchedule(notifier);
                         },
                 ),

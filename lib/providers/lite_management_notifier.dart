@@ -405,13 +405,13 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         int? parsedDurationMinutes;
         if (payload['startDate'] != null) {
           parsedStartDate = DateParser.parseDate(payload['startDate']);
-          if (payload['endDate'] != null) {
+          if (cfgMap['durationMinutes'] != null) {
+            parsedDurationMinutes = int.tryParse(cfgMap['durationMinutes'].toString());
+          } else if (payload['endDate'] != null) {
             final parsedEndDate = DateParser.parseDate(payload['endDate']);
             if (parsedEndDate.isAfter(parsedStartDate)) {
               parsedDurationMinutes = parsedEndDate.difference(parsedStartDate).inMinutes;
             }
-          } else if (cfgMap['durationMinutes'] != null) {
-            parsedDurationMinutes = int.tryParse(cfgMap['durationMinutes'].toString());
           } else if (cfgMap['durationHours'] != null) {
             final dh = double.tryParse(cfgMap['durationHours'].toString()) ?? 1.5;
             parsedDurationMinutes = (dh * 60).round();
@@ -622,12 +622,16 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
     state = state.copyWith(detailsSaveStatus: 'saving');
     try {
-      final startIso = startDate.toIso8601String();
-      final endIso = startDate.add(Duration(minutes: durationMinutes)).toIso8601String();
+      final startIso = startDate.toUtc().toIso8601String();
+      final endDateTime = startDate.add(Duration(minutes: durationMinutes));
+      final endIso = endDateTime.toUtc().toIso8601String();
       final totalMinutes = durationMinutes;
 
       final nextTournamentConfig = {
-        ...(tournament.locationConfig ?? {}),
+        if (tournament.locationConfig != null) 'location': tournament.locationConfig,
+        'bracketType': tournament.bracketType,
+        'maxTeams': tournament.maxTeams,
+        if (tournament.isLite) 'isLite': true,
         'durationHours': (totalMinutes / 60.0),
         'durationMinutes': totalMinutes,
       };
@@ -638,7 +642,13 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         'tournamentConfig': nextTournamentConfig,
       });
 
+      final updatedTournament = tournament.copyWith(
+        startDate: startDate,
+        endDate: endDateTime,
+      );
+
       state = state.copyWith(
+        tournament: updatedTournament,
         startDate: startDate,
         durationMinutes: durationMinutes,
         detailsSaveStatus: 'saved',
