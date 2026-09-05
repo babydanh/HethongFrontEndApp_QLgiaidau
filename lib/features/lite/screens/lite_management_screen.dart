@@ -2293,9 +2293,16 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         }
       } catch (e) {
         if (mounted) {
+          String message = e.toString();
+          if (e is DioException && e.response?.data != null) {
+            final data = e.response!.data;
+            if (data is Map && data['message'] != null) {
+              message = data['message'].toString();
+            }
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(l10n.lite_mockPlayersFailed(e.toString())),
+              content: Text(l10n.lite_mockPlayersFailed(message)),
               backgroundColor: colors.error,
             ),
           );
@@ -2341,9 +2348,16 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         }
       } catch (e) {
         if (mounted) {
+          String message = e.toString();
+          if (e is DioException && e.response?.data != null) {
+            final data = e.response!.data;
+            if (data is Map && data['message'] != null) {
+              message = data['message'].toString();
+            }
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(l10n.lite_mockPlayersFailed(e.toString())),
+              content: Text(l10n.lite_mockPlayersFailed(message)),
               backgroundColor: colors.error,
             ),
           );
