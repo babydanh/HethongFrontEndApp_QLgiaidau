@@ -478,6 +478,34 @@ class _CreateAdvancedTournamentScreenState
   }
 
   // ─── BƯỚC 2: PHÂN HẠNG THI ĐẤU (DIVISIONS) ───
+  IconData _getFormatIcon(String? bracketType) {
+    final t = (bracketType ?? '').toUpperCase();
+    if (t.contains('ROUND_ROBIN') || t.contains('ROBIN') || t.contains('VÒNG TRÒN')) {
+      return Icons.sync_rounded;
+    }
+    if (t.contains('GROUP_STAGE') || t.contains('GROUP') || t.contains('BẢNG')) {
+      return Icons.grid_view_rounded;
+    }
+    if (t.contains('DOUBLE_ELIMINATION') || t.contains('DOUBLE_ELIM') || t.contains('NHÁNH KÉP') || t.contains('THẮNG/THUA') || t.contains('THẮNG THUA')) {
+      return Icons.call_split_rounded;
+    }
+    return Icons.account_tree_outlined;
+  }
+
+  String _getFormatLabel(String? bracketType) {
+    final t = (bracketType ?? '').toUpperCase();
+    if (t.contains('ROUND_ROBIN') || t.contains('ROBIN') || t.contains('VÒNG TRÒN')) {
+      return 'Vòng tròn tính điểm';
+    }
+    if (t.contains('GROUP_STAGE') || t.contains('GROUP') || t.contains('BẢNG')) {
+      return 'Vòng bảng + loại trực tiếp';
+    }
+    if (t.contains('DOUBLE_ELIMINATION') || t.contains('DOUBLE_ELIM') || t.contains('NHÁNH KÉP') || t.contains('THẮNG/THUA') || t.contains('THẮNG THUA')) {
+      return 'Nhánh thắng/thua';
+    }
+    return 'Loại trực tiếp';
+  }
+
   Widget _buildStep2(AppColorsExtension colors) {
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -537,8 +565,9 @@ class _CreateAdvancedTournamentScreenState
                     decoration: BoxDecoration(
                       color: AppTheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
                     ),
-                    child: const Icon(Icons.military_tech_rounded, color: AppTheme.primary, size: 24),
+                    child: Icon(_getFormatIcon(div.bracketType), color: AppTheme.primary, size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -558,7 +587,7 @@ class _CreateAdvancedTournamentScreenState
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(color: colors.bgSurface, borderRadius: BorderRadius.circular(6)),
-                              child: Text(div.bracketType == AppConstants.bracketSingleElimination ? 'Knockout' : 'Vòng bảng', style: TextStyle(fontSize: 11, color: colors.textSecondary)),
+                              child: Text(_getFormatLabel(div.bracketType), style: TextStyle(fontSize: 11, color: colors.textSecondary)),
                             ),
                           ],
                         ),
@@ -987,9 +1016,46 @@ class _CreateAdvancedTournamentScreenState
                 DropdownButtonFormField<String>(
                   initialValue: bracket,
                   items: const [
-                    DropdownMenuItem(value: AppConstants.bracketSingleElimination, child: Text('Loại trực tiếp')),
-                    DropdownMenuItem(value: AppConstants.bracketRoundRobin, child: Text('Vòng tròn tính điểm')),
-                    DropdownMenuItem(value: AppConstants.bracketGroupStageKnockout, child: Text('Vòng bảng + Knockout')),
+                    DropdownMenuItem(
+                      value: AppConstants.bracketSingleElimination,
+                      child: Row(
+                        children: [
+                          Icon(Icons.account_tree_outlined, size: 18, color: AppTheme.primary),
+                          SizedBox(width: 8),
+                          Text('Loại trực tiếp'),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: AppConstants.bracketDoubleElimination,
+                      child: Row(
+                        children: [
+                          Icon(Icons.call_split_rounded, size: 18, color: AppTheme.primary),
+                          SizedBox(width: 8),
+                          Text('Nhánh thắng/thua'),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: AppConstants.bracketRoundRobin,
+                      child: Row(
+                        children: [
+                          Icon(Icons.sync_rounded, size: 18, color: AppTheme.primary),
+                          SizedBox(width: 8),
+                          Text('Vòng tròn tính điểm'),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: AppConstants.bracketGroupStageKnockout,
+                      child: Row(
+                        children: [
+                          Icon(Icons.grid_view_rounded, size: 18, color: AppTheme.primary),
+                          SizedBox(width: 8),
+                          Text('Vòng bảng + loại trực tiếp'),
+                        ],
+                      ),
+                    ),
                   ],
                   onChanged: (v) {
                     if (v != null) setModalState(() => bracket = v);

@@ -805,13 +805,13 @@ class _CreatePublicQuickTournamentScreenState
         AppConstants.bracketDoubleElimination,
         'Nhánh thắng - Nhánh thua',
         'Có cơ hội sửa sai ở nhánh dưới. Nhiều trận hơn.',
-        Icons.alt_route_rounded,
+        Icons.call_split_rounded,
       ),
       (
         AppConstants.bracketRoundRobin,
         'Vòng tròn tính điểm',
         'Tất cả các đội đều gặp nhau. Công bằng tối đa.',
-        Icons.loop_rounded,
+        Icons.sync_rounded,
       ),
       (
         AppConstants.bracketGroupStageKnockout,
@@ -843,14 +843,27 @@ class _CreatePublicQuickTournamentScreenState
               ),
               child: Row(
                 children: [
-                  Icon(
-                    selected ? Icons.radio_button_checked : Icons.radio_button_off,
-                    color: selected ? AppTheme.primary : colors.textMuted,
-                    size: 20,
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? AppTheme.primary
+                          : AppTheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: selected
+                            ? AppTheme.primary
+                            : AppTheme.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Icon(
+                      b.$4,
+                      size: 18,
+                      color: selected ? Colors.white : AppTheme.primary,
+                    ),
                   ),
                   const SizedBox(width: 12),
-                  Icon(b.$4, size: 20, color: selected ? AppTheme.primary : colors.textMuted),
-                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -870,6 +883,12 @@ class _CreatePublicQuickTournamentScreenState
                         ),
                       ],
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    selected ? Icons.radio_button_checked : Icons.radio_button_off,
+                    color: selected ? AppTheme.primary : colors.textMuted,
+                    size: 20,
                   ),
                 ],
               ),
