@@ -3571,7 +3571,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get club_createTournament => 'Create Tournament';
 
   @override
-  String get club_createNewTournament => '+ Create New Tournament';
+  String get club_createNewTournament => 'Create New Tournament';
 
   @override
   String get club_loadDataError => 'Failed to load tournament list';

@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 
 /// Màn hình Điều phối CLB — dành cho OWNER/ADMIN/MODERATOR.
 ///
@@ -142,20 +143,30 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                 children: [
                   _buildStatsRow(colors),
-                  const SizedBox(height: 16),
-                  _buildPendingPostsSection(colors),
-                  const SizedBox(height: 16),
-                  _buildReportsSection(colors),
+                  if (_pendingPosts.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _buildPendingPostsSection(colors),
+                  ],
+                  if (_reports.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _buildReportsSection(colors),
+                  ],
                   const SizedBox(height: 16),
                   _buildTournamentsManagementSection(colors),
-                  const SizedBox(height: 16),
-                  _buildJoinRequestsSection(colors),
+                  if (_joinRequests.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _buildJoinRequestsSection(colors),
+                  ],
                   const SizedBox(height: 16),
                   _buildInviteSection(colors),
-                  const SizedBox(height: 16),
-                  _buildInvitedSection(colors),
-                  const SizedBox(height: 16),
-                  _buildBannedSection(colors),
+                  if (_invitedMembers.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _buildInvitedSection(colors),
+                  ],
+                  if (_bannedMembers.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _buildBannedSection(colors),
+                  ],
                 ],
               ),
             ),
@@ -269,10 +280,11 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
         );
       }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(_l10n.club_postModerationError)));
+      }
     } finally {
       if (mounted) setState(() => _isModeratingPost = false);
     }
@@ -1006,32 +1018,55 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: const Color(0xFFF59E0B).withValues(alpha: 0.15),
-            child: Text(
-              (req.userFullName?.isNotEmpty == true
-                      ? req.userFullName![0]
-                      : '?')
-                  .toUpperCase(),
-              style: const TextStyle(
-                color: Color(0xFFF59E0B),
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              req.userFullName ?? l10n.dashboard_user,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: colors.textPrimary,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                final targetId = req.userId.isNotEmpty ? req.userId : req.id;
+                if (targetId.isNotEmpty) {
+                  UserProfileBottomSheet.show(
+                    context,
+                    userId: targetId,
+                    communityId: widget.clubId,
+                    initialFullName: req.userFullName,
+                    initialAvatarUrl: req.userAvatarUrl,
+                  );
+                }
+              },
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor:
+                        const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                    child: Text(
+                      (req.userFullName?.isNotEmpty == true
+                              ? req.userFullName![0]
+                              : '?')
+                          .toUpperCase(),
+                      style: const TextStyle(
+                        color: Color(0xFFF59E0B),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      req.userFullName ?? l10n.dashboard_user,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
+          const SizedBox(width: 8),
           _actionBtn(
             l10n.club_approve,
             const Color(0xFF10B981),
@@ -1080,13 +1115,14 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
         );
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.club_managementActionError),
             backgroundColor: Colors.red,
           ),
         );
+      }
     }
   }
 
@@ -1195,6 +1231,15 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                   final u = _searchResults[i];
                   return ListTile(
                     dense: true,
+                    onTap: () {
+                      UserProfileBottomSheet.show(
+                        context,
+                        userId: u.id,
+                        communityId: widget.clubId,
+                        initialFullName: u.fullName,
+                        initialAvatarUrl: u.avatarUrl,
+                      );
+                    },
                     leading: CircleAvatar(
                       radius: 16,
                       backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
@@ -1349,13 +1394,14 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
         );
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.club_managementActionError),
             backgroundColor: Colors.red,
           ),
         );
+      }
     }
   }
 
@@ -1389,30 +1435,55 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: const Color(0xFF6366F1).withValues(alpha: 0.1),
-            child: Text(
-              (m.userFullName?.isNotEmpty == true ? m.userFullName![0] : '?')
-                  .toUpperCase(),
-              style: const TextStyle(
-                color: Color(0xFF6366F1),
-                fontWeight: FontWeight.w800,
-                fontSize: 12,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              m.userFullName ?? l10n.dashboard_user,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: colors.textPrimary,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                final targetId = m.userId.isNotEmpty ? m.userId : m.id;
+                if (targetId.isNotEmpty) {
+                  UserProfileBottomSheet.show(
+                    context,
+                    userId: targetId,
+                    communityId: widget.clubId,
+                    initialFullName: m.userFullName,
+                    initialAvatarUrl: m.userAvatarUrl,
+                  );
+                }
+              },
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor:
+                        const Color(0xFF6366F1).withValues(alpha: 0.1),
+                    child: Text(
+                      (m.userFullName?.isNotEmpty == true
+                              ? m.userFullName![0]
+                              : '?')
+                          .toUpperCase(),
+                      style: const TextStyle(
+                        color: Color(0xFF6366F1),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      m.userFullName ?? l10n.dashboard_user,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: () async {
               try {
@@ -1494,30 +1565,55 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: const Color(0xFFEF4444).withValues(alpha: 0.1),
-            child: Text(
-              (m.userFullName?.isNotEmpty == true ? m.userFullName![0] : '?')
-                  .toUpperCase(),
-              style: const TextStyle(
-                color: Color(0xFFEF4444),
-                fontWeight: FontWeight.w800,
-                fontSize: 12,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              m.userFullName ?? l10n.dashboard_user,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: colors.textPrimary,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                final targetId = m.userId.isNotEmpty ? m.userId : m.id;
+                if (targetId.isNotEmpty) {
+                  UserProfileBottomSheet.show(
+                    context,
+                    userId: targetId,
+                    communityId: widget.clubId,
+                    initialFullName: m.userFullName,
+                    initialAvatarUrl: m.userAvatarUrl,
+                  );
+                }
+              },
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor:
+                        const Color(0xFFEF4444).withValues(alpha: 0.1),
+                    child: Text(
+                      (m.userFullName?.isNotEmpty == true
+                              ? m.userFullName![0]
+                              : '?')
+                          .toUpperCase(),
+                      style: const TextStyle(
+                        color: Color(0xFFEF4444),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      m.userFullName ?? l10n.dashboard_user,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: () async {
               try {

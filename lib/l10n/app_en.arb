@@ -1396,7 +1396,7 @@
   "club_sportLabel": "Sports",
   "club_noTournaments": "No tournaments yet",
   "club_createTournament": "Create Tournament",
-  "club_createNewTournament": "+ Create New Tournament",
+  "club_createNewTournament": "Create New Tournament",
   "club_loadDataError": "Failed to load tournament list",
   "club_teamCount": "{count}/{max} teams",
   "club_liteManage": "Quick (Manage)",

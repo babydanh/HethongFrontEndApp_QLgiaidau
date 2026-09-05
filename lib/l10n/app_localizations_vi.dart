@@ -3562,7 +3562,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_createTournament => 'Tạo giải đấu';
 
   @override
-  String get club_createNewTournament => '+ Tạo giải đấu mới';
+  String get club_createNewTournament => 'Tạo giải đấu mới';
 
   @override
   String get club_loadDataError => 'Không thể tải danh sách giải đấu';

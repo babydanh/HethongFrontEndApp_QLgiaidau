@@ -6737,7 +6737,7 @@ abstract class AppLocalizations {
   /// No description provided for @club_createNewTournament.
   ///
   /// In vi, this message translates to:
-  /// **'+ Tạo giải đấu mới'**
+  /// **'Tạo giải đấu mới'**
   String get club_createNewTournament;
 
   /// No description provided for @club_loadDataError.

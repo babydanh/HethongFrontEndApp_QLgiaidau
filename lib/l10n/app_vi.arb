@@ -1396,7 +1396,7 @@
   "club_sportLabel": "Môn thi đấu",
   "club_noTournaments": "Chưa có giải đấu nào",
   "club_createTournament": "Tạo giải đấu",
-  "club_createNewTournament": "+ Tạo giải đấu mới",
+  "club_createNewTournament": "Tạo giải đấu mới",
   "club_loadDataError": "Không thể tải danh sách giải đấu",
   "club_teamCount": "{count}/{max} đội",
   "club_liteManage": "Nhanh (Quản lý)",
