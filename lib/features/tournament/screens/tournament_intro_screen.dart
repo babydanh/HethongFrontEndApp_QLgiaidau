@@ -44,15 +44,18 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   String? _selectedDivisionId;
   String? _customInviteCode;
 
-  void _updateTabController(int count) {
+  void _updateTabController(int count, {int? defaultIndex}) {
     if (_tabController != null && _currentTabCount == count) return;
     final prev = _tabController;
-    final prevIndex = prev?.index ?? 0;
+    final prevIndex = prev?.index;
     _currentTabCount = count;
+    final targetIndex = prevIndex != null && prevIndex < count
+        ? prevIndex
+        : (defaultIndex != null && defaultIndex < count ? defaultIndex : 0);
     _tabController = TabController(
       length: count,
       vsync: this,
-      initialIndex: prevIndex < count ? prevIndex : 0,
+      initialIndex: targetIndex,
     );
     prev?.dispose();
   }
@@ -464,32 +467,14 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     // 2. Tab [🏆 Kết quả] CHỈ HIỆN KHI ĐÃ CÓ KẾT QUẢ / TRẬN ĐẤU HOÀN THÀNH
     if (hasResults) {
       tabHeaders.add(
-        Tab(
+        const Tab(
           height: 34,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.emoji_events_rounded, size: 14),
-              const SizedBox(width: 5),
-              const Text('Kết quả'),
-              if (completedMatches.isNotEmpty) ...[
-                const SizedBox(width: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF64748B),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '${completedMatches.length}',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
+              Icon(Icons.emoji_events_rounded, size: 14),
+              SizedBox(width: 5),
+              Text('Kết quả'),
             ],
           ),
         ),
@@ -505,7 +490,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       tournamentId: widget.tournamentId,
                       selectedDivisionId: _selectedDivisionId,
                       selectedDivision: _selectedDivision,
-                      completedMatches: completedMatches,
                     ),
                   ),
                 ],
@@ -515,12 +499,12 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 tournamentId: widget.tournamentId,
                 selectedDivisionId: _selectedDivisionId,
                 selectedDivision: _selectedDivision,
-                completedMatches: completedMatches,
               ),
       );
     }
 
-    // 3. Tab [Tổng quan]
+    // 3. Tab [Tổng quan] (Mặc định khi vào màn hình)
+    final int overviewIndex = tabHeaders.length;
     tabHeaders.add(const Tab(height: 34, text: 'Tổng quan'));
 
     // 4. Tab [Đội tham gia]
@@ -535,7 +519,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       tabHeaders.add(Tab(height: 34, text: l10n.tabSponsors));
     }
 
-    _updateTabController(tabHeaders.length);
+    _updateTabController(tabHeaders.length, defaultIndex: overviewIndex);
     final controller = _tabController!;
 
     // Add Views for remaining tabs:
@@ -652,8 +636,11 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-  IconData _getBracketFormatIcon(String? bracketType) {
-    final type = (bracketType ?? '').toUpperCase();
+  IconData _getBracketFormatIcon(String? bracketType, [String? fallbackBracketType]) {
+    final raw = (bracketType != null && bracketType.trim().isNotEmpty)
+        ? bracketType
+        : (fallbackBracketType ?? '');
+    final type = raw.toUpperCase();
     if (type.contains('ROUND_ROBIN') || type.contains('ROBIN') || type.contains('VÒNG TRÒN')) {
       return Icons.sync_rounded;
     }
@@ -717,7 +704,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           final curP = div.participantCount;
           final isFull = (maxP > 0 && curP >= maxP) ||
               tournament.status.toLowerCase() == 'completed';
-          final formatIcon = _getBracketFormatIcon(div.bracketType);
+          final formatIcon = _getBracketFormatIcon(div.bracketType, tournament.bracketType);
 
           return Container(
             margin: const EdgeInsets.only(bottom: 6),

@@ -52,7 +52,7 @@ void main() {
       expect(tournament.prizeDescription, '10.000.000d');
       expect(tournament.locationAddress, 'Ha Noi');
       expect(tournament.contactInfo, {'phone': '0123456789'});
-      expect(tournament.divisions, ['Nam', 'Nu']);
+      expect(tournament.divisions.map((d) => d.name).toList(), ['Nam', 'Nu']);
     });
 
     test('should handle minimal JSON with defaults', () {

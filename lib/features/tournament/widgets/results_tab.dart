@@ -1,23 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
-import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 
 class ResultsTab extends ConsumerWidget {
   final String tournamentId;
   final String? selectedDivisionId;
   final String? selectedDivision;
-  final List<MatchModel> completedMatches;
 
   const ResultsTab({
     super.key,
     required this.tournamentId,
     this.selectedDivisionId,
     this.selectedDivision,
-    this.completedMatches = const [],
   });
 
   @override
@@ -139,35 +134,6 @@ class ResultsTab extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
               ],
-
-              // ── 3. DANH SÁCH TRẬN ĐẤU (nếu có) ──
-              if (completedMatches.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Divider(color: colors.border.withValues(alpha: 0.5), height: 1),
-                const SizedBox(height: 16),
-                Text(
-                  'TRẬN ĐẤU ĐÃ HOÀN THÀNH (${completedMatches.length})',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: colors.textMuted,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ...completedMatches.map(
-                  (match) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: LiveMatchCardV2(
-                      match: match,
-                      isCompleted: true,
-                      onTap: () {
-                        context.push('/live/${match.id}');
-                      },
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
         );
@@ -175,56 +141,38 @@ class ResultsTab extends ConsumerWidget {
       loading: () => const Center(
         child: CircularProgressIndicator(color: AppTheme.primary),
       ),
-      error: (e, _) => _buildCompletedMatchesOnly(context, colors),
-    );
-  }
-
-  // Fallback khi API /results lỗi: chỉ hiện danh sách trận đã kết thúc
-  Widget _buildCompletedMatchesOnly(BuildContext context, dynamic colors) {
-    if (completedMatches.isEmpty) {
-      return Center(
+      error: (e, _) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.emoji_events_outlined, size: 40, color: colors.textMuted.withValues(alpha: 0.4)),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.emoji_events_outlined,
+                size: 40,
+                color: Color(0xFF94A3B8),
+              ),
+            ),
             const SizedBox(height: 12),
             Text(
               'Chưa có kết quả chính thức',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.textPrimary),
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: colors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Kết quả sẽ được công bố khi các vòng chung kết hoàn tất',
+              style: TextStyle(fontSize: 12, color: colors.textMuted),
             ),
           ],
         ),
-      );
-    }
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 140),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'TRẬN ĐẤU ĐÃ HOÀN THÀNH (${completedMatches.length})',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: colors.textMuted,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 10),
-          ...completedMatches.map(
-            (match) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: LiveMatchCardV2(
-                match: match,
-                isCompleted: true,
-                onTap: () {
-                  context.push('/live/${match.id}');
-                },
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -237,15 +185,23 @@ class ResultsTab extends ConsumerWidget {
   ) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 20, 12, 0),
+      padding: const EdgeInsets.fromLTRB(10, 16, 10, 0),
       decoration: BoxDecoration(
         color: context.colors.bgCard,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            context.colors.bgSurface,
+            context.colors.bgCard,
+          ],
+        ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.border.withValues(alpha: 0.6)),
+        border: Border.all(color: context.colors.border.withValues(alpha: 0.8)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -260,11 +216,15 @@ class ResultsTab extends ConsumerWidget {
               award: silver,
               rank: 2,
               rankLabel: 'Á QUÂN',
-              podiumHeight: 85,
-              accentColor: const Color(0xFF94A3B8),
-              podiumBgColor: const Color(0xFFF1F5F9),
+              podiumHeight: 80,
+              accentColor: const Color(0xFF64748B),
+              podiumGradient: const LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [Color(0xFFE2E8F0), Color(0xFFF1F5F9), Color(0xFFF8FAFC)],
+              ),
               borderColor: const Color(0xFFCBD5E1),
-              numberColor: const Color(0xFF64748B),
+              numberColor: const Color(0xFF475569),
             ),
           ),
           const SizedBox(width: 8),
@@ -277,11 +237,15 @@ class ResultsTab extends ConsumerWidget {
               award: gold,
               rank: 1,
               rankLabel: 'QUÁN QUÂN',
-              podiumHeight: 120,
-              accentColor: const Color(0xFFF59E0B),
-              podiumBgColor: const Color(0xFFFEF3C7),
-              borderColor: const Color(0xFFFBBF24),
-              numberColor: const Color(0xFFD97706),
+              podiumHeight: 110,
+              accentColor: const Color(0xFFD97706),
+              podiumGradient: const LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [Color(0xFFFCD34D), Color(0xFFFDE68A), Color(0xFFFFFBEB)],
+              ),
+              borderColor: const Color(0xFFF59E0B),
+              numberColor: const Color(0xFFB45309),
               isGold: true,
             ),
           ),
@@ -295,10 +259,14 @@ class ResultsTab extends ConsumerWidget {
               extraAwards: bronzes.length > 1 ? bronzes.sublist(1) : const [],
               rank: 3,
               rankLabel: bronzes.length > 1 ? 'ĐỒNG HẠNG 3' : 'HẠNG 3',
-              podiumHeight: 70,
+              podiumHeight: 65,
               accentColor: const Color(0xFFEA580C),
-              podiumBgColor: const Color(0xFFFFEDD5),
-              borderColor: const Color(0xFFFDBA74),
+              podiumGradient: const LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [Color(0xFFFED7AA), Color(0xFFFFEDD5), Color(0xFFFFF7ED)],
+              ),
+              borderColor: const Color(0xFFFB923C),
               numberColor: const Color(0xFFC2410C),
             ),
           ),
@@ -315,7 +283,7 @@ class ResultsTab extends ConsumerWidget {
     required String rankLabel,
     required double podiumHeight,
     required Color accentColor,
-    required Color podiumBgColor,
+    required Gradient podiumGradient,
     required Color borderColor,
     required Color numberColor,
     bool isGold = false,
@@ -333,17 +301,24 @@ class ResultsTab extends ConsumerWidget {
           // Crown badge for 1st place
           if (isGold)
             Container(
-              width: 24,
-              height: 24,
-              decoration: const BoxDecoration(
+              width: 22,
+              height: 22,
+              margin: const EdgeInsets.only(bottom: 2),
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   colors: [Color(0xFFF59E0B), Color(0xFFFBBF24)],
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              child: const Icon(Icons.star_rounded, color: Colors.white, size: 16),
+              child: const Icon(Icons.star_rounded, color: Colors.white, size: 14),
             ),
-          const SizedBox(height: 4),
 
           // Avatar
           _buildPodiumAvatar(participant, isGold ? 22 : 18, accentColor),
@@ -392,9 +367,16 @@ class ResultsTab extends ConsumerWidget {
           height: podiumHeight,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: podiumBgColor,
+            gradient: podiumGradient,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
             border: Border.all(color: borderColor, width: isGold ? 1.5 : 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 4,
+                offset: const Offset(0, -1),
+              ),
+            ],
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

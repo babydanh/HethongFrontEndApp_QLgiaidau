@@ -137,8 +137,11 @@ class _OverviewTabState extends State<OverviewTab> {
 
   final GlobalKey _divisionsKey = GlobalKey();
 
-  IconData _getBracketFormatIcon(String? bracketType) {
-    final type = (bracketType ?? '').toUpperCase();
+  IconData _getBracketFormatIcon(String? bracketType, [String? fallbackBracketType]) {
+    final raw = (bracketType != null && bracketType.trim().isNotEmpty)
+        ? bracketType
+        : (fallbackBracketType ?? '');
+    final type = raw.toUpperCase();
     if (type.contains('ROUND_ROBIN') || type.contains('ROBIN') || type.contains('VÒNG TRÒN')) {
       return Icons.sync_rounded;
     }
@@ -737,7 +740,7 @@ class _OverviewTabState extends State<OverviewTab> {
     final curP = div.participantCount;
     final isFull = maxP > 0 && curP >= maxP;
     final isExpanded = _expandedDivisionId == div.id;
-    final formatIcon = _getBracketFormatIcon(div.bracketType);
+    final formatIcon = _getBracketFormatIcon(div.bracketType, widget.tournament.bracketType);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),

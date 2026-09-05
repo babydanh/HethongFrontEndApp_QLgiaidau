@@ -208,8 +208,15 @@ class Tournament {
     if (json['divisions'] != null && json['divisions'] is List) {
       for (var div in json['divisions']) {
         if (div is Map) {
+          final divMap = Map<String, dynamic>.from(div);
+          if (divMap['bracketType'] == null &&
+              divMap['bracket_type'] == null &&
+              divMap['format'] == null &&
+              bracketTypeVal.isNotEmpty) {
+            divMap['bracketType'] = bracketTypeVal;
+          }
           parsedDivisions.add(
-            TournamentDivision.fromJson(Map<String, dynamic>.from(div)),
+            TournamentDivision.fromJson(divMap),
           );
         } else {
           // If the element is a string directly
@@ -218,6 +225,7 @@ class Tournament {
               id: '',
               name: div.toString(),
               matchType: 'SINGLES',
+              bracketType: bracketTypeVal.isNotEmpty ? bracketTypeVal : null,
             ),
           );
         }
@@ -604,8 +612,12 @@ class TournamentDivision {
         divisionConfig['roundRobinLegs'] ??
         groupsConfig['roundsToPlay'];
 
-    final rawBracketType =
-        json['bracketType']?.toString() ?? json['bracket_type']?.toString();
+    final rawBracketType = json['bracketType']?.toString() ??
+        json['bracket_type']?.toString() ??
+        divisionConfig['bracketType']?.toString() ??
+        divisionConfig['bracket_type']?.toString() ??
+        json['format']?.toString() ??
+        divisionConfig['format']?.toString();
 
     return TournamentDivision(
       id: json['id']?.toString() ?? '',
