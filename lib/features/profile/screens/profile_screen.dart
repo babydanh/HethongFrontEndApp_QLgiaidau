@@ -21,19 +21,15 @@ import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
-import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
-
-import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dart';
-import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/organizer_verification_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_type_sheet.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -48,7 +44,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _uploading = false;
   bool _uploadingCover = false;
   int _activeTab = 0;
-  String _selectedSport = 'all';
   String _followedFilter = 'all';
   late final Future<PackageInfo> _packageInfoFuture;
 
@@ -445,18 +440,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
           // Tab Content
           if (_activeTab == 0) ...[
-            // Category selector chips placed at the VERY TOP of Tab 0
-            _buildSportFilterChips(colors),
-            const SizedBox(height: 16),
-
-            // Dynamic rankings card list based on actual ELO and category ranks
-            _buildRankingsSection(context),
-            const SizedBox(height: 20),
-
-            // Achievements & Stats (Compact & Filtered by selectedSport)
-            AchievementsTab(selectedSport: _selectedSport),
-            const SizedBox(height: 24),
-
             // My Tournaments Section
             _buildSectionTitle(
               colors,
@@ -534,96 +517,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildSportFilterChips(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context)!;
-    final categories =
-        ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
-    final sports = [
-      {'id': 'all', 'label': l10n.infoAll, 'icon': Icons.grid_view_rounded},
-      ...categories.map(
-        (category) => <String, Object>{
-          'id': category.slug,
-          'label': category.name,
-          'icon': _profileSportIcon(category.slug),
-        },
-      ),
-    ];
 
-    return SizedBox(
-      height: 36,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: sports.length,
-        separatorBuilder: (_, index) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final sport = sports[index];
-          final isSelected = _selectedSport == sport['id'];
-          final icon = sport['icon'] as IconData;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedSport = sport['id'] as String),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-              decoration: BoxDecoration(
-                color: isSelected ? AppTheme.primary : colors.bgCard,
-                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                border: Border.all(
-                  color: isSelected ? AppTheme.primary : colors.border,
-                ),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: AppTheme.primary.withValues(alpha: 0.25),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    icon,
-                    size: 14,
-                    color: isSelected ? Colors.white : colors.textSecondary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    sport['label'] as String,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w600,
-                      color: isSelected ? Colors.white : colors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  IconData _profileSportIcon(String slug) {
-    switch (slug.toLowerCase()) {
-      case 'tennis':
-        return Icons.sports_tennis_rounded;
-      case 'football':
-        return Icons.sports_soccer_rounded;
-      case 'badminton':
-        return Icons.sports_tennis_outlined;
-      case 'table_tennis':
-        return Icons.sports_rounded;
-      default:
-        return Icons.sports_handball_rounded;
-    }
-  }
 
   Widget _buildTabButton(int index, String label, IconData icon) {
     final colors = context.colors;
@@ -671,9 +565,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final rankings =
         ref.watch(userRankingsProvider).asData?.value ??
         const <PlayerRanking>[];
+    final eligibleRankings =
+        rankings
+            .where((r) => r.isLeaderboardEligible && (r.eloPoints > 0 || r.tierName.isNotEmpty))
+            .toList()
+          ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
     final allRankings = rankings.toList()
       ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
-    final bestRanking = allRankings.isEmpty ? null : allRankings.first;
+    final bestRanking = eligibleRankings.isNotEmpty
+        ? eligibleRankings.first
+        : (allRankings.isNotEmpty ? allRankings.first : null);
 
     return Stack(
       clipBehavior: Clip.none,
@@ -1009,304 +910,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         .toList(growable: false);
   }
 
-  // ─── PROFILE RANK SNAPSHOT ─────────────────────────────────────────
 
-  Widget _buildRankingsSection(BuildContext context) {
-    final colors = context.colors;
-    final rankingsAsync = ref.watch(userRankingsProvider);
-
-    return rankingsAsync.when(
-      data: (rankings) {
-        final playedRankings =
-            rankings.where((ranking) => ranking.matchesPlayed > 0).toList()
-              ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
-
-        if (playedRankings.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildPrivateNoRankState(colors),
-          );
-        }
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: playedRankings
-                .map((ranking) => _buildPrivateRankCard(context, ranking))
-                .toList(),
-          ),
-        );
-      },
-      loading: () => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Container(
-          height: 140,
-          decoration: BoxDecoration(
-            color: colors.bgCard,
-            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-            border: Border.all(color: colors.border),
-          ),
-        ),
-      ),
-      error: (_, _) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: _buildPrivateNoRankState(colors),
-      ),
-    );
-  }
-
-  Widget _buildPrivateNoRankState(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.emoji_events_outlined, size: 42, color: colors.textMuted),
-          const SizedBox(height: 10),
-          Text(
-            l10n.publicProfileNoPlayedElo,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: colors.textSecondary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            l10n.publicProfileNoPlayedEloHint,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: colors.textMuted, fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPrivateRankCard(BuildContext context, PlayerRanking ranking) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final tierColor = TierPalette.fromElo(
-      ranking.eloPoints,
-      ranking.tierName,
-    ).badgeBg;
-    final winRate = ranking.matchesPlayed > 0
-        ? (ranking.matchesWon / ranking.matchesPlayed * 100).round()
-        : 0;
-    final isDoubles =
-        ranking.matchType == 'DOUBLES' || ranking.matchType == 'MIXED_DOUBLES';
-    final streakType = ranking.currentStreakType?.toUpperCase();
-    final streakColor = streakType == 'WIN'
-        ? const Color(0xFF2563EB)
-        : streakType == 'LOSS'
-        ? const Color(0xFFDC2626)
-        : colors.textMuted;
-    final streakText = streakType == 'WIN'
-        ? l10n.publicProfileWinStreak(ranking.currentStreakCount)
-        : streakType == 'LOSS'
-        ? l10n.publicProfileLossStreak(ranking.currentStreakCount)
-        : l10n.publicProfileNoStreak;
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: colors.border),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => EloHistoryScreen(
-              userId: ranking.userId,
-              userName: ranking.fullName,
-              avatarUrl: ranking.avatarUrl,
-              currentElo: ranking.eloPoints,
-              tierName: ranking.tierName,
-              categoryId: ranking.categoryId,
-              categoryName: ranking.categoryName,
-              initialScope: 'PUBLIC',
-              matchType: ranking.matchType,
-              genderRestriction: ranking.genderRestriction ?? '__NONE__',
-              partnerId: ranking.partnerId,
-              lockRatingScope: true,
-            ),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  isDoubles ? Icons.people_alt_rounded : Icons.person_rounded,
-                  color: AppTheme.primary,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    ranking.categoryName?.isNotEmpty == true
-                        ? ranking.categoryName!
-                        : l10n.publicProfileUserFallback,
-                    style: TextStyle(
-                      color: colors.textPrimary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Text(
-                  isDoubles
-                      ? ranking.matchType == 'MIXED_DOUBLES'
-                            ? l10n.publicProfileScopeMixedDoubles
-                            : l10n.publicProfileScopeDoubles
-                      : l10n.publicProfileScopeSingles,
-                  style: TextStyle(
-                    color: colors.textMuted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 18,
-                  color: colors.textMuted,
-                ),
-              ],
-            ),
-            if (isDoubles && ranking.partnerName?.isNotEmpty == true) ...[
-              const SizedBox(height: 8),
-              Text(
-                '${l10n.publicProfilePartner}: ${ranking.partnerName}',
-                style: TextStyle(color: colors.textSecondary, fontSize: 12),
-              ),
-            ],
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      RankTierBadge(
-                        tierName: ranking.tierName,
-                        elo: ranking.eloPoints,
-                        sportName: ranking.categoryName,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'ELO',
-                        style: TextStyle(color: colors.textMuted, fontSize: 10),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${ranking.eloPoints}',
-                        style: TextStyle(
-                          color: tierColor,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                _buildCompactProfileStat(
-                  l10n.publicProfileMatchesShort,
-                  '${ranking.matchesPlayed}',
-                  colors,
-                ),
-                _buildCompactProfileStat(
-                  l10n.infoWin,
-                  '${ranking.matchesWon}',
-                  colors,
-                ),
-                _buildCompactProfileStat(
-                  l10n.publicProfileWinRateShort,
-                  '$winRate%',
-                  colors,
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: (winRate / 100).clamp(0.0, 1.0),
-                minHeight: 5,
-                backgroundColor: colors.border,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  winRate >= 60 ? colors.success : tierColor,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(
-                  streakType == 'NONE'
-                      ? Icons.remove_circle_outline_rounded
-                      : Icons.local_fire_department_rounded,
-                  color: streakColor,
-                  size: 18,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  '${l10n.publicProfileCurrentStreak}: $streakText',
-                  style: TextStyle(
-                    color: streakColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCompactProfileStat(
-    String label,
-    String value,
-    AppColorsExtension colors,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 14),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              color: colors.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              color: colors.textMuted,
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   // ─── INFO CARD ──────────────────────────────────────────────────────
   Widget _buildInfoCard(BuildContext context, UserProfile profile) {
@@ -2404,6 +2008,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         '/profile/elo',
       ),
       _MenuItem(Icons.flag_outlined, l.myReportsTitle, '/profile/reports'),
+      _MenuItem(
+        Icons.verified_user_outlined,
+        l.organizer_becomeOrganizer,
+        null, // Custom handler to open OrganizerVerificationSheet
+      ),
     ];
 
     return Container(
@@ -2423,7 +2032,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           final item = items[i];
           final isLast = i == items.length - 1;
           return InkWell(
-            onTap: item.route != null ? () => context.push(item.route!) : null,
+            onTap: () {
+              if (item.route != null) {
+                context.push(item.route!);
+              } else {
+                OrganizerVerificationSheet.show(context);
+              }
+            },
             borderRadius: isLast
                 ? const BorderRadius.vertical(bottom: Radius.circular(20))
                 : BorderRadius.zero,

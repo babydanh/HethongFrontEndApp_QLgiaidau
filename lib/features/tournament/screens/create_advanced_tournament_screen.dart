@@ -9,8 +9,11 @@ import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_type_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 
 /// DTO cấu hình cho từng phân hạng thi đấu trong giải nâng cao
 class AdvancedDivisionDraft {
@@ -77,13 +80,57 @@ class _CreateAdvancedTournamentScreenState
 
   AppLocalizations get l10n => AppLocalizations.of(context)!;
 
+  bool _hasCheckedRole = false;
+
   @override
   void initState() {
     super.initState();
     if (widget.communityId != null && widget.communityId!.isNotEmpty) {
       _visibility = 'PRIVATE';
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _verifyOrganizerPermission());
     }
     _initDefaultDivisions();
+  }
+
+  Future<void> _verifyOrganizerPermission() async {
+    if (_hasCheckedRole || !mounted) return;
+    _hasCheckedRole = true;
+
+    try {
+      final userProfile = await ref.read(userProfileProvider.future);
+      final role = (userProfile.role ?? '').toUpperCase();
+      final isOrganizerOrAdmin = role == 'ORGANIZER' || role == 'ADMIN';
+
+      if (!isOrganizerOrAdmin && mounted) {
+        showOrganizerRequiredDialog(
+          context,
+          ref,
+          onCancel: () {
+            if (mounted && Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+        );
+      }
+    } catch (_) {
+      final cached = ref.read(userProfileProvider).asData?.value;
+      if (cached != null) {
+        final role = (cached.role ?? '').toUpperCase();
+        final isOrganizerOrAdmin = role == 'ORGANIZER' || role == 'ADMIN';
+        if (!isOrganizerOrAdmin && mounted) {
+          showOrganizerRequiredDialog(
+            context,
+            ref,
+            onCancel: () {
+              if (mounted && Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            },
+          );
+        }
+      }
+    }
   }
 
   void _initDefaultDivisions() {
@@ -158,6 +205,24 @@ class _CreateAdvancedTournamentScreenState
   }
 
   Future<void> _submit() async {
+    if (widget.communityId == null || widget.communityId!.isEmpty) {
+      final cached = ref.read(userProfileProvider).asData?.value;
+      final role = (cached?.role ?? '').toUpperCase();
+      final isOrganizerOrAdmin = role == 'ORGANIZER' || role == 'ADMIN';
+      if (!isOrganizerOrAdmin) {
+        showOrganizerRequiredDialog(
+          context,
+          ref,
+          onCancel: () {
+            if (mounted && Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+        );
+        return;
+      }
+    }
+
     setState(() => _isSubmitting = true);
     try {
       final dio = ref.read(dioClientProvider).dio;
@@ -284,11 +349,27 @@ class _CreateAdvancedTournamentScreenState
         elevation: 0,
         actions: [
           TextButton.icon(
-            onPressed: () {
-              final query = widget.communityId != null
-                  ? '?communityId=${widget.communityId}'
-                  : '';
-              context.pushReplacement('/tournaments/create$query');
+            onPressed: () async {
+              final communityId = widget.communityId;
+              if (communityId != null && communityId.isNotEmpty) {
+                context.pushReplacement('/club/$communityId/create-tournament');
+                return;
+              }
+
+              // Nếu ở ngoài không gắn communityId, kiểm tra CLB của người dùng
+              final clubs = await ref.read(myCommunitiesProvider.future).catchError((_) => <Community>[]);
+              if (!context.mounted) return;
+              if (clubs.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Giải Siêu Lite dành cho câu lạc bộ. Vui lòng tạo câu lạc bộ trước.'),
+                    backgroundColor: Color(0xFFF59E0B),
+                  ),
+                );
+                context.push('/club-create');
+              } else {
+                context.pushReplacement('/club/${clubs.first.id}/create-tournament');
+              }
             },
             icon: const Icon(Icons.flash_on_rounded, size: 16),
             label: const Text(
@@ -479,20 +560,6 @@ class _CreateAdvancedTournamentScreenState
   }
 
   // ─── BƯỚC 2: PHÂN HẠNG THI ĐẤU (DIVISIONS) ───
-  IconData _getFormatIcon(String? bracketType) {
-    final t = (bracketType ?? '').toUpperCase();
-    if (t.contains('ROUND_ROBIN') || t.contains('ROBIN') || t.contains('VÒNG TRÒN')) {
-      return Icons.sync_rounded;
-    }
-    if (t.contains('GROUP_STAGE') || t.contains('GROUP') || t.contains('BẢNG')) {
-      return Icons.grid_view_rounded;
-    }
-    if (t.contains('DOUBLE_ELIMINATION') || t.contains('DOUBLE_ELIM') || t.contains('NHÁNH KÉP') || t.contains('THẮNG/THUA') || t.contains('THẮNG THUA')) {
-      return Icons.call_split_rounded;
-    }
-    return Icons.account_tree_outlined;
-  }
-
   String _getFormatLabel(String? bracketType) {
     final t = (bracketType ?? '').toUpperCase();
     if (t.contains('ROUND_ROBIN') || t.contains('ROBIN') || t.contains('VÒNG TRÒN')) {

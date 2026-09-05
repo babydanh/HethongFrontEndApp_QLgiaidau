@@ -613,6 +613,45 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get communityRecurringBadge => 'Recurring';
+
+  @override
+  String get communityRecurringSchedulesTitle => 'Recurring Schedules (Cron)';
+
+  @override
+  String get communityRecurringActive => 'Active';
+
+  @override
+  String get communityRecurringPaused => 'Paused';
+
+  @override
+  String get createClub_recurringTitle =>
+      'Session Schedule & Auto Tournament Creation';
+
+  @override
+  String get createClub_recurringSubtitle =>
+      'The system automatically creates mini tournaments and opens registration for scheduled club sessions.';
+
+  @override
+  String get createClub_enableRecurring =>
+      'Enable automatic tournament creation for sessions';
+
+  @override
+  String get createClub_sessionSlotsTitle => 'Weekly session slots';
+
+  @override
+  String get createClub_addSlot => 'Add session slot';
+
+  @override
+  String get createClub_slotDay => 'Day of week';
+
+  @override
+  String get createClub_slotTime => 'Start time';
+
+  @override
+  String get createClub_slotDuration => 'Duration';
+
+  @override
   String get communityComposerPollInvalid =>
       'A poll needs a question and at least 2 options.';
 
@@ -11782,9 +11821,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lite_tournamentDescPlaceholder =>
-      'Brief introduction about the tournament...';
+      'Enter brief summary, tournament rules or regulations...';
 
   @override
   String get lite_recreateBracketNotice =>
       '💡 When re-pairing or re-seeding, you can tap Recreate Bracket to update the tree diagram.';
+
+  @override
+  String get organizer_reqTitle => 'Organizer Permission Required';
+
+  @override
+  String get organizer_reqDesc =>
+      'Creating an advanced tournament (divisions, fees, sponsors) requires an approved Organizer account. You can apply to become an Organizer or use Club Super Lite.';
+
+  @override
+  String get organizer_applyNow => 'Apply for Organizer';
+
+  @override
+  String get organizer_useLite => 'Use Club Super Lite';
+
+  @override
+  String get organizer_registrationTitle => 'Apply for Organizer';
+
+  @override
+  String get organizer_modalDescription =>
+      'Provide contact phone number and certificate or photo evidence of event hosting experience for admin approval.';
+
+  @override
+  String get organizer_contactEmail => 'Contact Email';
+
+  @override
+  String get organizer_contactPhone => 'Contact Phone';
+
+  @override
+  String get organizer_contactPhonePlaceholder => 'Enter your phone number';
+
+  @override
+  String get organizer_phoneRequired => 'Please enter a contact phone number';
+
+  @override
+  String get organizer_evidence => 'Verification Evidence';
+
+  @override
+  String get organizer_evidenceHint =>
+      'Select photos of certificates, badges or photos of past tournaments';
+
+  @override
+  String get organizer_evidenceRequired =>
+      'Please upload at least 1 evidence image';
+
+  @override
+  String get organizer_uploading => 'Uploading image...';
+
+  @override
+  String get organizer_submitBtn => 'Submit Application';
+
+  @override
+  String get organizer_submittedSuccess =>
+      'Application submitted successfully! Administrators will review within 24 hours.';
+
+  @override
+  String get organizer_pendingTitle => 'Application Pending';
+
+  @override
+  String get organizer_pendingDesc =>
+      'Your Organizer verification application is currently being reviewed by administrators.';
+
+  @override
+  String get organizer_rejectedTitle => 'Application Rejected';
+
+  @override
+  String get organizer_rejectedReason => 'Reason';
+
+  @override
+  String get organizer_resubmit => 'Resubmit Application';
+
+  @override
+  String get organizer_becomeOrganizer => 'Become a Tournament Organizer';
 }

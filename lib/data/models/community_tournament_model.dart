@@ -17,6 +17,8 @@ class CommunityTournamentModel {
   final String categoryName;
   final int entryFee;
   final String? endDate;
+  final bool isRecurring;
+  final Map<String, dynamic>? recurringConfig;
 
   const CommunityTournamentModel({
     required this.id,
@@ -36,6 +38,8 @@ class CommunityTournamentModel {
     this.categoryName = '',
     this.entryFee = 0,
     this.endDate,
+    this.isRecurring = false,
+    this.recurringConfig,
   });
 
   factory CommunityTournamentModel.fromJson(Map<String, dynamic> json) {
@@ -87,6 +91,14 @@ class CommunityTournamentModel {
         ) ??
         0;
 
+    final recurringConfig = config?['recurring'] is Map
+        ? Map<String, dynamic>.from(config!['recurring'] as Map)
+        : null;
+    final isRecurring =
+        json['isRecurring'] == true ||
+        recurringConfig?['enabled'] == true ||
+        recurringConfig?['frequency'] != null;
+
     return CommunityTournamentModel(
       id: json['id']?.toString() ?? '',
       name: json['name'] ?? '',
@@ -111,6 +123,8 @@ class CommunityTournamentModel {
       categoryName: categoryName,
       entryFee: entryFee,
       endDate: json['endDate']?.toString(),
+      isRecurring: isRecurring,
+      recurringConfig: recurringConfig,
     );
   }
 }

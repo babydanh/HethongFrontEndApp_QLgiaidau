@@ -504,6 +504,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
     BuildContext context,
     CommunityTournamentModel t,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final name = t.name;
     final status = t.status;
     final date = t.startDate != null ? DateTime.tryParse(t.startDate!) : null;
@@ -615,6 +616,41 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
                           ],
                         ),
                       ),
+                      if (t.isRecurring) ...[
+                        const SizedBox(width: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.sync_rounded,
+                                size: 10,
+                                color: Color(0xFF6366F1),
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                l10n.communityRecurringBadge,
+                                style: const TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xFF6366F1),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   if (dateStr.isNotEmpty)

@@ -571,12 +571,28 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               padding: const EdgeInsets.only(bottom: 160),
               child: _buildLiteTeamList(teamsAsync.value ?? const []),
             )
-          : TeamsTab(
-              teams: teamsAsync.value ?? const [],
-              selectedDivision: _selectedDivision,
-              selectedDivisionId: _selectedDivisionId,
-              isTeamSport: isTeamSport,
-            ),
+          : (tournament.divisions.length > 1
+              ? Column(
+                  children: [
+                    _buildDivisionsSelectorList(tournament, colors),
+                    Expanded(
+                      child: TeamsTab(
+                        key: ValueKey('teams-$_selectedDivisionId'),
+                        teams: teamsAsync.value ?? const [],
+                        selectedDivision: _selectedDivision,
+                        selectedDivisionId: _selectedDivisionId,
+                        isTeamSport: isTeamSport,
+                      ),
+                    ),
+                  ],
+                )
+              : TeamsTab(
+                  key: ValueKey('teams-$_selectedDivisionId'),
+                  teams: teamsAsync.value ?? const [],
+                  selectedDivision: _selectedDivision,
+                  selectedDivisionId: _selectedDivisionId,
+                  isTeamSport: isTeamSport,
+                )),
     );
 
     // Bảng đấu (BracketTab with divisions selector)
@@ -654,23 +670,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-  IconData _getBracketFormatIcon(String? bracketType, [String? fallbackBracketType]) {
-    final raw = (bracketType != null && bracketType.trim().isNotEmpty)
-        ? bracketType
-        : (fallbackBracketType ?? '');
-    final type = raw.toUpperCase();
-    if (type.contains('ROUND_ROBIN') || type.contains('ROBIN') || type.contains('VÒNG TRÒN')) {
-      return Icons.sync_rounded;
-    }
-    if (type.contains('GROUP_STAGE') || type.contains('GROUP') || type.contains('BẢNG')) {
-      return Icons.grid_view_rounded;
-    }
-    if (type.contains('DOUBLE_ELIMINATION') || type.contains('DOUBLE_ELIM') || type.contains('NHÁNH KÉP') || type.contains('THẮNG/THUA') || type.contains('THẮNG THUA')) {
-      return Icons.call_split_rounded;
-    }
-    return Icons.account_tree_outlined;
-  }
-
   String _getBracketFormatLabel(String? bracketType, [String? fallbackBracketType]) {
     final raw = (bracketType != null && bracketType.trim().isNotEmpty)
         ? bracketType
@@ -742,7 +741,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           final curP = div.participantCount;
           final isFull = (maxP > 0 && curP >= maxP) ||
               tournament.status.toLowerCase() == 'completed';
-          final formatIcon = _getBracketFormatIcon(div.bracketType, tournament.bracketType);
 
           return Container(
             margin: const EdgeInsets.only(bottom: 6),

@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class LiveTab extends StatefulWidget {
@@ -43,20 +44,6 @@ class _LiveTabState extends State<LiveTab> {
         _expandedDivisionId = widget.selectedDivisionId;
       });
     }
-  }
-
-  IconData _getFormatIcon(String? bracketType) {
-    final type = (bracketType ?? '').toUpperCase();
-    if (type.contains('ROUND_ROBIN') || type.contains('ROBIN') || type.contains('VÒNG TRÒN')) {
-      return Icons.sync_rounded;
-    }
-    if (type.contains('GROUP_STAGE') || type.contains('GROUP') || type.contains('BẢNG')) {
-      return Icons.alt_route_rounded;
-    }
-    if (type.contains('DOUBLE_ELIMINATION') || type.contains('DOUBLE_ELIM') || type.contains('NHÁNH KÉP')) {
-      return Icons.call_split_rounded;
-    }
-    return Icons.account_tree_outlined;
   }
 
   @override
@@ -114,7 +101,6 @@ class _LiveTabState extends State<LiveTab> {
           final maxP = div.maxParticipants ?? 0;
           final curP = div.participantCount;
           final isFull = maxP > 0 && curP >= maxP;
-          final formatIcon = _getFormatIcon(div.bracketType);
 
           // Lọc các trận live thuộc đúng division này
           final divLiveMatches = widget.liveMatches.where((m) {
@@ -124,125 +110,198 @@ class _LiveTabState extends State<LiveTab> {
             return mDiv != null && mDiv.isNotEmpty && mDiv == div.id;
           }).toList();
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Hàng Division phẳng, không đóng khung card xám, tràn viền
-              InkWell(
-                onTap: () {
-                  setState(() {
-                    _expandedDivisionId = isExpanded ? null : div.id;
-                  });
-                  widget.onSelectDivision?.call(div);
-                },
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: isExpanded
-                              ? AppTheme.primary
-                              : AppTheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: colors.bgSurface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isExpanded ? AppTheme.primary : colors.border.withValues(alpha: 0.7),
+                width: isExpanded ? 1.5 : 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header division đồng bộ với OverviewTab
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _expandedDivisionId = isExpanded ? null : div.id;
+                    });
+                    widget.onSelectDivision?.call(div);
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: isExpanded
+                                ? AppTheme.primary
+                                : AppTheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isExpanded
+                                  ? AppTheme.primary
+                                  : AppTheme.primary.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Center(
+                            child: BracketFormatIcons.getIcon(
+                              div.bracketType,
+                              size: 18,
+                              color: isExpanded ? Colors.white : AppTheme.primary,
+                            ),
+                          ),
                         ),
-                        child: Icon(
-                          formatIcon,
-                          size: 16,
-                          color: isExpanded ? Colors.white : AppTheme.primary,
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      div.name,
+                                      style: TextStyle(
+                                        fontSize: 13.5,
+                                        fontWeight: isExpanded ? FontWeight.w800 : FontWeight.w700,
+                                        color: isExpanded ? AppTheme.primary : colors.textPrimary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (divLiveMatches.isNotEmpty) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: const Color(0xFFEF4444).withValues(alpha: 0.28),
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 6,
+                                            height: 6,
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFFEF4444),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${divLiveMatches.length}',
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w800,
+                                              color: Color(0xFFDC2626),
+                                              height: 1.1,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              if (div.matchType.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  div.matchType == 'DOUBLES'
+                                      ? l10n.matchTypeDoubles
+                                      : l10n.matchTypeSingles,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: colors.textMuted,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              div.name,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: isExpanded ? FontWeight.w800 : FontWeight.w600,
-                                color: isExpanded ? AppTheme.primary : colors.textPrimary,
+                        const SizedBox(width: 8),
+                        if (isFull) ...[
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: colors.bgSurface,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: colors.border.withValues(alpha: 0.8),
                               ),
                             ),
-                            if (div.matchType.isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                div.matchType == 'DOUBLES'
-                                    ? l10n.matchTypeDoubles
-                                    : l10n.matchTypeSingles,
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  color: colors.textMuted,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                            child: Icon(
+                              Icons.check_circle_rounded,
+                              size: 13,
+                              color: colors.textMuted,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.people_alt_outlined,
+                              size: 13,
+                              color: colors.textMuted,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              maxP > 0 ? '$curP/$maxP' : '$curP',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textSecondary,
                               ),
-                            ],
+                            ),
                           ],
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      if (isFull) ...[
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: colors.bgSurface,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.check_circle_rounded,
-                            size: 13,
-                            color: colors.textMuted,
-                          ),
-                        ),
                         const SizedBox(width: 6),
-                      ],
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.people_alt_outlined,
-                            size: 13,
-                            color: colors.textMuted,
+                        AnimatedRotation(
+                          turns: isExpanded ? 0.5 : 0.0,
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.fastOutSlowIn,
+                          child: Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 22,
+                            color: isExpanded ? AppTheme.primary : colors.textMuted,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            maxP > 0 ? '$curP/$maxP' : '$curP',
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 6),
-                      AnimatedRotation(
-                        turns: isExpanded ? 0.5 : 0.0,
-                        duration: const Duration(milliseconds: 250),
-                        curve: Curves.fastOutSlowIn,
-                        child: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          size: 22,
-                          color: isExpanded ? AppTheme.primary : colors.textMuted,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              // Danh sách trận đấu MỞ RA VỚI ANIMATION MƯỢT MÀ (AnimatedCrossFade)
-              AnimatedCrossFade(
-                firstChild: const SizedBox.shrink(),
-                secondChild: Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: divLiveMatches.isNotEmpty
-                      ? Column(
-                          children: divLiveMatches.map((match) {
+                // Danh sách trận đấu MỞ RA VỚI ANIMATION MƯỢT MÀ (AnimatedCrossFade)
+                AnimatedCrossFade(
+                  firstChild: const SizedBox.shrink(),
+                  secondChild: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Divider(
+                          height: 1,
+                          thickness: 0.5,
+                          color: colors.border.withValues(alpha: 0.5),
+                        ),
+                        const SizedBox(height: 10),
+                        if (divLiveMatches.isNotEmpty)
+                          ...divLiveMatches.map((match) {
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: LiveMatchCardV2(
@@ -253,44 +312,42 @@ class _LiveTabState extends State<LiveTab> {
                                 },
                               ),
                             );
-                          }).toList(),
-                        )
-                      : Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.info_outline_rounded,
-                                size: 16,
-                                color: colors.textMuted,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                l10n.liveDivisionEmpty,
-                                style: TextStyle(
-                                  fontSize: 12,
+                          })
+                        else
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline_rounded,
+                                  size: 16,
                                   color: colors.textMuted,
-                                  fontWeight: FontWeight.w500,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 8),
+                                Text(
+                                  l10n.liveDivisionEmpty,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: colors.textMuted,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                      ],
+                    ),
+                  ),
+                  crossFadeState: isExpanded
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  duration: const Duration(milliseconds: 250),
+                  sizeCurve: Curves.fastOutSlowIn,
+                  firstCurve: Curves.easeOut,
+                  secondCurve: Curves.easeIn,
                 ),
-                crossFadeState: isExpanded
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
-                duration: const Duration(milliseconds: 250),
-                sizeCurve: Curves.fastOutSlowIn,
-                firstCurve: Curves.easeOut,
-                secondCurve: Curves.easeIn,
-              ),
-              Divider(
-                height: 1,
-                thickness: 0.5,
-                color: colors.border.withValues(alpha: 0.6),
-              ),
-            ],
+              ],
+            ),
           );
         },
       );

@@ -611,6 +611,44 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get communityRecurringBadge => 'Định kỳ';
+
+  @override
+  String get communityRecurringSchedulesTitle => 'Lịch tạo giải định kỳ (Cron)';
+
+  @override
+  String get communityRecurringActive => 'Đang bật';
+
+  @override
+  String get communityRecurringPaused => 'Tạm dừng';
+
+  @override
+  String get createClub_recurringTitle =>
+      'Lịch sinh hoạt & Tự động tạo giải định kỳ';
+
+  @override
+  String get createClub_recurringSubtitle =>
+      'Hệ thống tự tạo giải mini và mở đăng ký theo các ca sinh hoạt đã cấu hình.';
+
+  @override
+  String get createClub_enableRecurring => 'Kích hoạt tạo giải tự động theo ca';
+
+  @override
+  String get createClub_sessionSlotsTitle => 'Các ca sinh hoạt hàng tuần';
+
+  @override
+  String get createClub_addSlot => 'Thêm ca sinh hoạt';
+
+  @override
+  String get createClub_slotDay => 'Thứ trong tuần';
+
+  @override
+  String get createClub_slotTime => 'Giờ bắt đầu';
+
+  @override
+  String get createClub_slotDuration => 'Thời lượng';
+
+  @override
   String get communityComposerPollInvalid =>
       'Bình chọn cần câu hỏi và ít nhất 2 lựa chọn.';
 
@@ -11748,9 +11786,81 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lite_tournamentDescPlaceholder =>
-      'Giới thiệu ngắn gọn về giải đấu...';
+      'Nhập giới thiệu ngắn, điều lệ hoặc thể thức thi đấu...';
 
   @override
   String get lite_recreateBracketNotice =>
       '💡 Khi bốc thăm hoặc ghép lại cặp, bạn có thể bấm Tạo lại nhánh đấu để cập nhật sơ đồ.';
+
+  @override
+  String get organizer_reqTitle => 'Yêu cầu quyền Ban Tổ Chức';
+
+  @override
+  String get organizer_reqDesc =>
+      'Tạo giải đấu nâng cao (nhiều phân hạng, lệ phí, nhà tài trợ...) yêu cầu tài khoản được cấp quyền Ban Tổ Chức (Organizer). Bạn có thể đăng ký làm Ban Tổ Chức hoặc sử dụng Giải CLB Siêu Lite.';
+
+  @override
+  String get organizer_applyNow => 'Đăng ký Ban Tổ Chức';
+
+  @override
+  String get organizer_useLite => 'Dùng Giải Siêu Lite';
+
+  @override
+  String get organizer_registrationTitle => 'Đăng ký Ban Tổ Chức';
+
+  @override
+  String get organizer_modalDescription =>
+      'Cung cấp số điện thoại liên hệ và hình ảnh minh chứng kinh nghiệm tổ chức sự kiện/giải đấu thể thao để ban quản trị phê duyệt.';
+
+  @override
+  String get organizer_contactEmail => 'Email liên hệ';
+
+  @override
+  String get organizer_contactPhone => 'Số điện thoại liên hệ';
+
+  @override
+  String get organizer_contactPhonePlaceholder => 'Nhập số điện thoại của bạn';
+
+  @override
+  String get organizer_phoneRequired => 'Vui lòng nhập số điện thoại liên hệ';
+
+  @override
+  String get organizer_evidence => 'Hình ảnh minh chứng';
+
+  @override
+  String get organizer_evidenceHint =>
+      'Chọn ảnh chứng chỉ trọng tài, thẻ ban tổ chức hoặc hình ảnh giải đấu đã từng tổ chức';
+
+  @override
+  String get organizer_evidenceRequired =>
+      'Vui lòng tải lên ít nhất 1 ảnh minh chứng';
+
+  @override
+  String get organizer_uploading => 'Đang tải ảnh lên...';
+
+  @override
+  String get organizer_submitBtn => 'Gửi hồ sơ xét duyệt';
+
+  @override
+  String get organizer_submittedSuccess =>
+      'Gửi hồ sơ đăng ký thành công! Quản trị viên sẽ xem xét duyệt trong vòng 24h.';
+
+  @override
+  String get organizer_pendingTitle => 'Hồ sơ đang chờ duyệt';
+
+  @override
+  String get organizer_pendingDesc =>
+      'Hồ sơ đăng ký Ban Tổ Chức của bạn đang được ban quản trị xem xét.';
+
+  @override
+  String get organizer_rejectedTitle => 'Hồ sơ chưa được duyệt';
+
+  @override
+  String get organizer_rejectedReason => 'Lý do';
+
+  @override
+  String get organizer_resubmit => 'Nộp lại hồ sơ';
+
+  @override
+  String get organizer_becomeOrganizer => 'Đăng ký làm Ban Tổ Chức (Organizer)';
 }

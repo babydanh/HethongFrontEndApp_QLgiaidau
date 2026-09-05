@@ -97,16 +97,39 @@ class ResultsTab extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // ── 2. DANH SÁCH CHI TIẾT GIẢI THƯỞNG ──
-              Text(
-                'DANH SÁCH TRAO THƯỞNG',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: colors.textMuted,
-                  letterSpacing: 0.5,
+              Padding(
+                padding: const EdgeInsets.only(left: 2, bottom: 10),
+                child: Row(
+                  children: [
+                    Text(
+                      'DANH SÁCH TRAO THƯỞNG',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: colors.textMuted,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: colors.bgSurface,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: colors.border.withValues(alpha: 0.6)),
+                      ),
+                      child: Text(
+                        '${(gold != null ? 1 : 0) + (silver != null ? 1 : 0) + bronzes.length + others.length}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 10),
 
               if (gold != null) ...[
                 _buildAwardCard(context, gold, 1, 'QUÁN QUÂN'),
@@ -116,12 +139,12 @@ class ResultsTab extends ConsumerWidget {
                 _buildAwardCard(context, silver, 2, 'Á QUÂN'),
                 const SizedBox(height: 8),
               ],
-              for (final bronze in bronzes) ...[
+              for (int i = 0; i < bronzes.length; i++) ...[
                 _buildAwardCard(
                   context,
-                  bronze,
+                  bronzes[i],
                   3,
-                  bronzes.length > 1 ? 'ĐỒNG HẠNG 3 (3-4)' : 'HẠNG 3',
+                  bronzes.length > 1 ? 'ĐỒNG HẠNG 3' : 'HẠNG 3',
                 ),
                 const SizedBox(height: 8),
               ],
@@ -183,26 +206,20 @@ class ResultsTab extends ConsumerWidget {
     Map<String, dynamic>? silver,
     List<Map<String, dynamic>> bronzes,
   ) {
+    final colors = context.colors;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(10, 16, 10, 0),
+      padding: const EdgeInsets.fromLTRB(8, 14, 8, 0),
       decoration: BoxDecoration(
-        color: context.colors.bgCard,
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            context.colors.bgSurface,
-            context.colors.bgCard,
-          ],
-        ),
+        color: colors.bgSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.border.withValues(alpha: 0.8)),
+        border: Border.all(color: colors.border.withValues(alpha: 0.8)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -211,12 +228,13 @@ class ResultsTab extends ConsumerWidget {
         children: [
           // ── Bục 2: Á Quân (Bên Trái) ──
           Expanded(
+            flex: 10,
             child: _buildPodiumColumn(
               context,
               award: silver,
               rank: 2,
               rankLabel: 'Á QUÂN',
-              podiumHeight: 80,
+              podiumHeight: 82,
               accentColor: const Color(0xFF64748B),
               podiumGradient: const LinearGradient(
                 begin: Alignment.bottomCenter,
@@ -231,18 +249,18 @@ class ResultsTab extends ConsumerWidget {
 
           // ── Bục 1: Quán Quân (Ở Giữa - Cao nhất) ──
           Expanded(
-            flex: 11,
+            flex: 12,
             child: _buildPodiumColumn(
               context,
               award: gold,
               rank: 1,
               rankLabel: 'QUÁN QUÂN',
-              podiumHeight: 110,
+              podiumHeight: 114,
               accentColor: const Color(0xFFD97706),
               podiumGradient: const LinearGradient(
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
-                colors: [Color(0xFFFCD34D), Color(0xFFFDE68A), Color(0xFFFFFBEB)],
+                colors: [Color(0xFFFDE68A), Color(0xFFFEF3C7), Color(0xFFFFFBEB)],
               ),
               borderColor: const Color(0xFFF59E0B),
               numberColor: const Color(0xFFB45309),
@@ -253,13 +271,14 @@ class ResultsTab extends ConsumerWidget {
 
           // ── Bục 3: Đồng Hạng 3 / Hạng 3 (Bên Phải) ──
           Expanded(
+            flex: 10,
             child: _buildPodiumColumn(
               context,
               award: bronzes.isNotEmpty ? bronzes.first : null,
               extraAwards: bronzes.length > 1 ? bronzes.sublist(1) : const [],
               rank: 3,
               rankLabel: bronzes.length > 1 ? 'ĐỒNG HẠNG 3' : 'HẠNG 3',
-              podiumHeight: 65,
+              podiumHeight: 68,
               accentColor: const Color(0xFFEA580C),
               podiumGradient: const LinearGradient(
                 begin: Alignment.bottomCenter,
@@ -298,12 +317,12 @@ class ResultsTab extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (participant != null) ...[
-          // Crown badge for 1st place
+          // Crown icon for 1st place
           if (isGold)
             Container(
               width: 22,
               height: 22,
-              margin: const EdgeInsets.only(bottom: 2),
+              margin: const EdgeInsets.only(bottom: 3),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: const LinearGradient(
@@ -311,7 +330,7 @@ class ResultsTab extends ConsumerWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -320,49 +339,77 @@ class ResultsTab extends ConsumerWidget {
               child: const Icon(Icons.star_rounded, color: Colors.white, size: 14),
             ),
 
-          // Avatar
-          _buildPodiumAvatar(participant, isGold ? 22 : 18, accentColor),
+          // Avatar display
+          if (extraAwards.isNotEmpty)
+            // Khi có đồng hạng (nhiều đội hạng 3): hiển thị 2 avatar cạnh nhau hoặc badge tie
+            _buildTiePodiumAvatars(participant, extraAwards.first, accentColor)
+          else
+            _buildPodiumAvatar(participant, isGold ? 21 : 18, accentColor),
           const SizedBox(height: 6),
 
-          // Team Name
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Text(
-              teamName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: isGold ? 11.5 : 10.5,
-                fontWeight: FontWeight.w800,
-                color: colors.textPrimary,
-              ),
-            ),
-          ),
-          if (extraAwards.isNotEmpty)
-            for (final extra in extraAwards) ...[
-              const SizedBox(height: 2),
-              Text(
-                (extra['participant'] is Map
-                        ? (extra['participant'] as Map)['teamName']
-                        : null) ??
-                    '',
+          // Tên đội / VĐV
+          if (extraAwards.isNotEmpty) ...[
+            // Đội 1
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: Text(
+                teamName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w700,
-                  color: colors.textSecondary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                  height: 1.2,
+                ),
+              ),
+            ),
+            // Đội đồng hạng tiếp theo
+            for (final extra in extraAwards) ...[
+              const SizedBox(height: 2),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: Text(
+                  (extra['participant'] is Map
+                          ? (extra['participant'] as Map)['teamName']
+                          : null) ??
+                      '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textSecondary,
+                    height: 1.2,
+                  ),
                 ),
               ),
             ],
+          ] else ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: Text(
+                teamName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: isGold ? 11.5 : 10.5,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                  height: 1.2,
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
         ] else ...[
-          const SizedBox(height: 40),
+          const SizedBox(height: 48),
         ],
 
-        // Podium Bar
+        // Khối bục Podium
         Container(
           height: podiumHeight,
           width: double.infinity,
@@ -372,7 +419,7 @@ class ResultsTab extends ConsumerWidget {
             border: Border.all(color: borderColor, width: isGold ? 1.5 : 1),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
+                color: Colors.black.withValues(alpha: 0.02),
                 blurRadius: 4,
                 offset: const Offset(0, -1),
               ),
@@ -390,20 +437,48 @@ class ResultsTab extends ConsumerWidget {
                   height: 1,
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                rankLabel,
-                style: TextStyle(
-                  fontSize: isGold ? 8.5 : 7.5,
-                  fontWeight: FontWeight.w800,
-                  color: accentColor,
-                  letterSpacing: 0.2,
+              const SizedBox(height: 3),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                child: Text(
+                  rankLabel,
+                  style: TextStyle(
+                    fontSize: isGold ? 8.5 : 7.5,
+                    fontWeight: FontWeight.w800,
+                    color: accentColor,
+                    letterSpacing: 0.2,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildTiePodiumAvatars(
+    Map<String, dynamic> p1,
+    Map<String, dynamic> p2Award,
+    Color accentColor,
+  ) {
+    final p2 = p2Award['participant'] is Map
+        ? Map<String, dynamic>.from(p2Award['participant'] as Map)
+        : const <String, dynamic>{};
+
+    return SizedBox(
+      height: 36,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildPodiumAvatar(p1, 15, accentColor),
+          const SizedBox(width: 4),
+          _buildPodiumAvatar(p2, 15, accentColor),
+        ],
+      ),
     );
   }
 
@@ -422,12 +497,12 @@ class ResultsTab extends ConsumerWidget {
 
     if (members.length >= 2) {
       return SizedBox(
-        width: radius * 2 + 12,
+        width: radius * 2 + 10,
         height: radius * 2,
         child: Stack(
           children: [
             Positioned(
-              left: 12,
+              left: 10,
               child: _buildSingleAvatar(members[1], radius - 2, ringColor),
             ),
             Positioned(
@@ -449,8 +524,8 @@ class ResultsTab extends ConsumerWidget {
       height: radius * 2,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: ringColor.withValues(alpha: 0.15),
-        border: Border.all(color: ringColor, width: 2),
+        color: ringColor.withValues(alpha: 0.12),
+        border: Border.all(color: ringColor, width: 1.5),
       ),
       alignment: Alignment.center,
       child: Text(
@@ -500,7 +575,7 @@ class ResultsTab extends ConsumerWidget {
       child: Text(
         name.isNotEmpty ? name[0].toUpperCase() : '?',
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.w800,
           color: color,
         ),
@@ -524,22 +599,6 @@ class ResultsTab extends ConsumerWidget {
     final isSilver = rank == 2;
     final isBronze = rank == 3 || rank == 4;
 
-    final bgColor = isGold
-        ? const Color(0xFFFFFBEB)
-        : isSilver
-            ? const Color(0xFFF8FAFC)
-            : isBronze
-                ? const Color(0xFFFFF7ED)
-                : colors.bgCard;
-
-    final borderColor = isGold
-        ? const Color(0xFFFDE68A)
-        : isSilver
-            ? const Color(0xFFE2E8F0)
-            : isBronze
-                ? const Color(0xFFFFEDD5)
-                : colors.border;
-
     final badgeColor = isGold
         ? const Color(0xFFF59E0B)
         : isSilver
@@ -548,22 +607,40 @@ class ResultsTab extends ConsumerWidget {
                 ? const Color(0xFFEA580C)
                 : const Color(0xFF64748B);
 
+    final borderColor = isGold
+        ? const Color(0xFFF59E0B).withValues(alpha: 0.35)
+        : isSilver
+            ? const Color(0xFF94A3B8).withValues(alpha: 0.35)
+            : isBronze
+                ? const Color(0xFFEA580C).withValues(alpha: 0.35)
+                : colors.border.withValues(alpha: 0.7);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: bgColor,
+        color: colors.bgSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor, width: 1.2),
+        border: Border.all(
+          color: borderColor,
+          width: isGold ? 1.4 : 1.0,
+        ),
       ),
       child: Row(
         children: [
-          // Rank Medal Icon
+          // Huy hiệu Rank Medal với màu nhận diện chuẩn thể thao
           Container(
-            width: 32,
-            height: 32,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
               color: badgeColor,
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: badgeColor.withValues(alpha: 0.25),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             alignment: Alignment.center,
             child: Text(
@@ -572,12 +649,13 @@ class ResultsTab extends ConsumerWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w900,
                 color: Colors.white,
+                height: 1,
               ),
             ),
           ),
           const SizedBox(width: 12),
 
-          // Team Info
+          // Thông tin tên đội và danh hiệu
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -589,23 +667,38 @@ class ResultsTab extends ConsumerWidget {
                     fontWeight: FontWeight.w800,
                     color: colors.textPrimary,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  badgeTitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: badgeColor,
-                  ),
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: badgeColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        badgeTitle,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: badgeColor,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 8),
 
-          // Avatar
+          // Avatar VĐV / Đội
           if (participant.isNotEmpty)
-            _buildPodiumAvatar(participant, 16, badgeColor),
+            _buildPodiumAvatar(participant, 17, badgeColor),
         ],
       ),
     );

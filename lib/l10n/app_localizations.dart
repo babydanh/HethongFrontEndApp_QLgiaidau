@@ -1250,6 +1250,78 @@ abstract class AppLocalizations {
   /// **'{count} ảnh không tải lên được.'**
   String communityComposerUploadFailedCount(Object count);
 
+  /// No description provided for @communityRecurringBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Định kỳ'**
+  String get communityRecurringBadge;
+
+  /// No description provided for @communityRecurringSchedulesTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch tạo giải định kỳ (Cron)'**
+  String get communityRecurringSchedulesTitle;
+
+  /// No description provided for @communityRecurringActive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang bật'**
+  String get communityRecurringActive;
+
+  /// No description provided for @communityRecurringPaused.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạm dừng'**
+  String get communityRecurringPaused;
+
+  /// No description provided for @createClub_recurringTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch sinh hoạt & Tự động tạo giải định kỳ'**
+  String get createClub_recurringTitle;
+
+  /// No description provided for @createClub_recurringSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hệ thống tự tạo giải mini và mở đăng ký theo các ca sinh hoạt đã cấu hình.'**
+  String get createClub_recurringSubtitle;
+
+  /// No description provided for @createClub_enableRecurring.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kích hoạt tạo giải tự động theo ca'**
+  String get createClub_enableRecurring;
+
+  /// No description provided for @createClub_sessionSlotsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các ca sinh hoạt hàng tuần'**
+  String get createClub_sessionSlotsTitle;
+
+  /// No description provided for @createClub_addSlot.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm ca sinh hoạt'**
+  String get createClub_addSlot;
+
+  /// No description provided for @createClub_slotDay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ trong tuần'**
+  String get createClub_slotDay;
+
+  /// No description provided for @createClub_slotTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giờ bắt đầu'**
+  String get createClub_slotTime;
+
+  /// No description provided for @createClub_slotDuration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời lượng'**
+  String get createClub_slotDuration;
+
   /// No description provided for @communityComposerPollInvalid.
   ///
   /// In vi, this message translates to:
@@ -21421,7 +21493,7 @@ abstract class AppLocalizations {
   /// No description provided for @lite_tournamentDescPlaceholder.
   ///
   /// In vi, this message translates to:
-  /// **'Giới thiệu ngắn gọn về giải đấu...'**
+  /// **'Nhập giới thiệu ngắn, điều lệ hoặc thể thức thi đấu...'**
   String get lite_tournamentDescPlaceholder;
 
   /// No description provided for @lite_recreateBracketNotice.
@@ -21429,6 +21501,138 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'💡 Khi bốc thăm hoặc ghép lại cặp, bạn có thể bấm Tạo lại nhánh đấu để cập nhật sơ đồ.'**
   String get lite_recreateBracketNotice;
+
+  /// No description provided for @organizer_reqTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Yêu cầu quyền Ban Tổ Chức'**
+  String get organizer_reqTitle;
+
+  /// No description provided for @organizer_reqDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo giải đấu nâng cao (nhiều phân hạng, lệ phí, nhà tài trợ...) yêu cầu tài khoản được cấp quyền Ban Tổ Chức (Organizer). Bạn có thể đăng ký làm Ban Tổ Chức hoặc sử dụng Giải CLB Siêu Lite.'**
+  String get organizer_reqDesc;
+
+  /// No description provided for @organizer_applyNow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký Ban Tổ Chức'**
+  String get organizer_applyNow;
+
+  /// No description provided for @organizer_useLite.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng Giải Siêu Lite'**
+  String get organizer_useLite;
+
+  /// No description provided for @organizer_registrationTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký Ban Tổ Chức'**
+  String get organizer_registrationTitle;
+
+  /// No description provided for @organizer_modalDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cung cấp số điện thoại liên hệ và hình ảnh minh chứng kinh nghiệm tổ chức sự kiện/giải đấu thể thao để ban quản trị phê duyệt.'**
+  String get organizer_modalDescription;
+
+  /// No description provided for @organizer_contactEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email liên hệ'**
+  String get organizer_contactEmail;
+
+  /// No description provided for @organizer_contactPhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số điện thoại liên hệ'**
+  String get organizer_contactPhone;
+
+  /// No description provided for @organizer_contactPhonePlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập số điện thoại của bạn'**
+  String get organizer_contactPhonePlaceholder;
+
+  /// No description provided for @organizer_phoneRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập số điện thoại liên hệ'**
+  String get organizer_phoneRequired;
+
+  /// No description provided for @organizer_evidence.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hình ảnh minh chứng'**
+  String get organizer_evidence;
+
+  /// No description provided for @organizer_evidenceHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ảnh chứng chỉ trọng tài, thẻ ban tổ chức hoặc hình ảnh giải đấu đã từng tổ chức'**
+  String get organizer_evidenceHint;
+
+  /// No description provided for @organizer_evidenceRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng tải lên ít nhất 1 ảnh minh chứng'**
+  String get organizer_evidenceRequired;
+
+  /// No description provided for @organizer_uploading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải ảnh lên...'**
+  String get organizer_uploading;
+
+  /// No description provided for @organizer_submitBtn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi hồ sơ xét duyệt'**
+  String get organizer_submitBtn;
+
+  /// No description provided for @organizer_submittedSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi hồ sơ đăng ký thành công! Quản trị viên sẽ xem xét duyệt trong vòng 24h.'**
+  String get organizer_submittedSuccess;
+
+  /// No description provided for @organizer_pendingTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hồ sơ đang chờ duyệt'**
+  String get organizer_pendingTitle;
+
+  /// No description provided for @organizer_pendingDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hồ sơ đăng ký Ban Tổ Chức của bạn đang được ban quản trị xem xét.'**
+  String get organizer_pendingDesc;
+
+  /// No description provided for @organizer_rejectedTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hồ sơ chưa được duyệt'**
+  String get organizer_rejectedTitle;
+
+  /// No description provided for @organizer_rejectedReason.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lý do'**
+  String get organizer_rejectedReason;
+
+  /// No description provided for @organizer_resubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nộp lại hồ sơ'**
+  String get organizer_resubmit;
+
+  /// No description provided for @organizer_becomeOrganizer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký làm Ban Tổ Chức (Organizer)'**
+  String get organizer_becomeOrganizer;
 }
 
 class _AppLocalizationsDelegate

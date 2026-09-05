@@ -39,6 +39,12 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   bool _isUploadingBanner = false;
   bool _isLoading = false;
 
+  // Recurring cron tournament slots
+  bool _enableRecurring = false;
+  final List<Map<String, dynamic>> _recurringSlots = [
+    {'dayOfWeek': 6, 'startTime': '18:00', 'durationHours': 2},
+  ];
+
   @override
   void dispose() {
     _nameCtrl.dispose();
@@ -87,6 +93,39 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
       _log.info('Tạo CLB: ${body['name']}');
       final response = await dio.post('/communities', data: body);
       final clubId = response.data['data']?['id']?.toString() ?? '';
+
+      if (_enableRecurring && clubId.isNotEmpty && _recurringSlots.isNotEmpty) {
+        try {
+          final slot = _recurringSlots.first;
+          final allDays = _recurringSlots
+              .map((s) => s['dayOfWeek'] as int? ?? 6)
+              .toSet()
+              .toList();
+          final startTime = slot['startTime'] as String? ?? '18:00';
+
+          await dio.post(
+            '/tournaments/lite',
+            data: {
+              'name': 'Giao hữu ${body['name']}',
+              'sport': _selectedSport,
+              'communityId': clubId,
+              'format': 'doubles',
+              'bracketType': 'single_elimination',
+              'maxTeams': 16,
+              'isRanked': true,
+              'isRecurring': true,
+              'recurringFrequency': 'WEEKLY',
+              'recurringDayOfWeek': allDays.first,
+              'recurringDaysOfWeek': allDays,
+              'recurringTimeOfDay': startTime,
+              'recurringAdvanceDays': 0,
+            },
+          );
+          _log.info('Tạo template giải đấu định kỳ thành công cho CLB: $clubId');
+        } catch (templateErr) {
+          _log.warning('Không thể tự tạo giải định kỳ mẫu: $templateErr');
+        }
+      }
 
       _log.success('Tạo CLB thành công: $clubId');
       if (mounted) {
@@ -358,6 +397,9 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                 const SizedBox(height: 10),
                 _buildJoinQuestions(),
               ],
+              const SizedBox(height: 20),
+
+              _buildRecurringCronSection(),
               const SizedBox(height: 32),
 
               SizedBox(
@@ -793,6 +835,337 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildRecurringCronSection() {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+
+    final days = [
+      {'val': 1, 'label': 'T2'},
+      {'val': 2, 'label': 'T3'},
+      {'val': 3, 'label': 'T4'},
+      {'val': 4, 'label': 'T5'},
+      {'val': 5, 'label': 'T6'},
+      {'val': 6, 'label': 'T7'},
+      {'val': 0, 'label': 'CN'},
+    ];
+
+    final durations = [
+      {'hours': 1, 'label': '1h'},
+      {'hours': 2, 'label': '2h'},
+      {'hours': 3, 'label': '3h'},
+      {'hours': 4, 'label': '4h'},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.sync_rounded,
+                  color: AppTheme.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.createClub_recurringTitle,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.createClub_recurringSubtitle,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _enableRecurring,
+                activeThumbColor: AppTheme.primary,
+                onChanged: (val) => setState(() => _enableRecurring = val),
+              ),
+            ],
+          ),
+          if (_enableRecurring) ...[
+            const SizedBox(height: 14),
+            const Divider(height: 1),
+            const SizedBox(height: 14),
+            Text(
+              l10n.createClub_sessionSlotsTitle,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: colors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ..._recurringSlots.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final slot = entry.value;
+              final currentDay = slot['dayOfWeek'] as int? ?? 6;
+              final currentTime = slot['startTime'] as String? ?? '18:00';
+              final currentDuration = slot['durationHours'] as int? ?? 2;
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: colors.bgSurface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: colors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Ca #${idx + 1}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.primary,
+                          ),
+                        ),
+                        if (_recurringSlots.length > 1)
+                          IconButton(
+                            icon: Icon(
+                              Icons.delete_outline_rounded,
+                              size: 18,
+                              color: colors.error,
+                            ),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () {
+                              setState(() {
+                                _recurringSlots.removeAt(idx);
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Days row
+                    Text(
+                      l10n.createClub_slotDay,
+                      style: TextStyle(fontSize: 11, color: colors.textMuted),
+                    ),
+                    const SizedBox(height: 4),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: days.map((d) {
+                          final isSelected = currentDay == d['val'];
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: ChoiceChip(
+                              label: Text(d['label'] as String),
+                              selected: isSelected,
+                              labelStyle: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: isSelected
+                                    ? Colors.white
+                                    : colors.textPrimary,
+                              ),
+                              selectedColor: AppTheme.primary,
+                              backgroundColor: colors.bgCard,
+                              onSelected: (_) {
+                                setState(() {
+                                  slot['dayOfWeek'] = d['val'];
+                                });
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Time and duration pickers
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.createClub_slotTime,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colors.textMuted,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              InkWell(
+                                onTap: () async {
+                                  final parts = currentTime.split(':');
+                                  final initialTime = TimeOfDay(
+                                    hour: int.tryParse(parts[0]) ?? 18,
+                                    minute: int.tryParse(parts[1]) ?? 0,
+                                  );
+                                  final picked = await showTimePicker(
+                                    context: context,
+                                    initialTime: initialTime,
+                                  );
+                                  if (picked != null) {
+                                    final hh = picked.hour
+                                        .toString()
+                                        .padLeft(2, '0');
+                                    final mm = picked.minute
+                                        .toString()
+                                        .padLeft(2, '0');
+                                    setState(() {
+                                      slot['startTime'] = '$hh:$mm';
+                                    });
+                                  }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colors.bgCard,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: colors.border),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        currentTime,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: colors.textPrimary,
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.access_time_rounded,
+                                        size: 16,
+                                        color: colors.textMuted,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.createClub_slotDuration,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colors.textMuted,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.bgCard,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: colors.border),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<int>(
+                                    value: currentDuration,
+                                    isExpanded: true,
+                                    items: durations.map((dur) {
+                                      return DropdownMenuItem<int>(
+                                        value: dur['hours'] as int,
+                                        child: Text(
+                                          dur['label'] as String,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: colors.textPrimary,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (val) {
+                                      if (val != null) {
+                                        setState(() {
+                                          slot['durationHours'] = val;
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }),
+            if (_recurringSlots.length < 7)
+              OutlinedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _recurringSlots.add({
+                      'dayOfWeek': 0,
+                      'startTime': '18:00',
+                      'durationHours': 2,
+                    });
+                  });
+                },
+                icon: const Icon(Icons.add, size: 16),
+                label: Text(
+                  l10n.createClub_addSlot,
+                  style: const TextStyle(fontSize: 12),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.primary,
+                  side: BorderSide(
+                    color: AppTheme.primary.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+          ],
+        ],
+      ),
     );
   }
 }

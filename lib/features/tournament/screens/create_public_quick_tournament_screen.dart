@@ -11,7 +11,9 @@ import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_type_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 
 /// Tạo giải nhanh (Quick Lite) trên mobile app.
 /// Hỗ trợ cả tạo Công khai ngoài Public và tạo gắn liền với CLB (communityId).
@@ -46,11 +48,56 @@ class _CreatePublicQuickTournamentScreenState
 
   AppLocalizations get l10n => AppLocalizations.of(context)!;
 
+  bool _hasCheckedRole = false;
+
   @override
   void initState() {
     super.initState();
     if (widget.communityId != null && widget.communityId!.isNotEmpty) {
       _visibility = 'PRIVATE';
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _verifyOrganizerPermission());
+    }
+  }
+
+  Future<void> _verifyOrganizerPermission() async {
+    if (_hasCheckedRole || !mounted) return;
+    _hasCheckedRole = true;
+
+    try {
+      final userProfile = await ref.read(userProfileProvider.future);
+      final role = (userProfile.role ?? '').toUpperCase();
+      final isOrganizerOrAdmin = role == 'ORGANIZER' || role == 'ADMIN';
+
+      if (!isOrganizerOrAdmin && mounted) {
+        showOrganizerRequiredDialog(
+          context,
+          ref,
+          onCancel: () {
+            if (mounted && Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+        );
+      }
+    } catch (_) {
+      // If profile fails, check cached value
+      final cached = ref.read(userProfileProvider).asData?.value;
+      if (cached != null) {
+        final role = (cached.role ?? '').toUpperCase();
+        final isOrganizerOrAdmin = role == 'ORGANIZER' || role == 'ADMIN';
+        if (!isOrganizerOrAdmin && mounted) {
+          showOrganizerRequiredDialog(
+            context,
+            ref,
+            onCancel: () {
+              if (mounted && Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            },
+          );
+        }
+      }
     }
   }
 
@@ -81,6 +128,24 @@ class _CreatePublicQuickTournamentScreenState
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (widget.communityId == null || widget.communityId!.isEmpty) {
+      final cached = ref.read(userProfileProvider).asData?.value;
+      final role = (cached?.role ?? '').toUpperCase();
+      final isOrganizerOrAdmin = role == 'ORGANIZER' || role == 'ADMIN';
+      if (!isOrganizerOrAdmin) {
+        showOrganizerRequiredDialog(
+          context,
+          ref,
+          onCancel: () {
+            if (mounted && Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+        );
+        return;
+      }
+    }
 
     final name = _nameController.text.trim();
     final maxTeams = int.tryParse(_maxTeamsController.text.trim()) ?? 16;
@@ -219,6 +284,15 @@ class _CreatePublicQuickTournamentScreenState
         actions: [
           TextButton.icon(
             onPressed: () {
+              if (widget.communityId == null || widget.communityId!.isEmpty) {
+                final cached = ref.read(userProfileProvider).asData?.value;
+                final role = (cached?.role ?? '').toUpperCase();
+                final isOrganizerOrAdmin = role == 'ORGANIZER' || role == 'ADMIN';
+                if (!isOrganizerOrAdmin) {
+                  showOrganizerRequiredDialog(context, ref);
+                  return;
+                }
+              }
               final query = widget.communityId != null
                   ? '?communityId=${widget.communityId}'
                   : '';
