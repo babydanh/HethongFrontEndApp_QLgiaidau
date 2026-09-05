@@ -39,6 +39,8 @@ class _CreatePublicQuickTournamentScreenState
   String _registrationMode = 'APPROVAL';
   DateTime? _startDate;
   TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
+  int _durationHours = 1;
+  int _durationMinutes = 30;
   bool _isSubmitting = false;
 
   AppLocalizations get l10n => AppLocalizations.of(context)!;
@@ -134,9 +136,20 @@ class _CreatePublicQuickTournamentScreenState
             _startDate!.day,
             _startTime.hour,
             _startTime.minute,
-          ).toIso8601String(),
+          ).toUtc().toIso8601String(),
           'startTime':
               '${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}',
+          'durationMinutes': (_durationHours * 60) + _durationMinutes,
+          'endDate': DateTime(
+            _startDate!.year,
+            _startDate!.month,
+            _startDate!.day,
+            _startTime.hour,
+            _startTime.minute,
+          )
+              .add(Duration(minutes: (_durationHours * 60) + _durationMinutes))
+              .toUtc()
+              .toIso8601String(),
         },
       };
 
@@ -473,6 +486,76 @@ class _CreatePublicQuickTournamentScreenState
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+
+            // ─── Thời lượng thi đấu ───
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.border),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.timer_outlined, size: 16, color: colors.textSecondary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.lite_duration,
+                      style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                    ),
+                  ),
+                  DropdownButton<int>(
+                    value: _durationHours,
+                    underline: const SizedBox.shrink(),
+                    dropdownColor: colors.bgCard,
+                    items: List.generate(24, (i) => i)
+                        .map((h) => DropdownMenuItem(
+                              value: h,
+                              child: Text(
+                                '$h ${l10n.lite_hours}',
+                                style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val == null) return;
+                      setState(() {
+                        _durationHours = val;
+                        if (_durationHours == 0 && _durationMinutes < 15) {
+                          _durationMinutes = 15;
+                        }
+                      });
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  DropdownButton<int>(
+                    value: _durationMinutes,
+                    underline: const SizedBox.shrink(),
+                    dropdownColor: colors.bgCard,
+                    items: [0, 15, 30, 45]
+                        .map((m) => DropdownMenuItem(
+                              value: m,
+                              child: Text(
+                                '$m ${l10n.lite_minutes}',
+                                style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val == null) return;
+                      setState(() {
+                        _durationMinutes = val;
+                        if (_durationHours == 0 && _durationMinutes < 15) {
+                          _durationMinutes = 15;
+                        }
+                      });
+                    },
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 18),
 
