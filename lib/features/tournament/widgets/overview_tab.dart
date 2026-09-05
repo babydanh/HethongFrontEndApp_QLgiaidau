@@ -186,15 +186,40 @@ class _OverviewTabState extends State<OverviewTab> {
     final colors = context.colors;
     final resolvedAvatar = widget.resolveImageUrl(t.creatorAvatarUrl);
     final creatorName = t.creatorFullName ?? 'Ban tổ chức';
-    final dateRangeStr = (t.startDate != null && t.endDate != null)
-        ? '${_formatDate(t.startDate)} - ${_formatDate(t.endDate)}'
-        : (t.startDate != null
-            ? _formatDate(t.startDate)
-            : 'Chưa cập nhật thời gian');
-    final locationStr = TournamentLocationFormatter.tournamentFullLocation(t);
-    final desc = t.description.trim();
     final isClubLite = t.isClubLite;
 
+    String dateRangeStr;
+    if (isClubLite) {
+      if (t.startDate != null) {
+        final dateStr = _formatDate(t.startDate);
+        final hour = t.startDate!.hour;
+        final minute = t.startDate!.minute;
+        final timeStr = (hour != 0 || minute != 0)
+            ? ' · ${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}'
+            : '';
+
+        String durationStr = '';
+        if (t.endDate != null && t.endDate!.isAfter(t.startDate!)) {
+          final diffMinutes = t.endDate!.difference(t.startDate!).inMinutes;
+          if (diffMinutes > 0 && diffMinutes < 24 * 60) {
+            final h = diffMinutes ~/ 60;
+            final m = diffMinutes % 60;
+            durationStr = h > 0 ? (m > 0 ? ' (${h}h${m}p)' : ' (${h}h)') : ' (${m}p)';
+          }
+        }
+        dateRangeStr = '$dateStr$timeStr$durationStr';
+      } else {
+        dateRangeStr = 'Chưa cập nhật thời gian';
+      }
+    } else {
+      dateRangeStr = (t.startDate != null && t.endDate != null)
+          ? '${_formatDate(t.startDate)} - ${_formatDate(t.endDate)}'
+          : (t.startDate != null
+              ? _formatDate(t.startDate)
+              : 'Chưa cập nhật thời gian');
+    }
+    final locationStr = TournamentLocationFormatter.tournamentFullLocation(t);
+    final desc = t.description.trim();
     final hasCustomLogo = t.logoUrl != null && t.logoUrl!.trim().isNotEmpty;
 
     return SingleChildScrollView(
