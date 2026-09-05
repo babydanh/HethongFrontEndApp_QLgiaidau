@@ -422,10 +422,17 @@ class _UserProfileBottomSheetState
     final clubMatchesWon = clubRankInfo?.matchesWon ?? 0;
     final clubWinRate = clubMatchesPlayed > 0 ? (clubMatchesWon / clubMatchesPlayed * 100).round() : 0;
     final clubCategory = clubRankInfo?.categoryName ?? 'Pickleball';
+    final isRankedInClub = inClubContext && clubRankInfo != null && clubMatchesPlayed > 0;
 
-    final effectiveElo = inClubContext ? (clubMatchesPlayed > 0 ? clubElo : 1000) : (featuredRank?.eloPoints ?? 1000);
-    final effectiveTier = inClubContext ? (clubMatchesPlayed > 0 ? clubTier : 'Low Tier D') : (featuredRank?.tierName ?? 'Low Tier D');
-    final effectiveMatchesPlayed = inClubContext ? clubMatchesPlayed : (featuredRank?.matchesPlayed ?? 0);
+    final effectiveElo = inClubContext
+        ? (isRankedInClub ? clubElo : 0)
+        : (featuredRank?.eloPoints ?? 0);
+    final effectiveTier = inClubContext
+        ? (isRankedInClub ? clubTier : null)
+        : featuredRank?.tierName;
+    final effectiveMatchesPlayed = inClubContext
+        ? (isRankedInClub ? clubMatchesPlayed : 0)
+        : (featuredRank?.matchesPlayed ?? 0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -587,31 +594,53 @@ class _UserProfileBottomSheetState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header row: Badge + ELO points + Streak
+                // Header row: Badge + ELO points + Streak (or "Chưa xếp hạng" if unranked in club)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        EloTierBadge(
-                          elo: clubElo,
-                          tierName: clubTier,
-                          categoryName: clubCategory,
-                          scale: 0.95,
+                    if (isRankedInClub) ...[
+                      Row(
+                        children: [
+                          EloTierBadge(
+                            elo: clubElo,
+                            tierName: clubTier,
+                            categoryName: clubCategory,
+                            scale: 0.95,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '$clubElo ELO',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                              fontFamily: 'monospace',
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ] else ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 3.5,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '$clubElo ELO',
+                        decoration: BoxDecoration(
+                          color: colors.bgCard,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: colors.borderLight),
+                        ),
+                        child: Text(
+                          l10n.infoUnranked,
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w900,
-                            fontFamily: 'monospace',
-                            color: colors.textPrimary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textSecondary,
                           ),
                         ),
-                      ],
-                    ),
-                    if (clubRankInfo != null && clubRankInfo.streakCount > 0)
+                      ),
+                    ],
+                    if (isRankedInClub && clubRankInfo.streakCount > 0)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                         decoration: BoxDecoration(
@@ -808,21 +837,23 @@ class _UserProfileBottomSheetState
                       ],
                     ),
                   ],
-                ] else ...[
+                ] else if (featuredRank != null) ...[
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
                           EloTierBadge(
-                            elo: featuredRank?.eloPoints ?? 1000,
-                            tierName: featuredRank?.tierName ?? 'Low Tier D',
-                            categoryName: featuredRank?.categoryName,
+                            elo: featuredRank.eloPoints,
+                            tierName: featuredRank.tierName,
+                            categoryName: featuredRank.categoryName,
                             scale: 0.9,
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            featuredRank?.categoryName ?? l10n.userProfileEloStarting,
+                            featuredRank.categoryName.isNotEmpty
+                                ? featuredRank.categoryName
+                                : 'Thể thao',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -832,7 +863,7 @@ class _UserProfileBottomSheetState
                         ],
                       ),
                       Text(
-                        '${featuredRank?.eloPoints ?? 1000} ${l10n.userProfileElo}',
+                        '${featuredRank.eloPoints} ${l10n.userProfileElo}',
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
@@ -841,6 +872,29 @@ class _UserProfileBottomSheetState
                         ),
                       ),
                     ],
+                  ),
+                ] else ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 3.5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.bgCard,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: colors.borderLight),
+                      ),
+                      child: Text(
+                        l10n.publicProfileNoRankData,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
                 const SizedBox(height: 10),
