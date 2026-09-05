@@ -9,6 +9,9 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/widgets/football_registration_groups.dart';
@@ -44,6 +47,15 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   Timer? _maxPartDebounce;
   bool _controllersInitialized = false;
 
+  List<Region> _provinces = [];
+  List<Region> _wards = [];
+  String? _selectedProvinceCode;
+  String? _selectedWardCode;
+  bool _loadingProvinces = false;
+  bool _loadingWards = false;
+  Region? _aiDetectedProvince;
+  Region? _aiDetectedWard;
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +63,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     _tabController.addListener(() {
       if (mounted) setState(() {});
     });
+    _loadProvinces();
     // Wait until the first frame so auth/provider state is ready before the
     // first protected Lite request. Manual refresh already runs after this.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -67,6 +80,96 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         }
       });
     });
+  }
+
+  Future<void> _loadProvinces() async {
+    setState(() => _loadingProvinces = true);
+    try {
+      final list = await ref.read(regionRepositoryProvider).getProvinces();
+      if (!mounted) return;
+      setState(() {
+        _provinces = list;
+        _loadingProvinces = false;
+      });
+      _detectAddressAI(_locationController.text);
+    } catch (_) {
+      if (mounted) setState(() => _loadingProvinces = false);
+    }
+  }
+
+  Future<void> _loadWardsForProvince(String provinceCode, {String? targetWardCode}) async {
+    setState(() => _loadingWards = true);
+    try {
+      final list = await ref.read(regionRepositoryProvider).getWardsByProvince(provinceCode);
+      if (!mounted) return;
+      setState(() {
+        _wards = list;
+        _loadingWards = false;
+        if (targetWardCode != null && list.any((w) => w.code == targetWardCode)) {
+          _selectedWardCode = targetWardCode;
+        } else if (_selectedWardCode != null && !list.any((w) => w.code == _selectedWardCode)) {
+          _selectedWardCode = null;
+        }
+      });
+      _detectAddressAI(_locationController.text);
+    } catch (_) {
+      if (mounted) setState(() => _loadingWards = false);
+    }
+  }
+
+  void _detectAddressAI(String addressText) {
+    if (addressText.trim().isEmpty || _provinces.isEmpty) {
+      if (_aiDetectedProvince != null || _aiDetectedWard != null) {
+        setState(() {
+          _aiDetectedProvince = null;
+          _aiDetectedWard = null;
+        });
+      }
+      return;
+    }
+
+    final detectedP = VietnamAddressParser.detectProvince<Region>(
+      rawAddress: addressText,
+      provinces: _provinces,
+      getCode: (r) => r.code,
+      getName: (r) => r.name,
+      getFullName: (r) => r.fullName ?? r.name,
+    );
+
+    Region? detectedW;
+    if (_wards.isNotEmpty) {
+      detectedW = VietnamAddressParser.detectWard<Region>(
+        rawAddress: addressText,
+        wards: _wards,
+        getCode: (r) => r.code,
+        getName: (r) => r.name,
+        getFullName: (r) => r.fullName ?? r.name,
+      );
+    }
+
+    if (detectedP != _aiDetectedProvince || detectedW != _aiDetectedWard) {
+      setState(() {
+        _aiDetectedProvince = detectedP;
+        _aiDetectedWard = detectedW;
+      });
+    }
+  }
+
+  void _applyAiSuggestion(LiteManagementNotifier notifier) {
+    if (_aiDetectedProvince != null) {
+      final pCode = _aiDetectedProvince!.code;
+      setState(() {
+        _selectedProvinceCode = pCode;
+      });
+      _loadWardsForProvince(pCode, targetWardCode: _aiDetectedWard?.code);
+      notifier.updateLocation(
+        widget.tournamentId,
+        venueName: _venueNameController.text,
+        locationAddress: _locationController.text,
+        province: _aiDetectedProvince!.name,
+        ward: _aiDetectedWard?.name,
+      );
+    }
   }
 
   @override
@@ -115,6 +218,25 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       final dur = state.durationMinutes ?? 90;
       _durationHours = dur ~/ 60;
       _durationMinutes = dur % 60;
+
+      final pName = state.province;
+      final wName = state.ward;
+      if (pName != null && pName.isNotEmpty && _provinces.isNotEmpty) {
+        final pMatch = _provinces.where((p) => p.name.toLowerCase() == pName.toLowerCase() || (p.fullName != null && p.fullName!.toLowerCase() == pName.toLowerCase())).firstOrNull;
+        if (pMatch != null) {
+          _selectedProvinceCode = pMatch.code;
+          _loadWardsForProvince(pMatch.code).then((_) {
+            if (wName != null && wName.isNotEmpty && mounted) {
+              final wMatch = _wards.where((w) => w.name.toLowerCase() == wName.toLowerCase() || (w.fullName != null && w.fullName!.toLowerCase() == wName.toLowerCase())).firstOrNull;
+              if (wMatch != null) {
+                setState(() => _selectedWardCode = wMatch.code);
+              }
+            }
+          });
+        }
+      } else {
+        _detectAddressAI(_locationController.text);
+      }
     }
 
     return Scaffold(
@@ -672,6 +794,9 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
             .contains(t.status.toUpperCase());
 
+    final selectedProvince = _provinces.where((p) => p.code == _selectedProvinceCode).firstOrNull;
+    final selectedWard = _wards.where((w) => w.code == _selectedWardCode).firstOrNull;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -724,6 +849,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   widget.tournamentId,
                   venueName: _venueNameController.text,
                   locationAddress: _locationController.text,
+                  province: selectedProvince?.name,
+                  ward: selectedWard?.name,
                 );
               });
             },
@@ -747,15 +874,178 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               ),
             ),
             onChanged: (text) {
+              _detectAddressAI(text);
               _locationDebounce?.cancel();
               _locationDebounce = Timer(const Duration(milliseconds: 900), () {
                 notifier.updateLocation(
                   widget.tournamentId,
                   venueName: _venueNameController.text,
                   locationAddress: _locationController.text,
+                  province: selectedProvince?.name,
+                  ward: selectedWard?.name,
                 );
               });
             },
+          ),
+          // ─── AI Detected Address Helper Banner ───
+          if (!locked && (_aiDetectedProvince != null || _aiDetectedWard != null)) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.auto_awesome, size: 16, color: AppTheme.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${l10n.lite_aiDetectedAddress}: ${_aiDetectedProvince?.name ?? ''}${_aiDetectedWard != null ? ' > ${_aiDetectedWard?.name}' : ''}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => _applyAiSuggestion(notifier),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      child: Text(
+                        l10n.filterApply,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.primary,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          // ─── Dropdown Tỉnh/Thành phố & Phường/Xã ───
+          Row(
+            children: [
+              // Tỉnh / Thành phố
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedProvinceCode,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: l10n.lite_province,
+                    filled: true,
+                    fillColor: colors.bgDark,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colors.border),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                  dropdownColor: colors.bgCard,
+                  hint: Text(
+                    _loadingProvinces ? l10n.lite_loadingWards : l10n.lite_selectProvince,
+                    style: TextStyle(fontSize: 13, color: colors.textMuted),
+                  ),
+                  items: _provinces.map((p) {
+                    return DropdownMenuItem<String>(
+                      value: p.code,
+                      child: Text(
+                        p.name,
+                        style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: locked || _loadingProvinces
+                      ? null
+                      : (val) {
+                          if (val == null || val == _selectedProvinceCode) return;
+                          setState(() {
+                            _selectedProvinceCode = val;
+                            _selectedWardCode = null;
+                            _wards = [];
+                          });
+                          _loadWardsForProvince(val);
+                          final pObj = _provinces.where((p) => p.code == val).firstOrNull;
+                          notifier.updateLocation(
+                            widget.tournamentId,
+                            venueName: _venueNameController.text,
+                            locationAddress: _locationController.text,
+                            province: pObj?.name,
+                            ward: null,
+                          );
+                        },
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Phường / Xã
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedWardCode,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: l10n.lite_ward,
+                    filled: true,
+                    fillColor: colors.bgDark,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colors.border),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                  dropdownColor: colors.bgCard,
+                  hint: Text(
+                    _loadingWards
+                        ? l10n.lite_loadingWards
+                        : (_selectedProvinceCode == null
+                            ? l10n.lite_selectProvinceFirst
+                            : l10n.lite_selectWard),
+                    style: TextStyle(fontSize: 13, color: colors.textMuted),
+                  ),
+                  items: _wards.map((w) {
+                    return DropdownMenuItem<String>(
+                      value: w.code,
+                      child: Text(
+                        w.name,
+                        style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: locked || _loadingWards || _wards.isEmpty
+                      ? null
+                      : (val) {
+                          if (val == null || val == _selectedWardCode) return;
+                          setState(() => _selectedWardCode = val);
+                          final wObj = _wards.where((w) => w.code == val).firstOrNull;
+                          final pObj = _provinces.where((p) => p.code == _selectedProvinceCode).firstOrNull;
+                          notifier.updateLocation(
+                            widget.tournamentId,
+                            venueName: _venueNameController.text,
+                            locationAddress: _locationController.text,
+                            province: pObj?.name,
+                            ward: wObj?.name,
+                          );
+                        },
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1226,6 +1516,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         ? l10n.lite_doubles
         : l10n.lite_singles;
 
+    final logoOrBanner = tournament?.logoUrl ?? tournament?.bannerUrl;
+    final resolvedImageUrl = logoOrBanner != null && logoOrBanner.isNotEmpty
+        ? LiteTournamentCreateResult.resolveUrl(logoOrBanner)
+        : null;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -1238,7 +1533,45 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // Tournament Logo / Badge
+              Container(
+                width: 48,
+                height: 48,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    colors: [AppTheme.primary.withValues(alpha: 0.8), AppTheme.primary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primary.withValues(alpha: 0.25),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: resolvedImageUrl != null
+                      ? Image.network(
+                          resolvedImageUrl,
+                          fit: BoxFit.cover,
+                          width: 48,
+                          height: 48,
+                          errorBuilder: (ctx, err, stack) => const Center(
+                            child: Icon(Icons.emoji_events_rounded, color: Colors.white, size: 24),
+                          ),
+                        )
+                      : const Center(
+                          child: Icon(Icons.emoji_events_rounded, color: Colors.white, size: 24),
+                        ),
+                ),
+              ),
               Expanded(
                 child: Text(
                   state.tournamentName ?? l10n.navTournaments,
@@ -1249,6 +1582,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
@@ -1603,6 +1937,25 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           // ─── Mock tools ───
           Row(
             children: [
+              if (state.participants.isNotEmpty)
+                TextButton.icon(
+                  onPressed: state.mockLoading
+                      ? null
+                      : () => _confirmClearMock(colors, notifier),
+                  icon: Icon(
+                    Icons.delete_sweep_outlined,
+                    size: 18,
+                    color: colors.error,
+                  ),
+                  label: Text(
+                    l10n.lite_clearMockPlayers,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: colors.error,
+                    ),
+                  ),
+                ),
               const Spacer(),
               TextButton.icon(
                 onPressed: state.mockLoading
@@ -1928,7 +2281,74 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       ),
     );
     if (count != null) {
-      notifier.seedMock(widget.tournamentId, count);
+      try {
+        await notifier.seedMock(widget.tournamentId, count);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.lite_mockPlayersCreated(count)),
+              backgroundColor: colors.success,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.lite_mockPlayersFailed(e.toString())),
+              backgroundColor: colors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _confirmClearMock(
+    AppColorsExtension colors,
+    LiteManagementNotifier notifier,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.lite_clearMockConfirmTitle),
+        content: Text(l10n.lite_clearMockConfirmContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.matchesCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: colors.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.lite_clearMockPlayers),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await notifier.clearMock(widget.tournamentId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.lite_mockPlayersCleared),
+              backgroundColor: colors.success,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.lite_mockPlayersFailed(e.toString())),
+              backgroundColor: colors.error,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -2188,13 +2608,18 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     required String displayName,
     required Color accentColor,
     VoidCallback? onTap,
+    double size = 38,
   }) {
     final initial = displayName.trim().isNotEmpty ? displayName.trim()[0].toUpperCase() : '?';
+    final resolvedUrl = avatarUrl != null && avatarUrl.trim().isNotEmpty
+        ? LiteTournamentCreateResult.resolveUrl(avatarUrl.trim())
+        : null;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 38,
-        height: 38,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: LinearGradient(
@@ -2214,17 +2639,17 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           ],
         ),
         child: ClipOval(
-          child: avatarUrl != null && avatarUrl.trim().isNotEmpty
+          child: resolvedUrl != null && resolvedUrl.isNotEmpty
               ? Image.network(
-                  avatarUrl.trim(),
+                  resolvedUrl,
                   fit: BoxFit.cover,
-                  width: 38,
-                  height: 38,
+                  width: size,
+                  height: size,
                   errorBuilder: (context, error, stackTrace) => Center(
                     child: Text(
                       initial,
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: TextStyle(
+                        fontSize: size * 0.38,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
@@ -2234,8 +2659,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               : Center(
                   child: Text(
                     initial,
-                    style: const TextStyle(
-                      fontSize: 14,
+                    style: TextStyle(
+                      fontSize: size * 0.38,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
@@ -2428,10 +2853,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     LiteParticipant participant,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final firstMember = participant.members.isNotEmpty
-        ? participant.members.first
-        : null;
-    final subtitle = participant.members.map((m) => m.fullName).join(', ');
+    final members = participant.members;
+    final hasTwoMembers = members.length >= 2;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -2442,46 +2865,104 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         border: Border.all(color: colors.border),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _buildUserAvatar(
-            colors,
-            avatarUrl: firstMember?.avatarUrl,
-            displayName: participant.displayName,
-            accentColor: colors.success,
-            onTap: firstMember != null && firstMember.id.isNotEmpty
-                ? () => context.push('/user/${firstMember.id}')
-                : null,
-          ),
-          const SizedBox(width: 12),
           Expanded(
-            child: GestureDetector(
-              onTap: firstMember != null && firstMember.id.isNotEmpty
-                  ? () => context.push('/user/${firstMember.id}')
-                  : null,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    participant.displayName,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colors.textPrimary,
-                    ),
+            child: hasTwoMembers
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Member 1
+                      InkWell(
+                        onTap: members[0].id.isNotEmpty
+                            ? () => context.push('/user/${members[0].id}')
+                            : null,
+                        child: Row(
+                          children: [
+                            _buildUserAvatar(
+                              colors,
+                              avatarUrl: members[0].avatarUrl,
+                              displayName: members[0].fullName,
+                              accentColor: colors.success,
+                              size: 32,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                members[0].fullName.isNotEmpty
+                                    ? members[0].fullName
+                                    : l10n.infoPlayer,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      // Member 2
+                      InkWell(
+                        onTap: members[1].id.isNotEmpty
+                            ? () => context.push('/user/${members[1].id}')
+                            : null,
+                        child: Row(
+                          children: [
+                            _buildUserAvatar(
+                              colors,
+                              avatarUrl: members[1].avatarUrl,
+                              displayName: members[1].fullName,
+                              accentColor: AppTheme.primary,
+                              size: 32,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                members[1].fullName.isNotEmpty
+                                    ? members[1].fullName
+                                    : l10n.infoPlayer,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      _buildUserAvatar(
+                        colors,
+                        avatarUrl: members.isNotEmpty ? members.first.avatarUrl : null,
+                        displayName: participant.displayName,
+                        accentColor: colors.success,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          participant.displayName,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  if (subtitle.isNotEmpty &&
-                      subtitle != participant.displayName)
-                    Text(
-                      subtitle,
-                      style: TextStyle(fontSize: 11, color: colors.textMuted),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
-              ),
-            ),
           ),
-          if (participant.members.length >= 2)
+          const SizedBox(width: 10),
+          if (hasTwoMembers)
             SizedBox(
               height: 32,
               child: OutlinedButton(

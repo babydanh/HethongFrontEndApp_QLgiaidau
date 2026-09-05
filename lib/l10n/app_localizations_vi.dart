@@ -11863,4 +11863,48 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get organizer_becomeOrganizer => 'Đăng ký làm Ban Tổ Chức (Organizer)';
+
+  @override
+  String get lite_province => 'Tỉnh / Thành phố';
+
+  @override
+  String get lite_selectProvince => 'Chọn Tỉnh / Thành phố';
+
+  @override
+  String get lite_ward => 'Phường / Xã';
+
+  @override
+  String get lite_selectWard => 'Chọn Phường / Xã';
+
+  @override
+  String get lite_selectProvinceFirst => 'Vui lòng chọn Tỉnh/Thành trước';
+
+  @override
+  String get lite_loadingWards => 'Đang tải danh sách phường/xã...';
+
+  @override
+  String get lite_aiDetectedAddress => 'Đã tự nhận diện:';
+
+  @override
+  String get lite_clearMockPlayers => 'Xóa VĐV ảo';
+
+  @override
+  String get lite_clearMockConfirmTitle => 'Xóa toàn bộ VĐV ảo?';
+
+  @override
+  String get lite_clearMockConfirmContent =>
+      'Bạn có chắc chắn muốn xóa toàn bộ VĐV ảo đã sinh để kiểm thử không?';
+
+  @override
+  String lite_mockPlayersCreated(Object count) {
+    return 'Đã tạo thành công $count VĐV ảo';
+  }
+
+  @override
+  String get lite_mockPlayersCleared => 'Đã xóa toàn bộ VĐV ảo thành công';
+
+  @override
+  String lite_mockPlayersFailed(Object error) {
+    return 'Thao tác VĐV ảo thất bại: $error';
+  }
 }

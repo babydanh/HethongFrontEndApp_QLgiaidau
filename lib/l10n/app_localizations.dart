@@ -21633,6 +21633,84 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đăng ký làm Ban Tổ Chức (Organizer)'**
   String get organizer_becomeOrganizer;
+
+  /// No description provided for @lite_province.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉnh / Thành phố'**
+  String get lite_province;
+
+  /// No description provided for @lite_selectProvince.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn Tỉnh / Thành phố'**
+  String get lite_selectProvince;
+
+  /// No description provided for @lite_ward.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phường / Xã'**
+  String get lite_ward;
+
+  /// No description provided for @lite_selectWard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn Phường / Xã'**
+  String get lite_selectWard;
+
+  /// No description provided for @lite_selectProvinceFirst.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn Tỉnh/Thành trước'**
+  String get lite_selectProvinceFirst;
+
+  /// No description provided for @lite_loadingWards.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải danh sách phường/xã...'**
+  String get lite_loadingWards;
+
+  /// No description provided for @lite_aiDetectedAddress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tự nhận diện:'**
+  String get lite_aiDetectedAddress;
+
+  /// No description provided for @lite_clearMockPlayers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa VĐV ảo'**
+  String get lite_clearMockPlayers;
+
+  /// No description provided for @lite_clearMockConfirmTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa toàn bộ VĐV ảo?'**
+  String get lite_clearMockConfirmTitle;
+
+  /// No description provided for @lite_clearMockConfirmContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc chắn muốn xóa toàn bộ VĐV ảo đã sinh để kiểm thử không?'**
+  String get lite_clearMockConfirmContent;
+
+  /// No description provided for @lite_mockPlayersCreated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo thành công {count} VĐV ảo'**
+  String lite_mockPlayersCreated(Object count);
+
+  /// No description provided for @lite_mockPlayersCleared.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa toàn bộ VĐV ảo thành công'**
+  String get lite_mockPlayersCleared;
+
+  /// No description provided for @lite_mockPlayersFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thao tác VĐV ảo thất bại: {error}'**
+  String lite_mockPlayersFailed(Object error);
 }
 
 class _AppLocalizationsDelegate

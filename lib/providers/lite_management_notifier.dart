@@ -114,6 +114,8 @@ class LiteManagementState {
   final int? maxParticipants;
   final String? venueName;
   final String? locationAddress;
+  final String? province;
+  final String? ward;
   final String? description;
   final String detailsSaveStatus; // 'idle', 'saving', 'saved'
 
@@ -141,6 +143,8 @@ class LiteManagementState {
     this.maxParticipants,
     this.venueName,
     this.locationAddress,
+    this.province,
+    this.ward,
     this.description,
     this.detailsSaveStatus = 'idle',
   });
@@ -172,6 +176,8 @@ class LiteManagementState {
     int? maxParticipants,
     String? venueName,
     String? locationAddress,
+    String? province,
+    String? ward,
     String? description,
     String? detailsSaveStatus,
   }) {
@@ -203,6 +209,8 @@ class LiteManagementState {
       maxParticipants: maxParticipants ?? this.maxParticipants,
       venueName: venueName ?? this.venueName,
       locationAddress: locationAddress ?? this.locationAddress,
+      province: province ?? this.province,
+      ward: ward ?? this.ward,
       description: description ?? this.description,
       detailsSaveStatus: detailsSaveStatus ?? this.detailsSaveStatus,
     );
@@ -396,6 +404,11 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         final initialAddress = payload['locationAddress']?.toString() ??
             locConfig['address']?.toString() ??
             '';
+        final initialProvince = payload['city']?.toString() ??
+            locConfig['province']?.toString() ??
+            tournament?.city ??
+            '';
+        final initialWard = locConfig['ward']?.toString() ?? '';
         final initialDesc = payload['description']?.toString() ?? '';
         final initialMaxPart = int.tryParse(payload['maxParticipants']?.toString() ?? '') ??
             tournament?.maxTeams ??
@@ -439,6 +452,8 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
           maxParticipants: initialMaxPart,
           venueName: initialVenue,
           locationAddress: initialAddress,
+          province: initialProvince,
+          ward: initialWard,
           description: initialDesc,
         );
       }
@@ -718,6 +733,8 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     String tournamentId, {
     required String venueName,
     required String locationAddress,
+    String? province,
+    String? ward,
   }) async {
     final tournament = state.tournament;
     if (tournament == null ||
@@ -727,16 +744,30 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
     state = state.copyWith(detailsSaveStatus: 'saving');
     try {
+      final effectiveProvince = province ?? state.province ?? '';
+      final effectiveWard = ward ?? state.ward ?? '';
+      final displayParts = [
+        if (venueName.trim().isNotEmpty) venueName.trim(),
+        if (locationAddress.trim().isNotEmpty) locationAddress.trim(),
+        if (effectiveWard.trim().isNotEmpty) effectiveWard.trim(),
+        if (effectiveProvince.trim().isNotEmpty) effectiveProvince.trim(),
+      ];
+      final display = displayParts.join(', ');
+
       final nextTournamentConfig = {
         ...(tournament.locationConfig ?? {}),
         'location': {
           if (venueName.trim().isNotEmpty) 'venueName': venueName.trim(),
           if (locationAddress.trim().isNotEmpty) 'address': locationAddress.trim(),
+          if (effectiveProvince.trim().isNotEmpty) 'province': effectiveProvince.trim(),
+          if (effectiveWard.trim().isNotEmpty) 'ward': effectiveWard.trim(),
+          if (display.isNotEmpty) 'display': display,
         },
       };
 
       await _dio.patch('/tournaments/$tournamentId', data: {
         'locationAddress': locationAddress.trim(),
+        if (effectiveProvince.trim().isNotEmpty) 'city': effectiveProvince.trim(),
         'tournamentConfig': nextTournamentConfig,
       });
 
@@ -744,7 +775,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         try {
           await _dio.post('/tournaments/$tournamentId/venues', data: {
             'name': venueName.trim().isNotEmpty ? venueName.trim() : 'Sân thi đấu',
-            'locationAddress': locationAddress.trim(),
+            'locationAddress': locationAddress.trim().isNotEmpty ? locationAddress.trim() : display,
           });
         } catch (_) {}
       }
@@ -752,6 +783,8 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       state = state.copyWith(
         venueName: venueName.trim(),
         locationAddress: locationAddress.trim(),
+        province: effectiveProvince.trim(),
+        ward: effectiveWard.trim(),
         detailsSaveStatus: 'saved',
       );
       Future.delayed(const Duration(milliseconds: 2500), () {
@@ -1037,12 +1070,34 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       final names = List.generate(count, (i) => 'VĐV ảo ${i + 1}');
       await _dio.post(
         '/tournaments/$tournamentId/mock-participants',
-        data: {'names': names},
+        data: {
+          'names': names,
+          if (_liteDivisionId != null) 'divisionId': _liteDivisionId,
+        },
       );
       _log.success('Đã tạo $count VĐV ảo');
       await _fetchParticipants(tournamentId);
     } on DioException catch (e) {
       _log.error('Lỗi tạo VĐV ảo', e);
+      rethrow;
+    } finally {
+      state = state.copyWith(mockLoading: false);
+    }
+  }
+
+  Future<void> clearMock(String tournamentId) async {
+    state = state.copyWith(mockLoading: true);
+    try {
+      await _dio.delete(
+        '/tournaments/$tournamentId/mock-participants',
+        queryParameters: {
+          if (_liteDivisionId != null) 'divisionId': _liteDivisionId,
+        },
+      );
+      _log.success('Đã xóa toàn bộ VĐV ảo');
+      await _fetchParticipants(tournamentId);
+    } on DioException catch (e) {
+      _log.error('Lỗi xóa VĐV ảo', e);
       rethrow;
     } finally {
       state = state.copyWith(mockLoading: false);

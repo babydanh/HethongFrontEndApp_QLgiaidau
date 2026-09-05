@@ -4911,5 +4911,18 @@
   "organizer_rejectedTitle": "Hồ sơ chưa được duyệt",
   "organizer_rejectedReason": "Lý do",
   "organizer_resubmit": "Nộp lại hồ sơ",
-  "organizer_becomeOrganizer": "Đăng ký làm Ban Tổ Chức (Organizer)"
+  "organizer_becomeOrganizer": "Đăng ký làm Ban Tổ Chức (Organizer)",
+  "lite_province": "Tỉnh / Thành phố",
+  "lite_selectProvince": "Chọn Tỉnh / Thành phố",
+  "lite_ward": "Phường / Xã",
+  "lite_selectWard": "Chọn Phường / Xã",
+  "lite_selectProvinceFirst": "Vui lòng chọn Tỉnh/Thành trước",
+  "lite_loadingWards": "Đang tải danh sách phường/xã...",
+  "lite_aiDetectedAddress": "Đã tự nhận diện:",
+  "lite_clearMockPlayers": "Xóa VĐV ảo",
+  "lite_clearMockConfirmTitle": "Xóa toàn bộ VĐV ảo?",
+  "lite_clearMockConfirmContent": "Bạn có chắc chắn muốn xóa toàn bộ VĐV ảo đã sinh để kiểm thử không?",
+  "lite_mockPlayersCreated": "Đã tạo thành công {count} VĐV ảo",
+  "lite_mockPlayersCleared": "Đã xóa toàn bộ VĐV ảo thành công",
+  "lite_mockPlayersFailed": "Thao tác VĐV ảo thất bại: {error}"
 }

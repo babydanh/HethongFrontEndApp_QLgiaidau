@@ -11898,4 +11898,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get organizer_becomeOrganizer => 'Become a Tournament Organizer';
+
+  @override
+  String get lite_province => 'Province / City';
+
+  @override
+  String get lite_selectProvince => 'Select Province / City';
+
+  @override
+  String get lite_ward => 'Ward / Commune';
+
+  @override
+  String get lite_selectWard => 'Select Ward / Commune';
+
+  @override
+  String get lite_selectProvinceFirst => 'Please select Province first';
+
+  @override
+  String get lite_loadingWards => 'Loading wards...';
+
+  @override
+  String get lite_aiDetectedAddress => 'Detected automatically:';
+
+  @override
+  String get lite_clearMockPlayers => 'Clear Mock Players';
+
+  @override
+  String get lite_clearMockConfirmTitle => 'Clear all mock players?';
+
+  @override
+  String get lite_clearMockConfirmContent =>
+      'Are you sure you want to delete all mock players generated for testing?';
+
+  @override
+  String lite_mockPlayersCreated(Object count) {
+    return 'Successfully created $count mock players';
+  }
+
+  @override
+  String get lite_mockPlayersCleared => 'Successfully cleared all mock players';
+
+  @override
+  String lite_mockPlayersFailed(Object error) {
+    return 'Mock player operation failed: $error';
+  }
 }

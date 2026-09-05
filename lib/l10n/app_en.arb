@@ -4911,5 +4911,18 @@
   "organizer_rejectedTitle": "Application Rejected",
   "organizer_rejectedReason": "Reason",
   "organizer_resubmit": "Resubmit Application",
-  "organizer_becomeOrganizer": "Become a Tournament Organizer"
+  "organizer_becomeOrganizer": "Become a Tournament Organizer",
+  "lite_province": "Province / City",
+  "lite_selectProvince": "Select Province / City",
+  "lite_ward": "Ward / Commune",
+  "lite_selectWard": "Select Ward / Commune",
+  "lite_selectProvinceFirst": "Please select Province first",
+  "lite_loadingWards": "Loading wards...",
+  "lite_aiDetectedAddress": "Detected automatically:",
+  "lite_clearMockPlayers": "Clear Mock Players",
+  "lite_clearMockConfirmTitle": "Clear all mock players?",
+  "lite_clearMockConfirmContent": "Are you sure you want to delete all mock players generated for testing?",
+  "lite_mockPlayersCreated": "Successfully created {count} mock players",
+  "lite_mockPlayersCleared": "Successfully cleared all mock players",
+  "lite_mockPlayersFailed": "Mock player operation failed: {error}"
 }
