@@ -132,11 +132,28 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               }
             }
 
+            final asyncDivRawList = divisionsAsync.value ?? const <Map<String, dynamic>>[];
+            final asyncDivDetailsMap = <String, TournamentDivision>{
+              for (final raw in asyncDivRawList)
+                if (raw['id'] != null && raw['id'].toString().isNotEmpty)
+                  raw['id'].toString(): TournamentDivision.fromJson(raw)
+            };
+
             final divisions = tournament.divisions.isNotEmpty
-                ? tournament.divisions
-                : (divisionsAsync.value ?? const <Map<String, dynamic>>[])
-                      .map(TournamentDivision.fromJson)
-                      .toList();
+                ? tournament.divisions.map((d) {
+                    final detail = asyncDivDetailsMap[d.id];
+                    if (detail != null) {
+                      return d.copyWith(
+                        bracketType: detail.bracketType ?? d.bracketType,
+                        roundRobinLegs: detail.roundRobinLegs ?? d.roundRobinLegs,
+                        maxParticipants: detail.maxParticipants ?? d.maxParticipants,
+                        genderRestriction: detail.genderRestriction ?? d.genderRestriction,
+                      );
+                    }
+                    return d;
+                  }).toList()
+                : asyncDivRawList.map(TournamentDivision.fromJson).toList();
+
             return _buildContent(
               tournament.copyWith(divisions: divisions),
               authRole,

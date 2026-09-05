@@ -638,6 +638,28 @@ class TournamentDivision {
     );
   }
 
+  TournamentDivision copyWith({
+    String? id,
+    String? name,
+    String? matchType,
+    String? bracketType,
+    int? roundRobinLegs,
+    String? genderRestriction,
+    int? maxParticipants,
+    int? participantCount,
+  }) {
+    return TournamentDivision(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      matchType: matchType ?? this.matchType,
+      bracketType: bracketType ?? this.bracketType,
+      roundRobinLegs: roundRobinLegs ?? this.roundRobinLegs,
+      genderRestriction: genderRestriction ?? this.genderRestriction,
+      maxParticipants: maxParticipants ?? this.maxParticipants,
+      participantCount: participantCount ?? this.participantCount,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

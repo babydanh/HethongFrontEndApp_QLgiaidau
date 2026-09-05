@@ -222,15 +222,35 @@ class ApiTournamentRepository implements ITournamentRepository {
             // Sponsors are optional and must not block tournament detail loading.
           }
 
-          if ((data['divisions'] == null ||
-                  (data['divisions'] is List &&
-                      (data['divisions'] as List).isEmpty)) &&
-              divResponse != null &&
-              divResponse.statusCode == 200) {
-            final divData = divResponse.data['data'] ?? divResponse.data;
-            if (divData is List && divData.isNotEmpty) {
-              data['divisions'] = divData;
+          final rawDivisions = (data['divisions'] is List) ? List<dynamic>.from(data['divisions'] as List) : <dynamic>[];
+          final rawDivResponseData = (divResponse != null && divResponse.statusCode == 200)
+              ? (divResponse.data['data'] ?? divResponse.data)
+              : null;
+          final detailedDivList = (rawDivResponseData is List) ? List<dynamic>.from(rawDivResponseData) : <dynamic>[];
+
+          if (rawDivisions.isEmpty && detailedDivList.isNotEmpty) {
+            data['divisions'] = detailedDivList;
+          } else if (rawDivisions.isNotEmpty && detailedDivList.isNotEmpty) {
+            final detailedMap = <String, Map<String, dynamic>>{};
+            for (final d in detailedDivList) {
+              if (d is Map) {
+                final id = d['id']?.toString() ?? '';
+                if (id.isNotEmpty) detailedMap[id] = Map<String, dynamic>.from(d);
+              }
             }
+            data['divisions'] = rawDivisions.map((item) {
+              if (item is Map) {
+                final id = item['id']?.toString() ?? '';
+                final detail = detailedMap[id];
+                if (detail != null) {
+                  return {
+                    ...Map<String, dynamic>.from(item),
+                    ...detail,
+                  };
+                }
+              }
+              return item;
+            }).toList();
           }
           final tournament = Tournament.fromJson(data, id);
           _tournamentCache[id] = tournament;
