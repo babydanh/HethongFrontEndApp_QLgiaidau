@@ -129,6 +129,8 @@ class _CreatePublicQuickTournamentScreenState
         'isRanked': false,
         if (_descController.text.trim().isNotEmpty)
           'description': _descController.text.trim(),
+        'durationMinutes': (_durationHours * 60) + _durationMinutes,
+        'durationHours': ((_durationHours * 60) + _durationMinutes) / 60.0,
         if (_startDate != null) ...{
           'startDate': DateTime(
             _startDate!.year,
@@ -139,7 +141,6 @@ class _CreatePublicQuickTournamentScreenState
           ).toUtc().toIso8601String(),
           'startTime':
               '${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}',
-          'durationMinutes': (_durationHours * 60) + _durationMinutes,
           'endDate': DateTime(
             _startDate!.year,
             _startDate!.month,

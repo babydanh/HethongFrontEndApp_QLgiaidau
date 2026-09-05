@@ -402,19 +402,28 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
             16;
 
         DateTime? parsedStartDate;
-        int? parsedDurationMinutes;
         if (payload['startDate'] != null) {
           parsedStartDate = DateParser.parseDate(payload['startDate']);
-          if (cfgMap['durationMinutes'] != null) {
-            parsedDurationMinutes = int.tryParse(cfgMap['durationMinutes'].toString());
-          } else if (payload['endDate'] != null) {
-            final parsedEndDate = DateParser.parseDate(payload['endDate']);
-            if (parsedEndDate.isAfter(parsedStartDate)) {
-              parsedDurationMinutes = parsedEndDate.difference(parsedStartDate).inMinutes;
-            }
-          } else if (cfgMap['durationHours'] != null) {
-            final dh = double.tryParse(cfgMap['durationHours'].toString()) ?? 1.5;
+        }
+
+        final scheduleMap = cfgMap['schedule'] is Map<String, dynamic>
+            ? cfgMap['schedule'] as Map<String, dynamic>
+            : null;
+        final rawDurMin = cfgMap['durationMinutes'] ?? scheduleMap?['durationMinutes'];
+        final rawDurHours = cfgMap['durationHours'] ?? scheduleMap?['durationHours'];
+
+        int? parsedDurationMinutes;
+        if (rawDurMin != null) {
+          parsedDurationMinutes = int.tryParse(rawDurMin.toString());
+        } else if (rawDurHours != null) {
+          final dh = double.tryParse(rawDurHours.toString());
+          if (dh != null && dh > 0) {
             parsedDurationMinutes = (dh * 60).round();
+          }
+        } else if (parsedStartDate != null && payload['endDate'] != null) {
+          final parsedEndDate = DateParser.parseDate(payload['endDate']);
+          if (parsedEndDate.isAfter(parsedStartDate)) {
+            parsedDurationMinutes = parsedEndDate.difference(parsedStartDate).inMinutes;
           }
         }
 
