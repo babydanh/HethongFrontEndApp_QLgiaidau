@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -1021,7 +1022,7 @@ class _CreateAdvancedTournamentScreenState
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
                   initialValue: bracket,
-                  items: const [
+                  items: [
                     DropdownMenuItem(
                       value: AppConstants.bracketSingleElimination,
                       child: Row(
