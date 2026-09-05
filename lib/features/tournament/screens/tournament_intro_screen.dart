@@ -662,12 +662,32 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       return Icons.sync_rounded;
     }
     if (type.contains('GROUP_STAGE') || type.contains('GROUP') || type.contains('BẢNG')) {
-      return Icons.alt_route_rounded;
+      return Icons.grid_view_rounded;
     }
-    if (type.contains('DOUBLE_ELIMINATION') || type.contains('DOUBLE_ELIM') || type.contains('NHÁNH KÉP')) {
+    if (type.contains('DOUBLE_ELIMINATION') || type.contains('DOUBLE_ELIM') || type.contains('NHÁNH KÉP') || type.contains('THẮNG/THUA') || type.contains('THẮNG THUA')) {
       return Icons.call_split_rounded;
     }
     return Icons.account_tree_outlined;
+  }
+
+  String _getBracketFormatLabel(String? bracketType, [String? fallbackBracketType]) {
+    final raw = (bracketType != null && bracketType.trim().isNotEmpty)
+        ? bracketType
+        : (fallbackBracketType ?? '');
+    final type = raw.toUpperCase();
+    if (type.contains('ROUND_ROBIN') || type.contains('ROBIN') || type.contains('VÒNG TRÒN')) {
+      return 'Vòng tròn tính điểm';
+    }
+    if (type.contains('GROUP_STAGE') || type.contains('GROUP') || type.contains('BẢNG')) {
+      return 'Vòng bảng + loại trực tiếp';
+    }
+    if (type.contains('DOUBLE_ELIMINATION') || type.contains('DOUBLE_ELIM') || type.contains('NHÁNH KÉP') || type.contains('THẮNG/THUA') || type.contains('THẮNG THUA')) {
+      return 'Nhánh thắng/thua';
+    }
+    if (type.contains('SINGLE_ELIMINATION') || type.contains('SINGLE') || type.contains('LOẠI TRỰC TIẾP')) {
+      return 'Loại trực tiếp';
+    }
+    return raw.isNotEmpty ? raw : 'Loại trực tiếp';
   }
 
   /// Danh sách Phân hạng trực quan chuẩn Web & Taste Skill
@@ -766,16 +786,32 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        div.name,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight:
-                              isSelected ? FontWeight.w800 : FontWeight.w600,
-                          color: isSelected
-                              ? AppTheme.primary
-                              : colors.textPrimary,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            div.name,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight:
+                                  isSelected ? FontWeight.w800 : FontWeight.w600,
+                              color: isSelected
+                                  ? AppTheme.primary
+                                  : colors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _getBracketFormatLabel(div.bracketType, tournament.bracketType),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: isSelected
+                                  ? AppTheme.primary.withValues(alpha: 0.8)
+                                  : colors.textMuted,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 8),

@@ -208,15 +208,9 @@ class Tournament {
     if (json['divisions'] != null && json['divisions'] is List) {
       for (var div in json['divisions']) {
         if (div is Map) {
-          final divMap = Map<String, dynamic>.from(div);
-          if (divMap['bracketType'] == null &&
-              divMap['bracket_type'] == null &&
-              divMap['format'] == null &&
-              bracketTypeVal.isNotEmpty) {
-            divMap['bracketType'] = bracketTypeVal;
-          }
+          // Do not force tournament-level bracketType onto divisions to avoid masking division-specific formats
           parsedDivisions.add(
-            TournamentDivision.fromJson(divMap),
+            TournamentDivision.fromJson(Map<String, dynamic>.from(div)),
           );
         } else {
           // If the element is a string directly

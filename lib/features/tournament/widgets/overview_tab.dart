@@ -146,12 +146,32 @@ class _OverviewTabState extends State<OverviewTab> {
       return Icons.sync_rounded;
     }
     if (type.contains('GROUP_STAGE') || type.contains('GROUP') || type.contains('BẢNG')) {
-      return Icons.alt_route_rounded;
+      return Icons.grid_view_rounded;
     }
-    if (type.contains('DOUBLE_ELIMINATION') || type.contains('DOUBLE_ELIM') || type.contains('NHÁNH KÉP')) {
+    if (type.contains('DOUBLE_ELIMINATION') || type.contains('DOUBLE_ELIM') || type.contains('NHÁNH KÉP') || type.contains('THẮNG/THUA') || type.contains('THẮNG THUA')) {
       return Icons.call_split_rounded;
     }
     return Icons.account_tree_outlined;
+  }
+
+  String _getBracketFormatLabel(String? bracketType, [String? fallbackBracketType]) {
+    final raw = (bracketType != null && bracketType.trim().isNotEmpty)
+        ? bracketType
+        : (fallbackBracketType ?? '');
+    final type = raw.toUpperCase();
+    if (type.contains('ROUND_ROBIN') || type.contains('ROBIN') || type.contains('VÒNG TRÒN')) {
+      return 'Vòng tròn tính điểm';
+    }
+    if (type.contains('GROUP_STAGE') || type.contains('GROUP') || type.contains('BẢNG')) {
+      return 'Vòng bảng + loại trực tiếp';
+    }
+    if (type.contains('DOUBLE_ELIMINATION') || type.contains('DOUBLE_ELIM') || type.contains('NHÁNH KÉP') || type.contains('THẮNG/THUA') || type.contains('THẮNG THUA')) {
+      return 'Nhánh thắng/thua';
+    }
+    if (type.contains('SINGLE_ELIMINATION') || type.contains('SINGLE') || type.contains('LOẠI TRỰC TIẾP')) {
+      return 'Loại trực tiếp';
+    }
+    return raw.isNotEmpty ? raw : 'Loại trực tiếp';
   }
 
   void _scrollToDivisions() {
@@ -788,13 +808,27 @@ class _OverviewTabState extends State<OverviewTab> {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      displayName,
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                        color: isExpanded ? AppTheme.primary : colors.textPrimary,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          displayName,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: isExpanded ? AppTheme.primary : colors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _getBracketFormatLabel(div.bracketType, widget.tournament.bracketType),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -873,7 +907,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   _buildInlineInfo(
                     icon: Icons.sports_score_rounded,
                     label: 'Thể thức:',
-                    value: div.bracketType ?? 'Loại trực tiếp',
+                    value: _getBracketFormatLabel(div.bracketType, widget.tournament.bracketType),
                     colors: colors,
                   ),
                   const SizedBox(height: 6),
