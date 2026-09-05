@@ -35,6 +35,8 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   String _selectedFormat = AppConstants.formatDoubles;
   String _selectedBracket = AppConstants.bracketSingleElimination;
   DateTime? _startDate;
+  int _durationHours = 1;
+  int _durationMinutes = 30;
   bool _isRecurring = false;
   String _recurringFrequency = 'WEEKLY';
   int _recurringDayOfWeek = 6;
@@ -100,6 +102,10 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
           'startDate': _startDate!.toIso8601String(),
           'startTime':
               '${_startDate!.hour.toString().padLeft(2, '0')}:${_startDate!.minute.toString().padLeft(2, '0')}',
+          'durationMinutes': (_durationHours * 60) + _durationMinutes,
+          'endDate': _startDate!
+              .add(Duration(minutes: (_durationHours * 60) + _durationMinutes))
+              .toIso8601String(),
         },
         if (_isRecurring) ...{
           'isRecurring': true,
@@ -324,11 +330,77 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                   ),
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                l10n.createClubTournament_startDateNote,
-                style: TextStyle(color: colors.textMuted, fontSize: 11, height: 1.3),
-              ),
+              // ─── Thời lượng thi đấu ───
+              if (_startDate != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: colors.bgSurface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: colors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.timer_outlined, size: 16, color: colors.textSecondary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l10n.lite_duration,
+                          style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                        ),
+                      ),
+                      DropdownButton<int>(
+                        value: _durationHours,
+                        underline: const SizedBox.shrink(),
+                        dropdownColor: colors.bgCard,
+                        items: List.generate(24, (i) => i)
+                            .map((h) => DropdownMenuItem(
+                                  value: h,
+                                  child: Text(
+                                    '$h ${l10n.lite_hours}',
+                                    style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                                  ),
+                                ))
+                            .toList(),
+                        onChanged: (val) {
+                          if (val == null) return;
+                          setState(() {
+                            _durationHours = val;
+                            if (_durationHours == 0 && _durationMinutes < 15) {
+                              _durationMinutes = 15;
+                            }
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      DropdownButton<int>(
+                        value: _durationMinutes,
+                        underline: const SizedBox.shrink(),
+                        dropdownColor: colors.bgCard,
+                        items: [0, 15, 30, 45]
+                            .map((m) => DropdownMenuItem(
+                                  value: m,
+                                  child: Text(
+                                    '$m ${l10n.lite_minutes}',
+                                    style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                                  ),
+                                ))
+                            .toList(),
+                        onChanged: (val) {
+                          if (val == null) return;
+                          setState(() {
+                            _durationMinutes = val;
+                            if (_durationHours == 0 && _durationMinutes < 15) {
+                              _durationMinutes = 15;
+                            }
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
 
               // ─── Tạo định kỳ ───

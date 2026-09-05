@@ -37,8 +37,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   final _maxParticipantsController = TextEditingController();
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
-  int _durationHours = 4;
-  int _durationMinutes = 0;
+  int _durationHours = 1;
+  int _durationMinutes = 30;
   Timer? _descDebounce;
   Timer? _locationDebounce;
   Timer? _maxPartDebounce;
@@ -111,7 +111,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         _selectedDate = state.startDate;
         _selectedTime = TimeOfDay(hour: state.startDate!.hour, minute: state.startDate!.minute);
       }
-      final dur = state.durationMinutes ?? 240;
+      final dur = state.durationMinutes ?? 90;
       _durationHours = dur ~/ 60;
       _durationMinutes = dur % 60;
     }
@@ -646,7 +646,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     notifier.updateSchedule(
       widget.tournamentId,
       startDate: combined,
-      durationMinutes: totalMin > 0 ? totalMin : 240,
+      durationMinutes: totalMin > 0 ? totalMin : 90,
     );
   }
 

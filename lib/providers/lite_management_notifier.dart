@@ -413,7 +413,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
           } else if (cfgMap['durationMinutes'] != null) {
             parsedDurationMinutes = int.tryParse(cfgMap['durationMinutes'].toString());
           } else if (cfgMap['durationHours'] != null) {
-            final dh = double.tryParse(cfgMap['durationHours'].toString()) ?? 4.0;
+            final dh = double.tryParse(cfgMap['durationHours'].toString()) ?? 1.5;
             parsedDurationMinutes = (dh * 60).round();
           }
         }
@@ -426,7 +426,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
           hasBracket: hasBracket,
           rosterConfirmed: payload['isRegistrationLocked'] == true,
           startDate: parsedStartDate,
-          durationMinutes: parsedDurationMinutes ?? 240,
+          durationMinutes: parsedDurationMinutes ?? 90,
           maxParticipants: initialMaxPart,
           venueName: initialVenue,
           locationAddress: initialAddress,
