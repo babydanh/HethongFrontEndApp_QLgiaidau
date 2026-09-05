@@ -40,7 +40,11 @@ class StatusHelper {
   }
 
   static bool isTournamentDraft(String status) => normalizeTournamentStatus(status) == AppConstants.statusDraft;
-  static bool isTournamentUpcoming(String status) => normalizeTournamentStatus(status) == AppConstants.statusUpcoming;
+  static bool isTournamentUpcoming(String status) {
+    final normalized = normalizeTournamentStatus(status);
+    return normalized == AppConstants.statusUpcoming ||
+        normalized == AppConstants.statusRegistrationClosed;
+  }
   static bool isTournamentRegistration(String status) => normalizeTournamentStatus(status) == AppConstants.statusRegistration;
   static bool isTournamentRegistrationClosed(String status) => normalizeTournamentStatus(status) == AppConstants.statusRegistrationClosed;
   static bool isTournamentInProgress(String status) => normalizeTournamentStatus(status) == AppConstants.statusInProgress;
