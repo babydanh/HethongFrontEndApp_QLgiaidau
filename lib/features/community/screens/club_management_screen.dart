@@ -205,6 +205,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Parity Web: Bài viết chờ duyệt | Duyệt | Từ chối
           _sectionHeader(
             _l10n.club_pendingPostsSection(_pendingPosts.length),
             const Color(0xFFF59E0B),
