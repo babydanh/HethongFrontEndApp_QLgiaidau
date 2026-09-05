@@ -233,6 +233,9 @@ class _TournamentCardWithBannerState
           ]
         : categoryChips;
 
+    final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl);
+    final hasLogo = resolvedLogoUrl.isNotEmpty;
+
     return GestureDetector(
       onTap: widget.onTap,
       child: Container(
@@ -324,9 +327,9 @@ class _TournamentCardWithBannerState
                     ),
                   ),
 
-                  // Bottom Details Body (padding top 18 for floating logo)
+                  // Bottom Details Body (chỉ cộng padding-top khi có floating logo)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 18, 12, 12),
+                    padding: EdgeInsets.fromLTRB(12, hasLogo ? 18 : 12, 12, 12),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -545,31 +548,32 @@ class _TournamentCardWithBannerState
                 ],
               ),
 
-              // Floating Logo Avatar (top: 163 cho height 185)
-              Positioned(
-                top: 163,
-                left: 14,
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.12),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TournamentAvatar(
-                    imageUrl: widget.tournament.logoUrl ?? widget.tournament.creatorAvatarUrl,
-                    tournamentName: widget.tournament.name,
-                    sport: widget.tournament.sport,
-                    size: 42,
-                    borderWidth: 2.5,
-                    borderColor: colors.bgCard,
+              // Floating Logo Avatar (Chỉ hiển thị khi giải có logo tải lên, không có logo thì ẩn)
+              if (hasLogo)
+                Positioned(
+                  top: 163,
+                  left: 14,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TournamentAvatar(
+                      imageUrl: widget.tournament.logoUrl,
+                      tournamentName: widget.tournament.name,
+                      sport: widget.tournament.sport,
+                      size: 42,
+                      borderWidth: 2.5,
+                      borderColor: colors.bgCard,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
