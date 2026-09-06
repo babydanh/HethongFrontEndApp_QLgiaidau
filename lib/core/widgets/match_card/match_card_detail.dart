@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -39,7 +40,8 @@ class MatchCardDetail extends StatelessWidget {
         ? match.refereeName!.trim()
         : l10n.liveUnknownValue;
 
-    final isLiteMatch = match.tournamentConfig?['isLite'] == true ||
+    final isLiteMatch =
+        match.tournamentConfig?['isLite'] == true ||
         match.tournamentConfig?['mode']?.toString().toUpperCase() == 'LITE';
     final canScoreMatch = isReferee || !isReadOnly || isLiteMatch;
 
@@ -47,9 +49,13 @@ class MatchCardDetail extends StatelessWidget {
       onTap: match.hasTeams
           ? () {
               if (isReferee && tournamentId.isNotEmpty) {
-                context.push('/organizer/tournaments/$tournamentId/ops/match/${match.id}');
+                context.push(
+                  '/organizer/tournaments/$tournamentId/ops/match/${match.id}',
+                );
               } else {
-                context.push('/live/${match.id}${tournamentId.isNotEmpty ? '?tournamentId=$tournamentId' : ''}');
+                context.push(
+                  NavigationHelper.getLiveMatchRoute(tournamentId, match.id),
+                );
               }
             }
           : null,
@@ -217,9 +223,16 @@ class MatchCardDetail extends StatelessWidget {
                             Navigator.of(context).pop();
                           }
                           if (canScoreMatch && tournamentId.isNotEmpty) {
-                            context.push('/organizer/tournaments/$tournamentId/ops/match/${match.id}');
+                            context.push(
+                              '/organizer/tournaments/$tournamentId/ops/match/${match.id}',
+                            );
                           } else {
-                            context.push('/live/${match.id}${tournamentId.isNotEmpty ? '?tournamentId=$tournamentId' : ''}');
+                            context.push(
+                              NavigationHelper.getLiveMatchRoute(
+                                tournamentId,
+                                match.id,
+                              ),
+                            );
                           }
                         },
                         icon: Icon(
@@ -301,10 +314,7 @@ class MatchCardDetail extends StatelessWidget {
   }
 
   String _roundLabel(MatchModel match, AppLocalizations l10n) {
-    return MatchRoundLabel.formatRound(
-      match: match,
-      l10n: l10n,
-    );
+    return MatchRoundLabel.formatRound(match: match, l10n: l10n);
   }
 
   String _venueText(MatchModel match, AppLocalizations l10n) {

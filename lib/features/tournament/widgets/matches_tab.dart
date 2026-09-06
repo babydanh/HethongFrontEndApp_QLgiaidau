@@ -5,17 +5,20 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 
 class MatchesTab extends ConsumerStatefulWidget {
   final String tournamentId;
   final String? selectedDivisionId;
   final String? selectedDivision;
+  final bool isLite;
 
   const MatchesTab({
     super.key,
     required this.tournamentId,
     this.selectedDivisionId,
     this.selectedDivision,
+    this.isLite = false,
   });
 
   @override
@@ -36,7 +39,11 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final matchesAsync = ref.watch(matchesProvider(widget.tournamentId));
+    final matchesAsync = ref.watch(
+      widget.isLite
+          ? liteBracketMatchesProvider(widget.tournamentId)
+          : matchesProvider(widget.tournamentId),
+    );
 
     return matchesAsync.when(
       data: (allMatches) {
@@ -44,7 +51,8 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
         var matches = allMatches.where((m) {
           if (widget.selectedDivisionId != null &&
               widget.selectedDivisionId!.isNotEmpty) {
-            final mDiv = m.tournamentConfig?['divisionId']?.toString() ??
+            final mDiv =
+                m.tournamentConfig?['divisionId']?.toString() ??
                 m.tournamentConfig?['tournamentDivisionId']?.toString();
             if (mDiv != null &&
                 mDiv.isNotEmpty &&
@@ -75,15 +83,18 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
           matches = matches.where((m) => m.isLive).toList();
         } else if (_statusFilter == 'scheduled') {
           matches = matches
-              .where((m) =>
-                  !m.isLive &&
-                  !m.isCompleted &&
-                  m.status != AppConstants.matchCompleted)
+              .where(
+                (m) =>
+                    !m.isLive &&
+                    !m.isCompleted &&
+                    m.status != AppConstants.matchCompleted,
+              )
               .toList();
         } else if (_statusFilter == 'completed') {
           matches = matches
-              .where((m) =>
-                  m.isCompleted || m.status == AppConstants.matchCompleted)
+              .where(
+                (m) => m.isCompleted || m.status == AppConstants.matchCompleted,
+              )
               .toList();
         }
 
@@ -106,7 +117,10 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                       child: TextField(
                         controller: _searchCtrl,
                         onChanged: (val) => setState(() => _searchQuery = val),
-                        style: TextStyle(fontSize: 13.5, color: colors.textPrimary),
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          color: colors.textPrimary,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Tìm trận đấu, tên đội hoặc VĐV...',
                           hintStyle: TextStyle(
@@ -120,7 +134,10 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                           ),
                           suffixIcon: _searchQuery.isNotEmpty
                               ? IconButton(
-                                  icon: const Icon(Icons.close_rounded, size: 16),
+                                  icon: const Icon(
+                                    Icons.close_rounded,
+                                    size: 16,
+                                  ),
                                   onPressed: () {
                                     _searchCtrl.clear();
                                     setState(() => _searchQuery = '');
@@ -142,7 +159,10 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                       physics: const BouncingScrollPhysics(),
                       child: Row(
                         children: [
-                          _buildFilterChip('all', 'Tất cả (${allMatches.length})'),
+                          _buildFilterChip(
+                            'all',
+                            'Tất cả (${allMatches.length})',
+                          ),
                           const SizedBox(width: 8),
                           _buildFilterChip(
                             'live',
@@ -208,26 +228,29 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 6, 16, 100),
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final match = matches[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: LiveMatchCardV2(
-                          match: match,
-                          isLive: match.isLive,
-                          isCompleted: match.isCompleted ||
-                              match.status == AppConstants.matchCompleted,
-                          onTap: () {
-                            if (match.hasTeams) {
-                              context.push('/live/${match.id}');
-                            }
-                          },
-                        ),
-                      );
-                    },
-                    childCount: matches.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final match = matches[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: LiveMatchCardV2(
+                        match: match,
+                        isLive: match.isLive,
+                        isCompleted:
+                            match.isCompleted ||
+                            match.status == AppConstants.matchCompleted,
+                        onTap: () {
+                          if (match.hasTeams) {
+                            context.push(
+                              NavigationHelper.getLiveMatchRoute(
+                                widget.tournamentId,
+                                match.id,
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    );
+                  }, childCount: matches.length),
                 ),
               ),
           ],

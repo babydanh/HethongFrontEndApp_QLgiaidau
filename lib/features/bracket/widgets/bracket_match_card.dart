@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/match_card_detail.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/team_row.dart';
@@ -40,7 +41,7 @@ class BracketMatchCard extends StatelessWidget {
     // every tournament type, including Super Lite. The referee desk remains
     // available from the explicit scoring action in the detail view.
     if (match.isLive || match.isScheduled) {
-      context.push('/live/${match.id}${tournamentId.isNotEmpty ? '?tournamentId=$tournamentId' : ''}');
+      context.push(NavigationHelper.getLiveMatchRoute(tournamentId, match.id));
       return;
     }
     showDialog(

@@ -90,14 +90,12 @@ class AppNotification {
     switch (type) {
       case 'MATCH_LIVE':
       case 'MATCH_RESULT':
-        if (matchId != null) return '/live/$matchId';
-        return null;
+        return _liveMatchRoute;
 
       case 'MATCH_REMINDER':
         // Reminder payloads carry the canonical deep link; keep the match
         // fallback for older notifications that only contained matchId.
-        return _normalizeRedirectUrl(redirectUrl) ??
-            (matchId == null ? null : '/live/$matchId');
+        return _normalizeRedirectUrl(redirectUrl) ?? _liveMatchRoute;
 
       case 'TOURNAMENT_INVITE':
       case 'TOURNAMENT_REGISTER_PENDING':
@@ -131,7 +129,7 @@ class AppNotification {
           return _normalizeRedirectUrl(redirectUrl);
         }
         if (type.contains('MATCH') && matchId != null) {
-          return '/live/$matchId';
+          return _liveMatchRoute;
         }
         if (type.startsWith('TOURNAMENT_') && tournamentId != null) {
           return '/intro/$tournamentId';
@@ -154,6 +152,21 @@ class AppNotification {
         // Fallback: dùng redirectUrl nếu có
         return _normalizeRedirectUrl(redirectUrl);
     }
+  }
+
+  /// Match notifications may be opened outside the tournament page. Preserve
+  /// the tournament context so club/Lite access checks and the referee desk
+  /// resolve on the first request instead of requiring a second lookup.
+  String? get _liveMatchRoute {
+    final id = matchId;
+    if (id == null || id.isEmpty) return null;
+    final tournament = tournamentId;
+    return Uri(
+      path: '/live/$id',
+      queryParameters: tournament == null || tournament.isEmpty
+          ? null
+          : {'tournamentId': tournament},
+    ).toString();
   }
 
   /// Converts web notification links to routes that exist in the mobile app.
@@ -220,7 +233,12 @@ class AppNotification {
       return '/dashboard';
     }
     if (segments.length >= 2 && segments[0] == 'matches') {
-      return '/live/${segments[1]}';
+      return Uri(
+        path: '/live/${segments[1]}',
+        queryParameters: uri.queryParameters['tournamentId'] == null
+            ? null
+            : {'tournamentId': uri.queryParameters['tournamentId']!},
+      ).toString();
     }
     if (segments.length >= 2 && segments[0] == 'communities') {
       final postId = uri.queryParameters['postId'];
@@ -396,8 +414,9 @@ class AppNotification {
   }
 
   /// Legacy Vietnamese formatter kept for non-UI compatibility.
-  String get timeAgo =>
-      localizedTimeAgo(lookupAppLocalizations(PlatformDispatcher.instance.locale));
+  String get timeAgo => localizedTimeAgo(
+    lookupAppLocalizations(PlatformDispatcher.instance.locale),
+  );
 
   String localizedTimeAgo(AppLocalizations l10n) {
     final diff = DateTime.now().difference(createdAt);

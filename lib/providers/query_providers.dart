@@ -165,6 +165,61 @@ final bracketMatchesProvider = StreamProvider.family<List<MatchModel>, String>((
   }
 });
 
+/// Lite tournaments are rendered from the bracket projection. The public flat
+/// `/matches?publicOnly=true` feed intentionally excludes Lite records, so a
+/// Lite screen must never fall back to that feed after a bracket read fails.
+/// Keep the first paint bounded and retry the authoritative projection in the
+/// background so a transient API failure does not leave the screen spinning.
+final liteBracketMatchesProvider =
+    StreamProvider.family<List<MatchModel>, String>((ref, tournamentId) async* {
+      final repo = ref.watch(tournamentRepositoryProvider);
+
+      Future<List<MatchModel>> loadSnapshot() async {
+        try {
+          return await repo
+              .getBracketMatches(tournamentId)
+              .timeout(const Duration(seconds: 8), onTimeout: () => const []);
+        } catch (_) {
+          return const [];
+        }
+      }
+
+      yield await loadSnapshot();
+      yield* Stream.periodic(const Duration(seconds: 15))
+          .asyncMap((_) => loadSnapshot())
+          .handleError((_) => const <MatchModel>[]);
+    });
+
+/// Division-scoped Lite projection for the live tournament screen. Keep it
+/// separate from the generic provider so normal tournaments retain their
+/// existing flat-feed fallback and Lite never gets filtered out by
+/// `publicOnly=true`.
+final liteBracketMatchesWithDivisionProvider =
+    StreamProvider.family<
+      List<MatchModel>,
+      ({String tournamentId, String? divisionId})
+    >((ref, params) async* {
+      final repo = ref.watch(tournamentRepositoryProvider);
+
+      Future<List<MatchModel>> loadSnapshot() async {
+        try {
+          return await repo
+              .getBracketMatches(
+                params.tournamentId,
+                divisionId: params.divisionId,
+              )
+              .timeout(const Duration(seconds: 8), onTimeout: () => const []);
+        } catch (_) {
+          return const [];
+        }
+      }
+
+      yield await loadSnapshot();
+      yield* Stream.periodic(const Duration(seconds: 15))
+          .asyncMap((_) => loadSnapshot())
+          .handleError((_) => const <MatchModel>[]);
+    });
+
 final bracketMatchesWithDivisionProvider =
     StreamProvider.family<
       List<MatchModel>,

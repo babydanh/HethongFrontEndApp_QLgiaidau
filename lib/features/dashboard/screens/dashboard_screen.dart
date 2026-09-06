@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -48,10 +49,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           title: Text(l10n.dashboard_title),
           centerTitle: true,
           leading: IconButton(
-            icon: Icon(
-              Icons.arrow_back_rounded,
-              color: colors.textPrimary,
-            ),
+            icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
             onPressed: () {
               if (context.canPop()) {
                 context.pop();
@@ -107,10 +105,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         title: Text(l10n.dashboard_title),
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_rounded,
-            color: colors.textPrimary,
-          ),
+          icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -278,41 +273,39 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return rankingsAsync.when(
       data: (rankings) {
-        final playedRankings =
-            rankings.where((ranking) {
-              if (ranking.matchesPlayed <= 0) return false;
-              if (_selectedSport == 'all') return true;
+        final playedRankings = rankings.where((ranking) {
+          if (ranking.matchesPlayed <= 0) return false;
+          if (_selectedSport == 'all') return true;
 
-              final sportKey = (ranking.categoryId ?? ranking.categoryName ?? '')
-                  .trim()
-                  .toLowerCase();
-              final sel = _selectedSport.toLowerCase();
+          final sportKey = (ranking.categoryId ?? ranking.categoryName ?? '')
+              .trim()
+              .toLowerCase();
+          final sel = _selectedSport.toLowerCase();
 
-              if (sel == 'pickleball' &&
-                  (sportKey.contains('pickle') || sportKey.contains('padd'))) {
-                return true;
-              }
-              if (sel == 'badminton' &&
-                  (sportKey.contains('badminton') || sportKey.contains('cầu'))) {
-                return true;
-              }
-              if (sel == 'table_tennis' &&
-                  (sportKey.contains('table') || sportKey.contains('bàn'))) {
-                return true;
-              }
-              if (sel == 'tennis' && sportKey.contains('tennis')) {
-                return true;
-              }
-              if (sel == 'football' &&
-                  (sportKey.contains('foot') ||
-                      sportKey.contains('socc') ||
-                      sportKey.contains('bóng'))) {
-                return true;
-              }
+          if (sel == 'pickleball' &&
+              (sportKey.contains('pickle') || sportKey.contains('padd'))) {
+            return true;
+          }
+          if (sel == 'badminton' &&
+              (sportKey.contains('badminton') || sportKey.contains('cầu'))) {
+            return true;
+          }
+          if (sel == 'table_tennis' &&
+              (sportKey.contains('table') || sportKey.contains('bàn'))) {
+            return true;
+          }
+          if (sel == 'tennis' && sportKey.contains('tennis')) {
+            return true;
+          }
+          if (sel == 'football' &&
+              (sportKey.contains('foot') ||
+                  sportKey.contains('socc') ||
+                  sportKey.contains('bóng'))) {
+            return true;
+          }
 
-              return sportKey == sel;
-            }).toList()
-              ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
+          return sportKey == sel;
+        }).toList()..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
 
         if (playedRankings.isEmpty) {
           return Padding(
@@ -903,7 +896,12 @@ class _AssignedMatchesSection extends StatelessWidget {
                     subtitle: subtitle,
                     participants: match.participantLabel,
                     meta: _formatMatchMeta(match, l10n),
-                    onTap: () => context.push('/live/${match.id}'),
+                    onTap: () => context.push(
+                      NavigationHelper.getLiveMatchRoute(
+                        match.tournamentId,
+                        match.id,
+                      ),
+                    ),
                   ),
                 );
               }).toList(),
@@ -1577,7 +1575,8 @@ class _TournamentTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
-                  if (tournament.communityName != null && tournament.communityName!.isNotEmpty) ...[
+                  if (tournament.communityName != null &&
+                      tournament.communityName!.isNotEmpty) ...[
                     Row(
                       children: [
                         Icon(
@@ -1604,9 +1603,10 @@ class _TournamentTile extends StatelessWidget {
                   ],
                   Text(
                     isClubLite
-                        ? (tournament.communityName != null && tournament.communityName!.isNotEmpty
-                            ? 'Giải Siêu Lite • ${tournament.communityName}'
-                            : l10n.dashboard_liteDesc)
+                        ? (tournament.communityName != null &&
+                                  tournament.communityName!.isNotEmpty
+                              ? 'Giải Siêu Lite • ${tournament.communityName}'
+                              : l10n.dashboard_liteDesc)
                         : l10n.opsOrganizerOnly,
                     style: TextStyle(
                       fontSize: 9,

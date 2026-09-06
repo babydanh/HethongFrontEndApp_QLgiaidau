@@ -645,21 +645,21 @@ class ApiMatchRepository implements IMatchRepository {
           json['division_id']?.toString() ??
           (json['stage'] is Map
               ? (json['stage']['divisionId'] ?? json['stage']['division_id'])
-                  ?.toString()
+                    ?.toString()
               : null) ??
           (json['group'] is Map
               ? (json['group']['divisionId'] ?? json['group']['division_id'])
-                  ?.toString()
+                    ?.toString()
               : null) ??
           (json['scoreDetails'] is Map
               ? (json['scoreDetails']['division_id'] ??
-                      json['scoreDetails']['divisionId'])
-                  ?.toString()
+                        json['scoreDetails']['divisionId'])
+                    ?.toString()
               : null) ??
           (json['tournamentConfig'] is Map
               ? (json['tournamentConfig']['division_id'] ??
-                      json['tournamentConfig']['divisionId'])
-                  ?.toString()
+                        json['tournamentConfig']['divisionId'])
+                    ?.toString()
               : null),
     );
   }
@@ -679,7 +679,12 @@ class ApiMatchRepository implements IMatchRepository {
         _socketService.connect(matchId);
 
         // Fetch initial state
-        final initialMatch = await _getMatchById(matchId);
+        // Do not let the Dio retry chain leave the live screen spinning for
+        // tens of seconds. Socket/reconciliation can still recover the
+        // current match after this bounded initial snapshot.
+        final initialMatch = await _getMatchById(
+          matchId,
+        ).timeout(const Duration(seconds: 8), onTimeout: () => null);
         latestMatch = initialMatch;
         if (!controller.isClosed) {
           controller.add(initialMatch);
@@ -1098,7 +1103,9 @@ class ApiMatchRepository implements IMatchRepository {
   }
 
   @override
-  Future<({List<MatchModel> matches, String? nextCursor, bool hasMore, int total})>
+  Future<
+    ({List<MatchModel> matches, String? nextCursor, bool hasMore, int total})
+  >
   getTournamentMatchesPaged({
     required String tournamentId,
     String? status,
@@ -1115,7 +1122,10 @@ class ApiMatchRepository implements IMatchRepository {
     if (cursor != null && cursor.isNotEmpty) {
       query['cursor'] = cursor;
     }
-    final response = await _dioClient.dio.get('/matches', queryParameters: query);
+    final response = await _dioClient.dio.get(
+      '/matches',
+      queryParameters: query,
+    );
     final payload = response.data;
     final list = _extractList(payload);
     final matches = list
@@ -1126,13 +1136,14 @@ class ApiMatchRepository implements IMatchRepository {
     final meta = payload is Map && payload['meta'] is Map
         ? Map<String, dynamic>.from(payload['meta'] as Map)
         : null;
-    final hasMore = meta?['hasMore'] == true ||
+    final hasMore =
+        meta?['hasMore'] == true ||
         (nextCursor != null && nextCursor.isNotEmpty);
     final total = meta?['total'] is num
         ? (meta!['total'] as num).toInt()
         : (meta?['totalCount'] is num
-            ? (meta!['totalCount'] as num).toInt()
-            : matches.length);
+              ? (meta!['totalCount'] as num).toInt()
+              : matches.length);
     return (
       matches: matches,
       nextCursor: nextCursor,

@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -24,9 +25,13 @@ class CommunityTournamentPreview extends ConsumerWidget {
     }
 
     final tournamentAsync = ref.watch(tournamentProvider(tournamentId));
-    final matchesAsync = ref.watch(matchesProvider(tournamentId));
-
     final tournament = tournamentAsync.value;
+    final matchesAsync = ref.watch(
+      tournament?.isLite == true
+          ? liteBracketMatchesProvider(tournamentId)
+          : matchesProvider(tournamentId),
+    );
+
     final matches = matchesAsync.value ?? const <MatchModel>[];
 
     // Filter valid matches
@@ -71,7 +76,8 @@ class CommunityTournamentPreview extends ConsumerWidget {
           // ── Header Bar ──
           InkWell(
             onTap: () {
-              final inviteParam = (post.tournamentInviteCode != null &&
+              final inviteParam =
+                  (post.tournamentInviteCode != null &&
                       post.tournamentInviteCode!.isNotEmpty)
                   ? '?invite=${Uri.encodeComponent(post.tournamentInviteCode!)}'
                   : '';
@@ -179,7 +185,9 @@ class CommunityTournamentPreview extends ConsumerWidget {
                   );
 
                   return InkWell(
-                    onTap: () => context.push('/live/${m.id}'),
+                    onTap: () => context.push(
+                      NavigationHelper.getLiveMatchRoute(tournamentId, m.id),
+                    ),
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 3.5),
@@ -302,7 +310,8 @@ class CommunityTournamentPreview extends ConsumerWidget {
           Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
           InkWell(
             onTap: () {
-              final inviteParam = (post.tournamentInviteCode != null &&
+              final inviteParam =
+                  (post.tournamentInviteCode != null &&
                       post.tournamentInviteCode!.isNotEmpty)
                   ? '?invite=${Uri.encodeComponent(post.tournamentInviteCode!)}'
                   : '';

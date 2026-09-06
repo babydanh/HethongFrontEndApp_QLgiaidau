@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -86,8 +87,13 @@ class MatchTableRow extends StatelessWidget {
       roundLabel = l10n.matchTableGrandFinal;
     } else if (branch == 'losers') {
       roundLabel = l10n.matchTableLosersRound(match.round);
-    } else if (isGroup && match.groupName != null && match.groupName!.trim().isNotEmpty) {
-      final groupDisplay = MatchRoundLabel.formatStageOrGroupName(match.groupName, l10n: l10n);
+    } else if (isGroup &&
+        match.groupName != null &&
+        match.groupName!.trim().isNotEmpty) {
+      final groupDisplay = MatchRoundLabel.formatStageOrGroupName(
+        match.groupName,
+        l10n: l10n,
+      );
       roundLabel = l10n.crossTableLegTitle(groupDisplay, match.leg ?? 1);
     } else {
       roundLabel = l10n.matchTableRoundMatch(
@@ -144,7 +150,9 @@ class MatchTableRow extends StatelessWidget {
           onTap: () {
             // Match cards always open the live page. Scoring/referee access is
             // an explicit action, not the default card navigation.
-            context.push('/live/${match.id}${tournamentId.isNotEmpty ? '?tournamentId=$tournamentId' : ''}');
+            context.push(
+              NavigationHelper.getLiveMatchRoute(tournamentId, match.id),
+            );
           },
           borderRadius: BorderRadius.circular(16),
           child: Padding(

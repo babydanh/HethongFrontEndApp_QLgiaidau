@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
@@ -694,7 +695,12 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
       onTap: () {
         if (match.tournamentName != null) {
           // Navigate to the match detail via live-score
-          context.push('/live/${match.id}');
+          context.push(
+            NavigationHelper.getLiveMatchRoute(
+              match.tournamentId ?? '',
+              match.id,
+            ),
+          );
         }
       },
       child: Container(

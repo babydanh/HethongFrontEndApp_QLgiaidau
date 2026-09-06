@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'dart:math' as math;
@@ -278,8 +279,9 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
               title: l10n.exploreUpcomingTitle,
             ),
           ),
-            SliverList(
-              delegate: SliverChildBuilderDelegate((ctx, i) {
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (ctx, i) {
                 final list = widget.tournaments.isNotEmpty
                     ? widget.tournaments
                     : _filtered;
@@ -289,13 +291,14 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                   filterStatus: 'scheduled',
                 );
               },
-                  childCount: math.min(
-                    widget.tournaments.isNotEmpty
-                        ? widget.tournaments.length
-                        : _filtered.length,
-                    6,
-                  )),
+              childCount: math.min(
+                widget.tournaments.isNotEmpty
+                    ? widget.tournaments.length
+                    : _filtered.length,
+                6,
+              ),
             ),
+          ),
 
           // ── Empty State ──
           if (_filtered.isEmpty)
@@ -929,8 +932,9 @@ class _TournamentCard extends StatelessWidget {
       'double_elimination' => l10n.eliminationDouble,
       'round_robin' => l10n.roundRobin,
       'group_stage' || 'group_stage_knockout' => l10n.groupStage,
-      _ => AppConstants.bracketTypeNames[tournament.bracketType] ??
-          tournament.bracketType,
+      _ =>
+        AppConstants.bracketTypeNames[tournament.bracketType] ??
+            tournament.bracketType,
     };
 
     return GestureDetector(
@@ -1399,10 +1403,7 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
                   decoration: BoxDecoration(
                     color: colors.bgSurface,
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: colors.border,
-                      width: 1,
-                    ),
+                    border: Border.all(color: colors.border, width: 1),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1668,7 +1669,12 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
               Expanded(
                 child: InkWell(
                   onTap: () {
-                    context.push('/live/${m.id}');
+                    context.push(
+                      NavigationHelper.getLiveMatchRoute(
+                        widget.tournament?.id ?? m.tournamentId ?? '',
+                        m.id,
+                      ),
+                    );
                   },
                   borderRadius: BorderRadius.circular(10),
                   child: Container(

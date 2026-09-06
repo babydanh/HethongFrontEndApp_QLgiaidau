@@ -6,9 +6,11 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 
 class LiveTab extends StatefulWidget {
   final List<MatchModel> liveMatches;
+  final String? tournamentId;
   final List<TournamentDivision> divisions;
   final String? selectedDivisionId;
   final ValueChanged<TournamentDivision>? onSelectDivision;
@@ -16,6 +18,7 @@ class LiveTab extends StatefulWidget {
   const LiveTab({
     super.key,
     required this.liveMatches,
+    this.tournamentId,
     this.divisions = const [],
     this.selectedDivisionId,
     this.onSelectDivision,
@@ -31,7 +34,8 @@ class _LiveTabState extends State<LiveTab> {
   @override
   void initState() {
     super.initState();
-    _expandedDivisionId = widget.selectedDivisionId ??
+    _expandedDivisionId =
+        widget.selectedDivisionId ??
         (widget.divisions.isNotEmpty ? widget.divisions.first.id : null);
   }
 
@@ -104,7 +108,8 @@ class _LiveTabState extends State<LiveTab> {
 
           // Lọc các trận live thuộc đúng division này
           final divLiveMatches = widget.liveMatches.where((m) {
-            final mDiv = m.divisionId ??
+            final mDiv =
+                m.divisionId ??
                 m.scoreDetails?['division_id']?.toString() ??
                 m.tournamentConfig?['division_id']?.toString();
             return mDiv != null && mDiv.isNotEmpty && mDiv == div.id;
@@ -116,7 +121,9 @@ class _LiveTabState extends State<LiveTab> {
               color: colors.bgSurface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isExpanded ? AppTheme.primary : colors.border.withValues(alpha: 0.7),
+                color: isExpanded
+                    ? AppTheme.primary
+                    : colors.border.withValues(alpha: 0.7),
                 width: isExpanded ? 1.5 : 1,
               ),
             ),
@@ -133,7 +140,10 @@ class _LiveTabState extends State<LiveTab> {
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     child: Row(
                       children: [
                         Container(
@@ -154,7 +164,9 @@ class _LiveTabState extends State<LiveTab> {
                             child: BracketFormatIcons.getIcon(
                               div.bracketType,
                               size: 18,
-                              color: isExpanded ? Colors.white : AppTheme.primary,
+                              color: isExpanded
+                                  ? Colors.white
+                                  : AppTheme.primary,
                             ),
                           ),
                         ),
@@ -170,8 +182,12 @@ class _LiveTabState extends State<LiveTab> {
                                       div.name,
                                       style: TextStyle(
                                         fontSize: 13.5,
-                                        fontWeight: isExpanded ? FontWeight.w800 : FontWeight.w700,
-                                        color: isExpanded ? AppTheme.primary : colors.textPrimary,
+                                        fontWeight: isExpanded
+                                            ? FontWeight.w800
+                                            : FontWeight.w700,
+                                        color: isExpanded
+                                            ? AppTheme.primary
+                                            : colors.textPrimary,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -180,12 +196,19 @@ class _LiveTabState extends State<LiveTab> {
                                   if (divLiveMatches.isNotEmpty) ...[
                                     const SizedBox(width: 8),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+                                        color: const Color(
+                                          0xFFEF4444,
+                                        ).withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(10),
                                         border: Border.all(
-                                          color: const Color(0xFFEF4444).withValues(alpha: 0.28),
+                                          color: const Color(
+                                            0xFFEF4444,
+                                          ).withValues(alpha: 0.28),
                                           width: 0.8,
                                         ),
                                       ),
@@ -278,7 +301,9 @@ class _LiveTabState extends State<LiveTab> {
                           child: Icon(
                             Icons.keyboard_arrow_down_rounded,
                             size: 22,
-                            color: isExpanded ? AppTheme.primary : colors.textMuted,
+                            color: isExpanded
+                                ? AppTheme.primary
+                                : colors.textMuted,
                           ),
                         ),
                       ],
@@ -308,14 +333,24 @@ class _LiveTabState extends State<LiveTab> {
                                 match: match,
                                 isLive: true,
                                 onTap: () {
-                                  context.push('/live/${match.id}');
+                                  context.push(
+                                    NavigationHelper.getLiveMatchRoute(
+                                      widget.tournamentId ??
+                                          match.tournamentId ??
+                                          '',
+                                      match.id,
+                                    ),
+                                  );
                                 },
                               ),
                             );
                           })
                         else
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 4,
+                            ),
                             child: Row(
                               children: [
                                 Icon(
@@ -366,7 +401,12 @@ class _LiveTabState extends State<LiveTab> {
             match: match,
             isLive: true,
             onTap: () {
-              context.push('/live/${match.id}');
+              context.push(
+                NavigationHelper.getLiveMatchRoute(
+                  widget.tournamentId ?? match.tournamentId ?? '',
+                  match.id,
+                ),
+              );
             },
           ),
         );

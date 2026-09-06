@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -33,16 +34,21 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final tournamentAsync = ref.watch(tournamentProvider(widget.tournamentId));
     final divisionsAsync = ref.watch(
       tournamentDivisionsProvider(widget.tournamentId),
     );
     final matchesAsync = ref.watch(
-      matchesWithDivisionProvider((
-        tournamentId: widget.tournamentId,
-        divisionId: _selectedDivisionId,
-      )),
+      tournamentAsync.value?.isLite == true
+          ? liteBracketMatchesWithDivisionProvider((
+              tournamentId: widget.tournamentId,
+              divisionId: _selectedDivisionId,
+            ))
+          : matchesWithDivisionProvider((
+              tournamentId: widget.tournamentId,
+              divisionId: _selectedDivisionId,
+            )),
     );
-    final tournamentAsync = ref.watch(tournamentProvider(widget.tournamentId));
 
     return Scaffold(
       backgroundColor: context.colors.bgDark,
@@ -127,12 +133,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
 
     return RefreshIndicator(
       onRefresh: () async {
-        ref.invalidate(
-          matchesWithDivisionProvider((
-            tournamentId: widget.tournamentId,
-            divisionId: _selectedDivisionId,
-          )),
-        );
+        _invalidateMatchesProvider();
         ref.invalidate(tournamentDivisionsProvider(widget.tournamentId));
         await Future.delayed(const Duration(milliseconds: 100));
       },
@@ -649,12 +650,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
     final l10n = AppLocalizations.of(context)!;
     return RefreshIndicator(
       onRefresh: () async {
-        ref.invalidate(
-          matchesWithDivisionProvider((
-            tournamentId: widget.tournamentId,
-            divisionId: _selectedDivisionId,
-          )),
-        );
+        _invalidateMatchesProvider();
         ref.invalidate(tournamentDivisionsProvider(widget.tournamentId));
         await Future.delayed(const Duration(milliseconds: 100));
       },
@@ -789,12 +785,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                   const SizedBox(height: 24),
                   GestureDetector(
                     onTap: () {
-                      ref.invalidate(
-                        matchesWithDivisionProvider((
-                          tournamentId: widget.tournamentId,
-                          divisionId: _selectedDivisionId,
-                        )),
-                      );
+                      _invalidateMatchesProvider();
                       ref.invalidate(
                         tournamentDivisionsProvider(widget.tournamentId),
                       );
@@ -949,12 +940,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: () {
-                ref.invalidate(
-                  matchesWithDivisionProvider((
-                    tournamentId: widget.tournamentId,
-                    divisionId: _selectedDivisionId,
-                  )),
-                );
+                _invalidateMatchesProvider();
                 ref.invalidate(
                   tournamentDivisionsProvider(widget.tournamentId),
                 );
@@ -976,7 +962,23 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
   // ─────────────────────────────────────────────────────
   // NAVIGATION
   // ─────────────────────────────────────────────────────
+  void _invalidateMatchesProvider() {
+    final isLite =
+        ref.read(tournamentProvider(widget.tournamentId)).value?.isLite == true;
+    final params = (
+      tournamentId: widget.tournamentId,
+      divisionId: _selectedDivisionId,
+    );
+    if (isLite) {
+      ref.invalidate(liteBracketMatchesWithDivisionProvider(params));
+    } else {
+      ref.invalidate(matchesWithDivisionProvider(params));
+    }
+  }
+
   void _openMatch(MatchModel match) {
-    context.push('/live/${match.id}');
+    context.push(
+      NavigationHelper.getLiveMatchRoute(widget.tournamentId, match.id),
+    );
   }
 }

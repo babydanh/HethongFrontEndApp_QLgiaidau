@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 
 class LiveTournamentWithMatchesCard extends ConsumerStatefulWidget {
   final Tournament tournament;
@@ -103,7 +104,8 @@ class _LiveTournamentWithMatchesCardState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    final currentMatches = _pageMatches[_currentPageIndex] ?? const <MatchModel>[];
+    final currentMatches =
+        _pageMatches[_currentPageIndex] ?? const <MatchModel>[];
 
     if (currentMatches.isEmpty && !_isLoading && _pageMatches.isEmpty) {
       return const SizedBox.shrink();
@@ -369,10 +371,11 @@ class _LiveTournamentWithMatchesCardState
     final sportText = l10n.sportDisplayName(
       match.sportKey ?? widget.tournament.sport,
     );
-    final courtText = TournamentLocationFormatter.matchShortCourt(
-      match.court,
-      venueName: widget.tournament.venueName,
-    ).isNotEmpty
+    final courtText =
+        TournamentLocationFormatter.matchShortCourt(
+          match.court,
+          venueName: widget.tournament.venueName,
+        ).isNotEmpty
         ? TournamentLocationFormatter.matchShortCourt(
             match.court,
             venueName: widget.tournament.venueName,
@@ -401,7 +404,9 @@ class _LiveTournamentWithMatchesCardState
     final isCheered = cheerCount > 0;
 
     return GestureDetector(
-      onTap: () => context.push('/live/${match.id}'),
+      onTap: () => context.push(
+        NavigationHelper.getLiveMatchRoute(widget.tournament.id, match.id),
+      ),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -837,7 +842,9 @@ class _LiveTournamentWithMatchesCardState
     );
 
     return GestureDetector(
-      onTap: () => context.push('/live/${match.id}'),
+      onTap: () => context.push(
+        NavigationHelper.getLiveMatchRoute(widget.tournament.id, match.id),
+      ),
       child: Container(
         width: 275,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
@@ -861,7 +868,10 @@ class _LiveTournamentWithMatchesCardState
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2.5,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(6),
@@ -882,11 +892,17 @@ class _LiveTournamentWithMatchesCardState
                 ),
                 // Live status badge with pulsing red dot
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2.5,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEF2F2),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: const Color(0xFFFECACA), width: 0.8),
+                    border: Border.all(
+                      color: const Color(0xFFFECACA),
+                      width: 0.8,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -929,7 +945,9 @@ class _LiveTournamentWithMatchesCardState
                         children: [
                           _buildLargeAvatar(
                             initials: t1Initials[0],
-                            initials2: t1Initials.length > 1 ? t1Initials[1] : '',
+                            initials2: t1Initials.length > 1
+                                ? t1Initials[1]
+                                : '',
                             avatarColor: const Color(0xFF0284C7),
                           ),
                           const SizedBox(height: 5),
@@ -969,7 +987,9 @@ class _LiveTournamentWithMatchesCardState
                         children: [
                           _buildLargeAvatar(
                             initials: t2Initials[0],
-                            initials2: t2Initials.length > 1 ? t2Initials[1] : '',
+                            initials2: t2Initials.length > 1
+                                ? t2Initials[1]
+                                : '',
                             avatarColor: const Color(0xFF16A34A),
                           ),
                           const SizedBox(height: 5),
@@ -1164,7 +1184,9 @@ class _LiveTournamentWithMatchesCardState
     );
 
     return GestureDetector(
-      onTap: () => context.push('/live/${match.id}'),
+      onTap: () => context.push(
+        NavigationHelper.getLiveMatchRoute(widget.tournament.id, match.id),
+      ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
@@ -1277,11 +1299,16 @@ class _LiveTournamentWithMatchesCardState
               Container(
                 constraints: const BoxConstraints(maxWidth: 115),
                 margin: const EdgeInsets.only(left: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 7,
+                  vertical: 3.5,
+                ),
                 decoration: BoxDecoration(
                   color: colors.bgSurface,
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+                  border: Border.all(
+                    color: colors.border.withValues(alpha: 0.7),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
