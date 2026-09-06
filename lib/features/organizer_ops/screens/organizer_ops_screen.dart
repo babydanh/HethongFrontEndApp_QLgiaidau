@@ -1,7 +1,9 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/providers/organizer_ops_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -1797,12 +1799,13 @@ class _OpsMatchCard extends StatelessWidget {
         ? colors.info
         : colors.warning;
     final groupName = match.groupName?.trim();
-    final isRoundRobin =
-        groupName?.isNotEmpty == true ||
-        (match.stageType?.toLowerCase().contains('round_robin') ?? false);
+    final isRoundRobin = isGroupStageMatch(match);
     final contextLabel = isRoundRobin
         ? groupName?.isNotEmpty == true
-            ? l10n.crossTableLegTitle(groupName!, match.leg ?? 1)
+            ? l10n.crossTableLegTitle(
+                MatchRoundLabel.formatStageOrGroupName(groupName, l10n: l10n),
+                match.leg ?? 1,
+              )
             : '#${match.matchNumber}'
         : l10n.organizer_matchTitle(match.round, match.matchNumber);
     final scheduledLabel = match.scheduledTime == null

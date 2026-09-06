@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -171,13 +172,11 @@ class CommunityTournamentPreview extends ConsumerWidget {
                       m.winnerId == m.team1Id || (hasPlayed && s1 > s2);
                   final isT2Winner =
                       m.winnerId == m.team2Id || (hasPlayed && s2 > s1);
-                  final roundLabel =
-                      m.stageName ??
-                      (m.round > 0
-                          ? l10n.communityTournamentPreviewRound(m.round)
-                          : l10n.communityTournamentPreviewMatch(
-                              m.matchNumber,
-                            ));
+                  final roundLabel = MatchRoundLabel.formatRound(
+                    match: m,
+                    short: true,
+                    l10n: l10n,
+                  );
 
                   return InkWell(
                     onTap: () => context.push('/live/${m.id}'),

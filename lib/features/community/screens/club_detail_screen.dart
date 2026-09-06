@@ -1198,33 +1198,33 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: colors.bgCard,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: colors.border, width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                  if (club.logoUrl != null && club.logoUrl!.trim().isNotEmpty) ...[
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: colors.bgCard,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: colors.border, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: Image.network(
+                          club.logoUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _logoSportBg(sColor, emoji),
                         ),
-                      ],
+                      ),
                     ),
-                    child: ClipOval(
-                      child: club.logoUrl != null && club.logoUrl!.isNotEmpty
-                          ? Image.network(
-                              club.logoUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  _logoSportBg(sColor, emoji),
-                            )
-                          : _logoSportBg(sColor, emoji),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
+                    const SizedBox(width: 12),
+                  ],
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1488,7 +1488,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   }
 
   // ════════════════════════════════════
-  //  TAB 1: GIỚI THIỆU
+  //  TAB 1: GIỚI THIỆU (CHUẨN VĂN BẢN / EDITORIAL WORD STYLE)
   // ════════════════════════════════════
   Widget _buildAboutTab(Community club, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
@@ -1511,37 +1511,300 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       }
     }
 
+    final hasRules = club.rules != null && club.rules!.trim().isNotEmpty;
+    final hasDesc = club.description != null && club.description!.trim().isNotEmpty;
+    final hasSocial = club.socialLinks.entries.any((e) => e.value.trim().isNotEmpty);
+
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       children: [
-        if (club.description != null && club.description!.isNotEmpty) ...[
-          _sectionTitle(l10n.club_aboutSection, colors),
-          const SizedBox(height: 10),
+        // ─── Document Header Header Banner ───
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppTheme.primary.withValues(alpha: 0.1),
+                colors.bgCard,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.menu_book_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      club.name.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        color: colors.textPrimary,
+                        letterSpacing: 0.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      l10n.club_aboutOfficialDocumentBadge,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.primary,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (createdDateText.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: colors.bgSurface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: colors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        l10n.club_aboutEstablishedDate,
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: colors.textMuted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        createdDateText,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+
+        // ─── Phần 1: Giới thiệu & Sứ mệnh ───
+        if (hasDesc) ...[
+          _buildEditorialSectionHeader(
+            icon: Icons.info_outline_rounded,
+            title: l10n.club_aboutSection,
+            colors: colors,
+          ),
+          const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: colors.bgCard,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: colors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.02),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: Text(
-              club.description!,
-              style: TextStyle(
-                fontSize: 14,
-                color: colors.textSecondary,
-                height: 1.6,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.format_quote_rounded,
+                      size: 22,
+                      color: AppTheme.primary.withValues(alpha: 0.6),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        club.description!.trim(),
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          color: colors.textPrimary,
+                          height: 1.65,
+                          letterSpacing: 0.1,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
         ],
-        _sectionTitle(l10n.club_infoSection, colors),
-        const SizedBox(height: 10),
+
+        // ─── Phần 2: Điều lệ & Quy chế hoạt động ───
+        _buildEditorialSectionHeader(
+          icon: Icons.gavel_rounded,
+          title: l10n.club_aboutRegulationsTitle,
+          colors: colors,
+        ),
+        const SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: colors.bgCard,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: hasRules ? const Color(0xFFF59E0B).withValues(alpha: 0.35) : colors.border,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.verified_user_rounded,
+                          size: 13,
+                          color: Color(0xFFD97706),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          l10n.clubDetailRulesTitle.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFD97706),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  if (_myMembership?.role == 'OWNER' || _myMembership?.role == 'ADMIN')
+                    InkWell(
+                      onTap: () => context.push('/club/${widget.clubId}/edit'),
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.edit_note_rounded, size: 16, color: AppTheme.primary),
+                            const SizedBox(width: 3),
+                            Text(
+                              l10n.club_tabSettings,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              if (hasRules)
+                Text(
+                  club.rules!.trim(),
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    color: colors.textPrimary,
+                    height: 1.7,
+                    letterSpacing: 0.15,
+                  ),
+                )
+              else
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.shield_outlined,
+                      size: 20,
+                      color: colors.textMuted,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        l10n.club_aboutRegulationsDefault,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: colors.textSecondary,
+                          height: 1.5,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 22),
+
+        // ─── Phần 3: Thể thức sinh hoạt & Thông tin CLB ───
+        _buildEditorialSectionHeader(
+          icon: Icons.grid_view_rounded,
+          title: l10n.club_infoSection,
+          colors: colors,
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: colors.border),
           ),
           child: Column(
@@ -1550,10 +1813,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 club.visibility.toUpperCase() == 'PRIVATE'
                     ? Icons.lock_outline_rounded
                     : Icons.public_rounded,
-                'Quyền riêng tư',
+                l10n.club_aboutPrivacyLabel,
                 club.visibility.toUpperCase() == 'PRIVATE'
-                    ? 'Riêng tư (Chỉ thành viên xem được hoạt động)'
-                    : 'Công khai (Mọi người đều có thể xem)',
+                    ? l10n.club_aboutPrivacyPrivate
+                    : l10n.club_aboutPrivacyPublic,
                 colors,
               ),
               _divider(colors),
@@ -1590,129 +1853,49 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 finalSportsText,
                 colors,
               ),
-              if (createdDateText.isNotEmpty) ...[
-                _divider(colors),
-                _infoRow(
-                  Icons.calendar_today_rounded,
-                  'Ngày thành lập',
-                  createdDateText,
-                  colors,
-                ),
-              ],
             ],
           ),
         ),
-        const SizedBox(height: 24),
-        _sectionTitle(l10n.clubDetailRulesTitle, colors),
-        const SizedBox(height: 10),
-        if (club.rules != null && club.rules!.trim().isNotEmpty) ...[
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: colors.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFD97706).withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.gavel_rounded,
-                        size: 16,
-                        color: Color(0xFFD97706),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Điều lệ & Quy chế hoạt động',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  club.rules!.trim(),
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    color: colors.textSecondary,
-                    height: 1.6,
-                  ),
-                ),
-              ],
-            ),
+        const SizedBox(height: 22),
+
+        // ─── Phần 4: Kênh liên hệ & Mạng xã hội ───
+        if (hasSocial) ...[
+          _buildEditorialSectionHeader(
+            icon: Icons.alternate_email_rounded,
+            title: l10n.club_aboutContactChannels,
+            colors: colors,
           ),
-          const SizedBox(height: 24),
-        ] else ...[
+          const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: colors.bgCard,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: colors.border),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  size: 20,
-                  color: colors.textMuted,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'CLB chưa cập nhật nội quy riêng. Thành viên vui lòng tuân thủ quy tắc ứng xử chung và tinh thần thể thao văn minh.',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: colors.textSecondary,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-                if (_myMembership?.role == 'OWNER' ||
-                    _myMembership?.role == 'ADMIN') ...[
-                  const SizedBox(width: 8),
-                  TextButton(
-                    onPressed: () =>
-                        context.push('/club/${widget.clubId}/edit'),
-                    child: const Text('Thêm ngay'),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-        ],
-        if (club.socialLinks.isNotEmpty) ...[
-          _sectionTitle(l10n.clubDetailContactTitle, colors),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: colors.border),
             ),
             child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: 10,
+              runSpacing: 10,
               children: club.socialLinks.entries
                   .where((entry) => entry.value.trim().isNotEmpty)
                   .map(
                     (entry) => ActionChip(
-                      avatar: Icon(_socialIcon(entry.key), size: 16),
-                      label: Text(_socialLabel(entry.key)),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      avatar: Icon(_socialIcon(entry.key), size: 16, color: AppTheme.primary),
+                      label: Text(
+                        _socialLabel(entry.key),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      backgroundColor: colors.bgSurface,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        side: BorderSide(color: colors.borderLight),
+                      ),
                       onPressed: () => _openSocialLink(entry.value),
                     ),
                   )
@@ -1722,6 +1905,31 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           const SizedBox(height: 24),
         ],
       ],
+    );
+  }
+
+  Widget _buildEditorialSectionHeader({
+    required IconData icon,
+    required String title,
+    required AppColorsExtension colors,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 15, color: AppTheme.primary),
+          const SizedBox(width: 8),
+          Text(
+            title.toUpperCase(),
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w900,
+              color: colors.textSecondary,
+              letterSpacing: 0.6,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1763,18 +1971,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ).showSnackBar(SnackBar(content: Text(l10n.clubDetailOpenLinkError)));
       }
     }
-  }
-
-  Widget _sectionTitle(String title, AppColorsExtension colors) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w800,
-        color: colors.textSecondary,
-        letterSpacing: 0.5,
-      ),
-    );
   }
 
   Widget _infoRow(

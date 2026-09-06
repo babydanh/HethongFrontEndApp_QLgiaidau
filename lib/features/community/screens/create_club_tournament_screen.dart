@@ -53,6 +53,8 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
     super.dispose();
   }
 
+  bool _hasUserEditedName = false;
+
   /// Map App sport slug → backend slug
   String _mapSportSlug() {
     switch (_selectedSport) {
@@ -75,6 +77,46 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
     return null;
   }
 
+  String _getWeekdayName(int dayOfWeek, AppLocalizations l10n) {
+    switch (dayOfWeek) {
+      case 1: return l10n.createClubTournament_monday;
+      case 2: return l10n.createClubTournament_tuesday;
+      case 3: return l10n.createClubTournament_wednesday;
+      case 4: return l10n.createClubTournament_thursday;
+      case 5: return l10n.createClubTournament_friday;
+      case 6: return l10n.createClubTournament_saturday;
+      case 0: return l10n.createClubTournament_sunday;
+      default: return l10n.createClubTournament_saturday;
+    }
+  }
+
+  String _getSportDisplayName(String sport, AppLocalizations l10n) {
+    switch (sport) {
+      case AppConstants.sportBadminton: return l10n.createClubTournament_sportBadminton;
+      case AppConstants.sportTennis: return l10n.createClubTournament_sportTennis;
+      case AppConstants.sportPickleball: return l10n.createClubTournament_sportPickleball;
+      case AppConstants.sportTableTennis: return l10n.createClubTournament_sportTableTennis;
+      case AppConstants.sportFootball: return l10n.createClubTournament_sportFootball;
+      default: return l10n.createClubTournament_sportBadminton;
+    }
+  }
+
+  void _applyAutoNameIfUntouched(String? clubName, String sport, AppLocalizations l10n) {
+    if (_hasUserEditedName && _nameCtrl.text.trim().isNotEmpty) return;
+    final cleanClub = (clubName ?? '').trim();
+    final sportName = _getSportDisplayName(sport, l10n);
+    final weekdayStr = _getWeekdayName(_recurringDayOfWeek, l10n);
+    if (cleanClub.isNotEmpty) {
+      if (_isRecurring) {
+        _nameCtrl.text = 'Giải $sportName $cleanClub - $weekdayStr';
+      } else {
+        _nameCtrl.text = 'Giải $sportName $cleanClub';
+      }
+    } else {
+      _nameCtrl.text = 'Giải $sportName Mini';
+    }
+  }
+
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
@@ -84,11 +126,13 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
       final dio = ref.read(dioClientProvider).dio;
       final club = widget.clubId.isEmpty ? null : ref.read(communityDetailProvider(widget.clubId)).value;
       final clubSport = club?.sports.isNotEmpty == true ? _mapClubSport(club!.sports.first) : null;
+      final resolvedSport = clubSport ?? _mapSportSlug();
+      final recurringTimeString = _formatTime(_recurringTime);
 
       final body = <String, dynamic>{
         'name': _nameCtrl.text.trim(),
         'communityId': widget.clubId,
-        'sport': clubSport ?? _mapSportSlug(),
+        'sport': resolvedSport,
         'format': _selectedSport == AppConstants.sportFootball
             ? AppConstants.formatDoubles
             : (_selectedFormat == AppConstants.formatMixedDoubles
@@ -108,12 +152,16 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
               .add(Duration(minutes: (_durationHours * 60) + _durationMinutes))
               .toUtc()
               .toIso8601String(),
+        } else if (_isRecurring) ...{
+          // Khi tạo định kỳ không chọn ngày cụ thể, luôn gửi startTime bằng giờ recurring đã chọn
+          'startTime': recurringTimeString,
         },
         if (_isRecurring) ...{
           'isRecurring': true,
           'recurringFrequency': _recurringFrequency,
           'recurringDayOfWeek': _recurringDayOfWeek,
-          'recurringTimeOfDay': _formatTime(_recurringTime),
+          'recurringDaysOfWeek': [_recurringDayOfWeek],
+          'recurringTimeOfDay': recurringTimeString,
           'recurringAdvanceDays': _recurringAdvanceDays,
         },
       };
@@ -247,6 +295,11 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
     final colors = context.colors;
     final club = widget.clubId.isEmpty ? null : ref.watch(communityDetailProvider(widget.clubId)).value;
     final clubSport = club?.sports.isNotEmpty == true ? _mapClubSport(club!.sports.first) : null;
+    final activeSport = clubSport ?? _selectedSport;
+
+    if (!_hasUserEditedName && _nameCtrl.text.isEmpty && club != null) {
+      _applyAutoNameIfUntouched(club.name, activeSport, l10n);
+    }
 
     return Scaffold(
       backgroundColor: colors.bgDark,
@@ -271,15 +324,64 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ─── Tên giải đấu ───
-              _label(l10n.createClubTournament_nameLabel, colors),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _label(l10n.createClubTournament_nameLabel, colors),
+                  if (club != null)
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          _hasUserEditedName = false;
+                          _applyAutoNameIfUntouched(club.name, activeSport, l10n);
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.auto_fix_high_rounded, size: 13, color: AppTheme.primary),
+                            const SizedBox(width: 4),
+                            Text(
+                              l10n.club_autoGenerateNameHint,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _nameCtrl,
+                onChanged: (val) {
+                  if (!_hasUserEditedName) {
+                    setState(() => _hasUserEditedName = true);
+                  }
+                },
                 validator: (v) => (v == null || v.trim().isEmpty) ? l10n.createClubTournament_nameRequired : null,
                 style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
                   hintText: l10n.createClubTournament_nameHint,
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
+                  suffixIcon: _nameCtrl.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear_rounded, size: 18),
+                          onPressed: () {
+                            setState(() {
+                              _nameCtrl.clear();
+                              _hasUserEditedName = true;
+                            });
+                          },
+                        )
+                      : null,
                 ),
               ),
               const SizedBox(height: 20),

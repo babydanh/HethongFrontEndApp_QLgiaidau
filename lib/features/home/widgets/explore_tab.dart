@@ -928,8 +928,9 @@ class _TournamentCard extends StatelessWidget {
       'single_elimination' => l10n.eliminationSingle,
       'double_elimination' => l10n.eliminationDouble,
       'round_robin' => l10n.roundRobin,
-      'group_stage' => l10n.groupStage,
-      _ => tournament.bracketType,
+      'group_stage' || 'group_stage_knockout' => l10n.groupStage,
+      _ => AppConstants.bracketTypeNames[tournament.bracketType] ??
+          tournament.bracketType,
     };
 
     return GestureDetector(
@@ -1030,23 +1031,10 @@ class _TournamentCard extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            switch (StatusHelper.normalizeTournamentStatus(
+                            StatusHelper.getTournamentStatusLabel(
                               tournament.status,
-                            )) {
-                              AppConstants.statusRegistration =>
-                                l10n.profileRegistrationOpen,
-                              AppConstants.statusRegistrationClosed =>
-                                l10n.registrationClosed,
-                              AppConstants.statusInProgress =>
-                                l10n.homeInProgressStatus,
-                              AppConstants.statusCompleted =>
-                                l10n.homeCompletedStatus,
-                              AppConstants.statusUpcoming =>
-                                l10n.profileUpcoming,
-                              _ => StatusHelper.normalizeTournamentStatus(
-                                tournament.status,
-                              ),
-                            },
+                              l10n: l10n,
+                            ),
                             style: TextStyle(
                               color: statusColor,
                               fontSize: 9.5,
@@ -1282,13 +1270,19 @@ class _MatchExploreCardState extends ConsumerState<MatchExploreCard> {
       if (upper.contains('ELIMINATION') ||
           upper.contains('KNOCKOUT') ||
           upper.contains('LOẠI TRỰC TIẾP') ||
-          upper.contains('PLAYOFF')) {
+          upper.contains('PLAYOFF') ||
+          upper.contains('MAIN') ||
+          upper.contains('CHÍNH')) {
         return l10n.exploreBracketKnockout;
       }
       if (upper.contains('LOSER') || upper.contains('THUA')) {
         return l10n.exploreBracketLosers;
       }
-      if (raw.isNotEmpty && !raw.startsWith('{') && !raw.contains('name:')) {
+      if (raw.isNotEmpty &&
+          !raw.startsWith('{') &&
+          !raw.contains('name:') &&
+          !upper.contains('BRACKET') &&
+          !upper.contains('STAGE')) {
         return raw;
       }
 

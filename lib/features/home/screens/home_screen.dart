@@ -2602,6 +2602,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final String joinLabel = _getJoinModeLabel(club.joinMode, l10n);
     final Color joinColor = _getJoinModeColor(club.joinMode);
     final bool hasBanner = club.bannerUrl != null && club.bannerUrl!.isNotEmpty;
+    final bool hasLogo = club.logoUrl != null && club.logoUrl!.trim().isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -2710,7 +2711,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   // ─── Content Area ───
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 32, 14, 14),
+                    padding: EdgeInsets.fromLTRB(14, hasLogo ? 32 : 14, 14, 14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -2828,38 +2829,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
 
               // Floating Circular Logo — centered over bottom edge of banner (top: 157)
-              Positioned(
-                top: 157,
-                left: 14,
-                child: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: context.colors.bgCard,
-                    border: Border.all(
+              // Chỉ hiển thị khi câu lạc bộ có logo tải lên, không có logo thì ẩn hoàn toàn
+              if (hasLogo)
+                Positioned(
+                  top: 157,
+                  left: 14,
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
                       color: context.colors.bgCard,
-                      width: 2.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.12),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                      border: Border.all(
+                        color: context.colors.bgCard,
+                        width: 2.5,
                       ),
-                    ],
-                  ),
-                  child: ClipOval(
-                    child: club.logoUrl != null && club.logoUrl!.isNotEmpty
-                        ? Image.network(
-                            club.logoUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => _buildCardLogoFallback(),
-                          )
-                        : _buildCardLogoFallback(),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Image.network(
+                        club.logoUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                      ),
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -2867,16 +2868,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildCardLogoFallback() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      color: isDark ? const Color(0xFF1E293B) : Colors.white,
-      padding: const EdgeInsets.all(8),
-      child: Center(
-        child: SvgPicture.asset(AppConstants.logoFullSvg, fit: BoxFit.contain),
-      ),
-    );
-  }
 
   Widget _buildCardBannerFallback(Color sportColor, String emoji) {
     final isDark = Theme.of(context).brightness == Brightness.dark;

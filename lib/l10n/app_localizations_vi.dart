@@ -623,6 +623,66 @@ class AppLocalizationsVi extends AppLocalizations {
   String get communityRecurringPaused => 'Tạm dừng';
 
   @override
+  String get communityRecurringResume => 'Đã tiếp tục lịch tạo giải định kỳ';
+
+  @override
+  String get communityRecurringPause => 'Đã tạm dừng lịch tạo giải định kỳ';
+
+  @override
+  String get communityRecurringDelete => 'Đã xóa lịch tạo giải định kỳ';
+
+  @override
+  String get communityRecurringDeleteConfirm =>
+      'Bạn có chắc muốn xóa lịch tạo giải tự động này?';
+
+  @override
+  String get communityRecurringDays => 'Các ngày:';
+
+  @override
+  String get communityRecurringNextRun => 'Lần chạy tiếp theo:';
+
+  @override
+  String get communityRecurringEmpty => 'Chưa có lịch tạo giải định kỳ nào';
+
+  @override
+  String get communityRecurringEmptyHint =>
+      'Bạn có thể tạo giải nhanh và bật tính năng lặp lại để hệ thống tự động sinh giải đấu hàng tuần.';
+
+  @override
+  String get communityRecurringToggleError =>
+      'Không thể cập nhật trạng thái lịch định kỳ';
+
+  @override
+  String get club_aboutRegulationsTitle => 'Điều lệ & Quy chế hoạt động';
+
+  @override
+  String get club_aboutRegulationsDefault =>
+      'CLB chưa cập nhật nội quy riêng. Thành viên vui lòng tuân thủ quy tắc ứng xử chung và tinh thần thể thao văn minh.';
+
+  @override
+  String get club_aboutPrivacyLabel => 'Quyền riêng tư';
+
+  @override
+  String get club_aboutPrivacyPrivate =>
+      'Riêng tư (Chỉ thành viên xem được hoạt động)';
+
+  @override
+  String get club_aboutPrivacyPublic => 'Công khai (Mọi người đều có thể xem)';
+
+  @override
+  String get club_aboutEstablishedDate => 'Ngày thành lập';
+
+  @override
+  String get club_aboutContactChannels => 'Kênh liên hệ & Mạng xã hội';
+
+  @override
+  String get club_aboutOfficialDocumentBadge => 'VĂN BẢN QUY CHẾ CHÍNH THỨC';
+
+  @override
+  String get club_autoGenerateNameHint =>
+      'Tự động tạo tên theo CLB và lịch thi đấu';
+
+  @override
   String get createClub_recurringTitle =>
       'Lịch sinh hoạt & Tự động tạo giải định kỳ';
 
@@ -3304,7 +3364,27 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lite_copy => 'Sao chép';
 
   @override
+  String get lite_copyLink => 'Sao chép link';
+
+  @override
+  String get lite_linkCopied => 'Đã sao chép liên kết tham gia giải';
+
+  @override
+  String get lite_shareTournament => 'Chia sẻ giải';
+
+  @override
+  String lite_shareInviteMessage(Object name, Object code, Object link) {
+    return 'Tham gia giải đấu $name! Mã mời: $code. Đăng ký ngay tại: $link';
+  }
+
+  @override
   String get lite_qrInstruction => 'Quét mã QR để tham gia giải';
+
+  @override
+  String get lite_zoomQr => 'Phóng to QR';
+
+  @override
+  String get lite_close => 'Đóng';
 
   @override
   String get lite_creating => 'Đang tạo...';

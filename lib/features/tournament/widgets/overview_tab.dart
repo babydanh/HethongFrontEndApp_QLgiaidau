@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
@@ -138,22 +140,6 @@ class _OverviewTabState extends State<OverviewTab> {
 
   final GlobalKey _divisionsKey = GlobalKey();
 
-  IconData _getBracketFormatIcon(String? bracketType, [String? fallbackBracketType]) {
-    final raw = (bracketType != null && bracketType.trim().isNotEmpty)
-        ? bracketType
-        : (fallbackBracketType ?? '');
-    final type = raw.toUpperCase();
-    if (type.contains('ROUND_ROBIN') || type.contains('ROBIN') || type.contains('VÒNG TRÒN')) {
-      return Icons.sync_rounded;
-    }
-    if (type.contains('GROUP_STAGE') || type.contains('GROUP') || type.contains('BẢNG')) {
-      return Icons.grid_view_rounded;
-    }
-    if (type.contains('DOUBLE_ELIMINATION') || type.contains('DOUBLE_ELIM') || type.contains('NHÁNH KÉP') || type.contains('THẮNG/THUA') || type.contains('THẮNG THUA')) {
-      return Icons.call_split_rounded;
-    }
-    return Icons.account_tree_outlined;
-  }
 
   String _getBracketFormatLabel(String? bracketType, [String? fallbackBracketType]) {
     final raw = (bracketType != null && bracketType.trim().isNotEmpty)
@@ -266,71 +252,85 @@ class _OverviewTabState extends State<OverviewTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Badges + Thể thức + Ban tổ chức Row
-                Row(
+                // Badges + Thể thức + Ban tổ chức (Responsive Wrap Layout để không bao giờ bị overflow)
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  alignment: WrapAlignment.spaceBetween,
                   children: [
-                    _buildSportBadge(t.sport),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFDBEAFE), width: 0.8),
-                      ),
-                      child: Text(
-                        _resolveFormatBadge(t),
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF2563EB),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    _buildStatusBadge(t.status),
-                    if (t.isRanked) ...[
-                      const SizedBox(width: 6),
-                      _buildRankingBadge(true),
-                    ],
-                    const Spacer(),
-                    if (!hasCustomLogo && (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty))
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 12,
-                            backgroundColor: colors.bgSurface,
-                            backgroundImage: resolvedAvatar.isNotEmpty
-                                ? NetworkImage(resolvedAvatar)
-                                : null,
-                            child: resolvedAvatar.isEmpty
-                                ? Text(
-                                    creatorName.isNotEmpty
-                                        ? creatorName[0].toUpperCase()
-                                        : 'B',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.primary,
-                                    ),
-                                  )
-                                : null,
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        _buildSportBadge(t.sport),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFDBEAFE), width: 0.8),
                           ),
-                          const SizedBox(width: 6),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 110),
-                            child: Text(
-                              creatorName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: colors.textSecondary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          child: Text(
+                            _resolveFormatBadge(t),
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF2563EB),
                             ),
                           ),
-                        ],
+                        ),
+                        _buildStatusBadge(t.status),
+                        if (t.isRanked) _buildRankingBadge(true),
+                      ],
+                    ),
+                    if (!hasCustomLogo && (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty))
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: colors.bgSurface,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: colors.border.withValues(alpha: 0.5)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircleAvatar(
+                              radius: 10,
+                              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                              backgroundImage: resolvedAvatar.isNotEmpty
+                                  ? NetworkImage(resolvedAvatar)
+                                  : null,
+                              child: resolvedAvatar.isEmpty
+                                  ? Text(
+                                      creatorName.isNotEmpty
+                                          ? creatorName[0].toUpperCase()
+                                          : 'B',
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.primary,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(width: 5),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 120),
+                              child: Text(
+                                creatorName,
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.textSecondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                   ],
                 ),
@@ -761,7 +761,6 @@ class _OverviewTabState extends State<OverviewTab> {
     final curP = div.participantCount;
     final isFull = maxP > 0 && curP >= maxP;
     final isExpanded = _expandedDivisionId == div.id;
-    final formatIcon = _getBracketFormatIcon(div.bracketType, widget.tournament.bracketType);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -1114,25 +1113,9 @@ class _OverviewTabState extends State<OverviewTab> {
   }
 
   Widget _buildStatusBadge(String status) {
-    final colors = context.colors;
-    final s = status.toUpperCase();
-    Color bg = colors.bgSurface;
-    Color fg = colors.textSecondary;
-    String label = 'Sắp diễn ra';
-
-    if (s == 'IN_PROGRESS' || s == 'ONGOING' || s == 'LIVE') {
-      bg = colors.error;
-      fg = Colors.white;
-      label = '● LIVE';
-    } else if (s == 'REGISTRATION' || s == 'REGISTRATION_OPEN' || s == 'OPEN') {
-      bg = colors.success;
-      fg = Colors.white;
-      label = 'Mở đăng ký';
-    } else if (s == 'COMPLETED' || s == 'FINISHED') {
-      bg = colors.bgSurface;
-      fg = colors.textMuted;
-      label = 'Đã kết thúc';
-    }
+    final l10n = AppLocalizations.of(context)!;
+    final label = StatusHelper.getTournamentStatusLabel(status, l10n: l10n);
+    final bg = StatusHelper.getTournamentStatusColor(status, context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
@@ -1142,10 +1125,10 @@ class _OverviewTabState extends State<OverviewTab> {
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w800,
-          color: fg,
+          color: Colors.white,
         ),
       ),
     );

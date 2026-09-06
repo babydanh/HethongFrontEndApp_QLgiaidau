@@ -152,7 +152,11 @@ class _CommunityTournamentRosterWidgetState
     }
 
     final maxCap = _tournament?.maxTeams ?? widget.maxParticipants ?? 16;
-    if (_participants.length >= maxCap) {
+    final currentTotalPlayers = _participants.fold<int>(
+      0,
+      (sum, p) => sum + (p.members.isEmpty ? 1 : p.members.length),
+    );
+    if (currentTotalPlayers >= maxCap) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Giải đấu đã đủ số lượng người tham gia')),
       );
@@ -291,16 +295,50 @@ class _CommunityTournamentRosterWidgetState
       );
     }
 
-    final totalSlots = maxParticipants > _participants.length
+    // Flatten participants into individual roster items so doubles pairings
+    // show both players in separate slots rather than collapsing into one.
+    final List<_RosterSlotItem> rosterItems = [];
+    for (final p in _participants) {
+      if (p.members.isEmpty) {
+        rosterItems.add(_RosterSlotItem(
+          participant: p,
+          member: null,
+          displayName: p.teamName,
+          avatarUrl: null,
+          userId: '',
+          partnerName: null,
+        ));
+      } else {
+        final isPaired = p.members.length >= 2;
+        for (int i = 0; i < p.members.length; i++) {
+          final m = p.members[i];
+          final partner = isPaired
+              ? (i == 0 ? p.members[1].fullName : p.members[0].fullName)
+              : null;
+          rosterItems.add(_RosterSlotItem(
+            participant: p,
+            member: m,
+            displayName: m.fullName.isNotEmpty ? m.fullName : p.teamName,
+            avatarUrl: m.avatarUrl,
+            userId: m.userId,
+            partnerName: partner,
+          ));
+        }
+      }
+    }
+
+    final totalSlots = maxParticipants > rosterItems.length
         ? maxParticipants
-        : _participants.length;
+        : rosterItems.length;
     final totalPages = (totalSlots / _kSlotsPerPage).ceil().clamp(1, 999);
     final safePage = _currentPage.clamp(1, totalPages);
 
     final startIndex = (safePage - 1) * _kSlotsPerPage;
     final endIndex = (startIndex + _kSlotsPerPage).clamp(0, totalSlots);
 
-    final userSlotIndex = _findCurrentParticipantIndex(currentUserId);
+    final userSlotIndex = currentUserId.isNotEmpty
+        ? rosterItems.indexWhere((item) => item.userId == currentUserId)
+        : -1;
     final isUserRegistered = userSlotIndex >= 0;
     final userPage = isUserRegistered ? (userSlotIndex ~/ _kSlotsPerPage) + 1 : null;
 
@@ -425,7 +463,7 @@ class _CommunityTournamentRosterWidgetState
                     Row(
                       children: [
                         Text(
-                          'Xác nhận tham gia · ${_participants.length}',
+                          'Xác nhận tham gia · ${rosterItems.length}',
                           style: TextStyle(
                             fontSize: 14.5,
                             fontWeight: FontWeight.w800,
@@ -452,7 +490,7 @@ class _CommunityTournamentRosterWidgetState
                       ],
                     ),
                     Text(
-                      '${_participants.length}/$maxParticipants người',
+                      '${rosterItems.length}/$maxParticipants người',
                       style: const TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
@@ -510,21 +548,19 @@ class _CommunityTournamentRosterWidgetState
                     crossAxisCount: 4,
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 8,
-                    childAspectRatio: 0.82,
+                    childAspectRatio: 0.76,
                   ),
                   itemBuilder: (context, idx) {
                     final globalSlotIndex = startIndex + idx;
-                    final isOccupied = globalSlotIndex < _participants.length;
+                    final isOccupied = globalSlotIndex < rosterItems.length;
 
                     if (isOccupied) {
-                      final participant = _participants[globalSlotIndex];
-                      final firstMember = participant.members.firstOrNull;
-                      final displayName = firstMember?.fullName.isNotEmpty == true
-                          ? firstMember!.fullName
-                          : participant.teamName;
-                      final isSelf = currentUserId.isNotEmpty &&
-                          participant.members.any((m) => m.userId == currentUserId);
-                      final avatarUrl = firstMember?.avatarUrl;
+                      final item = rosterItems[globalSlotIndex];
+                      final participant = item.participant;
+                      final displayName = item.displayName;
+                      final isSelf = currentUserId.isNotEmpty && item.userId == currentUserId;
+                      final avatarUrl = item.avatarUrl;
+                      final partnerName = item.partnerName;
 
                       return GestureDetector(
                         onTap: () {
@@ -616,6 +652,18 @@ class _CommunityTournamentRosterWidgetState
                                   fontSize: 9,
                                   fontWeight: FontWeight.w800,
                                   color: Color(0xFF94A3B8),
+                                ),
+                              )
+                            else if (partnerName != null && partnerName.isNotEmpty)
+                              Text(
+                                'Cặp: $partnerName',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF64748B),
                                 ),
                               ),
                           ],
@@ -798,4 +846,22 @@ class _CommunityTournamentRosterWidgetState
       ),
     );
   }
+}
+
+class _RosterSlotItem {
+  final OrganizerOpsParticipant participant;
+  final OrganizerOpsMember? member;
+  final String displayName;
+  final String? avatarUrl;
+  final String userId;
+  final String? partnerName;
+
+  const _RosterSlotItem({
+    required this.participant,
+    required this.member,
+    required this.displayName,
+    required this.avatarUrl,
+    required this.userId,
+    required this.partnerName,
+  });
 }

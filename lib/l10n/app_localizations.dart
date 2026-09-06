@@ -1274,6 +1274,114 @@ abstract class AppLocalizations {
   /// **'Tạm dừng'**
   String get communityRecurringPaused;
 
+  /// No description provided for @communityRecurringResume.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tiếp tục lịch tạo giải định kỳ'**
+  String get communityRecurringResume;
+
+  /// No description provided for @communityRecurringPause.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạm dừng lịch tạo giải định kỳ'**
+  String get communityRecurringPause;
+
+  /// No description provided for @communityRecurringDelete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa lịch tạo giải định kỳ'**
+  String get communityRecurringDelete;
+
+  /// No description provided for @communityRecurringDeleteConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn xóa lịch tạo giải tự động này?'**
+  String get communityRecurringDeleteConfirm;
+
+  /// No description provided for @communityRecurringDays.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các ngày:'**
+  String get communityRecurringDays;
+
+  /// No description provided for @communityRecurringNextRun.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lần chạy tiếp theo:'**
+  String get communityRecurringNextRun;
+
+  /// No description provided for @communityRecurringEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có lịch tạo giải định kỳ nào'**
+  String get communityRecurringEmpty;
+
+  /// No description provided for @communityRecurringEmptyHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có thể tạo giải nhanh và bật tính năng lặp lại để hệ thống tự động sinh giải đấu hàng tuần.'**
+  String get communityRecurringEmptyHint;
+
+  /// No description provided for @communityRecurringToggleError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật trạng thái lịch định kỳ'**
+  String get communityRecurringToggleError;
+
+  /// No description provided for @club_aboutRegulationsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điều lệ & Quy chế hoạt động'**
+  String get club_aboutRegulationsTitle;
+
+  /// No description provided for @club_aboutRegulationsDefault.
+  ///
+  /// In vi, this message translates to:
+  /// **'CLB chưa cập nhật nội quy riêng. Thành viên vui lòng tuân thủ quy tắc ứng xử chung và tinh thần thể thao văn minh.'**
+  String get club_aboutRegulationsDefault;
+
+  /// No description provided for @club_aboutPrivacyLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quyền riêng tư'**
+  String get club_aboutPrivacyLabel;
+
+  /// No description provided for @club_aboutPrivacyPrivate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Riêng tư (Chỉ thành viên xem được hoạt động)'**
+  String get club_aboutPrivacyPrivate;
+
+  /// No description provided for @club_aboutPrivacyPublic.
+  ///
+  /// In vi, this message translates to:
+  /// **'Công khai (Mọi người đều có thể xem)'**
+  String get club_aboutPrivacyPublic;
+
+  /// No description provided for @club_aboutEstablishedDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày thành lập'**
+  String get club_aboutEstablishedDate;
+
+  /// No description provided for @club_aboutContactChannels.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kênh liên hệ & Mạng xã hội'**
+  String get club_aboutContactChannels;
+
+  /// No description provided for @club_aboutOfficialDocumentBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĂN BẢN QUY CHẾ CHÍNH THỨC'**
+  String get club_aboutOfficialDocumentBadge;
+
+  /// No description provided for @club_autoGenerateNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự động tạo tên theo CLB và lịch thi đấu'**
+  String get club_autoGenerateNameHint;
+
   /// No description provided for @createClub_recurringTitle.
   ///
   /// In vi, this message translates to:
@@ -6254,11 +6362,47 @@ abstract class AppLocalizations {
   /// **'Sao chép'**
   String get lite_copy;
 
+  /// No description provided for @lite_copyLink.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sao chép link'**
+  String get lite_copyLink;
+
+  /// No description provided for @lite_linkCopied.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã sao chép liên kết tham gia giải'**
+  String get lite_linkCopied;
+
+  /// No description provided for @lite_shareTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ giải'**
+  String get lite_shareTournament;
+
+  /// No description provided for @lite_shareInviteMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tham gia giải đấu {name}! Mã mời: {code}. Đăng ký ngay tại: {link}'**
+  String lite_shareInviteMessage(Object name, Object code, Object link);
+
   /// No description provided for @lite_qrInstruction.
   ///
   /// In vi, this message translates to:
   /// **'Quét mã QR để tham gia giải'**
   String get lite_qrInstruction;
+
+  /// No description provided for @lite_zoomQr.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phóng to QR'**
+  String get lite_zoomQr;
+
+  /// No description provided for @lite_close.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng'**
+  String get lite_close;
 
   /// No description provided for @lite_creating.
   ///

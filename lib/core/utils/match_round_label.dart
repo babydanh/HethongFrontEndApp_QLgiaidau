@@ -31,7 +31,10 @@ class MatchRoundLabel {
     if (stageName.contains('GROUP') || stageName.contains('VONG_BANG') || stageName.contains('BẢNG')) {
       return true;
     }
-    if (stageName.contains('KNOCKOUT') || stageName.contains('PLAYOFF') || stageName.contains('ELIMINATION')) {
+    if (stageName.contains('KNOCKOUT') ||
+        stageName.contains('PLAYOFF') ||
+        stageName.contains('ELIMINATION') ||
+        stageName.contains('MAIN')) {
       return false;
     }
     if (groupName.isNotEmpty &&
@@ -39,7 +42,9 @@ class MatchRoundLabel {
         !groupName.contains('PLAYOFF') &&
         !groupName.contains('WINNERS') &&
         !groupName.contains('LOSERS') &&
-        !groupName.contains('GRAND')) {
+        !groupName.contains('GRAND') &&
+        !groupName.contains('MAIN') &&
+        !groupName.contains('BRACKET')) {
       return true;
     }
     return false;
@@ -76,7 +81,9 @@ class MatchRoundLabel {
       final normGroup = _normalize(groupName);
       if (!normGroup.contains('DEFAULT') &&
           !normGroup.contains('CHUNG') &&
-          !normGroup.contains('VONG_BANG')) {
+          !normGroup.contains('VONG_BANG') &&
+          !normGroup.contains('MAIN') &&
+          !normGroup.contains('BRACKET')) {
         if (short || match.leg == null || match.leg! <= 1) {
           return groupName;
         }
@@ -88,6 +95,36 @@ class MatchRoundLabel {
       return title;
     }
     return strings.crossTableLegTitle(title, match.leg ?? 1);
+  }
+
+  static String formatStageOrGroupName(
+    String? raw, {
+    AppLocalizations? l10n,
+  }) {
+    if (raw == null || raw.trim().isEmpty) return '';
+    final trimmed = raw.trim();
+    final upper = trimmed.toUpperCase();
+    final strings =
+        l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
+
+    if (upper == 'MAIN BRACKET' ||
+        upper == 'MAIN' ||
+        upper == 'WINNERS BRACKET' ||
+        upper == 'WINNERS') {
+      return strings.bracketView_winners;
+    }
+    if (upper == 'LOSERS BRACKET' || upper == 'LOSERS') {
+      return strings.bracketView_losers;
+    }
+    if (upper == 'ELIMINATION STAGE' ||
+        upper == 'KNOCKOUT STAGE' ||
+        upper == 'KNOCKOUT') {
+      return strings.bracketView_knockoutStage;
+    }
+    if (upper == 'GROUP STAGE') {
+      return strings.bracketView_groupStage;
+    }
+    return trimmed;
   }
 
   static String doubleUpperHeader(int fromEnd, {AppLocalizations? l10n}) {
@@ -131,7 +168,8 @@ class MatchRoundLabel {
         match.tournamentConfig?['bracketType']?.toString() ??
         '';
 
-    final branch = _normalize(match.bracketPosition.bracket);
+    var branch = _normalize(match.bracketPosition.bracket);
+    if (branch == 'MAIN') branch = 'WINNERS';
 
     // 1. Grand Finals (Double Elimination)
     if (branch == 'GRAND_FINALS' || branch == 'GRAND_FINAL' || branch == 'FINAL') {

@@ -102,6 +102,31 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               .toSet()
               .toList();
           final startTime = slot['startTime'] as String? ?? '18:00';
+          final durationHours = slot['durationHours'] as int? ?? 2;
+          final durationMinutes = durationHours * 60;
+
+          // Tính ngày diễn ra gần nhất tiếp theo theo ngày trong tuần và giờ bắt đầu
+          final now = DateTime.now();
+          final timeParts = startTime.split(':');
+          final startHour = int.tryParse(timeParts.first) ?? 18;
+          final startMinute = timeParts.length > 1 ? (int.tryParse(timeParts[1]) ?? 0) : 0;
+          final targetDayOfWeek = allDays.first; // 0 = CN, 1 = T2, ..., 6 = T7
+          final currentWeekday = now.weekday % 7; // DateTime weekday: 1 (Mon) -> 7 (Sun) -> % 7 thành 0 (Sun) -> 6 (Sat)
+          int daysToAdd = (targetDayOfWeek - currentWeekday) % 7;
+          if (daysToAdd < 0) daysToAdd += 7;
+
+          var nextOccurrence = DateTime(
+            now.year,
+            now.month,
+            now.day + daysToAdd,
+            startHour,
+            startMinute,
+          );
+          if (nextOccurrence.isBefore(now)) {
+            nextOccurrence = nextOccurrence.add(const Duration(days: 7));
+          }
+
+          final calculatedEndDate = nextOccurrence.add(Duration(minutes: durationMinutes));
 
           await dio.post(
             '/tournaments/lite',
@@ -113,6 +138,11 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               'bracketType': 'single_elimination',
               'maxTeams': 16,
               'isRanked': true,
+              'durationMinutes': durationMinutes,
+              'durationHours': durationHours.toDouble(),
+              'startDate': nextOccurrence.toUtc().toIso8601String(),
+              'endDate': calculatedEndDate.toUtc().toIso8601String(),
+              'startTime': startTime,
               'isRecurring': true,
               'recurringFrequency': 'WEEKLY',
               'recurringDayOfWeek': allDays.first,

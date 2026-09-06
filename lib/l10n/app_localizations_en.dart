@@ -625,6 +625,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get communityRecurringPaused => 'Paused';
 
   @override
+  String get communityRecurringResume =>
+      'Resumed recurring tournament schedule';
+
+  @override
+  String get communityRecurringPause => 'Paused recurring tournament schedule';
+
+  @override
+  String get communityRecurringDelete =>
+      'Deleted recurring tournament schedule';
+
+  @override
+  String get communityRecurringDeleteConfirm =>
+      'Are you sure you want to delete this recurring schedule?';
+
+  @override
+  String get communityRecurringDays => 'Days:';
+
+  @override
+  String get communityRecurringNextRun => 'Next run:';
+
+  @override
+  String get communityRecurringEmpty => 'No recurring schedules yet';
+
+  @override
+  String get communityRecurringEmptyHint =>
+      'You can create a quick tournament with recurring enabled to automatically host weekly tournaments.';
+
+  @override
+  String get communityRecurringToggleError =>
+      'Could not update recurring schedule status';
+
+  @override
+  String get club_aboutRegulationsTitle => 'Rules & Operating Regulations';
+
+  @override
+  String get club_aboutRegulationsDefault =>
+      'This club has not set custom rules yet. Members are kindly requested to follow general sportsmanship and conduct standards.';
+
+  @override
+  String get club_aboutPrivacyLabel => 'Privacy';
+
+  @override
+  String get club_aboutPrivacyPrivate =>
+      'Private (Only members can view activities)';
+
+  @override
+  String get club_aboutPrivacyPublic => 'Public (Visible to everyone)';
+
+  @override
+  String get club_aboutEstablishedDate => 'Established date';
+
+  @override
+  String get club_aboutContactChannels => 'Contact Channels & Social Media';
+
+  @override
+  String get club_aboutOfficialDocumentBadge => 'OFFICIAL CLUB REGULATION';
+
+  @override
+  String get club_autoGenerateNameHint =>
+      'Auto-suggest tournament name based on club and schedule';
+
+  @override
   String get createClub_recurringTitle =>
       'Session Schedule & Auto Tournament Creation';
 
@@ -3317,7 +3379,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lite_copy => 'Copy';
 
   @override
+  String get lite_copyLink => 'Copy link';
+
+  @override
+  String get lite_linkCopied => 'Tournament join link copied';
+
+  @override
+  String get lite_shareTournament => 'Share';
+
+  @override
+  String lite_shareInviteMessage(Object name, Object code, Object link) {
+    return 'Join tournament $name! Invite code: $code. Register now at: $link';
+  }
+
+  @override
   String get lite_qrInstruction => 'Scan QR code to join the tournament';
+
+  @override
+  String get lite_zoomQr => 'Enlarge QR';
+
+  @override
+  String get lite_close => 'Close';
 
   @override
   String get lite_creating => 'Creating...';

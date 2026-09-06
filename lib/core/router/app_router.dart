@@ -486,10 +486,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/live/:matchId',
         builder: (context, state) {
           final matchId = state.pathParameters['matchId']!;
+          final tournamentId = state.uri.queryParameters['tournamentId'] ??
+              ref.read(authProvider).tournamentId ??
+              '';
+          final forceViewer = state.uri.queryParameters['viewer'] == 'true';
+          final canScore = ref.read(authProvider).canScore;
           return LiveScoreScreen(
-            tournamentId: '',
+            tournamentId: tournamentId,
             matchId: matchId,
-            isViewer: true,
+            isViewer: forceViewer || !canScore,
           );
         },
       ),
@@ -652,9 +657,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           final auth = ref.read(authProvider);
+          final isLite = state.uri.queryParameters['isLite'] == 'true';
           return BracketViewScreen(
             tournamentId: id,
-            isReferee: auth.role == UserRole.referee && auth.tournamentId == id,
+            isReferee: isLite || (auth.role == UserRole.referee && auth.tournamentId == id),
+            isLite: isLite,
           );
         },
       ),

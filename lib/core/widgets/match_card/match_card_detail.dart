@@ -39,10 +39,18 @@ class MatchCardDetail extends StatelessWidget {
         ? match.refereeName!.trim()
         : l10n.liveUnknownValue;
 
+    final isLiteMatch = match.tournamentConfig?['isLite'] == true ||
+        match.tournamentConfig?['mode']?.toString().toUpperCase() == 'LITE';
+    final canScoreMatch = isReferee || !isReadOnly || isLiteMatch;
+
     return GestureDetector(
       onTap: match.hasTeams
           ? () {
-              context.go('/live/${match.id}');
+              if (canScoreMatch && tournamentId.isNotEmpty) {
+                context.push('/organizer/tournaments/$tournamentId/ops/match/${match.id}');
+              } else {
+                context.push('/live/${match.id}${tournamentId.isNotEmpty ? '?tournamentId=$tournamentId' : ''}');
+              }
             }
           : null,
       child: Container(
@@ -208,12 +216,16 @@ class MatchCardDetail extends StatelessWidget {
                           if (Navigator.canPop(context)) {
                             Navigator.of(context).pop();
                           }
-                          context.push('/live/${match.id}');
+                          if (canScoreMatch && tournamentId.isNotEmpty) {
+                            context.push('/organizer/tournaments/$tournamentId/ops/match/${match.id}');
+                          } else {
+                            context.push('/live/${match.id}${tournamentId.isNotEmpty ? '?tournamentId=$tournamentId' : ''}');
+                          }
                         },
                         icon: Icon(
                           isLive
                               ? Icons.live_tv_rounded
-                              : (isReferee
+                              : (canScoreMatch
                                     ? Icons.edit_note_rounded
                                     : Icons.sports_score_rounded),
                           size: 18,
@@ -221,7 +233,7 @@ class MatchCardDetail extends StatelessWidget {
                         label: Text(
                           isLive
                               ? l10n.liveOpenScoreboardShort
-                              : (isReferee
+                              : (canScoreMatch
                                     ? l10n.officialScoreScoringTab
                                     : l10n.liveOpenScoreboardShort),
                           style: const TextStyle(

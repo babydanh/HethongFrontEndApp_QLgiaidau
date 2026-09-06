@@ -29,10 +29,19 @@ class BracketPosition {
   });
 
   factory BracketPosition.fromJson(Map<String, dynamic> json) {
+    final raw = (json['bracket'] ?? json['bracketBranch'] ?? json['bracket_branch'] ?? 'winners').toString().toUpperCase();
+    final bracket = switch (raw) {
+      'MAIN' || 'WINNERS' => 'winners',
+      'LOSERS' => 'losers',
+      'GRAND_FINALS' || 'GRAND_FINAL' => 'grand_final',
+      'GRAND_FINAL_RESET' => 'grand_final_reset',
+      'PLAYOFF' => 'playoff',
+      _ => raw.toLowerCase(),
+    };
     return BracketPosition(
-      bracket: json['bracket'] ?? 'winners',
-      round: json['round'] ?? 1,
-      position: json['position'] ?? 0,
+      bracket: bracket,
+      round: json['round'] ?? json['roundNumber'] ?? 1,
+      position: json['position'] ?? json['matchOrder'] ?? 0,
     );
   }
 
@@ -359,7 +368,32 @@ class MatchModel {
           ? BracketPosition.fromJson(
               json['bracketPosition'] as Map<String, dynamic>,
             )
-          : const BracketPosition(round: 1, position: 0),
+          : BracketPosition(
+              bracket: switch ((json['bracketBranch'] ??
+                      json['bracket_branch'] ??
+                      'winners')
+                  .toString()
+                  .toUpperCase()) {
+                'MAIN' || 'WINNERS' => 'winners',
+                'LOSERS' => 'losers',
+                'GRAND_FINALS' || 'GRAND_FINAL' => 'grand_final',
+                'GRAND_FINAL_RESET' => 'grand_final_reset',
+                'PLAYOFF' => 'playoff',
+                final other => other.toLowerCase(),
+              },
+              round: (json['roundNumber'] ?? json['round'] ?? 1) is num
+                  ? (json['roundNumber'] ?? json['round'] as num).toInt()
+                  : int.tryParse(
+                          (json['roundNumber'] ?? json['round'])?.toString() ??
+                              '') ??
+                      1,
+              position: (json['matchOrder'] ?? json['position'] ?? 0) is num
+                  ? (json['matchOrder'] ?? json['position'] as num).toInt()
+                  : int.tryParse(
+                          (json['matchOrder'] ?? json['position'])?.toString() ??
+                              '') ??
+                      0,
+            ),
       nextMatchId: json['nextMatchId'] ?? '',
       loserNextMatchId: json['loserNextMatchId'] ?? '',
       // A match-level courtName override wins over any generic court value;
@@ -440,7 +474,10 @@ class MatchModel {
       stageType:
           json['stageType']?.toString() ??
           json['stage_type']?.toString() ??
-          (json['stage'] is Map ? json['stage']['type']?.toString() : null),
+          (json['stage'] is Map ? json['stage']['type']?.toString() : null) ??
+          (json['group'] is Map && json['group']['stage'] is Map
+              ? json['group']['stage']['type']?.toString()
+              : null),
       divisionId:
           json['divisionId']?.toString() ??
           json['division_id']?.toString() ??

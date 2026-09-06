@@ -6,11 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
@@ -262,6 +264,24 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         ),
         centerTitle: true,
         actions: [
+          if (state.inviteCode != null && state.inviteCode!.isNotEmpty)
+            IconButton(
+              tooltip: l10n.lite_shareTournament,
+              icon: Icon(Icons.share_rounded, color: colors.textPrimary),
+              onPressed: () {
+                final invite = state.inviteCode!;
+                final link = LiteTournamentCreateResult.resolveUrl(
+                  '/lite/tournaments/join/$invite',
+                );
+                AppShareModal.show(
+                  context: context,
+                  title: state.tournamentName ?? l10n.lite_managementTitle,
+                  subtitle: l10n.lite_qrInstruction,
+                  webUrl: link,
+                  badgeText: invite,
+                );
+              },
+            ),
           IconButton(
             icon: Icon(Icons.refresh_rounded, color: colors.textPrimary),
             onPressed: state.loading
@@ -437,7 +457,14 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         children: [
           // ─── Header Card ───
           _buildHeaderCard(colors, state),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
+
+          // ─── 1. Top of Page: Mã mời, QR Code & Chia sẻ giải đấu ───
+          if (state.inviteCode != null && state.inviteCode!.isNotEmpty) ...[
+            _buildHeroShareCard(colors, state),
+            const SizedBox(height: 20),
+          ],
+
           _buildLiteFlow(colors, state),
           const SizedBox(height: 24),
 
@@ -467,28 +494,6 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           _buildVenueAndLocationCard(colors, state, notifier),
           const SizedBox(height: 20),
           _buildDescriptionCard(colors, state, notifier),
-          const SizedBox(height: 24),
-
-          // ─── Invite Code ───
-          if (state.inviteCode != null && state.inviteCode!.isNotEmpty) ...[
-            _sectionHeader(
-              colors,
-              l10n.lite_inviteCodeTitle,
-              Icons.link_rounded,
-            ),
-            const SizedBox(height: 10),
-            _inviteCodeCard(colors, state.inviteCode!),
-            const SizedBox(height: 20),
-
-            // ─── QR Code ───
-            _sectionHeader(
-              colors,
-              l10n.lite_qrCodeTitle,
-              Icons.qr_code_rounded,
-            ),
-            const SizedBox(height: 10),
-            _qrCodeCard(colors, state.inviteCode!),
-          ],
         ],
       ),
     );
@@ -1687,55 +1692,262 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     );
   }
 
-  Widget _inviteCodeCard(AppColorsExtension colors, String inviteCode) {
+  Widget _buildHeroShareCard(
+    AppColorsExtension colors,
+    LiteManagementState state,
+  ) {
     final l10n = AppLocalizations.of(context)!;
+    final inviteCode = state.inviteCode!;
+    final joinUrl = LiteTournamentCreateResult.resolveUrl(
+      '/lite/tournaments/join/$inviteCode',
+    );
+    final tournamentName = state.tournamentName ?? l10n.navTournaments;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: colors.border),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primary.withValues(alpha: 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // ─── Header: Icon + Title + Share action ───
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 12, 10),
+            child: Row(
               children: [
-                Text(
-                  l10n.lite_inviteCode,
-                  style: TextStyle(fontSize: 12, color: colors.textMuted),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  inviteCode,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.qr_code_2_rounded,
+                    size: 20,
                     color: AppTheme.primary,
-                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.lite_inviteCodeTitle,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        l10n.lite_qrInstruction,
+                        style: TextStyle(fontSize: 11, color: colors.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: l10n.lite_shareTournament,
+                  icon: const Icon(Icons.share_rounded, color: AppTheme.primary, size: 20),
+                  onPressed: () {
+                    AppShareModal.show(
+                      context: context,
+                      title: tournamentName,
+                      subtitle: l10n.lite_qrInstruction,
+                      webUrl: joinUrl,
+                      badgeText: inviteCode,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, color: colors.border.withValues(alpha: 0.6)),
+
+          // ─── Content: QR Thumbnail + Code Details ───
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // QR Box (Click to enlarge)
+                GestureDetector(
+                  onTap: () => _showEnlargedQrDialog(colors, tournamentName, inviteCode, joinUrl),
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: colors.border),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: QrImageView(
+                          data: joinUrl,
+                          version: QrVersions.auto,
+                          size: 92,
+                          backgroundColor: Colors.white,
+                          padding: EdgeInsets.zero,
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.all(4),
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.65),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.fullscreen_rounded,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 14),
+
+                // Invite code info & primary copy action
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.lite_inviteCode,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppTheme.primary.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                inviteCode,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppTheme.primary,
+                                  letterSpacing: 1.8,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            InkWell(
+                              onTap: () {
+                                Clipboard.setData(ClipboardData(text: inviteCode));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(l10n.lite_inviteCopied)),
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(6),
+                              child: Padding(
+                                padding: const EdgeInsets.all(4),
+                                child: Icon(
+                                  Icons.copy_rounded,
+                                  size: 16,
+                                  color: AppTheme.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        joinUrl,
+                        style: TextStyle(fontSize: 10.5, color: colors.textMuted),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-          SizedBox(
-            height: 40,
-            child: FilledButton.icon(
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: inviteCode));
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(l10n.lite_inviteCopied)));
-              },
-              icon: const Icon(Icons.copy_rounded, size: 16),
-              label: Text(l10n.lite_copy, style: const TextStyle(fontSize: 13)),
-              style: FilledButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+
+          // ─── Actions Row ───
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: joinUrl));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.lite_linkCopied)),
+                      );
+                    },
+                    icon: const Icon(Icons.link_rounded, size: 16),
+                    label: Text(
+                      l10n.lite_copyLink,
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      side: BorderSide(color: colors.border),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      final text = l10n.lite_shareInviteMessage(tournamentName, inviteCode, joinUrl);
+                      SharePlus.instance.share(ShareParams(text: text));
+                    },
+                    icon: const Icon(Icons.share_rounded, size: 16),
+                    label: Text(
+                      l10n.lite_shareTournament,
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1743,42 +1955,103 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     );
   }
 
-  Widget _qrCodeCard(AppColorsExtension colors, String inviteCode) {
+  void _showEnlargedQrDialog(
+    AppColorsExtension colors,
+    String tournamentName,
+    String inviteCode,
+    String joinUrl,
+  ) {
     final l10n = AppLocalizations.of(context)!;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-            ),
-            child: QrImageView(
-              // Mã QR phải chứa URL đầy đủ (mở thẳng luồng tham gia), không phải
-              // mã thô — khớp với web LiteInviteQr.
-              data: LiteTournamentCreateResult.resolveUrl(
-                '/lite/tournaments/join/$inviteCode',
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: colors.bgCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.lite_zoomQr,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.pop(dialogContext),
+                  ),
+                ],
               ),
-              version: QrVersions.auto,
-              size: 160,
-              backgroundColor: Colors.white,
-              padding: EdgeInsets.zero,
-            ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: QrImageView(
+                  data: joinUrl,
+                  version: QrVersions.auto,
+                  size: 220,
+                  backgroundColor: Colors.white,
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${l10n.lite_inviteCode}: $inviteCode',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.primary,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    final text = l10n.lite_shareInviteMessage(tournamentName, inviteCode, joinUrl);
+                    SharePlus.instance.share(ShareParams(text: text));
+                  },
+                  icon: const Icon(Icons.share_rounded, size: 16),
+                  label: Text(l10n.lite_shareTournament),
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.lite_qrInstruction,
-            style: TextStyle(fontSize: 12, color: colors.textMuted),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -483,7 +483,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       )),
     );
     final auth = ref.watch(authProvider);
-    final canOpenScoring = auth.canScore;
+    final match = matchAsync.value;
+    final effectiveTournamentId = widget.tournamentId.isNotEmpty
+        ? widget.tournamentId
+        : (match?.tournamentId ?? '');
+    final tournamentAsync = effectiveTournamentId.isNotEmpty
+        ? ref.watch(tournamentProvider(effectiveTournamentId))
+        : null;
+    final isLiteMatch = match?.tournamentConfig?['isLite'] == true ||
+        match?.tournamentConfig?['mode']?.toString().toUpperCase() == 'LITE' ||
+        tournamentAsync?.value?.isLite == true;
+    final canOpenScoring = auth.canScore || isLiteMatch;
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
@@ -538,7 +548,51 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           ),
           onPressed: () => context.pop(),
         ),
-        actions: const [],
+        actions: [
+          if (canOpenScoring && match != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: match.isScheduled
+                  ? IconButton(
+                      tooltip: l10n.liveStartMatch,
+                      icon: const Icon(Icons.play_circle_fill_rounded),
+                      color: const Color(0xFF16A34A),
+                      onPressed: () async {
+                        final params = (
+                          tournamentId: effectiveTournamentId,
+                          matchId: widget.matchId,
+                        );
+                        final controller = ref.read(
+                          matchControllerProvider(params),
+                        );
+                        await controller.startMatch();
+                      },
+                    )
+                  : IconButton(
+                      tooltip: l10n.liveOpenScoreboardShort,
+                      icon: const Icon(Icons.scoreboard_rounded),
+                      color: AppTheme.primary,
+                      onPressed: () {
+                        showOfficialScoreModal(
+                          context,
+                          tournamentId: effectiveTournamentId,
+                          matchId: widget.matchId,
+                          match: match,
+                          onRecordPenalty: () =>
+                              _showFoulSelectionDialog(match),
+                          onSubmitPenalty: (teamName, option, reason) =>
+                              _submitPenalty(
+                                match,
+                                teamName,
+                                option,
+                                reason,
+                              ),
+                          onForceWin: () => _showForceWinDialog(match),
+                        );
+                      },
+                    ),
+            ),
+        ],
       ),
       body: Stack(
         children: [
@@ -830,7 +884,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final tournamentMode = match.tournamentConfig?['mode']
         ?.toString()
         .toUpperCase();
-    if (tournamentMode == 'LITE') {
+    final effectiveTournamentId = widget.tournamentId.isNotEmpty
+        ? widget.tournamentId
+        : (match.tournamentId ?? '');
+    final tournamentAsync = effectiveTournamentId.isNotEmpty
+        ? ref.watch(tournamentProvider(effectiveTournamentId))
+        : null;
+    final isLiteMatch = match.tournamentConfig?['isLite'] == true ||
+        tournamentMode == 'LITE' ||
+        tournamentAsync?.value?.isLite == true;
+    if (isLiteMatch) {
       return _buildLiteSetupState(match, kind, config);
     }
     final scoreLabel = _setupScoreLabel(kind, config);

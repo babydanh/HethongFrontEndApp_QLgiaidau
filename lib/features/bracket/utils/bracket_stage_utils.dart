@@ -35,7 +35,10 @@ bool isGroupStageMatch(MatchModel match) {
     return true;
   }
   if (stageName.contains('GROUP') || stageName.contains('BẢNG')) return true;
-  if (stageName.contains('KNOCKOUT') || stageName.contains('PLAYOFF')) {
+  if (stageName.contains('KNOCKOUT') ||
+      stageName.contains('PLAYOFF') ||
+      stageName.contains('ELIMINATION') ||
+      stageName.contains('MAIN')) {
     return false;
   }
   if (groupName.isEmpty) return false;
@@ -45,6 +48,7 @@ bool isGroupStageMatch(MatchModel match) {
       !groupName.contains('WINNERS') &&
       !groupName.contains('LOSERS') &&
       !groupName.contains('GRAND') &&
+      !groupName.contains('MAIN') &&
       !groupName.contains('BRACKET');
 }
 
@@ -61,14 +65,21 @@ bool isKnockoutMatch(MatchModel match) {
   if (branch == 'PLAYOFF') return true;
   if (branch == 'WINNERS' ||
       branch == 'MAIN' ||
+      branch == 'LOSERS' ||
       branch == 'GRAND_FINAL' ||
       branch == 'GRAND_FINAL_RESET') {
     return !isGroupStageMatch(match);
   }
-  if (stageName.contains('KNOCKOUT') || stageName.contains('PLAYOFF')) {
+  if (stageName.contains('KNOCKOUT') ||
+      stageName.contains('PLAYOFF') ||
+      stageName.contains('ELIMINATION') ||
+      stageName.contains('MAIN')) {
     return true;
   }
-  if (groupName.contains('KNOCKOUT') || groupName.contains('PLAYOFF')) {
+  if (groupName.contains('KNOCKOUT') ||
+      groupName.contains('PLAYOFF') ||
+      groupName.contains('MAIN') ||
+      groupName.contains('BRACKET')) {
     return true;
   }
 

@@ -15,9 +15,10 @@ class StatusBadge extends StatelessWidget {
       statusKey,
       l10n: l10n,
     );
+    final normalized = StatusHelper.normalizeTournamentStatus(statusKey);
     final bgColor = StatusHelper.getTournamentStatusColor(statusKey, context);
-    final isLive = statusKey == AppConstants.statusInProgress;
-    final isCompleted = statusKey.toUpperCase() == AppConstants.statusCompleted.toUpperCase() || statusKey.toUpperCase() == 'COMPLETED';
+    final isLive = normalized == AppConstants.statusInProgress;
+    final isCompleted = normalized == AppConstants.statusCompleted;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

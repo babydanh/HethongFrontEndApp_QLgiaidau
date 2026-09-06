@@ -515,11 +515,24 @@ class ApiMatchRepository implements IMatchRepository {
     final hasBracketChain =
         nextMatchId.isNotEmpty || loserNextMatchId.isNotEmpty;
 
+    final rawStageType =
+        json['stageType'] ??
+        json['stage_type'] ??
+        (json['stage'] is Map ? json['stage']['type'] : null) ??
+        (json['group'] is Map && json['group']['stage'] is Map
+            ? json['group']['stage']['type']
+            : null);
+    final stageType = rawStageType?.toString();
+
     String bracketName = 'winners';
     if (json['bracketBranch'] != null) {
       bracketName = _mapBracketBranch(json['bracketBranch'] as String?);
     } else if (hasBracketChain) {
       bracketName = 'winners';
+    } else if (stageType != null &&
+        (stageType.toUpperCase() == 'ROUND_ROBIN' ||
+            stageType.toUpperCase() == 'GROUP_STAGE')) {
+      bracketName = 'group_stage';
     } else if ((stageName != null &&
             stageName.toUpperCase().contains('GROUP')) ||
         (json['stage']?.toString().toUpperCase() == 'GROUP_STAGE')) {
@@ -527,7 +540,11 @@ class ApiMatchRepository implements IMatchRepository {
     } else if (groupName != null &&
         groupName.isNotEmpty &&
         !groupName.toUpperCase().contains('KNOCKOUT') &&
-        !groupName.toUpperCase().contains('PLAYOFF')) {
+        !groupName.toUpperCase().contains('PLAYOFF') &&
+        !groupName.toUpperCase().contains('BRACKET') &&
+        !groupName.toUpperCase().contains('MAIN') &&
+        !groupName.toUpperCase().contains('WINNER') &&
+        !groupName.toUpperCase().contains('LOSER')) {
       bracketName = 'group_stage';
     }
 
@@ -622,6 +639,7 @@ class ApiMatchRepository implements IMatchRepository {
       team2Members: team2Members,
       groupName: groupName,
       stageName: stageName,
+      stageType: stageType,
       divisionId:
           json['divisionId']?.toString() ??
           json['division_id']?.toString() ??

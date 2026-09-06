@@ -36,8 +36,15 @@ class BracketMatchCard extends StatelessWidget {
   });
 
   void _onTap(BuildContext context) {
-    if ((isReferee || !isReadOnly) && (match.isLive || match.isScheduled)) {
-      context.push('/live/${match.id}');
+    final isLiteMatch = match.tournamentConfig?['isLite'] == true ||
+        match.tournamentConfig?['mode']?.toString().toUpperCase() == 'LITE';
+    final canScoreMatch = isReferee || !isReadOnly || isLiteMatch;
+    if (canScoreMatch && (match.isLive || match.isScheduled)) {
+      if (tournamentId.isNotEmpty) {
+        context.push('/organizer/tournaments/$tournamentId/ops/match/${match.id}');
+      } else {
+        context.push('/live/${match.id}');
+      }
       return;
     }
     showDialog(

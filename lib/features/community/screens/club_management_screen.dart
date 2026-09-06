@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
@@ -14,6 +15,8 @@ import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_
 import 'package:app_quanly_giaidau/features/community/widgets/member_elo_adjust_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart';
 import 'package:app_quanly_giaidau/data/models/community_ranking_model.dart';
+import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:intl/intl.dart';
 
 /// Màn hình Điều phối CLB — dành cho OWNER/ADMIN/MODERATOR.
 ///
@@ -44,6 +47,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   List<CommunityReportModel> _reports = [];
   bool _isLoading = true;
   bool _isModeratingPost = false;
+  String? _togglingRecurringId;
 
   // Invite state
   final _searchCtrl = TextEditingController();
@@ -171,6 +175,8 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                   ],
                   const SizedBox(height: 16),
                   _buildTournamentsManagementSection(colors),
+                  const SizedBox(height: 16),
+                  _buildRecurringSchedulesSection(colors),
                   const SizedBox(height: 16),
                   _buildEloCoordinationSection(colors),
                   if (_joinRequests.isNotEmpty) ...[
@@ -944,6 +950,29 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                         const SizedBox(height: 10),
                         Row(
                           children: [
+                            OutlinedButton(
+                              onPressed: () {
+                                final shareUrl = 'https://sporto.asia/tournaments/${t.id}';
+                                AppShareModal.show(
+                                  context: context,
+                                  title: t.name,
+                                  subtitle: t.sport.isNotEmpty ? t.sport : l10n.navTournaments,
+                                  webUrl: shareUrl,
+                                  imageUrl: t.logoUrl ?? t.bannerUrl,
+                                );
+                              },
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Icon(Icons.share_rounded, size: 16),
+                            ),
+                            const SizedBox(width: 8),
                             Expanded(
                               child: OutlinedButton.icon(
                                 onPressed: () => context.push('/intro/${t.id}'),
@@ -1042,6 +1071,362 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
         ],
       ),
     );
+  }
+
+  // ─── Recurring Schedules Management (Quản lý Lịch giải Định kỳ - Cron) ───
+  Widget _buildRecurringSchedulesSection(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
+    final tourneysAsync = ref.watch(communityTournamentsProvider(widget.clubId));
+
+    return tourneysAsync.when(
+      data: (tourneys) {
+        final recurringTourneys = tourneys.where((t) {
+          return t.isRecurring || t.recurringConfig != null;
+        }).toList();
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: colors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.sync_rounded,
+                      color: Color(0xFF6366F1),
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              l10n.communityRecurringSchedulesTitle,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                            if (recurringTourneys.isNotEmpty) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '${recurringTourneys.length}',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFF6366F1),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        Text(
+                          l10n.createClubTournament_recurringDescription,
+                          style: TextStyle(fontSize: 11, color: colors.textMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              if (recurringTourneys.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: colors.bgSurface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: colors.borderLight),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(Icons.schedule_rounded, size: 28, color: colors.textMuted),
+                      const SizedBox(height: 6),
+                      Text(
+                        l10n.communityRecurringEmpty,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.communityRecurringEmptyHint,
+                        style: TextStyle(fontSize: 11, color: colors.textMuted, height: 1.35),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                )
+              else
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: recurringTourneys.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final t = recurringTourneys[index];
+                    final rec = t.recurringConfig ?? <String, dynamic>{};
+                    final isEnabled = rec['enabled'] != false;
+                    final timeOfDay = rec['timeOfDay']?.toString() ?? '18:00';
+                    final advanceDays = rec['advanceDays'] ?? 0;
+                    final nextRunAtStr = rec['nextRunAt']?.toString() ?? rec['nextEventAt']?.toString();
+                    DateTime? nextRunAt;
+                    if (nextRunAtStr != null && nextRunAtStr.isNotEmpty) {
+                      nextRunAt = DateTime.tryParse(nextRunAtStr)?.toLocal();
+                    }
+
+                    List<int> days = [];
+                    if (rec['daysOfWeek'] is List) {
+                      days = (rec['daysOfWeek'] as List).map((d) => int.tryParse(d.toString()) ?? 6).toList();
+                    } else if (rec['dayOfWeek'] != null) {
+                      days = [int.tryParse(rec['dayOfWeek'].toString()) ?? 6];
+                    }
+                    if (days.isEmpty) days = [6];
+
+                    final isToggling = _togglingRecurringId == t.id;
+
+                    return Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: colors.bgSurface,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isEnabled
+                              ? const Color(0xFF6366F1).withValues(alpha: 0.3)
+                              : colors.borderLight,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  t.name,
+                                  style: TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: colors.textPrimary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isEnabled
+                                      ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                                      : const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: isEnabled
+                                        ? const Color(0xFF10B981).withValues(alpha: 0.3)
+                                        : const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      isEnabled ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                                      size: 11,
+                                      color: isEnabled ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      isEnabled ? l10n.communityRecurringActive : l10n.communityRecurringPaused,
+                                      style: TextStyle(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: isEnabled ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Text(
+                                l10n.communityRecurringDays,
+                                style: TextStyle(fontSize: 11, color: colors.textMuted),
+                              ),
+                              const SizedBox(width: 6),
+                              Wrap(
+                                spacing: 4,
+                                children: [1, 2, 3, 4, 5, 6, 0].map((d) {
+                                  final isSelected = days.contains(d);
+                                  final dayText = d == 0 ? 'CN' : 'T${d + 1}';
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? const Color(0xFF6366F1) : colors.bgCard,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                        color: isSelected ? const Color(0xFF6366F1) : colors.borderLight,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      dayText,
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w800,
+                                        color: isSelected ? Colors.white : colors.textMuted,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                              const SizedBox(width: 10),
+                              Icon(Icons.schedule_rounded, size: 12, color: colors.textMuted),
+                              const SizedBox(width: 3),
+                              Text(
+                                timeOfDay,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (nextRunAt != null) ...[
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Text(
+                                  l10n.communityRecurringNextRun,
+                                  style: TextStyle(fontSize: 10.5, color: colors.textMuted),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  DateFormat('HH:mm - dd/MM/yyyy').format(nextRunAt),
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: colors.textSecondary,
+                                  ),
+                                ),
+                                if (advanceDays > 0) ...[
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '(${l10n.createClubTournament_beforeDays(advanceDays)})',
+                                    style: TextStyle(fontSize: 10, color: colors.textMuted),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                          const SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              OutlinedButton.icon(
+                                onPressed: isToggling
+                                    ? null
+                                    : () => _toggleRecurringTournament(t.id, !isEnabled),
+                                icon: isToggling
+                                    ? const SizedBox(
+                                        width: 12,
+                                        height: 12,
+                                        child: CircularProgressIndicator(strokeWidth: 1.5),
+                                      )
+                                    : Icon(
+                                        isEnabled ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                        size: 13,
+                                      ),
+                                label: Text(
+                                  isEnabled ? l10n.communityRecurringPaused : l10n.communityRecurringActive,
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (err, stack) => const SizedBox.shrink(),
+    );
+  }
+
+  Future<void> _toggleRecurringTournament(String tournamentId, bool enable) async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _togglingRecurringId = tournamentId);
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      await dio.patch(
+        '/tournaments/$tournamentId/recurring/toggle',
+        data: {'enabled': enable},
+      );
+      if (mounted) {
+        ref.invalidate(communityTournamentsProvider(widget.clubId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              enable ? l10n.communityRecurringResume : l10n.communityRecurringPause,
+            ),
+            backgroundColor: enable ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e, stack) {
+      _log.error('Lỗi bật/tắt lịch định kỳ', e, stack);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.communityRecurringToggleError),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _togglingRecurringId = null);
+    }
   }
 
   // ─── ELO Coordination (Điều phối ELO Thành viên) ──────────────

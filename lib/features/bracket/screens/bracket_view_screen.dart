@@ -190,6 +190,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         final hasGroupStage =
             isRoundRobin || (isGroupStageKnockout && hasGroupMatches);
 
+        final effectiveIsLite = widget.isLite || tournament?.isLite == true;
+        final canActAsReferee = effectiveIsLite || auth.role == UserRole.admin || widget.isReferee;
+        final isReadOnlyMode = !effectiveIsLite && auth.role == UserRole.viewer;
+
         if (hasGroupStage) {
           return Column(
             mainAxisSize: widget.isEmbedded
@@ -199,13 +203,15 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
               _buildGroupStageTabBar(l10n),
               const SizedBox(height: 8),
               if (widget.isEmbedded)
-                _buildGroupTabContent(matches, effectiveBracketType, auth)
+                _buildGroupTabContent(matches, effectiveBracketType, auth, canActAsReferee: canActAsReferee, isReadOnly: isReadOnlyMode)
               else
                 Expanded(
                   child: _buildGroupTabContent(
                     matches,
                     effectiveBracketType,
                     auth,
+                    canActAsReferee: canActAsReferee,
+                    isReadOnly: isReadOnlyMode,
                   ),
                 ),
             ],
@@ -214,8 +220,8 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           return _buildKnockoutMatchTable(
             matches,
             effectiveBracketType,
-            auth.role == UserRole.viewer,
-            auth.role == UserRole.admin || widget.isReferee,
+            isReadOnlyMode,
+            canActAsReferee,
           );
         }
       },
@@ -337,8 +343,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
   Widget _buildGroupTabContent(
     List<MatchModel> matches,
     String bracketType,
-    AuthState auth,
-  ) {
+    AuthState auth, {
+    bool canActAsReferee = false,
+    bool isReadOnly = true,
+  }) {
     switch (_selectedGroupTab) {
       case 0:
         return Padding(
@@ -363,8 +371,8 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         return _buildKnockoutMatchTable(
           matches,
           bracketType,
-          auth.role == UserRole.viewer,
-          auth.role == UserRole.admin || widget.isReferee,
+          isReadOnly,
+          canActAsReferee,
         );
       default:
         return const SizedBox.shrink();
@@ -634,10 +642,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                           divisionId: widget.divisionId,
                           bracketType: bracketType,
                           initialMatches: matches,
-                          isReferee: widget.isReferee,
+                          isReferee: isReferee,
                           isReadOnly: isReadOnly,
                           canEditBracket: widget.canEditBracket,
-                          isLite: widget.isLite,
+                          isLite: isReferee || widget.isLite,
                         ),
                       ),
                     );
@@ -944,7 +952,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             isReadOnly: isReadOnly,
             totalRounds: effectiveTotalRounds,
             tournamentId: widget.tournamentId,
-            isReferee: widget.isReferee,
+            isReferee: isReferee,
           ),
         ],
       ],

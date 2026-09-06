@@ -1227,12 +1227,14 @@ class ApiTournamentRepository implements ITournamentRepository {
 
     final rawGroup = json['group'] as Map<String, dynamic>?;
     final resolvedGroupName = groupName ?? rawGroup?['name']?.toString();
-    final rawStage = rawGroup?['stage'] as Map<String, dynamic>?;
-    final resolvedStageName = stageName ?? rawStage?['name']?.toString();
-    final resolvedStageType =
-        stageType ??
+    final rawStage = (rawGroup?['stage'] ?? json['stage']) as Map<String, dynamic>?;
+    final resolvedStageName = stageName ??
+        rawStage?['name']?.toString() ??
+        json['stageName']?.toString();
+    final resolvedStageType = stageType ??
         rawStage?['type']?.toString() ??
-        json['stageType']?.toString();
+        json['stageType']?.toString() ??
+        json['stage_type']?.toString();
 
     int parseScore(dynamic value) {
       if (value is num) return value.toInt();

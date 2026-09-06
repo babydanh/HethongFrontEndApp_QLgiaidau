@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Clean, specs-driven schedule match card.
@@ -77,14 +79,16 @@ class MatchTableRow extends StatelessWidget {
     final t2Initials = _getInitials(match.team2Name);
 
     // Round / Group / Match location label
-    final branch = match.bracketPosition.bracket;
+    final branch = match.bracketPosition.bracket.toLowerCase();
+    final isGroup = isGroupStageMatch(match);
     final String roundLabel;
     if (branch == 'grand_final' || branch == 'grand_final_reset') {
       roundLabel = l10n.matchTableGrandFinal;
     } else if (branch == 'losers') {
       roundLabel = l10n.matchTableLosersRound(match.round);
-    } else if (match.groupName != null && match.groupName!.isNotEmpty) {
-      roundLabel = l10n.crossTableLegTitle(match.groupName!, match.leg ?? 1);
+    } else if (isGroup && match.groupName != null && match.groupName!.trim().isNotEmpty) {
+      final groupDisplay = MatchRoundLabel.formatStageOrGroupName(match.groupName, l10n: l10n);
+      roundLabel = l10n.crossTableLegTitle(groupDisplay, match.leg ?? 1);
     } else {
       roundLabel = l10n.matchTableRoundMatch(
         _getRoundName(match.round, totalRounds, l10n),
@@ -137,7 +141,16 @@ class MatchTableRow extends StatelessWidget {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
-          onTap: () => context.push('/live/${match.id}'),
+          onTap: () {
+            final isLiteMatch = match.tournamentConfig?['isLite'] == true ||
+                match.tournamentConfig?['mode']?.toString().toUpperCase() == 'LITE';
+            final canScoreMatch = isReferee || !isReadOnly || isLiteMatch;
+            if (canScoreMatch && tournamentId.isNotEmpty) {
+              context.push('/organizer/tournaments/$tournamentId/ops/match/${match.id}');
+            } else {
+              context.push('/live/${match.id}${tournamentId.isNotEmpty ? '?tournamentId=$tournamentId' : ''}');
+            }
+          },
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(14),

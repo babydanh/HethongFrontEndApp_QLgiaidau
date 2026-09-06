@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
+import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -883,9 +884,16 @@ class _AssignedMatchesSection extends StatelessWidget {
           ? _EmptySectionText(l10n.dashboard_noAssignedMatches)
           : Column(
               children: matches.map((match) {
+                final stageDisplay = MatchRoundLabel.formatStageOrGroupName(
+                  match.stageName,
+                  l10n: l10n,
+                );
                 final subtitle = [
-                  if (match.stageName.isNotEmpty) match.stageName,
-                  if (match.groupName.isNotEmpty) match.groupName,
+                  if (stageDisplay.isNotEmpty) stageDisplay,
+                  if (match.groupName.isNotEmpty &&
+                      !match.groupName.toUpperCase().contains('BRACKET') &&
+                      !match.groupName.toUpperCase().contains('MAIN'))
+                    match.groupName,
                   l10n.dashboard_roundLabel(match.roundNumber),
                 ].join(' • ');
                 return Padding(

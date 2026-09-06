@@ -11,12 +11,37 @@ class StatusHelper {
     return switch (status) {
       'DRAFT' => AppConstants.statusDraft,
       'UPCOMING' => AppConstants.statusUpcoming,
-      'REGISTRATION_OPEN' => AppConstants.statusRegistration,
-      'REGISTRATION_CLOSED' || 'CLOSED' => AppConstants.statusRegistrationClosed,
-      'ONGOING' || 'IN_PROGRESS' => AppConstants.statusInProgress,
-      'COMPLETED' || 'FINISHED' => AppConstants.statusCompleted,
+      'REGISTRATION_OPEN' ||
+      'REGISTER_OPEN' ||
+      'REGISTRATION' ||
+      'OPEN' ||
+      'PUBLISHED' ||
+      'ACTIVE' => AppConstants.statusRegistration,
+      'REGISTRATION_CLOSED' ||
+      'REGISTER_CLOSED' ||
+      'CLOSED' => AppConstants.statusRegistrationClosed,
+      'DRAWING' => AppConstants.statusDrawing,
+      'ONGOING' ||
+      'IN_PROGRESS' ||
+      'LIVE' => AppConstants.statusInProgress,
+      'COMPLETED' ||
+      'FINISHED' => AppConstants.statusCompleted,
       'CANCELLED' => AppConstants.statusCancelled,
-      _ => rawStatus?.toLowerCase() ?? AppConstants.statusDraft,
+      _ => () {
+        if (status.contains('REGIST') || status.contains('OPEN')) {
+          return AppConstants.statusRegistration;
+        }
+        if (status.contains('CLOSE')) {
+          return AppConstants.statusRegistrationClosed;
+        }
+        if (status.contains('LIVE') || status.contains('PROGRESS')) {
+          return AppConstants.statusInProgress;
+        }
+        if (status.contains('FINISH') || status.contains('COMPLETE')) {
+          return AppConstants.statusCompleted;
+        }
+        return rawStatus?.toLowerCase() ?? AppConstants.statusUpcoming;
+      }(),
     };
   }
 
@@ -35,7 +60,7 @@ class StatusHelper {
       AppConstants.statusInProgress => labels.statusLabelInProgress,
       AppConstants.statusCompleted => labels.statusLabelCompleted,
       AppConstants.statusCancelled => labels.statusLabelCancelled,
-      _ => normalized,
+      _ => labels.statusLabelUpcoming,
     };
   }
 

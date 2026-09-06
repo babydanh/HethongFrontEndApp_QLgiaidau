@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class AboutTab extends StatefulWidget {
   final Tournament tournament;
@@ -716,25 +718,9 @@ class _AboutTabState extends State<AboutTab> {
   }
 
   Widget _buildStatusBadge(String status) {
-    final colors = context.colors;
-    final s = status.toUpperCase();
-    Color bg = colors.bgSurface;
-    Color fg = colors.textSecondary;
-    String label = 'Sắp diễn ra';
-
-    if (s == 'IN_PROGRESS' || s == 'ONGOING' || s == 'LIVE') {
-      bg = colors.error;
-      fg = Colors.white;
-      label = '● Đang diễn ra';
-    } else if (s == 'REGISTRATION' || s == 'REGISTRATION_OPEN' || s == 'OPEN') {
-      bg = colors.success;
-      fg = Colors.white;
-      label = 'Đang mở đăng ký';
-    } else if (s == 'COMPLETED' || s == 'FINISHED') {
-      bg = colors.bgSurface;
-      fg = colors.textMuted;
-      label = 'Đã kết thúc';
-    }
+    final l10n = AppLocalizations.of(context)!;
+    final label = StatusHelper.getTournamentStatusLabel(status, l10n: l10n);
+    final bg = StatusHelper.getTournamentStatusColor(status, context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -744,10 +730,10 @@ class _AboutTabState extends State<AboutTab> {
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w800,
-          color: fg,
+          color: Colors.white,
         ),
       ),
     );

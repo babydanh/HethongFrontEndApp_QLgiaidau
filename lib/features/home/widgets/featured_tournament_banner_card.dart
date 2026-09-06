@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -51,37 +52,11 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
   }
 
   String _statusLabel(AppLocalizations l10n) {
-    switch (tournament.status.toLowerCase()) {
-      case 'live':
-      case 'in_progress':
-        return l10n.matchesStatusLive;
-      case 'completed':
-      case 'finished':
-        return l10n.matchesFilterEnded;
-      case 'registration':
-      case 'published':
-      case 'active':
-        return l10n.lite_statusRegistering;
-      default:
-        return l10n.matchesStatusScheduled;
-    }
+    return StatusHelper.getTournamentStatusLabel(tournament.status, l10n: l10n);
   }
 
-  Color _statusColor() {
-    switch (tournament.status.toLowerCase()) {
-      case 'live':
-      case 'in_progress':
-        return const Color(0xFF16A34A);
-      case 'completed':
-      case 'finished':
-        return const Color(0xFF64748B);
-      case 'registration':
-      case 'published':
-      case 'active':
-        return AppTheme.primary;
-      default:
-        return const Color(0xFFF97316);
-    }
+  Color _statusColor(BuildContext context) {
+    return StatusHelper.getTournamentStatusColor(tournament.status, context);
   }
 
   @override
@@ -151,7 +126,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                       const Spacer(),
                       _CompactTopStatusBadge(
                         label: _statusLabel(l10n),
-                        color: _statusColor(),
+                        color: _statusColor(context),
                       ),
                     ],
                   ),
