@@ -131,12 +131,29 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   void _updateStateFromMatch(MatchModel match) {
     final incomingRevision = match.revision;
+    final hydrated = _hydrateState(state, match);
+
+    // The score write invalidates the match provider so the outer cards stay
+    // fresh.  That provider can briefly emit the pre-write snapshot (or a
+    // cached snapshot with the new revision but old score) before the socket
+    // echo arrives.  Applying it here makes every tap appear to reset to 1:
+    // tap 1 is rendered locally, the stale refetch replaces it with 0, and the
+    // next tap starts from 0 again.  A snapshot at or before our last accepted
+    // write may only replace local state when it actually contains that write.
+    // Newer revisions remain authoritative, including a genuine terminal
+    // status change.
+    if (_lastLocalWriteRevision != null &&
+        incomingRevision != null &&
+        incomingRevision <= _lastLocalWriteRevision! &&
+        _scoreSignature(hydrated) != _scoreSignature(state) &&
+        !_isServerTerminal(match)) {
+      return;
+    }
     if (_lastLocalWriteRevision != null &&
         incomingRevision != null &&
         incomingRevision < _lastLocalWriteRevision!) {
       return;
     }
-    final hydrated = _hydrateState(state, match);
     final pending = _pendingScoreSignature;
     if (pending != null) {
       final isOurEcho = _scoreSignature(hydrated) == pending;

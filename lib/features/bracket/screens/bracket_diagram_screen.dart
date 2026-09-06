@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
@@ -126,7 +127,22 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
       ],
       isLite: widget.isLite,
     );
+    _invalidateMatchProviders();
     await _fetchBracket();
+  }
+
+  void _invalidateMatchProviders() {
+    ref.invalidate(bracketMatchesProvider(widget.tournamentId));
+    ref.invalidate(liteBracketMatchesProvider(widget.tournamentId));
+    ref.invalidate(matchesProvider(widget.tournamentId));
+    ref.invalidate(liveMatchesProvider(widget.tournamentId));
+    final params = (
+      tournamentId: widget.tournamentId,
+      divisionId: widget.divisionId,
+    );
+    ref.invalidate(bracketMatchesWithDivisionProvider(params));
+    ref.invalidate(liteBracketMatchesWithDivisionProvider(params));
+    ref.invalidate(matchesWithDivisionProvider(params));
   }
 
   Future<void> _unassignBracketSlot(BracketSlotDragData slot) async {
@@ -166,6 +182,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
             ],
             isLite: widget.isLite,
           );
+      _invalidateMatchProviders();
       await _fetchBracket();
     } catch (error) {
       if (!mounted) return;

@@ -771,8 +771,8 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                   ),
                   minimumSize: Size.zero,
                 ),
-                onPressed: () {
-                  Navigator.of(context).push(
+                onPressed: () async {
+                  await Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => BracketDiagramScreen(
                         tournamentId: widget.tournamentId,
@@ -786,6 +786,17 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                       ),
                     ),
                   );
+                  ref.invalidate(bracketMatchesProvider(widget.tournamentId));
+                  ref.invalidate(liteBracketMatchesProvider(widget.tournamentId));
+                  ref.invalidate(matchesProvider(widget.tournamentId));
+                  final params = (
+                    tournamentId: widget.tournamentId,
+                    divisionId: widget.divisionId,
+                  );
+                  ref.invalidate(bracketMatchesWithDivisionProvider(params));
+                  ref.invalidate(liteBracketMatchesWithDivisionProvider(params));
+                  ref.invalidate(matchesWithDivisionProvider(params));
+                  if (mounted) setState(() {});
                 },
                 icon: const Icon(Icons.account_tree_rounded, size: 14),
                 label: Text(
