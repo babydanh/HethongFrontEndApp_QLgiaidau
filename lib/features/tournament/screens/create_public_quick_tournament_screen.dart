@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
@@ -38,6 +39,7 @@ class _CreatePublicQuickTournamentScreenState
   String _sport = AppConstants.sportBadminton;
   String _formatKey = 'MALE_DOUBLES'; // MALE_SINGLES, FEMALE_SINGLES, MALE_DOUBLES, FEMALE_DOUBLES, MIXED_DOUBLES, FOOTBALL_MALE, FOOTBALL_FEMALE, FOOTBALL_MIXED
   String _bracket = AppConstants.bracketSingleElimination;
+  String? _selectedCommunityId;
   String _visibility = 'PUBLIC';
   String _registrationMode = 'APPROVAL';
   DateTime? _startDate;
@@ -53,7 +55,8 @@ class _CreatePublicQuickTournamentScreenState
   @override
   void initState() {
     super.initState();
-    if (widget.communityId != null && widget.communityId!.isNotEmpty) {
+    _selectedCommunityId = widget.communityId;
+    if (_selectedCommunityId != null && _selectedCommunityId!.isNotEmpty) {
       _visibility = 'PRIVATE';
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) => _verifyOrganizerPermission());
@@ -64,12 +67,24 @@ class _CreatePublicQuickTournamentScreenState
     if (_hasCheckedRole || !mounted) return;
     _hasCheckedRole = true;
 
+    // Nếu đang chọn tạo cho CLB thì thành viên/quản lý CLB đều được phép tạo giải Lite
+    if (_selectedCommunityId != null && _selectedCommunityId!.isNotEmpty) {
+      return;
+    }
+
     try {
       final userProfile = await ref.read(userProfileProvider.future);
       final role = (userProfile.role ?? '').toUpperCase();
       final isOrganizerOrAdmin = role == 'ORGANIZER' || role == 'ADMIN';
 
-      if (!isOrganizerOrAdmin && mounted) {
+      // Kiểm tra xem user có quản lý CLB nào không
+      final clubs = await ref.read(myCommunitiesProvider.future).catchError((_) => <Community>[]);
+      final managedClubs = clubs.where((c) {
+        final r = (c.myRole ?? '').toUpperCase();
+        return r == 'OWNER' || r == 'ADMIN' || r == 'MODERATOR' || r == 'LEADER' || r == 'CREATOR';
+      }).toList();
+
+      if (!isOrganizerOrAdmin && managedClubs.isEmpty && mounted) {
         showOrganizerRequiredDialog(
           context,
           ref,
@@ -79,9 +94,14 @@ class _CreatePublicQuickTournamentScreenState
             }
           },
         );
+      } else if (!isOrganizerOrAdmin && managedClubs.isNotEmpty && _selectedCommunityId == null) {
+        // Tự động chọn CLB đầu tiên nếu người dùng không có quyền Organizer công khai
+        setState(() {
+          _selectedCommunityId = managedClubs.first.id;
+          _visibility = 'PRIVATE';
+        });
       }
     } catch (_) {
-      // If profile fails, check cached value
       final cached = ref.read(userProfileProvider).asData?.value;
       if (cached != null) {
         final role = (cached.role ?? '').toUpperCase();
@@ -129,7 +149,9 @@ class _CreatePublicQuickTournamentScreenState
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (widget.communityId == null || widget.communityId!.isEmpty) {
+    final isForClub = _selectedCommunityId != null && _selectedCommunityId!.isNotEmpty;
+
+    if (!isForClub) {
       final cached = ref.read(userProfileProvider).asData?.value;
       final role = (cached?.role ?? '').toUpperCase();
       final isOrganizerOrAdmin = role == 'ORGANIZER' || role == 'ADMIN';
@@ -183,14 +205,13 @@ class _CreatePublicQuickTournamentScreenState
 
       final payload = <String, dynamic>{
         'name': name,
-        if (widget.communityId != null && widget.communityId!.isNotEmpty)
-          'communityId': widget.communityId,
+        if (isForClub) 'communityId': _selectedCommunityId,
         'sport': _mapSportSlug(),
         'format': apiFormat,
         'genderRestriction': ?genderRestriction,
         'bracketType': _bracket,
         'maxTeams': maxTeams,
-        'visibility': _visibility,
+        'visibility': isForClub ? _visibility : 'PUBLIC',
         'registrationMode': _registrationMode,
         'isRanked': false,
         if (_descController.text.trim().isNotEmpty)
@@ -220,7 +241,7 @@ class _CreatePublicQuickTournamentScreenState
         },
       };
 
-      _log.info('Gửi yêu cầu tạo giải nhanh: $name');
+      _log.info('Gửi yêu cầu tạo giải nhanh: $name (CLB: $_selectedCommunityId)');
       final response = await ref
           .read(dioClientProvider)
           .dio
@@ -234,9 +255,9 @@ class _CreatePublicQuickTournamentScreenState
       final result = LiteTournamentCreateResult.fromJson(dataJson);
       _log.info('Tạo giải nhanh thành công ID: ${result.id}');
 
-      if (widget.communityId != null && widget.communityId!.isNotEmpty) {
-        ref.invalidate(communityTournamentsProvider(widget.communityId!));
-        ref.invalidate(communityDetailProvider(widget.communityId!));
+      if (isForClub) {
+        ref.invalidate(communityTournamentsProvider(_selectedCommunityId!));
+        ref.invalidate(communityDetailProvider(_selectedCommunityId!));
       }
 
       if (mounted) {
@@ -367,7 +388,9 @@ class _CreatePublicQuickTournamentScreenState
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            // ─── Chọn Câu Lạc Bộ / Đơn vị tổ chức ───
+            _buildClubSelector(colors),
+            const SizedBox(height: 18),
 
             // ─── Tên giải đấu ───
             _sectionLabel('Tên giải đấu *', colors),
@@ -973,6 +996,159 @@ class _CreatePublicQuickTournamentScreenState
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildClubSelector(AppColorsExtension colors) {
+    final myClubsAsync = ref.watch(myCommunitiesProvider);
+
+    return myClubsAsync.when(
+      loading: () => Container(
+        height: 54,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: colors.bgSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.border),
+        ),
+        child: const Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary),
+          ),
+        ),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (clubs) {
+        final managedClubs = clubs.where((c) {
+          final r = (c.myRole ?? '').toUpperCase();
+          return r == 'OWNER' || r == 'ADMIN' || r == 'MODERATOR' || r == 'LEADER' || r == 'CREATOR';
+        }).toList();
+
+        if (managedClubs.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        // Nếu chỉ quản lý 1 CLB và widget.communityId đã được định sẵn
+        if (managedClubs.length == 1 && widget.communityId != null && widget.communityId!.isNotEmpty) {
+          final club = managedClubs.first;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _sectionLabel('Đơn vị tổ chức', colors),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: colors.bgSurface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: colors.border),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.groups_rounded, size: 20, color: Color(0xFF059669)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Câu lạc bộ: ${club.name}',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF059669).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'CLB CỦA BẠN',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF059669),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _sectionLabel('Tổ chức cho Câu Lạc Bộ nào? *', colors),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.border),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String?>(
+                  value: _selectedCommunityId,
+                  isExpanded: true,
+                  icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                  dropdownColor: colors.bgCard,
+                  items: [
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Row(
+                        children: [
+                          Icon(Icons.public_rounded, size: 18, color: AppTheme.primary),
+                          SizedBox(width: 10),
+                          Text(
+                            'Giải Tự Do (Public - Ngoài CLB)',
+                            style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ...managedClubs.map((club) {
+                      return DropdownMenuItem<String?>(
+                        value: club.id,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.groups_rounded, size: 18, color: Color(0xFF059669)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'CLB: ${club.name}',
+                                style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedCommunityId = val;
+                      if (val != null && val.isNotEmpty) {
+                        _visibility = 'PRIVATE';
+                      } else {
+                        _visibility = 'PUBLIC';
+                      }
+                    });
+                  },
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

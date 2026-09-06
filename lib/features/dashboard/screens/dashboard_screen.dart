@@ -1577,9 +1577,36 @@ class _TournamentTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
+                  if (tournament.communityName != null && tournament.communityName!.isNotEmpty) ...[
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.groups_rounded,
+                          size: 11,
+                          color: colors.textMuted,
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            tournament.communityName!,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: colors.textMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                  ],
                   Text(
                     isClubLite
-                        ? l10n.dashboard_liteDesc
+                        ? (tournament.communityName != null && tournament.communityName!.isNotEmpty
+                            ? 'Giải Siêu Lite • ${tournament.communityName}'
+                            : l10n.dashboard_liteDesc)
                         : l10n.opsOrganizerOnly,
                     style: TextStyle(
                       fontSize: 9,

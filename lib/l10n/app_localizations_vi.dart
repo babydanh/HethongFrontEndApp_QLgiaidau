@@ -5828,6 +5828,23 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clubDetailLeaveError => 'Không thể rời câu lạc bộ';
 
   @override
+  String get clubDetailCancelJoinTitle => 'Huỷ yêu cầu tham gia?';
+
+  @override
+  String get clubDetailCancelJoinDescription =>
+      'Bạn có chắc chắn muốn huỷ yêu cầu tham gia câu lạc bộ này?';
+
+  @override
+  String get clubDetailCancelJoinAction => 'Huỷ yêu cầu';
+
+  @override
+  String get clubDetailCancelJoinSuccess =>
+      'Đã huỷ yêu cầu tham gia câu lạc bộ';
+
+  @override
+  String get clubDetailCancelJoinError => 'Không thể huỷ yêu cầu tham gia';
+
+  @override
   String get clubDetailJoinQuestionsTitle => 'Câu hỏi tham gia CLB';
 
   @override

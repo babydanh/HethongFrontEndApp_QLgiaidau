@@ -47,6 +47,8 @@ class Tournament {
   final bool hideFeaturedCardText;
   final String? inviteCode;
   final String? communityId;
+  final String? communityName;
+  final String? communityLogoUrl;
   final bool isLite;
   final bool isRegistrationLocked;
   // Team sport (bóng đá): sân 5/7/11 → đội nhiều người
@@ -98,6 +100,8 @@ class Tournament {
     this.hideFeaturedCardText = false,
     this.inviteCode,
     this.communityId,
+    this.communityName,
+    this.communityLogoUrl,
     this.isLite = false,
     this.isRegistrationLocked = false,
     this.teamSize,
@@ -113,6 +117,10 @@ class Tournament {
   /// tournament on the web and must not be routed to the Lite workspace.
   bool get isClubLite =>
       isLite && communityId != null && communityId!.isNotEmpty;
+
+  /// Internal club tournament indicator (explicit community attachment or club lite)
+  bool get isClubTournament =>
+      (communityId != null && communityId!.isNotEmpty) || isClubLite;
 
   factory Tournament.fromJson(Map<String, dynamic> json, String id) {
     // ─── Debug log ───
@@ -363,9 +371,13 @@ class Tournament {
       registrationMode: config['registrationMode']?.toString(),
       hideFeaturedCardText: config['hideFeaturedCardText'] == true,
       inviteCode: json['inviteCode']?.toString(),
-      communityId: (json['communityId'] ?? json['community_id'])?.toString(),
-      // isLite = LOẠI GIẢI lite (nhanh). KHÔNG nhầm với configMode (cách tính điểm LITE/STRICT).
-      isLite: json['isLite'] == true || config['isLite'] == true,
+      communityId: (json['communityId'] ?? json['community_id'] ?? json['community']?['id'])?.toString(),
+      communityName: (json['community'] is Map ? json['community']['name'] : json['communityName'] ?? json['community_name'])?.toString(),
+      communityLogoUrl: (json['community'] is Map ? json['community']['logoUrl'] : json['communityLogoUrl'] ?? json['community_logo_url'])?.toString(),
+      // isLite = LOẠI GIẢI lite (nhanh). Hỗ trợ cả flag isLite trực tiếp hoặc trong config hoặc config mode = LITE
+      isLite: json['isLite'] == true ||
+          config['isLite'] == true ||
+          config['mode']?.toString().toUpperCase() == 'LITE',
       isRegistrationLocked: json['isRegistrationLocked'] == true,
       // Team sport (bóng đá): giữ tương thích bản ghi cũ chưa có selector sân.
       teamSize:
@@ -501,6 +513,8 @@ class Tournament {
     bool? hideFeaturedCardText,
     String? inviteCode,
     String? communityId,
+    String? communityName,
+    String? communityLogoUrl,
     bool? isLite,
     bool? isRegistrationLocked,
     int? teamSize,
@@ -553,6 +567,8 @@ class Tournament {
       hideFeaturedCardText: hideFeaturedCardText ?? this.hideFeaturedCardText,
       inviteCode: inviteCode ?? this.inviteCode,
       communityId: communityId ?? this.communityId,
+      communityName: communityName ?? this.communityName,
+      communityLogoUrl: communityLogoUrl ?? this.communityLogoUrl,
       isLite: isLite ?? this.isLite,
       isRegistrationLocked: isRegistrationLocked ?? this.isRegistrationLocked,
       sponsors: sponsors ?? this.sponsors,

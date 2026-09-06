@@ -1054,7 +1054,10 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         '/tournaments/lite/$tournamentId/bracket/reset',
         data: {if (_liteDivisionId != null) 'divisionId': _liteDivisionId},
       );
+      state = state.copyWith(hasBracket: true);
       await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
+      await _fetchMatches(tournamentId);
+      await _fetchParticipants(tournamentId);
       _log.success('Đã reset bracket Lite');
     } on DioException catch (e) {
       _log.error('Lỗi reset bracket', e);

@@ -964,6 +964,63 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     }
   }
 
+  Future<void> _confirmCancelJoinRequest() async {
+    final l10n = AppLocalizations.of(context)!;
+    final userId = ref.read(userProfileProvider).asData?.value.id ??
+        _myMembership?.userId;
+    if (userId == null || userId.isEmpty || !_isPending) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.clubDetailCancelJoinTitle),
+        content: Text(l10n.clubDetailCancelJoinDescription),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.clubDetailCancelJoinAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _isJoinLoading = true);
+    try {
+      final ok = await ref
+          .read(communityRepositoryProvider)
+          .leaveCommunity(widget.clubId, userId);
+      if (!mounted) return;
+      if (ok) {
+        await _fetchMembership();
+        ref.invalidate(communityDetailProvider(widget.clubId));
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.clubDetailCancelJoinSuccess)));
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.clubDetailCancelJoinError)));
+      }
+    } catch (e, stack) {
+      _log.error('Lỗi huỷ yêu cầu tham gia CLB', e, stack);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.clubDetailCancelJoinError)));
+      }
+    } finally {
+      if (mounted) setState(() => _isJoinLoading = false);
+    }
+  }
+
   Future<Map<String, dynamic>?> _showJoinQuestionsDialog(
     List<String> questions,
   ) async {
@@ -1032,7 +1089,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
   Color? _getJoinBgColor() {
     if (_isMember) return const Color(0xFF059669);
-    if (_isPending) return Colors.grey;
+    if (_isPending) return const Color(0xFFD97706);
     if (_isInvited) return AppTheme.primary;
     return AppTheme.primary;
   }
@@ -1044,7 +1101,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       context.push('/login');
       return;
     }
-    if (_isMember || _isPending) return;
+    if (_isMember) return;
+    if (_isPending) {
+      await _confirmCancelJoinRequest();
+      return;
+    }
 
     final community =
         club ?? ref.read(communityDetailProvider(widget.clubId)).value;
@@ -2946,7 +3007,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 icon: Icon(_getJoinIcon(), size: 16),
                 label: Text(_getJoinLabel()),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
+                  backgroundColor: _getJoinBgColor() ?? AppTheme.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,

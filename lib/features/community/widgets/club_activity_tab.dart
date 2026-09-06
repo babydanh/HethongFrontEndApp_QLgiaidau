@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/community/providers/user_club_rank_provider.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
@@ -115,7 +116,9 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
             if (mJson is Map<String, dynamic>) {
               final id = mJson['id']?.toString() ?? '';
               final match = MatchModel.fromJson(mJson, id);
-              allMatches.add(match.copyWith(tournamentName: tourName));
+              if (isRenderablePublicMatch(match)) {
+                allMatches.add(match.copyWith(tournamentName: tourName));
+              }
             }
           }
         } catch (_) {}

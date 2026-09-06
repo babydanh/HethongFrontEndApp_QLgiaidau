@@ -1878,10 +1878,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       },
       child: InkWell(
         onTap: () {
-          if (t.isClubLite) {
-            context.push('/lite-manage/${t.id}');
+          final isManager = roleLabel == l10n.profileOwnerTournamentRole ||
+              roleLabel == l10n.profileOrganizerTournamentRole;
+          if (isManager) {
+            if (t.isClubLite) {
+              context.push('/lite-manage/${t.id}');
+            } else {
+              _showAdvancedManagementUnsupported(context);
+            }
           } else {
-            _showAdvancedManagementUnsupported(context);
+            context.push('/intro/${t.id}');
           }
         },
         child: Padding(
@@ -1906,9 +1912,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
+                    if (t is Tournament && t.communityName != null && t.communityName!.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.groups_rounded,
+                            size: 11,
+                            color: colors.textMuted,
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              t.communityName!,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: colors.textMuted,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                    ],
                     Text(
                       t.isClubLite
-                          ? l10n.profileLiteTournamentHint
+                          ? (t is Tournament && t.communityName != null && t.communityName!.isNotEmpty
+                              ? 'Giải Siêu Lite • ${t.communityName}'
+                              : l10n.profileLiteTournamentHint)
                           : l10n.profileAdvancedTournamentHint,
                       style: TextStyle(
                         fontSize: 9,

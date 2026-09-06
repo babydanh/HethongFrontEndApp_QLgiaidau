@@ -79,7 +79,11 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final divisionsAsync = ref.watch(
       tournamentDivisionsProvider(widget.tournamentId),
     );
-    final authRole = ref.watch(authProvider).role;
+    final authState = ref.watch(authProvider);
+    final authRole = authState.role;
+    final userProfile = ref.watch(userProfileProvider).value;
+    final currentUserId = userProfile?.id;
+    final isAdmin = authState.isAdmin;
 
     return Scaffold(
       backgroundColor: context.colors.bgDark,
@@ -91,24 +95,59 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               return NotFoundView(onGoHome: () => context.go('/home'));
             }
 
-            // ─── ACCESS GATE: Giải siêu lite (nội bộ CLB) ───
-            // Nếu là giải lite gắn với CLB và user chưa/không phải member → chặn
-            if (tournament.isClubLite &&
-                tournament.communityId != null &&
-                tournament.communityId!.isNotEmpty &&
-                activeInvite == null) {
-              final membershipAsync = ref.watch(
-                myCommunityMembershipProvider(tournament.communityId!),
-              );
-              final isVerifiedMember = membershipAsync.maybeWhen(
-                data: (m) {
-                  if (m == null) return false;
-                  final s = m.status.toUpperCase();
-                  return s == 'JOINED' || s == 'ADMIN' || s == 'OWNER' || s == 'APPROVED';
-                },
-                orElse: () => false,
-              );
-              if (!isVerifiedMember) {
+            // ─── ACCESS GATE: Giải nội bộ CLB / Giải siêu lite / Private ───
+            final isCreator = tournament.creatorId == currentUserId;
+            final isClubRestricted = tournament.isClubTournament ||
+                tournament.isClubLite ||
+                (tournament.communityId != null &&
+                    tournament.communityId!.isNotEmpty) ||
+                tournament.visibility == 'PRIVATE' ||
+                tournament.isLite;
+
+            if (isClubRestricted &&
+                activeInvite == null &&
+                !isAdmin &&
+                !isCreator) {
+              if (tournament.communityId != null &&
+                  tournament.communityId!.isNotEmpty) {
+                final membershipAsync = ref.watch(
+                  myCommunityMembershipProvider(tournament.communityId!),
+                );
+                final isVerifiedMember = membershipAsync.maybeWhen(
+                  data: (m) {
+                    if (m == null) return false;
+                    final s = m.status.toUpperCase();
+                    return s == 'JOINED' ||
+                        s == 'ADMIN' ||
+                        s == 'OWNER' ||
+                        s == 'APPROVED';
+                  },
+                  orElse: () => false,
+                );
+                if (!isVerifiedMember) {
+                  return SafeArea(
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          left: 12,
+                          top: 8,
+                          child: _backButton(context.colors),
+                        ),
+                        PrivateTournamentAccessView(
+                          message:
+                              'Đây là giải đấu nội bộ của Câu Lạc Bộ. Bạn cần tham gia Câu Lạc Bộ hoặc nhập mã mời từ Ban tổ chức để xem chi tiết.',
+                          onGoHome: () => context.go('/home'),
+                          onSubmitInviteCode: (code) {
+                            setState(() {
+                              _customInviteCode = code;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                }
+              } else {
                 return SafeArea(
                   child: Stack(
                     children: [
@@ -119,7 +158,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       ),
                       PrivateTournamentAccessView(
                         message:
-                            'Đây là giải đấu nội bộ của Câu Lạc Bộ. Bạn cần tham gia Câu Lạc Bộ hoặc nhập mã mời từ Ban tổ chức để xem chi tiết.',
+                            'Giải đấu này yêu cầu mã mời để xem thông tin chi tiết.',
                         onGoHome: () => context.go('/home'),
                         onSubmitInviteCode: (code) {
                           setState(() {
@@ -330,12 +369,22 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final activeInvite = _customInviteCode ?? widget.inviteCode;
     final hasInvite = activeInvite != null && activeInvite.trim().isNotEmpty;
 
-    // Nếu là giải Siêu Lite nội bộ của CLB: Chỉ thành viên CLB / Chủ giải / Admin / người có link mời mới được xem
-    if (tournament.isClubLite && !isCreator && !isAdmin && !hasInvite) {
+    // ─── ACCESS GATE: Giải nội bộ CLB / Giải siêu lite / Private ───
+    final isClubRestricted = tournament.isClubTournament ||
+        tournament.isClubLite ||
+        (tournament.communityId != null && tournament.communityId!.isNotEmpty) ||
+        tournament.visibility == 'PRIVATE' ||
+        tournament.isLite;
+
+    if (isClubRestricted && !isCreator && !isAdmin && !hasInvite) {
       final membership = tournament.communityId != null && tournament.communityId!.isNotEmpty
           ? ref.watch(myCommunityMembershipProvider(tournament.communityId!)).value
           : null;
-      final isMember = membership != null && membership.status.toUpperCase() == 'JOINED';
+      final isMember = membership != null &&
+          (membership.status.toUpperCase() == 'JOINED' ||
+              membership.status.toUpperCase() == 'ADMIN' ||
+              membership.status.toUpperCase() == 'OWNER' ||
+              membership.status.toUpperCase() == 'APPROVED');
       if (!isMember) {
         return Scaffold(
           backgroundColor: colors.bgDark,
@@ -370,7 +419,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Giải siêu Lite này chỉ dành riêng cho thành viên của câu lạc bộ. Vui lòng tham gia câu lạc bộ để xem và đăng ký.',
+                    'Giải đấu này chỉ dành riêng cho thành viên của câu lạc bộ hoặc người có mã mời. Vui lòng tham gia câu lạc bộ hoặc nhập mã mời để xem chi tiết.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 14, color: colors.textSecondary, height: 1.4),
                   ),

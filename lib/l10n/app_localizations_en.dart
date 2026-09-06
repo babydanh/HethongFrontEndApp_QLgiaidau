@@ -5834,6 +5834,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubDetailLeaveError => 'Unable to leave the club';
 
   @override
+  String get clubDetailCancelJoinTitle => 'Cancel join request?';
+
+  @override
+  String get clubDetailCancelJoinDescription =>
+      'Are you sure you want to cancel your request to join this club?';
+
+  @override
+  String get clubDetailCancelJoinAction => 'Cancel request';
+
+  @override
+  String get clubDetailCancelJoinSuccess =>
+      'Join request cancelled successfully';
+
+  @override
+  String get clubDetailCancelJoinError => 'Unable to cancel join request';
+
+  @override
   String get clubDetailJoinQuestionsTitle => 'Club membership questions';
 
   @override

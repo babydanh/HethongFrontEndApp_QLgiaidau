@@ -10910,6 +10910,36 @@ abstract class AppLocalizations {
   /// **'Không thể rời câu lạc bộ'**
   String get clubDetailLeaveError;
 
+  /// No description provided for @clubDetailCancelJoinTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Huỷ yêu cầu tham gia?'**
+  String get clubDetailCancelJoinTitle;
+
+  /// No description provided for @clubDetailCancelJoinDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc chắn muốn huỷ yêu cầu tham gia câu lạc bộ này?'**
+  String get clubDetailCancelJoinDescription;
+
+  /// No description provided for @clubDetailCancelJoinAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Huỷ yêu cầu'**
+  String get clubDetailCancelJoinAction;
+
+  /// No description provided for @clubDetailCancelJoinSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã huỷ yêu cầu tham gia câu lạc bộ'**
+  String get clubDetailCancelJoinSuccess;
+
+  /// No description provided for @clubDetailCancelJoinError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể huỷ yêu cầu tham gia'**
+  String get clubDetailCancelJoinError;
+
   /// No description provided for @clubDetailJoinQuestionsTitle.
   ///
   /// In vi, this message translates to:

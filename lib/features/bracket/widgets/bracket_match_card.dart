@@ -36,15 +36,11 @@ class BracketMatchCard extends StatelessWidget {
   });
 
   void _onTap(BuildContext context) {
-    final isLiteMatch = match.tournamentConfig?['isLite'] == true ||
-        match.tournamentConfig?['mode']?.toString().toUpperCase() == 'LITE';
-    final canScoreMatch = isReferee || !isReadOnly || isLiteMatch;
-    if (canScoreMatch && (match.isLive || match.isScheduled)) {
-      if (tournamentId.isNotEmpty) {
-        context.push('/organizer/tournaments/$tournamentId/ops/match/${match.id}');
-      } else {
-        context.push('/live/${match.id}');
-      }
+    // A match card is a public/viewing entry point. Open the live match for
+    // every tournament type, including Super Lite. The referee desk remains
+    // available from the explicit scoring action in the detail view.
+    if (match.isLive || match.isScheduled) {
+      context.push('/live/${match.id}${tournamentId.isNotEmpty ? '?tournamentId=$tournamentId' : ''}');
       return;
     }
     showDialog(

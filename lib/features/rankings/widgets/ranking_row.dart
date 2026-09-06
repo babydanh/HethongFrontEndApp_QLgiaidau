@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/sport_rank_badge.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -30,16 +31,6 @@ class RankingRow extends StatelessWidget {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
 
-    // Fixed color for avatar initial based on rank or name
-    final List<Color> avatarColors = [
-      const Color(0xFF10B981), // Emerald
-      const Color(0xFFA855F7), // Purple
-      const Color(0xFFEC4899), // Pink
-      const Color(0xFF06B6D4), // Cyan
-      const Color(0xFFF97316), // Orange
-      const Color(0xFF3B82F6), // Blue
-    ];
-    final avatarColor = avatarColors[ranking.rank % avatarColors.length];
     final isRank4 = ranking.rank == 4;
 
     if (isRank4) {
@@ -190,7 +181,7 @@ class RankingRow extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             // Avatar (Single or Stacked Dual for Doubles)
-            _buildAvatarWidget(context, colors, avatarColor),
+            _buildAvatarWidget(context, colors),
             const SizedBox(width: 14),
             // Tên VĐV
             Expanded(
@@ -225,11 +216,7 @@ class RankingRow extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatarWidget(
-    BuildContext context,
-    dynamic colors,
-    Color avatarColor,
-  ) {
+  Widget _buildAvatarWidget(BuildContext context, dynamic colors) {
     final nameParts = ranking.fullName.split('/');
     final normalizedFormatLabel = formatLabel?.toLowerCase() ?? '';
     final isDoublesFormat =
@@ -247,58 +234,32 @@ class RankingRow extends StatelessWidget {
         height: 40,
         child: Stack(
           children: [
-            // Player 1 Avatar
+            // Player 1 Avatar — viền lấy từ tier ELO dùng chung với CLB.
             Positioned(
               left: 0,
               top: 2,
-              child: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isMe ? const Color(0xFF1E40AF) : colors.bgCard,
-                    width: 2,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    _initials(name1),
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+              child: RankAvatar(
+                imageUrl: ranking.avatarUrl,
+                name: name1,
+                elo: ranking.eloPoints,
+                tierName: ranking.tierName,
+                matchesPlayed: ranking.matchesPlayed,
+                size: 34,
+                ringWidth: 2,
               ),
             ),
-            // Player 2 Avatar (Overlapping)
+            // Player 2 Avatar (Overlapping) — cùng tier của cặp đấu.
             Positioned(
               left: 18,
               top: 2,
-              child: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isMe ? const Color(0xFF1E40AF) : colors.bgCard,
-                    width: 2,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    name2.isNotEmpty ? _initials(name2) : '+1',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+              child: RankAvatar(
+                imageUrl: ranking.partnerAvatarUrl,
+                name: name2.isNotEmpty ? name2 : '+1',
+                elo: ranking.eloPoints,
+                tierName: ranking.tierName,
+                matchesPlayed: ranking.matchesPlayed,
+                size: 34,
+                ringWidth: 2,
               ),
             ),
           ],
@@ -306,31 +267,14 @@ class RankingRow extends StatelessWidget {
       );
     }
 
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: isMe ? Colors.white.withValues(alpha: 0.2) : avatarColor,
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          _initials(ranking.fullName),
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w900,
-            color: Colors.white,
-          ),
-        ),
-      ),
+    return RankAvatar(
+      imageUrl: ranking.avatarUrl,
+      name: ranking.fullName,
+      elo: ranking.eloPoints,
+      tierName: ranking.tierName,
+      matchesPlayed: ranking.matchesPlayed,
+      size: 40,
+      ringWidth: 2,
     );
-  }
-
-  String _initials(String name) {
-    final p = name.trim().split(' ');
-    if (p.length >= 2) {
-      return '${p[p.length - 2][0]}${p[p.length - 1][0]}'.toUpperCase();
-    }
-    return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 }

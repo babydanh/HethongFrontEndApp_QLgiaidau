@@ -490,11 +490,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               ref.read(authProvider).tournamentId ??
               '';
           final forceViewer = state.uri.queryParameters['viewer'] == 'true';
-          final canScore = ref.read(authProvider).canScore;
           return LiveScoreScreen(
             tournamentId: tournamentId,
             matchId: matchId,
-            isViewer: forceViewer || !canScore,
+            isViewer: forceViewer,
           );
         },
       ),

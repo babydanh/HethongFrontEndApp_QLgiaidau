@@ -103,7 +103,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     final initialMatch = ref.read(singleMatchProvider(arg)).value;
     var initialState = ScorePanelState(
       config: config,
-      isLite: _isLiteMatch(initialMatch),
+      isLite: _isLiteMatch(initialMatch, ref, arg),
       football:
           SportRuleKind.fromString(initialMatch?.sportKey) ==
               SportRuleKind.football
@@ -276,9 +276,15 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     return resolveSportConfig(null, SportRuleKind.badminton);
   }
 
-  static bool _isLiteMatch(MatchModel? match) {
+  static bool _isLiteMatch(MatchModel? match, [Ref? ref, MatchControlParams? arg]) {
+    if (match?.tournamentConfig?['isLite'] == true) return true;
     final mode = match?.tournamentConfig?['mode']?.toString().toUpperCase();
-    return mode == 'LITE';
+    if (mode == 'LITE') return true;
+    if (ref != null && arg != null && arg.tournamentId.isNotEmpty) {
+      final tournament = ref.read(tournamentProvider(arg.tournamentId)).value;
+      if (tournament?.isLite == true) return true;
+    }
+    return false;
   }
 
   static bool _isServerTerminal(MatchModel match) {

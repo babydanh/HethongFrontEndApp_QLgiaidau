@@ -46,7 +46,7 @@ class MatchCardDetail extends StatelessWidget {
     return GestureDetector(
       onTap: match.hasTeams
           ? () {
-              if (canScoreMatch && tournamentId.isNotEmpty) {
+              if (isReferee && tournamentId.isNotEmpty) {
                 context.push('/organizer/tournaments/$tournamentId/ops/match/${match.id}');
               } else {
                 context.push('/live/${match.id}${tournamentId.isNotEmpty ? '?tournamentId=$tournamentId' : ''}');

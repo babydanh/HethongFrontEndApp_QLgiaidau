@@ -125,8 +125,9 @@ class AppNotification {
 
       default:
         if (type.startsWith('FOOTBALL_TEAM_')) {
-          if (footballTeamId != null)
+          if (footballTeamId != null) {
             return '/football-teams?teamId=$footballTeamId';
+          }
           return _normalizeRedirectUrl(redirectUrl);
         }
         if (type.contains('MATCH') && matchId != null) {
@@ -166,8 +167,9 @@ class AppNotification {
 
     if (path == '/profile' ||
         path == '/notifications' ||
-        path == '/football-teams')
+        path == '/football-teams') {
       return raw;
+    }
     if (segments.length >= 2 && segments[0] == 'tournaments') {
       final participantId = uri.queryParameters['participantId'];
       if (participantId != null && participantId.isNotEmpty) {
@@ -324,6 +326,8 @@ class AppNotification {
       case 'COMMUNITY_ROLE_DEMOTED':
       case 'COMMUNITY_KICKED':
       case 'COMMUNITY_INVITE_REVOKED':
+      case 'COMMUNITY_JOIN_APPROVED':
+      case 'COMMUNITY_JOIN_REJECTED':
         return Icons.groups_rounded;
       case 'CHAT':
         return Icons.chat_rounded;
@@ -378,6 +382,10 @@ class AppNotification {
       case 'COMMUNITY_KICKED':
       case 'COMMUNITY_INVITE_REVOKED':
         return const Color(0xFF64748B);
+      case 'COMMUNITY_JOIN_APPROVED':
+        return const Color(0xFF10B981);
+      case 'COMMUNITY_JOIN_REJECTED':
+        return const Color(0xFFEF4444);
       case 'CHAT':
         return const Color(0xFF8B5CF6);
       case 'REMINDER':

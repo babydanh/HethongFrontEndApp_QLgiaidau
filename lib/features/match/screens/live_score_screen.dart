@@ -65,6 +65,20 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   bool _winByTwo = true;
   bool _didSeedSetupControls = false;
 
+  String _effectiveTournamentId([MatchModel? match]) {
+    if (widget.tournamentId.isNotEmpty) return widget.tournamentId;
+    if (match?.tournamentId?.isNotEmpty == true) return match!.tournamentId!;
+    final matchFromSub = ref
+        .read(
+          singleMatchProvider((
+            tournamentId: widget.tournamentId,
+            matchId: widget.matchId,
+          )),
+        )
+        .value;
+    return matchFromSub?.tournamentId ?? '';
+  }
+
   late TabController _tabController;
   int _selectedViewerTab = 0;
   final List<Map<String, dynamic>> _comments = [];
@@ -261,8 +275,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   // ═══════════════════════════════════════════════════════════
 
   void _showFoulSheet(bool isTeam1, MatchModel match) {
-    final tournamentAsync = ref.read(tournamentProvider(widget.tournamentId));
-    final sport = match.sportKey ?? tournamentAsync.value?.sport ?? 'other';
+    final effectiveId = _effectiveTournamentId(match);
+    final tournamentAsync = effectiveId.isNotEmpty
+        ? ref.read(tournamentProvider(effectiveId))
+        : null;
+    final sport = match.sportKey ?? tournamentAsync?.value?.sport ?? 'other';
     final l10n = AppLocalizations.of(context)!;
 
     showDialog(
@@ -276,7 +293,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           ref
               .read(
                 matchControllerProvider((
-                  tournamentId: widget.tournamentId,
+                  tournamentId: effectiveId,
                   matchId: widget.matchId,
                 )),
               )
@@ -301,14 +318,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     PenaltyOption option,
     String reason,
   ) async {
-    final tournamentAsync = ref.read(tournamentProvider(widget.tournamentId));
-    final sport = match.sportKey ?? tournamentAsync.value?.sport ?? 'other';
+    final effectiveId = _effectiveTournamentId(match);
+    final tournamentAsync = effectiveId.isNotEmpty
+        ? ref.read(tournamentProvider(effectiveId))
+        : null;
+    final sport = match.sportKey ?? tournamentAsync?.value?.sport ?? 'other';
     final isTeam1 = teamName == match.team1Name;
     final l10n = AppLocalizations.of(context)!;
     await ref
         .read(
           matchControllerProvider((
-            tournamentId: widget.tournamentId,
+            tournamentId: effectiveId,
             matchId: widget.matchId,
           )),
         )
@@ -434,10 +454,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   void _forceWinMatch(String winnerId, String loserId) {
+    final effectiveId = _effectiveTournamentId();
     final match = ref
         .read(
           singleMatchProvider((
-            tournamentId: widget.tournamentId,
+            tournamentId: effectiveId,
             matchId: widget.matchId,
           )),
         )
@@ -446,7 +467,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     ref
         .read(
           matchControllerProvider((
-            tournamentId: widget.tournamentId,
+            tournamentId: effectiveId,
             matchId: widget.matchId,
           )),
         )
@@ -469,24 +490,22 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final effectiveTournamentId = _effectiveTournamentId();
     final matchAsync = ref.watch(
       singleMatchProvider((
-        tournamentId: widget.tournamentId,
+        tournamentId: effectiveTournamentId,
         matchId: widget.matchId,
       )),
     );
 
     ref.watch(
       matchControllerProvider((
-        tournamentId: widget.tournamentId,
+        tournamentId: effectiveTournamentId,
         matchId: widget.matchId,
       )),
     );
     final auth = ref.watch(authProvider);
     final match = matchAsync.value;
-    final effectiveTournamentId = widget.tournamentId.isNotEmpty
-        ? widget.tournamentId
-        : (match?.tournamentId ?? '');
     final tournamentAsync = effectiveTournamentId.isNotEmpty
         ? ref.watch(tournamentProvider(effectiveTournamentId))
         : null;
@@ -527,11 +546,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 ),
               ),
             Text(
-              widget.isViewer
-                  ? (matchAsync.value?.isLive == true
+              (!widget.isViewer && auth.canScore)
+                  ? l10n.liveRefereeDeskTitle
+                  : (matchAsync.value?.isLive == true
                         ? l10n.liveMatchTitle
-                        : l10n.liveMatchDetailsTitle)
-                  : l10n.liveRefereeDeskTitle,
+                        : l10n.liveMatchDetailsTitle),
               style: TextStyle(
                 fontSize: isLandscape ? 16 : 18,
                 fontWeight: FontWeight.w700,
@@ -830,9 +849,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 height: 52,
                 child: ElevatedButton.icon(
                   onPressed: () async {
+                    final effectiveId = _effectiveTournamentId(match);
                     final controller = ref.read(
                       matchControllerProvider((
-                        tournamentId: widget.tournamentId,
+                        tournamentId: effectiveId,
                         matchId: widget.matchId,
                       )),
                     );
@@ -840,7 +860,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     if (!mounted) return;
                     showOfficialScoreModal(
                       context,
-                      tournamentId: widget.tournamentId,
+                      tournamentId: effectiveId,
                       matchId: widget.matchId,
                       match: match.copyWith(
                         status: 'ONGOING',
@@ -1139,9 +1159,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 height: 52,
                 child: ElevatedButton.icon(
                   onPressed: () async {
+                    final effectiveId = _effectiveTournamentId(match);
                     final controller = ref.read(
                       matchControllerProvider((
-                        tournamentId: widget.tournamentId,
+                        tournamentId: effectiveId,
                         matchId: widget.matchId,
                       )),
                     );
@@ -1570,7 +1591,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   // ═══════════════════════════════════════════════════════════
   Widget _buildViewerState(MatchModel match, {required bool canOpenScoring}) {
     final l10n = AppLocalizations.of(context)!;
-    final params = (tournamentId: widget.tournamentId, matchId: widget.matchId);
+    final effectiveId = _effectiveTournamentId(match);
+    final params = (tournamentId: effectiveId, matchId: widget.matchId);
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
@@ -1675,6 +1697,26 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               matchControllerProvider(params),
                             );
                             await controller.startMatch();
+                            if (!context.mounted) return;
+                            showOfficialScoreModal(
+                              context,
+                              tournamentId: effectiveId,
+                              matchId: widget.matchId,
+                              match: match.copyWith(
+                                status: 'ONGOING',
+                                startedAt: DateTime.now(),
+                              ),
+                              onRecordPenalty: () =>
+                                  _showFoulSelectionDialog(match),
+                              onSubmitPenalty: (teamName, option, reason) =>
+                                  _submitPenalty(
+                                    match,
+                                    teamName,
+                                    option,
+                                    reason,
+                                  ),
+                              onForceWin: () => _showForceWinDialog(match),
+                            );
                           },
                           icon: const Icon(Icons.play_arrow_rounded, size: 18),
                           label: Text(
@@ -1700,7 +1742,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           onPressed: () {
                             showOfficialScoreModal(
                               context,
-                              tournamentId: widget.tournamentId,
+                              tournamentId: effectiveId,
                               matchId: widget.matchId,
                               match: match,
                               onRecordPenalty: () =>
@@ -1798,6 +1840,26 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             matchControllerProvider(params),
                           );
                           await controller.startMatch();
+                          if (!context.mounted) return;
+                          showOfficialScoreModal(
+                            context,
+                            tournamentId: effectiveId,
+                            matchId: widget.matchId,
+                            match: match.copyWith(
+                              status: 'ONGOING',
+                              startedAt: DateTime.now(),
+                            ),
+                            onRecordPenalty: () =>
+                                _showFoulSelectionDialog(match),
+                            onSubmitPenalty: (teamName, option, reason) =>
+                                _submitPenalty(
+                                  match,
+                                  teamName,
+                                  option,
+                                  reason,
+                                ),
+                            onForceWin: () => _showForceWinDialog(match),
+                          );
                         },
                         icon: const Icon(Icons.play_arrow_rounded, size: 16),
                         label: Text(
@@ -1826,7 +1888,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         onPressed: () {
                           showOfficialScoreModal(
                             context,
-                            tournamentId: widget.tournamentId,
+                            tournamentId: effectiveId,
                             matchId: widget.matchId,
                             match: match,
                             onRecordPenalty: () =>

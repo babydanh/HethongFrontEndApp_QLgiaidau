@@ -392,17 +392,91 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                               .toLowerCase();
                       return state.hasBracket
                           ? frame(
-                              BracketViewScreen(
-                                tournamentId: widget.tournamentId,
-                                divisionId: liteDivision?.id,
-                                bracketType: bracketType,
-                                isEmbedded: true,
-                                isLite: true,
-                                canEditBracket:
-                                    hasSingleDivision &&
-                                    liteDivision?.id.isNotEmpty == true &&
-                                    bracketType ==
-                                        AppConstants.bracketSingleElimination,
+                              Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: colors.bgCard,
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: colors.border,
+                                          width: 1,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.emoji_events_rounded,
+                                          size: 20,
+                                          color: AppTheme.primary,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            l10n.bracketDiagramDefaultTitle,
+                                            style: TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w700,
+                                              color: colors.textPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                        OutlinedButton.icon(
+                                          onPressed: state.creatingBracket
+                                              ? null
+                                              : () => _createBracket(colors, notifier),
+                                          icon: state.creatingBracket
+                                              ? const SizedBox(
+                                                  width: 16,
+                                                  height: 16,
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                  ),
+                                                )
+                                              : const Icon(Icons.refresh_rounded, size: 16),
+                                          label: Text(
+                                            state.creatingBracket
+                                                ? l10n.lite_creating
+                                                : l10n.lite_recreateBracket,
+                                            style: const TextStyle(fontSize: 13),
+                                          ),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: colors.warning,
+                                            side: BorderSide(color: colors.warning),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 6,
+                                            ),
+                                            minimumSize: Size.zero,
+                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: BracketViewScreen(
+                                      tournamentId: widget.tournamentId,
+                                      divisionId: liteDivision?.id,
+                                      bracketType: bracketType,
+                                      isEmbedded: true,
+                                      isLite: true,
+                                      canEditBracket:
+                                          hasSingleDivision &&
+                                          liteDivision?.id.isNotEmpty == true &&
+                                          bracketType ==
+                                              AppConstants.bracketSingleElimination,
+                                    ),
+                                  ),
+                                ],
                               ),
                             )
                           : frame(_buildBracketTab(colors, state, notifier));
@@ -2492,11 +2566,18 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                           color: Colors.white,
                         ),
                       )
-                    : const Icon(Icons.emoji_events_rounded, size: 20),
+                    : Icon(
+                        state.hasBracket
+                            ? Icons.refresh_rounded
+                            : Icons.emoji_events_rounded,
+                        size: 20,
+                      ),
                 label: Text(
                   state.creatingBracket
                       ? l10n.lite_creating
-                      : l10n.lite_createBracket,
+                      : (state.hasBracket
+                            ? l10n.lite_recreateBracket
+                            : l10n.lite_createBracket),
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 style: FilledButton.styleFrom(
@@ -2678,6 +2759,30 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   ) async {
     final l10n = AppLocalizations.of(context)!;
     final replacingExisting = ref.read(liteManagementProvider).hasBracket;
+
+    if (replacingExisting) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.lite_recreateBracketTitle),
+          content: Text(l10n.lite_recreateBracketConfirm),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(l10n.commonCancel),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: colors.warning,
+              ),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(l10n.lite_recreateBracket),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
 
     try {
       if (replacingExisting) {

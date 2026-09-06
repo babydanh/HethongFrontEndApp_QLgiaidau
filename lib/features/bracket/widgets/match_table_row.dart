@@ -142,14 +142,9 @@ class MatchTableRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: () {
-            final isLiteMatch = match.tournamentConfig?['isLite'] == true ||
-                match.tournamentConfig?['mode']?.toString().toUpperCase() == 'LITE';
-            final canScoreMatch = isReferee || !isReadOnly || isLiteMatch;
-            if (canScoreMatch && tournamentId.isNotEmpty) {
-              context.push('/organizer/tournaments/$tournamentId/ops/match/${match.id}');
-            } else {
-              context.push('/live/${match.id}${tournamentId.isNotEmpty ? '?tournamentId=$tournamentId' : ''}');
-            }
+            // Match cards always open the live page. Scoring/referee access is
+            // an explicit action, not the default card navigation.
+            context.push('/live/${match.id}${tournamentId.isNotEmpty ? '?tournamentId=$tournamentId' : ''}');
           },
           borderRadius: BorderRadius.circular(16),
           child: Padding(

@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/features/match/widgets/set_history_bar.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/utils/score_validation_localizer.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
+import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 SportRuleKind _resolveMatchSportKind(MatchModel match) {
@@ -50,7 +51,7 @@ void showOfficialScoreModal(
   );
 }
 
-class OfficialScorePage extends StatefulWidget {
+class OfficialScorePage extends ConsumerStatefulWidget {
   final String tournamentId;
   final String matchId;
   final MatchModel match;
@@ -74,10 +75,10 @@ class OfficialScorePage extends StatefulWidget {
   });
 
   @override
-  State<OfficialScorePage> createState() => _OfficialScorePageState();
+  ConsumerState<OfficialScorePage> createState() => _OfficialScorePageState();
 }
 
-class _OfficialScorePageState extends State<OfficialScorePage> {
+class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
   String? _selectedPenaltyTeam;
   PenaltyOption? _selectedPenalty;
   bool _penaltySelectionError = false;
@@ -111,13 +112,20 @@ class _OfficialScorePageState extends State<OfficialScorePage> {
     final l10n = AppLocalizations.of(context)!;
     final colors = Theme.of(context).extension<AppColorsExtension>()!;
     final kind = _resolveMatchSportKind(widget.match);
-    final params = (tournamentId: widget.tournamentId, matchId: widget.matchId);
+    final effectiveTournamentId = widget.tournamentId.isNotEmpty
+        ? widget.tournamentId
+        : (widget.match.tournamentId ?? '');
+    final params = (tournamentId: effectiveTournamentId, matchId: widget.matchId);
     final config = resolveSportConfig(widget.match.sportRules, kind);
     final strategy = PenaltyStrategyFactory.getStrategy(_sportKeyForKind(kind));
+    final tournamentAsync = effectiveTournamentId.isNotEmpty
+        ? ref.watch(tournamentProvider(effectiveTournamentId))
+        : null;
     final isLite =
         widget.match.tournamentConfig?['isLite'] == true ||
         widget.match.tournamentConfig?['mode']?.toString().toUpperCase() ==
-            'LITE';
+            'LITE' ||
+        tournamentAsync?.value?.isLite == true;
     final usePickleballSideOutPanel =
         !isLite &&
         kind == SportRuleKind.pickleball &&
