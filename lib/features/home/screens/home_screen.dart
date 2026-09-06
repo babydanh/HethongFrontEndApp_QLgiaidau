@@ -67,6 +67,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   // ─── Per-tab filter state ───
   String _exploreSport = 'all';
   String _exploreStatus = 'live';
+  bool _hasAutoSwitchedLiveTab = false;
+  bool _userManuallySelectedLiveTab = false;
+
+  void _handleNoLiveMatches() {
+    if (!_hasAutoSwitchedLiveTab &&
+        _exploreStatus == 'live' &&
+        !_userManuallySelectedLiveTab) {
+      _hasAutoSwitchedLiveTab = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted &&
+            _exploreStatus == 'live' &&
+            !_userManuallySelectedLiveTab) {
+          setState(() {
+            _exploreStatus = 'scheduled';
+          });
+        }
+      });
+    }
+  }
+
   String _exploreContent = 'all';
   String _exploreBracket = 'all';
   String _exploreRanked = 'all';
@@ -119,6 +139,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _setActiveSportFilter(String key) {
     setState(() {
+      _hasAutoSwitchedLiveTab = false;
+      _userManuallySelectedLiveTab = false;
+      _exploreStatus = 'live';
       _exploreSport = key;
       _tournamentSport = key;
       _clubSport = key;
@@ -543,7 +566,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       children: [
         Positioned.fill(
           child: RefreshIndicator(
-            onRefresh: () async => ref.refresh(tournamentsProvider),
+            onRefresh: () async {
+              _hasAutoSwitchedLiveTab = false;
+              _userManuallySelectedLiveTab = false;
+              return ref.refresh(tournamentsProvider);
+            },
             color: AppTheme.primary,
             child: tournamentsAsync.when(
               data: (tournamentsList) {
@@ -641,6 +668,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           : _exploreStatus == 'scheduled'
                               ? l10n.noUpcomingMatches
                               : l10n.homeNoCompletedMatches,
+                      onNoLiveMatches: _handleNoLiveMatches,
                     ),
 
                     if (allTournaments.isEmpty)
@@ -2090,6 +2118,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: GestureDetector(
         onTap: () {
           HapticFeedback.selectionClick();
+          _userManuallySelectedLiveTab = true;
           setState(() => _exploreStatus = statusKey);
         },
         behavior: HitTestBehavior.opaque,
@@ -3037,6 +3066,7 @@ class _TournamentSectionList extends ConsumerWidget {
   final String emptyMessage;
   final String? sectionTitle;
   final bool isLive;
+  final VoidCallback? onNoLiveMatches;
 
   const _TournamentSectionList({
     required this.tournaments,
@@ -3049,6 +3079,7 @@ class _TournamentSectionList extends ConsumerWidget {
     required this.emptyMessage,
     this.sectionTitle,
     this.isLive = false,
+    this.onNoLiveMatches,
   });
 
   @override
@@ -3056,6 +3087,9 @@ class _TournamentSectionList extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     if (!enabled) return const SliverToBoxAdapter(child: SizedBox.shrink());
     if (tournaments.isEmpty) {
+      if (filterStatus == 'live' && searchQuery.isEmpty) {
+        onNoLiveMatches?.call();
+      }
       if (searchQuery.isNotEmpty) {
         return SliverToBoxAdapter(
           child: Padding(
@@ -3131,6 +3165,9 @@ class _TournamentSectionList extends ConsumerWidget {
     }
 
     if (activeTournaments.isEmpty) {
+      if (filterStatus == 'live' && !hasLoadingMatches && searchQuery.isEmpty) {
+        onNoLiveMatches?.call();
+      }
       if (searchQuery.isNotEmpty) {
         return SliverToBoxAdapter(
           child: Padding(
