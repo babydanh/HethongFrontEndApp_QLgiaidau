@@ -18,9 +18,36 @@ class MatchController {
 
   MatchController(this.ref, this.tournamentId, this.matchId);
 
-  MatchModel? get match => ref.read(singleMatchProvider((tournamentId: tournamentId, matchId: matchId))).value;
+  MatchModel? get match => ref
+      .read(singleMatchProvider((tournamentId: tournamentId, matchId: matchId)))
+      .value;
 
-  Future<void> updateConfig({int? maxScore, bool? winByTwo, int? timeLimitMinutes}) async {
+  /// Invalidate every surface that renders a match after an authoritative
+  /// write. The live screen is backed by singleMatchProvider, while cards and
+  /// bracket views use different tournament/division providers.
+  void _invalidateMatchSurfaces(MatchModel? currentMatch) {
+    ref.invalidate(
+      singleMatchProvider((tournamentId: tournamentId, matchId: matchId)),
+    );
+    ref.invalidate(matchesProvider(tournamentId));
+    ref.invalidate(liveMatchesProvider(tournamentId));
+    ref.invalidate(bracketMatchesProvider(tournamentId));
+    ref.invalidate(liteBracketMatchesProvider(tournamentId));
+    ref.invalidate(tournamentProvider(tournamentId));
+
+    final divisionId = currentMatch?.divisionId;
+    if (divisionId == null || divisionId.isEmpty) return;
+    final params = (tournamentId: tournamentId, divisionId: divisionId);
+    ref.invalidate(matchesWithDivisionProvider(params));
+    ref.invalidate(liteBracketMatchesWithDivisionProvider(params));
+    ref.invalidate(bracketMatchesWithDivisionProvider(params));
+  }
+
+  Future<void> updateConfig({
+    int? maxScore,
+    bool? winByTwo,
+    int? timeLimitMinutes,
+  }) async {
     _log.warning(
       'updateConfig: Không có endpoint backend cho cập nhật cấu hình (maxScore/winByTwo/timeLimitMinutes). '
       'Các tham số này chỉ được thiết lập khi bắt đầu trận qua startMatch().',
@@ -31,14 +58,29 @@ class MatchController {
     );
   }
 
-  Future<void> startMatch({int? maxScore, int? timeLimitMinutes, String? refereeName}) async {
-    await ref.read(matchRepositoryProvider).startMatch(
-      tournamentId, 
-      matchId,
-      maxScore: maxScore,
-      timeLimitMinutes: timeLimitMinutes,
-      refereeName: refereeName,
-    );
+  Future<void> startMatch({
+    int? maxScore,
+    int? timeLimitMinutes,
+    String? refereeName,
+  }) async {
+    final currentMatch = match;
+    final tournament = ref.read(tournamentProvider(tournamentId)).value;
+    await ref
+        .read(matchRepositoryProvider)
+        .startMatch(
+          tournamentId,
+          matchId,
+          maxScore: maxScore,
+          timeLimitMinutes: timeLimitMinutes,
+          refereeName: refereeName,
+          useLiteParticipantAccess: isSuperLiteTournament(
+            tournamentConfig: currentMatch?.tournamentConfig,
+            tournamentIsLite: tournament?.isLite == true,
+          ),
+        );
+    // Refresh all authoritative match surfaces even when the websocket echo
+    // arrives late or is unavailable.
+    _invalidateMatchSurfaces(currentMatch);
   }
 
   Future<void> addScore(bool isTeam1, int points) async {
@@ -56,7 +98,11 @@ class MatchController {
     );
   }
 
-  Future<void> addFoul(bool isTeam1, MatchEventType type, String description) async {
+  Future<void> addFoul(
+    bool isTeam1,
+    MatchEventType type,
+    String description,
+  ) async {
     final m = match;
     if (m == null) return;
 
@@ -70,30 +116,45 @@ class MatchController {
 
     final updatedEvents = List<MatchEvent>.from(m.events)..add(event);
 
-    await ref.read(matchRepositoryProvider).updateLiveState(
-      tournamentId,
-      matchId,
-      events: updatedEvents,
-    );
+    await ref
+        .read(matchRepositoryProvider)
+        .updateLiveState(tournamentId, matchId, events: updatedEvents);
   }
 
-  Future<void> addPenalty(bool isTeam1, String sportType, String penaltyId, String penaltyName, String reason) async {
+  Future<void> addPenalty(
+    bool isTeam1,
+    String sportType,
+    String penaltyId,
+    String penaltyName,
+    String reason,
+  ) async {
     final m = match;
     if (m == null) return;
 
     final rawSets = m.scoreDetails?['sets'];
     final sets = rawSets is List
         ? rawSets
-            .whereType<Map>()
-            .map((set) => SetScoreData.fromJson(Map<String, dynamic>.from(set)))
-            .toList()
+              .whereType<Map>()
+              .map(
+                (set) => SetScoreData.fromJson(Map<String, dynamic>.from(set)),
+              )
+              .toList()
         : m.sets
-            .map((set) => SetScoreData(score1: set.score1, score2: set.score2, isFinished: true))
-            .toList();
+              .map(
+                (set) => SetScoreData(
+                  score1: set.score1,
+                  score2: set.score2,
+                  isFinished: true,
+                ),
+              )
+              .toList();
     final (p1Sets, p2Sets) = computeMatchSetsWon(sets);
     final existingPenalties = m.scoreDetails?['penalties'];
     final penalties = existingPenalties is List
-        ? existingPenalties.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList()
+        ? existingPenalties
+              .whereType<Map>()
+              .map((item) => Map<String, dynamic>.from(item))
+              .toList()
         : <Map<String, dynamic>>[];
     penalties.insert(0, {
       'id': const Uuid().v4(),
@@ -150,18 +211,31 @@ class MatchController {
     String? overrideReason,
     int? expectedRevision,
   }) async {
-    _log.info('updateSetsWithDetails: $p1SetsWon-$p2SetsWon, ${scoreDetails.length} sets');
-    await ref.read(matchRepositoryProvider).updateScoreDetails(
-      tournamentId,
-      matchId,
-      p1SetsWon: p1SetsWon,
-      p2SetsWon: p2SetsWon,
-      scoreDetails: scoreDetails,
-      scoreDetailsExtras: scoreDetailsExtras,
-      winnerId: winnerId,
-      overrideReason: overrideReason,
-      expectedRevision: expectedRevision,
+    _log.info(
+      'updateSetsWithDetails: $p1SetsWon-$p2SetsWon, ${scoreDetails.length} sets',
     );
+    final currentMatch = match;
+    final tournament = ref.read(tournamentProvider(tournamentId)).value;
+    await ref
+        .read(matchRepositoryProvider)
+        .updateScoreDetails(
+          tournamentId,
+          matchId,
+          p1SetsWon: p1SetsWon,
+          p2SetsWon: p2SetsWon,
+          scoreDetails: scoreDetails,
+          scoreDetailsExtras: scoreDetailsExtras,
+          winnerId: winnerId,
+          overrideReason: overrideReason,
+          expectedRevision: expectedRevision,
+          useLiteParticipantAccess: isSuperLiteTournament(
+            tournamentConfig: currentMatch?.tournamentConfig,
+            tournamentIsLite: tournament?.isLite == true,
+          ),
+        );
+    // The write increments the backend revision. Refresh the outer cards and
+    // bracket immediately; socket events remain the fast path for viewers.
+    _invalidateMatchSurfaces(currentMatch);
   }
 
   /// Kết thúc trận kèm scoreDetails đầy đủ (sets).
@@ -173,7 +247,9 @@ class MatchController {
     String? overrideReason,
     int? expectedRevision,
   }) async {
-    _log.info('completeMatchWithDetails: winner=$winnerId, ${finalSets.length} sets');
+    _log.info(
+      'completeMatchWithDetails: winner=$winnerId, ${finalSets.length} sets',
+    );
     final (p1Sets, p2Sets) = computeMatchSetsWon(finalSets);
 
     // Gửi scoreDetails kèm winnerId. Backend sẽ tự finalize trận,
@@ -195,13 +271,15 @@ class MatchController {
     required String winnerName,
     required bool isTeam1,
   }) async {
-    await ref.read(matchRepositoryProvider).advanceWinner(
-      tournamentId,
-      nextMatchId,
-      winnerId: winnerId,
-      winnerName: winnerName,
-      isTeam1: isTeam1,
-    );
+    await ref
+        .read(matchRepositoryProvider)
+        .advanceWinner(
+          tournamentId,
+          nextMatchId,
+          winnerId: winnerId,
+          winnerName: winnerName,
+          isTeam1: isTeam1,
+        );
   }
 
   Future<void> updateMatchResultByAdmin({
@@ -236,15 +314,18 @@ class MatchController {
     String? winnerId,
   }) async {
     _log.info('Applying operation $action to match $matchId');
-    await ref.read(matchRepositoryProvider).matchOperation(
-      matchId,
-      action: action,
-      reason: reason,
-      winnerId: winnerId,
-    );
+    await ref
+        .read(matchRepositoryProvider)
+        .matchOperation(
+          matchId,
+          action: action,
+          reason: reason,
+          winnerId: winnerId,
+        );
   }
 }
 
-final matchControllerProvider = Provider.autoDispose.family<MatchController, MatchControlParams>((ref, arg) {
-  return MatchController(ref, arg.tournamentId, arg.matchId);
-});
+final matchControllerProvider = Provider.autoDispose
+    .family<MatchController, MatchControlParams>((ref, arg) {
+      return MatchController(ref, arg.tournamentId, arg.matchId);
+    });

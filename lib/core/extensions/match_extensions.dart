@@ -25,7 +25,12 @@ extension MatchStatusExtension on MatchModel {
         !hasWinner();
   }
 
-  bool get isScheduled => status == AppConstants.matchScheduled;
+  bool get isScheduled => const {
+    'SCHEDULED',
+    'PENDING',
+    'NOT_STARTED',
+    'UPCOMING',
+  }.contains(status.trim().toUpperCase());
   bool get hasResult => isCompleted || isWalkover;
 
   bool hasWinner() => winnerId.isNotEmpty && winnerId != 'BYE';

@@ -8,9 +8,6 @@ import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
-import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -179,7 +176,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         ref.invalidate(communityTournamentsProvider(widget.clubId));
         ref.invalidate(communityDetailProvider(widget.clubId));
 
-        _showSuccessSheet(result);
+        context.pushReplacement('/lite-manage/${result.id}');
       }
     } catch (e, stack) {
       _log.error('Lỗi tạo giải đấu trong CLB', e, stack);
@@ -211,25 +208,6 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  void _showSuccessSheet(LiteTournamentCreateResult result) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _LiteSuccessSheet(
-        result: result,
-        onManage: () {
-          context.pop();
-          context.push('/lite-manage/${result.id}');
-        },
-        onClose: () {
-          context.pop();
-          context.pop();
-        },
-      ),
-    );
   }
 
   Future<void> _pickStartDate() async {
@@ -700,7 +678,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
     final sports = [
       (AppConstants.sportBadminton, l10n.createClubTournament_sportBadminton, '🏸'),
       (AppConstants.sportTennis, l10n.createClubTournament_sportTennis, '🎾'),
-      (AppConstants.sportPickleball, l10n.createClubTournament_sportPickleball, '🥒'),
+      (AppConstants.sportPickleball, l10n.createClubTournament_sportPickleball, AppConstants.sportIcons[AppConstants.sportPickleball] ?? 'assets/icons/pickleball.png'),
       (AppConstants.sportTableTennis, l10n.createClubTournament_sportTableTennis, '🏓'),
       (AppConstants.sportFootball, l10n.createClubTournament_sportFootball, '⚽'),
     ];
@@ -728,7 +706,22 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                 ),
                 child: Column(
                   children: [
-                    Text(s.$3, style: const TextStyle(fontSize: 20)),
+                    s.$3.endsWith('.png') || s.$3.endsWith('.svg')
+                        ? SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: Image.asset(
+                              s.$3,
+                              width: 24,
+                              height: 24,
+                              errorBuilder: (context, error, stackTrace) => const Icon(
+                                Icons.sports_tennis_rounded,
+                                size: 22,
+                                color: Color(0xFF0D9488),
+                              ),
+                            ),
+                          )
+                        : Text(s.$3, style: const TextStyle(fontSize: 20)),
                     const SizedBox(height: 4),
                     Text(s.$2, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: selected ? AppTheme.primary : context.colors.textSecondary)),
                   ],
@@ -821,206 +814,6 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
           ),
         );
       }).toList(),
-    );
-  }
-}
-
-/// Bottom sheet hiển thị sau khi tạo giải Lite thành công
-/// Gồm QR, link mời, các nút Sao chép / Chia sẻ / Vào quản lý nhanh
-class _LiteSuccessSheet extends StatelessWidget {
-  const _LiteSuccessSheet({
-    required this.result,
-    required this.onManage,
-    required this.onClose,
-  });
-
-  final LiteTournamentCreateResult result;
-  final VoidCallback onManage;
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final link = result.joinUrl ?? '/lite/tournaments/join/${result.inviteCode ?? result.id}';
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ─── Drag handle ───
-              Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: colors.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-
-              // ─── Success icon ───
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: colors.success.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.check_circle_rounded, color: colors.success, size: 32),
-              ),
-              const SizedBox(height: 14),
-
-              // ─── Title ───
-              Text(
-                l10n.createClubTournament_successTitle,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: colors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                result.name,
-                style: TextStyle(fontSize: 13, color: colors.textMuted),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 20),
-
-              // ─── QR Code ───
-              if (result.qrPayload != null || result.joinUrl != null)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: QrImageView(
-                    data: result.qrPayload ?? link,
-                    version: QrVersions.auto,
-                    size: 160,
-                    backgroundColor: Colors.white,
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
-              if (result.qrPayload != null || result.joinUrl != null)
-                const SizedBox(height: 16),
-
-              // ─── Link ───
-              if (link.isNotEmpty)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: colors.bgSurface,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    link,
-                    style: TextStyle(fontSize: 12, color: colors.textMuted),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              if (link.isNotEmpty)
-                const SizedBox(height: 20),
-
-              // ─── Buttons ───
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: link));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(l10n.createClubTournament_linkCopied),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.copy_rounded, size: 18),
-                      label: Text(l10n.createClubTournament_copyLink, style: const TextStyle(fontSize: 13)),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        SharePlus.instance.share(
-                          ShareParams(text: l10n.createClubTournament_shareText(result.name, link)),
-                        );
-                      },
-                      icon: const Icon(Icons.share_rounded, size: 18),
-                      label: Text(l10n.createClubTournament_share, style: const TextStyle(fontSize: 13)),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-
-              // ─── Vào quản lý nhanh ───
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: FilledButton.icon(
-                  onPressed: onManage,
-                  icon: const Icon(Icons.speed_rounded, size: 20),
-                  label: Text(
-                    l10n.createClubTournament_manageQuickly,
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-                  ),
-                  style: FilledButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // ─── Đóng ───
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: onClose,
-                  child: Text(
-                    l10n.createClubTournament_close,
-                    style: TextStyle(color: colors.textMuted, fontSize: 14),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

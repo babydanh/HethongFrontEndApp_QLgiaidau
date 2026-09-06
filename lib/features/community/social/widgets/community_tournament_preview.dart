@@ -76,6 +76,16 @@ class CommunityTournamentPreview extends ConsumerWidget {
           // ── Header Bar ──
           InkWell(
             onTap: () {
+              if (tournamentAsync.hasError || tournament == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Bạn không có quyền xem chi tiết giải đấu này.',
+                    ),
+                  ),
+                );
+                return;
+              }
               final inviteParam =
                   (post.tournamentInviteCode != null &&
                       post.tournamentInviteCode!.isNotEmpty)

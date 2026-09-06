@@ -44,20 +44,33 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   String _selectedDivision = "";
   String? _selectedDivisionId;
   String? _customInviteCode;
+  bool _hasUserSwitchedTab = false;
 
   void _updateTabController(int count, {int? defaultIndex}) {
     if (_tabController != null && _currentTabCount == count) return;
     final prev = _tabController;
     final prevIndex = prev?.index;
     _currentTabCount = count;
-    final targetIndex = prevIndex != null && prevIndex < count
-        ? prevIndex
-        : (defaultIndex != null && defaultIndex < count ? defaultIndex : 0);
-    _tabController = TabController(
+    
+    // If the user hasn't actively switched tabs yet, always default to defaultIndex (overview tab)
+    final targetIndex = (!_hasUserSwitchedTab && defaultIndex != null && defaultIndex < count)
+        ? defaultIndex
+        : (prevIndex != null && prevIndex < count
+            ? prevIndex
+            : (defaultIndex != null && defaultIndex < count ? defaultIndex : 0));
+
+    final newController = TabController(
       length: count,
       vsync: this,
       initialIndex: targetIndex,
     );
+    newController.addListener(() {
+      if (newController.indexIsChanging || newController.index != targetIndex) {
+        _hasUserSwitchedTab = true;
+      }
+    });
+
+    _tabController = newController;
     prev?.dispose();
   }
 
@@ -488,8 +501,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     }).toList();
 
     final completedMatches = allMatches.where((m) {
-      final s = m.status.toLowerCase();
-      return s == 'completed' || s == 'finished';
+      if (m.isBye || m.isByeMatch || m.isFullByeMatch) return false;
+      if (!m.hasTeams) return false;
+      return m.isCompleted;
     }).toList();
 
     final bool hasLive = liveMatches.isNotEmpty;
@@ -747,33 +761,11 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     String? bracketType, [
     String? fallbackBracketType,
   ]) {
-    final raw = (bracketType != null && bracketType.trim().isNotEmpty)
-        ? bracketType
-        : (fallbackBracketType ?? '');
-    final type = raw.toUpperCase();
-    if (type.contains('ROUND_ROBIN') ||
-        type.contains('ROBIN') ||
-        type.contains('VÒNG TRÒN')) {
-      return 'Vòng tròn tính điểm';
-    }
-    if (type.contains('GROUP_STAGE') ||
-        type.contains('GROUP') ||
-        type.contains('BẢNG')) {
-      return 'Vòng bảng + loại trực tiếp';
-    }
-    if (type.contains('DOUBLE_ELIMINATION') ||
-        type.contains('DOUBLE_ELIM') ||
-        type.contains('NHÁNH KÉP') ||
-        type.contains('THẮNG/THUA') ||
-        type.contains('THẮNG THUA')) {
-      return 'Nhánh thắng/thua';
-    }
-    if (type.contains('SINGLE_ELIMINATION') ||
-        type.contains('SINGLE') ||
-        type.contains('LOẠI TRỰC TIẾP')) {
-      return 'Loại trực tiếp';
-    }
-    return raw.isNotEmpty ? raw : 'Loại trực tiếp';
+    return BracketFormatIcons.getFormatLabel(
+      context,
+      bracketType,
+      fallbackBracketType,
+    );
   }
 
   /// Danh sách Phân hạng trực quan chuẩn Web & Taste Skill

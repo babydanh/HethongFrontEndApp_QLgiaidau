@@ -79,6 +79,32 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     return matchFromSub?.tournamentId ?? '';
   }
 
+  Future<bool> _startMatchSafely({required String tournamentId}) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ref
+          .read(
+            matchControllerProvider((
+              tournamentId: tournamentId,
+              matchId: widget.matchId,
+            )),
+          )
+          .startMatch();
+      return true;
+    } catch (error) {
+      if (!mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ErrorParser.parse(error, l10n.liveMatchStartError, l10n),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return false;
+    }
+  }
+
   late TabController _tabController;
   int _selectedViewerTab = 0;
   final List<Map<String, dynamic>> _comments = [];
@@ -258,16 +284,53 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   void _trackScoreChanges(MatchModel match) {
-    if (match.score1 != _lastScore1) {
+    final currentScore = _currentLiveScore(match);
+    if (currentScore.score1 != _lastScore1) {
       setState(() {
-        _lastScore1 = match.score1;
+        _lastScore1 = currentScore.score1;
       });
     }
-    if (match.score2 != _lastScore2) {
+    if (currentScore.score2 != _lastScore2) {
       setState(() {
-        _lastScore2 = match.score2;
+        _lastScore2 = currentScore.score2;
       });
     }
+  }
+
+  List<SetScoreData> _scoreDetailsSets(MatchModel match) {
+    final rawSets = match.scoreDetails?['sets'];
+    if (rawSets is! List) return const [];
+    return rawSets.whereType<Map>().map((rawSet) {
+      return SetScoreData.fromJson(Map<String, dynamic>.from(rawSet));
+    }).toList();
+  }
+
+  /// Live score is the currently open set, not the match-level set aggregate.
+  /// The API keeps p1SetsWon/p2SetsWon in score1/score2 for compatibility, so
+  /// using those fields directly makes the viewer show 0-0 or a set tally after
+  /// the previous set is closed. This mirrors the web live page's
+  /// scoreDetails.sets source of truth.
+  SetScoreData _currentLiveScore(
+    MatchModel match, [
+    ScorePanelState? scorePanelState,
+  ]) {
+    final sets = _scoreDetailsSets(match);
+    final activeSet = sets.where((set) => !set.isFinished).lastOrNull;
+    final rally = scorePanelState?.rally;
+    // Prefer a local optimistic point while it is ahead of the server echo,
+    // but do not let a stale 0-0 notifier state hide a newer active set from
+    // scoreDetails.
+    if (rally != null && (rally.currentP1 > 0 || rally.currentP2 > 0)) {
+      return SetScoreData(score1: rally.currentP1, score2: rally.currentP2);
+    }
+    if (activeSet != null) return activeSet;
+    // After closing a set the next set starts at 0-0. Keep that local zero
+    // instead of falling back to the previous finished set's score.
+    if (rally != null) {
+      return SetScoreData(score1: rally.currentP1, score2: rally.currentP2);
+    }
+    if (sets.isNotEmpty) return sets.last;
+    return SetScoreData(score1: match.score1, score2: match.score2);
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -464,20 +527,23 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         )
         .value;
     if (match == null) return;
+    final scorePanelParams = (
+      tournamentId: effectiveId,
+      matchId: widget.matchId,
+    );
+    final currentScore = _currentLiveScore(
+      match,
+      ref.read(scorePanelNotifierProvider(scorePanelParams)),
+    );
     ref
-        .read(
-          matchControllerProvider((
-            tournamentId: effectiveId,
-            matchId: widget.matchId,
-          )),
-        )
+        .read(matchControllerProvider(scorePanelParams))
         .completeMatchWithDetails(
           winnerId: winnerId,
           loserId: loserId,
           finalSets: [
             SetScoreData(
-              score1: match.score1,
-              score2: match.score2,
+              score1: currentScore.score1,
+              score2: currentScore.score2,
               isFinished: true,
             ),
           ],
@@ -509,10 +575,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final tournamentAsync = effectiveTournamentId.isNotEmpty
         ? ref.watch(tournamentProvider(effectiveTournamentId))
         : null;
-    final isLiteMatch = match?.tournamentConfig?['isLite'] == true ||
-        match?.tournamentConfig?['mode']?.toString().toUpperCase() == 'LITE' ||
-        tournamentAsync?.value?.isLite == true;
-    final canOpenScoring = auth.canScore || isLiteMatch;
+    final isSuperLiteMatch = isSuperLiteTournament(
+      tournamentConfig: match?.tournamentConfig,
+      tournamentIsLite: tournamentAsync?.value?.isLite == true,
+    );
+    // A completed match remains viewable, but must never expose a scoring
+    // action again. This also prevents the old score panel from appearing
+    // after the server has finalized the match.
+    final canOpenScoring =
+        match != null &&
+        !match.isCompleted &&
+        (auth.canScore || (isSuperLiteMatch && auth.isAuthenticated));
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
@@ -568,7 +641,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           onPressed: () => context.pop(),
         ),
         actions: [
-          if (canOpenScoring && match != null)
+          if (!widget.isViewer && canOpenScoring)
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: match.isScheduled
@@ -577,14 +650,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       icon: const Icon(Icons.play_circle_fill_rounded),
                       color: const Color(0xFF16A34A),
                       onPressed: () async {
-                        final params = (
+                        await _startMatchSafely(
                           tournamentId: effectiveTournamentId,
-                          matchId: widget.matchId,
                         );
-                        final controller = ref.read(
-                          matchControllerProvider(params),
-                        );
-                        await controller.startMatch();
                       },
                     )
                   : IconButton(
@@ -600,12 +668,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           onRecordPenalty: () =>
                               _showFoulSelectionDialog(match),
                           onSubmitPenalty: (teamName, option, reason) =>
-                              _submitPenalty(
-                                match,
-                                teamName,
-                                option,
-                                reason,
-                              ),
+                              _submitPenalty(match, teamName, option, reason),
                           onForceWin: () => _showForceWinDialog(match),
                         );
                       },
@@ -642,6 +705,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
 
               if (match.isLive) {
                 // Live state — scoring handled via scorePanelNotifierProvider
+              }
+
+              // Every match card/deep link opens the shared live detail page.
+              // Scoring is an explicit action inside that page, including
+              // Super Lite matches.
+              if (widget.isViewer) {
+                return _buildLiveState(match, canOpenScoring: canOpenScoring);
               }
 
               if (!canOpenScoring) {
@@ -818,26 +888,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                                 : l10n.sportDisplayName(sportKey);
                           })(),
                         ),
-                        _buildSetupChip(
-                          l10n.liveFormatLabel,
-                          'BO${config.bestOf}',
-                        ),
-                        _buildSetupChip(
-                          l10n.liveWinLabel,
-                          l10n.liveSetValue(config.setsToWin),
-                        ),
-                        _buildSetupChip(
-                          l10n.liveSetTargetLabel,
-                          kind == SportRuleKind.tennis
-                              ? l10n.liveGamesValue(config.pointsPerSet)
-                              : l10n.livePointsValue(config.pointsPerSet),
-                        ),
-                        _buildSetupChip(
-                          l10n.liveRuleLabel,
-                          config.mustWinByTwo
-                              ? l10n.liveDifferenceTwo
-                              : l10n.liveNoDifferenceTwo,
-                        ),
+                        _buildSetupChip(l10n.liveRuleLabel, l10n.liveOpenRules),
                       ],
                     ),
                   ],
@@ -850,14 +901,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 child: ElevatedButton.icon(
                   onPressed: () async {
                     final effectiveId = _effectiveTournamentId(match);
-                    final controller = ref.read(
-                      matchControllerProvider((
-                        tournamentId: effectiveId,
-                        matchId: widget.matchId,
-                      )),
+                    final started = await _startMatchSafely(
+                      tournamentId: effectiveId,
                     );
-                    await controller.startMatch();
-                    if (!mounted) return;
+                    if (!started || !mounted) return;
                     showOfficialScoreModal(
                       context,
                       tournamentId: effectiveId,
@@ -899,20 +946,28 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   Widget _buildSetupState(MatchModel match) {
     final l10n = AppLocalizations.of(context)!;
     final kind = SportRuleKind.fromString(match.sportKey);
-    final config = resolveSportConfig(match.sportRules, kind);
-    _ensureSetupControlsSeeded(match, config);
-    final tournamentMode = match.tournamentConfig?['mode']
-        ?.toString()
-        .toUpperCase();
     final effectiveTournamentId = widget.tournamentId.isNotEmpty
         ? widget.tournamentId
         : (match.tournamentId ?? '');
     final tournamentAsync = effectiveTournamentId.isNotEmpty
         ? ref.watch(tournamentProvider(effectiveTournamentId))
         : null;
-    final isLiteMatch = match.tournamentConfig?['isLite'] == true ||
-        tournamentMode == 'LITE' ||
-        tournamentAsync?.value?.isLite == true;
+    final tournamentRules = tournamentAsync?.value?.sportRules;
+    final effectiveSportRules =
+        tournamentRules != null && tournamentRules.isNotEmpty
+        ? {
+            ...tournamentRules,
+            if (match.sportRules != null && match.sportRules!.isNotEmpty)
+              ...match.sportRules!,
+          }
+        : match.sportRules;
+    final config = resolveSportConfig(effectiveSportRules, kind);
+    _ensureSetupControlsSeeded(match, config);
+    final isLiteMatch = isLiteScoringMode(
+      tournamentConfig: match.tournamentConfig,
+      sportRules: effectiveSportRules,
+      tournamentIsLite: tournamentAsync?.value?.isLite == true,
+    );
     if (isLiteMatch) {
       return _buildLiteSetupState(match, kind, config);
     }
@@ -1160,28 +1215,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 child: ElevatedButton.icon(
                   onPressed: () async {
                     final effectiveId = _effectiveTournamentId(match);
-                    final controller = ref.read(
-                      matchControllerProvider((
-                        tournamentId: effectiveId,
-                        matchId: widget.matchId,
-                      )),
-                    );
-                    final resolvedMaxScore =
-                        int.tryParse(_maxScoreController.text) ??
-                        match.maxScore ??
-                        config.pointsPerSet;
-                    final resolvedTimeLimit = int.tryParse(
-                      _timeLimitController.text,
-                    );
-                    await controller.updateConfig(
-                      maxScore: resolvedMaxScore,
-                      winByTwo: _winByTwo,
-                      timeLimitMinutes: resolvedTimeLimit,
-                    );
-                    await controller.startMatch(
-                      maxScore: resolvedMaxScore,
-                      timeLimitMinutes: resolvedTimeLimit,
-                    );
+                    await _startMatchSafely(tournamentId: effectiveId);
                   },
                   icon: const Icon(Icons.play_arrow_rounded),
                   label: Text(
@@ -1279,6 +1313,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   // ═══════════════════════════════════════════════════════════
   Widget _buildLiveState(MatchModel match, {required bool canOpenScoring}) {
     final l10n = AppLocalizations.of(context)!;
+    final currentScore = _currentLiveScore(match);
     if (widget.isViewer || canOpenScoring) {
       return _buildViewerState(match, canOpenScoring: canOpenScoring);
     }
@@ -1320,7 +1355,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               Expanded(
                 child: _buildReadOnlyScoreCard(
                   teamName: match.team1Name,
-                  score: match.score1,
+                  score: currentScore.score1,
                   setsWon: match.sets.length,
                 ),
               ),
@@ -1388,7 +1423,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               Expanded(
                 child: _buildReadOnlyScoreCard(
                   teamName: match.team2Name,
-                  score: match.score2,
+                  score: currentScore.score2,
                   setsWon: match.sets.length,
                 ),
               ),
@@ -1397,12 +1432,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         ),
 
         // ─── Bottom Controls ───
-        Container(
-          padding: const EdgeInsets.all(12),
-          color: context.colors.bgCard,
-          child: Row(
-            children: [
-              if (canOpenScoring) ...[
+        if (canOpenScoring)
+          Container(
+            padding: const EdgeInsets.all(12),
+            color: context.colors.bgCard,
+            child: Row(
+              children: [
                 Expanded(
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
@@ -1425,33 +1460,30 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   ),
                 ),
                 const SizedBox(width: 8),
-              ],
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.colors.success,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: context.colors.success,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
-                  icon: const Icon(Icons.check_circle_outline, size: 20),
-                  label: Text(
-                    l10n.liveEndMatch,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
+                    icon: const Icon(Icons.check_circle_outline, size: 20),
+                    label: Text(
+                      l10n.liveEndMatch,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
                     ),
+                    onPressed: () => _showCompleteMatchDialog(match),
                   ),
-                  onPressed: canOpenScoring
-                      ? () => _showCompleteMatchDialog(match)
-                      : null,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
       ],
     );
   }
@@ -1591,6 +1623,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   // ═══════════════════════════════════════════════════════════
   Widget _buildViewerState(MatchModel match, {required bool canOpenScoring}) {
     final l10n = AppLocalizations.of(context)!;
+    final currentScore = _currentLiveScore(match);
     final effectiveId = _effectiveTournamentId(match);
     final params = (tournamentId: effectiveId, matchId: widget.matchId);
     final isLandscape =
@@ -1693,11 +1726,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             ),
                           ),
                           onPressed: () async {
-                            final controller = ref.read(
-                              matchControllerProvider(params),
+                            final started = await _startMatchSafely(
+                              tournamentId: effectiveId,
                             );
-                            await controller.startMatch();
-                            if (!context.mounted) return;
+                            if (!started || !context.mounted) return;
                             showOfficialScoreModal(
                               context,
                               tournamentId: effectiveId,
@@ -1836,11 +1868,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           ),
                         ),
                         onPressed: () async {
-                          final controller = ref.read(
-                            matchControllerProvider(params),
+                          final started = await _startMatchSafely(
+                            tournamentId: effectiveId,
                           );
-                          await controller.startMatch();
-                          if (!context.mounted) return;
+                          if (!started || !context.mounted) return;
                           showOfficialScoreModal(
                             context,
                             tournamentId: effectiveId,
@@ -1852,12 +1883,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             onRecordPenalty: () =>
                                 _showFoulSelectionDialog(match),
                             onSubmitPenalty: (teamName, option, reason) =>
-                                _submitPenalty(
-                                  match,
-                                  teamName,
-                                  option,
-                                  reason,
-                                ),
+                                _submitPenalty(match, teamName, option, reason),
                             onForceWin: () => _showForceWinDialog(match),
                           );
                         },
@@ -2024,7 +2050,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               color: Colors.white,
                             ),
                           ),
-                          _scoreBadge(match.score1, const Color(0xFF2979FF)),
+                          _scoreBadge(
+                            currentScore.score1,
+                            const Color(0xFF2979FF),
+                          ),
                           const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 3),
                             child: Text(
@@ -2036,7 +2065,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               ),
                             ),
                           ),
-                          _scoreBadge(match.score2, const Color(0xFFEF4444)),
+                          _scoreBadge(
+                            currentScore.score2,
+                            const Color(0xFFEF4444),
+                          ),
                           Text(
                             ' ${_compactTeamName(match.team2Name)}',
                             style: const TextStyle(
@@ -2599,14 +2631,49 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   ) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
-    final int team1SetWins = notifierState.team1SetWins;
-    final int team2SetWins = notifierState.team2SetWins;
+    final currentScore = _currentLiveScore(match, notifierState);
     final kind = SportRuleKind.fromString(match.sportKey);
-    final config = resolveSportConfig(match.sportRules, kind);
-    final maxSets = config.bestOf;
-    final scoreSummary = _viewerScoreSummary(match, config);
-    final modelLabel = _viewerModelLabel(config);
-    final tournament = ref.watch(tournamentProvider(widget.tournamentId)).value;
+    final effectiveTournamentId = _effectiveTournamentId(match);
+    final tournament = effectiveTournamentId.isNotEmpty
+        ? ref.watch(tournamentProvider(effectiveTournamentId)).value
+        : null;
+    final tournamentRules = tournament?.sportRules;
+    final effectiveSportRules =
+        tournamentRules != null && tournamentRules.isNotEmpty
+        ? {
+            ...tournamentRules,
+            if (match.sportRules != null && match.sportRules!.isNotEmpty)
+              ...match.sportRules!,
+          }
+        : match.sportRules;
+    final config = resolveSportConfig(effectiveSportRules, kind);
+    final isLiteMatch = isLiteScoringMode(
+      tournamentConfig: match.tournamentConfig,
+      sportRules: effectiveSportRules,
+      tournamentIsLite: tournament?.isLite == true,
+    );
+    // Prefer hydrated notifier state, but keep the server snapshot as a
+    // fallback while the score-panel provider is reconnecting. Super Lite
+    // deliberately has no fixed BO/max-set limit: every manually closed set
+    // is retained and one open set is shown after it.
+    final serverSets = _scoreDetailsSets(match);
+    final finishedSets = notifierState.finishedSets.isNotEmpty
+        ? notifierState.finishedSets
+        : serverSets.where((set) => set.isFinished).toList();
+    final team1SetWins = finishedSets
+        .where((set) => set.score1 > set.score2)
+        .length;
+    final team2SetWins = finishedSets
+        .where((set) => set.score2 > set.score1)
+        .length;
+    final liteSetCount = finishedSets.length + (match.isCompleted ? 0 : 1);
+    final setCount = isLiteMatch
+        ? (liteSetCount > 0 ? liteSetCount : 1)
+        : config.bestOf;
+    final scoreSummary = isLiteMatch
+        ? null
+        : _viewerScoreSummary(match, config);
+    final modelLabel = isLiteMatch ? null : _viewerModelLabel(config);
     final fullLocation = tournament != null
         ? TournamentLocationFormatter.matchFullLocation(
             tournament: tournament,
@@ -2618,6 +2685,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       match,
       notifierState,
       config,
+      isLiteMatch,
+      finishedSetCount: finishedSets.length,
     );
 
     // Split names if double matches format
@@ -2684,25 +2753,27 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     ),
                   ),
                 ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                  ),
-                  child: Text(
-                    scoreSummary,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.primary,
+                if (scoreSummary != null) ...[
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                    ),
+                    child: Text(
+                      scoreSummary,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.primary,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -2723,17 +2794,24 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   l10n.liveSportLabel,
                   _setupSportLabel(kind),
                 ),
-                _buildViewerConfigChip(l10n.liveScoringLabel, modelLabel),
-                _buildViewerConfigChip(
-                  l10n.liveWinLabel,
-                  l10n.liveSetValue(config.setsToWin),
-                ),
-                if (config.mustWinByTwo)
+                if (modelLabel != null)
+                  _buildViewerConfigChip(l10n.liveScoringLabel, modelLabel),
+                if (isLiteMatch)
+                  _buildViewerConfigChip(
+                    l10n.liveRuleLabel,
+                    l10n.liveOpenRules,
+                  ),
+                if (!isLiteMatch)
+                  _buildViewerConfigChip(
+                    l10n.liveWinLabel,
+                    l10n.liveSetValue(config.setsToWin),
+                  ),
+                if (!isLiteMatch && config.mustWinByTwo)
                   _buildViewerConfigChip(
                     l10n.liveRuleLabel,
                     l10n.liveDifferenceTwo,
                   ),
-                if (kind == SportRuleKind.tennis)
+                if (!isLiteMatch && kind == SportRuleKind.tennis)
                   _buildViewerConfigChip(
                     l10n.liveTiebreakLabel,
                     l10n.livePointsValue(config.tiebreakPoints ?? 7),
@@ -2800,28 +2878,29 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             ),
                           ),
                           const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(
-                                0xFF2979FF,
-                              ).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radiusMedium,
+                          if (!isLiteMatch)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFF2979FF,
+                                ).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radiusMedium,
+                                ),
+                              ),
+                              child: Text(
+                                l10n.liveSetWins(team1SetWins),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2979FF),
+                                ),
                               ),
                             ),
-                            child: Text(
-                              l10n.liveSetWins(team1SetWins),
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2979FF),
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -2835,7 +2914,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           Row(
                             children: [
                               Text(
-                                '${match.score1}',
+                                '${currentScore.score1}',
                                 style: TextStyle(
                                   fontSize: 40,
                                   fontWeight: FontWeight.w700,
@@ -2855,7 +2934,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                                 ),
                               ),
                               Text(
-                                '${match.score2}',
+                                '${currentScore.score2}',
                                 style: TextStyle(
                                   fontSize: 40,
                                   fontWeight: FontWeight.w700,
@@ -2936,28 +3015,29 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             ),
                           ),
                           const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(
-                                0xFFEF4444,
-                              ).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radiusMedium,
+                          if (!isLiteMatch)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFFEF4444,
+                                ).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radiusMedium,
+                                ),
+                              ),
+                              child: Text(
+                                l10n.liveSetWins(team2SetWins),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFEF4444),
+                                ),
                               ),
                             ),
-                            child: Text(
-                              l10n.liveSetWins(team2SetWins),
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFFEF4444),
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -2968,75 +3048,81 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           ),
           const SizedBox(height: 24),
 
-          // TỈ SỐ CÁC SET Section
-          Text(
-            l10n.liveSetScoresTitle,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: colors.textSecondary,
-              letterSpacing: 0.5,
+          // Both strict formats and Super Lite expose set history. Strict
+          // formats use the configured BO count; Super Lite grows this list
+          // from the sets that the scorer has explicitly closed.
+          if (setCount > 0) ...[
+            // TỈ SỐ CÁC SET Section
+            Text(
+              l10n.liveSetScoresTitle,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: colors.textSecondary,
+                letterSpacing: 0.5,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(maxSets, (index) {
-              final isPlayed = index < notifierState.finishedSets.length;
-              final currentPlaying = index == notifierState.finishedSets.length;
-              String scoreDisplay = '-';
-              Color boxBg = colors.bgSurface;
-              Color borderCol = colors.border;
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(setCount, (index) {
+                final isPlayed = index < finishedSets.length;
+                final currentPlaying = index == finishedSets.length;
+                String scoreDisplay = '-';
+                Color boxBg = colors.bgSurface;
+                Color borderCol = colors.border;
 
-              if (isPlayed) {
-                final setScore = notifierState.finishedSets[index];
-                scoreDisplay = '${setScore.score1} - ${setScore.score2}';
-                boxBg = Colors.green.withValues(alpha: 0.06);
-                borderCol = Colors.green.withValues(alpha: 0.2);
-              } else if (currentPlaying && !match.isCompleted) {
-                scoreDisplay = '${match.score1} - ${match.score2}';
-                boxBg = AppTheme.primary.withValues(alpha: 0.05);
-                borderCol = AppTheme.primary.withValues(alpha: 0.3);
-              }
+                if (isPlayed) {
+                  final setScore = finishedSets[index];
+                  scoreDisplay = '${setScore.score1} - ${setScore.score2}';
+                  boxBg = Colors.green.withValues(alpha: 0.06);
+                  borderCol = Colors.green.withValues(alpha: 0.2);
+                } else if (currentPlaying && !match.isCompleted) {
+                  scoreDisplay =
+                      '${currentScore.score1} - ${currentScore.score2}';
+                  boxBg = AppTheme.primary.withValues(alpha: 0.05);
+                  borderCol = AppTheme.primary.withValues(alpha: 0.3);
+                }
 
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: boxBg,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                  border: Border.all(color: borderCol, width: 1.5),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      '${l10n.tennisInfoSet} ${index + 1}',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        color: colors.textMuted,
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: boxBg,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                    border: Border.all(color: borderCol, width: 1.5),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        '${l10n.tennisInfoSet} ${index + 1}',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: colors.textMuted,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      scoreDisplay,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: isPlayed || currentPlaying
-                            ? colors.textPrimary
-                            : colors.textMuted.withValues(alpha: 0.5),
+                      const SizedBox(height: 6),
+                      Text(
+                        scoreDisplay,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: isPlayed || currentPlaying
+                              ? colors.textPrimary
+                              : colors.textMuted.withValues(alpha: 0.5),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ],
 
           _buildViewerPenaltyLog(match),
 
@@ -3151,13 +3237,15 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     MatchModel match,
     ScorePanelState state,
     SportConfig config,
-  ) {
+    bool isLiteMatch, {
+    int? finishedSetCount,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     if (match.isCompleted) {
       return l10n.liveCurrentSetFinished;
     }
-    final currentSet = state.finishedSets.length + 1;
-    if (config.scoringModel == SportScoringModel.tennisSet) {
+    final currentSet = (finishedSetCount ?? state.finishedSets.length) + 1;
+    if (isLiteMatch || config.scoringModel == SportScoringModel.tennisSet) {
       return l10n.liveCurrentSet(currentSet);
     }
     return l10n.liveCurrentRound(currentSet);

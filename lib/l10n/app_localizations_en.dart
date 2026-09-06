@@ -1756,6 +1756,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get matchFinishSet => 'FINISH SET';
 
   @override
+  String get matchFinishSetLite => 'Finish this set';
+
+  @override
+  String matchFinishSetLiteNumber(Object value) {
+    return 'Finish set $value';
+  }
+
+  @override
   String get matchFinishSetConfirm => 'Finish Set';
 
   @override
@@ -3492,6 +3500,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get lite_unpairContent =>
       'Both players will return to the waiting list.';
+
+  @override
+  String get lite_unassignBracketTitle => 'Remove from match?';
+
+  @override
+  String get lite_unassignBracketContent =>
+      'The team will be removed from this match slot; the two players will remain paired.';
+
+  @override
+  String get lite_unassignBracket => 'Remove from match';
 
   @override
   String get lite_keepPair => 'Keep';
@@ -6654,7 +6672,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveRuleLabel => 'Rule';
 
   @override
+  String get liveOpenRules => 'Open rules';
+
+  @override
   String get liveScoringLabel => 'Scoring';
+
+  @override
+  String get liveDirectScoring => 'Direct score';
 
   @override
   String get liveTiebreakLabel => 'Tiebreak';
@@ -6723,6 +6747,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveStartMatch => 'START MATCH';
+
+  @override
+  String get liveMatchStartError => 'Unable to start the match.';
 
   @override
   String get liveStartShort => 'START';
@@ -7577,16 +7604,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickCreateFormatMixedDoubles => 'Mixed doubles';
 
   @override
-  String get quickCreateBracketSingle => 'Single elimination';
+  String get quickCreateBracketSingle => 'Single Elimination (Knockout)';
 
   @override
-  String get quickCreateBracketDouble => 'Double elimination';
+  String get quickCreateBracketSingleDesc =>
+      'One loss and you\'re out. Fast, high stakes.';
 
   @override
-  String get quickCreateBracketRoundRobin => 'Round robin';
+  String get quickCreateBracketDouble =>
+      'Double Elimination (Winners / Losers)';
 
   @override
-  String get quickCreateBracketGroup => 'Group stage + knockout';
+  String get quickCreateBracketDoubleDesc =>
+      'Second chance in the lower bracket. More matches.';
+
+  @override
+  String get quickCreateBracketRoundRobin => 'Round Robin';
+
+  @override
+  String get quickCreateBracketRoundRobinDesc =>
+      'Every team plays each other. Maximum fairness.';
+
+  @override
+  String get quickCreateBracketGroup => 'Group Stage + Knockout';
+
+  @override
+  String get quickCreateBracketGroupDesc =>
+      'Round robin in groups, advancing teams play knockout.';
 
   @override
   String get tournamentSettingsCategoryLabel => 'Category / content';
@@ -7659,6 +7703,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentCategoryMixedDoubles => 'Mixed doubles';
+
+  @override
+  String get tournamentCategoryFootballMen => 'Men\'s Football';
+
+  @override
+  String get tournamentCategoryFootballWomen => 'Women\'s Football';
+
+  @override
+  String get tournamentCategoryFootballMixed => 'Mixed Football';
 
   @override
   String get createClubTournament_formatSingles => 'Singles';

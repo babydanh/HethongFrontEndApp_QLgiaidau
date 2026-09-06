@@ -3440,6 +3440,18 @@ abstract class AppLocalizations {
   /// **'CHỐT SET'**
   String get matchFinishSet;
 
+  /// No description provided for @matchFinishSetLite.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chốt set này'**
+  String get matchFinishSetLite;
+
+  /// No description provided for @matchFinishSetLiteNumber.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chốt set {value}'**
+  String matchFinishSetLiteNumber(Object value);
+
   /// No description provided for @matchFinishSetConfirm.
   ///
   /// In vi, this message translates to:
@@ -6571,6 +6583,24 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Hai người chơi sẽ trở lại danh sách chờ ghép.'**
   String get lite_unpairContent;
+
+  /// No description provided for @lite_unassignBracketTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ khỏi trận?'**
+  String get lite_unassignBracketTitle;
+
+  /// No description provided for @lite_unassignBracketContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội sẽ được gỡ khỏi ô trận này, không huỷ ghép hai người chơi.'**
+  String get lite_unassignBracketContent;
+
+  /// No description provided for @lite_unassignBracket.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ khỏi trận'**
+  String get lite_unassignBracket;
 
   /// No description provided for @lite_keepPair.
   ///
@@ -12392,11 +12422,23 @@ abstract class AppLocalizations {
   /// **'Luật'**
   String get liveRuleLabel;
 
+  /// No description provided for @liveOpenRules.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luật mở'**
+  String get liveOpenRules;
+
   /// No description provided for @liveScoringLabel.
   ///
   /// In vi, this message translates to:
   /// **'Scoring'**
   String get liveScoringLabel;
+
+  /// No description provided for @liveDirectScoring.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm trực tiếp'**
+  String get liveDirectScoring;
 
   /// No description provided for @liveTiebreakLabel.
   ///
@@ -12499,6 +12541,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'BẮT ĐẦU TRẬN ĐẤU'**
   String get liveStartMatch;
+
+  /// No description provided for @liveMatchStartError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể bắt đầu trận đấu.'**
+  String get liveMatchStartError;
 
   /// No description provided for @liveStartShort.
   ///
@@ -14075,26 +14123,50 @@ abstract class AppLocalizations {
   /// No description provided for @quickCreateBracketSingle.
   ///
   /// In vi, this message translates to:
-  /// **'Đấu loại trực tiếp'**
+  /// **'Loại trực tiếp (Knockout)'**
   String get quickCreateBracketSingle;
+
+  /// No description provided for @quickCreateBracketSingleDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thua 1 trận bị loại ngay. Nhanh gọn, kịch tính.'**
+  String get quickCreateBracketSingleDesc;
 
   /// No description provided for @quickCreateBracketDouble.
   ///
   /// In vi, this message translates to:
-  /// **'Đấu loại kép'**
+  /// **'Nhánh thắng / Nhánh thua'**
   String get quickCreateBracketDouble;
+
+  /// No description provided for @quickCreateBracketDoubleDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có cơ hội sửa sai ở nhánh dưới. Nhiều trận hơn.'**
+  String get quickCreateBracketDoubleDesc;
 
   /// No description provided for @quickCreateBracketRoundRobin.
   ///
   /// In vi, this message translates to:
-  /// **'Vòng tròn'**
+  /// **'Vòng tròn tính điểm'**
   String get quickCreateBracketRoundRobin;
+
+  /// No description provided for @quickCreateBracketRoundRobinDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả các đội đều gặp nhau. Công bằng tối đa.'**
+  String get quickCreateBracketRoundRobinDesc;
 
   /// No description provided for @quickCreateBracketGroup.
   ///
   /// In vi, this message translates to:
-  /// **'Vòng bảng + Loại trực tiếp'**
+  /// **'Vòng bảng + Knockout'**
   String get quickCreateBracketGroup;
+
+  /// No description provided for @quickCreateBracketGroupDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia bảng đá vòng tròn, lấy đội đầu bảng vào knock-out.'**
+  String get quickCreateBracketGroupDesc;
 
   /// No description provided for @tournamentSettingsCategoryLabel.
   ///
@@ -14221,6 +14293,24 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đôi nam nữ'**
   String get tournamentCategoryMixedDoubles;
+
+  /// No description provided for @tournamentCategoryFootballMen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bóng đá Nam'**
+  String get tournamentCategoryFootballMen;
+
+  /// No description provided for @tournamentCategoryFootballWomen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bóng đá Nữ'**
+  String get tournamentCategoryFootballWomen;
+
+  /// No description provided for @tournamentCategoryFootballMixed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bóng đá Nam Nữ'**
+  String get tournamentCategoryFootballMixed;
 
   /// No description provided for @createClubTournament_formatSingles.
   ///

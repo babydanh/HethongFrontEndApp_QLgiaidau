@@ -360,6 +360,9 @@ class _LiveTournamentWithMatchesCardState
         match.team2Name.trim().toUpperCase() == 'TBD' ||
         match.team2Name.trim().toUpperCase() == 'BYE';
     final isByeMatch = match.isBye || isT1Tbd || isT2Tbd;
+    final cardScore = match.isLive
+        ? match.currentLiveScore
+        : SetScore(score1: match.score1, score2: match.score2);
 
     final bracketText = MatchRoundLabel.formatRound(
       match: match,
@@ -529,27 +532,19 @@ class _LiveTournamentWithMatchesCardState
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color:
-                            (match.sets.isNotEmpty
-                                ? match.sets.last.score1 >
-                                      match.sets.last.score2
-                                : match.score1 > match.score2)
+                        color: cardScore.score1 > cardScore.score2
                             ? AppTheme.primary.withValues(alpha: 0.12)
                             : colors.bgSurface,
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
-                          color:
-                              (match.sets.isNotEmpty
-                                  ? match.sets.last.score1 >
-                                        match.sets.last.score2
-                                  : match.score1 > match.score2)
+                          color: cardScore.score1 > cardScore.score2
                               ? AppTheme.primary.withValues(alpha: 0.4)
                               : colors.border,
                         ),
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        '${match.sets.isNotEmpty ? match.sets.last.score1 : match.score1}',
+                        '${cardScore.score1}',
                         style: TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w900,
@@ -618,27 +613,19 @@ class _LiveTournamentWithMatchesCardState
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color:
-                            (match.sets.isNotEmpty
-                                ? match.sets.last.score2 >
-                                      match.sets.last.score1
-                                : match.score2 > match.score1)
+                        color: cardScore.score2 > cardScore.score1
                             ? AppTheme.primary.withValues(alpha: 0.12)
                             : colors.bgSurface,
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
-                          color:
-                              (match.sets.isNotEmpty
-                                  ? match.sets.last.score2 >
-                                        match.sets.last.score1
-                                  : match.score2 > match.score1)
+                          color: cardScore.score2 > cardScore.score1
                               ? AppTheme.primary.withValues(alpha: 0.4)
                               : colors.border,
                         ),
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        '${match.sets.isNotEmpty ? match.sets.last.score2 : match.score2}',
+                        '${cardScore.score2}',
                         style: TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w900,
@@ -970,7 +957,7 @@ class _LiveTournamentWithMatchesCardState
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 6),
                       child: Text(
-                        '${match.score1} - ${match.score2}',
+                        '${match.currentLiveScore.score1} - ${match.currentLiveScore.score2}',
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w900,

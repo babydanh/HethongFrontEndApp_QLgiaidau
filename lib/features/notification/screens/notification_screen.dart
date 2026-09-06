@@ -492,13 +492,15 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       );
     }
     for (final t in workspace.coOrganizerTournaments) {
-      items.add(
-        _TournamentWithRole(
-          t,
-          l10n.notification_roleBtc,
-          const Color(0xFF2979FF),
-        ),
-      );
+      if (!items.any((i) => i.tournament.id == t.id)) {
+        items.add(
+          _TournamentWithRole(
+            t,
+            l10n.notification_roleBtc,
+            const Color(0xFF2979FF),
+          ),
+        );
+      }
     }
     for (final refInvite in workspace.refereeTournaments) {
       Tournament? t = workspace.organizedTournaments

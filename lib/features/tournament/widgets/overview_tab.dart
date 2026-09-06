@@ -142,23 +142,11 @@ class _OverviewTabState extends State<OverviewTab> {
 
 
   String _getBracketFormatLabel(String? bracketType, [String? fallbackBracketType]) {
-    final raw = (bracketType != null && bracketType.trim().isNotEmpty)
-        ? bracketType
-        : (fallbackBracketType ?? '');
-    final type = raw.toUpperCase();
-    if (type.contains('ROUND_ROBIN') || type.contains('ROBIN') || type.contains('VÒNG TRÒN')) {
-      return 'Vòng tròn tính điểm';
-    }
-    if (type.contains('GROUP_STAGE') || type.contains('GROUP') || type.contains('BẢNG')) {
-      return 'Vòng bảng + loại trực tiếp';
-    }
-    if (type.contains('DOUBLE_ELIMINATION') || type.contains('DOUBLE_ELIM') || type.contains('NHÁNH KÉP') || type.contains('THẮNG/THUA') || type.contains('THẮNG THUA')) {
-      return 'Nhánh thắng/thua';
-    }
-    if (type.contains('SINGLE_ELIMINATION') || type.contains('SINGLE') || type.contains('LOẠI TRỰC TIẾP')) {
-      return 'Loại trực tiếp';
-    }
-    return raw.isNotEmpty ? raw : 'Loại trực tiếp';
+    return BracketFormatIcons.getFormatLabel(
+      context,
+      bracketType,
+      fallbackBracketType,
+    );
   }
 
   void _scrollToDivisions() {
@@ -179,15 +167,18 @@ class _OverviewTabState extends State<OverviewTab> {
   }
 
   String _resolveFormatBadge(Tournament t) {
+    final l10n = AppLocalizations.of(context)!;
     final formatStr = (t.format).toLowerCase();
     final sportStr = (t.sport).toLowerCase();
     final isFootball = sportStr.contains('bóng đá') || sportStr.contains('football');
 
     if (isFootball) {
-      return 'Bóng đá 7 người';
+      return l10n.tournamentCategoryFootballMen;
     }
     final isDoubles = formatStr.contains('doubles') || formatStr.contains('đôi');
-    return isDoubles ? 'Đánh Đôi' : 'Đánh Đơn';
+    return isDoubles
+        ? l10n.createClubTournament_formatDoubles
+        : l10n.createClubTournament_formatSingles;
   }
 
   @override

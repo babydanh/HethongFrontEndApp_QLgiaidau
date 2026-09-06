@@ -489,7 +489,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           final tournamentId = state.uri.queryParameters['tournamentId'] ??
               ref.read(authProvider).tournamentId ??
               '';
-          final forceViewer = state.uri.queryParameters['viewer'] == 'true';
+          // Public/deep-link match entries always open the shared viewer page.
+          // The referee desk has explicit organizer/referee routes, so a
+          // scorer opening a card must not be sent straight into controls.
+          final forceViewer = state.uri.queryParameters['viewer'] != 'false';
           return LiveScoreScreen(
             tournamentId: tournamentId,
             matchId: matchId,

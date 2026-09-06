@@ -6,8 +6,8 @@ import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
+import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:intl/intl.dart';
 
 class ClubTournamentsScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -507,8 +507,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final name = t.name;
     final status = t.status;
-    final date = t.startDate != null ? DateTime.tryParse(t.startDate!) : null;
-    final dateStr = date != null ? DateFormat('dd/MM/yyyy').format(date) : '';
+    final dateStr = DateFormatterUtils.formatTournamentDate(t.startDate);
     final isLive = StatusHelper.isTournamentInProgress(status);
     final isLite = t.isLite;
 

@@ -26,7 +26,6 @@ class LiveMatchCardV2 extends StatefulWidget {
 }
 
 class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
-
   @override
   Widget build(BuildContext context) {
     return _buildCard(context);
@@ -36,15 +35,23 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardScore = widget.isLive
+        ? widget.match.currentLiveScore
+        : SetScore(score1: widget.match.score1, score2: widget.match.score2);
 
     final cardBorder = widget.isLive
-        ? Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.35), width: 1.2)
+        ? Border.all(
+            color: const Color(0xFFEF4444).withValues(alpha: 0.35),
+            width: 1.2,
+          )
         : Border.all(color: colors.border.withValues(alpha: 0.6), width: 1);
 
     final cardShadow = widget.isLive
         ? [
             BoxShadow(
-              color: const Color(0xFFEF4444).withValues(alpha: isDark ? 0.12 : 0.08),
+              color: const Color(
+                0xFFEF4444,
+              ).withValues(alpha: isDark ? 0.12 : 0.08),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -94,11 +101,13 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                           teamName: widget.match.team1Name,
                           teamLogoUrl: widget.match.team1LogoUrl,
                           members: widget.match.team1MemberInfos,
-                          score: widget.match.score1,
+                          score: cardScore.score1,
                           isWinner:
                               widget.isCompleted &&
                               widget.match.winnerId == widget.match.team1Id,
-                          isLeading: widget.isLive && widget.match.score1 > widget.match.score2,
+                          isLeading:
+                              widget.isLive &&
+                              cardScore.score1 > cardScore.score2,
                           alignment: CrossAxisAlignment.start,
                         ),
                       ),
@@ -113,11 +122,13 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                           teamName: widget.match.team2Name,
                           teamLogoUrl: widget.match.team2LogoUrl,
                           members: widget.match.team2MemberInfos,
-                          score: widget.match.score2,
+                          score: cardScore.score2,
                           isWinner:
                               widget.isCompleted &&
                               widget.match.winnerId == widget.match.team2Id,
-                          isLeading: widget.isLive && widget.match.score2 > widget.match.score1,
+                          isLeading:
+                              widget.isLive &&
+                              cardScore.score2 > cardScore.score1,
                           alignment: CrossAxisAlignment.end,
                         ),
                       ),
@@ -126,7 +137,8 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                 ),
 
                 // ─── Set Scores (nếu có) ───
-                if (widget.match.sets.isNotEmpty) _buildSetScores(context),
+                if (widget.match.scoreHistory.isNotEmpty)
+                  _buildSetScores(context),
 
                 // ─── Bottom Info ───
                 if (widget.match.scheduledTime != null ||
@@ -140,11 +152,12 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
     );
   }
 
-
   Widget _buildLiveBar(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final courtName = TournamentLocationFormatter.matchShortCourt(widget.match.court);
+    final courtName = TournamentLocationFormatter.matchShortCourt(
+      widget.match.court,
+    );
     final roundName = MatchRoundLabel.formatRound(
       match: widget.match,
       short: true,
@@ -155,10 +168,14 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF450A0A).withValues(alpha: 0.4) : const Color(0xFFFEF2F2),
+        color: isDark
+            ? const Color(0xFF450A0A).withValues(alpha: 0.4)
+            : const Color(0xFFFEF2F2),
         border: Border(
           bottom: BorderSide(
-            color: isDark ? const Color(0xFFEF4444).withValues(alpha: 0.2) : const Color(0xFFFEE2E2),
+            color: isDark
+                ? const Color(0xFFEF4444).withValues(alpha: 0.2)
+                : const Color(0xFFFEE2E2),
             width: 1,
           ),
         ),
@@ -183,13 +200,13 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 5.5,
-                  height: 5.5,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                )
+                      width: 5.5,
+                      height: 5.5,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    )
                     .animate(onPlay: (c) => c.repeat(reverse: true))
                     .scaleXY(begin: 0.7, end: 1.25, duration: 750.ms),
                 const SizedBox(width: 5),
@@ -267,7 +284,9 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
   Widget _buildCompletedBar(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    final courtName = TournamentLocationFormatter.matchShortCourt(widget.match.court);
+    final courtName = TournamentLocationFormatter.matchShortCourt(
+      widget.match.court,
+    );
     final roundName = MatchRoundLabel.formatRound(
       match: widget.match,
       short: true,
@@ -297,7 +316,11 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle_rounded, size: 11, color: colors.success),
+                Icon(
+                  Icons.check_circle_rounded,
+                  size: 11,
+                  color: colors.success,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   l10n.liveMatchCompletedStatus.toUpperCase(),
@@ -345,7 +368,9 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
       short: true,
       l10n: l10n,
     );
-    final courtName = TournamentLocationFormatter.matchShortCourt(widget.match.court);
+    final courtName = TournamentLocationFormatter.matchShortCourt(
+      widget.match.court,
+    );
 
     return Container(
       width: double.infinity,
@@ -387,10 +412,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
           if (courtName.isNotEmpty)
             Text(
               courtName,
-              style: TextStyle(
-                fontSize: 10,
-                color: colors.textMuted,
-              ),
+              style: TextStyle(fontSize: 10, color: colors.textMuted),
             ),
         ],
       ),
@@ -443,9 +465,9 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
     final colors = context.colors;
     final memberLabel = members.length == 2
         ? members
-            .map((member) => _lastNameWord(member.fullName))
-            .where((name) => name.isNotEmpty)
-            .join(' / ')
+              .map((member) => _lastNameWord(member.fullName))
+              .where((name) => name.isNotEmpty)
+              .join(' / ')
         : '';
     final displayLabel = members.length == 2 && memberLabel.isNotEmpty
         ? memberLabel
@@ -472,13 +494,17 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
           displayLabel,
           style: TextStyle(
             fontSize: 13,
-            fontWeight: isWinner || isLeading ? FontWeight.w800 : FontWeight.w600,
+            fontWeight: isWinner || isLeading
+                ? FontWeight.w800
+                : FontWeight.w600,
             color: isWinner
                 ? colors.success
                 : (isLeading ? const Color(0xFFDC2626) : colors.textPrimary),
             height: 1.25,
           ),
-          textAlign: alignment == CrossAxisAlignment.start ? TextAlign.left : TextAlign.right,
+          textAlign: alignment == CrossAxisAlignment.start
+              ? TextAlign.left
+              : TextAlign.right,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
@@ -508,13 +534,17 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
     required CrossAxisAlignment alignment,
   }) {
     final colors = context.colors;
-    final displayMembers = members.length == 2 ? members : const <MatchMemberInfo>[];
-    
+    final displayMembers = members.length == 2
+        ? members
+        : const <MatchMemberInfo>[];
+
     final borderColor = isWinner
         ? colors.success
         : (isLeading ? const Color(0xFFEF4444) : colors.border);
 
-    final fallbackInitial = teamName.isNotEmpty ? teamName[0].toUpperCase() : '?';
+    final fallbackInitial = teamName.isNotEmpty
+        ? teamName[0].toUpperCase()
+        : '?';
 
     Widget avatar({String? url, required String initial}) {
       return Container(
@@ -546,7 +576,9 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                     fontWeight: FontWeight.w800,
                     color: isWinner
                         ? colors.success
-                        : (isLeading ? const Color(0xFFDC2626) : colors.textPrimary),
+                        : (isLeading
+                              ? const Color(0xFFDC2626)
+                              : colors.textPrimary),
                   ),
                 ),
               ),
@@ -569,7 +601,9 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
               right: alignment == CrossAxisAlignment.end ? 0 : null,
               child: avatar(
                 url: m1.avatarUrl,
-                initial: m1.fullName.isNotEmpty ? m1.fullName[0].toUpperCase() : '?',
+                initial: m1.fullName.isNotEmpty
+                    ? m1.fullName[0].toUpperCase()
+                    : '?',
               ),
             ),
             Positioned(
@@ -577,7 +611,9 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
               right: alignment == CrossAxisAlignment.end ? 20 : null,
               child: avatar(
                 url: m2.avatarUrl,
-                initial: m2.fullName.isNotEmpty ? m2.fullName[0].toUpperCase() : '?',
+                initial: m2.fullName.isNotEmpty
+                    ? m2.fullName[0].toUpperCase()
+                    : '?',
               ),
             ),
           ],
@@ -605,7 +641,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
         spacing: 8,
         runSpacing: 4,
         children: [
-          for (int i = 0; i < widget.match.sets.length; i++) ...[
+          for (int i = 0; i < widget.match.scoreHistory.length; i++) ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
@@ -617,7 +653,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                 ),
               ),
               child: Text(
-                'S${i + 1}: ${widget.match.sets[i].score1} - ${widget.match.sets[i].score2}',
+                'S${i + 1}: ${widget.match.scoreHistory[i].score1} - ${widget.match.scoreHistory[i].score2}',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -643,11 +679,19 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.access_time_rounded, size: 12, color: colors.textMuted),
+                Icon(
+                  Icons.access_time_rounded,
+                  size: 12,
+                  color: colors.textMuted,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '${widget.match.scheduledTime!.hour.toString().padLeft(2, '0')}:${widget.match.scheduledTime!.minute.toString().padLeft(2, '0')}',
-                  style: TextStyle(fontSize: 11, color: colors.textMuted, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: colors.textMuted,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             )
@@ -661,7 +705,11 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                 const SizedBox(width: 4),
                 Text(
                   'TT: ${widget.match.refereeName}',
-                  style: TextStyle(fontSize: 11, color: colors.textMuted, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: colors.textMuted,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             )

@@ -34,6 +34,7 @@ class OrganizerOpsParticipant {
     required this.teamStatus,
     required this.isPaid,
     required this.members,
+    this.registeredByUserId,
     this.divisionId,
     this.seed,
     this.entryFee,
@@ -45,6 +46,7 @@ class OrganizerOpsParticipant {
   final String teamStatus;
   final bool isPaid;
   final List<OrganizerOpsMember> members;
+  final String? registeredByUserId;
   final String? divisionId;
   final int? seed;
   final double? entryFee;
@@ -75,6 +77,15 @@ class OrganizerOpsParticipant {
           (json['teamStatus'] ?? json['team_status'])?.toString() ?? 'PENDING',
       isPaid: json['isPaid'] == true || json['is_paid'] == true,
       members: members,
+      registeredByUserId:
+          (json['registeredBy'] is Map
+                  ? json['registeredBy']['id']
+                  : json['registeredBy'])
+              ?.toString() ??
+          (json['registeredByUser'] is Map
+                  ? json['registeredByUser']['id']
+                  : json['registeredByUser'])
+              ?.toString(),
       divisionId: (json['tournamentDivisionId'] ?? json['divisionId'])
           ?.toString(),
       seed: _toInt(json['seed']),

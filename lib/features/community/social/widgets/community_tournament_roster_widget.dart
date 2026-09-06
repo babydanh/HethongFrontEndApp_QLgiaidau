@@ -78,7 +78,9 @@ class _CommunityTournamentRosterWidgetState
       final repo = ref.read(tournamentRepositoryProvider);
       final results = await Future.wait([
         repo.getById(widget.tournamentId).catchError((_) => null),
-        repo.getPublicParticipants(widget.tournamentId).catchError((_) => <OrganizerOpsParticipant>[]),
+        repo
+            .getPublicParticipants(widget.tournamentId)
+            .catchError((_) => <OrganizerOpsParticipant>[]),
       ]);
 
       if (mounted) {
@@ -116,19 +118,23 @@ class _CommunityTournamentRosterWidgetState
 
   int _findCurrentParticipantIndex(String currentUserId) {
     if (currentUserId.isEmpty || _participants.isEmpty) return -1;
-    return _participants.indexWhere((p) =>
-        p.members.any((m) => m.userId == currentUserId));
+    return _participants.indexWhere(
+      (p) => p.members.any((m) => m.userId == currentUserId),
+    );
   }
 
   String _resolveFormatBadge() {
     final formatStr = (_tournament?.format ?? '').toLowerCase();
-    final sportStr = (_tournament?.sport ?? widget.categoryName ?? '').toLowerCase();
-    final isFootball = sportStr.contains('bóng đá') || sportStr.contains('football');
+    final sportStr = (_tournament?.sport ?? widget.categoryName ?? '')
+        .toLowerCase();
+    final isFootball =
+        sportStr.contains('bóng đá') || sportStr.contains('football');
 
     if (isFootball) {
       return 'Bóng đá 7 người';
     }
-    final isDoubles = formatStr.contains('doubles') || formatStr.contains('đôi');
+    final isDoubles =
+        formatStr.contains('doubles') || formatStr.contains('đôi');
     return isDoubles ? 'Đánh Đôi' : 'Đánh Đơn';
   }
 
@@ -136,9 +142,13 @@ class _CommunityTournamentRosterWidgetState
     final authState = ref.read(authProvider);
     final userProfile = ref.read(userProfileProvider).asData?.value;
 
-    if (!authState.isAuthenticated || userProfile == null || userProfile.id.isEmpty) {
+    if (!authState.isAuthenticated ||
+        userProfile == null ||
+        userProfile.id.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng đăng nhập để xác nhận tham gia')),
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập để xác nhận tham gia'),
+        ),
       );
       return;
     }
@@ -173,7 +183,9 @@ class _CommunityTournamentRosterWidgetState
         final name = userProfile.fullName;
         await repo.registerParticipant(
           tournamentId: widget.tournamentId,
-          teamName: (name != null && name.trim().isNotEmpty) ? name.trim() : 'VĐV',
+          teamName: (name != null && name.trim().isNotEmpty)
+              ? name.trim()
+              : 'VĐV',
         );
       }
       if (mounted) {
@@ -189,7 +201,9 @@ class _CommunityTournamentRosterWidgetState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ErrorParser.parse(e, 'Không thể xác nhận tham gia giải đấu')),
+            content: Text(
+              ErrorParser.parse(e, 'Không thể xác nhận tham gia giải đấu'),
+            ),
             backgroundColor: const Color(0xFFEF4444),
           ),
         );
@@ -199,15 +213,22 @@ class _CommunityTournamentRosterWidgetState
     }
   }
 
-  Future<void> _confirmWithdrawDialog(OrganizerOpsParticipant participant) async {
-    final tournamentName = _tournament?.name ?? widget.initialTournamentName ?? 'Giải đấu';
+  Future<void> _confirmWithdrawDialog(
+    OrganizerOpsParticipant participant,
+  ) async {
+    final tournamentName =
+        _tournament?.name ?? widget.initialTournamentName ?? 'Giải đấu';
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Color(0xFFEF4444), size: 24),
+            Icon(
+              Icons.warning_amber_rounded,
+              color: Color(0xFFEF4444),
+              size: 24,
+            ),
             SizedBox(width: 8),
             Text(
               'Hủy tham gia giải đấu',
@@ -222,16 +243,24 @@ class _CommunityTournamentRosterWidgetState
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Hủy bỏ', style: TextStyle(color: Color(0xFF64748B))),
+            child: const Text(
+              'Hủy bỏ',
+              style: TextStyle(color: Color(0xFF64748B)),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFEF4444),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Xác nhận rút lui', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Xác nhận rút lui',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -263,7 +292,8 @@ class _CommunityTournamentRosterWidgetState
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final tournamentName = _tournament?.name ?? widget.initialTournamentName ?? 'Giải đấu';
+    final tournamentName =
+        _tournament?.name ?? widget.initialTournamentName ?? 'Giải đấu';
     final effectiveMaxParticipants =
         _tournament?.divisions.firstOrNull?.maxParticipants ??
         _tournament?.maxTeams ??
@@ -300,14 +330,16 @@ class _CommunityTournamentRosterWidgetState
     final List<_RosterSlotItem> rosterItems = [];
     for (final p in _participants) {
       if (p.members.isEmpty) {
-        rosterItems.add(_RosterSlotItem(
-          participant: p,
-          member: null,
-          displayName: p.teamName,
-          avatarUrl: null,
-          userId: '',
-          partnerName: null,
-        ));
+        rosterItems.add(
+          _RosterSlotItem(
+            participant: p,
+            member: null,
+            displayName: p.teamName,
+            avatarUrl: null,
+            userId: '',
+            partnerName: null,
+          ),
+        );
       } else {
         final isPaired = p.members.length >= 2;
         for (int i = 0; i < p.members.length; i++) {
@@ -315,14 +347,16 @@ class _CommunityTournamentRosterWidgetState
           final partner = isPaired
               ? (i == 0 ? p.members[1].fullName : p.members[0].fullName)
               : null;
-          rosterItems.add(_RosterSlotItem(
-            participant: p,
-            member: m,
-            displayName: m.fullName.isNotEmpty ? m.fullName : p.teamName,
-            avatarUrl: m.avatarUrl,
-            userId: m.userId,
-            partnerName: partner,
-          ));
+          rosterItems.add(
+            _RosterSlotItem(
+              participant: p,
+              member: m,
+              displayName: m.fullName.isNotEmpty ? m.fullName : p.teamName,
+              avatarUrl: m.avatarUrl,
+              userId: m.userId,
+              partnerName: partner,
+            ),
+          );
         }
       }
     }
@@ -340,7 +374,9 @@ class _CommunityTournamentRosterWidgetState
         ? rosterItems.indexWhere((item) => item.userId == currentUserId)
         : -1;
     final isUserRegistered = userSlotIndex >= 0;
-    final userPage = isUserRegistered ? (userSlotIndex ~/ _kSlotsPerPage) + 1 : null;
+    final userPage = isUserRegistered
+        ? (userSlotIndex ~/ _kSlotsPerPage) + 1
+        : null;
 
     final formatBadge = _resolveFormatBadge();
 
@@ -365,19 +401,38 @@ class _CommunityTournamentRosterWidgetState
           if (widget.showTopBar)
             GestureDetector(
               onTap: () {
+                if (_tournament == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Bạn không có quyền xem chi tiết giải đấu này.',
+                      ),
+                    ),
+                  );
+                  return;
+                }
                 if (widget.tournamentId.isNotEmpty) {
-                  final inviteParam = (widget.inviteCode != null && widget.inviteCode!.isNotEmpty)
+                  final inviteParam =
+                      (widget.inviteCode != null &&
+                          widget.inviteCode!.isNotEmpty)
                       ? '?invite=${widget.inviteCode}'
                       : '';
-                  context.push('/tournaments/${widget.tournamentId}$inviteParam');
+                  context.push(
+                    '/tournaments/${widget.tournamentId}$inviteParam',
+                  );
                 }
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: const BoxDecoration(
                   color: Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-                  border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1)),
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -387,7 +442,10 @@ class _CommunityTournamentRosterWidgetState
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                        border: Border.all(
+                          color: const Color(0xFFE2E8F0),
+                          width: 1,
+                        ),
                       ),
                       child: ClipOval(
                         child: Image.asset(
@@ -424,7 +482,10 @@ class _CommunityTournamentRosterWidgetState
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.primary,
                         borderRadius: BorderRadius.circular(8),
@@ -441,7 +502,11 @@ class _CommunityTournamentRosterWidgetState
                             ),
                           ),
                           SizedBox(width: 3),
-                          Icon(Icons.arrow_outward_rounded, size: 13, color: Colors.white),
+                          Icon(
+                            Icons.arrow_outward_rounded,
+                            size: 13,
+                            color: Colors.white,
+                          ),
                         ],
                       ),
                     ),
@@ -472,11 +537,17 @@ class _CommunityTournamentRosterWidgetState
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFEFF6FF),
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: const Color(0xFFDBEAFE), width: 0.8),
+                            border: Border.all(
+                              color: const Color(0xFFDBEAFE),
+                              width: 0.8,
+                            ),
                           ),
                           child: Text(
                             formatBadge,
@@ -504,11 +575,17 @@ class _CommunityTournamentRosterWidgetState
                 if (userPage != null && userPage != safePage) ...[
                   const SizedBox(height: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEFF6FF),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFBFDBFE), width: 0.8),
+                      border: Border.all(
+                        color: const Color(0xFFBFDBFE),
+                        width: 0.8,
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -558,7 +635,9 @@ class _CommunityTournamentRosterWidgetState
                       final item = rosterItems[globalSlotIndex];
                       final participant = item.participant;
                       final displayName = item.displayName;
-                      final isSelf = currentUserId.isNotEmpty && item.userId == currentUserId;
+                      final isSelf =
+                          currentUserId.isNotEmpty &&
+                          item.userId == currentUserId;
                       final avatarUrl = item.avatarUrl;
                       final partnerName = item.partnerName;
 
@@ -578,32 +657,43 @@ class _CommunityTournamentRosterWidgetState
                                     color: _getColorByName(displayName),
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: isSelf ? const Color(0xFF3B82F6) : Colors.white,
+                                      color: isSelf
+                                          ? const Color(0xFF3B82F6)
+                                          : Colors.white,
                                       width: 2,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.08),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.08,
+                                        ),
                                         blurRadius: 6,
                                         offset: const Offset(0, 2),
                                       ),
                                     ],
                                   ),
                                   child: ClipOval(
-                                    child: avatarUrl != null && avatarUrl.isNotEmpty
+                                    child:
+                                        avatarUrl != null &&
+                                            avatarUrl.isNotEmpty
                                         ? Image.network(
                                             avatarUrl,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stackTrace) => Center(
-                                              child: Text(
-                                                _getInitials(displayName),
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w800,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ),
+                                            errorBuilder:
+                                                (context, error, stackTrace) =>
+                                                    Center(
+                                                      child: Text(
+                                                        _getInitials(
+                                                          displayName,
+                                                        ),
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                          fontSize: 14,
+                                                        ),
+                                                      ),
+                                                    ),
                                           )
                                         : Center(
                                             child: Text(
@@ -628,7 +718,11 @@ class _CommunityTournamentRosterWidgetState
                                         color: Color(0xFFEF4444),
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(Icons.close_rounded, size: 12, color: Colors.white),
+                                      child: const Icon(
+                                        Icons.close_rounded,
+                                        size: 12,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                               ],
@@ -654,7 +748,8 @@ class _CommunityTournamentRosterWidgetState
                                   color: Color(0xFF94A3B8),
                                 ),
                               )
-                            else if (partnerName != null && partnerName.isNotEmpty)
+                            else if (partnerName != null &&
+                                partnerName.isNotEmpty)
                               Text(
                                 'Cặp: $partnerName',
                                 maxLines: 1,
@@ -693,9 +788,15 @@ class _CommunityTournamentRosterWidgetState
                                   ? const SizedBox(
                                       width: 16,
                                       height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
                                     )
-                                  : const Icon(Icons.add_rounded, size: 22, color: Color(0xFF94A3B8)),
+                                  : const Icon(
+                                      Icons.add_rounded,
+                                      size: 22,
+                                      color: Color(0xFF94A3B8),
+                                    ),
                             ),
                           ),
                           const SizedBox(height: 5),
@@ -734,16 +835,25 @@ class _CommunityTournamentRosterWidgetState
                           // Prev
                           InkWell(
                             onTap: safePage > 1
-                                ? () => setState(() => _currentPage = safePage - 1)
+                                ? () => setState(
+                                    () => _currentPage = safePage - 1,
+                                  )
                                 : null,
                             borderRadius: BorderRadius.circular(6),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: safePage > 1 ? Colors.white : const Color(0xFFF1F5F9),
+                                color: safePage > 1
+                                    ? Colors.white
+                                    : const Color(0xFFF1F5F9),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: safePage > 1 ? const Color(0xFFE2E8F0) : const Color(0xFFF1F5F9),
+                                  color: safePage > 1
+                                      ? const Color(0xFFE2E8F0)
+                                      : const Color(0xFFF1F5F9),
                                 ),
                               ),
                               child: Text(
@@ -751,7 +861,9 @@ class _CommunityTournamentRosterWidgetState
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
-                                  color: safePage > 1 ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                                  color: safePage > 1
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFCBD5E1),
                                 ),
                               ),
                             ),
@@ -765,18 +877,25 @@ class _CommunityTournamentRosterWidgetState
                             final hasUser = pageNum == userPage;
 
                             return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 2,
+                              ),
                               child: GestureDetector(
-                                onTap: () => setState(() => _currentPage = pageNum),
+                                onTap: () =>
+                                    setState(() => _currentPage = pageNum),
                                 child: Stack(
                                   clipBehavior: Clip.none,
                                   children: [
                                     Container(
-                                      constraints: const BoxConstraints(minWidth: 26),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 26,
+                                      ),
                                       height: 26,
                                       alignment: Alignment.center,
                                       decoration: BoxDecoration(
-                                        color: isActive ? const Color(0xFF2563EB) : const Color(0xFFF1F5F9),
+                                        color: isActive
+                                            ? const Color(0xFF2563EB)
+                                            : const Color(0xFFF1F5F9),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
@@ -784,7 +903,9 @@ class _CommunityTournamentRosterWidgetState
                                         style: TextStyle(
                                           fontSize: 11,
                                           fontWeight: FontWeight.w800,
-                                          color: isActive ? Colors.white : const Color(0xFF475569),
+                                          color: isActive
+                                              ? Colors.white
+                                              : const Color(0xFF475569),
                                         ),
                                       ),
                                     ),
@@ -812,16 +933,25 @@ class _CommunityTournamentRosterWidgetState
                           // Next
                           InkWell(
                             onTap: safePage < totalPages
-                                ? () => setState(() => _currentPage = safePage + 1)
+                                ? () => setState(
+                                    () => _currentPage = safePage + 1,
+                                  )
                                 : null,
                             borderRadius: BorderRadius.circular(6),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: safePage < totalPages ? Colors.white : const Color(0xFFF1F5F9),
+                                color: safePage < totalPages
+                                    ? Colors.white
+                                    : const Color(0xFFF1F5F9),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: safePage < totalPages ? const Color(0xFFE2E8F0) : const Color(0xFFF1F5F9),
+                                  color: safePage < totalPages
+                                      ? const Color(0xFFE2E8F0)
+                                      : const Color(0xFFF1F5F9),
                                 ),
                               ),
                               child: Text(
@@ -829,7 +959,9 @@ class _CommunityTournamentRosterWidgetState
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
-                                  color: safePage < totalPages ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                                  color: safePage < totalPages
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFCBD5E1),
                                 ),
                               ),
                             ),

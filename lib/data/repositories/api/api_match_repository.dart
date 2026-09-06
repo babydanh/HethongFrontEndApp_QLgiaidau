@@ -18,16 +18,44 @@ Map<String, dynamic>? _readSportRules(Map<String, dynamic> json) {
     return value is Map ? Map<String, dynamic>.from(value) : null;
   }
 
+  Map<String, dynamic>? tournamentConfig(Map<String, dynamic>? tournament) {
+    return asMap(json['tournamentConfig']) ??
+        asMap(tournament?['tournamentConfig']);
+  }
+
+  Map<String, dynamic>? carryOpenScoringMarker(
+    Map<String, dynamic>? rules,
+    Map<String, dynamic>? config,
+  ) {
+    if (rules == null || config == null) return rules;
+    final marker =
+        config['scoringMode'] ??
+        config['scoring_mode'] ??
+        config['rulesPreset'];
+    if (marker == null ||
+        rules.containsKey('scoringMode') ||
+        rules.containsKey('scoring_mode') ||
+        rules.containsKey('rulesPreset')) {
+      return rules;
+    }
+    // Match snapshots often carry sportRules and tournamentConfig separately.
+    // Preserve the scoring contract in the same map so an older socket/list
+    // payload cannot silently resolve an open Quick/Lite match as BO3.
+    return {...rules, 'scoringMode': marker};
+  }
+
+  final tournament = asMap(json['tournament']);
+  final config = tournamentConfig(tournament);
   final effectiveRules = asMap(json['effectiveSportRules']);
   if (effectiveRules != null && effectiveRules.isNotEmpty) {
-    return effectiveRules;
+    return carryOpenScoringMarker(effectiveRules, config);
   }
   final matchRules = asMap(json['sportRules']);
   if (matchRules != null && matchRules.isNotEmpty) {
-    return matchRules;
+    return carryOpenScoringMarker(matchRules, config);
   }
-  final tournament = asMap(json['tournament']);
-  return asMap(tournament?['sportRules']) ??
+  final tournamentRules =
+      asMap(tournament?['sportRules']) ??
       asMap(
         tournament?['tournamentConfig'] is Map
             ? (tournament?['tournamentConfig'] as Map)['sportRules']
@@ -38,6 +66,7 @@ Map<String, dynamic>? _readSportRules(Map<String, dynamic> json) {
             ? (json['tournamentConfig'] as Map)['sportRules']
             : null,
       );
+  return carryOpenScoringMarker(tournamentRules, config);
 }
 
 class ApiMatchRepository implements IMatchRepository {
@@ -889,10 +918,13 @@ class ApiMatchRepository implements IMatchRepository {
     int? maxScore,
     int? timeLimitMinutes,
     String? refereeName,
+    bool useLiteParticipantAccess = false,
   }) async {
     _log.info('Starting match $matchId via API');
     await _dioClient.dio.patch(
-      '/matches/$matchId/status',
+      useLiteParticipantAccess
+          ? '/matches/$matchId/lite-status'
+          : '/matches/$matchId/status',
       data: {'status': 'ONGOING'},
     );
   }
@@ -927,6 +959,7 @@ class ApiMatchRepository implements IMatchRepository {
     String? winnerId,
     String? overrideReason,
     int? expectedRevision,
+    bool useLiteParticipantAccess = false,
   }) async {
     _log.info(
       'Updating score details for match $matchId: sets=$p1SetsWon-$p2SetsWon',
@@ -946,7 +979,12 @@ class ApiMatchRepository implements IMatchRepository {
     }
 
     try {
-      await _dioClient.dio.patch('/matches/$matchId/score', data: payload);
+      await _dioClient.dio.patch(
+        useLiteParticipantAccess
+            ? '/matches/$matchId/lite-score'
+            : '/matches/$matchId/score',
+        data: payload,
+      );
     } on DioException catch (error) {
       final body = error.response?.data;
       final rawMessage = body is Map ? body['message'] : null;

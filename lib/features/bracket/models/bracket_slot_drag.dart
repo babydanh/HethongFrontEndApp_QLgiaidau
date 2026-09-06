@@ -45,3 +45,6 @@ typedef BracketSlotDropCallback =
       BracketSlotDragData source,
       BracketSlotDragData target,
     );
+
+typedef BracketSlotUnassignCallback =
+    Future<void> Function(BracketSlotDragData slot);

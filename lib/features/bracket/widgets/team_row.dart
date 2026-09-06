@@ -16,6 +16,7 @@ class TeamRow extends StatelessWidget {
   final TextStyle? nameStyle;
   final double rowHeight;
   final int maxSetsCount;
+  final Widget? trailing;
 
   const TeamRow({
     super.key,
@@ -31,6 +32,7 @@ class TeamRow extends StatelessWidget {
     this.nameStyle,
     this.rowHeight = 24,
     this.maxSetsCount = 0,
+    this.trailing,
   });
 
   @override
@@ -95,7 +97,8 @@ class TeamRow extends StatelessWidget {
             Expanded(
               child: Text(
                 name,
-                style: nameStyle ??
+                style:
+                    nameStyle ??
                     TextStyle(
                       fontSize: 11,
                       fontWeight: isWinner ? FontWeight.w800 : FontWeight.w500,
@@ -115,41 +118,51 @@ class TeamRow extends StatelessWidget {
             if (hasSetDetails)
               Row(
                 mainAxisSize: MainAxisSize.min,
-                children: List.generate(maxSetsCount > 0 ? maxSetsCount : sets!.length, (index) {
-                  final s = (index < sets!.length) ? sets![index] : null;
-                  final oppS = (opponentSets != null && index < opponentSets!.length) ? opponentSets![index] : null;
-                  final isSetWon = s != null && oppS != null && s > oppS;
-                  return Container(
-                    width: 24,
-                    height: 20,
-                    margin: const EdgeInsets.only(left: 3),
-                    decoration: BoxDecoration(
-                      color: s != null
-                          ? (isSetWon
-                              ? colors.success.withValues(alpha: 0.15)
-                              : colors.bgSurface)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(4),
-                      border: s != null
-                          ? Border.all(
-                              color: isSetWon
-                                  ? colors.success.withValues(alpha: 0.5)
-                                  : colors.border,
-                            )
-                          : null,
-                    ),
-                    child: Center(
-                      child: Text(
-                        s != null ? '$s' : '',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: isSetWon ? FontWeight.w900 : FontWeight.w600,
-                          color: isSetWon ? colors.success : colors.textSecondary,
+                children: List.generate(
+                  maxSetsCount > 0 ? maxSetsCount : sets!.length,
+                  (index) {
+                    final s = (index < sets!.length) ? sets![index] : null;
+                    final oppS =
+                        (opponentSets != null && index < opponentSets!.length)
+                        ? opponentSets![index]
+                        : null;
+                    final isSetWon = s != null && oppS != null && s > oppS;
+                    return Container(
+                      width: 24,
+                      height: 20,
+                      margin: const EdgeInsets.only(left: 3),
+                      decoration: BoxDecoration(
+                        color: s != null
+                            ? (isSetWon
+                                  ? colors.success.withValues(alpha: 0.15)
+                                  : colors.bgSurface)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(4),
+                        border: s != null
+                            ? Border.all(
+                                color: isSetWon
+                                    ? colors.success.withValues(alpha: 0.5)
+                                    : colors.border,
+                              )
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          s != null ? '$s' : '',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: isSetWon
+                                ? FontWeight.w900
+                                : FontWeight.w600,
+                            color: isSetWon
+                                ? colors.success
+                                : colors.textSecondary,
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  },
+                ),
               )
             else if (!isBye)
               Container(
@@ -157,10 +170,14 @@ class TeamRow extends StatelessWidget {
                 height: 20,
                 margin: const EdgeInsets.only(left: 3),
                 decoration: BoxDecoration(
-                  color: isWinner ? colors.success.withValues(alpha: 0.15) : colors.bgSurface,
+                  color: isWinner
+                      ? colors.success.withValues(alpha: 0.15)
+                      : colors.bgSurface,
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(
-                    color: isWinner ? colors.success.withValues(alpha: 0.5) : colors.border,
+                    color: isWinner
+                        ? colors.success.withValues(alpha: 0.5)
+                        : colors.border,
                   ),
                 ),
                 child: Center(
@@ -174,6 +191,8 @@ class TeamRow extends StatelessWidget {
                   ),
                 ),
               ),
+
+            if (trailing != null) ...[const SizedBox(width: 3), trailing!],
           ],
         ),
       ),

@@ -11,6 +11,7 @@ class MatchCardLive extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final liveScore = match.currentLiveScore;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -43,13 +44,15 @@ class MatchCardLive extends StatelessWidget {
               children: [
                 Icon(Icons.fiber_manual_record, size: 10, color: Colors.white),
                 SizedBox(width: 6),
-                Text(l10n.liveLiveBadge,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: 2,
-                    )),
+                Text(
+                  l10n.liveLiveBadge,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 2,
+                  ),
+                ),
               ],
             ),
           ),
@@ -74,7 +77,7 @@ class MatchCardLive extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        '${match.score1}',
+                        '${liveScore.score1}',
                         style: TextStyle(
                           fontSize: 56,
                           fontWeight: FontWeight.w800,
@@ -124,7 +127,7 @@ class MatchCardLive extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        '${match.score2}',
+                        '${liveScore.score2}',
                         style: TextStyle(
                           fontSize: 56,
                           fontWeight: FontWeight.w800,

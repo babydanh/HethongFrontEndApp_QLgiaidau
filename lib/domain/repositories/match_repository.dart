@@ -42,6 +42,7 @@ abstract class IMatchRepository {
     int? maxScore,
     int? timeLimitMinutes,
     String? refereeName,
+    bool useLiteParticipantAccess = false,
   });
 
   Future<void> completeMatch(
@@ -65,6 +66,7 @@ abstract class IMatchRepository {
     String? winnerId,
     String? overrideReason,
     int? expectedRevision,
+    bool useLiteParticipantAccess = false,
   });
 
   Future<void> advanceWinner(

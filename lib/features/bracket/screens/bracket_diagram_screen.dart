@@ -129,6 +129,52 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
     await _fetchBracket();
   }
 
+  Future<void> _unassignBracketSlot(BracketSlotDragData slot) async {
+    if (!slot.hasParticipant || !widget.canEditBracket) return;
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.lite_unassignBracketTitle),
+        content: Text(l10n.lite_unassignBracketContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.lite_keepPair),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.lite_unassignBracket),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await ref
+          .read(tournamentRepositoryProvider)
+          .updateBracketSlots(
+            widget.tournamentId,
+            divisionId: widget.divisionId,
+            operations: [
+              {
+                'operation': 'UNASSIGN',
+                'matchId': slot.matchId,
+                'slot': slot.slot,
+              },
+            ],
+            isLite: widget.isLite,
+          );
+      await _fetchBracket();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.singleElimUpdateError(error.toString()))),
+      );
+    }
+  }
+
   @override
   void dispose() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -240,6 +286,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         isReadOnly: widget.isReadOnly,
         isEditable: widget.canEditBracket,
         onSlotDrop: _updateBracketSlots,
+        onUnassignSlot: _unassignBracketSlot,
         onDoubleTapMatch: widget.canEditBracket ? _handleDoubleTapMatch : null,
       );
     }
@@ -259,6 +306,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
           isReadOnly: widget.isReadOnly,
           isEditable: widget.canEditBracket,
           onSlotDrop: _updateBracketSlots,
+          onUnassignSlot: _unassignBracketSlot,
           onDoubleTapMatch: widget.canEditBracket
               ? _handleDoubleTapMatch
               : null,
@@ -271,6 +319,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         isReadOnly: widget.isReadOnly,
         isEditable: widget.canEditBracket,
         onSlotDrop: _updateBracketSlots,
+        onUnassignSlot: _unassignBracketSlot,
         onDoubleTapMatch: widget.canEditBracket ? _handleDoubleTapMatch : null,
       );
     }
@@ -283,6 +332,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
       isReadOnly: widget.isReadOnly,
       isEditable: widget.canEditBracket,
       onSlotDrop: _updateBracketSlots,
+      onUnassignSlot: _unassignBracketSlot,
       onDoubleTapMatch: widget.canEditBracket ? _handleDoubleTapMatch : null,
     );
   }

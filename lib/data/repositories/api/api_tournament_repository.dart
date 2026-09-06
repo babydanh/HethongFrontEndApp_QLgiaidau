@@ -222,11 +222,16 @@ class ApiTournamentRepository implements ITournamentRepository {
             // Sponsors are optional and must not block tournament detail loading.
           }
 
-          final rawDivisions = (data['divisions'] is List) ? List<dynamic>.from(data['divisions'] as List) : <dynamic>[];
-          final rawDivResponseData = (divResponse != null && divResponse.statusCode == 200)
+          final rawDivisions = (data['divisions'] is List)
+              ? List<dynamic>.from(data['divisions'] as List)
+              : <dynamic>[];
+          final rawDivResponseData =
+              (divResponse != null && divResponse.statusCode == 200)
               ? (divResponse.data['data'] ?? divResponse.data)
               : null;
-          final detailedDivList = (rawDivResponseData is List) ? List<dynamic>.from(rawDivResponseData) : <dynamic>[];
+          final detailedDivList = (rawDivResponseData is List)
+              ? List<dynamic>.from(rawDivResponseData)
+              : <dynamic>[];
 
           if (rawDivisions.isEmpty && detailedDivList.isNotEmpty) {
             data['divisions'] = detailedDivList;
@@ -235,7 +240,9 @@ class ApiTournamentRepository implements ITournamentRepository {
             for (final d in detailedDivList) {
               if (d is Map) {
                 final id = d['id']?.toString() ?? '';
-                if (id.isNotEmpty) detailedMap[id] = Map<String, dynamic>.from(d);
+                if (id.isNotEmpty) {
+                  detailedMap[id] = Map<String, dynamic>.from(d);
+                }
               }
             }
             data['divisions'] = rawDivisions.map((item) {
@@ -243,10 +250,7 @@ class ApiTournamentRepository implements ITournamentRepository {
                 final id = item['id']?.toString() ?? '';
                 final detail = detailedMap[id];
                 if (detail != null) {
-                  return {
-                    ...Map<String, dynamic>.from(item),
-                    ...detail,
-                  };
+                  return {...Map<String, dynamic>.from(item), ...detail};
                 }
               }
               return item;
@@ -267,7 +271,8 @@ class ApiTournamentRepository implements ITournamentRepository {
               ? e.response?.data['message']?.toString()
               : null;
           throw TournamentAccessDeniedException(
-            message: serverMsg ??
+            message:
+                serverMsg ??
                 'Giải đấu nội bộ chỉ dành cho thành viên của Câu Lạc Bộ.',
           );
         }
@@ -559,7 +564,9 @@ class ApiTournamentRepository implements ITournamentRepository {
   }
 
   @override
-  Future<List<OrganizerOpsParticipant>> getPublicParticipants(String tournamentId) async {
+  Future<List<OrganizerOpsParticipant>> getPublicParticipants(
+    String tournamentId,
+  ) async {
     try {
       final response = await _dioClient.dio.get(
         '/tournaments/$tournamentId/participants',
@@ -570,8 +577,18 @@ class ApiTournamentRepository implements ITournamentRepository {
       if (data is! List) return const [];
       return data
           .whereType<Map>()
-          .map((item) => OrganizerOpsParticipant.fromJson(Map<String, dynamic>.from(item)))
-          .where((p) => !['WITHDRAWN', 'REJECTED', 'CANCELLED'].contains(p.teamStatus.toUpperCase()))
+          .map(
+            (item) => OrganizerOpsParticipant.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
+          .where(
+            (p) => ![
+              'WITHDRAWN',
+              'REJECTED',
+              'CANCELLED',
+            ].contains(p.teamStatus.toUpperCase()),
+          )
           .toList();
     } catch (_) {
       return const [];
@@ -674,6 +691,12 @@ class ApiTournamentRepository implements ITournamentRepository {
         if (updated != null) lastKnown = updated;
         if (!updates.isClosed) updates.add(lastKnown);
       } catch (error, stack) {
+        if (error is TournamentAccessDeniedException) {
+          // Do not keep rendering a previously cached snapshot after the
+          // backend revokes access to a club/private tournament.
+          if (!updates.isClosed) updates.addError(error, stack);
+          return;
+        }
         _log.error(
           'Keeping cached tournament after realtime refresh failure',
           error,
@@ -814,11 +837,8 @@ class ApiTournamentRepository implements ITournamentRepository {
   }
 
   @override
-  Future<({
-    List<Tournament> tournaments,
-    String? nextCursor,
-    bool hasMore,
-  })> getPublicTournamentsPaged({
+  Future<({List<Tournament> tournaments, String? nextCursor, bool hasMore})>
+  getPublicTournamentsPaged({
     String? cursor,
     int limit = 6,
     String? sport,
@@ -886,18 +906,15 @@ class ApiTournamentRepository implements ITournamentRepository {
         final meta = raw is Map && raw['meta'] is Map
             ? Map<String, dynamic>.from(raw['meta'] as Map)
             : const <String, dynamic>{};
-        final nextCursor = meta['nextCursor']?.toString() ??
+        final nextCursor =
+            meta['nextCursor']?.toString() ??
             (raw is Map ? raw['nextCursor']?.toString() : null);
         final hasMore =
             meta['hasNext'] == true ||
             meta['hasMore'] == true ||
             (nextCursor != null && nextCursor.isNotEmpty);
 
-        return (
-          tournaments: parsed,
-          nextCursor: nextCursor,
-          hasMore: hasMore,
-        );
+        return (tournaments: parsed, nextCursor: nextCursor, hasMore: hasMore);
       }
       return (tournaments: <Tournament>[], nextCursor: null, hasMore: false);
     } catch (e, stack) {
@@ -1122,11 +1139,74 @@ class ApiTournamentRepository implements ITournamentRepository {
   Stream<List<MatchModel>> watchBracketMatches(
     String tournamentId, {
     String? divisionId,
-  }) async* {
-    yield await getBracketMatches(tournamentId, divisionId: divisionId);
-    yield* Stream.periodic(
-      const Duration(seconds: 30),
-    ).asyncMap((_) => getBracketMatches(tournamentId, divisionId: divisionId));
+  }) {
+    final updates = StreamController<List<MatchModel>>();
+    final socketService = _matchSocketService;
+    StreamSubscription<Map<String, dynamic>>? matchUpdateSubscription;
+    Timer? refreshTimer;
+    var refreshing = false;
+    var refreshQueued = false;
+
+    Future<void> refresh() async {
+      if (refreshing) {
+        refreshQueued = true;
+        return;
+      }
+      refreshing = true;
+      try {
+        final snapshot = await getBracketMatches(
+          tournamentId,
+          divisionId: divisionId,
+        );
+        if (!updates.isClosed) updates.add(snapshot);
+      } catch (error, stack) {
+        // Keep the last bracket visible after a dropped socket/reconciliation
+        // request. The next socket event or timer tick retries it.
+        _log.error('Error refreshing bracket after match update', error, stack);
+      } finally {
+        refreshing = false;
+        if (refreshQueued && !updates.isClosed) {
+          refreshQueued = false;
+          unawaited(refresh());
+        }
+      }
+    }
+
+    updates.onListen = () {
+      if (socketService != null) {
+        // The backend emits match:update to the tournament room after every
+        // score/status write, so the bracket re-reads the authoritative
+        // projection instead of trying to merge a partial match payload.
+        matchUpdateSubscription = socketService.onTournamentMatchUpdate
+            .where(
+              (payload) =>
+                  payload['tournamentId']?.toString() == tournamentId &&
+                  (divisionId == null ||
+                      divisionId.isEmpty ||
+                      payload['divisionId']?.toString() == divisionId),
+            )
+            .listen((_) => unawaited(refresh()));
+        socketService.connect(null, joinMatch: false);
+        socketService.joinTournament(tournamentId);
+      }
+
+      unawaited(refresh());
+      // Polling remains as a recovery path for a missed socket event or an
+      // older backend node that does not broadcast tournament match:update.
+      refreshTimer = Timer.periodic(
+        const Duration(seconds: 30),
+        (_) => unawaited(refresh()),
+      );
+    };
+
+    updates.onCancel = () async {
+      refreshTimer?.cancel();
+      await matchUpdateSubscription?.cancel();
+      if (socketService != null) socketService.leaveTournament(tournamentId);
+      await updates.close();
+    };
+
+    return updates.stream;
   }
 
   static String _mapBracketMatchStatus(String? status) {
@@ -1227,11 +1307,14 @@ class ApiTournamentRepository implements ITournamentRepository {
 
     final rawGroup = json['group'] as Map<String, dynamic>?;
     final resolvedGroupName = groupName ?? rawGroup?['name']?.toString();
-    final rawStage = (rawGroup?['stage'] ?? json['stage']) as Map<String, dynamic>?;
-    final resolvedStageName = stageName ??
+    final rawStage =
+        (rawGroup?['stage'] ?? json['stage']) as Map<String, dynamic>?;
+    final resolvedStageName =
+        stageName ??
         rawStage?['name']?.toString() ??
         json['stageName']?.toString();
-    final resolvedStageType = stageType ??
+    final resolvedStageType =
+        stageType ??
         rawStage?['type']?.toString() ??
         json['stageType']?.toString() ??
         json['stage_type']?.toString();

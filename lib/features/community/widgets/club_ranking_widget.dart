@@ -43,6 +43,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   String? _selectedCategoryId;
   List<dynamic> _availableCategories = const [];
   final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounceTimer;
   String _searchQuery = '';
   Timer? _pollingTimer;
 
@@ -68,6 +69,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
 
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     _pollingTimer?.cancel();
     _searchController.dispose();
     super.dispose();
@@ -312,7 +314,14 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         if (!widget.compact) ...[
           TextField(
             controller: _searchController,
-            onChanged: (value) => setState(() => _searchQuery = value),
+            onChanged: (value) {
+              _searchDebounceTimer?.cancel();
+              _searchDebounceTimer = Timer(const Duration(milliseconds: 250), () {
+                if (mounted) {
+                  setState(() => _searchQuery = value);
+                }
+              });
+            },
             decoration: InputDecoration(
               hintText: l10n.clubRankingSearchHint,
               prefixIcon: const Icon(Icons.search_rounded, size: 18),
@@ -327,29 +336,49 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(color: colors.border),
               ),
-              suffixIcon: IconButton(
-                tooltip: l10n.clubRankingFilterTooltip,
-                visualDensity: VisualDensity.compact,
-                onPressed: _openFilterSheet,
-                icon: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    const Icon(Icons.tune_rounded, size: 19),
-                    if (_activeFilterCount > 0)
-                      Positioned(
-                        top: -3,
-                        right: -3,
-                        child: Container(
-                          width: 7,
-                          height: 7,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.primary,
-                            shape: BoxShape.circle,
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _searchController,
+                    builder: (context, val, _) {
+                      if (val.text.isEmpty) return const SizedBox.shrink();
+                      return IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 16),
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () {
+                          _searchDebounceTimer?.cancel();
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      );
+                    },
+                  ),
+                  IconButton(
+                    tooltip: l10n.clubRankingFilterTooltip,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: _openFilterSheet,
+                    icon: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        const Icon(Icons.tune_rounded, size: 19),
+                        if (_activeFilterCount > 0)
+                          Positioned(
+                            top: -3,
+                            right: -3,
+                            child: Container(
+                              width: 7,
+                              height: 7,
+                              decoration: const BoxDecoration(
+                                color: AppTheme.primary,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                  ],
-                ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

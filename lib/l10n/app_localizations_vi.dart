@@ -1750,6 +1750,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get matchFinishSet => 'CHỐT SET';
 
   @override
+  String get matchFinishSetLite => 'Chốt set này';
+
+  @override
+  String matchFinishSetLiteNumber(Object value) {
+    return 'Chốt set $value';
+  }
+
+  @override
   String get matchFinishSetConfirm => 'Chốt set';
 
   @override
@@ -3479,6 +3487,16 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get lite_unpairContent =>
       'Hai người chơi sẽ trở lại danh sách chờ ghép.';
+
+  @override
+  String get lite_unassignBracketTitle => 'Gỡ khỏi trận?';
+
+  @override
+  String get lite_unassignBracketContent =>
+      'Đội sẽ được gỡ khỏi ô trận này, không huỷ ghép hai người chơi.';
+
+  @override
+  String get lite_unassignBracket => 'Gỡ khỏi trận';
 
   @override
   String get lite_keepPair => 'Giữ nguyên';
@@ -6644,7 +6662,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get liveRuleLabel => 'Luật';
 
   @override
+  String get liveOpenRules => 'Luật mở';
+
+  @override
   String get liveScoringLabel => 'Scoring';
+
+  @override
+  String get liveDirectScoring => 'Điểm trực tiếp';
 
   @override
   String get liveTiebreakLabel => 'Tiebreak';
@@ -6713,6 +6737,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get liveStartMatch => 'BẮT ĐẦU TRẬN ĐẤU';
+
+  @override
+  String get liveMatchStartError => 'Không thể bắt đầu trận đấu.';
 
   @override
   String get liveStartShort => 'BẮT ĐẦU';
@@ -7560,16 +7587,32 @@ class AppLocalizationsVi extends AppLocalizations {
   String get quickCreateFormatMixedDoubles => 'Đôi nam nữ';
 
   @override
-  String get quickCreateBracketSingle => 'Đấu loại trực tiếp';
+  String get quickCreateBracketSingle => 'Loại trực tiếp (Knockout)';
 
   @override
-  String get quickCreateBracketDouble => 'Đấu loại kép';
+  String get quickCreateBracketSingleDesc =>
+      'Thua 1 trận bị loại ngay. Nhanh gọn, kịch tính.';
 
   @override
-  String get quickCreateBracketRoundRobin => 'Vòng tròn';
+  String get quickCreateBracketDouble => 'Nhánh thắng / Nhánh thua';
 
   @override
-  String get quickCreateBracketGroup => 'Vòng bảng + Loại trực tiếp';
+  String get quickCreateBracketDoubleDesc =>
+      'Có cơ hội sửa sai ở nhánh dưới. Nhiều trận hơn.';
+
+  @override
+  String get quickCreateBracketRoundRobin => 'Vòng tròn tính điểm';
+
+  @override
+  String get quickCreateBracketRoundRobinDesc =>
+      'Tất cả các đội đều gặp nhau. Công bằng tối đa.';
+
+  @override
+  String get quickCreateBracketGroup => 'Vòng bảng + Knockout';
+
+  @override
+  String get quickCreateBracketGroupDesc =>
+      'Chia bảng đá vòng tròn, lấy đội đầu bảng vào knock-out.';
 
   @override
   String get tournamentSettingsCategoryLabel => 'Hạng mục / Nội dung';
@@ -7642,6 +7685,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentCategoryMixedDoubles => 'Đôi nam nữ';
+
+  @override
+  String get tournamentCategoryFootballMen => 'Bóng đá Nam';
+
+  @override
+  String get tournamentCategoryFootballWomen => 'Bóng đá Nữ';
+
+  @override
+  String get tournamentCategoryFootballMixed => 'Bóng đá Nam Nữ';
 
   @override
   String get createClubTournament_formatSingles => 'Đánh đơn';

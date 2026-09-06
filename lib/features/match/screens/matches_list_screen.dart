@@ -690,6 +690,9 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
 
   Widget _buildMatchCard(MatchModel match, AppColorsExtension colors) {
     final isLive = match.isLive;
+    final cardScore = isLive
+        ? match.currentLiveScore
+        : SetScore(score1: match.score1, score2: match.score2);
 
     return GestureDetector(
       onTap: () {
@@ -752,7 +755,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
               ),
               child: Text(
                 match.isCompleted || match.isLive
-                    ? '${match.score1} - ${match.score2}'
+                    ? '${cardScore.score1} - ${cardScore.score2}'
                     : 'VS',
                 style: TextStyle(
                   fontSize: 16,

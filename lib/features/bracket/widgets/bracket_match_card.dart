@@ -20,6 +20,7 @@ class BracketMatchCard extends StatelessWidget {
   final BracketSlotDragData? selectedSlot;
   final ValueChanged<BracketSlotDragData>? onSlotTap;
   final BracketSlotDropCallback? onSlotDrop;
+  final BracketSlotUnassignCallback? onUnassignSlot;
   final ValueChanged<MatchModel>? onDoubleTapMatch;
 
   const BracketMatchCard({
@@ -33,6 +34,7 @@ class BracketMatchCard extends StatelessWidget {
     this.selectedSlot,
     this.onSlotTap,
     this.onSlotDrop,
+    this.onUnassignSlot,
     this.onDoubleTapMatch,
   });
 
@@ -82,6 +84,17 @@ class BracketMatchCard extends StatelessWidget {
     required String slot,
     required String participantId,
   }) {
+    final dragData = BracketSlotDragData(
+      matchId: match.id,
+      slot: slot,
+      participantId: participantId,
+      isBye: isBye,
+    );
+    final canUnassign =
+        isSlotEditable &&
+        onUnassignSlot != null &&
+        dragData.hasParticipant &&
+        match.isScheduled;
     final row = TeamRow(
       name: name,
       logoUrl: logoUrl,
@@ -93,15 +106,24 @@ class BracketMatchCard extends StatelessWidget {
       isLive: isLive,
       isBye: isBye,
       isGrandFinalWinner: isGrandFinalWinner,
+      trailing: canUnassign
+          ? Tooltip(
+              message: AppLocalizations.of(context)!.lite_unassignBracket,
+              child: IconButton(
+                onPressed: () => onUnassignSlot!(dragData),
+                icon: const Icon(Icons.link_off_rounded, size: 14),
+                color: Theme.of(context).colorScheme.error,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: 22,
+                  height: 22,
+                ),
+                visualDensity: VisualDensity.compact,
+              ),
+            )
+          : null,
     );
     if (!isSlotEditable || onSlotDrop == null || onSlotTap == null) return row;
-
-    final dragData = BracketSlotDragData(
-      matchId: match.id,
-      slot: slot,
-      participantId: participantId,
-      isBye: isBye,
-    );
     final isSelected = selectedSlot == dragData;
     final canDrag = dragData.hasParticipant;
 

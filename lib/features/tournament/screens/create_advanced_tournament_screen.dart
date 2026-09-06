@@ -384,20 +384,26 @@ class _CreateAdvancedTournamentScreenState
         children: [
           _buildStepProgress(colors),
           Expanded(
-            child: IndexedStack(
-              index: _currentStep,
-              children: [
-                _buildStep1(colors),
-                _buildStep2(colors),
-                _buildStep3(colors),
-                _buildStep4(colors),
-              ],
-            ),
+            child: _buildCurrentStep(colors),
           ),
           _buildBottomBar(colors),
         ],
       ),
     );
+  }
+
+  Widget _buildCurrentStep(AppColorsExtension colors) {
+    switch (_currentStep) {
+      case 0:
+        return _buildStep1(colors);
+      case 1:
+        return _buildStep2(colors);
+      case 2:
+        return _buildStep3(colors);
+      case 3:
+      default:
+        return _buildStep4(colors);
+    }
   }
 
   Widget _buildStepProgress(AppColorsExtension colors) {
@@ -484,6 +490,7 @@ class _CreateAdvancedTournamentScreenState
     return Form(
       key: _step1FormKey,
       child: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.all(16),
         children: [
           _label('Tên giải đấu *', colors),
@@ -561,17 +568,7 @@ class _CreateAdvancedTournamentScreenState
 
   // ─── BƯỚC 2: PHÂN HẠNG THI ĐẤU (DIVISIONS) ───
   String _getFormatLabel(String? bracketType) {
-    final t = (bracketType ?? '').toUpperCase();
-    if (t.contains('ROUND_ROBIN') || t.contains('ROBIN') || t.contains('VÒNG TRÒN')) {
-      return 'Vòng tròn tính điểm';
-    }
-    if (t.contains('GROUP_STAGE') || t.contains('GROUP') || t.contains('BẢNG')) {
-      return 'Vòng bảng + loại trực tiếp';
-    }
-    if (t.contains('DOUBLE_ELIMINATION') || t.contains('DOUBLE_ELIM') || t.contains('NHÁNH KÉP') || t.contains('THẮNG/THUA') || t.contains('THẮNG THUA')) {
-      return 'Nhánh thắng/thua';
-    }
-    return 'Loại trực tiếp';
+    return BracketFormatIcons.getFormatLabel(context, bracketType);
   }
 
   Widget _buildStep2(AppColorsExtension colors) {
@@ -685,6 +682,7 @@ class _CreateAdvancedTournamentScreenState
     return Form(
       key: _step3FormKey,
       child: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.all(16),
         children: [
           _label('Ngày khai mạc thi đấu *', colors),
@@ -941,75 +939,82 @@ class _CreateAdvancedTournamentScreenState
   }
 
   Widget _buildSportGrid(AppColorsExtension colors) {
-    final activeCategories = ref.watch(categoriesProvider).value ?? const [];
+    return Consumer(
+      builder: (context, ref, _) {
+        final activeCategories = ref.watch(categoriesProvider).value ?? const [];
 
-    final sportsMeta = {
-      'pickleball': ('Pickleball', Icons.sports_baseball_rounded),
-      'badminton': ('Cầu lông', Icons.sports_tennis_rounded),
-      'tennis': ('Tennis', Icons.sports_tennis_outlined),
-      'table_tennis': ('Bóng bàn', Icons.sports_cricket_rounded),
-      'football': ('Bóng đá', Icons.sports_soccer_rounded),
-    };
+        final sportsMeta = {
+          'pickleball': ('Pickleball', Icons.sports_baseball_rounded),
+          'badminton': ('Cầu lông', Icons.sports_tennis_rounded),
+          'tennis': ('Tennis', Icons.sports_tennis_outlined),
+          'table_tennis': ('Bóng bàn', Icons.sports_cricket_rounded),
+          'football': ('Bóng đá', Icons.sports_soccer_rounded),
+        };
 
-    // Chỉ hiển thị các môn thể thao đang ACTIVE từ backend, tuyệt đối không fallback môn đã tắt
-    final sports = activeCategories.where((cat) => cat.isActive).map((cat) {
-      final slug = cat.slug.toLowerCase();
-      final metaKey = sportsMeta.keys.firstWhere(
-        (k) => slug.contains(k) || k.contains(slug),
-        orElse: () => 'pickleball',
-      );
-      final meta = sportsMeta[metaKey] ?? (cat.name, Icons.sports_rounded);
-      return (metaKey, cat.name.isNotEmpty ? cat.name : meta.$1, meta.$2);
-    }).toList();
+        // Chỉ hiển thị các môn thể thao đang ACTIVE từ backend, tuyệt đối không fallback môn đã tắt
+        final sports = activeCategories.where((cat) => cat.isActive).map((cat) {
+          final slug = cat.slug.toLowerCase();
+          final metaKey = sportsMeta.keys.firstWhere(
+            (k) => slug.contains(k) || k.contains(slug),
+            orElse: () => 'pickleball',
+          );
+          final meta = sportsMeta[metaKey] ?? (cat.name, Icons.sports_rounded);
+          return (metaKey, cat.name.isNotEmpty ? cat.name : meta.$1, meta.$2);
+        }).toList();
 
-    if (sports.isNotEmpty && !sports.any((s) => s.$1 == _sport)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _sport = sports.first.$1);
-      });
-    }
+        if (sports.isNotEmpty && !sports.any((s) => s.$1 == _sport)) {
+          final firstSport = sports.first.$1;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _sport != firstSport) {
+              setState(() => _sport = firstSport);
+            }
+          });
+        }
 
-    if (sports.isEmpty) {
-      return const SizedBox(
-        height: 60,
-        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-      );
-    }
+        if (sports.isEmpty) {
+          return const SizedBox(
+            height: 60,
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          );
+        }
 
-    return Row(
-      children: sports.map((s) {
-        final selected = _sport == s.$1;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: s != sports.last ? 8 : 0),
-            child: GestureDetector(
-              onTap: () => setState(() => _sport = s.$1),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: selected ? AppTheme.primary.withValues(alpha: 0.12) : colors.bgSurface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: selected ? AppTheme.primary : colors.border, width: selected ? 1.8 : 1),
-                ),
-                child: Column(
-                  children: [
-                    Icon(s.$3, size: 24, color: selected ? AppTheme.primary : colors.textSecondary),
-                    const SizedBox(height: 6),
-                    Text(
-                      s.$2,
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
-                        color: selected ? AppTheme.primary : colors.textSecondary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+        return Row(
+          children: sports.map((s) {
+            final selected = _sport == s.$1;
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: s != sports.last ? 8 : 0),
+                child: GestureDetector(
+                  onTap: () => setState(() => _sport = s.$1),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: selected ? AppTheme.primary.withValues(alpha: 0.12) : colors.bgSurface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: selected ? AppTheme.primary : colors.border, width: selected ? 1.8 : 1),
                     ),
-                  ],
+                    child: Column(
+                      children: [
+                        Icon(s.$3, size: 24, color: selected ? AppTheme.primary : colors.textSecondary),
+                        const SizedBox(height: 6),
+                        Text(
+                          s.$2,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: selected ? AppTheme.primary : colors.textSecondary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
   }
 
@@ -1096,7 +1101,7 @@ class _CreateAdvancedTournamentScreenState
                         children: [
                           BracketFormatIcons.getIcon(AppConstants.bracketSingleElimination, size: 18, color: AppTheme.primary),
                           const SizedBox(width: 8),
-                          const Text('Loại trực tiếp'),
+                          Text(l10n.eliminationSingle),
                         ],
                       ),
                     ),
@@ -1106,7 +1111,7 @@ class _CreateAdvancedTournamentScreenState
                         children: [
                           BracketFormatIcons.getIcon(AppConstants.bracketDoubleElimination, size: 18, color: AppTheme.primary),
                           const SizedBox(width: 8),
-                          const Text('Nhánh thắng/thua'),
+                          Text(l10n.eliminationDouble),
                         ],
                       ),
                     ),
@@ -1116,7 +1121,7 @@ class _CreateAdvancedTournamentScreenState
                         children: [
                           BracketFormatIcons.getIcon(AppConstants.bracketRoundRobin, size: 18, color: AppTheme.primary),
                           const SizedBox(width: 8),
-                          const Text('Vòng tròn tính điểm'),
+                          Text(l10n.roundRobin),
                         ],
                       ),
                     ),
@@ -1126,7 +1131,7 @@ class _CreateAdvancedTournamentScreenState
                         children: [
                           BracketFormatIcons.getIcon(AppConstants.bracketGroupStageKnockout, size: 18, color: AppTheme.primary),
                           const SizedBox(width: 8),
-                          const Text('Vòng bảng + loại trực tiếp'),
+                          Text(l10n.createClubTournament_bracketGroupStageKnockout),
                         ],
                       ),
                     ),

@@ -5,14 +5,11 @@ class LiveMatchCard extends StatelessWidget {
   final MatchModel match;
   final VoidCallback onTap;
 
-  const LiveMatchCard({
-    super.key,
-    required this.match,
-    required this.onTap,
-  });
+  const LiveMatchCard({super.key, required this.match, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final liveScore = match.currentLiveScore;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -28,7 +25,7 @@ class LiveMatchCard extends StatelessWidget {
               color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -38,7 +35,10 @@ class LiveMatchCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.red.shade50,
                     borderRadius: BorderRadius.circular(8),
@@ -89,7 +89,11 @@ class LiveMatchCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: _buildTeamCol(context, match.team1Name, match.score1.toString()),
+                  child: _buildTeamCol(
+                    context,
+                    match.team1Name,
+                    liveScore.score1.toString(),
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -108,7 +112,11 @@ class LiveMatchCard extends StatelessWidget {
                   ),
                 ),
                 Expanded(
-                  child: _buildTeamCol(context, match.team2Name, match.score2.toString()),
+                  child: _buildTeamCol(
+                    context,
+                    match.team2Name,
+                    liveScore.score2.toString(),
+                  ),
                 ),
               ],
             ),
@@ -122,7 +130,11 @@ class LiveMatchCard extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade600),
+                  Icon(
+                    Icons.location_on_outlined,
+                    size: 14,
+                    color: Colors.grey.shade600,
+                  ),
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
@@ -152,10 +164,7 @@ class LiveMatchCard extends StatelessWidget {
         Text(
           name,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),

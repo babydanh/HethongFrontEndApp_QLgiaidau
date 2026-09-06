@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
@@ -16,6 +16,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/member_elo_adjust_
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart';
 import 'package:app_quanly_giaidau/data/models/community_ranking_model.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:intl/intl.dart';
 
 /// Màn hình Điều phối CLB — dành cho OWNER/ADMIN/MODERATOR.
@@ -48,6 +49,8 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   bool _isLoading = true;
   bool _isModeratingPost = false;
   String? _togglingRecurringId;
+  String? _deletingRecurringId;
+  String? _deletingTournamentId;
 
   // Invite state
   final _searchCtrl = TextEditingController();
@@ -950,29 +953,6 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                         const SizedBox(height: 10),
                         Row(
                           children: [
-                            OutlinedButton(
-                              onPressed: () {
-                                final shareUrl = 'https://sporto.asia/tournaments/${t.id}';
-                                AppShareModal.show(
-                                  context: context,
-                                  title: t.name,
-                                  subtitle: t.sport.isNotEmpty ? t.sport : l10n.navTournaments,
-                                  webUrl: shareUrl,
-                                  imageUrl: t.logoUrl ?? t.bannerUrl,
-                                );
-                              },
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 8,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: const Icon(Icons.share_rounded, size: 16),
-                            ),
-                            const SizedBox(width: 8),
                             Expanded(
                               child: OutlinedButton.icon(
                                 onPressed: () => context.push('/intro/${t.id}'),
@@ -1045,6 +1025,33 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              onPressed: _deletingTournamentId == t.id
+                                  ? null
+                                  : () => _deleteTournament(t.id, t.name),
+                              icon: _deletingTournamentId == t.id
+                                  ? const SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(strokeWidth: 1.5),
+                                    )
+                                  : Icon(
+                                      Icons.delete_outline_rounded,
+                                      size: 18,
+                                      color: colors.error,
+                                    ),
+                              tooltip: l10n.deleteTournament,
+                              style: IconButton.styleFrom(
+                                padding: const EdgeInsets.all(8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  side: BorderSide(
+                                    color: colors.error.withValues(alpha: 0.3),
                                   ),
                                 ),
                               ),
@@ -1354,7 +1361,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               OutlinedButton.icon(
-                                onPressed: isToggling
+                                onPressed: (isToggling || _deletingRecurringId == t.id)
                                     ? null
                                     : () => _toggleRecurringTournament(t.id, !isEnabled),
                                 icon: isToggling
@@ -1374,6 +1381,33 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                 style: OutlinedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                onPressed: (_deletingRecurringId == t.id || isToggling)
+                                    ? null
+                                    : () => _deleteRecurringTournament(t.id, t.name),
+                                icon: _deletingRecurringId == t.id
+                                    ? const SizedBox(
+                                        width: 14,
+                                        height: 14,
+                                        child: CircularProgressIndicator(strokeWidth: 1.5),
+                                      )
+                                    : Icon(
+                                        Icons.delete_outline_rounded,
+                                        size: 18,
+                                        color: colors.error,
+                                      ),
+                                tooltip: l10n.communityRecurringDelete,
+                                style: IconButton.styleFrom(
+                                  padding: const EdgeInsets.all(6),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    side: BorderSide(
+                                      color: colors.error.withValues(alpha: 0.3),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
@@ -1426,6 +1460,154 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       }
     } finally {
       if (mounted) setState(() => _togglingRecurringId = null);
+    }
+  }
+
+  Future<void> _deleteRecurringTournament(String tournamentId, String tournamentName) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.communityRecurringSchedulesTitle),
+        content: Text(
+          l10n.communityRecurringDeleteConfirm,
+          style: const TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.profileCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _deletingRecurringId = tournamentId);
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      await dio.delete('/tournaments/$tournamentId/recurring');
+      if (mounted) {
+        ref.invalidate(communityTournamentsProvider(widget.clubId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.communityRecurringDelete),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e, stack) {
+      _log.error('Lỗi xóa lịch định kỳ', e, stack);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.communityRecurringToggleError),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _deletingRecurringId = null);
+    }
+  }
+
+  Future<void> _deleteTournament(String tournamentId, String tournamentName) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.deleteTournamentTitle),
+        content: Text(
+          l10n.profileDeleteTournamentContent(tournamentName),
+          style: const TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.profileCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              l10n.deleteTournament,
+              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _deletingTournamentId = tournamentId);
+    try {
+      final success = await ref
+          .read(tournamentActionProvider.notifier)
+          .deleteTournament(tournamentId);
+      if (mounted) {
+        ref.invalidate(communityTournamentsProvider(widget.clubId));
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.profileTournamentDeleted),
+              backgroundColor: const Color(0xFF10B981),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        } else {
+          final err = ref.read(tournamentActionProvider).error;
+          String errorMsg = 'Không thể xóa giải đấu. Vui lòng thử lại.';
+          if (err is DioException) {
+            final data = err.response?.data;
+            if (data is Map && data['message'] != null) {
+              errorMsg = data['message'].toString();
+            } else if (err.response?.statusCode != null) {
+              errorMsg = 'Lỗi máy chủ (${err.response!.statusCode})';
+            }
+          } else if (err != null) {
+            errorMsg = err.toString();
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMsg),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e, stack) {
+      _log.error('Lỗi xóa giải đấu', e, stack);
+      if (mounted) {
+        String errorMsg = e.toString();
+        if (e is DioException) {
+          final data = e.response?.data;
+          if (data is Map && data['message'] != null) {
+            errorMsg = data['message'].toString();
+          } else if (e.response?.statusCode != null) {
+            errorMsg = 'Lỗi (${e.response!.statusCode})';
+          }
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _deletingTournamentId = null);
     }
   }
 
@@ -1552,6 +1734,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                 separatorBuilder: (ctx, i) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final m = filtered[index];
+                  final hasRank = _memberEloMap.containsKey(m.userId);
                   final elo = _memberEloMap[m.userId] ?? 1000;
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -1604,23 +1787,43 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 3),
-                              Row(
-                                children: [
-                                  EloTierBadge(
-                                    elo: elo,
-                                    scale: 0.8,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '$elo ELO',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
-                                      color: colors.textSecondary,
+                              if (hasRank)
+                                Row(
+                                  children: [
+                                    EloTierBadge(
+                                      elo: elo,
+                                      scale: 0.8,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '$elo ELO',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        color: colors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              else
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: colors.textMuted.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: colors.textMuted.withValues(alpha: 0.25),
                                     ),
                                   ),
-                                ],
-                              ),
+                                  child: Text(
+                                    'Chưa có rank',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: colors.textMuted,
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                         ),

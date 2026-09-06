@@ -115,17 +115,32 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     final effectiveTournamentId = widget.tournamentId.isNotEmpty
         ? widget.tournamentId
         : (widget.match.tournamentId ?? '');
-    final params = (tournamentId: effectiveTournamentId, matchId: widget.matchId);
-    final config = resolveSportConfig(widget.match.sportRules, kind);
+    final params = (
+      tournamentId: effectiveTournamentId,
+      matchId: widget.matchId,
+    );
     final strategy = PenaltyStrategyFactory.getStrategy(_sportKeyForKind(kind));
     final tournamentAsync = effectiveTournamentId.isNotEmpty
         ? ref.watch(tournamentProvider(effectiveTournamentId))
         : null;
+    final tournamentRules = tournamentAsync?.value?.sportRules;
+    final effectiveSportRules =
+        tournamentRules != null && tournamentRules.isNotEmpty
+        ? {
+            ...tournamentRules,
+            if (widget.match.sportRules != null &&
+                widget.match.sportRules!.isNotEmpty)
+              ...widget.match.sportRules!,
+          }
+        : widget.match.sportRules;
+    final config = resolveSportConfig(effectiveSportRules, kind);
     final isLite =
-        widget.match.tournamentConfig?['isLite'] == true ||
-        widget.match.tournamentConfig?['mode']?.toString().toUpperCase() ==
-            'LITE' ||
-        tournamentAsync?.value?.isLite == true;
+        isLiteScoringMode(
+          tournamentConfig: widget.match.tournamentConfig,
+          sportRules: effectiveSportRules,
+          tournamentIsLite: tournamentAsync?.value?.isLite == true,
+        ) ||
+        config.isOpenScoring;
     final usePickleballSideOutPanel =
         !isLite &&
         kind == SportRuleKind.pickleball &&
@@ -178,6 +193,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                             kind,
                             colors,
                             l10n,
+                            isLite: isLite,
                           );
                         },
                       ),
@@ -234,6 +250,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                                 params,
                                 kind,
                                 usePickleballSideOutPanel,
+                                isLite,
                               ),
                               _buildFoulTab(
                                 context,
@@ -260,10 +277,36 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                     final n = ref.read(
                       scorePanelNotifierProvider(params).notifier,
                     );
+                    final liteRally = state.rally;
+                    final openSets = List<SetScoreData>.from(
+                      state.finishedSets,
+                    );
+                    if (state.isOpenScoring &&
+                        liteRally != null &&
+                        (liteRally.currentP1 > 0 || liteRally.currentP2 > 0)) {
+                      // The active open set is not in finishedSets until the
+                      // scorer explicitly closes it. Include it only for the
+                      // winner preview so the final button can be used after
+                      // the first open set as well.
+                      openSets.add(
+                        SetScoreData(
+                          score1: liteRally.currentP1,
+                          score2: liteRally.currentP2,
+                          isFinished: true,
+                        ),
+                      );
+                    }
+                    final (openTeam1Wins, openTeam2Wins) = computeMatchSetsWon(
+                      openSets,
+                    );
                     final selectedWinner = state.winnerTeam != 0
                         ? state.winnerTeam
                         : state.football != null
                         ? 0
+                        : state.isOpenScoring
+                        ? openTeam1Wins == openTeam2Wins
+                              ? 0
+                              : (openTeam1Wins > openTeam2Wins ? 1 : 2)
                         : (state.team1SetWins >= state.team2SetWins ? 1 : 2);
                     final canSaveResult =
                         selectedWinner != 0 && n.canCompleteAs(selectedWinner);
@@ -276,7 +319,8 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (!state.isLite && state.overrideEnabled) ...[
+                          if (!state.isOpenScoring &&
+                              state.overrideEnabled) ...[
                             Padding(
                               padding: const EdgeInsets.only(bottom: 6),
                               child: Row(
@@ -326,7 +370,24 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                             spacing: 12,
                             runSpacing: 8,
                             children: [
-                              // SetHistoryBar with fallback
+                              if (state.errorMessage != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: Text(
+                                      state.errorMessage!,
+                                      style: TextStyle(
+                                        color: colors.error,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              // Super Lite also keeps every manually closed
+                              // set. It is not a fixed BO format, so this
+                              // history grows only as sets are closed.
                               if (state.finishedSets.isNotEmpty)
                                 SingleChildScrollView(
                                   scrollDirection: Axis.horizontal,
@@ -344,7 +405,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                                 alignment: WrapAlignment.end,
                                 children: [
                                   // Toggle Ngoại lệ
-                                  if (!state.isLite)
+                                  if (!state.isOpenScoring)
                                     FilterChip(
                                       selected: state.overrideEnabled,
                                       onSelected: (sel) => n.setOverride(
@@ -410,35 +471,48 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                                               }
                                               final confirmed = await showDialog<bool>(
                                                 context: context,
-                                                builder: (dialogContext) =>
-                                                    AlertDialog(
-                                                      title: Text(
-                                                        l10n.matchFinishSet,
+                                                builder: (dialogContext) => AlertDialog(
+                                                  title: Text(
+                                                    state.isOpenScoring
+                                                        ? l10n.matchFinishSetLiteNumber(
+                                                            state
+                                                                    .finishedSets
+                                                                    .length +
+                                                                1,
+                                                          )
+                                                        : l10n.matchFinishSet,
+                                                  ),
+                                                  content: Text(message),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                            dialogContext,
+                                                            false,
+                                                          ),
+                                                      child: Text(
+                                                        l10n.officialScoreCancel,
                                                       ),
-                                                      content: Text(message),
-                                                      actions: [
-                                                        TextButton(
-                                                          onPressed: () =>
-                                                              Navigator.pop(
-                                                                dialogContext,
-                                                                false,
-                                                              ),
-                                                          child: Text(
-                                                            l10n.officialScoreCancel,
-                                                          ),
-                                                        ),
-                                                        FilledButton(
-                                                          onPressed: () =>
-                                                              Navigator.pop(
-                                                                dialogContext,
-                                                                true,
-                                                              ),
-                                                          child: Text(
-                                                            l10n.matchFinishSet,
-                                                          ),
-                                                        ),
-                                                      ],
                                                     ),
+                                                    FilledButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                            dialogContext,
+                                                            true,
+                                                          ),
+                                                      child: Text(
+                                                        state.isOpenScoring
+                                                            ? l10n.matchFinishSetLiteNumber(
+                                                                state
+                                                                        .finishedSets
+                                                                        .length +
+                                                                    1,
+                                                              )
+                                                            : l10n.matchFinishSet,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               );
                                               if (confirmed == true) {
                                                 await n.finishSet();
@@ -457,17 +531,21 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                                         ),
                                       ),
                                       child: Text(
-                                        l10n.matchFinishSet,
+                                        state.isOpenScoring
+                                            ? l10n.matchFinishSetLiteNumber(
+                                                state.finishedSets.length + 1,
+                                              )
+                                            : l10n.matchFinishSet,
                                         style: const TextStyle(
                                           fontSize: 11,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
-                                  if (state.isMatchComplete ||
-                                      state.overrideEnabled ||
-                                      (state.isLite &&
-                                          state.finishedSets.isNotEmpty))
+                                  if ((state.isOpenScoring && canSaveResult) ||
+                                      (!state.isOpenScoring &&
+                                          (state.isMatchComplete ||
+                                              state.overrideEnabled)))
                                     FilledButton(
                                       onPressed:
                                           state.isSubmitting ||
@@ -579,6 +657,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     ({String tournamentId, String matchId}) params,
     SportRuleKind kind,
     bool usePickleballSideOutPanel,
+    bool isLite,
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -591,6 +670,8 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                     team1Name: widget.match.team1Name,
                     team2Name: widget.match.team2Name,
                   )
+                : isLite
+                ? RallyScorePanel(params: params, isReadOnly: false)
                 : kind == SportRuleKind.tennis
                 ? TennisScorePanel(params: params, isReadOnly: false)
                 : usePickleballSideOutPanel
@@ -1072,8 +1153,9 @@ void _showMatchInfoDialog(
   SportConfig config,
   SportRuleKind kind,
   AppColorsExtension colors,
-  AppLocalizations l10n,
-) {
+  AppLocalizations l10n, {
+  required bool isLite,
+}) {
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -1115,22 +1197,29 @@ void _showMatchInfoDialog(
               _RuleChip(
                 label: l10n.officialScore_sport(_sportLabel(kind, l10n)),
               ),
-              _RuleChip(label: l10n.officialScore_format(config.bestOf)),
-              _RuleChip(label: l10n.officialScore_setsToWin(config.setsToWin)),
-              _RuleChip(
-                label: l10n.officialScore_pointsPerSet(
-                  config.pointsPerSet,
-                  kind == SportRuleKind.tennis
-                      ? l10n.officialScore_gameSetUnit
-                      : l10n.officialScore_pointsSetUnit,
-                ),
-              ),
-              if (config.mustWinByTwo) _RuleChip(label: l10n.matchWinByTwo),
-              _RuleChip(label: _scoringModelLabel(config.scoringModel, l10n)),
-              if (config.maxPoints > config.pointsPerSet)
+              if (isLite)
+                _RuleChip(label: l10n.liveOpenRules)
+              else ...[
+                _RuleChip(label: l10n.officialScore_format(config.bestOf)),
                 _RuleChip(
-                  label: l10n.officialScore_maxPoints(config.maxPoints),
+                  label: l10n.officialScore_setsToWin(config.setsToWin),
                 ),
+                _RuleChip(
+                  label: l10n.officialScore_pointsPerSet(
+                    config.pointsPerSet,
+                    kind == SportRuleKind.tennis
+                        ? l10n.officialScore_gameSetUnit
+                        : l10n.officialScore_pointsSetUnit,
+                  ),
+                ),
+                if (config.mustWinByTwo) _RuleChip(label: l10n.matchWinByTwo),
+                if (config.maxPoints > config.pointsPerSet)
+                  _RuleChip(
+                    label: l10n.officialScore_maxPoints(config.maxPoints),
+                  ),
+              ],
+              if (!isLite)
+                _RuleChip(label: _scoringModelLabel(config.scoringModel, l10n)),
               if (match.court.isNotEmpty)
                 _RuleChip(label: l10n.officialScore_court(match.court)),
               _RuleChip(label: l10n.officialScore_round(match.round)),

@@ -28,6 +28,7 @@ class DoubleElimDiagram extends StatefulWidget {
   final bool isReadOnly;
   final bool isEditable;
   final BracketSlotDropCallback? onSlotDrop;
+  final BracketSlotUnassignCallback? onUnassignSlot;
   final ValueChanged<MatchModel>? onDoubleTapMatch;
 
   const DoubleElimDiagram({
@@ -38,6 +39,7 @@ class DoubleElimDiagram extends StatefulWidget {
     this.isReadOnly = true,
     this.isEditable = false,
     this.onSlotDrop,
+    this.onUnassignSlot,
     this.onDoubleTapMatch,
   });
 
@@ -326,6 +328,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                           selectedSlot: _selectedSlot,
                           onSlotTap: _handleSlotTap,
                           onSlotDrop: widget.onSlotDrop,
+                          onUnassignSlot: widget.onUnassignSlot,
                           onDoubleTapMatch: widget.onDoubleTapMatch,
                         ),
                       );

@@ -59,8 +59,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     4: TextEditingController(),
   };
   final FocusNode _searchFocusNode = FocusNode();
+  Timer? _searchDebounceTimer;
 
-  String get _activeSearchQuery => _searchQueries[_currentIndex] ?? '';
   TextEditingController get _activeSearchController =>
       _searchControllers[_currentIndex] ?? _searchControllers[0]!;
 
@@ -318,6 +318,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     _carouselTimer?.cancel();
     _carouselController?.dispose();
     _scrollController.dispose();
@@ -959,7 +960,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         controller: _activeSearchController,
         focusNode: _searchFocusNode,
         textInputAction: TextInputAction.search,
-        onChanged: (v) => setState(() => _searchQueries[_currentIndex] = v),
+        onChanged: (v) {
+          _searchDebounceTimer?.cancel();
+          _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+            if (mounted) {
+              setState(() => _searchQueries[_currentIndex] = v);
+              if (_currentIndex == 1) {
+                _resetTournamentCursorPagination();
+              } else if (_currentIndex == 3) {
+                _resetClubCursorPagination();
+              }
+            }
+          });
+        },
         onSubmitted: (_) => _submitSearch(),
         style: TextStyle(
           fontSize: 14.0,
@@ -979,18 +992,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (_activeSearchQuery.isNotEmpty)
-                IconButton(
-                  icon: Icon(
-                    Icons.clear,
-                    color: context.colors.textSecondary,
-                    size: 18.0,
-                  ),
-                  onPressed: () {
-                    _activeSearchController.clear();
-                    setState(() => _searchQueries[_currentIndex] = '');
-                  },
-                ),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _activeSearchController,
+                builder: (context, value, _) {
+                  if (value.text.isEmpty) return const SizedBox.shrink();
+                  return IconButton(
+                    icon: Icon(
+                      Icons.clear,
+                      color: context.colors.textSecondary,
+                      size: 18.0,
+                    ),
+                    onPressed: () {
+                      _searchDebounceTimer?.cancel();
+                      _activeSearchController.clear();
+                      setState(() => _searchQueries[_currentIndex] = '');
+                      if (_currentIndex == 1) {
+                        _resetTournamentCursorPagination();
+                      } else if (_currentIndex == 3) {
+                        _resetClubCursorPagination();
+                      }
+                    },
+                  );
+                },
+              ),
               Stack(
                 children: [
                   IconButton(

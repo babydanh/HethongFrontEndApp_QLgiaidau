@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -27,10 +28,12 @@ class TeamsTab extends StatefulWidget {
 
 class _TeamsTabState extends State<TeamsTab> {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounceTimer;
   String _searchQuery = '';
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -119,8 +122,13 @@ class _TeamsTabState extends State<TeamsTab> {
               child: TextField(
                 controller: _searchController,
                 onChanged: (val) {
-                  setState(() {
-                    _searchQuery = val;
+                  _debounceTimer?.cancel();
+                  _debounceTimer = Timer(const Duration(milliseconds: 250), () {
+                    if (mounted) {
+                      setState(() {
+                        _searchQuery = val;
+                      });
+                    }
                   });
                 },
                 style: TextStyle(fontSize: 13, color: colors.textPrimary),
@@ -132,21 +140,26 @@ class _TeamsTabState extends State<TeamsTab> {
                     size: 18,
                     color: colors.textMuted,
                   ),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(
-                            Icons.close,
-                            size: 16,
-                            color: colors.textMuted,
-                          ),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {
-                              _searchQuery = '';
-                            });
-                          },
-                        )
-                      : null,
+                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _searchController,
+                    builder: (context, value, _) {
+                      if (value.text.isEmpty) return const SizedBox.shrink();
+                      return IconButton(
+                        icon: Icon(
+                          Icons.close,
+                          size: 16,
+                          color: colors.textMuted,
+                        ),
+                        onPressed: () {
+                          _debounceTimer?.cancel();
+                          _searchController.clear();
+                          setState(() {
+                            _searchQuery = '';
+                          });
+                        },
+                      );
+                    },
+                  ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 11),
                 ),

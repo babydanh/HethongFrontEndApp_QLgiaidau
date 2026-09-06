@@ -49,6 +49,11 @@ class Tournament {
   final String? communityId;
   final String? communityName;
   final String? communityLogoUrl;
+
+  /// Scoring rules are separate from the product flag `isLite`.
+  /// A public Quick tournament may use `mode: LITE` for open scoring without
+  /// becoming a Super Lite tournament.
+  final Map<String, dynamic>? sportRules;
   final bool isLite;
   final bool isRegistrationLocked;
   // Team sport (bóng đá): sân 5/7/11 → đội nhiều người
@@ -102,6 +107,7 @@ class Tournament {
     this.communityId,
     this.communityName,
     this.communityLogoUrl,
+    this.sportRules,
     this.isLite = false,
     this.isRegistrationLocked = false,
     this.teamSize,
@@ -183,10 +189,12 @@ class Tournament {
     if (json['divisions'] is List && (json['divisions'] as List).isNotEmpty) {
       final firstDiv = (json['divisions'] as List).first;
       if (firstDiv is Map) {
-        parsedDivMax = _toInt(firstDiv['maxParticipants']) ?? _toInt(firstDiv['maxTeams']);
+        parsedDivMax =
+            _toInt(firstDiv['maxParticipants']) ?? _toInt(firstDiv['maxTeams']);
       }
     }
-    int maxTeamsVal = _toInt(config['maxTeams']) ??
+    int maxTeamsVal =
+        _toInt(config['maxTeams']) ??
         _toInt(json['maxParticipants']) ??
         _toInt(json['maxTeams']) ??
         parsedDivMax ??
@@ -371,13 +379,35 @@ class Tournament {
       registrationMode: config['registrationMode']?.toString(),
       hideFeaturedCardText: config['hideFeaturedCardText'] == true,
       inviteCode: json['inviteCode']?.toString(),
-      communityId: (json['communityId'] ?? json['community_id'] ?? json['community']?['id'])?.toString(),
-      communityName: (json['community'] is Map ? json['community']['name'] : json['communityName'] ?? json['community_name'])?.toString(),
-      communityLogoUrl: (json['community'] is Map ? json['community']['logoUrl'] : json['communityLogoUrl'] ?? json['community_logo_url'])?.toString(),
-      // isLite = LOẠI GIẢI lite (nhanh). Hỗ trợ cả flag isLite trực tiếp hoặc trong config hoặc config mode = LITE
-      isLite: json['isLite'] == true ||
+      communityId:
+          (json['communityId'] ??
+                  json['community_id'] ??
+                  json['community']?['id'])
+              ?.toString(),
+      communityName:
+          (json['community'] is Map
+                  ? json['community']['name']
+                  : json['communityName'] ?? json['community_name'])
+              ?.toString(),
+      communityLogoUrl:
+          (json['community'] is Map
+                  ? json['community']['logoUrl']
+                  : json['communityLogoUrl'] ?? json['community_logo_url'])
+              ?.toString(),
+      sportRules: json['sportRules'] is Map
+          ? Map<String, dynamic>.from(json['sportRules'] as Map)
+          : json['sport_rules'] is Map
+          ? Map<String, dynamic>.from(json['sport_rules'] as Map)
+          : config['sportRules'] is Map
+          ? Map<String, dynamic>.from(config['sportRules'] as Map)
+          : null,
+      // isLite = LOẠI SẢN PHẨM Super Lite. Không dùng mode=LITE đơn độc vì
+      // preset Quick cũng dùng mode này cho bảng điểm mở.
+      isLite:
+          json['isLite'] == true ||
           config['isLite'] == true ||
-          config['mode']?.toString().toUpperCase() == 'LITE',
+          (config['mode']?.toString().toUpperCase() == 'LITE' &&
+              config['hideAdvancedSettings'] == true),
       isRegistrationLocked: json['isRegistrationLocked'] == true,
       // Team sport (bóng đá): giữ tương thích bản ghi cũ chưa có selector sân.
       teamSize:
@@ -453,22 +483,26 @@ class Tournament {
       'divisions': divisions.map((e) => e.toJson()).toList(),
       if (sponsors.isNotEmpty)
         'sponsors': sponsors
-            .map((sponsor) => {
-              'id': sponsor.id,
-              'displayName': sponsor.displayName,
-              'tier': sponsor.tier,
-              'logoUrl': sponsor.logoUrl,
-              if (sponsor.websiteUrl != null) 'websiteUrl': sponsor.websiteUrl,
-              if (sponsor.shortDescription != null)
-                'shortDescription': sponsor.shortDescription,
-              'displayOrder': sponsor.displayOrder,
-            })
+            .map(
+              (sponsor) => {
+                'id': sponsor.id,
+                'displayName': sponsor.displayName,
+                'tier': sponsor.tier,
+                'logoUrl': sponsor.logoUrl,
+                if (sponsor.websiteUrl != null)
+                  'websiteUrl': sponsor.websiteUrl,
+                if (sponsor.shortDescription != null)
+                  'shortDescription': sponsor.shortDescription,
+                'displayOrder': sponsor.displayOrder,
+              },
+            )
             .toList(),
       'isRanked': isRanked,
       'isRegistrationLocked': isRegistrationLocked,
       if (registrationMode != null) 'registrationMode': registrationMode,
       if (inviteCode != null) 'inviteCode': inviteCode,
       if (communityId != null) 'communityId': communityId,
+      if (sportRules != null) 'sportRules': sportRules,
     };
   }
 
@@ -515,6 +549,7 @@ class Tournament {
     String? communityId,
     String? communityName,
     String? communityLogoUrl,
+    Map<String, dynamic>? sportRules,
     bool? isLite,
     bool? isRegistrationLocked,
     int? teamSize,
@@ -569,6 +604,7 @@ class Tournament {
       communityId: communityId ?? this.communityId,
       communityName: communityName ?? this.communityName,
       communityLogoUrl: communityLogoUrl ?? this.communityLogoUrl,
+      sportRules: sportRules ?? this.sportRules,
       isLite: isLite ?? this.isLite,
       isRegistrationLocked: isRegistrationLocked ?? this.isRegistrationLocked,
       sponsors: sponsors ?? this.sponsors,
@@ -622,7 +658,8 @@ class TournamentDivision {
         divisionConfig['roundRobinLegs'] ??
         groupsConfig['roundsToPlay'];
 
-    final rawBracketType = json['bracketType']?.toString() ??
+    final rawBracketType =
+        json['bracketType']?.toString() ??
         json['bracket_type']?.toString() ??
         divisionConfig['bracketType']?.toString() ??
         divisionConfig['bracket_type']?.toString() ??

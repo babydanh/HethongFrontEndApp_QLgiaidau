@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
+import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/widgets/football_registration_groups.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
@@ -57,6 +58,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   bool _loadingWards = false;
   Region? _aiDetectedProvince;
   Region? _aiDetectedWard;
+  bool _isDeleting = false;
 
   @override
   void initState() {
@@ -99,17 +101,24 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     }
   }
 
-  Future<void> _loadWardsForProvince(String provinceCode, {String? targetWardCode}) async {
+  Future<void> _loadWardsForProvince(
+    String provinceCode, {
+    String? targetWardCode,
+  }) async {
     setState(() => _loadingWards = true);
     try {
-      final list = await ref.read(regionRepositoryProvider).getWardsByProvince(provinceCode);
+      final list = await ref
+          .read(regionRepositoryProvider)
+          .getWardsByProvince(provinceCode);
       if (!mounted) return;
       setState(() {
         _wards = list;
         _loadingWards = false;
-        if (targetWardCode != null && list.any((w) => w.code == targetWardCode)) {
+        if (targetWardCode != null &&
+            list.any((w) => w.code == targetWardCode)) {
           _selectedWardCode = targetWardCode;
-        } else if (_selectedWardCode != null && !list.any((w) => w.code == _selectedWardCode)) {
+        } else if (_selectedWardCode != null &&
+            !list.any((w) => w.code == _selectedWardCode)) {
           _selectedWardCode = null;
         }
       });
@@ -201,6 +210,45 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     super.dispose();
   }
 
+  bool _isTournamentCompleted(LiteManagementState state) {
+    final status = StatusHelper.normalizeTournamentStatus(
+      state.tournament?.status,
+    );
+    return StatusHelper.isTournamentCompleted(status) ||
+        const {
+          'FINISHED',
+          'DONE',
+          'ENDED',
+        }.contains(state.tournament?.status.trim().toUpperCase());
+  }
+
+  /// Bracket regeneration is only a pre-start operation. The server is the
+  /// final authority, while this guard keeps the management UI from offering
+  /// an operation that is guaranteed to fail once the tournament is live or
+  /// has a terminal result.
+  bool _isBracketLockedForRecreation(LiteManagementState state) {
+    final normalized = StatusHelper.normalizeTournamentStatus(
+      state.tournament?.status,
+    );
+    final rawStatus = state.tournament?.status.trim().toUpperCase();
+    if (StatusHelper.isTournamentInProgress(normalized) ||
+        _isTournamentCompleted(state) ||
+        StatusHelper.isTournamentCancelled(normalized) ||
+        rawStatus == 'CANCELED') {
+      return true;
+    }
+
+    // A stale tournament-level status must not reopen the reset action after
+    // a live/completed match has already been written.
+    return state.matches.any(
+      (match) =>
+          match.isLive ||
+          match.isCompleted ||
+          match.startedAt != null ||
+          match.completedAt != null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -209,13 +257,21 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     final notifier = ref.read(liteManagementProvider.notifier);
     if (!_controllersInitialized && state.tournament != null) {
       _controllersInitialized = true;
-      _descriptionController.text = state.description ?? state.tournament?.description ?? "";
-      _locationController.text = state.locationAddress ?? state.tournament?.locationAddress ?? "";
-      _venueNameController.text = state.venueName ?? state.tournament?.venueName ?? "";
-      _maxParticipantsController.text = (state.maxParticipants ?? state.tournament?.maxTeams ?? 16).toString();
+      _descriptionController.text =
+          state.description ?? state.tournament?.description ?? "";
+      _locationController.text =
+          state.locationAddress ?? state.tournament?.locationAddress ?? "";
+      _venueNameController.text =
+          state.venueName ?? state.tournament?.venueName ?? "";
+      _maxParticipantsController.text =
+          (state.maxParticipants ?? state.tournament?.maxTeams ?? 16)
+              .toString();
       if (state.startDate != null) {
         _selectedDate = state.startDate;
-        _selectedTime = TimeOfDay(hour: state.startDate!.hour, minute: state.startDate!.minute);
+        _selectedTime = TimeOfDay(
+          hour: state.startDate!.hour,
+          minute: state.startDate!.minute,
+        );
       }
       final dur = state.durationMinutes ?? 90;
       _durationHours = dur ~/ 60;
@@ -224,12 +280,26 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       final pName = state.province;
       final wName = state.ward;
       if (pName != null && pName.isNotEmpty && _provinces.isNotEmpty) {
-        final pMatch = _provinces.where((p) => p.name.toLowerCase() == pName.toLowerCase() || (p.fullName != null && p.fullName!.toLowerCase() == pName.toLowerCase())).firstOrNull;
+        final pMatch = _provinces
+            .where(
+              (p) =>
+                  p.name.toLowerCase() == pName.toLowerCase() ||
+                  (p.fullName != null &&
+                      p.fullName!.toLowerCase() == pName.toLowerCase()),
+            )
+            .firstOrNull;
         if (pMatch != null) {
           _selectedProvinceCode = pMatch.code;
           _loadWardsForProvince(pMatch.code).then((_) {
             if (wName != null && wName.isNotEmpty && mounted) {
-              final wMatch = _wards.where((w) => w.name.toLowerCase() == wName.toLowerCase() || (w.fullName != null && w.fullName!.toLowerCase() == wName.toLowerCase())).firstOrNull;
+              final wMatch = _wards
+                  .where(
+                    (w) =>
+                        w.name.toLowerCase() == wName.toLowerCase() ||
+                        (w.fullName != null &&
+                            w.fullName!.toLowerCase() == wName.toLowerCase()),
+                  )
+                  .firstOrNull;
               if (wMatch != null) {
                 setState(() => _selectedWardCode = wMatch.code);
               }
@@ -287,6 +357,30 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             onPressed: state.loading
                 ? null
                 : () => notifier.refresh(widget.tournamentId),
+          ),
+          PopupMenuButton<String>(
+            icon: Icon(Icons.more_vert_rounded, color: colors.textPrimary),
+            tooltip: l10n.deleteTournament,
+            onSelected: (value) {
+              if (value == 'delete') {
+                _confirmAndDeleteTournament(state.tournamentName ?? '');
+              }
+            },
+            itemBuilder: (ctx) => [
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    const Icon(Icons.delete_outline_rounded, color: Colors.red, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.deleteTournament,
+                      style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
         bottom: TabBar(
@@ -390,6 +484,9 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                                   AppConstants.bracketSingleElimination)
                               .trim()
                               .toLowerCase();
+                      final bracketLocked = _isBracketLockedForRecreation(
+                        state,
+                      );
                       return state.hasBracket
                           ? frame(
                               Column(
@@ -426,39 +523,57 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                                             ),
                                           ),
                                         ),
-                                        OutlinedButton.icon(
-                                          onPressed: state.creatingBracket
-                                              ? null
-                                              : () => _createBracket(colors, notifier),
-                                          icon: state.creatingBracket
-                                              ? const SizedBox(
-                                                  width: 16,
-                                                  height: 16,
-                                                  child: CircularProgressIndicator(
-                                                    strokeWidth: 2,
+                                        if (!bracketLocked)
+                                          OutlinedButton.icon(
+                                            onPressed: state.creatingBracket
+                                                ? null
+                                                : () => _createBracket(
+                                                    colors,
+                                                    notifier,
                                                   ),
-                                                )
-                                              : const Icon(Icons.refresh_rounded, size: 16),
-                                          label: Text(
-                                            state.creatingBracket
-                                                ? l10n.lite_creating
-                                                : l10n.lite_recreateBracket,
-                                            style: const TextStyle(fontSize: 13),
-                                          ),
-                                          style: OutlinedButton.styleFrom(
-                                            foregroundColor: colors.warning,
-                                            side: BorderSide(color: colors.warning),
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 6,
+                                            icon: state.creatingBracket
+                                                ? const SizedBox(
+                                                    width: 16,
+                                                    height: 16,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                        ),
+                                                  )
+                                                : const Icon(
+                                                    Icons.refresh_rounded,
+                                                    size: 16,
+                                                  ),
+                                            label: Text(
+                                              state.creatingBracket
+                                                  ? l10n.lite_creating
+                                                  : l10n.lite_recreateBracket,
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                              ),
                                             ),
-                                            minimumSize: Size.zero,
-                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                                            style: OutlinedButton.styleFrom(
+                                              foregroundColor: colors.warning,
+                                              side: BorderSide(
+                                                color: colors.warning,
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 6,
+                                                  ),
+                                              minimumSize: Size.zero,
+                                              tapTargetSize:
+                                                  MaterialTapTargetSize
+                                                      .shrinkWrap,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      AppTheme.radiusXL,
+                                                    ),
+                                              ),
                                             ),
                                           ),
-                                        ),
                                       ],
                                     ),
                                   ),
@@ -473,7 +588,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                                           hasSingleDivision &&
                                           liteDivision?.id.isNotEmpty == true &&
                                           bracketType ==
-                                              AppConstants.bracketSingleElimination,
+                                              AppConstants
+                                                  .bracketSingleElimination,
                                     ),
                                   ),
                                 ],
@@ -568,9 +684,162 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           _buildVenueAndLocationCard(colors, state, notifier),
           const SizedBox(height: 20),
           _buildDescriptionCard(colors, state, notifier),
+          const SizedBox(height: 28),
+          _buildDangerZoneCard(colors, state),
         ],
       ),
     );
+  }
+
+  Widget _buildDangerZoneCard(AppColorsExtension colors, LiteManagementState state) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                l10n.deleteTournament,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.deleteTournamentContent,
+            style: TextStyle(fontSize: 13, color: colors.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.red,
+                side: const BorderSide(color: Colors.red),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: _isDeleting
+                  ? null
+                  : () => _confirmAndDeleteTournament(state.tournamentName ?? ''),
+              icon: _isDeleting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
+                    )
+                  : const Icon(Icons.delete_forever_rounded, size: 18),
+              label: Text(
+                _isDeleting ? '...' : l10n.deleteTournament,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmAndDeleteTournament(String tournamentName) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.deleteTournamentTitle),
+        content: Text(
+          tournamentName.isNotEmpty
+              ? l10n.profileDeleteTournamentContent(tournamentName)
+              : l10n.deleteTournamentContent,
+          style: const TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.profileCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              l10n.deleteTournament,
+              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isDeleting = true);
+    try {
+      final success = await ref
+          .read(tournamentActionProvider.notifier)
+          .deleteTournament(widget.tournamentId);
+      if (!mounted) return;
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.profileTournamentDeleted),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        if (context.canPop()) {
+          context.pop(true);
+        } else {
+          context.go('/home');
+        }
+      } else {
+        final err = ref.read(tournamentActionProvider).error;
+        String errorMsg = 'Không thể xóa giải đấu. Vui lòng thử lại.';
+        if (err is DioException) {
+          final data = err.response?.data;
+          if (data is Map && data['message'] != null) {
+            errorMsg = data['message'].toString();
+          } else if (err.response?.statusCode != null) {
+            errorMsg = 'Lỗi máy chủ (${err.response!.statusCode})';
+          }
+        } else if (err != null) {
+          errorMsg = err.toString();
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isDeleting = false);
+      }
+    }
   }
 
   Widget _buildInlineSaveIndicator(AppColorsExtension colors, String status) {
@@ -587,7 +856,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           const SizedBox(width: 6),
           Text(
             l10n.lite_autoSaving,
-            style: TextStyle(fontSize: 11, color: colors.textMuted, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 11,
+              color: colors.textMuted,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       );
@@ -600,7 +873,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           const SizedBox(width: 4),
           Text(
             l10n.lite_saved,
-            style: TextStyle(fontSize: 11, color: colors.success, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 11,
+              color: colors.success,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       );
@@ -615,9 +892,14 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   ) {
     final l10n = AppLocalizations.of(context)!;
     final t = state.tournament;
-    final locked = t == null ||
-        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
-            .contains(t.status.toUpperCase());
+    final locked =
+        t == null ||
+        {
+          'IN_PROGRESS',
+          'ONGOING',
+          'COMPLETED',
+          'CANCELLED',
+        }.contains(t.status.toUpperCase());
 
     final now = DateTime.now();
     final dateDisplay = _selectedDate != null
@@ -639,7 +921,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.calendar_month_rounded, size: 20, color: AppTheme.primary),
+              Icon(
+                Icons.calendar_month_rounded,
+                size: 20,
+                color: AppTheme.primary,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -676,7 +962,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                         },
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: colors.bgDark,
                       borderRadius: BorderRadius.circular(12),
@@ -684,7 +973,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.today_rounded, size: 16, color: colors.textSecondary),
+                        Icon(
+                          Icons.today_rounded,
+                          size: 16,
+                          color: colors.textSecondary,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Column(
@@ -692,7 +985,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                             children: [
                               Text(
                                 l10n.lite_startDate,
-                                style: TextStyle(fontSize: 10, color: colors.textMuted),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: colors.textMuted,
+                                ),
                               ),
                               Text(
                                 dateDisplay,
@@ -719,7 +1015,9 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       : () async {
                           final picked = await showTimePicker(
                             context: context,
-                            initialTime: _selectedTime ?? const TimeOfDay(hour: 8, minute: 0),
+                            initialTime:
+                                _selectedTime ??
+                                const TimeOfDay(hour: 8, minute: 0),
                           );
                           if (picked != null) {
                             setState(() => _selectedTime = picked);
@@ -728,7 +1026,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                         },
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: colors.bgDark,
                       borderRadius: BorderRadius.circular(12),
@@ -736,7 +1037,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.access_time_rounded, size: 16, color: colors.textSecondary),
+                        Icon(
+                          Icons.access_time_rounded,
+                          size: 16,
+                          color: colors.textSecondary,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Column(
@@ -744,7 +1049,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                             children: [
                               Text(
                                 l10n.lite_startTime,
-                                style: TextStyle(fontSize: 10, color: colors.textMuted),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: colors.textMuted,
+                                ),
                               ),
                               Text(
                                 timeDisplay,
@@ -775,7 +1083,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             ),
             child: Row(
               children: [
-                Icon(Icons.timer_outlined, size: 16, color: colors.textSecondary),
+                Icon(
+                  Icons.timer_outlined,
+                  size: 16,
+                  color: colors.textSecondary,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -788,13 +1100,18 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   underline: const SizedBox.shrink(),
                   dropdownColor: colors.bgCard,
                   items: List.generate(24, (i) => i)
-                      .map((h) => DropdownMenuItem(
-                            value: h,
-                            child: Text(
-                              '$h ${l10n.lite_hours}',
-                              style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                      .map(
+                        (h) => DropdownMenuItem(
+                          value: h,
+                          child: Text(
+                            '$h ${l10n.lite_hours}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: colors.textPrimary,
                             ),
-                          ))
+                          ),
+                        ),
+                      )
                       .toList(),
                   onChanged: locked
                       ? null
@@ -815,13 +1132,18 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   underline: const SizedBox.shrink(),
                   dropdownColor: colors.bgCard,
                   items: [0, 15, 30, 45]
-                      .map((m) => DropdownMenuItem(
-                            value: m,
-                            child: Text(
-                              '$m ${l10n.lite_minutes}',
-                              style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                      .map(
+                        (m) => DropdownMenuItem(
+                          value: m,
+                          child: Text(
+                            '$m ${l10n.lite_minutes}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: colors.textPrimary,
                             ),
-                          ))
+                          ),
+                        ),
+                      )
                       .toList(),
                   onChanged: locked
                       ? null
@@ -869,12 +1191,21 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   ) {
     final l10n = AppLocalizations.of(context)!;
     final t = state.tournament;
-    final locked = t == null ||
-        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
-            .contains(t.status.toUpperCase());
+    final locked =
+        t == null ||
+        {
+          'IN_PROGRESS',
+          'ONGOING',
+          'COMPLETED',
+          'CANCELLED',
+        }.contains(t.status.toUpperCase());
 
-    final selectedProvince = _provinces.where((p) => p.code == _selectedProvinceCode).firstOrNull;
-    final selectedWard = _wards.where((w) => w.code == _selectedWardCode).firstOrNull;
+    final selectedProvince = _provinces
+        .where((p) => p.code == _selectedProvinceCode)
+        .firstOrNull;
+    final selectedWard = _wards
+        .where((w) => w.code == _selectedWardCode)
+        .firstOrNull;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -888,7 +1219,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.location_on_outlined, size: 20, color: AppTheme.primary),
+              Icon(
+                Icons.location_on_outlined,
+                size: 20,
+                color: AppTheme.primary,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -967,14 +1302,17 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             },
           ),
           // ─── AI Detected Address Helper Banner ───
-          if (!locked && (_aiDetectedProvince != null || _aiDetectedWard != null)) ...[
+          if (!locked &&
+              (_aiDetectedProvince != null || _aiDetectedWard != null)) ...[
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: AppTheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
+                border: Border.all(
+                  color: AppTheme.primary.withValues(alpha: 0.25),
+                ),
               ),
               child: Row(
                 children: [
@@ -993,7 +1331,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   InkWell(
                     onTap: () => _applyAiSuggestion(notifier),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       child: Text(
                         l10n.filterApply,
                         style: TextStyle(
@@ -1030,11 +1371,16 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(color: colors.border),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
                   ),
                   dropdownColor: colors.bgCard,
                   hint: Text(
-                    _loadingProvinces ? l10n.lite_loadingWards : l10n.lite_selectProvince,
+                    _loadingProvinces
+                        ? l10n.lite_loadingWards
+                        : l10n.lite_selectProvince,
                     style: TextStyle(fontSize: 13, color: colors.textMuted),
                   ),
                   items: _provinces.map((p) {
@@ -1042,7 +1388,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       value: p.code,
                       child: Text(
                         p.name,
-                        style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colors.textPrimary,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     );
@@ -1050,14 +1399,17 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   onChanged: locked || _loadingProvinces
                       ? null
                       : (val) {
-                          if (val == null || val == _selectedProvinceCode) return;
+                          if (val == null || val == _selectedProvinceCode)
+                            return;
                           setState(() {
                             _selectedProvinceCode = val;
                             _selectedWardCode = null;
                             _wards = [];
                           });
                           _loadWardsForProvince(val);
-                          final pObj = _provinces.where((p) => p.code == val).firstOrNull;
+                          final pObj = _provinces
+                              .where((p) => p.code == val)
+                              .firstOrNull;
                           notifier.updateLocation(
                             widget.tournamentId,
                             venueName: _venueNameController.text,
@@ -1086,15 +1438,18 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(color: colors.border),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
                   ),
                   dropdownColor: colors.bgCard,
                   hint: Text(
                     _loadingWards
                         ? l10n.lite_loadingWards
                         : (_selectedProvinceCode == null
-                            ? l10n.lite_selectProvinceFirst
-                            : l10n.lite_selectWard),
+                              ? l10n.lite_selectProvinceFirst
+                              : l10n.lite_selectWard),
                     style: TextStyle(fontSize: 13, color: colors.textMuted),
                   ),
                   items: _wards.map((w) {
@@ -1102,7 +1457,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       value: w.code,
                       child: Text(
                         w.name,
-                        style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colors.textPrimary,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     );
@@ -1112,8 +1470,12 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       : (val) {
                           if (val == null || val == _selectedWardCode) return;
                           setState(() => _selectedWardCode = val);
-                          final wObj = _wards.where((w) => w.code == val).firstOrNull;
-                          final pObj = _provinces.where((p) => p.code == _selectedProvinceCode).firstOrNull;
+                          final wObj = _wards
+                              .where((w) => w.code == val)
+                              .firstOrNull;
+                          final pObj = _provinces
+                              .where((p) => p.code == _selectedProvinceCode)
+                              .firstOrNull;
                           notifier.updateLocation(
                             widget.tournamentId,
                             venueName: _venueNameController.text,
@@ -1138,9 +1500,14 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   ) {
     final l10n = AppLocalizations.of(context)!;
     final t = state.tournament;
-    final locked = t == null ||
-        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
-            .contains(t.status.toUpperCase());
+    final locked =
+        t == null ||
+        {
+          'IN_PROGRESS',
+          'ONGOING',
+          'COMPLETED',
+          'CANCELLED',
+        }.contains(t.status.toUpperCase());
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1313,9 +1680,15 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     final n = int.tryParse(val.trim());
                     if (n != null && n >= 2 && n <= 128) {
                       _maxPartDebounce?.cancel();
-                      _maxPartDebounce = Timer(const Duration(milliseconds: 900), () {
-                        notifier.updateMaxParticipants(widget.tournamentId, n);
-                      });
+                      _maxPartDebounce = Timer(
+                        const Duration(milliseconds: 900),
+                        () {
+                          notifier.updateMaxParticipants(
+                            widget.tournamentId,
+                            n,
+                          );
+                        },
+                      );
                     }
                   },
                 ),
@@ -1622,7 +1995,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   gradient: LinearGradient(
-                    colors: [AppTheme.primary.withValues(alpha: 0.8), AppTheme.primary],
+                    colors: [
+                      AppTheme.primary.withValues(alpha: 0.8),
+                      AppTheme.primary,
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -1643,11 +2019,19 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                           width: 48,
                           height: 48,
                           errorBuilder: (ctx, err, stack) => const Center(
-                            child: Icon(Icons.emoji_events_rounded, color: Colors.white, size: 24),
+                            child: Icon(
+                              Icons.emoji_events_rounded,
+                              color: Colors.white,
+                              size: 24,
+                            ),
                           ),
                         )
                       : const Center(
-                          child: Icon(Icons.emoji_events_rounded, color: Colors.white, size: 24),
+                          child: Icon(
+                            Icons.emoji_events_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
                         ),
                 ),
               ),
@@ -1782,7 +2166,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25), width: 1.2),
+        border: Border.all(
+          color: AppTheme.primary.withValues(alpha: 0.25),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
             color: AppTheme.primary.withValues(alpha: 0.05),
@@ -1833,7 +2220,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 ),
                 IconButton(
                   tooltip: l10n.lite_shareTournament,
-                  icon: const Icon(Icons.share_rounded, color: AppTheme.primary, size: 20),
+                  icon: const Icon(
+                    Icons.share_rounded,
+                    color: AppTheme.primary,
+                    size: 20,
+                  ),
                   onPressed: () {
                     AppShareModal.show(
                       context: context,
@@ -1857,7 +2248,12 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               children: [
                 // QR Box (Click to enlarge)
                 GestureDetector(
-                  onTap: () => _showEnlargedQrDialog(colors, tournamentName, inviteCode, joinUrl),
+                  onTap: () => _showEnlargedQrDialog(
+                    colors,
+                    tournamentName,
+                    inviteCode,
+                    joinUrl,
+                  ),
                   child: Stack(
                     alignment: Alignment.bottomRight,
                     children: [
@@ -1916,7 +2312,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       ),
                       const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: AppTheme.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
@@ -1941,9 +2340,13 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                             ),
                             InkWell(
                               onTap: () {
-                                Clipboard.setData(ClipboardData(text: inviteCode));
+                                Clipboard.setData(
+                                  ClipboardData(text: inviteCode),
+                                );
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(l10n.lite_inviteCopied)),
+                                  SnackBar(
+                                    content: Text(l10n.lite_inviteCopied),
+                                  ),
                                 );
                               },
                               borderRadius: BorderRadius.circular(6),
@@ -1962,7 +2365,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       const SizedBox(height: 6),
                       Text(
                         joinUrl,
-                        style: TextStyle(fontSize: 10.5, color: colors.textMuted),
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: colors.textMuted,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1989,7 +2395,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     icon: const Icon(Icons.link_rounded, size: 16),
                     label: Text(
                       l10n.lite_copyLink,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -2004,13 +2413,20 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () {
-                      final text = l10n.lite_shareInviteMessage(tournamentName, inviteCode, joinUrl);
+                      final text = l10n.lite_shareInviteMessage(
+                        tournamentName,
+                        inviteCode,
+                        joinUrl,
+                      );
                       SharePlus.instance.share(ShareParams(text: text));
                     },
                     icon: const Icon(Icons.share_rounded, size: 16),
                     label: Text(
                       l10n.lite_shareTournament,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppTheme.primary,
@@ -2040,9 +2456,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: colors.bgCard,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -2090,7 +2504,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               ),
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -2111,7 +2528,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 child: FilledButton.icon(
                   onPressed: () {
                     Navigator.pop(dialogContext);
-                    final text = l10n.lite_shareInviteMessage(tournamentName, inviteCode, joinUrl);
+                    final text = l10n.lite_shareInviteMessage(
+                      tournamentName,
+                      inviteCode,
+                      joinUrl,
+                    );
                     SharePlus.instance.share(ShareParams(text: text));
                   },
                   icon: const Icon(Icons.share_rounded, size: 16),
@@ -2173,6 +2594,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     final pending = state.pendingParticipants;
     final allPaired = state.completeParticipants;
     final isDoubles = state.isDoubles;
+    final bracketLocked = _isBracketLockedForRecreation(state);
 
     return RefreshIndicator(
       onRefresh: () => notifier.refresh(widget.tournamentId),
@@ -2197,12 +2619,20 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline_rounded, size: 18, color: colors.info),
+                  Icon(
+                    Icons.info_outline_rounded,
+                    size: 18,
+                    color: colors.info,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       l10n.lite_recreateBracketNotice,
-                      style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.35),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colors.textSecondary,
+                        height: 1.35,
+                      ),
                     ),
                   ),
                 ],
@@ -2244,14 +2674,18 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                                     FilledButton(
                                       onPressed: () =>
                                           Navigator.pop(context, true),
-                                      child: Text(l10n.lite_confirmRosterButton),
+                                      child: Text(
+                                        l10n.lite_confirmRosterButton,
+                                      ),
                                     ),
                                   ],
                                 ),
                               );
                               if (confirmed != true || !mounted) return;
                               try {
-                                await notifier.confirmRoster(widget.tournamentId);
+                                await notifier.confirmRoster(
+                                  widget.tournamentId,
+                                );
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -2544,9 +2978,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           ],
 
           // ─── Bracket generation button ───
-          if (state.bracketEligibleCount >= 2 ||
-              allPaired.isNotEmpty ||
-              (state.participants.isNotEmpty && !isDoubles)) ...[
+          if (!bracketLocked &&
+              (state.bracketEligibleCount >= 2 ||
+                  allPaired.isNotEmpty ||
+                  (state.participants.isNotEmpty && !isDoubles))) ...[
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -2554,7 +2989,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               child: FilledButton.icon(
                 onPressed:
                     state.creatingBracket ||
-                        state.bracketEligibleCount < 2
+                        state.bracketEligibleCount < 2 ||
+                        bracketLocked
                     ? null
                     : () => _createBracket(colors, notifier),
                 icon: state.creatingBracket
@@ -2757,6 +3193,9 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     AppColorsExtension colors,
     LiteManagementNotifier notifier,
   ) async {
+    if (_isBracketLockedForRecreation(ref.read(liteManagementProvider))) {
+      return;
+    }
     final l10n = AppLocalizations.of(context)!;
     final replacingExisting = ref.read(liteManagementProvider).hasBracket;
 
@@ -2772,9 +3211,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               child: Text(l10n.commonCancel),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: colors.warning,
-              ),
+              style: FilledButton.styleFrom(backgroundColor: colors.warning),
               onPressed: () => Navigator.of(ctx).pop(true),
               child: Text(l10n.lite_recreateBracket),
             ),
@@ -2832,6 +3269,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     LiteManagementNotifier notifier,
   ) {
     final l10n = AppLocalizations.of(context)!;
+    final bracketLocked = _isBracketLockedForRecreation(state);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -2881,30 +3319,33 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       ),
                     ),
                   ),
-                  OutlinedButton.icon(
-                    onPressed: state.creatingBracket
-                        ? null
-                        : () => _createBracket(colors, notifier),
-                    icon: state.creatingBracket
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.refresh_rounded, size: 18),
-                    label: Text(
-                      state.creatingBracket
-                          ? l10n.lite_creating
-                          : l10n.lite_recreateBracket,
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: colors.warning,
-                      side: BorderSide(color: colors.warning),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                  if (!bracketLocked)
+                    OutlinedButton.icon(
+                      onPressed: state.creatingBracket
+                          ? null
+                          : () => _createBracket(colors, notifier),
+                      icon: state.creatingBracket
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.refresh_rounded, size: 18),
+                      label: Text(
+                        state.creatingBracket
+                            ? l10n.lite_creating
+                            : l10n.lite_recreateBracket,
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: colors.warning,
+                        side: BorderSide(color: colors.warning),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusXL,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
                 ],
               )
             else ...[
@@ -2914,7 +3355,8 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 child: FilledButton.icon(
                   onPressed:
                       state.creatingBracket ||
-                          state.bracketEligibleCount < 2
+                          state.bracketEligibleCount < 2 ||
+                          bracketLocked
                       ? null
                       : () => _createBracket(colors, notifier),
                   icon: state.creatingBracket
@@ -3003,7 +3445,9 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     VoidCallback? onTap,
     double size = 38,
   }) {
-    final initial = displayName.trim().isNotEmpty ? displayName.trim()[0].toUpperCase() : '?';
+    final initial = displayName.trim().isNotEmpty
+        ? displayName.trim()[0].toUpperCase()
+        : '?';
     final resolvedUrl = avatarUrl != null && avatarUrl.trim().isNotEmpty
         ? LiteTournamentCreateResult.resolveUrl(avatarUrl.trim())
         : null;
@@ -3018,10 +3462,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              accentColor.withValues(alpha: 0.85),
-              accentColor,
-            ],
+            colors: [accentColor.withValues(alpha: 0.85), accentColor],
           ),
           boxShadow: [
             BoxShadow(
@@ -3336,7 +3777,9 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     children: [
                       _buildUserAvatar(
                         colors,
-                        avatarUrl: members.isNotEmpty ? members.first.avatarUrl : null,
+                        avatarUrl: members.isNotEmpty
+                            ? members.first.avatarUrl
+                            : null,
                         displayName: participant.displayName,
                         accentColor: colors.success,
                       ),

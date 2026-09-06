@@ -1151,8 +1151,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 items: workspace.participatingTournaments,
               ),
             ];
-        final tournaments = roleGroups.expand((group) => group.items).toList();
-        final visible = tournaments.take(4).toList();
+        final seenIds = <String>{};
+        final deduplicatedItems = <({dynamic tournament, ({String label, IconData icon, Color color}) role})>[];
+
+        for (final group in roleGroups) {
+          for (final item in group.items) {
+            final id = item.id?.toString() ?? '';
+            if (id.isNotEmpty && !seenIds.contains(id)) {
+              seenIds.add(id);
+              deduplicatedItems.add((
+                tournament: item,
+                role: (
+                  label: group.label,
+                  icon: group.icon,
+                  color: group.color,
+                ),
+              ));
+            }
+          }
+        }
+
+        final visible = deduplicatedItems.take(4).toList();
 
         if (visible.isEmpty) {
           return Container(
@@ -1211,17 +1230,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           child: Column(
             children: [
-              ...visible.map((t) {
-                final group = roleGroups.firstWhere(
-                  (item) => item.items.any((candidate) => candidate.id == t.id),
-                );
+              ...visible.map((entry) {
                 return _buildTournamentRow(
-                  t,
+                  entry.tournament,
                   colors,
                   context,
-                  roleLabel: group.label,
-                  roleColor: group.color,
-                  roleIcon: group.icon,
+                  roleLabel: entry.role.label,
+                  roleColor: entry.role.color,
+                  roleIcon: entry.role.icon,
                 );
               }),
               Padding(
@@ -1230,7 +1246,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   onPressed: () => context.go('/dashboard'),
                   icon: const Icon(Icons.open_in_new_rounded, size: 16),
                   label: Text(
-                    l10n.profileViewAllCount(tournaments.length.toString()),
+                    l10n.profileViewAllCount(deduplicatedItems.length.toString()),
                   ),
                 ),
               ),

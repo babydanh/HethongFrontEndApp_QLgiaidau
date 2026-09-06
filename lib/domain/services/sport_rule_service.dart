@@ -67,6 +67,10 @@ enum SportScoringModel {
 class SportConfig {
   final SportRuleKind kind;
   final SportScoringModel scoringModel;
+
+  /// Open/Free scorecards have no BO cap. Strict presets still use
+  /// [bestOf]/[setsToWin] as their match-completion contract.
+  final bool isOpenScoring;
   final int bestOf;
   final int setsToWin;
   final int pointsPerSet;
@@ -78,6 +82,7 @@ class SportConfig {
   const SportConfig({
     required this.kind,
     required this.scoringModel,
+    this.isOpenScoring = false,
     required this.bestOf,
     required this.setsToWin,
     required this.pointsPerSet,
@@ -89,7 +94,67 @@ class SportConfig {
 
   @override
   String toString() =>
-      'SportConfig(kind=$kind, model=$scoringModel, BO$bestOf, ${pointsPerSet}pts, winBy2=$mustWinByTwo)';
+      'SportConfig(kind=$kind, model=$scoringModel, '
+      '${isOpenScoring ? 'OPEN' : 'BO$bestOf'}, ${pointsPerSet}pts, '
+      'winBy2=$mustWinByTwo)';
+}
+
+/// Xác định một trận dùng cách tính điểm Lite/open-score.
+///
+/// Preset nhanh có thể dùng cùng cách tính điểm mở nhưng không vì vậy mà trở
+/// thành sản phẩm Super Lite. Vì thế hàm này chỉ phục vụ cách hiển thị/nhập
+/// điểm; quyền mở bàn và quyền cập nhật dữ liệu được kiểm tra riêng.
+bool isLiteScoringMode({
+  Map<String, dynamic>? tournamentConfig,
+  Map<String, dynamic>? sportRules,
+  bool tournamentIsLite = false,
+}) {
+  bool hasLiteMarker(Map<String, dynamic>? source) {
+    if (source == null) return false;
+    if (source['isLite'] == true) return true;
+    final mode = source['mode']?.toString().trim().toUpperCase();
+    if (mode == 'LITE' || mode == 'OPEN' || mode == 'FREE') return true;
+    final scoringMode = (source['scoringMode'] ?? source['scoring_mode'])
+        ?.toString()
+        .trim()
+        .toUpperCase();
+    // `scoringMode=FREE` is used by Quick tournaments in tournamentConfig.
+    // It describes the scorecard contract only; it never grants Super Lite
+    // access because that check is kept in isSuperLiteTournament().
+    if (scoringMode == 'LITE' ||
+        scoringMode == 'OPEN' ||
+        scoringMode == 'FREE') {
+      return true;
+    }
+    final preset = source['rulesPreset']?.toString().trim().toUpperCase();
+    return preset == 'LITE' || preset == 'OPEN' || preset == 'FREE';
+  }
+
+  if (tournamentIsLite ||
+      hasLiteMarker(tournamentConfig) ||
+      hasLiteMarker(sportRules)) {
+    return true;
+  }
+
+  final nestedScoring = sportRules?['scoring'];
+  return nestedScoring is Map &&
+      hasLiteMarker(Map<String, dynamic>.from(nestedScoring));
+}
+
+/// Xác định loại sản phẩm Super Lite của giải.
+///
+/// Chỉ cờ `isLite` (top-level hoặc tournamentConfig) mới mở quyền Live cho
+/// tài khoản đã đăng nhập. `sportRules.mode=LITE` có thể chỉ là preset nhanh
+/// nên tuyệt đối không được dùng làm quyền truy cập.
+bool isSuperLiteTournament({
+  Map<String, dynamic>? tournamentConfig,
+  bool tournamentIsLite = false,
+}) {
+  if (tournamentIsLite || tournamentConfig?['isLite'] == true) return true;
+
+  // Tương thích dữ liệu Super Lite cũ trước khi có cờ canonical.
+  final mode = tournamentConfig?['mode']?.toString().trim().toUpperCase();
+  return mode == 'LITE' && tournamentConfig?['hideAdvancedSettings'] == true;
 }
 
 // ─── Defaults map ───
@@ -159,27 +224,50 @@ SportConfig resolveSportConfig(
     return _sportDefaults[fallback]!;
   }
 
-  final kind = SportRuleKind.fromString(sportRules['kind']?.toString());
+  // Some API responses wrap scoring fields under `scoring`, while older
+  // responses keep them at the top level. Flatten both shapes before reading
+  // BO/sets so a configured BO5 cannot silently fall back to BO3.
+  final nestedScoring = sportRules['scoring'];
+  final source = nestedScoring is Map
+      ? {...sportRules, ...Map<String, dynamic>.from(nestedScoring)}
+      : sportRules;
+  final kind = SportRuleKind.fromString(source['kind']?.toString());
   final defaults = _sportDefaults[kind]!;
 
   // Nếu sportRules có scoringModel override
-  final rawModel = sportRules['scoringModel']?.toString();
+  final rawModel = source['scoringModel']?.toString();
   final scoringModel = rawModel != null
       ? SportScoringModel.fromString(rawModel)
       : defaults.scoringModel;
 
+  final configuredBestOf = _readInt(source, 'bestOf');
+  final configuredSetsToWin = _readInt(source, 'setsToWin');
+  final isOpenScoring = isLiteScoringMode(sportRules: source);
+  final bestOf =
+      configuredBestOf ??
+      (configuredSetsToWin != null
+          ? configuredSetsToWin * 2 - 1
+          : defaults.bestOf);
+  // `bestOf` is canonical when both fields are sent. Older match snapshots
+  // can still contain the stale BO3 companion value `setsToWin: 2`; letting
+  // it win would make a BO5 close after two sets in the app while the backend
+  // correctly waits for three wins.
+  final setsToWin = configuredBestOf != null
+      ? ((bestOf + 1) ~/ 2)
+      : (configuredSetsToWin ?? ((bestOf + 1) ~/ 2));
+
   return SportConfig(
     kind: kind,
     scoringModel: scoringModel,
-    bestOf: _readInt(sportRules, 'bestOf') ?? defaults.bestOf,
-    setsToWin: _readInt(sportRules, 'setsToWin') ?? defaults.setsToWin,
-    pointsPerSet: _readInt(sportRules, 'pointsPerSet') ?? defaults.pointsPerSet,
-    mustWinByTwo:
-        _readBool(sportRules, 'mustWinByTwo') ?? defaults.mustWinByTwo,
-    maxPoints: _readInt(sportRules, 'maxPoints') ?? defaults.maxPoints,
-    tiebreakAt: _readInt(sportRules, 'tiebreakAt') ?? defaults.tiebreakAt,
+    isOpenScoring: isOpenScoring,
+    bestOf: bestOf,
+    setsToWin: setsToWin,
+    pointsPerSet: _readInt(source, 'pointsPerSet') ?? defaults.pointsPerSet,
+    mustWinByTwo: _readBool(source, 'mustWinByTwo') ?? defaults.mustWinByTwo,
+    maxPoints: _readInt(source, 'maxPoints') ?? defaults.maxPoints,
+    tiebreakAt: _readInt(source, 'tiebreakAt') ?? defaults.tiebreakAt,
     tiebreakPoints:
-        _readInt(sportRules, 'tiebreakPoints') ?? defaults.tiebreakPoints,
+        _readInt(source, 'tiebreakPoints') ?? defaults.tiebreakPoints,
   );
 }
 
@@ -198,11 +286,13 @@ SportConfig resolveSportConfig(
 
 /// Kiểm tra match đã kết thúc chưa
 bool isMatchComplete(SportConfig config, List<SetScoreData> sets) {
+  if (config.isOpenScoring) return false;
   final (t1, t2) = computeMatchSetsWon(sets);
   return t1 >= config.setsToWin || t2 >= config.setsToWin;
 }
 
 int? getMatchWinnerIndex(SportConfig config, List<SetScoreData> sets) {
+  if (config.isOpenScoring) return null;
   final (t1, t2) = computeMatchSetsWon(sets);
   if (t1 >= config.setsToWin) return 1;
   if (t2 >= config.setsToWin) return 2;

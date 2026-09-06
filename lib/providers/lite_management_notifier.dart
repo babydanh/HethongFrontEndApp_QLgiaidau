@@ -337,6 +337,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         _fetchParticipants(tournamentId),
       ]).timeout(const Duration(seconds: 15));
       await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
+      await _fetchMatches(tournamentId);
       _loadInFlight = false;
     } on TimeoutException {
       _loadInFlight = false;
@@ -398,19 +399,25 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
             : payload['location'] is Map
             ? Map<String, dynamic>.from(payload['location'] as Map)
             : const <String, dynamic>{};
-        final initialVenue = locConfig['venueName']?.toString() ??
-            (payload['venue'] is Map ? (payload['venue'] as Map)['name']?.toString() : null) ??
+        final initialVenue =
+            locConfig['venueName']?.toString() ??
+            (payload['venue'] is Map
+                ? (payload['venue'] as Map)['name']?.toString()
+                : null) ??
             '';
-        final initialAddress = payload['locationAddress']?.toString() ??
+        final initialAddress =
+            payload['locationAddress']?.toString() ??
             locConfig['address']?.toString() ??
             '';
-        final initialProvince = payload['city']?.toString() ??
+        final initialProvince =
+            payload['city']?.toString() ??
             locConfig['province']?.toString() ??
             tournament?.city ??
             '';
         final initialWard = locConfig['ward']?.toString() ?? '';
         final initialDesc = payload['description']?.toString() ?? '';
-        final initialMaxPart = int.tryParse(payload['maxParticipants']?.toString() ?? '') ??
+        final initialMaxPart =
+            int.tryParse(payload['maxParticipants']?.toString() ?? '') ??
             tournament?.maxTeams ??
             16;
 
@@ -422,8 +429,10 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         final scheduleMap = cfgMap['schedule'] is Map<String, dynamic>
             ? cfgMap['schedule'] as Map<String, dynamic>
             : null;
-        final rawDurMin = cfgMap['durationMinutes'] ?? scheduleMap?['durationMinutes'];
-        final rawDurHours = cfgMap['durationHours'] ?? scheduleMap?['durationHours'];
+        final rawDurMin =
+            cfgMap['durationMinutes'] ?? scheduleMap?['durationMinutes'];
+        final rawDurHours =
+            cfgMap['durationHours'] ?? scheduleMap?['durationHours'];
 
         int? parsedDurationMinutes;
         if (rawDurMin != null) {
@@ -436,7 +445,9 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         } else if (parsedStartDate != null && payload['endDate'] != null) {
           final parsedEndDate = DateParser.parseDate(payload['endDate']);
           if (parsedEndDate.isAfter(parsedStartDate)) {
-            parsedDurationMinutes = parsedEndDate.difference(parsedStartDate).inMinutes;
+            parsedDurationMinutes = parsedEndDate
+                .difference(parsedStartDate)
+                .inMinutes;
           }
         }
 
@@ -537,8 +548,8 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   Future<void> _fetchMatches(String tournamentId) async {
     try {
       final matches = await ref
-          .read(matchRepositoryProvider)
-          .getAllByTournament(tournamentId);
+          .read(tournamentRepositoryProvider)
+          .getBracketMatches(tournamentId, divisionId: _liteDivisionId);
       state = state.copyWith(matches: matches, clearMatchesError: true);
     } catch (e, stack) {
       _log.error('Lỗi tải danh sách trận Lite', e, stack);
@@ -563,6 +574,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         _fetchParticipants(tournamentId),
       ]).timeout(const Duration(seconds: 15));
       await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
+      await _fetchMatches(tournamentId);
       _loadInFlight = false;
     } on TimeoutException {
       _loadInFlight = false;
@@ -640,8 +652,12 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   }) async {
     final tournament = state.tournament;
     if (tournament == null ||
-        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
-            .contains(tournament.status.toUpperCase())) {
+        {
+          'IN_PROGRESS',
+          'ONGOING',
+          'COMPLETED',
+          'CANCELLED',
+        }.contains(tournament.status.toUpperCase())) {
       return false;
     }
     state = state.copyWith(detailsSaveStatus: 'saving');
@@ -652,7 +668,8 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       final totalMinutes = durationMinutes;
 
       final nextTournamentConfig = {
-        if (tournament.locationConfig != null) 'location': tournament.locationConfig,
+        if (tournament.locationConfig != null)
+          'location': tournament.locationConfig,
         'bracketType': tournament.bracketType,
         'maxTeams': tournament.maxTeams,
         if (tournament.isLite) 'isLite': true,
@@ -660,11 +677,14 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         'durationMinutes': totalMinutes,
       };
 
-      await _dio.patch('/tournaments/$tournamentId', data: {
-        'startDate': startIso,
-        'endDate': endIso,
-        'tournamentConfig': nextTournamentConfig,
-      });
+      await _dio.patch(
+        '/tournaments/$tournamentId',
+        data: {
+          'startDate': startIso,
+          'endDate': endIso,
+          'tournamentConfig': nextTournamentConfig,
+        },
+      );
 
       final updatedTournament = tournament.copyWith(
         startDate: startDate,
@@ -695,16 +715,21 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     final tournament = state.tournament;
     if (tournament == null ||
         state.hasBracket ||
-        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
-            .contains(tournament.status.toUpperCase())) {
+        {
+          'IN_PROGRESS',
+          'ONGOING',
+          'COMPLETED',
+          'CANCELLED',
+        }.contains(tournament.status.toUpperCase())) {
       return false;
     }
     state = state.copyWith(detailsSaveStatus: 'saving');
     try {
       final divisionId = _liteDivisionId;
-      await _dio.patch('/tournaments/$tournamentId', data: {
-        'maxParticipants': maxParticipants,
-      });
+      await _dio.patch(
+        '/tournaments/$tournamentId',
+        data: {'maxParticipants': maxParticipants},
+      );
       if (divisionId != null) {
         try {
           await _dio.patch(
@@ -738,8 +763,12 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   }) async {
     final tournament = state.tournament;
     if (tournament == null ||
-        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
-            .contains(tournament.status.toUpperCase())) {
+        {
+          'IN_PROGRESS',
+          'ONGOING',
+          'COMPLETED',
+          'CANCELLED',
+        }.contains(tournament.status.toUpperCase())) {
       return false;
     }
     state = state.copyWith(detailsSaveStatus: 'saving');
@@ -758,25 +787,38 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         ...(tournament.locationConfig ?? {}),
         'location': {
           if (venueName.trim().isNotEmpty) 'venueName': venueName.trim(),
-          if (locationAddress.trim().isNotEmpty) 'address': locationAddress.trim(),
-          if (effectiveProvince.trim().isNotEmpty) 'province': effectiveProvince.trim(),
+          if (locationAddress.trim().isNotEmpty)
+            'address': locationAddress.trim(),
+          if (effectiveProvince.trim().isNotEmpty)
+            'province': effectiveProvince.trim(),
           if (effectiveWard.trim().isNotEmpty) 'ward': effectiveWard.trim(),
           if (display.isNotEmpty) 'display': display,
         },
       };
 
-      await _dio.patch('/tournaments/$tournamentId', data: {
-        'locationAddress': locationAddress.trim(),
-        if (effectiveProvince.trim().isNotEmpty) 'city': effectiveProvince.trim(),
-        'tournamentConfig': nextTournamentConfig,
-      });
+      await _dio.patch(
+        '/tournaments/$tournamentId',
+        data: {
+          'locationAddress': locationAddress.trim(),
+          if (effectiveProvince.trim().isNotEmpty)
+            'city': effectiveProvince.trim(),
+          'tournamentConfig': nextTournamentConfig,
+        },
+      );
 
       if (venueName.trim().isNotEmpty || locationAddress.trim().isNotEmpty) {
         try {
-          await _dio.post('/tournaments/$tournamentId/venues', data: {
-            'name': venueName.trim().isNotEmpty ? venueName.trim() : 'Sân thi đấu',
-            'locationAddress': locationAddress.trim().isNotEmpty ? locationAddress.trim() : display,
-          });
+          await _dio.post(
+            '/tournaments/$tournamentId/venues',
+            data: {
+              'name': venueName.trim().isNotEmpty
+                  ? venueName.trim()
+                  : 'Sân thi đấu',
+              'locationAddress': locationAddress.trim().isNotEmpty
+                  ? locationAddress.trim()
+                  : display,
+            },
+          );
         } catch (_) {}
       }
 
@@ -806,8 +848,12 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   }) async {
     final tournament = state.tournament;
     if (tournament == null ||
-        {'IN_PROGRESS', 'ONGOING', 'COMPLETED', 'CANCELLED'}
-            .contains(tournament.status.toUpperCase())) {
+        {
+          'IN_PROGRESS',
+          'ONGOING',
+          'COMPLETED',
+          'CANCELLED',
+        }.contains(tournament.status.toUpperCase())) {
       return false;
     }
     state = state.copyWith(detailsSaveStatus: 'saving');
@@ -817,15 +863,19 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         if (venueName != null && venueName.trim().isNotEmpty)
           'location': {
             'venueName': venueName.trim(),
-            if (locationAddress.trim().isNotEmpty) 'address': locationAddress.trim(),
+            if (locationAddress.trim().isNotEmpty)
+              'address': locationAddress.trim(),
           },
       };
 
-      await _dio.patch('/tournaments/$tournamentId', data: {
-        'description': description.trim(),
-        'locationAddress': locationAddress.trim(),
-        'tournamentConfig': nextTournamentConfig,
-      });
+      await _dio.patch(
+        '/tournaments/$tournamentId',
+        data: {
+          'description': description.trim(),
+          'locationAddress': locationAddress.trim(),
+          'tournamentConfig': nextTournamentConfig,
+        },
+      );
 
       state = state.copyWith(
         description: description.trim(),
@@ -1004,38 +1054,25 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
           );
           await _fetchParticipants(tournamentId);
         } catch (pairErr) {
-          _log.warning('Tự động ghép cặp trước khi tạo bracket bỏ qua lỗi: $pairErr');
+          _log.warning(
+            'Tự động ghép cặp trước khi tạo bracket bỏ qua lỗi: $pairErr',
+          );
         }
       }
 
-      try {
-        await _dio.post(
-          '/tournaments/lite/$tournamentId/bracket',
-          data: {
-            if (_liteDivisionId != null) 'divisionId': _liteDivisionId,
-            'seedingType': 'RANDOM',
-            'bracketType': bType.contains('DOUBLE')
-                ? 'DOUBLE_ELIMINATION'
-                : 'SINGLE_ELIMINATION',
-          },
-        );
-      } on DioException catch (e) {
-        if (e.response?.statusCode == 400 || e.response?.statusCode == 404) {
-          // Fallback to standard bracket generation endpoint
-          await _dio.post(
-            '/tournaments/$tournamentId/bracket/generate',
-            data: {
-              if (_liteDivisionId != null) 'divisionId': _liteDivisionId,
-              'bracketType': bType.contains('DOUBLE')
-                  ? 'DOUBLE_ELIMINATION'
-                  : 'SINGLE_ELIMINATION',
-              'seedingType': 'RANDOM',
-            },
-          );
-        } else {
-          rethrow;
-        }
-      }
+      // Lite must stay on its guarded endpoint. Falling back to the normal
+      // bracket endpoint after a 400/404 could bypass the Lite lifecycle
+      // guard and recreate a bracket while the tournament is live.
+      await _dio.post(
+        '/tournaments/lite/$tournamentId/bracket',
+        data: {
+          if (_liteDivisionId != null) 'divisionId': _liteDivisionId,
+          'seedingType': 'RANDOM',
+          'bracketType': bType.contains('DOUBLE')
+              ? 'DOUBLE_ELIMINATION'
+              : 'SINGLE_ELIMINATION',
+        },
+      );
       _log.success('Tạo bracket thành công');
       state = state.copyWith(creatingBracket: false, hasBracket: true);
       await _fetchBracket(tournamentId, divisionId: _liteDivisionId);

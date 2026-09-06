@@ -63,11 +63,65 @@ void main() {
       expect(match.winnerId, '');
     });
 
+    test('uses backend set aggregate when score aliases are absent', () {
+      final match = MatchModel.fromJson({
+        'status': 'COMPLETED',
+        'p1SetsWon': 2,
+        'p2SetsWon': 1,
+      }, 'match-aggregate');
+
+      expect(match.score1, 2);
+      expect(match.score2, 1);
+    });
+
     test('should handle TBD team names', () {
       final json = {'team1Name': null, 'team2Name': null};
       final match = MatchModel.fromJson(json, 'm1');
       expect(match.team1Name, 'TBD');
       expect(match.team2Name, 'TBD');
+    });
+
+    test('reads the open set for live cards instead of the set aggregate', () {
+      final match = MatchModel.fromJson({
+        'status': 'ONGOING',
+        'score1': 1,
+        'score2': 0,
+        'scoreDetails': {
+          'sets': [
+            {'team1Score': 11, 'team2Score': 7, 'isFinished': true},
+            {'team1Score': 4, 'team2Score': 2, 'isFinished': false},
+          ],
+        },
+      }, 'm1');
+
+      expect(match.currentLiveScore.score1, 4);
+      expect(match.currentLiveScore.score2, 2);
+      expect(match.scoreHistory.map((set) => '${set.score1}-${set.score2}'), [
+        '11-7',
+        '4-2',
+      ]);
+      expect(match.sets.length, 2);
+    });
+
+    test('keeps Quick FREE scoring marker from top-level match payload', () {
+      final match = MatchModel.fromJson({
+        'sport': 'BADMINTON',
+        'tournamentConfig': {
+          'mode': 'STRICT',
+          'scoringMode': 'FREE',
+          'bestOf': 3,
+          'setsToWin': 2,
+        },
+        'sportRules': {
+          'kind': 'BADMINTON',
+          'mode': 'STRICT',
+          'bestOf': 3,
+          'setsToWin': 2,
+        },
+      }, 'quick-free');
+
+      expect(match.tournamentConfig?['scoringMode'], 'FREE');
+      expect(match.sportRules?['scoringMode'], 'FREE');
     });
   });
 

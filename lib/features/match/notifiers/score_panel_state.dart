@@ -208,15 +208,29 @@ class ScorePanelState {
     return t;
   }
 
+  /// A scoring preset can be open even when the legacy `isLite` flag was not
+  /// carried by an older match snapshot. Keep the resolved rule as a second
+  /// source so a stale snapshot cannot silently fall back to BO3.
+  bool get isOpenScoring => isLite || config.isOpenScoring;
+
   /// Football uses its own phase/goal state instead of finished sets.
+  ///
+  /// Super Lite is an open scorecard: each manually closed set is history,
+  /// not a signal that the match is over. The server-terminal flag is the
+  /// only terminal state for Lite; otherwise the configured set target applies
+  /// to strict presets only.
   bool get isMatchComplete =>
-      football?.isMatchComplete ??
-      (team1SetWins >= config.setsToWin || team2SetWins >= config.setsToWin);
+      isServerTerminal ||
+      (football?.isMatchComplete ??
+          (!isOpenScoring &&
+              (team1SetWins >= config.setsToWin ||
+                  team2SetWins >= config.setsToWin)));
 
   /// Đội thắng (0 = chưa, 1 = Đội 1, 2 = Đội 2).
   int get winnerTeam {
     final footballWinner = football?.winnerTeam;
     if (footballWinner != null) return footballWinner;
+    if (isOpenScoring && !isServerTerminal) return 0;
     if (team1SetWins >= config.setsToWin) return 1;
     if (team2SetWins >= config.setsToWin) return 2;
     return 0;

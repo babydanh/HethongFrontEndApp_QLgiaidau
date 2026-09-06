@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -12,8 +14,8 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dar
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/standings_view.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/filter_chips.dart'
-    show RoundFilterPill;
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_filter_bottom_sheet.dart';
+import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -24,9 +26,10 @@ class BracketViewScreen extends ConsumerStatefulWidget {
   final String? bracketType;
   final int configuredLegs;
   final bool isReferee;
-  final bool isEmbedded;
+  final bool isReadOnly;
   final bool canEditBracket;
   final bool isLite;
+  final bool isEmbedded;
   final ScrollController? scrollController;
 
   const BracketViewScreen({
@@ -36,9 +39,10 @@ class BracketViewScreen extends ConsumerStatefulWidget {
     this.bracketType,
     this.configuredLegs = 1,
     this.isReferee = false,
-    this.isEmbedded = false,
+    this.isReadOnly = false,
     this.canEditBracket = false,
     this.isLite = false,
+    this.isEmbedded = false,
     this.scrollController,
   });
 
@@ -48,6 +52,7 @@ class BracketViewScreen extends ConsumerStatefulWidget {
 
 class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounceTimer;
   int _selectedGroupTab = 0;
   String _searchQuery = '';
   int _selectedRound = 0;
@@ -55,6 +60,58 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
   String _matchFilter = '';
   String _selectedBranch = '';
   String _selectedGroup = '';
+
+  BracketFilterState get _currentFilterState => BracketFilterState(
+    matchFilter: _matchFilter,
+    selectedBranch: _selectedBranch,
+    selectedGroup: _selectedGroup,
+    selectedLeg: _selectedLeg,
+    selectedRound: _selectedRound,
+  );
+
+  void _applyFilterState(BracketFilterState state) {
+    setState(() {
+      _matchFilter = state.matchFilter;
+      _selectedBranch = state.selectedBranch;
+      _selectedGroup = state.selectedGroup;
+      _selectedLeg = state.selectedLeg;
+      _selectedRound = state.selectedRound;
+    });
+  }
+
+  void _openFilterBottomSheet({
+    required BuildContext context,
+    required bool isDoubleElimination,
+    required bool isGroupStageKnockout,
+    required bool isRoundRobin,
+    required int liveCount,
+    required int scheduledCount,
+    required int completedCount,
+    required List<String> availableGroups,
+    required List<int> availableLegs,
+    required List<int> availableRounds,
+    required int effectiveTotalRounds,
+  }) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => BracketFilterBottomSheet(
+        initialState: _currentFilterState,
+        isDoubleElimination: isDoubleElimination,
+        isGroupStageKnockout: isGroupStageKnockout,
+        isRoundRobin: isRoundRobin,
+        liveCount: liveCount,
+        scheduledCount: scheduledCount,
+        completedCount: completedCount,
+        availableGroups: availableGroups,
+        availableLegs: availableLegs,
+        availableRounds: availableRounds,
+        effectiveTotalRounds: effectiveTotalRounds,
+        onApply: _applyFilterState,
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -84,8 +141,85 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
     );
   }
 
+  Future<void> _unassignBracketSlot(BracketSlotDragData slot) async {
+    if (!widget.canEditBracket || !slot.hasParticipant) return;
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.lite_unassignBracketTitle),
+        content: Text(l10n.lite_unassignBracketContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.lite_keepPair),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.lite_unassignBracket),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final tournament = ref
+          .read(tournamentProvider(widget.tournamentId))
+          .value;
+      final isLite = widget.isLite || tournament?.isLite == true;
+      await ref
+          .read(tournamentRepositoryProvider)
+          .updateBracketSlots(
+            widget.tournamentId,
+            divisionId: widget.divisionId,
+            operations: [
+              {
+                'operation': 'UNASSIGN',
+                'matchId': slot.matchId,
+                'slot': slot.slot,
+              },
+            ],
+            isLite: isLite,
+          );
+      ref.invalidate(bracketMatchesProvider(widget.tournamentId));
+      final params = (
+        tournamentId: widget.tournamentId,
+        divisionId: widget.divisionId,
+      );
+      ref.invalidate(bracketMatchesWithDivisionProvider(params));
+      if (mounted) setState(() {});
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.singleElimUpdateError(_formatBracketError(error))),
+        ),
+      );
+    }
+  }
+
+  String _formatBracketError(Object error) {
+    if (error is DioException) {
+      final payload = error.response?.data;
+      if (payload is Map) {
+        final message = payload['message'];
+        if (message is List) return message.join(', ');
+        if (message != null && message.toString().trim().isNotEmpty) {
+          return message.toString();
+        }
+      }
+      if (error.message?.trim().isNotEmpty == true) return error.message!;
+    }
+    return error
+        .toString()
+        .replaceFirst('Exception: ', '')
+        .replaceFirst('DioException: ', '');
+  }
+
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
 
     if (!widget.isEmbedded) {
@@ -191,7 +325,8 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             isRoundRobin || (isGroupStageKnockout && hasGroupMatches);
 
         final effectiveIsLite = widget.isLite || tournament?.isLite == true;
-        final canActAsReferee = effectiveIsLite || auth.role == UserRole.admin || widget.isReferee;
+        final canActAsReferee =
+            effectiveIsLite || auth.role == UserRole.admin || widget.isReferee;
         final isReadOnlyMode = !effectiveIsLite && auth.role == UserRole.viewer;
 
         if (hasGroupStage) {
@@ -203,7 +338,13 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
               _buildGroupStageTabBar(l10n),
               const SizedBox(height: 8),
               if (widget.isEmbedded)
-                _buildGroupTabContent(matches, effectiveBracketType, auth, canActAsReferee: canActAsReferee, isReadOnly: isReadOnlyMode)
+                _buildGroupTabContent(
+                  matches,
+                  effectiveBracketType,
+                  auth,
+                  canActAsReferee: canActAsReferee,
+                  isReadOnly: isReadOnlyMode,
+                )
               else
                 Expanded(
                   child: _buildGroupTabContent(
@@ -387,6 +528,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
   ) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
+    final tournament = ref.read(tournamentProvider(widget.tournamentId)).value;
     final totalRounds = _computeTotalRounds(matches, bracketType);
 
     final isDoubleElimination =
@@ -569,334 +711,310 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       children: [
         // ── Diagram Access Banner ──
         Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppTheme.primary.withValues(alpha: 0.12),
-                  colors.bgCard,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.primary.withValues(alpha: 0.2),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isGroupStageKnockout ||
-                                bracketType == 'group_stage_knockout'
-                            ? l10n.bracketView_knockoutStage
-                            : isDoubleElimination ||
-                                  bracketType == 'double_elimination'
-                            ? l10n.bracketView_doubleEliminationMap
-                            : isRoundRobin || bracketType == 'round_robin'
-                            ? l10n.bracketView_roundRobinMap
-                            : l10n.bracketView_knockoutTitle,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        isGroupStageKnockout ||
-                                bracketType == 'group_stage_knockout'
-                            ? l10n.bracketView_knockoutDescription
-                            : isDoubleElimination ||
-                                  bracketType == 'double_elimination'
-                            ? l10n.bracketView_doubleEliminationDescription
-                            : isRoundRobin || bracketType == 'round_robin'
-                            ? l10n.bracketView_roundRobinDescription
-                            : l10n.bracketView_singleEliminationDescription,
-                        style: TextStyle(fontSize: 10, color: colors.textMuted),
-                      ),
-                    ],
-                  ),
-                ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    minimumSize: Size.zero,
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => BracketDiagramScreen(
-                          tournamentId: widget.tournamentId,
-                          divisionId: widget.divisionId,
-                          bracketType: bracketType,
-                          initialMatches: matches,
-                          isReferee: isReferee,
-                          isReadOnly: isReadOnly,
-                          canEditBracket: widget.canEditBracket,
-                          isLite: isReferee || widget.isLite,
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.account_tree_rounded, size: 14),
-                  label: Text(
-                    isGroupStageKnockout ||
-                            bracketType == 'group_stage_knockout'
-                        ? l10n.bracketView_knockoutMap
-                        : isDoubleElimination ||
-                              bracketType == 'double_elimination'
-                        ? l10n.bracketView_doubleEliminationMap
-                        : isRoundRobin || bracketType == 'round_robin'
-                        ? l10n.bracketView_roundRobinMap
-                        : l10n.bracketView_knockoutMap,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-        // ── Search Input Field ──
-        Container(
           margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppTheme.primary.withValues(alpha: 0.12), colors.bgCard],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isGroupStageKnockout ||
+                              bracketType == 'group_stage_knockout'
+                          ? l10n.bracketView_knockoutStage
+                          : isDoubleElimination ||
+                                bracketType == 'double_elimination'
+                          ? l10n.bracketView_doubleEliminationMap
+                          : isRoundRobin || bracketType == 'round_robin'
+                          ? l10n.bracketView_roundRobinMap
+                          : l10n.bracketView_knockoutTitle,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      isGroupStageKnockout ||
+                              bracketType == 'group_stage_knockout'
+                          ? l10n.bracketView_knockoutDescription
+                          : isDoubleElimination ||
+                                bracketType == 'double_elimination'
+                          ? l10n.bracketView_doubleEliminationDescription
+                          : isRoundRobin || bracketType == 'round_robin'
+                          ? l10n.bracketView_roundRobinDescription
+                          : l10n.bracketView_singleEliminationDescription,
+                      style: TextStyle(fontSize: 10, color: colors.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  minimumSize: Size.zero,
+                ),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => BracketDiagramScreen(
+                        tournamentId: widget.tournamentId,
+                        divisionId: widget.divisionId,
+                        bracketType: bracketType,
+                        initialMatches: matches,
+                        isReferee: isReferee,
+                        isReadOnly: isReadOnly,
+                        canEditBracket: widget.canEditBracket,
+                        isLite: widget.isLite || tournament?.isLite == true,
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.account_tree_rounded, size: 14),
+                label: Text(
+                  isGroupStageKnockout || bracketType == 'group_stage_knockout'
+                      ? l10n.bracketView_knockoutMap
+                      : isDoubleElimination ||
+                            bracketType == 'double_elimination'
+                      ? l10n.bracketView_doubleEliminationMap
+                      : isRoundRobin || bracketType == 'round_robin'
+                      ? l10n.bracketView_roundRobinMap
+                      : l10n.bracketView_knockoutMap,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // ── Search & Filter Unified Bar ──
+        Container(
+          margin: const EdgeInsets.only(bottom: 10),
           decoration: BoxDecoration(
             color: colors.bgCard,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: colors.border),
-          ),
-          child: TextField(
-            controller: _searchController,
-            onChanged: (val) =>
-                setState(() => _searchQuery = val.trim().toLowerCase()),
-            style: TextStyle(fontSize: 13, color: colors.textPrimary),
-            decoration: InputDecoration(
-              hintText: l10n.bracketView_searchHint,
-              hintStyle: TextStyle(fontSize: 12, color: colors.textMuted),
-              prefixIcon: Icon(
-                Icons.search_rounded,
-                size: 18,
-                color: colors.textMuted,
-              ),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 11,
-              ),
-              isDense: true,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: _currentFilterState.hasActiveFilters
+                  ? AppTheme.primary
+                  : colors.border,
+              width: _currentFilterState.hasActiveFilters ? 1.5 : 1,
             ),
           ),
-        ),
-
-        // ── ROW 1: TRẠNG THÁI (Toggle Filter) ──
-        _buildFilterRow(
-          title: l10n.bracketView_statusTitle,
-          children: [
-            RoundFilterPill(
-              isSelected: _matchFilter == 'live',
-              label: l10n.bracketView_live,
-              count: liveCount,
-              onTap: () => setState(
-                () => _matchFilter = _matchFilter == 'live' ? '' : 'live',
-              ),
-            ),
-            RoundFilterPill(
-              isSelected: _matchFilter == 'scheduled',
-              label: l10n.bracketView_scheduled,
-              count: scheduledCount,
-              onTap: () => setState(
-                () => _matchFilter = _matchFilter == 'scheduled'
-                    ? ''
-                    : 'scheduled',
-              ),
-            ),
-            RoundFilterPill(
-              isSelected: _matchFilter == 'completed',
-              label: l10n.bracketView_completed,
-              count: completedCount,
-              onTap: () => setState(
-                () => _matchFilter = _matchFilter == 'completed'
-                    ? ''
-                    : 'completed',
-              ),
-            ),
-          ],
-        ),
-
-        // ── ROW 2: NHÁNH THI ĐẤU (Double Elimination: Nhánh thắng / Nhánh thua Toggle) ──
-        if (isDoubleElimination)
-          _buildFilterRow(
-            title: l10n.bracketView_branchTitle,
+          child: Row(
             children: [
-              RoundFilterPill(
-                isSelected: _selectedBranch == 'winners',
-                label: l10n.bracketView_winners,
-                onTap: () => setState(() {
-                  _selectedBranch = _selectedBranch == 'winners'
-                      ? ''
-                      : 'winners';
-                  _selectedRound = 0;
-                }),
-              ),
-              RoundFilterPill(
-                isSelected: _selectedBranch == 'losers',
-                label: l10n.bracketView_losers,
-                onTap: () => setState(() {
-                  _selectedBranch = _selectedBranch == 'losers' ? '' : 'losers';
-                  _selectedRound = 0;
-                }),
-              ),
-            ],
-          ),
-
-        if (isGroupStageKnockout)
-          _buildFilterRow(
-            title: l10n.bracketView_stageTitle,
-            children: [
-              RoundFilterPill(
-                isSelected: _selectedBranch.isEmpty,
-                label:
-                    '${l10n.filterAll} ${l10n.bracketView_stageTitle.toLowerCase()}',
-                onTap: () => setState(() {
-                  _selectedBranch = '';
-                  _selectedGroup = '';
-                  _selectedLeg = 0;
-                  _selectedRound = 0;
-                }),
-              ),
-              RoundFilterPill(
-                isSelected: _selectedBranch == 'group_stage',
-                label: l10n.bracketView_groupStage,
-                onTap: () => setState(() {
-                  _selectedBranch = 'group_stage';
-                  _selectedRound = 0;
-                }),
-              ),
-              RoundFilterPill(
-                isSelected: _selectedBranch == 'knockout',
-                label: l10n.bracketView_knockoutStage,
-                onTap: () => setState(() {
-                  _selectedBranch = 'knockout';
-                  _selectedGroup = '';
-                  _selectedLeg = 0;
-                  _selectedRound = 0;
-                }),
-              ),
-            ],
-          ),
-
-        // ── ROW 3: BẢNG ĐẤU (Group Stage only - filter out duplicate branch names) ──
-        Builder(
-          builder: (context) {
-            final cleanGroups = availableGroups.where((g) {
-              final lower = g.toLowerCase();
-              return !lower.contains('winners') &&
-                  !lower.contains('losers') &&
-                  !lower.contains('grand') &&
-                  !lower.contains('bracket');
-            }).toList();
-
-            if (cleanGroups.isEmpty || _selectedBranch == 'knockout') {
-              return const SizedBox.shrink();
-            }
-
-            return _buildFilterRow(
-              title: l10n.bracketView_groupTitle,
-              children: [
-                RoundFilterPill(
-                  isSelected: _selectedGroup.isEmpty,
-                  label: l10n.filterAll,
-                  onTap: () => setState(() {
-                    _selectedGroup = '';
-                    _selectedRound = 0;
-                  }),
-                ),
-                ...cleanGroups.map(
-                  (group) => RoundFilterPill(
-                    isSelected: _selectedGroup == group,
-                    label: group,
-                    onTap: () => setState(() {
-                      _selectedGroup = _selectedGroup == group ? '' : group;
-                      _selectedRound = 0;
-                    }),
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (val) {
+                    _debounceTimer?.cancel();
+                    _debounceTimer = Timer(
+                      const Duration(milliseconds: 250),
+                      () {
+                        if (mounted) {
+                          setState(
+                            () => _searchQuery = val.trim().toLowerCase(),
+                          );
+                        }
+                      },
+                    );
+                  },
+                  style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                  decoration: InputDecoration(
+                    hintText: l10n.bracketView_searchHint,
+                    hintStyle: TextStyle(fontSize: 12, color: colors.textMuted),
+                    prefixIcon: Icon(
+                      Icons.search_rounded,
+                      size: 18,
+                      color: colors.textMuted,
+                    ),
+                    suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: _searchController,
+                      builder: (context, value, _) {
+                        if (value.text.isEmpty) return const SizedBox.shrink();
+                        return IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 16),
+                          onPressed: () {
+                            _debounceTimer?.cancel();
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                        );
+                      },
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 11,
+                    ),
+                    isDense: true,
                   ),
                 ),
-              ],
-            );
-          },
-        ),
-
-        if (availableGroups.isNotEmpty &&
-            availableLegs.isNotEmpty &&
-            _selectedBranch != 'knockout')
-          _buildFilterRow(
-            title: l10n.seriesLegCount,
-            children: [
-              RoundFilterPill(
-                isSelected: _selectedLeg == 0,
-                label: l10n.filterAll,
-                onTap: () => setState(() => _selectedLeg = 0),
               ),
-              ...availableLegs.map(
-                (leg) => RoundFilterPill(
-                  isSelected: _selectedLeg == leg,
-                  label: l10n.crossTableLegIndicator(leg, availableLegs.length),
-                  onTap: () => setState(() {
-                    _selectedLeg = leg;
-                    _selectedRound = 0;
-                  }),
+              Container(height: 22, width: 1, color: colors.border),
+              // Unified Filter Button inside search bar
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _openFilterBottomSheet(
+                    context: context,
+                    isDoubleElimination: isDoubleElimination,
+                    isGroupStageKnockout: isGroupStageKnockout,
+                    isRoundRobin: isRoundRobin,
+                    liveCount: liveCount,
+                    scheduledCount: scheduledCount,
+                    completedCount: completedCount,
+                    availableGroups: availableGroups,
+                    availableLegs: availableLegs,
+                    availableRounds: availableRounds,
+                    effectiveTotalRounds: effectiveTotalRounds,
+                  ),
+                  borderRadius: const BorderRadius.horizontal(
+                    right: Radius.circular(10),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 9,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.tune_rounded,
+                          size: 18,
+                          color: _currentFilterState.hasActiveFilters
+                              ? AppTheme.primary
+                              : colors.textMuted,
+                        ),
+                        if (_currentFilterState.hasActiveFilters) ...[
+                          const SizedBox(width: 5),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 1.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${_currentFilterState.activeCount}',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
+        ),
 
-        // ── ROW 4: KNOCKOUT ROUND FILTER ONLY ──
-        if (!isRoundRobin &&
-            (!isGroupStageKnockout || _selectedBranch == 'knockout') &&
-            availableRounds.length > 1)
-          _buildFilterRow(
-            title: l10n.bracketView_roundTitle,
-            children: availableRounds.map((r) {
-              final isGroupStageRound =
-                  isGroupStageKnockout && _selectedBranch != 'knockout';
-              // When showing knockout rounds in a group_stage_knockout,
-              // totalRounds must only count knockout rounds — not group stage rounds.
-              final label = isRoundRobin || isGroupStageRound
-                  ? l10n.bracketView_round(r)
-                  : MatchRoundLabel.knockoutRoundName(
-                      r,
-                      effectiveTotalRounds,
-                      l10n: l10n,
-                    );
-              final count = groupScopedMatches
-                  .where((m) => m.round == r)
-                  .length;
-              return RoundFilterPill(
-                isSelected: _selectedRound == r,
-                label: label,
-                count: count,
-                onTap: () => setState(
-                  () => _selectedRound = _selectedRound == r ? 0 : r,
-                ),
-              );
-            }).toList(),
+        // ── Active Filter Badges (Only shown when filters are active) ──
+        if (_currentFilterState.hasActiveFilters)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: [
+                  if (_matchFilter.isNotEmpty)
+                    _buildActiveFilterChip(
+                      label: _getMatchFilterLabel(_matchFilter, l10n),
+                      onRemove: () => setState(() => _matchFilter = ''),
+                      context: context,
+                    ),
+                  if (_selectedBranch.isNotEmpty)
+                    _buildActiveFilterChip(
+                      label: _getBranchFilterLabel(
+                        _selectedBranch,
+                        isDoubleElimination,
+                        l10n,
+                      ),
+                      onRemove: () => setState(() => _selectedBranch = ''),
+                      context: context,
+                    ),
+                  if (_selectedGroup.isNotEmpty)
+                    _buildActiveFilterChip(
+                      label: _selectedGroup,
+                      onRemove: () => setState(() => _selectedGroup = ''),
+                      context: context,
+                    ),
+                  if (_selectedLeg != 0)
+                    _buildActiveFilterChip(
+                      label: l10n.crossTableLegIndicator(
+                        _selectedLeg,
+                        availableLegs.length,
+                      ),
+                      onRemove: () => setState(() => _selectedLeg = 0),
+                      context: context,
+                    ),
+                  if (_selectedRound != 0)
+                    _buildActiveFilterChip(
+                      label: _getRoundLabel(
+                        _selectedRound,
+                        isRoundRobin,
+                        isGroupStageKnockout,
+                        _selectedBranch,
+                        effectiveTotalRounds,
+                        l10n,
+                      ),
+                      onRemove: () => setState(() => _selectedRound = 0),
+                      context: context,
+                    ),
+                  TextButton(
+                    onPressed: () => setState(() {
+                      _matchFilter = '';
+                      _selectedBranch = '';
+                      _selectedGroup = '';
+                      _selectedLeg = 0;
+                      _selectedRound = 0;
+                    }),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      minimumSize: const Size(0, 26),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      'Xoá lọc',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textMuted,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-
-        const SizedBox(height: 6),
 
         // ── MATCHES LIST ──
         if (filteredMatches.isEmpty)
@@ -953,42 +1071,97 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             totalRounds: effectiveTotalRounds,
             tournamentId: widget.tournamentId,
             isReferee: isReferee,
+            onUnassignSlot: widget.canEditBracket ? _unassignBracketSlot : null,
           ),
         ],
       ],
     );
   }
 
-  Widget _buildFilterRow({
-    required String title,
-    required List<Widget> children,
+  String _getMatchFilterLabel(String status, AppLocalizations l10n) {
+    switch (status) {
+      case 'live':
+        return l10n.bracketView_live;
+      case 'scheduled':
+        return l10n.bracketView_scheduled;
+      case 'completed':
+        return l10n.bracketView_completed;
+      default:
+        return status;
+    }
+  }
+
+  String _getBranchFilterLabel(
+    String branch,
+    bool isDoubleElimination,
+    AppLocalizations l10n,
+  ) {
+    if (isDoubleElimination) {
+      if (branch == 'winners') return l10n.bracketView_winners;
+      if (branch == 'losers') return l10n.bracketView_losers;
+    } else {
+      if (branch == 'group_stage') return l10n.bracketView_groupStage;
+      if (branch == 'knockout') return l10n.bracketView_knockoutStage;
+    }
+    return branch;
+  }
+
+  String _getRoundLabel(
+    int round,
+    bool isRoundRobin,
+    bool isGroupStageKnockout,
+    String selectedBranch,
+    int effectiveTotalRounds,
+    AppLocalizations l10n,
+  ) {
+    final isGroupStageRound =
+        isGroupStageKnockout && selectedBranch != 'knockout';
+    return isRoundRobin || isGroupStageRound
+        ? l10n.bracketView_round(round)
+        : MatchRoundLabel.knockoutRoundName(
+            round,
+            effectiveTotalRounds,
+            l10n: l10n,
+          );
+  }
+
+  Widget _buildActiveFilterChip({
+    required String label,
+    required VoidCallback onRemove,
+    required BuildContext context,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+    return Container(
+      margin: const EdgeInsets.only(right: 6),
+      padding: const EdgeInsets.fromLTRB(10, 4, 6, 4),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.35)),
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: 90,
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: context.colors.textMuted,
-                letterSpacing: 0.5,
-              ),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.primary,
             ),
           ),
-          Expanded(
-            child: SizedBox(
-              height: 32,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                itemCount: children.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 6),
-                itemBuilder: (context, index) => children[index],
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: onRemove,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppTheme.primary.withValues(alpha: 0.2),
+              ),
+              child: const Icon(
+                Icons.close_rounded,
+                size: 11,
+                color: AppTheme.primary,
               ),
             ),
           ),

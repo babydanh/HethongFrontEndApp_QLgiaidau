@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -18,6 +19,7 @@ class MatchTableRow extends StatelessWidget {
   final int totalRounds;
   final String tournamentId;
   final bool isReferee;
+  final BracketSlotUnassignCallback? onUnassignSlot;
 
   const MatchTableRow({
     super.key,
@@ -26,7 +28,43 @@ class MatchTableRow extends StatelessWidget {
     required this.totalRounds,
     required this.tournamentId,
     this.isReferee = false,
+    this.onUnassignSlot,
   });
+
+  bool _canUnassignParticipant(String participantId, String teamName) {
+    if (!match.isScheduled || onUnassignSlot == null) return false;
+    final id = participantId.trim().toUpperCase();
+    final name = teamName.trim().toUpperCase();
+    return id.isNotEmpty &&
+        id != 'BYE' &&
+        id != 'TBD' &&
+        name != 'BYE' &&
+        name != 'CHỜ XÁC ĐỊNH' &&
+        name != 'CHO XAC DINH';
+  }
+
+  Widget _buildUnassignButton(BuildContext context, String slot) {
+    final l10n = AppLocalizations.of(context)!;
+    return Tooltip(
+      message: l10n.lite_unassignBracket,
+      child: IconButton(
+        onPressed: () => onUnassignSlot!(
+          BracketSlotDragData(
+            matchId: match.id,
+            slot: slot,
+            participantId: slot == 'participant1'
+                ? match.team1Id
+                : match.team2Id,
+          ),
+        ),
+        icon: const Icon(Icons.link_off_rounded, size: 14),
+        color: Theme.of(context).colorScheme.error,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 22, height: 22),
+        visualDensity: VisualDensity.compact,
+      ),
+    );
+  }
 
   static String _getRoundName(
     int round,
@@ -287,6 +325,11 @@ class MatchTableRow extends StatelessWidget {
                                         ),
                                       ],
                               ),
+                              if (_canUnassignParticipant(
+                                match.team1Id,
+                                match.team1Name,
+                              ))
+                                _buildUnassignButton(context, 'participant1'),
                             ],
                           ),
                           const SizedBox(height: 10),
@@ -410,6 +453,11 @@ class MatchTableRow extends StatelessWidget {
                                         ),
                                       ],
                               ),
+                              if (_canUnassignParticipant(
+                                match.team2Id,
+                                match.team2Name,
+                              ))
+                                _buildUnassignButton(context, 'participant2'),
                             ],
                           ),
                         ],

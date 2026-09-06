@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
+import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
@@ -2576,11 +2577,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          t.startDate != null && t.startDate!.isNotEmpty
-                              ? (t.endDate != null && t.endDate!.isNotEmpty
-                                  ? '${t.startDate} - ${t.endDate}'
-                                  : t.startDate!)
-                              : l10n.club_noTournaments,
+                          DateFormatterUtils.formatTournamentDateRange(
+                            t.startDate,
+                            t.endDate,
+                            fallback: l10n.club_noTournaments,
+                          ),
                           style: TextStyle(
                             fontSize: 12,
                             color: colors.textSecondary,
@@ -3049,10 +3050,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         : const AsyncValue.data(<CommunityMemberModel>[]);
     final rankingsAsync = ref.watch(communityRankingsProvider(widget.clubId));
     final memberEloMap = <String, int>{};
+    final rankedMemberIds = <String>{};
     rankingsAsync.whenData((rankings) {
       for (final r in rankings) {
         if (r.userId.isNotEmpty) {
           memberEloMap[r.userId] = r.eloPoints;
+          rankedMemberIds.add(r.userId);
         }
       }
     });
@@ -3074,6 +3077,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
           );
         }
+        final approvedMembers = members
+            .where((m) => m.status.toUpperCase() == 'JOINED')
+            .toList();
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -3083,8 +3089,15 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               const SizedBox(height: 8),
             ],
             if (isAdmin) _buildJoinRequestsSection(joinRequestsAsync, colors),
-            if (members.isEmpty) const SizedBox.shrink(),
-            ...members.map((m) => _buildMemberItem(m, colors, isAdmin, memberEloMap[m.userId] ?? 1000)),
+            if (approvedMembers.isEmpty) const SizedBox.shrink(),
+            ...approvedMembers.map((m) => _buildMemberItem(
+                  m,
+                  colors,
+                  isAdmin,
+                  rankedMemberIds.contains(m.userId)
+                      ? memberEloMap[m.userId]
+                      : null,
+                )),
           ],
         );
       },
@@ -3128,7 +3141,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     CommunityMemberModel m,
     AppColorsExtension colors,
     bool isAdmin,
-    int memberElo,
+    int? memberElo,
   ) {
     final l10n = AppLocalizations.of(context)!;
     final isOwner = m.role == 'OWNER';
@@ -3188,20 +3201,22 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         ),
                       ),
                       const SizedBox(width: 6),
-                      EloTierBadge(elo: memberElo, scale: 0.75),
+                      if (memberElo != null)
+                        EloTierBadge(elo: memberElo, scale: 0.75),
                     ],
                   ),
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      Text(
-                        '$memberElo ELO',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.primary,
+                      if (memberElo != null)
+                        Text(
+                          '$memberElo ELO',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primary,
+                          ),
                         ),
-                      ),
                       if (m.role != 'MEMBER') ...[
                         const SizedBox(width: 6),
                         Container(
@@ -3273,7 +3288,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 size: 20,
               ),
               color: colors.bgSurface,
-              onSelected: (action) => _handleMemberAction(action, m, colors, memberElo),
+              onSelected: (action) =>
+                  _handleMemberAction(action, m, colors, memberElo ?? 1000),
               itemBuilder: (_) => [
                 PopupMenuItem(
                   value: 'promote_admin',

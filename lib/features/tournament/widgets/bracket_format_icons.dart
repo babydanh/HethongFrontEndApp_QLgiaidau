@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Bộ icon thể thức thi đấu vẽ chuẩn 1:1 theo SVG của hệ thống Web:
 /// 1. Single Elimination (Loại trực tiếp): Nhánh đấu đơn gộp vào nhánh chung kết
@@ -80,5 +81,43 @@ class BracketFormatIcons {
       height: size,
       colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
     );
+  }
+
+  /// Lấy tên định dạng thể thức chuẩn hóa đa ngôn ngữ (VI / EN)
+  static String getFormatLabel(
+    BuildContext context,
+    String? bracketType, [
+    String? fallbackBracketType,
+  ]) {
+    final l10n = AppLocalizations.of(context);
+    final raw = (bracketType != null && bracketType.trim().isNotEmpty)
+        ? bracketType
+        : (fallbackBracketType ?? '');
+    final type = raw.toUpperCase();
+
+    if (type.contains('ROUND_ROBIN') ||
+        type.contains('ROBIN') ||
+        type.contains('VÒNG TRÒN')) {
+      return l10n?.roundRobin ?? 'Vòng tròn';
+    }
+    if (type.contains('GROUP_STAGE') ||
+        type.contains('GROUP') ||
+        type.contains('BẢNG')) {
+      return l10n?.createClubTournament_bracketGroupStageKnockout ??
+          'Vòng bảng + Loại trực tiếp';
+    }
+    if (type.contains('DOUBLE_ELIMINATION') ||
+        type.contains('DOUBLE_ELIM') ||
+        type.contains('NHÁNH KÉP') ||
+        type.contains('THẮNG/THUA') ||
+        type.contains('THẮNG THUA')) {
+      return l10n?.eliminationDouble ?? 'Nhánh thắng/thua';
+    }
+    if (type.contains('SINGLE_ELIMINATION') ||
+        type.contains('SINGLE') ||
+        type.contains('LOẠI TRỰC TIẾP')) {
+      return l10n?.eliminationSingle ?? 'Loại trực tiếp';
+    }
+    return raw.isNotEmpty ? raw : (l10n?.eliminationSingle ?? 'Loại trực tiếp');
   }
 }

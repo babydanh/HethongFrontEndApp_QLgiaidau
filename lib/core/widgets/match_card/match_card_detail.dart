@@ -29,6 +29,9 @@ class MatchCardDetail extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final isLive = match.status == AppConstants.matchLive;
     final isCompleted = match.status == AppConstants.matchCompleted;
+    final cardScore = isLive
+        ? match.currentLiveScore
+        : SetScore(score1: match.score1, score2: match.score2);
     final scheduleText = match.scheduledTime != null
         ? DateFormatterUtils.formatDateTime(match.scheduledTime!.toLocal())
         : l10n.liveNotScheduled;
@@ -147,7 +150,7 @@ class MatchCardDetail extends StatelessWidget {
               _buildTeamRow(
                 context,
                 match.team1Name,
-                match.score1,
+                cardScore.score1,
                 isWinner: isCompleted && match.winnerId == match.team1Id,
               ),
               Divider(
@@ -159,7 +162,7 @@ class MatchCardDetail extends StatelessWidget {
               _buildTeamRow(
                 context,
                 match.team2Name,
-                match.score2,
+                cardScore.score2,
                 isWinner: isCompleted && match.winnerId == match.team2Id,
               ),
               const SizedBox(height: 8),
@@ -187,13 +190,13 @@ class MatchCardDetail extends StatelessWidget {
                       l10n.infoReferee,
                       refereeText,
                     ),
-                    if (match.sets.isNotEmpty) ...[
+                    if (match.scoreHistory.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       _infoRow(
                         context,
                         Icons.sports_score_rounded,
                         l10n.liveSetScoresTitle,
-                        match.sets
+                        match.scoreHistory
                             .asMap()
                             .entries
                             .map(

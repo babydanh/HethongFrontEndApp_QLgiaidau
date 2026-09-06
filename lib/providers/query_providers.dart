@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final tournamentsProvider = StreamProvider<List<Tournament>>((ref) {
@@ -69,6 +70,21 @@ final tournamentIntroWithInviteProvider =
           .watch(tournamentRepositoryProvider)
           .getById(params.id, inviteCode: params.invite)
           .timeout(const Duration(seconds: 8));
+    });
+
+/// Public roster snapshot used only to decide whether the current user may
+/// open the scoring action of a Super Lite live match. It grants no management
+/// capability; the backend remains the final authorization boundary.
+final tournamentParticipantsProvider = FutureProvider.autoDispose
+    .family<List<OrganizerOpsParticipant>, String>((ref, tournamentId) async {
+      try {
+        return await ref
+            .read(tournamentRepositoryProvider)
+            .getPublicParticipants(tournamentId)
+            .timeout(const Duration(seconds: 8));
+      } catch (_) {
+        return const <OrganizerOpsParticipant>[];
+      }
     });
 
 /// Tải thông tin giải cho màn hình đăng ký, kèm mã mời (nếu có).

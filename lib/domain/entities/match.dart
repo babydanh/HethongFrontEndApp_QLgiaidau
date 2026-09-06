@@ -29,7 +29,13 @@ class BracketPosition {
   });
 
   factory BracketPosition.fromJson(Map<String, dynamic> json) {
-    final raw = (json['bracket'] ?? json['bracketBranch'] ?? json['bracket_branch'] ?? 'winners').toString().toUpperCase();
+    final raw =
+        (json['bracket'] ??
+                json['bracketBranch'] ??
+                json['bracket_branch'] ??
+                'winners')
+            .toString()
+            .toUpperCase();
     final bracket = switch (raw) {
       'MAIN' || 'WINNERS' => 'winners',
       'LOSERS' => 'losers',
@@ -244,6 +250,11 @@ class MatchModel {
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json, String id) {
+    int parseInt(dynamic value, {int fallback = 0}) {
+      if (value is num) return value.toInt();
+      return int.tryParse(value?.toString() ?? '') ?? fallback;
+    }
+
     List<MatchMemberInfo> parseMemberInfos(
       dynamic explicitMembers,
       dynamic participant,
@@ -299,6 +310,18 @@ class MatchModel {
       parsedSets = (json['sets'] as List)
           .map((s) => SetScore.fromJson(s as Map<String, dynamic>))
           .toList();
+    } else if (scoreDetails != null && scoreDetails['sets'] is List) {
+      parsedSets = (scoreDetails['sets'] as List).map((s) {
+        if (s is Map) {
+          final t1 = s['team1Score'] ?? s['score1'] ?? s['p1'] ?? 0;
+          final t2 = s['team2Score'] ?? s['score2'] ?? s['p2'] ?? 0;
+          return SetScore(
+            score1: t1 is num ? t1.toInt() : int.tryParse(t1.toString()) ?? 0,
+            score2: t2 is num ? t2.toInt() : int.tryParse(t2.toString()) ?? 0,
+          );
+        }
+        return const SetScore(score1: 0, score2: 0);
+      }).toList();
     } else if (scoreDetails != null && scoreDetails['scores'] is List) {
       parsedSets = (scoreDetails['scores'] as List).map((s) {
         if (s is Map) {
@@ -329,6 +352,37 @@ class MatchModel {
         ? matchCourt
         : tournamentVenueName;
 
+    Map<String, dynamic>? asMap(dynamic value) {
+      return value is Map ? Map<String, dynamic>.from(value) : null;
+    }
+
+    final parsedTournamentConfig =
+        asMap(json['tournamentConfig']) ??
+        asMap(
+          tournamentPayload is Map
+              ? tournamentPayload['tournamentConfig']
+              : null,
+        );
+    final parsedRules =
+        asMap(json['effectiveSportRules']) ??
+        asMap(json['sportRules']) ??
+        asMap(
+          tournamentPayload is Map ? tournamentPayload['sportRules'] : null,
+        ) ??
+        asMap(parsedTournamentConfig?['sportRules']);
+    final openScoringMarker =
+        parsedTournamentConfig?['scoringMode'] ??
+        parsedTournamentConfig?['scoring_mode'] ??
+        parsedTournamentConfig?['rulesPreset'];
+    final parsedSportRules =
+        parsedRules == null ||
+            openScoringMarker == null ||
+            parsedRules.containsKey('scoringMode') ||
+            parsedRules.containsKey('scoring_mode') ||
+            parsedRules.containsKey('rulesPreset')
+        ? parsedRules
+        : {...parsedRules, 'scoringMode': openScoringMarker};
+
     return MatchModel(
       id: id,
       tournamentId:
@@ -337,11 +391,11 @@ class MatchModel {
           (json['tournament'] is Map
               ? (json['tournament'] as Map)['id']?.toString()
               : null),
-      round: json['round'] ?? 1,
+      round: parseInt(json['round'], fallback: 1),
       leg: json['leg'] is num
           ? (json['leg'] as num).toInt()
           : int.tryParse(json['leg']?.toString() ?? ''),
-      matchNumber: json['matchNumber'] ?? 1,
+      matchNumber: parseInt(json['matchNumber'], fallback: 1),
       team1Id:
           json['team1Id']?.toString() ??
           json['participant1Id']?.toString() ??
@@ -358,8 +412,15 @@ class MatchModel {
           '',
       team1Name: json['team1Name'] ?? 'TBD',
       team2Name: json['team2Name'] ?? 'TBD',
-      score1: json['score1'] ?? 0,
-      score2: json['score2'] ?? 0,
+      // The API's authoritative match aggregate is p1SetsWon/p2SetsWon.
+      // Some list/bracket responses do not include the legacy score1/score2
+      // aliases, so do not let completed cards fall back to 0-0.
+      score1: parseInt(
+        json['score1'] ?? json['p1SetsWon'] ?? json['p1_sets_won'],
+      ),
+      score2: parseInt(
+        json['score2'] ?? json['p2SetsWon'] ?? json['p2_sets_won'],
+      ),
       sets: parsedSets,
       winnerId: json['winnerId'] ?? '',
       loserId: json['loserId'] ?? '',
@@ -381,18 +442,11 @@ class MatchModel {
                 'PLAYOFF' => 'playoff',
                 final other => other.toLowerCase(),
               },
-              round: (json['roundNumber'] ?? json['round'] ?? 1) is num
-                  ? (json['roundNumber'] ?? json['round'] as num).toInt()
-                  : int.tryParse(
-                          (json['roundNumber'] ?? json['round'])?.toString() ??
-                              '') ??
-                      1,
-              position: (json['matchOrder'] ?? json['position'] ?? 0) is num
-                  ? (json['matchOrder'] ?? json['position'] as num).toInt()
-                  : int.tryParse(
-                          (json['matchOrder'] ?? json['position'])?.toString() ??
-                              '') ??
-                      0,
+              round: parseInt(
+                json['roundNumber'] ?? json['round'],
+                fallback: 1,
+              ),
+              position: parseInt(json['matchOrder'] ?? json['position']),
             ),
       nextMatchId: json['nextMatchId'] ?? '',
       loserNextMatchId: json['loserNextMatchId'] ?? '',
@@ -426,16 +480,8 @@ class MatchModel {
       sportKey:
           json['sport']?.toString() ?? json['tournament']?['sport']?.toString(),
       // Sport-specific: từ tournament sportRules hoặc matchConfig
-      sportRules: json['tournament'] is Map
-          ? (json['tournament'] as Map)['sportRules'] as Map<String, dynamic>?
-          : json['sportRules'] as Map<String, dynamic>?,
-      tournamentConfig:
-          json['tournament'] is Map &&
-              (json['tournament'] as Map)['tournamentConfig'] is Map
-          ? Map<String, dynamic>.from(
-              (json['tournament'] as Map)['tournamentConfig'] as Map,
-            )
-          : null,
+      sportRules: parsedSportRules,
+      tournamentConfig: parsedTournamentConfig,
       scoreDetails: scoreDetails,
       setsToWin: json['setsToWin'] as int?,
       team1Members: team1MemberInfos.map((m) => m.fullName).toList(),
@@ -483,11 +529,11 @@ class MatchModel {
           json['division_id']?.toString() ??
           (json['stage'] is Map
               ? (json['stage']['divisionId'] ?? json['stage']['division_id'])
-                  ?.toString()
+                    ?.toString()
               : null) ??
           (json['group'] is Map
               ? (json['group']['divisionId'] ?? json['group']['division_id'])
-                  ?.toString()
+                    ?.toString()
               : null) ??
           scoreDetails?['division_id']?.toString() ??
           scoreDetails?['divisionId']?.toString(),
@@ -670,8 +716,12 @@ class MatchModel {
         'DISQUALIFIED',
       }.contains(normalizedStatus) ||
       completedAt != null;
-  bool get isScheduled =>
-      const {'SCHEDULED', 'PENDING', 'NOT_STARTED'}.contains(normalizedStatus);
+  bool get isScheduled => const {
+    'SCHEDULED',
+    'PENDING',
+    'NOT_STARTED',
+    'UPCOMING',
+  }.contains(normalizedStatus);
   bool get isWalkover => status == 'walkover';
   bool get hasTeams => team1Id.isNotEmpty && team2Id.isNotEmpty;
   bool get isByeMatch =>
@@ -685,7 +735,52 @@ class MatchModel {
       (team1Id.isEmpty || team1Name == 'BYE') &&
       (team2Id.isEmpty || team2Name == 'BYE');
 
+  /// Score shown by live cards is the open set, not the match-level
+  /// `p1SetsWon`/`p2SetsWon` aggregate. The backend keeps an explicit open
+  /// 0-0 entry after a Lite set is closed, while this fallback also protects
+  /// older records that do not have that entry yet.
+  SetScore get currentLiveScore {
+    final rawSets = scoreDetails?['sets'];
+    if (rawSets is List) {
+      for (final rawSet in rawSets.reversed) {
+        if (rawSet is! Map) continue;
+        if (rawSet['isFinished'] == true) continue;
+        return _cardSetScore(rawSet);
+      }
+      if (isLive && rawSets.isNotEmpty) {
+        return const SetScore(score1: 0, score2: 0);
+      }
+    }
+    return SetScore(score1: score1, score2: score2);
+  }
+
+  /// Score history for cards, including the current open set when present.
+  /// This reads the same `scoreDetails.sets` contract as the web UI.
+  List<SetScore> get scoreHistory {
+    final rawSets = scoreDetails?['sets'];
+    if (rawSets is List) {
+      final parsed = rawSets
+          .whereType<Map>()
+          .map(_cardSetScore)
+          .toList(growable: false);
+      if (parsed.isNotEmpty) return parsed;
+    }
+    return sets;
+  }
+
   @override
   String toString() =>
       'MatchModel(id: $id, round: $round, $team1Name vs $team2Name, $score1-$score2)';
+}
+
+SetScore _cardSetScore(Map rawSet) {
+  int readScore(dynamic value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  return SetScore(
+    score1: readScore(rawSet['team1Score'] ?? rawSet['score1'] ?? rawSet['p1']),
+    score2: readScore(rawSet['team2Score'] ?? rawSet['score2'] ?? rawSet['p2']),
+  );
 }
