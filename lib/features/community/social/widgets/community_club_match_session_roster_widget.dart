@@ -178,70 +178,8 @@ class _CommunityClubMatchSessionRosterWidgetState
               ],
             ),
           ),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 8,
-              childAspectRatio: .72,
-            ),
-            itemCount: totalSlots,
-            itemBuilder: (context, index) {
-              final item = index < active.length ? active[index] : null;
-              final name = item?.displayName.trim().isNotEmpty == true
-                  ? item!.displayName
-                  : '${l10n.clubMatchSessionMockPlayer} ${index + 1}';
-              return Column(
-                children: [
-                  CircleAvatar(
-                    radius: 27,
-                    backgroundColor: item == null
-                        ? colors.bgSurface
-                        : item.isMock
-                        ? colors.warning.withValues(alpha: .18)
-                        : colors.info.withValues(alpha: .16),
-                    child: item == null
-                        ? Icon(Icons.add_rounded, color: colors.textMuted)
-                        : Text(
-                            name
-                                .substring(0, name.length > 2 ? 2 : name.length)
-                                .toUpperCase(),
-                            style: TextStyle(
-                              color: item.isMock ? colors.warning : colors.info,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    item == null ? 'Slot #${index + 1}' : name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: item == null
-                          ? colors.textMuted
-                          : colors.textPrimary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (item?.isMock == true)
-                    Text(
-                      l10n.clubMatchSessionMockPlayer,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: colors.warning, fontSize: 9),
-                    ),
-                ],
-              );
-            },
-          ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -275,6 +213,85 @@ class _CommunityClubMatchSessionRosterWidgetState
               ],
             ),
           ),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 8,
+              childAspectRatio: .72,
+            ),
+            itemCount: totalSlots,
+            itemBuilder: (context, index) {
+              final item = index < active.length ? active[index] : null;
+              final name = item?.displayName.trim().isNotEmpty == true
+                  ? item!.displayName
+                  : '${l10n.clubMatchSessionMockPlayer} ${index + 1}';
+              final canTapEmptySlot =
+                  item == null &&
+                  (session.canJoin || session.canWithdraw) &&
+                  session.status == 'OPEN';
+              return InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: canTapEmptySlot ? _joinOrWithdraw : null,
+                child: Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 27,
+                        backgroundColor: item == null
+                            ? colors.bgSurface
+                            : item.isMock
+                            ? colors.warning.withValues(alpha: .18)
+                            : colors.info.withValues(alpha: .16),
+                        child: item == null
+                            ? Icon(Icons.add_rounded, color: colors.textMuted)
+                            : Text(
+                                name
+                                    .substring(
+                                      0,
+                                      name.length > 2 ? 2 : name.length,
+                                    )
+                                    .toUpperCase(),
+                                style: TextStyle(
+                                  color: item.isMock
+                                      ? colors.warning
+                                      : colors.info,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        item == null ? 'Slot #${index + 1}' : name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: item == null
+                              ? colors.textMuted
+                              : colors.textPrimary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (item?.isMock == true)
+                        Text(
+                          l10n.clubMatchSessionMockPlayer,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: colors.warning, fontSize: 9),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
         ],
       ),
     );

@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math';
 
+import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
@@ -426,9 +428,50 @@ class _ClubMatchSessionsScreenState
   }
 }
 
-class ClubMatchSessionDetailPage extends ConsumerWidget {
+class ClubMatchSessionDetailPage extends ConsumerStatefulWidget {
   final ClubMatchSessionModel session;
   const ClubMatchSessionDetailPage({super.key, required this.session});
+
+  @override
+  ConsumerState<ClubMatchSessionDetailPage> createState() =>
+      _ClubMatchSessionDetailPageState();
+}
+
+class _ClubMatchSessionDetailPageState
+    extends ConsumerState<ClubMatchSessionDetailPage> {
+  int _currentPage = 1;
+  static const int _slotsPerPage = 16;
+  static const List<Color> _kSlotAvatarColors = [
+    Color(0xFF10B981),
+    Color(0xFF3B82F6),
+    Color(0xFFF59E0B),
+    Color(0xFF8B5CF6),
+    Color(0xFFF43F5E),
+    Color(0xFF6366F1),
+    Color(0xFF14B8A6),
+    Color(0xFF06B6D4),
+  ];
+
+  Color _getColorByName(String name) {
+    int hash = 0;
+    for (int i = 0; i < name.length; i++) {
+      hash = name.codeUnitAt(i) + ((hash << 5) - hash);
+    }
+    return _kSlotAvatarColors[hash.abs() % _kSlotAvatarColors.length];
+  }
+
+  String _getInitials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts[0].isEmpty) return '?';
+    if (parts.length == 1) {
+      return parts[0].length >= 2
+          ? parts[0].substring(0, 2).toUpperCase()
+          : parts[0].toUpperCase();
+    }
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+  }
+
+  ClubMatchSessionModel get session => widget.session;
 
   Future<void> _mutation(
     BuildContext context,
@@ -898,7 +941,7 @@ class ClubMatchSessionDetailPage extends ConsumerWidget {
   );
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final detail = ref.watch(clubSessionDetailProvider(session.id));
     return Scaffold(
@@ -967,184 +1010,940 @@ class ClubMatchSessionDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildSessionHeader(
-    BuildContext context,
-    ClubMatchSessionModel currentSession,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    return Card(
-      margin: EdgeInsets.zero,
-      elevation: 0,
-      color: colors.bgCard,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        side: BorderSide(color: colors.border),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _SessionBadge(
-                  label: _localizedSessionStatus(l10n, currentSession.status),
-                  color: currentSession.status == 'LIVE'
-                      ? colors.success
-                      : colors.info,
-                ),
-                _SessionBadge(
-                  label: currentSession.isRanked
-                      ? l10n.clubMatchSessionRankedShort
-                      : l10n.clubMatchSessionUnrankedShort,
-                  color: currentSession.isRanked
-                      ? colors.warning
-                      : colors.textMuted,
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              currentSession.resolvedName,
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              currentSession.description ?? l10n.clubMatchSessionNoDescription,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colors.textSecondary,
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildOverviewTab(
     BuildContext context,
     WidgetRef ref,
     ClubSessionDetail value,
   ) {
+    final currentSession = value.session;
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+
+    // Active participants
+    final activeParticipants = value.participants
+        .where((p) => p.status == 'ACTIVE')
+        .toList();
+    final totalSlots = max(currentSession.maxParticipants, activeParticipants.length);
+    final totalPages = max(1, (totalSlots / _slotsPerPage).ceil());
+    final safePage = _currentPage.clamp(1, totalPages);
+    final startIndex = (safePage - 1) * _slotsPerPage;
+    final endIndex = min(startIndex + _slotsPerPage, totalSlots);
+
+    // Check viewer slot and page
+    final currentUserId = currentSession.viewerUserId ?? '';
+    final userSlotIndex = currentUserId.isNotEmpty
+        ? activeParticipants.indexWhere((p) => p.userId == currentUserId)
+        : -1;
+    final userPage = userSlotIndex >= 0
+        ? (userSlotIndex ~/ _slotsPerPage) + 1
+        : null;
+
+    // Date/time formatting
+    String dateRangeStr = 'Chưa cập nhật thời gian';
+    if (currentSession.startAt != null) {
+      final start = currentSession.startAt!;
+      final dateStr = DateFormat('dd/MM/yyyy').format(start);
+      final hour = start.hour;
+      final minute = start.minute;
+      final timeStr = (hour != 0 || minute != 0)
+          ? ' · ${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}'
+          : '';
+      String durationStr = '';
+      if (currentSession.endAt != null && currentSession.endAt!.isAfter(start)) {
+        final diffMinutes = currentSession.endAt!.difference(start).inMinutes;
+        if (diffMinutes > 0 && diffMinutes < 24 * 60) {
+          final h = diffMinutes ~/ 60;
+          final m = diffMinutes % 60;
+          durationStr = h > 0 ? (m > 0 ? ' (${h}h${m}p)' : ' (${h}h)') : ' (${m}p)';
+        }
+      }
+      dateRangeStr = '$dateStr$timeStr$durationStr';
+    }
+
+    // Format badge text
+    final formatBadge = switch (currentSession.registrationMode.toUpperCase()) {
+      'PAIR' => 'Đánh đôi',
+      'SINGLE' => 'Đánh đơn',
+      _ => 'Ghép tự do',
+    };
+
     return _refreshableTab(
       context,
       ref,
       ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 36),
         children: [
-          _buildSessionHeader(context, value.session),
-          const SizedBox(height: 12),
-          _SessionStats(
-            participantCount: value.participants.length,
-            matchCount: value.matches.length,
+          // ─── 1. THẺ TỔNG QUAN PHONG CÁCH SIÊU LITE ───
+          Container(
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Hàng Badges
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    // Sport badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: colors.bgSurface,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: colors.border),
+                      ),
+                      child: Text(
+                        '🏓 Buổi giao lưu',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    // Format badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: const Color(0xFFDBEAFE), width: 0.8),
+                      ),
+                      child: Text(
+                        formatBadge,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF2563EB),
+                        ),
+                      ),
+                    ),
+                    // Status badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: currentSession.status == 'OPEN'
+                            ? const Color(0xFF10B981)
+                            : currentSession.status == 'LIVE'
+                                ? const Color(0xFFEF4444)
+                                : colors.textMuted,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        _localizedSessionStatus(l10n, currentSession.status),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    // ELO Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: currentSession.isRanked
+                            ? const Color(0xFFF59E0B)
+                            : Colors.grey.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        currentSession.isRanked ? '★ ELO' : 'Phong trào',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Tiêu đề tên buổi giao lưu
+                Text(
+                  currentSession.resolvedName,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: colors.textPrimary,
+                    letterSpacing: -0.3,
+                    height: 1.25,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // 3 dòng inline thông tin (Thời gian, Địa điểm, Lệ phí)
+                _buildInlineInfoRow(
+                  icon: Icons.calendar_today_outlined,
+                  label: 'Thời gian:',
+                  value: dateRangeStr,
+                  colors: colors,
+                ),
+                const SizedBox(height: 6),
+                _buildInlineInfoRow(
+                  icon: Icons.location_on_outlined,
+                  label: 'Địa điểm:',
+                  value: currentSession.description?.isNotEmpty == true
+                      ? currentSession.description!
+                      : 'Sân hoạt động CLB',
+                  colors: colors,
+                ),
+                const SizedBox(height: 6),
+                _buildInlineInfoRow(
+                  icon: Icons.payments_outlined,
+                  label: 'Lệ phí:',
+                  value: 'Miễn phí',
+                  colors: colors,
+                ),
+
+                // Quick stats summary
+                const SizedBox(height: 14),
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(Icons.people_alt_outlined, size: 18, color: colors.info),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${activeParticipants.length}/$totalSlots người tham gia',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Icon(Icons.sports_tennis_outlined, size: 18, color: colors.warning),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${value.matches.length} trận đấu',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          _buildActions(context, ref, value),
+          const SizedBox(height: 14),
+
+          // ─── 2. BANNER QUẢN LÝ CHO BQT (NẾU CÓ QUYỀN) ───
+          if (currentSession.canManage) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 14),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppTheme.primary.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.admin_panel_settings_rounded,
+                      color: AppTheme.primary,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Bạn là Ban quản trị',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Text(
+                          'Điều hành trận đấu, xếp cặp và quản lý VĐV',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    tooltip: 'Thao tác quản lý',
+                    onSelected: (action) {
+                      switch (action) {
+                        case 'CREATE_MATCH':
+                          _createMatch(context, ref, value.participants);
+                          break;
+                        case 'ASSIGN_MEMBERS':
+                          _forceParticipants(context, ref);
+                          break;
+                        case 'CREATE_MOCK':
+                          _createMockParticipant(context, ref);
+                          break;
+                        case 'CLOSE':
+                          _transition(context, ref, 'CLOSE', currentSession);
+                          break;
+                        case 'END':
+                          _transition(context, ref, 'END', currentSession);
+                          break;
+                        case 'CANCEL':
+                          _transition(context, ref, 'CANCEL', currentSession);
+                          break;
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      if (currentSession.canCreateMatch)
+                        PopupMenuItem(
+                          value: 'CREATE_MATCH',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.add_circle_outline_rounded, size: 18),
+                              const SizedBox(width: 8),
+                              Text(l10n.clubMatchSessionCreateMatch),
+                            ],
+                          ),
+                        ),
+                      PopupMenuItem(
+                        value: 'ASSIGN_MEMBERS',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                            const SizedBox(width: 8),
+                            Text(l10n.clubMatchSessionAssignMembers),
+                          ],
+                        ),
+                      ),
+                      if (currentSession.status == 'OPEN')
+                        PopupMenuItem(
+                          value: 'CREATE_MOCK',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.person_add_alt_rounded, size: 18),
+                              const SizedBox(width: 8),
+                              Text(l10n.clubMatchSessionCreateMock),
+                            ],
+                          ),
+                        ),
+                      if (currentSession.status == 'OPEN' || currentSession.status == 'LIVE')
+                        PopupMenuItem(
+                          value: 'CLOSE',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.lock_clock_rounded, size: 18),
+                              const SizedBox(width: 8),
+                              Text(l10n.clubMatchSessionCloseRegistration),
+                            ],
+                          ),
+                        ),
+                      if (currentSession.status != 'ENDED' && currentSession.status != 'CANCELLED')
+                        PopupMenuItem(
+                          value: 'END',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.flag_rounded, size: 18),
+                              const SizedBox(width: 8),
+                              Text(l10n.clubMatchSessionEnd),
+                            ],
+                          ),
+                        ),
+                      if (currentSession.status != 'ENDED' && currentSession.status != 'CANCELLED')
+                        PopupMenuItem(
+                          value: 'CANCEL',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.cancel_outlined, size: 18, color: Colors.red),
+                              const SizedBox(width: 8),
+                              Text(
+                                l10n.clubMatchSessionCancel,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Quản lý',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(width: 4),
+                          Icon(
+                            Icons.arrow_drop_down_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // ─── 3. THẺ XÁC NHẬN THAM GIA (LƯỚI TRÒN 16 SLOT & PHÂN TRANG) ───
+          Container(
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Xác nhận tham gia · ${activeParticipants.length}',
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w800,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: const Color(0xFFDBEAFE),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Text(
+                            formatBadge,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF2563EB),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      '${activeParticipants.length}/$totalSlots người',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Helper banner when user is registered on a different page
+                if (userPage != null && userPage != safePage) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFBFDBFE), width: 0.8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Bạn đang ở slot #${userSlotIndex + 1} (Trang $userPage)',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1E40AF),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => setState(() => _currentPage = userPage),
+                          child: const Text(
+                            'Xem vị trí →',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF2563EB),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                // Action buttons (Tham gia / Rút lui / Tùy chọn ghép cặp)
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (currentSession.canJoin)
+                      FilledButton.icon(
+                        icon: const Icon(Icons.how_to_reg_rounded, size: 16),
+                        onPressed: () => _mutation(
+                          context,
+                          ref,
+                          () => ref
+                              .read(clubMatchSessionRepositoryProvider)
+                              .selfJoin(session.id),
+                          l10n.clubMatchSessionJoined,
+                        ),
+                        label: Text(l10n.clubMatchSessionJoin),
+                      ),
+                    if (currentSession.canWithdraw)
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.logout_rounded, size: 16),
+                        onPressed: () => _mutation(
+                          context,
+                          ref,
+                          () => ref
+                              .read(clubMatchSessionRepositoryProvider)
+                              .withdraw(session.id),
+                          l10n.clubMatchSessionWithdrawn,
+                        ),
+                        label: Text(l10n.clubMatchSessionWithdraw),
+                      ),
+                    if (currentSession.viewerIsActive)
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.tune_rounded, size: 16),
+                        onPressed: () => _editPreferences(
+                          context,
+                          ref,
+                          value.participants,
+                          currentSession,
+                        ),
+                        label: Text(l10n.clubMatchSessionPreferences),
+                      ),
+                  ],
+                ),
+
+                const SizedBox(height: 14),
+
+                // 4-Column Circular Slots Grid
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: endIndex - startIndex,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 8,
+                    childAspectRatio: 0.76,
+                  ),
+                  itemBuilder: (context, idx) {
+                    final globalSlotIndex = startIndex + idx;
+                    final isOccupied = globalSlotIndex < activeParticipants.length;
+
+                    if (isOccupied) {
+                      final item = activeParticipants[globalSlotIndex];
+                      final isSelf = currentUserId.isNotEmpty && item.userId == currentUserId;
+                      final displayName = item.displayName.trim().isNotEmpty
+                          ? item.displayName.trim()
+                          : (item.isMock ? '${l10n.clubMatchSessionMockPlayer} ${globalSlotIndex + 1}' : 'VĐV');
+
+                      return GestureDetector(
+                        onTap: isSelf && currentSession.canWithdraw
+                            ? () => _mutation(
+                                  context,
+                                  ref,
+                                  () => ref
+                                      .read(clubMatchSessionRepositoryProvider)
+                                      .withdraw(session.id),
+                                  l10n.clubMatchSessionWithdrawn,
+                                )
+                            : null,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Stack(
+                              children: [
+                                Container(
+                                  width: 52,
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    color: _getColorByName(displayName),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: isSelf
+                                          ? const Color(0xFF3B82F6)
+                                          : Colors.white,
+                                      width: 2,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.08),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      _getInitials(displayName),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (isSelf)
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: Container(
+                                      width: 18,
+                                      height: 18,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFFEF4444),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close_rounded,
+                                        size: 12,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              displayName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF2563EB),
+                              ),
+                            ),
+                            if (isSelf)
+                              const Text(
+                                '(Bạn)',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                              )
+                            else if (item.isMock)
+                              Text(
+                                l10n.clubMatchSessionMockPlayer,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFFF59E0B),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    // Empty Slot with Dashed/Grey Circle
+                    final canTapEmptySlot = currentSession.canJoin && currentSession.status == 'OPEN';
+                    return GestureDetector(
+                      onTap: canTapEmptySlot
+                          ? () => _mutation(
+                                context,
+                                ref,
+                                () => ref
+                                    .read(clubMatchSessionRepositoryProvider)
+                                    .selfJoin(session.id),
+                                l10n.clubMatchSessionJoined,
+                              )
+                          : null,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: const Color(0xFFCBD5E1),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.add_rounded,
+                                size: 22,
+                                color: Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            'Slot #${globalSlotIndex + 1}',
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+
+                // Pagination Toolbar (When totalPages > 1)
+                if (totalPages > 1) ...[
+                  const SizedBox(height: 14),
+                  const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Slot ${startIndex + 1} - $endIndex / $totalSlots',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF94A3B8),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          // Prev button
+                          InkWell(
+                            onTap: safePage > 1
+                                ? () => setState(() => _currentPage = safePage - 1)
+                                : null,
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: safePage > 1
+                                    ? Colors.white
+                                    : const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: safePage > 1
+                                      ? const Color(0xFFE2E8F0)
+                                      : const Color(0xFFF1F5F9),
+                                ),
+                              ),
+                              child: Text(
+                                '‹ Trước',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: safePage > 1
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFCBD5E1),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+
+                          // Page pills
+                          ...List.generate(totalPages, (i) {
+                            final pageNum = i + 1;
+                            final isActive = pageNum == safePage;
+                            final hasUser = pageNum == userPage;
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 2),
+                              child: GestureDetector(
+                                onTap: () => setState(() => _currentPage = pageNum),
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    Container(
+                                      constraints: const BoxConstraints(minWidth: 26),
+                                      height: 26,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: isActive
+                                            ? const Color(0xFF2563EB)
+                                            : const Color(0xFFF1F5F9),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        '$pageNum',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800,
+                                          color: isActive
+                                              ? Colors.white
+                                              : const Color(0xFF475569),
+                                        ),
+                                      ),
+                                    ),
+                                    if (hasUser)
+                                      Positioned(
+                                        top: -3,
+                                        right: -3,
+                                        child: Container(
+                                          width: 8,
+                                          height: 8,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF10B981),
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: Colors.white,
+                                              width: 1.5,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
+                          const SizedBox(width: 6),
+
+                          // Next button
+                          InkWell(
+                            onTap: safePage < totalPages
+                                ? () => setState(() => _currentPage = safePage + 1)
+                                : null,
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: safePage < totalPages
+                                    ? Colors.white
+                                    : const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: safePage < totalPages
+                                      ? const Color(0xFFE2E8F0)
+                                      : const Color(0xFFF1F5F9),
+                                ),
+                              ),
+                              child: Text(
+                                'Sau ›',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: safePage < totalPages
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFCBD5E1),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildActions(
-    BuildContext context,
-    WidgetRef ref,
-    ClubSessionDetail value,
-  ) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+  Widget _buildInlineInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required AppColorsExtension colors,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (value.session.canJoin)
-          FilledButton.icon(
-            icon: const Icon(Icons.how_to_reg_rounded),
-            onPressed: () => _mutation(
-              context,
-              ref,
-              () => ref
-                  .read(clubMatchSessionRepositoryProvider)
-                  .selfJoin(session.id),
-              AppLocalizations.of(context)!.clubMatchSessionJoined,
-            ),
-            label: Text(AppLocalizations.of(context)!.clubMatchSessionJoin),
+        Icon(icon, size: 15, color: colors.textMuted),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
+            color: colors.textMuted,
           ),
-        if (value.session.canWithdraw)
-          OutlinedButton.icon(
-            icon: const Icon(Icons.logout_rounded),
-            onPressed: () => _mutation(
-              context,
-              ref,
-              () => ref
-                  .read(clubMatchSessionRepositoryProvider)
-                  .withdraw(session.id),
-              AppLocalizations.of(context)!.clubMatchSessionWithdrawn,
-            ),
-            label: Text(AppLocalizations.of(context)!.clubMatchSessionWithdraw),
-          ),
-        if (value.session.canCreateMatch)
-          FilledButton.tonalIcon(
-            icon: const Icon(Icons.add_rounded),
-            onPressed: () => _createMatch(context, ref, value.participants),
-            label: Text(
-              AppLocalizations.of(context)!.clubMatchSessionCreateMatch,
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
             ),
           ),
-        if (value.session.canManage)
-          OutlinedButton.icon(
-            icon: const Icon(Icons.person_add_alt_1_rounded),
-            onPressed: () => _forceParticipants(context, ref),
-            label: Text(
-              AppLocalizations.of(context)!.clubMatchSessionAssignMembers,
-            ),
-          ),
-        if (value.session.canManage && value.session.status == 'OPEN')
-          OutlinedButton.icon(
-            icon: const Icon(Icons.person_add_alt_rounded),
-            onPressed: () => _createMockParticipant(context, ref),
-            label: Text(
-              AppLocalizations.of(context)!.clubMatchSessionCreateMock,
-            ),
-          ),
-        if (value.session.viewerIsActive)
-          OutlinedButton.icon(
-            icon: const Icon(Icons.tune_rounded),
-            onPressed: () => _editPreferences(
-              context,
-              ref,
-              value.participants,
-              value.session,
-            ),
-            label: Text(
-              AppLocalizations.of(context)!.clubMatchSessionPreferences,
-            ),
-          ),
-        if (value.session.canManage &&
-            (value.session.status == 'OPEN' || value.session.status == 'LIVE'))
-          OutlinedButton(
-            onPressed: () => _transition(context, ref, 'CLOSE', value.session),
-            child: Text(
-              AppLocalizations.of(context)!.clubMatchSessionCloseRegistration,
-            ),
-          ),
-        if (value.session.canManage &&
-            value.session.status != 'ENDED' &&
-            value.session.status != 'CANCELLED')
-          OutlinedButton(
-            onPressed: () => _transition(context, ref, 'END', value.session),
-            child: Text(AppLocalizations.of(context)!.clubMatchSessionEnd),
-          ),
-        if (value.session.canManage &&
-            value.session.status != 'ENDED' &&
-            value.session.status != 'CANCELLED')
-          OutlinedButton(
-            onPressed: () => _transition(context, ref, 'CANCEL', value.session),
-            child: Text(AppLocalizations.of(context)!.clubMatchSessionCancel),
-          ),
+        ),
       ],
     );
   }
@@ -1282,25 +2081,6 @@ class ClubMatchSessionDetailPage extends ConsumerWidget {
       );
 }
 
-class _SessionBadge extends StatelessWidget {
-  final String label;
-  final Color color;
-  const _SessionBadge({required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: .12),
-      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-    ),
-    child: Text(
-      label,
-      style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12),
-    ),
-  );
-}
-
 class _MatchSideSummary extends StatelessWidget {
   final String label;
   final String emptyLabel;
@@ -1343,81 +2123,6 @@ class _MatchSideSummary extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
-        ),
-      ],
-    ),
-  );
-}
-
-class _SessionStats extends StatelessWidget {
-  final int participantCount;
-  final int matchCount;
-
-  const _SessionStats({
-    required this.participantCount,
-    required this.matchCount,
-  });
-
-  @override
-  Widget build(BuildContext context) => Card(
-    margin: EdgeInsets.zero,
-    elevation: 0,
-    color: context.colors.bgSurface,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-      side: BorderSide(color: context.colors.border),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(12),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          _SessionStat(
-            icon: Icons.people_alt_outlined,
-            label: AppLocalizations.of(context)!.clubMatchSessionParticipants,
-            value: '$participantCount',
-          ),
-          _SessionStat(
-            icon: Icons.sports_tennis_outlined,
-            label: AppLocalizations.of(context)!.clubMatchSessionMatches,
-            value: '$matchCount',
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-class _SessionStat extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  const _SessionStat({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    width: 140,
-    child: Row(
-      children: [
-        Icon(icon, size: 20, color: context.colors.info),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
-              Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: context.colors.textMuted, fontSize: 12),
-              ),
-            ],
-          ),
         ),
       ],
     ),
