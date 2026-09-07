@@ -210,6 +210,7 @@ class MatchController {
     String? winnerId,
     String? overrideReason,
     int? expectedRevision,
+    bool refreshSurfaces = true,
   }) async {
     _log.info(
       'updateSetsWithDetails: $p1SetsWon-$p2SetsWon, ${scoreDetails.length} sets',
@@ -233,9 +234,14 @@ class MatchController {
             tournamentIsLite: tournament?.isLite == true,
           ),
         );
-    // The write increments the backend revision. Refresh the outer cards and
-    // bracket immediately; socket events remain the fast path for viewers.
-    _invalidateMatchSurfaces(currentMatch);
+    // A live point write is deliberately optimistic: the score panel already
+    // rendered the local state and the socket updates other viewers. Refreshing
+    // every match/list/bracket provider on every tap makes the scorer see a
+    // loading flicker and can re-apply an older snapshot. Callers that close a
+    // set or finalize a match keep the durable surface refresh enabled.
+    if (refreshSurfaces) {
+      _invalidateMatchSurfaces(currentMatch);
+    }
   }
 
   /// Kết thúc trận kèm scoreDetails đầy đủ (sets).

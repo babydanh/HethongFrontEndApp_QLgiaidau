@@ -670,10 +670,10 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                     team1Name: widget.match.team1Name,
                     team2Name: widget.match.team2Name,
                   )
-                : isLite
-                ? RallyScorePanel(params: params, isReadOnly: false)
                 : kind == SportRuleKind.tennis
                 ? TennisScorePanel(params: params, isReadOnly: false)
+                : isLite
+                ? RallyScorePanel(params: params, isReadOnly: false)
                 : usePickleballSideOutPanel
                 ? PickleballPanel(params: params, isReadOnly: false)
                 : kind == SportRuleKind.badminton

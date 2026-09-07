@@ -248,7 +248,12 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         .whereType<Map>()
         .map((s) => SetScoreData.fromJson(Map<String, dynamic>.from(s)))
         .toList();
-    final finishedSets = allSets.where((set) => set.isFinished).toList();
+    // Tennis stores the current in-progress set in `sets` as well. Keep that
+    // active set when hydrating; dropping it leaves only 40/deuce in
+    // liveState and loses the game/set score on the next socket/refetch.
+    final finishedSets = config.scoringModel == SportScoringModel.tennisSet
+        ? allSets
+        : allSets.where((set) => set.isFinished).toList();
 
     // 2. Tennis point state
     TennisGameState? tennisState;
@@ -351,16 +356,39 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     }
 
     final matchRules = match?.sportRules;
+    Map<String, dynamic>? mergedRules;
     if (tournamentRules != null && tournamentRules.isNotEmpty) {
       // Match-level values (including a stage/match BO override) win, while
       // the tournament mode is retained when an older match snapshot omitted
       // it. This prevents Quick/Lite from being interpreted as the default BO3.
-      return {
+      mergedRules = {
         ...tournamentRules,
         if (matchRules != null && matchRules.isNotEmpty) ...matchRules,
       };
+    } else {
+      mergedRules = matchRules;
     }
-    return matchRules;
+
+    final config = match?.tournamentConfig;
+    if (mergedRules == null && config == null) return null;
+
+    // Older match/socket payloads can contain `mode: STRICT` in sportRules
+    // while tournamentConfig carries the authoritative open marker. Preserve
+    // that marker in the effective map so resolver state cannot fall back to
+    // BO3/max-one-point behaviour.
+    final marker =
+        config?['scoringMode'] ??
+        config?['scoring_mode'] ??
+        config?['rulesPreset'];
+    final configIsLite = config?['isLite'] == true;
+    if (configIsLite || marker != null) {
+      return {
+        ...?mergedRules,
+        ...?(configIsLite ? const {'mode': 'LITE'} : null),
+        ...?(marker == null ? null : {'scoringMode': marker}),
+      };
+    }
+    return mergedRules;
   }
 
   static bool _isLiteMatch(
@@ -424,6 +452,13 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       errorMessage: null,
     );
     _checkTennisGameEnd();
+    if (state.isMatchComplete) {
+      // Strict tennis completes only after the configured number of sets.
+      // Open/Lite tennis never reaches this branch from a set count.
+      unawaited(_syncSetsToBackend());
+    } else {
+      _scheduleLiveSync();
+    }
   }
 
   void tennisRemovePoint(bool isTeam1) {
@@ -439,6 +474,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       ),
       errorMessage: null,
     );
+    _scheduleLiveSync();
   }
 
   void _checkTennisGameEnd() {
@@ -498,9 +534,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         ? state.finishedSets.last
         : null;
     if (curSet == null) return;
-    if (!state.isOpenScoring &&
-        !state.overrideEnabled &&
-        isSetComplete(curSet, state.config)) {
+    if (!state.overrideEnabled && isSetComplete(curSet, state.config)) {
       final idx = state.finishedSets.length - 1;
       final newSets = [...state.finishedSets];
       newSets[idx] = newSets[idx].copyWith(isFinished: true);
@@ -813,6 +847,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
               },
             },
             expectedRevision: _nextExpectedRevision() ?? match.revision,
+            refreshSurfaces: false,
           );
     } catch (error, stack) {
       _log.error('Football live score sync failed', error, stack);
@@ -1019,6 +1054,28 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   String? finishSetConfirmMessage() {
     final rally = state.rally;
     final tennis = state.tennis;
+    if (state.config.scoringModel == SportScoringModel.tennisSet) {
+      final currentSet = state.finishedSets.isNotEmpty
+          ? state.finishedSets.last
+          : null;
+      // Tennis point values (0/15/30/40/deuce) are not a set score. The
+      // scorer must finish the current game first; this button closes the
+      // whole set represented by the accumulated game score.
+      if (tennis == null ||
+          tennis.team1GamePoints != 0 ||
+          tennis.team2GamePoints != 0 ||
+          currentSet == null ||
+          currentSet.isFinished ||
+          currentSet.score1 + currentSet.score2 == 0) {
+        return null;
+      }
+      final setNum = state.finishedSets.length;
+      return _l10n.scorePanel_finishSetWithScore(
+        setNum,
+        currentSet.score1,
+        currentSet.score2,
+      );
+    }
     if (rally != null && (rally.currentP1 > 0 || rally.currentP2 > 0)) {
       final setNum = state.finishedSets.length + 1;
       return _l10n.scorePanel_finishSetWithScore(
@@ -1051,6 +1108,13 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         state = state.copyWith(isSubmitting: false);
         return;
       }
+      if (tennis.team1GamePoints != 0 || tennis.team2GamePoints != 0) {
+        state = state.copyWith(
+          isSubmitting: false,
+          errorMessage: _l10n.scorePanel_matchNotReady,
+        );
+        return;
+      }
       final curSet = state.finishedSets.isNotEmpty
           ? state.finishedSets.last
           : null;
@@ -1065,15 +1129,11 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
           curSet.copyWith(isFinished: true),
         ];
       } else {
-        const emptySet = SetScoreData(score1: 0, score2: 0);
-        if (!_validateSetBeforeFinish(emptySet)) {
-          state = state.copyWith(isSubmitting: false);
-          return;
-        }
-        newSets = [
-          ...state.finishedSets,
-          const SetScoreData(score1: 0, score2: 0, isFinished: true),
-        ];
+        state = state.copyWith(
+          isSubmitting: false,
+          errorMessage: _l10n.scorePanel_matchNotReady,
+        );
+        return;
       }
       state = state.copyWith(
         finishedSets: newSets,
@@ -1206,18 +1266,43 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   Future<void> _syncLiveScore() async {
     if (_liveSyncInFlight) return;
     final rally = state.rally;
-    if (rally == null || state.isMatchComplete) {
+    final tennis = state.tennis;
+    if ((rally == null && tennis == null) || state.isMatchComplete) {
       _liveSyncPending = false;
       return;
     }
-    if (rally.currentP1 == 0 && rally.currentP2 == 0) {
+    if (rally != null && rally.currentP1 == 0 && rally.currentP2 == 0) {
       _liveSyncPending = false;
       return;
     }
-    final sets = [
-      ...state.finishedSets,
-      SetScoreData(score1: rally.currentP1, score2: rally.currentP2),
-    ];
+    if (tennis != null &&
+        tennis.team1GamePoints == 0 &&
+        tennis.team2GamePoints == 0 &&
+        state.finishedSets.isEmpty) {
+      _liveSyncPending = false;
+      return;
+    }
+    final sets = List<SetScoreData>.from(state.finishedSets);
+    Map<String, dynamic>? liveState;
+    if (rally != null) {
+      sets.add(SetScoreData(score1: rally.currentP1, score2: rally.currentP2));
+    } else if (tennis != null) {
+      final hasActiveSet = sets.isNotEmpty && !sets.last.isFinished;
+      if (!hasActiveSet &&
+          (tennis.team1GamePoints > 0 || tennis.team2GamePoints > 0)) {
+        // The first tennis game may have points before any game has been won.
+        // Keep an explicit live 0-0 game/set so the point state survives a
+        // reload and the viewer does not fall back to the previous set.
+        sets.add(const SetScoreData(score1: 0, score2: 0));
+      }
+      liveState = {
+        'tennisPointState': {
+          'team1Point': tennis.team1GamePoints,
+          'team2Point': tennis.team2GamePoints,
+          'mode': tennis.isTiebreak ? 'tiebreak' : 'game',
+        },
+      };
+    }
     final (p1Sets, p2Sets) = computeMatchSetsWon(state.finishedSets);
     final requestSignature = _scoreSignature(state);
     final expectedRevision = _nextExpectedRevision();
@@ -1232,7 +1317,11 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
             p1SetsWon: p1Sets,
             p2SetsWon: p2Sets,
             scoreDetails: sets,
+            scoreDetailsExtras: liveState == null
+                ? null
+                : {'liveState': liveState},
             expectedRevision: expectedRevision,
+            refreshSurfaces: false,
           );
       if (expectedRevision != null) {
         _lastLocalWriteRevision = expectedRevision + 1;
@@ -1240,10 +1329,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       // A tap may have arrived while this request was in flight. Keep the
       // pending flag in that case so the latest local snapshot is sent next.
       _liveSyncPending = _scoreSignature(state) != requestSignature;
-      // The websocket remains the fast path; this refetch is the durable
-      // fallback for a missed echo and also refreshes the optimistic-lock
-      // revision before the next point is entered.
-      ref.invalidate(singleMatchProvider(arg));
+      // The websocket remains the fast path for other viewers. Do not
+      // invalidate this provider for every tap: the panel already owns the
+      // optimistic local state and a refetch here causes visible jitter and
+      // can replay an older score before the socket echo arrives.
     } catch (e, stack) {
       final msg = e.toString();
       if (msg.contains('409') || msg.contains('thay đổi từ thiết bị khác')) {

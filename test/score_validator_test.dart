@@ -183,4 +183,29 @@ void main() {
     expect(config.setsToWin, 3);
     expect(state.isMatchComplete, isFalse);
   });
+
+  test('Tennis Lite giữ luật game nhưng không khóa theo BO3', () {
+    final config = resolveSportConfig({
+      'kind': 'TENNIS',
+      'mode': 'LITE',
+      'scoringModel': 'TENNIS_SET',
+      'bestOf': 3,
+      'setsToWin': 2,
+      'pointsPerSet': 6,
+      'maxPoints': 7,
+    });
+    final state = ScorePanelState(
+      config: config,
+      finishedSets: const [
+        SetScoreData(score1: 6, score2: 4, isFinished: true),
+        SetScoreData(score1: 6, score2: 0, isFinished: true),
+        SetScoreData(score1: 7, score2: 5, isFinished: true),
+      ],
+    );
+
+    expect(config.scoringModel, SportScoringModel.tennisSet);
+    expect(config.isOpenScoring, isTrue);
+    expect(state.isMatchComplete, isFalse);
+    expect(state.winnerTeam, 0);
+  });
 }
