@@ -133,15 +133,16 @@ class TennisScorePanel extends ConsumerWidget {
                             l10n: l10n,
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: _buildCenterState(
-                            colors,
-                            isDeuce,
-                            t.isTiebreak,
-                            l10n,
+                        if (isDeuce || t.isTiebreak)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: _buildCenterState(
+                              colors,
+                              isDeuce,
+                              t.isTiebreak,
+                              l10n,
+                            ),
                           ),
-                        ),
                         Expanded(
                           child: _buildTeamControl(
                             isTeam1: false,
@@ -168,15 +169,16 @@ class TennisScorePanel extends ConsumerWidget {
                             l10n: l10n,
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: _buildCenterState(
-                            colors,
-                            isDeuce,
-                            t.isTiebreak,
-                            l10n,
+                        if (isDeuce || t.isTiebreak)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: _buildCenterState(
+                              colors,
+                              isDeuce,
+                              t.isTiebreak,
+                              l10n,
+                            ),
                           ),
-                        ),
                         Expanded(
                           child: _buildTeamControl(
                             isTeam1: false,
@@ -190,16 +192,6 @@ class TennisScorePanel extends ConsumerWidget {
                         ),
                       ],
                     ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Text(
-                t.isTiebreak
-                    ? l10n.tennisScoreTiebreakHelp
-                    : l10n.tennisScoreGameHelp,
-                style: TextStyle(fontSize: 11, color: colors.textMuted),
-                textAlign: TextAlign.center,
-              ),
             ),
           ],
         );
@@ -229,7 +221,7 @@ class TennisScorePanel extends ConsumerWidget {
         horizontal: compact ? 0 : 4,
         vertical: compact ? 4 : 0,
       ),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(compact ? 10 : 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -248,7 +240,7 @@ class TennisScorePanel extends ConsumerWidget {
           Text(
             teamName,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: compact ? 13 : 14,
               fontWeight: FontWeight.w700,
               color: colors.textPrimary,
             ),
@@ -256,7 +248,7 @@ class TennisScorePanel extends ConsumerWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: compact ? 5 : 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
@@ -272,17 +264,17 @@ class TennisScorePanel extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: compact ? 7 : 12),
           Text(
             displayPoints,
             style: TextStyle(
-              fontSize: compact ? 54 : 62,
+              fontSize: compact ? 48 : 62,
               fontWeight: FontWeight.w700,
               color: color,
               height: 0.95,
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: compact ? 8 : 14),
           if (!isReadOnly)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -291,14 +283,18 @@ class TennisScorePanel extends ConsumerWidget {
                   Icons.remove_rounded,
                   () => notifier.tennisRemovePoint(isTeam1),
                   colors,
+                  size: compact ? 40 : 48,
+                  iconSize: compact ? 20 : 24,
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: compact ? 10 : 16),
                 _roundBtn(
                   Icons.add_rounded,
                   () => notifier.tennisAwardPoint(isTeam1),
                   colors,
                   primary: true,
                   color: color,
+                  size: compact ? 40 : 48,
+                  iconSize: compact ? 20 : 24,
                 ),
               ],
             ),
@@ -313,54 +309,33 @@ class TennisScorePanel extends ConsumerWidget {
     bool isTiebreak,
     AppLocalizations l10n,
   ) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          l10n.tennisScoreVs,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: colors.textMuted,
-          ),
+    if (!isTiebreak && !isDeuce) {
+      return const SizedBox.shrink();
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: isTiebreak
+            ? const Color(0xFFFF7A00).withValues(alpha: 0.12)
+            : Colors.amber.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: isTiebreak
+              ? const Color(0xFFFF7A00).withValues(alpha: 0.24)
+              : Colors.amber.withValues(alpha: 0.24),
         ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: isTiebreak
-                ? const Color(0xFFFF7A00).withValues(alpha: 0.12)
-                : isDeuce
-                ? Colors.amber.withValues(alpha: 0.16)
-                : colors.bgSurface,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: isTiebreak
-                  ? const Color(0xFFFF7A00).withValues(alpha: 0.24)
-                  : isDeuce
-                  ? Colors.amber.withValues(alpha: 0.24)
-                  : colors.border,
-            ),
-          ),
-          child: Text(
-            isTiebreak
-                ? l10n.tennisTiebreakLabel
-                : isDeuce
-                ? l10n.tennisDeuce
-                : l10n.tennisGameLabel,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: isTiebreak
-                  ? const Color(0xFFFF7A00)
-                  : isDeuce
-                  ? Colors.amber.shade700
-                  : colors.textMuted,
-              letterSpacing: 0.6,
-            ),
-          ),
+      ),
+      child: Text(
+        isTiebreak ? l10n.tennisTiebreakLabel : l10n.tennisDeuce,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: isTiebreak
+              ? const Color(0xFFFF7A00)
+              : Colors.amber.shade700,
+          letterSpacing: 0.6,
         ),
-      ],
+      ),
     );
   }
 
@@ -401,12 +376,14 @@ class TennisScorePanel extends ConsumerWidget {
     AppColorsExtension colors, {
     bool primary = false,
     Color color = AppTheme.primary,
+    double size = 48,
+    double iconSize = 24,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 48,
-        height: 48,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           color: primary ? color.withValues(alpha: 0.15) : colors.bgSurface,
           shape: BoxShape.circle,
@@ -416,7 +393,7 @@ class TennisScorePanel extends ConsumerWidget {
         ),
         child: Icon(
           icon,
-          size: 24,
+          size: iconSize,
           color: primary ? color : colors.textSecondary,
         ),
       ),
