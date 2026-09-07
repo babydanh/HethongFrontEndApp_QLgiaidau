@@ -2278,7 +2278,7 @@
   "communitySocialSettingsSaveSuccess": "Club activity settings saved",
   "communitySocialSettingsSaveError": "Unable to save settings. Please try again.",
   "communitySocialSettingsCreateTagError": "Unable to create the tag.",
-  "communitySocialSettingsTitle": "Club activity",
+  "communitySocialSettingsTitle": "Feed & social settings",
   "communitySocialSettingsDescription": "Control the feed, comments, chat, and member tags.",
   "communitySocialSettingsPostingPolicy": "Posting permission",
   "communitySocialSettingsTaggingPolicy": "Tagging permission",
@@ -2593,8 +2593,8 @@
   "clubDetailCasualBadge": "Casual",
   "clubDetailSeriesBadge": "Tournament series",
   "clubDetailLiteBadge": "Quick (Lite)",
-  "clubDetailSocialSettings": "Club activities",
-  "clubDetailSocialSettingsSubtitle": "Configure the feed, comments, chat, and member tags",
+  "clubDetailSocialSettings": "Feed & social settings",
+  "clubDetailSocialSettingsSubtitle": "Posting permissions, approvals, comments, chat and tags",
   "clubDetailQuickStatus": "Quick status",
   "clubDetailStatus": "Status",
   "clubDetailActiveStatus": "Active",
@@ -5034,7 +5034,11 @@
   "clubMatchSessionOptionalDate": "Optional — tap to choose",
   "clubMatchSessionCloseRegistration": "Close registration",
   "clubMatchSessionEnd": "End session",
-  "clubMatchSessionStatusUpdated": "Session status updated"
+  "clubMatchSessionStatusUpdated": "Session status updated",
+  "clubMatchSessionCancel": "Cancel session",
+  "clubMatchSessionRemoveParticipant": "Remove participant",
+  "clubMatchSessionRemoveParticipantConfirm": "Remove this participant from the session?",
+  "clubMatchSessionParticipantRemoved": "Participant removed"
   ,"clubMatchSessionStatusOpen": "Open",
   "clubMatchSessionStatusLive": "Live",
   "clubMatchSessionStatusClosed": "Registration closed",
@@ -5052,5 +5056,14 @@
   "clubMatchSessionEloSkippedCancelled": "ELO: cancelled result skipped",
   "clubMatchSessionEloApplied": "ELO: applied",
   "clubMatchSessionEloRetry": "ELO: retry scheduled",
-  "clubMatchSessionEloFailed": "ELO: manager review required"
+  "clubMatchSessionEloFailed": "ELO: manager review required",
+  "clubMatchSessionPairingWarning": "This pairing has scheduling or preference warnings. Create the match anyway?",
+  "clubMatchSessionDecreaseSideA": "Decrease side A score",
+  "clubMatchSessionIncreaseSideA": "Increase side A score",
+  "clubMatchSessionDecreaseSideB": "Decrease side B score",
+  "clubMatchSessionIncreaseSideB": "Increase side B score",
+  "clubMatchSessionEloDelta": "{value} ELO change",
+  "@clubMatchSessionEloDelta": {
+    "placeholders": { "value": { "type": "int" } }
+  }
 }

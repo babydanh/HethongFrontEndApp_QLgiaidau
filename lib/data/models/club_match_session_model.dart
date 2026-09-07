@@ -8,6 +8,15 @@ class ClubMatchSessionModel {
   final bool isRanked;
   final int version;
   final bool canManage;
+  final bool canJoin;
+  final bool canWithdraw;
+  final bool canCreateMatch;
+  final String? viewerUserId;
+  final bool viewerIsActive;
+  final List<String> preferredPartnerUserIds;
+  final List<String> preferredOpponentUserIds;
+  final List<String> avoidUserIds;
+  final int preferenceVersion;
 
   const ClubMatchSessionModel({
     required this.id,
@@ -18,23 +27,58 @@ class ClubMatchSessionModel {
     required this.isRanked,
     required this.version,
     required this.canManage,
+    this.canJoin = false,
+    this.canWithdraw = false,
+    this.canCreateMatch = false,
+    this.viewerUserId,
+    this.viewerIsActive = false,
+    this.preferredPartnerUserIds = const [],
+    this.preferredOpponentUserIds = const [],
+    this.avoidUserIds = const [],
+    this.preferenceVersion = 0,
     this.description,
   });
 
-  factory ClubMatchSessionModel.fromJson(Map<String, dynamic> json) =>
-      ClubMatchSessionModel(
-        id: json['id']?.toString() ?? '',
-        communityId: json['communityId']?.toString() ?? '',
-        resolvedName:
-            json['resolvedName']?.toString() ?? json['name']?.toString() ?? '',
-        description: json['description']?.toString(),
-        status: json['status']?.toString() ?? 'OPEN',
-        registrationMode: json['registrationMode']?.toString() ?? 'MIXED',
-        isRanked: json['isRanked'] != false,
-        version: (json['version'] as num?)?.toInt() ?? 1,
-        canManage:
-            (json['capabilities'] as Map?)?['canManage'] == true,
-      );
+  factory ClubMatchSessionModel.fromJson(
+    Map<String, dynamic> json,
+  ) => ClubMatchSessionModel(
+    id: json['id']?.toString() ?? '',
+    communityId: json['communityId']?.toString() ?? '',
+    resolvedName:
+        json['resolvedName']?.toString() ?? json['name']?.toString() ?? '',
+    description: json['description']?.toString(),
+    status: json['status']?.toString() ?? 'OPEN',
+    registrationMode: json['registrationMode']?.toString() ?? 'MIXED',
+    isRanked: json['isRanked'] != false,
+    version: (json['version'] as num?)?.toInt() ?? 1,
+    canManage: (json['capabilities'] as Map?)?['canManage'] == true,
+    canJoin: (json['capabilities'] as Map?)?['canJoin'] == true,
+    canWithdraw: (json['capabilities'] as Map?)?['canWithdraw'] == true,
+    canCreateMatch: (json['capabilities'] as Map?)?['canCreateMatch'] == true,
+    viewerUserId: (json['viewerParticipant'] as Map?)?['userId']?.toString(),
+    viewerIsActive:
+        (json['viewerParticipant'] as Map?)?['status']?.toString() == 'ACTIVE',
+    preferredPartnerUserIds:
+        ((json['viewerPreferences'] as Map?)?['preferredPartnerUserIds']
+                    as List<dynamic>? ??
+                const [])
+            .map((value) => value.toString())
+            .toList(),
+    preferredOpponentUserIds:
+        ((json['viewerPreferences'] as Map?)?['preferredOpponentUserIds']
+                    as List<dynamic>? ??
+                const [])
+            .map((value) => value.toString())
+            .toList(),
+    avoidUserIds:
+        ((json['viewerPreferences'] as Map?)?['avoidUserIds']
+                    as List<dynamic>? ??
+                const [])
+            .map((value) => value.toString())
+            .toList(),
+    preferenceVersion:
+        ((json['viewerPreferences'] as Map?)?['version'] as num?)?.toInt() ?? 0,
+  );
 }
 
 class ClubMatchParticipantModel {
@@ -43,6 +87,7 @@ class ClubMatchParticipantModel {
   final String displayName;
   final String source;
   final String status;
+  final int version;
 
   const ClubMatchParticipantModel({
     required this.id,
@@ -50,17 +95,18 @@ class ClubMatchParticipantModel {
     required this.displayName,
     required this.source,
     required this.status,
+    required this.version,
   });
 
   factory ClubMatchParticipantModel.fromJson(Map<String, dynamic> json) {
-    final participant =
-        json['participant'] as Map<String, dynamic>? ?? json;
+    final participant = json['participant'] as Map<String, dynamic>? ?? json;
     return ClubMatchParticipantModel(
       id: participant['id']?.toString() ?? '',
       userId: participant['userId']?.toString() ?? '',
       displayName: json['fullName']?.toString() ?? '',
       source: participant['source']?.toString() ?? 'SELF',
       status: participant['status']?.toString() ?? 'ACTIVE',
+      version: (participant['version'] as num?)?.toInt() ?? 1,
     );
   }
 }
@@ -74,6 +120,8 @@ class ClubSessionMatchModel {
   final int sideBScore;
   final int revision;
   final String eloStatus;
+  final Map<String, dynamic> scoreDetails;
+  final Map<String, int> eloDelta;
 
   const ClubSessionMatchModel({
     required this.id,
@@ -84,6 +132,8 @@ class ClubSessionMatchModel {
     required this.sideBScore,
     required this.revision,
     required this.eloStatus,
+    this.scoreDetails = const {},
+    this.eloDelta = const {},
   });
 
   factory ClubSessionMatchModel.fromJson(Map<String, dynamic> json) =>
@@ -100,5 +150,13 @@ class ClubSessionMatchModel {
         sideBScore: (json['p2SetsWon'] as num?)?.toInt() ?? 0,
         revision: (json['revision'] as num?)?.toInt() ?? 1,
         eloStatus: json['eloStatus']?.toString() ?? 'PENDING',
+        scoreDetails: json['scoreDetails'] is Map
+            ? Map<String, dynamic>.from(json['scoreDetails'] as Map)
+            : const {},
+        eloDelta: json['eloDelta'] is Map
+            ? Map<String, dynamic>.from(
+                json['eloDelta'] as Map,
+              ).map((key, value) => MapEntry(key, (value as num).toInt()))
+            : const {},
       );
 }

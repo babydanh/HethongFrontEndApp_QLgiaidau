@@ -5970,7 +5970,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get communitySocialSettingsCreateTagError => 'Không thể tạo tag.';
 
   @override
-  String get communitySocialSettingsTitle => 'Sinh hoạt CLB';
+  String get communitySocialSettingsTitle => 'Cài đặt bảng tin & sinh hoạt';
 
   @override
   String get communitySocialSettingsDescription =>
@@ -7017,11 +7017,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clubDetailLiteBadge => 'Nhanh (Lite)';
 
   @override
-  String get clubDetailSocialSettings => 'Sinh hoạt CLB';
+  String get clubDetailSocialSettings => 'Cài đặt bảng tin & sinh hoạt';
 
   @override
   String get clubDetailSocialSettingsSubtitle =>
-      'Cài đặt bảng tin, bình luận, chat và tag thành viên';
+      'Quyền đăng bài, duyệt bài, bình luận, chat và tag';
 
   @override
   String get clubDetailQuickStatus => 'Trạng thái nhanh';
@@ -12235,6 +12235,19 @@ class AppLocalizationsVi extends AppLocalizations {
       'Đã cập nhật trạng thái buổi giao lưu';
 
   @override
+  String get clubMatchSessionCancel => 'Hủy buổi giao lưu';
+
+  @override
+  String get clubMatchSessionRemoveParticipant => 'Xóa người tham gia';
+
+  @override
+  String get clubMatchSessionRemoveParticipantConfirm =>
+      'Xóa người này khỏi buổi giao lưu?';
+
+  @override
+  String get clubMatchSessionParticipantRemoved => 'Đã xóa người tham gia';
+
+  @override
   String get clubMatchSessionStatusOpen => 'Đang mở';
 
   @override
@@ -12287,4 +12300,25 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get clubMatchSessionEloFailed => 'ELO: cần BQT kiểm tra';
+
+  @override
+  String get clubMatchSessionPairingWarning =>
+      'Cách ghép này có cảnh báo về lịch đấu hoặc nguyện vọng. Bạn vẫn muốn tạo trận?';
+
+  @override
+  String get clubMatchSessionDecreaseSideA => 'Giảm điểm bên A';
+
+  @override
+  String get clubMatchSessionIncreaseSideA => 'Tăng điểm bên A';
+
+  @override
+  String get clubMatchSessionDecreaseSideB => 'Giảm điểm bên B';
+
+  @override
+  String get clubMatchSessionIncreaseSideB => 'Tăng điểm bên B';
+
+  @override
+  String clubMatchSessionEloDelta(int value) {
+    return 'Biến động $value ELO';
+  }
 }

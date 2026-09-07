@@ -2278,7 +2278,7 @@
   "communitySocialSettingsSaveSuccess": "Đã lưu cài đặt sinh hoạt CLB",
   "communitySocialSettingsSaveError": "Lưu cài đặt thất bại. Vui lòng thử lại.",
   "communitySocialSettingsCreateTagError": "Không thể tạo tag.",
-  "communitySocialSettingsTitle": "Sinh hoạt CLB",
+  "communitySocialSettingsTitle": "Cài đặt bảng tin & sinh hoạt",
   "communitySocialSettingsDescription": "Điều khiển bảng tin, bình luận, chat và tag thành viên.",
   "communitySocialSettingsPostingPolicy": "Quyền đăng bài",
   "communitySocialSettingsTaggingPolicy": "Quyền gắn thẻ",
@@ -2593,8 +2593,8 @@
   "clubDetailCasualBadge": "Phong trào",
   "clubDetailSeriesBadge": "Chuỗi giải",
   "clubDetailLiteBadge": "Nhanh (Lite)",
-  "clubDetailSocialSettings": "Sinh hoạt CLB",
-  "clubDetailSocialSettingsSubtitle": "Cài đặt bảng tin, bình luận, chat và tag thành viên",
+  "clubDetailSocialSettings": "Cài đặt bảng tin & sinh hoạt",
+  "clubDetailSocialSettingsSubtitle": "Quyền đăng bài, duyệt bài, bình luận, chat và tag",
   "clubDetailQuickStatus": "Trạng thái nhanh",
   "clubDetailStatus": "Trạng thái",
   "clubDetailActiveStatus": "Đang hoạt động",
@@ -5034,7 +5034,11 @@
   "clubMatchSessionOptionalDate": "Không bắt buộc — chạm để chọn",
   "clubMatchSessionCloseRegistration": "Đóng đăng ký",
   "clubMatchSessionEnd": "Kết thúc buổi",
-  "clubMatchSessionStatusUpdated": "Đã cập nhật trạng thái buổi giao lưu"
+  "clubMatchSessionStatusUpdated": "Đã cập nhật trạng thái buổi giao lưu",
+  "clubMatchSessionCancel": "Hủy buổi giao lưu",
+  "clubMatchSessionRemoveParticipant": "Xóa người tham gia",
+  "clubMatchSessionRemoveParticipantConfirm": "Xóa người này khỏi buổi giao lưu?",
+  "clubMatchSessionParticipantRemoved": "Đã xóa người tham gia"
   ,"clubMatchSessionStatusOpen": "Đang mở",
   "clubMatchSessionStatusLive": "Đang diễn ra",
   "clubMatchSessionStatusClosed": "Đã đóng đăng ký",
@@ -5052,5 +5056,14 @@
   "clubMatchSessionEloSkippedCancelled": "ELO: bỏ qua do đã hủy",
   "clubMatchSessionEloApplied": "ELO: đã cập nhật",
   "clubMatchSessionEloRetry": "ELO: sẽ thử lại",
-  "clubMatchSessionEloFailed": "ELO: cần BQT kiểm tra"
+  "clubMatchSessionEloFailed": "ELO: cần BQT kiểm tra",
+  "clubMatchSessionPairingWarning": "Cách ghép này có cảnh báo về lịch đấu hoặc nguyện vọng. Bạn vẫn muốn tạo trận?",
+  "clubMatchSessionDecreaseSideA": "Giảm điểm bên A",
+  "clubMatchSessionIncreaseSideA": "Tăng điểm bên A",
+  "clubMatchSessionDecreaseSideB": "Giảm điểm bên B",
+  "clubMatchSessionIncreaseSideB": "Tăng điểm bên B",
+  "clubMatchSessionEloDelta": "Biến động {value} ELO",
+  "@clubMatchSessionEloDelta": {
+    "placeholders": { "value": { "type": "int" } }
+  }
 }

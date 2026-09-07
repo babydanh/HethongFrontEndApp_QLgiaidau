@@ -11159,7 +11159,7 @@ abstract class AppLocalizations {
   /// No description provided for @communitySocialSettingsTitle.
   ///
   /// In vi, this message translates to:
-  /// **'Sinh hoạt CLB'**
+  /// **'Cài đặt bảng tin & sinh hoạt'**
   String get communitySocialSettingsTitle;
 
   /// No description provided for @communitySocialSettingsDescription.
@@ -13049,13 +13049,13 @@ abstract class AppLocalizations {
   /// No description provided for @clubDetailSocialSettings.
   ///
   /// In vi, this message translates to:
-  /// **'Sinh hoạt CLB'**
+  /// **'Cài đặt bảng tin & sinh hoạt'**
   String get clubDetailSocialSettings;
 
   /// No description provided for @clubDetailSocialSettingsSubtitle.
   ///
   /// In vi, this message translates to:
-  /// **'Cài đặt bảng tin, bình luận, chat và tag thành viên'**
+  /// **'Quyền đăng bài, duyệt bài, bình luận, chat và tag'**
   String get clubDetailSocialSettingsSubtitle;
 
   /// No description provided for @clubDetailQuickStatus.
@@ -22300,6 +22300,30 @@ abstract class AppLocalizations {
   /// **'Đã cập nhật trạng thái buổi giao lưu'**
   String get clubMatchSessionStatusUpdated;
 
+  /// No description provided for @clubMatchSessionCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy buổi giao lưu'**
+  String get clubMatchSessionCancel;
+
+  /// No description provided for @clubMatchSessionRemoveParticipant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa người tham gia'**
+  String get clubMatchSessionRemoveParticipant;
+
+  /// No description provided for @clubMatchSessionRemoveParticipantConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa người này khỏi buổi giao lưu?'**
+  String get clubMatchSessionRemoveParticipantConfirm;
+
+  /// No description provided for @clubMatchSessionParticipantRemoved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa người tham gia'**
+  String get clubMatchSessionParticipantRemoved;
+
   /// No description provided for @clubMatchSessionStatusOpen.
   ///
   /// In vi, this message translates to:
@@ -22407,6 +22431,42 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'ELO: cần BQT kiểm tra'**
   String get clubMatchSessionEloFailed;
+
+  /// No description provided for @clubMatchSessionPairingWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cách ghép này có cảnh báo về lịch đấu hoặc nguyện vọng. Bạn vẫn muốn tạo trận?'**
+  String get clubMatchSessionPairingWarning;
+
+  /// No description provided for @clubMatchSessionDecreaseSideA.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giảm điểm bên A'**
+  String get clubMatchSessionDecreaseSideA;
+
+  /// No description provided for @clubMatchSessionIncreaseSideA.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tăng điểm bên A'**
+  String get clubMatchSessionIncreaseSideA;
+
+  /// No description provided for @clubMatchSessionDecreaseSideB.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giảm điểm bên B'**
+  String get clubMatchSessionDecreaseSideB;
+
+  /// No description provided for @clubMatchSessionIncreaseSideB.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tăng điểm bên B'**
+  String get clubMatchSessionIncreaseSideB;
+
+  /// No description provided for @clubMatchSessionEloDelta.
+  ///
+  /// In vi, this message translates to:
+  /// **'Biến động {value} ELO'**
+  String clubMatchSessionEloDelta(int value);
 }
 
 class _AppLocalizationsDelegate

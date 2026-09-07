@@ -48,25 +48,30 @@ class ClubMatchSessionsNotifier
   }
 }
 
-final clubMatchSessionsProvider = AsyncNotifierProvider.family<
-  ClubMatchSessionsNotifier,
-  List<ClubMatchSessionModel>,
-  String
->(ClubMatchSessionsNotifier.new);
+final clubMatchSessionsProvider =
+    AsyncNotifierProvider.family<
+      ClubMatchSessionsNotifier,
+      List<ClubMatchSessionModel>,
+      String
+    >(ClubMatchSessionsNotifier.new);
 
 typedef ClubSessionDetail = ({
+  ClubMatchSessionModel session,
   List<ClubMatchParticipantModel> participants,
   List<ClubSessionMatchModel> matches,
 });
 
-final clubSessionDetailProvider = FutureProvider.family<ClubSessionDetail, String>((ref, sessionId) async {
-  final repository = ref.read(clubMatchSessionRepositoryProvider);
-  final values = await Future.wait([
-    repository.participants(sessionId),
-    repository.matches(sessionId),
-  ]);
-  return (
-    participants: values[0] as List<ClubMatchParticipantModel>,
-    matches: values[1] as List<ClubSessionMatchModel>,
-  );
-});
+final clubSessionDetailProvider =
+    FutureProvider.family<ClubSessionDetail, String>((ref, sessionId) async {
+      final repository = ref.read(clubMatchSessionRepositoryProvider);
+      final values = await Future.wait([
+        repository.get(sessionId),
+        repository.participants(sessionId),
+        repository.matches(sessionId),
+      ]);
+      return (
+        session: values[0] as ClubMatchSessionModel,
+        participants: values[1] as List<ClubMatchParticipantModel>,
+        matches: values[2] as List<ClubSessionMatchModel>,
+      );
+    });

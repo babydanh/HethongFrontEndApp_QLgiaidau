@@ -5978,7 +5978,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unable to create the tag.';
 
   @override
-  String get communitySocialSettingsTitle => 'Club activity';
+  String get communitySocialSettingsTitle => 'Feed & social settings';
 
   @override
   String get communitySocialSettingsDescription =>
@@ -7027,11 +7027,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubDetailLiteBadge => 'Quick (Lite)';
 
   @override
-  String get clubDetailSocialSettings => 'Club activities';
+  String get clubDetailSocialSettings => 'Feed & social settings';
 
   @override
   String get clubDetailSocialSettingsSubtitle =>
-      'Configure the feed, comments, chat, and member tags';
+      'Posting permissions, approvals, comments, chat and tags';
 
   @override
   String get clubDetailQuickStatus => 'Quick status';
@@ -12274,6 +12274,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubMatchSessionStatusUpdated => 'Session status updated';
 
   @override
+  String get clubMatchSessionCancel => 'Cancel session';
+
+  @override
+  String get clubMatchSessionRemoveParticipant => 'Remove participant';
+
+  @override
+  String get clubMatchSessionRemoveParticipantConfirm =>
+      'Remove this participant from the session?';
+
+  @override
+  String get clubMatchSessionParticipantRemoved => 'Participant removed';
+
+  @override
   String get clubMatchSessionStatusOpen => 'Open';
 
   @override
@@ -12327,4 +12340,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clubMatchSessionEloFailed => 'ELO: manager review required';
+
+  @override
+  String get clubMatchSessionPairingWarning =>
+      'This pairing has scheduling or preference warnings. Create the match anyway?';
+
+  @override
+  String get clubMatchSessionDecreaseSideA => 'Decrease side A score';
+
+  @override
+  String get clubMatchSessionIncreaseSideA => 'Increase side A score';
+
+  @override
+  String get clubMatchSessionDecreaseSideB => 'Decrease side B score';
+
+  @override
+  String get clubMatchSessionIncreaseSideB => 'Increase side B score';
+
+  @override
+  String clubMatchSessionEloDelta(int value) {
+    return '$value ELO change';
+  }
 }
