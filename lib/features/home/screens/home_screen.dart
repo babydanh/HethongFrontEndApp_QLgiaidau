@@ -2764,23 +2764,62 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   // ─── Content Area ───
                   Padding(
-                    padding: EdgeInsets.fromLTRB(14, hasLogo ? 32 : 14, 14, 14),
+                    padding: const EdgeInsets.all(14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Club name (no fake verified tick)
-                        Text(
-                          club.name,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: context.colors.textPrimary,
-                            letterSpacing: -0.2,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            if (hasLogo) ...[
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: context.colors.bgSurface,
+                                  border: Border.all(
+                                    color: context.colors.border,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: ClipOval(
+                                  child: Image.network(
+                                    club.logoUrl!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, _, _) => Center(
+                                      child: Text(
+                                        club.name.isNotEmpty
+                                            ? club.name.characters.first.toUpperCase()
+                                            : 'C',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                          color: sportColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                            ],
+                            Expanded(
+                              child: Text(
+                                club.name,
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w900,
+                                  color: context.colors.textPrimary,
+                                  letterSpacing: -0.2,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
 
                         // Stats (Members & Location)
                         Row(
@@ -2880,40 +2919,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ],
               ),
-
-              // Floating Circular Logo — centered over bottom edge of banner (top: 157)
-              // Chỉ hiển thị khi câu lạc bộ có logo tải lên, không có logo thì ẩn hoàn toàn
-              if (hasLogo)
-                Positioned(
-                  top: 157,
-                  left: 14,
-                  child: Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: context.colors.bgCard,
-                      border: Border.all(
-                        color: context.colors.bgCard,
-                        width: 2.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.12),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child: Image.network(
-                        club.logoUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                      ),
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
