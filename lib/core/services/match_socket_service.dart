@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/services/token_manager.dart';
 
 /// Service quản lý kết nối WebSocket (socket.io) tới namespace `/live` phục vụ live scores.
 class MatchSocketService {
@@ -12,6 +13,10 @@ class MatchSocketService {
   io.Socket? _socket;
   final _joinedMatchIds = <String>{};
   final _joinedTournamentIds = <String>{};
+  final _joinedClubSessionIds = <String>{};
+  final TokenManager? _tokenManager;
+
+  MatchSocketService({TokenManager? tokenManager}) : _tokenManager = tokenManager;
 
   // Stream controllers to broadcast incoming events
   final _scoreUpdateController = StreamController<Map<String, dynamic>>.broadcast();
@@ -65,7 +70,7 @@ class MatchSocketService {
 
   bool get isConnected => _socket?.connected ?? false;
 
-  void connect(String? matchId, {bool joinMatch = true}) {
+  Future<void> connect(String? matchId, {bool joinMatch = true}) async {
     if (joinMatch && matchId != null) {
       _joinedMatchIds.add(matchId);
     }
@@ -94,6 +99,7 @@ class MatchSocketService {
       final serverUrl = rawBaseUrl.replaceAll(RegExp(r'/api/v1/?$'), '');
       _log.info('Connecting to match socket at $serverUrl/live');
 
+      final token = await _tokenManager?.getAccessToken();
       _socket = io.io(
         '$serverUrl/live',
         io.OptionBuilder()
@@ -104,6 +110,10 @@ class MatchSocketService {
             .setReconnectionAttempts(20)
             .setReconnectionDelay(1000)
             .setTimeout(8000)
+            .setAuth({
+              if (token != null && token.isNotEmpty)
+                'token': token.startsWith('Bearer ') ? token : 'Bearer $token',
+            })
             .disableAutoConnect()
             .build(),
       );
@@ -200,6 +210,20 @@ class MatchSocketService {
     }
   }
 
+  void joinClubMatchSession(String sessionId) {
+    _joinedClubSessionIds.add(sessionId);
+    if (_socket?.connected == true) {
+      _socket!.emit('joinClubMatchSession', sessionId);
+    }
+  }
+
+  void leaveClubMatchSession(String sessionId) {
+    _joinedClubSessionIds.remove(sessionId);
+    if (_socket?.connected == true) {
+      _socket!.emit('leaveClubMatchSession', sessionId);
+    }
+  }
+
   void disconnect() {
     if (_socket != null) {
       _log.info('Disconnecting match socket');
@@ -209,6 +233,7 @@ class MatchSocketService {
     }
     _joinedMatchIds.clear();
     _joinedTournamentIds.clear();
+    _joinedClubSessionIds.clear();
   }
 
   void _joinTrackedRooms() {
@@ -219,6 +244,9 @@ class MatchSocketService {
     }
     for (final tournamentId in _joinedTournamentIds) {
       socket!.emit('joinTournament', tournamentId);
+    }
+    for (final sessionId in _joinedClubSessionIds) {
+      socket!.emit('joinClubMatchSession', sessionId);
     }
   }
 }

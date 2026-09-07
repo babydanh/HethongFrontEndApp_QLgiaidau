@@ -569,6 +569,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 onSelected: (val) {
                   if (val == 'create_tournament') {
                     _showCreateTournamentTypeSheet();
+                  } else if (val == 'match_sessions') {
+                    context.push('/club/${widget.clubId}/match-sessions');
                   } else if (val == 'manage') {
                     context.push(
                       '/club/${widget.clubId}/manage',
@@ -579,6 +581,26 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   }
                 },
                 itemBuilder: (ctx) => [
+                  PopupMenuItem(
+                    value: 'match_sessions',
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.groups_rounded,
+                          size: 18,
+                          color: AppTheme.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          l10n.clubMatchSessionTitle,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   PopupMenuItem(
                     value: 'create_tournament',
                     child: Row(
@@ -1259,7 +1281,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     String emoji,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final bool hasBanner = club.bannerUrl != null && club.bannerUrl!.isNotEmpty;
+    final bannerUrl = _resolveImageUrl(club.bannerUrl);
+    final logoUrl = _resolveImageUrl(club.logoUrl);
+    final bool hasBanner = bannerUrl.isNotEmpty;
     final List<Widget> sportTagWidgets = [];
     if (club.sports.isNotEmpty) {
       for (final s in club.sports) {
@@ -1288,7 +1312,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               color: colors.bgCard,
               child: hasBanner
                   ? Image.network(
-                      club.bannerUrl!,
+                      bannerUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
                           _bannerGradient(sColor, emoji),
@@ -1305,8 +1329,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (club.logoUrl != null &&
-                      club.logoUrl!.trim().isNotEmpty) ...[
+                  if (logoUrl.isNotEmpty) ...[
                     Container(
                       width: 64,
                       height: 64,
@@ -1324,7 +1347,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       ),
                       child: ClipOval(
                         child: Image.network(
-                          club.logoUrl!,
+                          logoUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               _logoSportBg(sColor, emoji),
@@ -4305,8 +4328,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 itemCount: allItems.length,
                 itemBuilder: (context, i) {
                   final item = allItems[i];
+                  final resolvedUrl = _resolveImageUrl(item.url);
                   return GestureDetector(
-                    onTap: () => _showImagePreview(item.url),
+                    onTap: () => _showImagePreview(resolvedUrl),
                     child: Container(
                       decoration: BoxDecoration(
                         color: colors.bgCard,
@@ -4326,7 +4350,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                           fit: StackFit.expand,
                           children: [
                             Image.network(
-                              item.url,
+                              resolvedUrl,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   Container(

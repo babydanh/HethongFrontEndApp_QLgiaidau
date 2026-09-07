@@ -84,7 +84,11 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     }
     try {
       final dio = ref.read(dioProvider);
-      final allCategories = await ref.read(categoriesProvider.future);
+      // Danh mục chỉ phục vụ bộ lọc. Không để request này làm cả tab
+      // Xếp hạng quay vô hạn nếu backend danh mục phản hồi chậm.
+      final allCategories = await ref
+          .read(categoriesProvider.future)
+          .timeout(const Duration(seconds: 5), onTimeout: () => const []);
       // Lọc Môn theo setting CLB (clubSportKeys), fallback toàn bộ nếu không
       // khớp — giống web dùng community.categories.
       var categories = allCategories;

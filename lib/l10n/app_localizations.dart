@@ -21987,6 +21987,426 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thao tác VĐV ảo thất bại: {error}'**
   String lite_mockPlayersFailed(Object error);
+
+  /// No description provided for @clubMatchSessionTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Buổi giao lưu CLB'**
+  String get clubMatchSessionTitle;
+
+  /// No description provided for @clubMatchSessionCreateTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo buổi giao lưu CLB'**
+  String get clubMatchSessionCreateTitle;
+
+  /// No description provided for @clubMatchSessionCreate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo buổi giao lưu'**
+  String get clubMatchSessionCreate;
+
+  /// No description provided for @clubMatchSessionCreated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo buổi giao lưu'**
+  String get clubMatchSessionCreated;
+
+  /// No description provided for @clubMatchSessionName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên buổi giao lưu'**
+  String get clubMatchSessionName;
+
+  /// No description provided for @clubMatchSessionNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Để trống để dùng tên gợi ý theo CLB'**
+  String get clubMatchSessionNameHint;
+
+  /// No description provided for @clubMatchSessionDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mô tả'**
+  String get clubMatchSessionDescription;
+
+  /// No description provided for @clubMatchSessionRegistrationMode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cách tham gia'**
+  String get clubMatchSessionRegistrationMode;
+
+  /// No description provided for @clubMatchSessionRegistrationMixed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự đăng ký hoặc BQT chỉ định'**
+  String get clubMatchSessionRegistrationMixed;
+
+  /// No description provided for @clubMatchSessionRegistrationSelf.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên tự đăng ký'**
+  String get clubMatchSessionRegistrationSelf;
+
+  /// No description provided for @clubMatchSessionRegistrationManager.
+  ///
+  /// In vi, this message translates to:
+  /// **'BQT chỉ định'**
+  String get clubMatchSessionRegistrationManager;
+
+  /// No description provided for @clubMatchSessionRanked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tính ELO cho các trận hợp lệ'**
+  String get clubMatchSessionRanked;
+
+  /// No description provided for @clubMatchSessionNoBracketHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tạo nhánh đấu, vòng đấu, trận ẩn hoặc giới hạn số trận.'**
+  String get clubMatchSessionNoBracketHint;
+
+  /// No description provided for @clubMatchSessionEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có buổi giao lưu nào'**
+  String get clubMatchSessionEmpty;
+
+  /// No description provided for @clubMatchSessionRankedShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có ELO'**
+  String get clubMatchSessionRankedShort;
+
+  /// No description provided for @clubMatchSessionUnrankedShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không ELO'**
+  String get clubMatchSessionUnrankedShort;
+
+  /// No description provided for @clubMatchSessionStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái: {status}'**
+  String clubMatchSessionStatus(Object status);
+
+  /// No description provided for @clubMatchSessionNoDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có mô tả'**
+  String get clubMatchSessionNoDescription;
+
+  /// No description provided for @clubMatchSessionJoin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tham gia'**
+  String get clubMatchSessionJoin;
+
+  /// No description provided for @clubMatchSessionJoined.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tham gia buổi giao lưu'**
+  String get clubMatchSessionJoined;
+
+  /// No description provided for @clubMatchSessionWithdraw.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rút đăng ký'**
+  String get clubMatchSessionWithdraw;
+
+  /// No description provided for @clubMatchSessionWithdrawn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã rút đăng ký'**
+  String get clubMatchSessionWithdrawn;
+
+  /// No description provided for @clubMatchSessionCreateMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo trận tự do'**
+  String get clubMatchSessionCreateMatch;
+
+  /// No description provided for @clubMatchSessionDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đôi'**
+  String get clubMatchSessionDoubles;
+
+  /// No description provided for @clubMatchSessionPlayerCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn đúng {count} người đang tham gia'**
+  String clubMatchSessionPlayerCount(Object count);
+
+  /// No description provided for @clubMatchSessionMatchCreated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo trận giao lưu'**
+  String get clubMatchSessionMatchCreated;
+
+  /// No description provided for @clubMatchSessionParticipants.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người tham gia'**
+  String get clubMatchSessionParticipants;
+
+  /// No description provided for @clubMatchSessionMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các trận giao lưu'**
+  String get clubMatchSessionMatches;
+
+  /// No description provided for @clubMatchSessionNoMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trận nào. Không có trận ẩn được tạo tự động.'**
+  String get clubMatchSessionNoMatches;
+
+  /// No description provided for @clubMatchSessionLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải buổi giao lưu này'**
+  String get clubMatchSessionLoadFailed;
+
+  /// No description provided for @clubMatchSessionMatchStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái trận: {status}'**
+  String clubMatchSessionMatchStatus(Object status);
+
+  /// No description provided for @clubMatchSessionSaveScore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu điểm'**
+  String get clubMatchSessionSaveScore;
+
+  /// No description provided for @clubMatchSessionComplete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chốt kết quả'**
+  String get clubMatchSessionComplete;
+
+  /// No description provided for @clubMatchSessionEloStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái ELO: {status}'**
+  String clubMatchSessionEloStatus(Object status);
+
+  /// No description provided for @clubMatchSessionSelfSource.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự đăng ký'**
+  String get clubMatchSessionSelfSource;
+
+  /// No description provided for @clubMatchSessionMandatorySource.
+  ///
+  /// In vi, this message translates to:
+  /// **'BQT chỉ định'**
+  String get clubMatchSessionMandatorySource;
+
+  /// No description provided for @clubMatchSessionAssignMembers.
+  ///
+  /// In vi, this message translates to:
+  /// **'BQT thêm thành viên'**
+  String get clubMatchSessionAssignMembers;
+
+  /// No description provided for @clubMatchSessionAssign.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm người đã chọn'**
+  String get clubMatchSessionAssign;
+
+  /// No description provided for @clubMatchSessionAssigned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm thành viên vào buổi giao lưu'**
+  String get clubMatchSessionAssigned;
+
+  /// No description provided for @clubMatchSessionUnnamedMember.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên chưa đặt tên'**
+  String get clubMatchSessionUnnamedMember;
+
+  /// No description provided for @clubMatchSessionPreferences.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nguyện vọng ghép trận'**
+  String get clubMatchSessionPreferences;
+
+  /// No description provided for @clubMatchSessionPreferredPartner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Muốn cùng đội'**
+  String get clubMatchSessionPreferredPartner;
+
+  /// No description provided for @clubMatchSessionPreferredOpponent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Muốn đối đầu'**
+  String get clubMatchSessionPreferredOpponent;
+
+  /// No description provided for @clubMatchSessionAvoidPlayer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Muốn tránh ghép'**
+  String get clubMatchSessionAvoidPlayer;
+
+  /// No description provided for @clubMatchSessionSavePreferences.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu nguyện vọng'**
+  String get clubMatchSessionSavePreferences;
+
+  /// No description provided for @clubMatchSessionPreferencesSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu nguyện vọng'**
+  String get clubMatchSessionPreferencesSaved;
+
+  /// No description provided for @clubMatchSessionStartAt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày giờ bắt đầu'**
+  String get clubMatchSessionStartAt;
+
+  /// No description provided for @clubMatchSessionEndAt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày giờ kết thúc'**
+  String get clubMatchSessionEndAt;
+
+  /// No description provided for @clubMatchSessionOptionalDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không bắt buộc — chạm để chọn'**
+  String get clubMatchSessionOptionalDate;
+
+  /// No description provided for @clubMatchSessionCloseRegistration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng đăng ký'**
+  String get clubMatchSessionCloseRegistration;
+
+  /// No description provided for @clubMatchSessionEnd.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết thúc buổi'**
+  String get clubMatchSessionEnd;
+
+  /// No description provided for @clubMatchSessionStatusUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật trạng thái buổi giao lưu'**
+  String get clubMatchSessionStatusUpdated;
+
+  /// No description provided for @clubMatchSessionStatusOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mở'**
+  String get clubMatchSessionStatusOpen;
+
+  /// No description provided for @clubMatchSessionStatusLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get clubMatchSessionStatusLive;
+
+  /// No description provided for @clubMatchSessionStatusClosed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đóng đăng ký'**
+  String get clubMatchSessionStatusClosed;
+
+  /// No description provided for @clubMatchSessionStatusEnded.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã kết thúc'**
+  String get clubMatchSessionStatusEnded;
+
+  /// No description provided for @clubMatchSessionStatusCancelled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hủy'**
+  String get clubMatchSessionStatusCancelled;
+
+  /// No description provided for @clubMatchSessionStatusUnknown.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái chưa xác định'**
+  String get clubMatchSessionStatusUnknown;
+
+  /// No description provided for @clubMatchSessionMatchScheduled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sắp đấu'**
+  String get clubMatchSessionMatchScheduled;
+
+  /// No description provided for @clubMatchSessionMatchOngoing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang đấu'**
+  String get clubMatchSessionMatchOngoing;
+
+  /// No description provided for @clubMatchSessionMatchCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn tất'**
+  String get clubMatchSessionMatchCompleted;
+
+  /// No description provided for @clubMatchSessionMatchCancelled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hủy'**
+  String get clubMatchSessionMatchCancelled;
+
+  /// No description provided for @clubMatchSessionEloWaiting.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO: chờ kết quả'**
+  String get clubMatchSessionEloWaiting;
+
+  /// No description provided for @clubMatchSessionEloPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO: đang xử lý'**
+  String get clubMatchSessionEloPending;
+
+  /// No description provided for @clubMatchSessionEloNotRanked.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO: không xếp hạng'**
+  String get clubMatchSessionEloNotRanked;
+
+  /// No description provided for @clubMatchSessionEloSkippedMock.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO: bỏ qua VĐV ảo'**
+  String get clubMatchSessionEloSkippedMock;
+
+  /// No description provided for @clubMatchSessionEloSkippedCancelled.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO: bỏ qua do đã hủy'**
+  String get clubMatchSessionEloSkippedCancelled;
+
+  /// No description provided for @clubMatchSessionEloApplied.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO: đã cập nhật'**
+  String get clubMatchSessionEloApplied;
+
+  /// No description provided for @clubMatchSessionEloRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO: sẽ thử lại'**
+  String get clubMatchSessionEloRetry;
+
+  /// No description provided for @clubMatchSessionEloFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO: cần BQT kiểm tra'**
+  String get clubMatchSessionEloFailed;
 }
 
 class _AppLocalizationsDelegate

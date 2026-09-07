@@ -12,7 +12,7 @@ final socketServiceProvider = Provider<SocketService>((ref) {
 
 /// Provider cho MatchSocketService (kết nối WebSocket /live realtime).
 final matchSocketServiceProvider = Provider<MatchSocketService>((ref) {
-  final service = MatchSocketService();
+  final service = MatchSocketService(tokenManager: ref.read(tokenManagerProvider));
   ref.onDispose(() {
     service.disconnect();
   });

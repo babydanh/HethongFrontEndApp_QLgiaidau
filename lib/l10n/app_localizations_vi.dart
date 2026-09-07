@@ -12065,4 +12065,226 @@ class AppLocalizationsVi extends AppLocalizations {
   String lite_mockPlayersFailed(Object error) {
     return 'Thao tác VĐV ảo thất bại: $error';
   }
+
+  @override
+  String get clubMatchSessionTitle => 'Buổi giao lưu CLB';
+
+  @override
+  String get clubMatchSessionCreateTitle => 'Tạo buổi giao lưu CLB';
+
+  @override
+  String get clubMatchSessionCreate => 'Tạo buổi giao lưu';
+
+  @override
+  String get clubMatchSessionCreated => 'Đã tạo buổi giao lưu';
+
+  @override
+  String get clubMatchSessionName => 'Tên buổi giao lưu';
+
+  @override
+  String get clubMatchSessionNameHint => 'Để trống để dùng tên gợi ý theo CLB';
+
+  @override
+  String get clubMatchSessionDescription => 'Mô tả';
+
+  @override
+  String get clubMatchSessionRegistrationMode => 'Cách tham gia';
+
+  @override
+  String get clubMatchSessionRegistrationMixed =>
+      'Tự đăng ký hoặc BQT chỉ định';
+
+  @override
+  String get clubMatchSessionRegistrationSelf => 'Thành viên tự đăng ký';
+
+  @override
+  String get clubMatchSessionRegistrationManager => 'BQT chỉ định';
+
+  @override
+  String get clubMatchSessionRanked => 'Tính ELO cho các trận hợp lệ';
+
+  @override
+  String get clubMatchSessionNoBracketHint =>
+      'Không tạo nhánh đấu, vòng đấu, trận ẩn hoặc giới hạn số trận.';
+
+  @override
+  String get clubMatchSessionEmpty => 'Chưa có buổi giao lưu nào';
+
+  @override
+  String get clubMatchSessionRankedShort => 'Có ELO';
+
+  @override
+  String get clubMatchSessionUnrankedShort => 'Không ELO';
+
+  @override
+  String clubMatchSessionStatus(Object status) {
+    return 'Trạng thái: $status';
+  }
+
+  @override
+  String get clubMatchSessionNoDescription => 'Chưa có mô tả';
+
+  @override
+  String get clubMatchSessionJoin => 'Tham gia';
+
+  @override
+  String get clubMatchSessionJoined => 'Đã tham gia buổi giao lưu';
+
+  @override
+  String get clubMatchSessionWithdraw => 'Rút đăng ký';
+
+  @override
+  String get clubMatchSessionWithdrawn => 'Đã rút đăng ký';
+
+  @override
+  String get clubMatchSessionCreateMatch => 'Tạo trận tự do';
+
+  @override
+  String get clubMatchSessionDoubles => 'Trận đôi';
+
+  @override
+  String clubMatchSessionPlayerCount(Object count) {
+    return 'Chọn đúng $count người đang tham gia';
+  }
+
+  @override
+  String get clubMatchSessionMatchCreated => 'Đã tạo trận giao lưu';
+
+  @override
+  String get clubMatchSessionParticipants => 'Người tham gia';
+
+  @override
+  String get clubMatchSessionMatches => 'Các trận giao lưu';
+
+  @override
+  String get clubMatchSessionNoMatches =>
+      'Chưa có trận nào. Không có trận ẩn được tạo tự động.';
+
+  @override
+  String get clubMatchSessionLoadFailed => 'Không thể tải buổi giao lưu này';
+
+  @override
+  String clubMatchSessionMatchStatus(Object status) {
+    return 'Trạng thái trận: $status';
+  }
+
+  @override
+  String get clubMatchSessionSaveScore => 'Lưu điểm';
+
+  @override
+  String get clubMatchSessionComplete => 'Chốt kết quả';
+
+  @override
+  String clubMatchSessionEloStatus(Object status) {
+    return 'Trạng thái ELO: $status';
+  }
+
+  @override
+  String get clubMatchSessionSelfSource => 'Tự đăng ký';
+
+  @override
+  String get clubMatchSessionMandatorySource => 'BQT chỉ định';
+
+  @override
+  String get clubMatchSessionAssignMembers => 'BQT thêm thành viên';
+
+  @override
+  String get clubMatchSessionAssign => 'Thêm người đã chọn';
+
+  @override
+  String get clubMatchSessionAssigned => 'Đã thêm thành viên vào buổi giao lưu';
+
+  @override
+  String get clubMatchSessionUnnamedMember => 'Thành viên chưa đặt tên';
+
+  @override
+  String get clubMatchSessionPreferences => 'Nguyện vọng ghép trận';
+
+  @override
+  String get clubMatchSessionPreferredPartner => 'Muốn cùng đội';
+
+  @override
+  String get clubMatchSessionPreferredOpponent => 'Muốn đối đầu';
+
+  @override
+  String get clubMatchSessionAvoidPlayer => 'Muốn tránh ghép';
+
+  @override
+  String get clubMatchSessionSavePreferences => 'Lưu nguyện vọng';
+
+  @override
+  String get clubMatchSessionPreferencesSaved => 'Đã lưu nguyện vọng';
+
+  @override
+  String get clubMatchSessionStartAt => 'Ngày giờ bắt đầu';
+
+  @override
+  String get clubMatchSessionEndAt => 'Ngày giờ kết thúc';
+
+  @override
+  String get clubMatchSessionOptionalDate => 'Không bắt buộc — chạm để chọn';
+
+  @override
+  String get clubMatchSessionCloseRegistration => 'Đóng đăng ký';
+
+  @override
+  String get clubMatchSessionEnd => 'Kết thúc buổi';
+
+  @override
+  String get clubMatchSessionStatusUpdated =>
+      'Đã cập nhật trạng thái buổi giao lưu';
+
+  @override
+  String get clubMatchSessionStatusOpen => 'Đang mở';
+
+  @override
+  String get clubMatchSessionStatusLive => 'Đang diễn ra';
+
+  @override
+  String get clubMatchSessionStatusClosed => 'Đã đóng đăng ký';
+
+  @override
+  String get clubMatchSessionStatusEnded => 'Đã kết thúc';
+
+  @override
+  String get clubMatchSessionStatusCancelled => 'Đã hủy';
+
+  @override
+  String get clubMatchSessionStatusUnknown => 'Trạng thái chưa xác định';
+
+  @override
+  String get clubMatchSessionMatchScheduled => 'Sắp đấu';
+
+  @override
+  String get clubMatchSessionMatchOngoing => 'Đang đấu';
+
+  @override
+  String get clubMatchSessionMatchCompleted => 'Hoàn tất';
+
+  @override
+  String get clubMatchSessionMatchCancelled => 'Đã hủy';
+
+  @override
+  String get clubMatchSessionEloWaiting => 'ELO: chờ kết quả';
+
+  @override
+  String get clubMatchSessionEloPending => 'ELO: đang xử lý';
+
+  @override
+  String get clubMatchSessionEloNotRanked => 'ELO: không xếp hạng';
+
+  @override
+  String get clubMatchSessionEloSkippedMock => 'ELO: bỏ qua VĐV ảo';
+
+  @override
+  String get clubMatchSessionEloSkippedCancelled => 'ELO: bỏ qua do đã hủy';
+
+  @override
+  String get clubMatchSessionEloApplied => 'ELO: đã cập nhật';
+
+  @override
+  String get clubMatchSessionEloRetry => 'ELO: sẽ thử lại';
+
+  @override
+  String get clubMatchSessionEloFailed => 'ELO: cần BQT kiểm tra';
 }

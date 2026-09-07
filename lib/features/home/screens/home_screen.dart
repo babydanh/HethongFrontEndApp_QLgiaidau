@@ -2679,6 +2679,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return '${host.replaceFirst(RegExp(r'/$'), '')}/${value.replaceFirst(RegExp(r'^/'), '')}';
   }
 
+  String _webImageFallback(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null || uri.path.isEmpty) return '';
+    return Uri(
+      scheme: 'https',
+      host: 'sporto.asia',
+      path: uri.path,
+      query: uri.query,
+    ).toString();
+  }
+
   Widget _buildClubCardPremium(Community club) {
     final l10n = AppLocalizations.of(context)!;
     final sportName = club.sports.isNotEmpty ? club.sports.first : "";
@@ -2731,8 +2742,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Image.network(
                             bannerUrl,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) =>
-                                _buildCardBannerFallback(sportColor, emoji),
+                            errorBuilder: (_, _, _) {
+                              final fallback = _webImageFallback(bannerUrl);
+                              return fallback.isNotEmpty &&
+                                      fallback != bannerUrl
+                                  ? Image.network(
+                                      fallback,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, _, _) =>
+                                          _buildCardBannerFallback(
+                                            sportColor,
+                                            emoji,
+                                          ),
+                                    )
+                                  : _buildCardBannerFallback(sportColor, emoji);
+                            },
                           )
                         else
                           _buildCardBannerFallback(sportColor, emoji),
@@ -2838,19 +2862,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     child: Image.network(
                                       logoUrl,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, _, _) => Center(
-                                        child: Text(
-                                          club.name.isNotEmpty
-                                              ? club.name.characters.first
-                                                    .toUpperCase()
-                                              : 'C',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 20,
-                                            color: sportColor,
-                                          ),
-                                        ),
-                                      ),
+                                      errorBuilder: (_, _, _) {
+                                        final fallback = _webImageFallback(
+                                          logoUrl,
+                                        );
+                                        return fallback.isNotEmpty &&
+                                                fallback != logoUrl
+                                            ? Image.network(
+                                                fallback,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, _, _) =>
+                                                    _buildClubInitial(
+                                                      club,
+                                                      sportColor,
+                                                    ),
+                                              )
+                                            : _buildClubInitial(
+                                                club,
+                                                sportColor,
+                                              );
+                                      },
                                     ),
                                   ),
                                 ),
@@ -3049,6 +3080,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClubInitial(Community club, Color sportColor) {
+    return Center(
+      child: Text(
+        club.name.isNotEmpty ? club.name.characters.first.toUpperCase() : 'C',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 20,
+          color: sportColor,
         ),
       ),
     );

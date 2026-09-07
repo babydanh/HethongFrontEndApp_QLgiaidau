@@ -12103,4 +12103,228 @@ class AppLocalizationsEn extends AppLocalizations {
   String lite_mockPlayersFailed(Object error) {
     return 'Mock player operation failed: $error';
   }
+
+  @override
+  String get clubMatchSessionTitle => 'Club social match sessions';
+
+  @override
+  String get clubMatchSessionCreateTitle => 'Create a social match session';
+
+  @override
+  String get clubMatchSessionCreate => 'Create session';
+
+  @override
+  String get clubMatchSessionCreated => 'Social match session created';
+
+  @override
+  String get clubMatchSessionName => 'Session name';
+
+  @override
+  String get clubMatchSessionNameHint =>
+      'Leave blank to use the club-based suggested name';
+
+  @override
+  String get clubMatchSessionDescription => 'Description';
+
+  @override
+  String get clubMatchSessionRegistrationMode => 'Participation mode';
+
+  @override
+  String get clubMatchSessionRegistrationMixed =>
+      'Self-registration or manager assignment';
+
+  @override
+  String get clubMatchSessionRegistrationSelf => 'Member self-registration';
+
+  @override
+  String get clubMatchSessionRegistrationManager => 'Manager assignment';
+
+  @override
+  String get clubMatchSessionRanked => 'Apply ELO to eligible matches';
+
+  @override
+  String get clubMatchSessionNoBracketHint =>
+      'No bracket, rounds, hidden matches, or match limit will be created.';
+
+  @override
+  String get clubMatchSessionEmpty => 'No social match sessions yet';
+
+  @override
+  String get clubMatchSessionRankedShort => 'Ranked';
+
+  @override
+  String get clubMatchSessionUnrankedShort => 'Unranked';
+
+  @override
+  String clubMatchSessionStatus(Object status) {
+    return 'Status: $status';
+  }
+
+  @override
+  String get clubMatchSessionNoDescription => 'No description yet';
+
+  @override
+  String get clubMatchSessionJoin => 'Join';
+
+  @override
+  String get clubMatchSessionJoined => 'You joined the session';
+
+  @override
+  String get clubMatchSessionWithdraw => 'Withdraw';
+
+  @override
+  String get clubMatchSessionWithdrawn => 'Registration withdrawn';
+
+  @override
+  String get clubMatchSessionCreateMatch => 'Create free-pair match';
+
+  @override
+  String get clubMatchSessionDoubles => 'Doubles match';
+
+  @override
+  String clubMatchSessionPlayerCount(Object count) {
+    return 'Select exactly $count active players';
+  }
+
+  @override
+  String get clubMatchSessionMatchCreated => 'Social match created';
+
+  @override
+  String get clubMatchSessionParticipants => 'Participants';
+
+  @override
+  String get clubMatchSessionMatches => 'Matches';
+
+  @override
+  String get clubMatchSessionNoMatches =>
+      'No matches yet. No hidden matches are created automatically.';
+
+  @override
+  String get clubMatchSessionLoadFailed =>
+      'Unable to load this social match session';
+
+  @override
+  String clubMatchSessionMatchStatus(Object status) {
+    return 'Match status: $status';
+  }
+
+  @override
+  String get clubMatchSessionSaveScore => 'Save score';
+
+  @override
+  String get clubMatchSessionComplete => 'Complete result';
+
+  @override
+  String clubMatchSessionEloStatus(Object status) {
+    return 'ELO status: $status';
+  }
+
+  @override
+  String get clubMatchSessionSelfSource => 'Self-registered';
+
+  @override
+  String get clubMatchSessionMandatorySource => 'Assigned by club manager';
+
+  @override
+  String get clubMatchSessionAssignMembers => 'Assign members';
+
+  @override
+  String get clubMatchSessionAssign => 'Assign selected';
+
+  @override
+  String get clubMatchSessionAssigned => 'Members assigned to the session';
+
+  @override
+  String get clubMatchSessionUnnamedMember => 'Unnamed member';
+
+  @override
+  String get clubMatchSessionPreferences => 'My pairing preferences';
+
+  @override
+  String get clubMatchSessionPreferredPartner => 'Preferred partner';
+
+  @override
+  String get clubMatchSessionPreferredOpponent => 'Preferred opponent';
+
+  @override
+  String get clubMatchSessionAvoidPlayer => 'Avoid pairing with';
+
+  @override
+  String get clubMatchSessionSavePreferences => 'Save preferences';
+
+  @override
+  String get clubMatchSessionPreferencesSaved => 'Preferences saved';
+
+  @override
+  String get clubMatchSessionStartAt => 'Start date and time';
+
+  @override
+  String get clubMatchSessionEndAt => 'End date and time';
+
+  @override
+  String get clubMatchSessionOptionalDate => 'Optional — tap to choose';
+
+  @override
+  String get clubMatchSessionCloseRegistration => 'Close registration';
+
+  @override
+  String get clubMatchSessionEnd => 'End session';
+
+  @override
+  String get clubMatchSessionStatusUpdated => 'Session status updated';
+
+  @override
+  String get clubMatchSessionStatusOpen => 'Open';
+
+  @override
+  String get clubMatchSessionStatusLive => 'Live';
+
+  @override
+  String get clubMatchSessionStatusClosed => 'Registration closed';
+
+  @override
+  String get clubMatchSessionStatusEnded => 'Ended';
+
+  @override
+  String get clubMatchSessionStatusCancelled => 'Cancelled';
+
+  @override
+  String get clubMatchSessionStatusUnknown => 'Unknown status';
+
+  @override
+  String get clubMatchSessionMatchScheduled => 'Scheduled';
+
+  @override
+  String get clubMatchSessionMatchOngoing => 'Ongoing';
+
+  @override
+  String get clubMatchSessionMatchCompleted => 'Completed';
+
+  @override
+  String get clubMatchSessionMatchCancelled => 'Cancelled';
+
+  @override
+  String get clubMatchSessionEloWaiting => 'ELO: waiting for result';
+
+  @override
+  String get clubMatchSessionEloPending => 'ELO: processing';
+
+  @override
+  String get clubMatchSessionEloNotRanked => 'ELO: not ranked';
+
+  @override
+  String get clubMatchSessionEloSkippedMock => 'ELO: mock players skipped';
+
+  @override
+  String get clubMatchSessionEloSkippedCancelled =>
+      'ELO: cancelled result skipped';
+
+  @override
+  String get clubMatchSessionEloApplied => 'ELO: applied';
+
+  @override
+  String get clubMatchSessionEloRetry => 'ELO: retry scheduled';
+
+  @override
+  String get clubMatchSessionEloFailed => 'ELO: manager review required';
 }

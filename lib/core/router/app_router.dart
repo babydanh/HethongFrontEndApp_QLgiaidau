@@ -24,6 +24,7 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_
 import 'package:app_quanly_giaidau/features/notification/screens/notification_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_tournaments_screen.dart';
+import 'package:app_quanly_giaidau/features/community/screens/club_match_sessions_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/create_club_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/create_club_tournament_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/create_public_quick_tournament_screen.dart';
@@ -602,6 +603,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final id = state.pathParameters['id']!;
               return ClubTournamentsScreen(clubId: id);
+            },
+          ),
+          GoRoute(
+            path: 'match-sessions',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return ClubMatchSessionsScreen(communityId: id);
             },
           ),
         ],
