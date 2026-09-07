@@ -119,6 +119,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _isClubInitialLoading = true;
   bool _isClubLoadingMore = false;
   bool _serverClubHasMore = false;
+  int _clubRequestVersion = 0;
   static const int _clubsPageSize = 6;
 
   // Khám phá (tab 0) CÓ thanh search — nhưng gõ tìm sẽ lọc tại chỗ trong tab,
@@ -226,6 +227,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } else {
       setState(() => _isClubInitialLoading = true);
     }
+    final requestVersion = ++_clubRequestVersion;
 
     try {
       final repo = ref.read(communityRepositoryProvider);
@@ -237,7 +239,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         categoryId: _clubSport != 'all' ? _clubSport : null,
       );
 
-      if (mounted) {
+      if (mounted && requestVersion == _clubRequestVersion) {
         setState(() {
           if (isLoadMore) {
             final existingIds = _serverClubsList.map((c) => c.id).toSet();
@@ -257,7 +259,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         });
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && requestVersion == _clubRequestVersion) {
         setState(() {
           _isClubInitialLoading = false;
           _isClubLoadingMore = false;

@@ -10,8 +10,8 @@ class CommunitySocialSettingsSheet extends StatefulWidget {
 
   const CommunitySocialSettingsSheet({super.key, required this.repository, required this.communityId});
 
-  static Future<void> show(BuildContext context, {required ICommunityRepository repository, required String communityId}) =>
-      showModalBottomSheet<void>(
+  static Future<CommunitySocialSettings?> show(BuildContext context, {required ICommunityRepository repository, required String communityId}) =>
+      showModalBottomSheet<CommunitySocialSettings>(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
@@ -34,16 +34,23 @@ class _CommunitySocialSettingsSheetState extends State<CommunitySocialSettingsSh
   @override
   void initState() {
     super.initState();
-    _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _load();
+    });
   }
 
   Future<void> _load() async {
-    final l10n = AppLocalizations.of(context)!;
     try {
-      final results = await Future.wait([
-        widget.repository.getSocialSettings(widget.communityId),
-        widget.repository.getTagPresets(widget.communityId),
-      ]);
+      final socialFuture = widget.repository
+          .getSocialSettings(widget.communityId)
+          .timeout(const Duration(seconds: 10))
+          .catchError((_) => const CommunitySocialSettings());
+      final presetsFuture = widget.repository
+          .getTagPresets(widget.communityId)
+          .timeout(const Duration(seconds: 10))
+          .catchError((_) => const <CommunityTagPreset>[]);
+
+      final results = await Future.wait([socialFuture, presetsFuture]);
       if (!mounted) return;
       setState(() {
         _settings = results[0] as CommunitySocialSettings;
@@ -51,26 +58,40 @@ class _CommunitySocialSettingsSheetState extends State<CommunitySocialSettingsSh
         _loading = false;
       });
     } catch (_) {
-      if (mounted) setState(() { _loading = false; _error = l10n.communitySocialSettingsLoadError; });
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
+      setState(() {
+        _loading = false;
+        _error = l10n?.communitySocialSettingsLoadError ?? 'Không thể tải cài đặt sinh hoạt CLB.';
+      });
     }
   }
 
   Future<void> _save() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (_saving) return;
     setState(() => _saving = true);
     try {
       final next = await widget.repository.updateSocialSettings(widget.communityId, _settings);
       if (!mounted) return;
       setState(() { _settings = next; _saving = false; });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.communitySocialSettingsSaveSuccess)));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n?.communitySocialSettingsSaveSuccess ?? 'Đã lưu cài đặt sinh hoạt CLB')),
+        );
+      }
     } catch (_) {
-      if (mounted) setState(() { _saving = false; _error = l10n.communitySocialSettingsSaveError; });
+      if (mounted) {
+        setState(() {
+          _saving = false;
+          _error = l10n?.communitySocialSettingsSaveError ?? 'Lưu cài đặt thất bại.';
+        });
+      }
     }
   }
 
   Future<void> _createPreset() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final name = _nameController.text.trim();
     if (name.isEmpty || _presets.length >= 20) return;
     try {
@@ -78,7 +99,9 @@ class _CommunitySocialSettingsSheetState extends State<CommunitySocialSettingsSh
       if (!mounted) return;
       setState(() { _presets = [..._presets, preset]; _nameController.clear(); });
     } catch (_) {
-      if (mounted) setState(() => _error = l10n.communitySocialSettingsCreateTagError);
+      if (mounted) {
+        setState(() => _error = l10n?.communitySocialSettingsCreateTagError ?? 'Không thể tạo tag.');
+      }
     }
   }
 
@@ -91,7 +114,7 @@ class _CommunitySocialSettingsSheetState extends State<CommunitySocialSettingsSh
     final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       child: Container(
-        constraints: const BoxConstraints(maxHeight: 720),
+        constraints: const BoxConstraints(maxHeight: 720, minHeight: 240),
         padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
         decoration: BoxDecoration(color: colors.bgCard, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
         child: _loading
@@ -99,7 +122,7 @@ class _CommunitySocialSettingsSheetState extends State<CommunitySocialSettingsSh
             : ListView(children: [
                 Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: colors.border, borderRadius: BorderRadius.circular(4)))),
                 const SizedBox(height: 14),
-                Row(children: [Expanded(child: Text(l10n.communitySocialSettingsTitle, style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: colors.textPrimary))), IconButton(onPressed: () => Navigator.pop(context), tooltip: l10n.communitySocialSettingsClose, icon: const Icon(Icons.close))]),
+                Row(children: [Expanded(child: Text(l10n.communitySocialSettingsTitle, style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: colors.textPrimary))), IconButton(onPressed: () => Navigator.pop(context, _settings), tooltip: l10n.communitySocialSettingsClose, icon: const Icon(Icons.close))]),
                 Text(l10n.communitySocialSettingsDescription, style: TextStyle(color: colors.textSecondary, fontSize: 12)),
                 if (_error != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(_error!, style: TextStyle(color: colors.error, fontSize: 12))),
                 const SizedBox(height: 16),
@@ -124,7 +147,19 @@ class _CommunitySocialSettingsSheetState extends State<CommunitySocialSettingsSh
   }
 
   Widget _toggle(String title, bool value, ValueChanged<bool> onChanged) => SwitchListTile.adaptive(contentPadding: EdgeInsets.zero, title: Text(title), value: value, onChanged: onChanged);
-  Widget _select(String title, String value, Map<String, String> items, ValueChanged<String> onChanged) => Padding(padding: const EdgeInsets.only(bottom: 8), child: DropdownButtonFormField<String>(initialValue: value, decoration: InputDecoration(labelText: title, isDense: true), items: items.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))).toList(), onChanged: (v) { if (v != null) onChanged(v); }));
+  Widget _select(String title, String value, Map<String, String> items, ValueChanged<String> onChanged) {
+    final effectiveValue = items.containsKey(value) ? value : items.keys.first;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: DropdownButtonFormField<String>(
+        key: ValueKey('${title}_$effectiveValue'),
+        initialValue: effectiveValue,
+        decoration: InputDecoration(labelText: title, isDense: true),
+        items: items.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))).toList(),
+        onChanged: (v) { if (v != null) onChanged(v); },
+      ),
+    );
+  }
   Color _hex(String value) {
     final hex = value.replaceFirst('#', '');
     return Color(int.tryParse('FF${hex.length == 6 ? hex : '3B82F6'}', radix: 16) ?? 0xFF3B82F6);

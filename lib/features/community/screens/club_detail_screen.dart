@@ -805,33 +805,49 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   ],
                 ] else ...[
                   Expanded(
-                    child: FilledButton.icon(
-                      onPressed: _isJoinLoading
-                          ? null
-                          : () => _handleJoinAction(club),
-                      icon: _isJoinLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
+                    child: Container(
+                      decoration: !_isMember && !_isPending
+                          ? BoxDecoration(
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             )
-                          : Icon(_getJoinIcon(), size: 18),
-                      label: Text(
-                        _getJoinLabel(),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
+                          : null,
+                      child: FilledButton.icon(
+                        onPressed: _isJoinLoading
+                            ? null
+                            : () => _handleJoinAction(club),
+                        icon: _isJoinLoading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Icon(_getJoinIcon(), size: 19),
+                        label: Text(
+                          _getJoinLabel(),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            letterSpacing: 0.2,
+                          ),
                         ),
-                      ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _getJoinBgColor(),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _getJoinBgColor(),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
                       ),
                     ),
@@ -880,7 +896,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     if (_isMember) return Icons.check_rounded;
     if (_isPending) return Icons.hourglass_empty_rounded;
     if (_isInvited) return Icons.mail_rounded;
-    return Icons.add_rounded;
+    return Icons.person_add_alt_1_rounded;
   }
 
   String _getJoinLabel() {
@@ -3106,21 +3122,43 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
             const SizedBox(height: 22),
             if (!_isMember)
-              FilledButton.icon(
-                onPressed: _isJoinLoading
-                    ? null
-                    : () => _handleJoinAction(club),
-                icon: Icon(_getJoinIcon(), size: 16),
-                label: Text(_getJoinLabel()),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _getJoinBgColor() ?? AppTheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
+              Container(
+                decoration: !_isPending
+                    ? BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      )
+                    : null,
+                child: FilledButton.icon(
+                  onPressed: _isJoinLoading
+                      ? null
+                      : () => _handleJoinAction(club),
+                  icon: Icon(_getJoinIcon(), size: 18),
+                  label: Text(
+                    _getJoinLabel(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      letterSpacing: 0.2,
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _getJoinBgColor() ?? AppTheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28,
+                      vertical: 13,
+                    ),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -4664,11 +4702,18 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             title: l10n.clubDetailSocialSettings,
             subtitle: l10n.clubDetailSocialSettingsSubtitle,
             color: AppTheme.primary,
-            onTap: () => CommunitySocialSettingsSheet.show(
-              context,
-              repository: ref.read(communityRepositoryProvider),
-              communityId: widget.clubId,
-            ),
+            onTap: () async {
+              final updated = await CommunitySocialSettingsSheet.show(
+                context,
+                repository: ref.read(communityRepositoryProvider),
+                communityId: widget.clubId,
+              );
+              if (updated != null && mounted) {
+                setState(() {
+                  _socialSettingsFuture = Future.value(updated);
+                });
+              }
+            },
           ),
         ],
         const SizedBox(height: 20),
