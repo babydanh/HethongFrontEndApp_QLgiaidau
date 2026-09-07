@@ -4991,7 +4991,7 @@
   "clubMatchSessionNameHint": "Leave blank to use the club-based suggested name",
   "clubMatchSessionDescription": "Description",
   "clubMatchSessionBasicInfo": "Session details",
-  "clubMatchSessionRanked": "Apply ELO to eligible matches",
+  "clubMatchSessionRanked": "Ranked (Apply ELO)",
   "clubMatchSessionNoBracketHint": "No bracket, rounds, hidden matches, or match limit will be created.",
   "clubMatchSessionEmpty": "No social match sessions yet",
   "clubMatchSessionRankedShort": "Ranked",

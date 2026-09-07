@@ -4991,7 +4991,7 @@
   "clubMatchSessionNameHint": "Để trống để dùng tên gợi ý theo CLB",
   "clubMatchSessionDescription": "Mô tả",
   "clubMatchSessionBasicInfo": "Thông tin buổi giao lưu",
-  "clubMatchSessionRanked": "Tính ELO cho các trận hợp lệ",
+  "clubMatchSessionRanked": "Xếp hạng (Tính điểm ELO)",
   "clubMatchSessionNoBracketHint": "Không tạo nhánh đấu, vòng đấu, trận ẩn hoặc giới hạn số trận.",
   "clubMatchSessionEmpty": "Chưa có buổi giao lưu nào",
   "clubMatchSessionRankedShort": "Có ELO",

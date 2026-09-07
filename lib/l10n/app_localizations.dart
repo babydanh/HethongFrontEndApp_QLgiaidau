@@ -22039,7 +22039,7 @@ abstract class AppLocalizations {
   /// No description provided for @clubMatchSessionRanked.
   ///
   /// In vi, this message translates to:
-  /// **'Tính ELO cho các trận hợp lệ'**
+  /// **'Xếp hạng (Tính điểm ELO)'**
   String get clubMatchSessionRanked;
 
   /// No description provided for @clubMatchSessionNoBracketHint.

@@ -12091,7 +12091,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clubMatchSessionBasicInfo => 'Thông tin buổi giao lưu';
 
   @override
-  String get clubMatchSessionRanked => 'Tính ELO cho các trận hợp lệ';
+  String get clubMatchSessionRanked => 'Xếp hạng (Tính điểm ELO)';
 
   @override
   String get clubMatchSessionNoBracketHint =>

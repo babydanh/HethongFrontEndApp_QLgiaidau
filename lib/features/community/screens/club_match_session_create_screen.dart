@@ -174,17 +174,27 @@ class _ClubMatchSessionCreateScreenState
                       title: l10n.clubMatchSessionBasicInfo,
                       child: _buildBasicInfo(l10n),
                     ),
+                    _buildRankedCard(l10n),
+                    const SizedBox(height: 20),
                     FormSection(
-                      title: l10n.clubMatchSessionRanked,
-                      child: _buildRankedSection(l10n),
-                    ),
-                    FormSection(
-                      title: l10n.clubMatchSessionSchedule,
-                      child: _buildScheduleSection(l10n),
-                    ),
-                    FormSection(
-                      title: l10n.clubMatchSessionDuration,
-                      child: _buildDurationSection(l10n),
+                      title: '${l10n.lite_scheduleCardTitle} (${l10n.clubMatchSessionStartAt})',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildScheduleSection(l10n),
+                          const SizedBox(height: AppTheme.spacingMD),
+                          Text(
+                            l10n.clubMatchSessionDuration,
+                            style: TextStyle(
+                              color: context.colors.textSecondary,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spacingSM),
+                          _buildDurationSection(l10n),
+                        ],
+                      ),
                     ),
                     FormSection(
                       title: l10n.clubMatchSessionMaxParticipants,
@@ -232,27 +242,68 @@ class _ClubMatchSessionCreateScreenState
     );
   }
 
-  Widget _buildRankedSection(AppLocalizations l10n) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(Icons.insights_rounded, color: context.colors.info),
-        const SizedBox(width: AppTheme.spacingSM),
-        Expanded(
-          child: Text(
-            l10n.clubMatchSessionRanked,
-            style: TextStyle(
-              color: context.colors.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+  Widget _buildRankedCard(AppLocalizations l10n) {
+    final colors = context.colors;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        border: Border.all(
+          color: _isRanked ? colors.info.withValues(alpha: 0.35) : colors.border,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: _isRanked
+                  ? colors.info.withValues(alpha: 0.12)
+                  : colors.bgSurface,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.military_tech_rounded,
+              size: 22,
+              color: _isRanked ? colors.info : colors.textMuted,
             ),
           ),
-        ),
-        Switch.adaptive(
-          value: _isRanked,
-          onChanged: (value) => setState(() => _isRanked = value),
-        ),
-      ],
+          const SizedBox(width: AppTheme.spacingMD),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Xếp hạng',
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _isRanked
+                      ? 'Áp dụng cộng/trừ ELO cho các trận hợp lệ'
+                      : 'Trận giao lưu tự do, không tính điểm ELO',
+                  style: TextStyle(
+                    color: colors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: _isRanked,
+            activeTrackColor: colors.info,
+            onChanged: (value) => setState(() => _isRanked = value),
+          ),
+        ],
+      ),
     );
   }
 

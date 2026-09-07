@@ -12130,7 +12130,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubMatchSessionBasicInfo => 'Session details';
 
   @override
-  String get clubMatchSessionRanked => 'Apply ELO to eligible matches';
+  String get clubMatchSessionRanked => 'Ranked (Apply ELO)';
 
   @override
   String get clubMatchSessionNoBracketHint =>
