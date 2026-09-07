@@ -22471,14 +22471,26 @@ abstract class AppLocalizations {
   /// No description provided for @clubMatchSessionDurationOneHour.
   ///
   /// In vi, this message translates to:
-  /// **'1 giờ'**
+  /// **'1h'**
   String get clubMatchSessionDurationOneHour;
 
   /// No description provided for @clubMatchSessionDurationNinetyMinutes.
   ///
   /// In vi, this message translates to:
-  /// **'1 giờ 30 phút'**
+  /// **'1h30'**
   String get clubMatchSessionDurationNinetyMinutes;
+
+  /// No description provided for @clubMatchSessionDurationTwoHours.
+  ///
+  /// In vi, this message translates to:
+  /// **'2h'**
+  String get clubMatchSessionDurationTwoHours;
+
+  /// No description provided for @clubMatchSessionDurationThreeHours.
+  ///
+  /// In vi, this message translates to:
+  /// **'3h'**
+  String get clubMatchSessionDurationThreeHours;
 
   /// No description provided for @clubMatchSessionDurationCustom.
   ///
@@ -22533,6 +22545,126 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Nhập từ 2 đến 128 người'**
   String get clubMatchSessionMaxParticipantsInvalid;
+
+  /// No description provided for @clubMatchSessionRecurringTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch lặp tự động'**
+  String get clubMatchSessionRecurringTitle;
+
+  /// No description provided for @clubMatchSessionRecurringEnabled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự động tạo buổi mới'**
+  String get clubMatchSessionRecurringEnabled;
+
+  /// No description provided for @clubMatchSessionRecurringHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cron tạo buổi và mở đăng ký theo lịch này.'**
+  String get clubMatchSessionRecurringHint;
+
+  /// No description provided for @clubMatchSessionRecurringFrequency.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chu kỳ'**
+  String get clubMatchSessionRecurringFrequency;
+
+  /// No description provided for @clubMatchSessionRecurringDaily.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi ngày'**
+  String get clubMatchSessionRecurringDaily;
+
+  /// No description provided for @clubMatchSessionRecurringWeekly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hàng tuần'**
+  String get clubMatchSessionRecurringWeekly;
+
+  /// No description provided for @clubMatchSessionRecurringBiweekly.
+  ///
+  /// In vi, this message translates to:
+  /// **'2 tuần/lần'**
+  String get clubMatchSessionRecurringBiweekly;
+
+  /// No description provided for @clubMatchSessionRecurringMonthly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hàng tháng'**
+  String get clubMatchSessionRecurringMonthly;
+
+  /// No description provided for @clubMatchSessionRecurringWeekday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ trong tuần'**
+  String get clubMatchSessionRecurringWeekday;
+
+  /// No description provided for @clubMatchSessionWeekdayMonday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ 2'**
+  String get clubMatchSessionWeekdayMonday;
+
+  /// No description provided for @clubMatchSessionWeekdayTuesday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ 3'**
+  String get clubMatchSessionWeekdayTuesday;
+
+  /// No description provided for @clubMatchSessionWeekdayWednesday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ 4'**
+  String get clubMatchSessionWeekdayWednesday;
+
+  /// No description provided for @clubMatchSessionWeekdayThursday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ 5'**
+  String get clubMatchSessionWeekdayThursday;
+
+  /// No description provided for @clubMatchSessionWeekdayFriday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ 6'**
+  String get clubMatchSessionWeekdayFriday;
+
+  /// No description provided for @clubMatchSessionWeekdaySaturday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ 7'**
+  String get clubMatchSessionWeekdaySaturday;
+
+  /// No description provided for @clubMatchSessionWeekdaySunday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chủ nhật'**
+  String get clubMatchSessionWeekdaySunday;
+
+  /// No description provided for @clubMatchSessionRecurringTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giờ mở buổi'**
+  String get clubMatchSessionRecurringTime;
+
+  /// No description provided for @clubMatchSessionRecurringAdvanceDays.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo trước'**
+  String get clubMatchSessionRecurringAdvanceDays;
+
+  /// No description provided for @clubMatchSessionRecurringSameDay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trong ngày'**
+  String get clubMatchSessionRecurringSameDay;
+
+  /// No description provided for @clubMatchSessionRecurringBeforeDays.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trước {count} ngày'**
+  String clubMatchSessionRecurringBeforeDays(int count);
 }
 
 class _AppLocalizationsDelegate

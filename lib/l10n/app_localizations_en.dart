@@ -12363,10 +12363,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubMatchSessionDuration => 'Duration';
 
   @override
-  String get clubMatchSessionDurationOneHour => '1 hour';
+  String get clubMatchSessionDurationOneHour => '1h';
 
   @override
-  String get clubMatchSessionDurationNinetyMinutes => '1 hour 30 minutes';
+  String get clubMatchSessionDurationNinetyMinutes => '1h30';
+
+  @override
+  String get clubMatchSessionDurationTwoHours => '2h';
+
+  @override
+  String get clubMatchSessionDurationThreeHours => '3h';
 
   @override
   String get clubMatchSessionDurationCustom => 'Custom';
@@ -12396,4 +12402,68 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get clubMatchSessionMaxParticipantsInvalid =>
       'Enter between 2 and 128 people';
+
+  @override
+  String get clubMatchSessionRecurringTitle => 'Recurring schedule';
+
+  @override
+  String get clubMatchSessionRecurringEnabled =>
+      'Automatically create new sessions';
+
+  @override
+  String get clubMatchSessionRecurringHint =>
+      'Cron creates sessions and opens registration on this schedule.';
+
+  @override
+  String get clubMatchSessionRecurringFrequency => 'Frequency';
+
+  @override
+  String get clubMatchSessionRecurringDaily => 'Daily';
+
+  @override
+  String get clubMatchSessionRecurringWeekly => 'Weekly';
+
+  @override
+  String get clubMatchSessionRecurringBiweekly => 'Every 2 weeks';
+
+  @override
+  String get clubMatchSessionRecurringMonthly => 'Monthly';
+
+  @override
+  String get clubMatchSessionRecurringWeekday => 'Day of week';
+
+  @override
+  String get clubMatchSessionWeekdayMonday => 'Monday';
+
+  @override
+  String get clubMatchSessionWeekdayTuesday => 'Tuesday';
+
+  @override
+  String get clubMatchSessionWeekdayWednesday => 'Wednesday';
+
+  @override
+  String get clubMatchSessionWeekdayThursday => 'Thursday';
+
+  @override
+  String get clubMatchSessionWeekdayFriday => 'Friday';
+
+  @override
+  String get clubMatchSessionWeekdaySaturday => 'Saturday';
+
+  @override
+  String get clubMatchSessionWeekdaySunday => 'Sunday';
+
+  @override
+  String get clubMatchSessionRecurringTime => 'Session time';
+
+  @override
+  String get clubMatchSessionRecurringAdvanceDays => 'Create in advance';
+
+  @override
+  String get clubMatchSessionRecurringSameDay => 'Same day';
+
+  @override
+  String clubMatchSessionRecurringBeforeDays(int count) {
+    return '$count days before';
+  }
 }

@@ -12323,10 +12323,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clubMatchSessionDuration => 'Thời lượng';
 
   @override
-  String get clubMatchSessionDurationOneHour => '1 giờ';
+  String get clubMatchSessionDurationOneHour => '1h';
 
   @override
-  String get clubMatchSessionDurationNinetyMinutes => '1 giờ 30 phút';
+  String get clubMatchSessionDurationNinetyMinutes => '1h30';
+
+  @override
+  String get clubMatchSessionDurationTwoHours => '2h';
+
+  @override
+  String get clubMatchSessionDurationThreeHours => '3h';
 
   @override
   String get clubMatchSessionDurationCustom => 'Tự nhập';
@@ -12355,4 +12361,67 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get clubMatchSessionMaxParticipantsInvalid =>
       'Nhập từ 2 đến 128 người';
+
+  @override
+  String get clubMatchSessionRecurringTitle => 'Lịch lặp tự động';
+
+  @override
+  String get clubMatchSessionRecurringEnabled => 'Tự động tạo buổi mới';
+
+  @override
+  String get clubMatchSessionRecurringHint =>
+      'Cron tạo buổi và mở đăng ký theo lịch này.';
+
+  @override
+  String get clubMatchSessionRecurringFrequency => 'Chu kỳ';
+
+  @override
+  String get clubMatchSessionRecurringDaily => 'Mỗi ngày';
+
+  @override
+  String get clubMatchSessionRecurringWeekly => 'Hàng tuần';
+
+  @override
+  String get clubMatchSessionRecurringBiweekly => '2 tuần/lần';
+
+  @override
+  String get clubMatchSessionRecurringMonthly => 'Hàng tháng';
+
+  @override
+  String get clubMatchSessionRecurringWeekday => 'Thứ trong tuần';
+
+  @override
+  String get clubMatchSessionWeekdayMonday => 'Thứ 2';
+
+  @override
+  String get clubMatchSessionWeekdayTuesday => 'Thứ 3';
+
+  @override
+  String get clubMatchSessionWeekdayWednesday => 'Thứ 4';
+
+  @override
+  String get clubMatchSessionWeekdayThursday => 'Thứ 5';
+
+  @override
+  String get clubMatchSessionWeekdayFriday => 'Thứ 6';
+
+  @override
+  String get clubMatchSessionWeekdaySaturday => 'Thứ 7';
+
+  @override
+  String get clubMatchSessionWeekdaySunday => 'Chủ nhật';
+
+  @override
+  String get clubMatchSessionRecurringTime => 'Giờ mở buổi';
+
+  @override
+  String get clubMatchSessionRecurringAdvanceDays => 'Tạo trước';
+
+  @override
+  String get clubMatchSessionRecurringSameDay => 'Trong ngày';
+
+  @override
+  String clubMatchSessionRecurringBeforeDays(int count) {
+    return 'Trước $count ngày';
+  }
 }

@@ -32,6 +32,11 @@ class _ClubMatchSessionCreateScreenState
   DateTime? _startAt;
   int _durationMinutes = 60;
   int _maxParticipants = 16;
+  bool _isRecurring = false;
+  String _recurringFrequency = 'WEEKLY';
+  int _recurringDayOfWeek = 6;
+  TimeOfDay _recurringTime = const TimeOfDay(hour: 18, minute: 0);
+  int _recurringAdvanceDays = 3;
   bool _isCustomDuration = false;
   bool _isCustomParticipants = false;
   final _customDurationController = TextEditingController();
@@ -62,6 +67,13 @@ class _ClubMatchSessionCreateScreenState
             startAt: _startAt,
             endAt: _startAt?.add(Duration(minutes: _durationMinutes)),
             maxParticipants: _maxParticipants,
+            isRecurring: _isRecurring,
+            recurringFrequency: _recurringFrequency,
+            recurringDayOfWeek: _recurringDayOfWeek,
+            recurringDaysOfWeek: [_recurringDayOfWeek],
+            recurringTimeOfDay:
+                '${_recurringTime.hour.toString().padLeft(2, '0')}:${_recurringTime.minute.toString().padLeft(2, '0')}',
+            recurringAdvanceDays: _recurringAdvanceDays,
           );
       if (mounted) Navigator.of(context).pop(true);
     } catch (error, stackTrace) {
@@ -78,42 +90,51 @@ class _ClubMatchSessionCreateScreenState
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _selectDateTime() async {
+  Future<void> _pickDate() async {
     final now = DateTime.now();
-    final current = _startAt;
+    final current = _startAt ?? now;
     final date = await showDatePicker(
       context: context,
-      initialDate: current ?? now,
+      initialDate: current,
       firstDate: now.subtract(const Duration(days: 1)),
       lastDate: now.add(const Duration(days: 730)),
     );
     if (date == null || !mounted) return;
 
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(current ?? now),
-    );
-    if (time == null || !mounted) return;
+    final existingTime = _startAt != null
+        ? TimeOfDay.fromDateTime(_startAt!)
+        : const TimeOfDay(hour: 8, minute: 0);
 
-    final value = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    );
     setState(() {
-      _startAt = value;
+      _startAt = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        existingTime.hour,
+        existingTime.minute,
+      );
     });
   }
 
-  String _dateTimeLabel(BuildContext context, DateTime? value) {
-    if (value == null) {
-      return AppLocalizations.of(context)!.clubMatchSessionOptionalDate;
-    }
-    final localizations = MaterialLocalizations.of(context);
-    return '${localizations.formatMediumDate(value)} · '
-        '${localizations.formatTimeOfDay(TimeOfDay.fromDateTime(value))}';
+  Future<void> _pickTime() async {
+    final now = DateTime.now();
+    final current = _startAt ?? now;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(current),
+    );
+    if (time == null || !mounted) return;
+
+    final baseDate = _startAt ?? now;
+    setState(() {
+      _startAt = DateTime(
+        baseDate.year,
+        baseDate.month,
+        baseDate.day,
+        time.hour,
+        time.minute,
+      );
+    });
   }
 
   @override
@@ -168,6 +189,10 @@ class _ClubMatchSessionCreateScreenState
                     FormSection(
                       title: l10n.clubMatchSessionMaxParticipants,
                       child: _buildParticipantsSection(l10n),
+                    ),
+                    FormSection(
+                      title: l10n.clubMatchSessionRecurringTitle,
+                      child: _buildRecurringSection(l10n),
                     ),
                   ],
                 ),
@@ -232,12 +257,11 @@ class _ClubMatchSessionCreateScreenState
   }
 
   Widget _buildScheduleSection(AppLocalizations l10n) {
-    return ClubMatchSessionDateChoice(
-      label: l10n.clubMatchSessionStartAt,
-      valueLabel: _dateTimeLabel(context, _startAt),
-      hasValue: _startAt != null,
-      icon: Icons.event_rounded,
-      onTap: _selectDateTime,
+    return ClubMatchSessionDateTimePicker(
+      selectedDate: _startAt,
+      selectedTime: _startAt != null ? TimeOfDay.fromDateTime(_startAt!) : null,
+      onPickDate: _pickDate,
+      onPickTime: _pickTime,
     );
   }
 
@@ -256,6 +280,14 @@ class _ClubMatchSessionCreateScreenState
               value: 90,
             ),
             ClubMatchSessionChoice(
+              label: l10n.clubMatchSessionDurationTwoHours,
+              value: 120,
+            ),
+            ClubMatchSessionChoice(
+              label: l10n.clubMatchSessionDurationThreeHours,
+              value: 180,
+            ),
+            ClubMatchSessionChoice(
               label: l10n.clubMatchSessionDurationCustom,
               value: null,
             ),
@@ -264,8 +296,10 @@ class _ClubMatchSessionCreateScreenState
           onSelected: (value) {
             setState(() {
               _isCustomDuration = value == null;
-              _durationMinutes = value ?? _durationMinutes;
-              if (value != null) _customDurationController.clear();
+              if (value != null) {
+                _durationMinutes = value;
+                _customDurationController.clear();
+              }
             });
           },
         ),
@@ -341,6 +375,127 @@ class _ClubMatchSessionCreateScreenState
               },
             ),
           ),
+      ],
+    );
+  }
+
+  Widget _buildRecurringSection(AppLocalizations l10n) {
+    final weekly =
+        _recurringFrequency == 'WEEKLY' || _recurringFrequency == 'BIWEEKLY';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          value: _isRecurring,
+          title: Text(l10n.clubMatchSessionRecurringEnabled),
+          subtitle: Text(l10n.clubMatchSessionRecurringHint),
+          onChanged: (value) => setState(() => _isRecurring = value),
+        ),
+        if (_isRecurring) ...[
+          DropdownButtonFormField<String>(
+            initialValue: _recurringFrequency,
+            decoration: InputDecoration(
+              labelText: l10n.clubMatchSessionRecurringFrequency,
+            ),
+            items: [
+              DropdownMenuItem(
+                value: 'DAILY',
+                child: Text(l10n.clubMatchSessionRecurringDaily),
+              ),
+              DropdownMenuItem(
+                value: 'WEEKLY',
+                child: Text(l10n.clubMatchSessionRecurringWeekly),
+              ),
+              DropdownMenuItem(
+                value: 'BIWEEKLY',
+                child: Text(l10n.clubMatchSessionRecurringBiweekly),
+              ),
+              DropdownMenuItem(
+                value: 'MONTHLY',
+                child: Text(l10n.clubMatchSessionRecurringMonthly),
+              ),
+            ],
+            onChanged: (value) => setState(
+              () => _recurringFrequency = value ?? _recurringFrequency,
+            ),
+          ),
+          if (weekly)
+            DropdownButtonFormField<int>(
+              initialValue: _recurringDayOfWeek,
+              decoration: InputDecoration(
+                labelText: l10n.clubMatchSessionRecurringWeekday,
+              ),
+              items: [
+                DropdownMenuItem(
+                  value: 1,
+                  child: Text(l10n.clubMatchSessionWeekdayMonday),
+                ),
+                DropdownMenuItem(
+                  value: 2,
+                  child: Text(l10n.clubMatchSessionWeekdayTuesday),
+                ),
+                DropdownMenuItem(
+                  value: 3,
+                  child: Text(l10n.clubMatchSessionWeekdayWednesday),
+                ),
+                DropdownMenuItem(
+                  value: 4,
+                  child: Text(l10n.clubMatchSessionWeekdayThursday),
+                ),
+                DropdownMenuItem(
+                  value: 5,
+                  child: Text(l10n.clubMatchSessionWeekdayFriday),
+                ),
+                DropdownMenuItem(
+                  value: 6,
+                  child: Text(l10n.clubMatchSessionWeekdaySaturday),
+                ),
+                DropdownMenuItem(
+                  value: 0,
+                  child: Text(l10n.clubMatchSessionWeekdaySunday),
+                ),
+              ],
+              onChanged: (value) => setState(
+                () => _recurringDayOfWeek = value ?? _recurringDayOfWeek,
+              ),
+            ),
+          ClubMatchSessionDateChoice(
+            label: l10n.clubMatchSessionRecurringTime,
+            valueLabel: _recurringTime.format(context),
+            hasValue: true,
+            icon: Icons.schedule_rounded,
+            onTap: () async {
+              final value = await showTimePicker(
+                context: context,
+                initialTime: _recurringTime,
+              );
+              if (value != null && mounted) {
+                setState(() => _recurringTime = value);
+              }
+            },
+          ),
+          DropdownButtonFormField<int>(
+            initialValue: _recurringAdvanceDays,
+            decoration: InputDecoration(
+              labelText: l10n.clubMatchSessionRecurringAdvanceDays,
+            ),
+            items: List.generate(
+              8,
+              (days) => DropdownMenuItem(
+                value: days,
+                child: Text(
+                  days == 0
+                      ? l10n.clubMatchSessionRecurringSameDay
+                      : l10n.clubMatchSessionRecurringBeforeDays(days),
+                ),
+              ),
+            ),
+            onChanged: (value) => setState(
+              () => _recurringAdvanceDays = value ?? _recurringAdvanceDays,
+            ),
+          ),
+        ],
       ],
     );
   }

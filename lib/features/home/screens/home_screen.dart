@@ -3,7 +3,6 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
@@ -2621,18 +2620,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return const Color(0xFF0284C7);
   }
 
-  String _getSportEmoji(String sportName) {
-    final n = sportName.toLowerCase();
-    if (n.contains('badminton') || n.contains('cầu lông')) return '🏸';
-    if (n.contains('tennis')) return '🎾';
-    if (n.contains('pickleball')) return '🏓';
-    if (n.contains('table tennis') || n.contains('bóng bàn')) return '🏓';
-    if (n.contains('bóng đá') || n.contains('football')) return '⚽';
-    if (n.contains('bơi') || n.contains('swim')) return '🏊';
-    if (n.contains('cờ') || n.contains('chess')) return '♟️';
-    return '🏆';
-  }
-
   String _getJoinModeLabel(String mode, AppLocalizations l10n) {
     switch (mode) {
       case 'INVITE_ONLY':
@@ -2696,7 +2683,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final l10n = AppLocalizations.of(context)!;
     final sportName = club.sports.isNotEmpty ? club.sports.first : "";
     final Color sportColor = _getSportColor(sportName);
-    final String emoji = _getSportEmoji(sportName);
     final String joinLabel = _getJoinModeLabel(club.joinMode, l10n);
     final Color joinColor = _getJoinModeColor(club.joinMode);
     final bannerUrl = _resolveClubImageUrl(club.bannerUrl);
@@ -2744,6 +2730,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Image.network(
                             bannerUrl,
                             fit: BoxFit.cover,
+                            loadingBuilder: (_, child, progress) {
+                              if (progress == null) return child;
+                              return _buildCardBannerPlaceholder(sportColor);
+                            },
                             errorBuilder: (_, _, _) {
                               final fallback = _webImageFallback(bannerUrl);
                               return fallback.isNotEmpty &&
@@ -2751,17 +2741,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ? Image.network(
                                       fallback,
                                       fit: BoxFit.cover,
+                                      loadingBuilder: (_, child, progress) {
+                                        if (progress == null) return child;
+                                        return _buildCardBannerPlaceholder(
+                                          sportColor,
+                                        );
+                                      },
                                       errorBuilder: (_, _, _) =>
-                                          _buildCardBannerFallback(
+                                          _buildCardBannerPlaceholder(
                                             sportColor,
-                                            emoji,
                                           ),
                                     )
-                                  : _buildCardBannerFallback(sportColor, emoji);
+                                  : _buildCardBannerPlaceholder(sportColor);
                             },
                           )
                         else
-                          _buildCardBannerFallback(sportColor, emoji),
+                          _buildCardBannerFallback(sportColor),
 
                         // Gradient overlay
                         Positioned(
@@ -3100,7 +3095,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildCardBannerFallback(Color sportColor, String emoji) {
+  Widget _buildCardBannerPlaceholder(Color sportColor) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
@@ -3113,12 +3108,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
       child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-          child: SvgPicture.asset(
-            AppConstants.logoFullSvg,
-            width: 180,
-            fit: BoxFit.contain,
+        child: Icon(
+          Icons.image_outlined,
+          size: 34,
+          color: sportColor.withValues(alpha: 0.28),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCardBannerFallback(Color sportColor) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? const [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF0F172A)]
+              : const [Color(0xFFF8FAFC), Color(0xFFEFF6FF), Color(0xFFE0E7FF)],
+        ),
+      ),
+      child: Center(
+        child: Image.asset(
+          AppConstants.logoFullPng,
+          width: 180,
+          fit: BoxFit.contain,
+          errorBuilder: (_, _, _) => Icon(
+            Icons.image_outlined,
+            size: 34,
+            color: sportColor.withValues(alpha: 0.28),
           ),
         ),
       ),

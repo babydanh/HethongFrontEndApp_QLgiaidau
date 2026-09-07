@@ -7,6 +7,16 @@ class ClubMatchSessionModel {
   final String registrationMode;
   final bool isRanked;
   final int maxParticipants;
+  final bool isRecurring;
+  final String? recurringFrequency;
+  final int? recurringDayOfWeek;
+  final List<int> recurringDaysOfWeek;
+  final String? recurringTimeOfDay;
+  final int? recurringAdvanceDays;
+  final DateTime? startAt;
+  final DateTime? endAt;
+  final int? participantCount;
+  final int? matchCount;
   final int version;
   final bool canManage;
   final bool canJoin;
@@ -27,6 +37,16 @@ class ClubMatchSessionModel {
     required this.registrationMode,
     required this.isRanked,
     this.maxParticipants = 16,
+    this.startAt,
+    this.endAt,
+    this.participantCount,
+    this.matchCount,
+    this.isRecurring = false,
+    this.recurringFrequency,
+    this.recurringDayOfWeek,
+    this.recurringDaysOfWeek = const [],
+    this.recurringTimeOfDay,
+    this.recurringAdvanceDays,
     required this.version,
     required this.canManage,
     this.canJoin = false,
@@ -53,6 +73,20 @@ class ClubMatchSessionModel {
     registrationMode: json['registrationMode']?.toString() ?? 'MIXED',
     isRanked: json['isRanked'] != false,
     maxParticipants: (json['maxParticipants'] as num?)?.toInt() ?? 16,
+    startAt: json['startAt'] != null ? DateTime.tryParse(json['startAt'].toString()) : null,
+    endAt: json['endAt'] != null ? DateTime.tryParse(json['endAt'].toString()) : null,
+    participantCount: (json['participantCount'] as num?)?.toInt(),
+    matchCount: (json['matchCount'] as num?)?.toInt(),
+    isRecurring: json['isRecurring'] == true,
+    recurringFrequency: json['recurringFrequency']?.toString(),
+    recurringDayOfWeek: (json['recurringDayOfWeek'] as num?)?.toInt(),
+    recurringDaysOfWeek:
+        (json['recurringDaysOfWeek'] as List<dynamic>? ?? const [])
+            .whereType<num>()
+            .map((value) => value.toInt())
+            .toList(),
+    recurringTimeOfDay: json['recurringTimeOfDay']?.toString(),
+    recurringAdvanceDays: (json['recurringAdvanceDays'] as num?)?.toInt(),
     version: (json['version'] as num?)?.toInt() ?? 1,
     canManage: (json['capabilities'] as Map?)?['canManage'] == true,
     canJoin: (json['capabilities'] as Map?)?['canJoin'] == true,

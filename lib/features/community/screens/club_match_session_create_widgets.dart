@@ -9,59 +9,57 @@ class ClubMatchSessionIntroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleColor = context.colors.textPrimary;
-    final bodyColor = context.colors.textSecondary;
-    return DecoratedBox(
+    final colors = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacingMD),
       decoration: BoxDecoration(
-        color: context.colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: context.colors.border),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacingMD),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: context.colors.info.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-              ),
-              child: Icon(
-                Icons.groups_rounded,
-                color: context.colors.info,
-                size: 26,
-              ),
-            ),
-            const SizedBox(width: AppTheme.spacingMD),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.clubMatchSessionCreateTitle,
-                    style: TextStyle(
-                      color: titleColor,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacingXS),
-                  Text(
-                    l10n.clubMatchSessionNoBracketHint,
-                    style: TextStyle(
-                      color: bodyColor,
-                      fontSize: 12,
-                      height: 1.35,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+        color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        border: Border.all(
+          color: const Color(0xFF3B82F6).withValues(alpha: 0.25),
         ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.bolt_rounded,
+              color: Color(0xFF2563EB),
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacingMD),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.clubMatchSessionCreateTitle,
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.clubMatchSessionNoBracketHint,
+                  style: TextStyle(
+                    color: colors.textSecondary,
+                    fontSize: 11.5,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -209,6 +207,114 @@ class ClubMatchSessionDateChoice extends StatelessWidget {
   }
 }
 
+class ClubMatchSessionDateTimePicker extends StatelessWidget {
+  final DateTime? selectedDate;
+  final TimeOfDay? selectedTime;
+  final VoidCallback onPickDate;
+  final VoidCallback onPickTime;
+
+  const ClubMatchSessionDateTimePicker({
+    super.key,
+    required this.selectedDate,
+    required this.selectedTime,
+    required this.onPickDate,
+    required this.onPickTime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final dateText = selectedDate != null
+        ? '${selectedDate!.day.toString().padLeft(2, '0')}/${selectedDate!.month.toString().padLeft(2, '0')}/${selectedDate!.year}'
+        : 'Chọn ngày';
+    final timeText = selectedTime != null
+        ? '${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}'
+        : 'Chọn giờ';
+
+    return Row(
+      children: [
+        Expanded(
+          flex: 3,
+          child: InkWell(
+            onTap: onPickDate,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: selectedDate != null ? colors.info.withValues(alpha: 0.4) : colors.border,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today_rounded,
+                    size: 17,
+                    color: selectedDate != null ? colors.info : colors.textMuted,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      dateText,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: selectedDate != null ? colors.textPrimary : colors.textMuted,
+                        fontWeight: selectedDate != null ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          flex: 2,
+          child: InkWell(
+            onTap: onPickTime,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: selectedTime != null ? colors.info.withValues(alpha: 0.4) : colors.border,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.access_time_rounded,
+                    size: 17,
+                    color: selectedTime != null ? colors.info : colors.textMuted,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      timeText,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: selectedTime != null ? FontWeight.w600 : FontWeight.normal,
+                        color: selectedTime != null ? colors.textPrimary : colors.textMuted,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class ClubMatchSessionBottomActions extends StatelessWidget {
   final AppLocalizations l10n;
   final bool isSubmitting;
@@ -232,7 +338,7 @@ class ClubMatchSessionBottomActions extends StatelessWidget {
           AppTheme.spacingMD,
           AppTheme.spacingSM,
           AppTheme.spacingMD,
-          AppTheme.spacingSM,
+          AppTheme.spacingMD,
         ),
         decoration: BoxDecoration(
           color: context.colors.bgCard,
@@ -240,25 +346,42 @@ class ClubMatchSessionBottomActions extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: isSubmitting ? null : onCancel,
-                child: Text(l10n.commonCancel),
+            OutlinedButton(
+              onPressed: isSubmitting ? null : onCancel,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(80, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
+              child: Text(l10n.commonCancel),
             ),
             const SizedBox(width: AppTheme.spacingSM),
             Expanded(
-              flex: 2,
-              child: FilledButton.icon(
-                onPressed: isSubmitting ? null : onSubmit,
-                icon: isSubmitting
-                    ? const SizedBox(
-                        width: 17,
-                        height: 17,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.add_rounded),
-                label: Text(l10n.clubMatchSessionCreate),
+              child: SizedBox(
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: isSubmitting ? null : onSubmit,
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.flash_on_rounded, size: 20),
+                  label: Text(
+                    isSubmitting ? 'Đang tạo...' : l10n.clubMatchSessionCreate,
+                    style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700),
+                  ),
+                ),
               ),
             ),
           ],

@@ -66,6 +66,12 @@ class ApiClubMatchSessionRepository {
     int maxParticipants = 16,
     DateTime? startAt,
     DateTime? endAt,
+    bool isRecurring = false,
+    String recurringFrequency = 'WEEKLY',
+    int recurringDayOfWeek = 6,
+    List<int> recurringDaysOfWeek = const [6],
+    String recurringTimeOfDay = '18:00',
+    int recurringAdvanceDays = 3,
   }) async {
     final response = await _client.dio.post(
       '/club-match-sessions',
@@ -79,6 +85,14 @@ class ApiClubMatchSessionRepository {
         'maxParticipants': maxParticipants,
         if (startAt != null) 'startAt': startAt.toIso8601String(),
         if (endAt != null) 'endAt': endAt.toIso8601String(),
+        'isRecurring': isRecurring,
+        if (isRecurring) ...{
+          'recurringFrequency': recurringFrequency,
+          'recurringDayOfWeek': recurringDayOfWeek,
+          'recurringDaysOfWeek': recurringDaysOfWeek,
+          'recurringTimeOfDay': recurringTimeOfDay,
+          'recurringAdvanceDays': recurringAdvanceDays,
+        },
       },
     );
     return ClubMatchSessionModel.fromJson(
