@@ -12304,6 +12304,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clubMatchSessionEloSkippedMock => 'ELO: bỏ qua VĐV ảo';
 
   @override
+  String get clubMatchSessionMockPlayer => 'VĐV ảo';
+
+  @override
+  String get clubMatchSessionMockEloDisabled => 'Không tính ELO';
+
+  @override
+  String get clubMatchSessionCreateMock => 'Tạo VĐV ảo';
+
+  @override
+  String get clubMatchSessionMockNameHint => 'Tên VĐV ảo';
+
+  @override
+  String get clubMatchSessionMockCreated => 'Đã tạo VĐV ảo';
+
+  @override
   String get clubMatchSessionEloSkippedCancelled => 'ELO: bỏ qua do đã hủy';
 
   @override

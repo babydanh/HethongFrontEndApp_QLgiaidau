@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/features/community/social/community_feed_noti
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_poll_widget.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_preview.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
+import 'package:app_quanly_giaidau/features/community/social/widgets/community_club_match_session_roster_widget.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_comment_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
@@ -270,7 +271,13 @@ class CommunityPostCard extends ConsumerWidget {
           // CHỈ áp dụng CommunityTournamentRosterWidget (lưới 16 slot tròn)
           // cho giải SIÊU SIÊU LITE (post.isTournamentLite == true).
           // Mọi giải Nâng cao / Public / Chuẩn khác hiển thị CommunityTournamentPreview.
-          if (post.tournamentId != null) ...[
+          if (post.clubMatchSessionId != null &&
+              post.clubMatchSessionId!.isNotEmpty) ...[
+            CommunityClubMatchSessionRosterWidget(
+              sessionId: post.clubMatchSessionId!,
+              communityId: communityId,
+            ),
+          ] else if (post.tournamentId != null) ...[
             Builder(
               builder: (context) {
                 final rawStatus = post.tournamentStatus?.trim();
@@ -287,10 +294,15 @@ class CommunityPostCard extends ConsumerWidget {
 
                 // Đồng bộ chuẩn Web: bài viết giải đấu trong CLB ở giai đoạn đăng ký / chuẩn bị
                 // sẽ hiển thị lưới slot tròn xác nhận tham gia trực tiếp.
-                final hasTournament = post.tournamentId != null && post.tournamentId!.isNotEmpty;
-                final shouldShowRoster = hasTournament &&
+                final hasTournament =
+                    post.tournamentId != null && post.tournamentId!.isNotEmpty;
+                final shouldShowRoster =
+                    hasTournament &&
                     isRegistrationPhase &&
-                    (post.isTournamentLite || communityId.isNotEmpty || (post.tournamentName != null && post.tournamentName!.isNotEmpty));
+                    (post.isTournamentLite ||
+                        communityId.isNotEmpty ||
+                        (post.tournamentName != null &&
+                            post.tournamentName!.isNotEmpty));
 
                 if (shouldShowRoster) {
                   return CommunityTournamentRosterWidget(
@@ -345,7 +357,9 @@ class CommunityPostCard extends ConsumerWidget {
 
           // ── Edge-to-Edge Media / Photo Preview (Full width like Facebook) ──
           // Khi đã có thẻ giải đấu (Lưới 16 Slot tròn hoặc Thẻ xem giải đấu), không spam thêm ảnh banner lặp lại bên dưới
-          if (post.mediaUrls.isNotEmpty && post.tournamentId == null)
+          if (post.mediaUrls.isNotEmpty &&
+              post.tournamentId == null &&
+              post.clubMatchSessionId == null)
             GestureDetector(
               onTap: () => _showMediaGallery(context),
               child: AspectRatio(

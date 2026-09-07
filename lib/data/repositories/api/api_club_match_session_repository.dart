@@ -146,6 +146,12 @@ class ApiClubMatchSessionRepository {
     options: _idempotency(key),
   );
 
+  Future<void> createMockParticipant(String sessionId, String name) =>
+      _client.dio.post(
+        '/club-match-sessions/$sessionId/participants/mock',
+        data: {'name': name},
+      );
+
   Future<void> updatePreferences(
     String sessionId, {
     required List<String> preferredPartners,

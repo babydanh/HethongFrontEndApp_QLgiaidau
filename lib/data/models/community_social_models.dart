@@ -104,6 +104,7 @@ class CommunityPostModel {
   final String? authorAvatarUrl;
   final String text;
   final String? tournamentId;
+  final String? clubMatchSessionId;
   final String? tournamentName;
   final String? tournamentInviteCode;
   final String? tournamentStatus;
@@ -129,6 +130,7 @@ class CommunityPostModel {
     this.authorId = '',
     this.authorAvatarUrl,
     this.tournamentId,
+    this.clubMatchSessionId,
     this.tournamentName,
     this.tournamentInviteCode,
     this.tournamentStatus,
@@ -174,6 +176,7 @@ class CommunityPostModel {
           _asString(json['message']) ??
           '',
       tournamentId: _asString(json['tournamentId'] ?? tournament['id']),
+      clubMatchSessionId: _asString(json['clubMatchSessionId']),
       tournamentName: _asString(json['tournamentName'] ?? tournament['name']),
       tournamentInviteCode: _asString(
         json['tournamentInviteCode'] ??
@@ -191,7 +194,7 @@ class CommunityPostModel {
             tournament['maxTeams'] ??
             (tournament['tournamentConfig'] is Map
                 ? (tournament['tournamentConfig']['maxTeams'] ??
-                    tournament['tournamentConfig']['maxParticipants'])
+                      tournament['tournamentConfig']['maxParticipants'])
                 : null),
       ),
       hasBracket:

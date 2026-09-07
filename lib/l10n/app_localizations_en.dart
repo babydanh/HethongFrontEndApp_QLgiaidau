@@ -12343,6 +12343,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubMatchSessionEloSkippedMock => 'ELO: mock players skipped';
 
   @override
+  String get clubMatchSessionMockPlayer => 'Mock player';
+
+  @override
+  String get clubMatchSessionMockEloDisabled => 'ELO excluded';
+
+  @override
+  String get clubMatchSessionCreateMock => 'Create mock player';
+
+  @override
+  String get clubMatchSessionMockNameHint => 'Mock player name';
+
+  @override
+  String get clubMatchSessionMockCreated => 'Mock player created';
+
+  @override
   String get clubMatchSessionEloSkippedCancelled =>
       'ELO: cancelled result skipped';
 

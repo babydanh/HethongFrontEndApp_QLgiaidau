@@ -73,8 +73,12 @@ class ClubMatchSessionModel {
     registrationMode: json['registrationMode']?.toString() ?? 'MIXED',
     isRanked: json['isRanked'] != false,
     maxParticipants: (json['maxParticipants'] as num?)?.toInt() ?? 16,
-    startAt: json['startAt'] != null ? DateTime.tryParse(json['startAt'].toString()) : null,
-    endAt: json['endAt'] != null ? DateTime.tryParse(json['endAt'].toString()) : null,
+    startAt: json['startAt'] != null
+        ? DateTime.tryParse(json['startAt'].toString())
+        : null,
+    endAt: json['endAt'] != null
+        ? DateTime.tryParse(json['endAt'].toString())
+        : null,
     participantCount: (json['participantCount'] as num?)?.toInt(),
     matchCount: (json['matchCount'] as num?)?.toInt(),
     isRecurring: json['isRecurring'] == true,
@@ -124,6 +128,7 @@ class ClubMatchParticipantModel {
   final String displayName;
   final String source;
   final String status;
+  final bool isMock;
   final int version;
 
   const ClubMatchParticipantModel({
@@ -132,6 +137,7 @@ class ClubMatchParticipantModel {
     required this.displayName,
     required this.source,
     required this.status,
+    this.isMock = false,
     required this.version,
   });
 
@@ -143,6 +149,7 @@ class ClubMatchParticipantModel {
       displayName: json['fullName']?.toString() ?? '',
       source: participant['source']?.toString() ?? 'SELF',
       status: participant['status']?.toString() ?? 'ACTIVE',
+      isMock: json['isMock'] == true || participant['isMock'] == true,
       version: (participant['version'] as num?)?.toInt() ?? 1,
     );
   }

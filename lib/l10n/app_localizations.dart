@@ -22432,6 +22432,36 @@ abstract class AppLocalizations {
   /// **'ELO: bỏ qua VĐV ảo'**
   String get clubMatchSessionEloSkippedMock;
 
+  /// No description provided for @clubMatchSessionMockPlayer.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV ảo'**
+  String get clubMatchSessionMockPlayer;
+
+  /// No description provided for @clubMatchSessionMockEloDisabled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tính ELO'**
+  String get clubMatchSessionMockEloDisabled;
+
+  /// No description provided for @clubMatchSessionCreateMock.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo VĐV ảo'**
+  String get clubMatchSessionCreateMock;
+
+  /// No description provided for @clubMatchSessionMockNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên VĐV ảo'**
+  String get clubMatchSessionMockNameHint;
+
+  /// No description provided for @clubMatchSessionMockCreated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo VĐV ảo'**
+  String get clubMatchSessionMockCreated;
+
   /// No description provided for @clubMatchSessionEloSkippedCancelled.
   ///
   /// In vi, this message translates to:

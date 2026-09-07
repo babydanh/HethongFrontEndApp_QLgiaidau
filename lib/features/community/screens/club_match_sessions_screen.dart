@@ -156,13 +156,41 @@ class _ClubMatchSessionsScreenState
                     final session = items[index];
                     final colors = context.colors;
 
-                    final (badgeBg, badgeTextColor, statusDotColor) = switch (session.status) {
-                      'OPEN' => (const Color(0xFF10B981).withValues(alpha: 0.12), const Color(0xFF059669), const Color(0xFF10B981)),
-                      'LIVE' => (const Color(0xFFEF4444).withValues(alpha: 0.12), const Color(0xFFDC2626), const Color(0xFFEF4444)),
-                      'CLOSED' => (const Color(0xFFF59E0B).withValues(alpha: 0.12), const Color(0xFFD97706), const Color(0xFFF59E0B)),
-                      'ENDED' => (colors.bgSurface, colors.textMuted, colors.textMuted),
-                      'CANCELLED' => (colors.bgSurface, colors.textMuted, colors.textMuted),
-                      _ => (colors.bgSurface, colors.textMuted, colors.textMuted),
+                    final (
+                      badgeBg,
+                      badgeTextColor,
+                      statusDotColor,
+                    ) = switch (session.status) {
+                      'OPEN' => (
+                        const Color(0xFF10B981).withValues(alpha: 0.12),
+                        const Color(0xFF059669),
+                        const Color(0xFF10B981),
+                      ),
+                      'LIVE' => (
+                        const Color(0xFFEF4444).withValues(alpha: 0.12),
+                        const Color(0xFFDC2626),
+                        const Color(0xFFEF4444),
+                      ),
+                      'CLOSED' => (
+                        const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                        const Color(0xFFD97706),
+                        const Color(0xFFF59E0B),
+                      ),
+                      'ENDED' => (
+                        colors.bgSurface,
+                        colors.textMuted,
+                        colors.textMuted,
+                      ),
+                      'CANCELLED' => (
+                        colors.bgSurface,
+                        colors.textMuted,
+                        colors.textMuted,
+                      ),
+                      _ => (
+                        colors.bgSurface,
+                        colors.textMuted,
+                        colors.textMuted,
+                      ),
                     };
 
                     return InkWell(
@@ -192,7 +220,9 @@ class _ClubMatchSessionsScreenState
                                   width: 44,
                                   height: 44,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF3B82F6).withValues(alpha: 0.10),
+                                    color: const Color(
+                                      0xFF3B82F6,
+                                    ).withValues(alpha: 0.10),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Icon(
@@ -204,7 +234,8 @@ class _ClubMatchSessionsScreenState
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         session.resolvedName,
@@ -218,12 +249,18 @@ class _ClubMatchSessionsScreenState
                                       Row(
                                         children: [
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 2,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: session.isRanked
-                                                  ? const Color(0xFF3B82F6).withValues(alpha: 0.10)
+                                                  ? const Color(
+                                                      0xFF3B82F6,
+                                                    ).withValues(alpha: 0.10)
                                                   : colors.bgSurface,
-                                              borderRadius: BorderRadius.circular(6),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
                                             ),
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
@@ -244,7 +281,9 @@ class _ClubMatchSessionsScreenState
                                                     fontSize: 11,
                                                     fontWeight: FontWeight.w600,
                                                     color: session.isRanked
-                                                        ? const Color(0xFF2563EB)
+                                                        ? const Color(
+                                                            0xFF2563EB,
+                                                          )
                                                         : colors.textMuted,
                                                   ),
                                                 ),
@@ -274,7 +313,10 @@ class _ClubMatchSessionsScreenState
                                 ),
                                 const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 9,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: badgeBg,
                                     borderRadius: BorderRadius.circular(8),
@@ -292,7 +334,10 @@ class _ClubMatchSessionsScreenState
                                       ),
                                       const SizedBox(width: 5),
                                       Text(
-                                        _localizedSessionStatus(l10n, session.status),
+                                        _localizedSessionStatus(
+                                          l10n,
+                                          session.status,
+                                        ),
                                         style: TextStyle(
                                           fontSize: 11.5,
                                           fontWeight: FontWeight.w700,
@@ -305,7 +350,10 @@ class _ClubMatchSessionsScreenState
                               ],
                             ),
                             const SizedBox(height: 12),
-                            Divider(height: 1, color: colors.border.withValues(alpha: 0.6)),
+                            Divider(
+                              height: 1,
+                              color: colors.border.withValues(alpha: 0.6),
+                            ),
                             const SizedBox(height: 10),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -326,7 +374,8 @@ class _ClubMatchSessionsScreenState
                                         color: colors.textSecondary,
                                       ),
                                     ),
-                                    if (session.matchCount != null && session.matchCount! > 0) ...[
+                                    if (session.matchCount != null &&
+                                        session.matchCount! > 0) ...[
                                       const SizedBox(width: 12),
                                       Icon(
                                         Icons.sports_rounded,
@@ -500,7 +549,8 @@ class ClubMatchSessionDetailPage extends ConsumerWidget {
               child: Text(l10n.commonCancel),
             ),
             FilledButton(
-              onPressed: sideA.isNotEmpty &&
+              onPressed:
+                  sideA.isNotEmpty &&
                       sideA.length == sideB.length &&
                       sideA.length <= 2
                   ? () => Navigator.pop(dialogContext, true)
@@ -630,6 +680,51 @@ class ClubMatchSessionDetailPage extends ConsumerWidget {
           .read(clubMatchSessionRepositoryProvider)
           .forceParticipants(session.id, selected.toList(), const Uuid().v4()),
       l10n.clubMatchSessionAssigned,
+    );
+  }
+
+  Future<void> _createMockParticipant(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.clubMatchSessionCreateMock),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 255,
+          textInputAction: TextInputAction.done,
+          decoration: InputDecoration(
+            hintText: l10n.clubMatchSessionMockNameHint,
+          ),
+          onSubmitted: (value) => Navigator.pop(dialogContext, value.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
+            child: Text(l10n.clubMatchSessionCreateMock),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (name == null || name.isEmpty || !context.mounted) return;
+    await _mutation(
+      context,
+      ref,
+      () => ref
+          .read(clubMatchSessionRepositoryProvider)
+          .createMockParticipant(session.id, name),
+      l10n.clubMatchSessionMockCreated,
     );
   }
 
@@ -1007,6 +1102,14 @@ class ClubMatchSessionDetailPage extends ConsumerWidget {
               AppLocalizations.of(context)!.clubMatchSessionAssignMembers,
             ),
           ),
+        if (value.session.canManage && value.session.status == 'OPEN')
+          OutlinedButton.icon(
+            icon: const Icon(Icons.person_add_alt_rounded),
+            onPressed: () => _createMockParticipant(context, ref),
+            label: Text(
+              AppLocalizations.of(context)!.clubMatchSessionCreateMock,
+            ),
+          ),
         if (value.session.viewerIsActive)
           OutlinedButton.icon(
             icon: const Icon(Icons.tune_rounded),
@@ -1091,7 +1194,9 @@ class ClubMatchSessionDetailPage extends ConsumerWidget {
                             ),
                             title: Text(item.displayName),
                             subtitle: Text(
-                              item.source == 'MANDATORY'
+                              item.isMock
+                                  ? '${l10n.clubMatchSessionMockPlayer} · ${l10n.clubMatchSessionMockEloDisabled}'
+                                  : item.source == 'MANDATORY'
                                   ? l10n.clubMatchSessionMandatorySource
                                   : l10n.clubMatchSessionSelfSource,
                             ),
