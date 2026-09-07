@@ -534,7 +534,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
     required CrossAxisAlignment alignment,
   }) {
     final colors = context.colors;
-    final displayMembers = members.length == 2
+    final displayMembers = members.length == 1 || members.length == 2
         ? members
         : const <MatchMemberInfo>[];
 
@@ -621,7 +621,16 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
       );
     }
 
-    return avatar(url: teamLogoUrl, initial: fallbackInitial);
+    final singleMemberAvatar = displayMembers.length == 1
+        ? displayMembers.first.avatarUrl
+        : null;
+    return avatar(
+      url: singleMemberAvatar ?? teamLogoUrl,
+      initial:
+          displayMembers.length == 1 && displayMembers.first.fullName.isNotEmpty
+          ? displayMembers.first.fullName[0].toUpperCase()
+          : fallbackInitial,
+    );
   }
 
   Widget _buildSetScores(BuildContext context) {

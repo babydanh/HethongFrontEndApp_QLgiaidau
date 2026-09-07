@@ -2194,6 +2194,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   }
 
   bool _matchesSessionStatus(String status, String filter) {
+    if (status == 'CANCELLED') return false;
     if (filter == 'ALL') return true;
     if (filter == 'UPCOMING') return status == 'OPEN';
     if (filter == 'ONGOING') return status == 'LIVE';
@@ -2762,7 +2763,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           children: [
             // ─── Athletic Sport Banner Cover ───
             SizedBox(
-              height: 128,
+              height: 140,
               width: double.infinity,
               child: Stack(
                 fit: StackFit.expand,
@@ -2846,7 +2847,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       children: [
                         SvgPicture.asset(
                           AppConstants.logoFullSvg,
-                          width: 140,
+                          width: 120,
                           fit: BoxFit.contain,
                           colorFilter: const ColorFilter.mode(
                             Colors.white,

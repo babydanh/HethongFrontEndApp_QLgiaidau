@@ -8,10 +8,14 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
+import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_match_session_create_screen.dart';
+import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,15 +28,6 @@ String _localizedSessionStatus(AppLocalizations l10n, String status) =>
       'CLOSED' => l10n.clubMatchSessionStatusClosed,
       'ENDED' => l10n.clubMatchSessionStatusEnded,
       'CANCELLED' => l10n.clubMatchSessionStatusCancelled,
-      _ => l10n.clubMatchSessionStatusUnknown,
-    };
-
-String _localizedMatchStatus(AppLocalizations l10n, String status) =>
-    switch (status) {
-      'SCHEDULED' => l10n.clubMatchSessionMatchScheduled,
-      'ONGOING' => l10n.clubMatchSessionMatchOngoing,
-      'COMPLETED' => l10n.clubMatchSessionMatchCompleted,
-      'CANCELLED' => l10n.clubMatchSessionMatchCancelled,
       _ => l10n.clubMatchSessionStatusUnknown,
     };
 
@@ -558,6 +553,25 @@ class _ClubMatchSessionDetailPageState
                       .where((item) => item.status == 'ACTIVE')
                       .map(
                         (item) => ListTile(
+                          leading: CircleAvatar(
+                            backgroundImage:
+                                item.avatarUrl?.trim().isNotEmpty == true
+                                ? NetworkImage(item.avatarUrl!.trim())
+                                : null,
+                            backgroundColor: context.colors.info.withValues(
+                              alpha: .12,
+                            ),
+                            child: item.avatarUrl?.trim().isNotEmpty == true
+                                ? null
+                                : Text(
+                                    item.displayName.isEmpty
+                                        ? '?'
+                                        : item.displayName[0].toUpperCase(),
+                                    style: TextStyle(
+                                      color: context.colors.info,
+                                    ),
+                                  ),
+                          ),
                           title: Text(item.displayName),
                           trailing: SegmentedButton<String>(
                             segments: const [
@@ -905,7 +919,10 @@ class _ClubMatchSessionDetailPageState
     final activeParticipants = value.participants
         .where((p) => p.status == 'ACTIVE')
         .toList();
-    final totalSlots = max(currentSession.maxParticipants, activeParticipants.length);
+    final totalSlots = max(
+      currentSession.maxParticipants,
+      activeParticipants.length,
+    );
     final totalPages = max(1, (totalSlots / _slotsPerPage).ceil());
     final safePage = _currentPage.clamp(1, totalPages);
     final startIndex = (safePage - 1) * _slotsPerPage;
@@ -931,12 +948,15 @@ class _ClubMatchSessionDetailPageState
           ? ' · ${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}'
           : '';
       String durationStr = '';
-      if (currentSession.endAt != null && currentSession.endAt!.isAfter(start)) {
+      if (currentSession.endAt != null &&
+          currentSession.endAt!.isAfter(start)) {
         final diffMinutes = currentSession.endAt!.difference(start).inMinutes;
         if (diffMinutes > 0 && diffMinutes < 24 * 60) {
           final h = diffMinutes ~/ 60;
           final m = diffMinutes % 60;
-          durationStr = h > 0 ? (m > 0 ? ' (${h}h${m}p)' : ' (${h}h)') : ' (${m}p)';
+          durationStr = h > 0
+              ? (m > 0 ? ' (${h}h${m}p)' : ' (${h}h)')
+              : ' (${m}p)';
         }
       }
       dateRangeStr = '$dateStr$timeStr$durationStr';
@@ -981,7 +1001,10 @@ class _ClubMatchSessionDetailPageState
                   children: [
                     // Sport badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: colors.bgSurface,
                         borderRadius: BorderRadius.circular(6),
@@ -998,11 +1021,17 @@ class _ClubMatchSessionDetailPageState
                     ),
                     // Format badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEFF6FF),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFDBEAFE), width: 0.8),
+                        border: Border.all(
+                          color: const Color(0xFFDBEAFE),
+                          width: 0.8,
+                        ),
                       ),
                       child: Text(
                         formatBadge,
@@ -1015,13 +1044,16 @@ class _ClubMatchSessionDetailPageState
                     ),
                     // Status badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: currentSession.status == 'OPEN'
                             ? const Color(0xFF10B981)
                             : currentSession.status == 'LIVE'
-                                ? const Color(0xFFEF4444)
-                                : colors.textMuted,
+                            ? const Color(0xFFEF4444)
+                            : colors.textMuted,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -1035,7 +1067,10 @@ class _ClubMatchSessionDetailPageState
                     ),
                     // ELO Badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: currentSession.isRanked
                             ? const Color(0xFFF59E0B)
@@ -1101,7 +1136,11 @@ class _ClubMatchSessionDetailPageState
                     Expanded(
                       child: Row(
                         children: [
-                          Icon(Icons.people_alt_outlined, size: 18, color: colors.info),
+                          Icon(
+                            Icons.people_alt_outlined,
+                            size: 18,
+                            color: colors.info,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             '${activeParticipants.length}/$totalSlots người tham gia',
@@ -1116,7 +1155,11 @@ class _ClubMatchSessionDetailPageState
                     ),
                     Row(
                       children: [
-                        Icon(Icons.sports_tennis_outlined, size: 18, color: colors.warning),
+                        Icon(
+                          Icons.sports_tennis_outlined,
+                          size: 18,
+                          color: colors.warning,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           '${value.matches.length} trận đấu',
@@ -1214,7 +1257,10 @@ class _ClubMatchSessionDetailPageState
                           value: 'CREATE_MATCH',
                           child: Row(
                             children: [
-                              const Icon(Icons.add_circle_outline_rounded, size: 18),
+                              const Icon(
+                                Icons.add_circle_outline_rounded,
+                                size: 18,
+                              ),
                               const SizedBox(width: 8),
                               Text(l10n.clubMatchSessionCreateMatch),
                             ],
@@ -1224,7 +1270,10 @@ class _ClubMatchSessionDetailPageState
                         value: 'ASSIGN_MEMBERS',
                         child: Row(
                           children: [
-                            const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                            const Icon(
+                              Icons.person_add_alt_1_rounded,
+                              size: 18,
+                            ),
                             const SizedBox(width: 8),
                             Text(l10n.clubMatchSessionAssignMembers),
                           ],
@@ -1235,13 +1284,17 @@ class _ClubMatchSessionDetailPageState
                           value: 'CREATE_MOCK',
                           child: Row(
                             children: [
-                              const Icon(Icons.person_add_alt_rounded, size: 18),
+                              const Icon(
+                                Icons.person_add_alt_rounded,
+                                size: 18,
+                              ),
                               const SizedBox(width: 8),
                               Text(l10n.clubMatchSessionCreateMock),
                             ],
                           ),
                         ),
-                      if (currentSession.status == 'OPEN' || currentSession.status == 'LIVE')
+                      if (currentSession.status == 'OPEN' ||
+                          currentSession.status == 'LIVE')
                         PopupMenuItem(
                           value: 'CLOSE',
                           child: Row(
@@ -1252,7 +1305,8 @@ class _ClubMatchSessionDetailPageState
                             ],
                           ),
                         ),
-                      if (currentSession.status != 'ENDED' && currentSession.status != 'CANCELLED')
+                      if (currentSession.status != 'ENDED' &&
+                          currentSession.status != 'CANCELLED')
                         PopupMenuItem(
                           value: 'END',
                           child: Row(
@@ -1263,12 +1317,17 @@ class _ClubMatchSessionDetailPageState
                             ],
                           ),
                         ),
-                      if (currentSession.status != 'ENDED' && currentSession.status != 'CANCELLED')
+                      if (currentSession.status != 'ENDED' &&
+                          currentSession.status != 'CANCELLED')
                         PopupMenuItem(
                           value: 'CANCEL',
                           child: Row(
                             children: [
-                              const Icon(Icons.cancel_outlined, size: 18, color: Colors.red),
+                              const Icon(
+                                Icons.cancel_outlined,
+                                size: 18,
+                                color: Colors.red,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 l10n.clubMatchSessionCancel,
@@ -1279,7 +1338,10 @@ class _ClubMatchSessionDetailPageState
                         ),
                     ],
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.primary,
                         borderRadius: BorderRadius.circular(8),
@@ -1344,7 +1406,10 @@ class _ClubMatchSessionDetailPageState
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFEFF6FF),
                             borderRadius: BorderRadius.circular(6),
@@ -1379,11 +1444,17 @@ class _ClubMatchSessionDetailPageState
                 if (userPage != null && userPage != safePage) ...[
                   const SizedBox(height: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEFF6FF),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFBFDBFE), width: 0.8),
+                      border: Border.all(
+                        color: const Color(0xFFBFDBFE),
+                        width: 0.8,
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1427,25 +1498,30 @@ class _ClubMatchSessionDetailPageState
                   ),
                   itemBuilder: (context, idx) {
                     final globalSlotIndex = startIndex + idx;
-                    final isOccupied = globalSlotIndex < activeParticipants.length;
+                    final isOccupied =
+                        globalSlotIndex < activeParticipants.length;
 
                     if (isOccupied) {
                       final item = activeParticipants[globalSlotIndex];
-                      final isSelf = currentUserId.isNotEmpty && item.userId == currentUserId;
+                      final isSelf =
+                          currentUserId.isNotEmpty &&
+                          item.userId == currentUserId;
                       final displayName = item.displayName.trim().isNotEmpty
                           ? item.displayName.trim()
-                          : (item.isMock ? '${l10n.clubMatchSessionMockPlayer} ${globalSlotIndex + 1}' : 'VĐV');
+                          : (item.isMock
+                                ? '${l10n.clubMatchSessionMockPlayer} ${globalSlotIndex + 1}'
+                                : 'VĐV');
 
                       return GestureDetector(
                         onTap: isSelf && currentSession.canWithdraw
                             ? () => _mutation(
-                                  context,
-                                  ref,
-                                  () => ref
-                                      .read(clubMatchSessionRepositoryProvider)
-                                      .withdraw(session.id),
-                                  l10n.clubMatchSessionWithdrawn,
-                                )
+                                context,
+                                ref,
+                                () => ref
+                                    .read(clubMatchSessionRepositoryProvider)
+                                    .withdraw(session.id),
+                                l10n.clubMatchSessionWithdrawn,
+                              )
                             : null,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -1466,21 +1542,43 @@ class _ClubMatchSessionDetailPageState
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.08),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.08,
+                                        ),
                                         blurRadius: 6,
                                         offset: const Offset(0, 2),
                                       ),
                                     ],
                                   ),
-                                  child: Center(
-                                    child: Text(
-                                      _getInitials(displayName),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 14,
-                                      ),
-                                    ),
+                                  child: ClipOval(
+                                    child: item.avatarUrl != null &&
+                                            item.avatarUrl!.isNotEmpty
+                                        ? Image.network(
+                                            item.avatarUrl!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) =>
+                                                    Center(
+                                              child: Text(
+                                                _getInitials(displayName),
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w800,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        : Center(
+                                            child: Text(
+                                              _getInitials(displayName),
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w800,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ),
                                   ),
                                 ),
                                 if (isSelf)
@@ -1542,17 +1640,19 @@ class _ClubMatchSessionDetailPageState
                     }
 
                     // Empty Slot with Dashed/Grey Circle
-                    final canTapEmptySlot = currentSession.canJoin && currentSession.status == 'OPEN';
+                    final canTapEmptySlot =
+                        currentSession.canJoin &&
+                        currentSession.status == 'OPEN';
                     return GestureDetector(
                       onTap: canTapEmptySlot
                           ? () => _mutation(
-                                context,
-                                ref,
-                                () => ref
-                                    .read(clubMatchSessionRepositoryProvider)
-                                    .selfJoin(session.id),
-                                l10n.clubMatchSessionJoined,
-                              )
+                              context,
+                              ref,
+                              () => ref
+                                  .read(clubMatchSessionRepositoryProvider)
+                                  .selfJoin(session.id),
+                              l10n.clubMatchSessionJoined,
+                            )
                           : null,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -1612,7 +1712,9 @@ class _ClubMatchSessionDetailPageState
                           // Prev button
                           InkWell(
                             onTap: safePage > 1
-                                ? () => setState(() => _currentPage = safePage - 1)
+                                ? () => setState(
+                                    () => _currentPage = safePage - 1,
+                                  )
                                 : null,
                             borderRadius: BorderRadius.circular(6),
                             child: Container(
@@ -1652,14 +1754,19 @@ class _ClubMatchSessionDetailPageState
                             final hasUser = pageNum == userPage;
 
                             return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 2,
+                              ),
                               child: GestureDetector(
-                                onTap: () => setState(() => _currentPage = pageNum),
+                                onTap: () =>
+                                    setState(() => _currentPage = pageNum),
                                 child: Stack(
                                   clipBehavior: Clip.none,
                                   children: [
                                     Container(
-                                      constraints: const BoxConstraints(minWidth: 26),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 26,
+                                      ),
                                       height: 26,
                                       alignment: Alignment.center,
                                       decoration: BoxDecoration(
@@ -1706,7 +1813,9 @@ class _ClubMatchSessionDetailPageState
                           // Next button
                           InkWell(
                             onTap: safePage < totalPages
-                                ? () => setState(() => _currentPage = safePage + 1)
+                                ? () => setState(
+                                    () => _currentPage = safePage + 1,
+                                  )
                                 : null,
                             borderRadius: BorderRadius.circular(6),
                             child: Container(
@@ -1817,15 +1926,21 @@ class _ClubMatchSessionDetailPageState
                         .map(
                           (item) => ListTile(
                             leading: CircleAvatar(
+                              backgroundImage:
+                                  item.avatarUrl?.trim().isNotEmpty == true
+                                  ? NetworkImage(item.avatarUrl!.trim())
+                                  : null,
                               backgroundColor: colors.info.withValues(
                                 alpha: .12,
                               ),
-                              child: Text(
-                                item.displayName.isEmpty
-                                    ? '?'
-                                    : item.displayName[0].toUpperCase(),
-                                style: TextStyle(color: colors.info),
-                              ),
+                              child: item.avatarUrl?.trim().isNotEmpty == true
+                                  ? null
+                                  : Text(
+                                      item.displayName.isEmpty
+                                          ? '?'
+                                          : item.displayName[0].toUpperCase(),
+                                      style: TextStyle(color: colors.info),
+                                    ),
                             ),
                             title: Text(item.displayName),
                             subtitle: Text(
@@ -1891,19 +2006,7 @@ class _ClubMatchSessionDetailPageState
                 child: Center(child: Text(l10n.clubMatchSessionNoMatches)),
               ),
             ),
-          ...value.matches.map(
-            (match) => _ClubMatchScoreCard(
-              match: match,
-              sessionId: session.id,
-              canEdit:
-                  value.session.canManage ||
-                  (value.session.viewerUserId != null &&
-                      [
-                        ...match.sideAUserIds,
-                        ...match.sideBUserIds,
-                      ].contains(value.session.viewerUserId)),
-            ),
-          ),
+          ...value.matches.map((match) => _ClubMatchScoreCard(match: match)),
         ],
       ),
     );
@@ -1998,151 +2101,145 @@ class _SessionSectionTitle extends StatelessWidget {
   );
 }
 
-class _ClubMatchScoreCard extends ConsumerStatefulWidget {
+class _ClubMatchScoreCard extends StatelessWidget {
   final ClubSessionMatchModel match;
-  final String sessionId;
-  final bool canEdit;
-  const _ClubMatchScoreCard({
-    required this.match,
-    required this.sessionId,
-    required this.canEdit,
-  });
+  const _ClubMatchScoreCard({required this.match});
 
-  @override
-  ConsumerState<_ClubMatchScoreCard> createState() =>
-      _ClubMatchScoreCardState();
-}
+  MatchModel _asSharedMatch() {
+    final sideAMembers = match.sideAMembers
+        .map(
+          (member) => MatchMemberInfo(
+            userId: member.userId,
+            fullName: member.displayName,
+            avatarUrl: member.avatarUrl,
+            isMock: member.isMock,
+          ),
+        )
+        .toList(growable: false);
+    final sideBMembers = match.sideBMembers
+        .map(
+          (member) => MatchMemberInfo(
+            userId: member.userId,
+            fullName: member.displayName,
+            avatarUrl: member.avatarUrl,
+            isMock: member.isMock,
+          ),
+        )
+        .toList(growable: false);
+    final sideAName = match.sideANames.join(' · ').trim();
+    final sideBName = match.sideBNames.join(' · ').trim();
+    final winnerId = switch (match.status) {
+      'COMPLETED' when match.sideAScore > match.sideBScore => 'SIDE_A',
+      'COMPLETED' when match.sideBScore > match.sideAScore => 'SIDE_B',
+      _ => '',
+    };
 
-class _ClubMatchScoreCardState extends ConsumerState<_ClubMatchScoreCard> {
-  late int sideA = widget.match.sideAScore;
-  late int sideB = widget.match.sideBScore;
-  bool _saving = false;
-
-  @override
-  void didUpdateWidget(covariant _ClubMatchScoreCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.match.revision != widget.match.revision ||
-        oldWidget.match.sideAScore != widget.match.sideAScore ||
-        oldWidget.match.sideBScore != widget.match.sideBScore) {
-      sideA = widget.match.sideAScore;
-      sideB = widget.match.sideBScore;
-    }
+    return MatchModel(
+      id: match.id,
+      round: 1,
+      matchNumber: 1,
+      team1Id: 'SIDE_A',
+      team2Id: 'SIDE_B',
+      team1Name: sideAName.isEmpty ? 'Đội A' : sideAName,
+      team2Name: sideBName.isEmpty ? 'Đội B' : sideBName,
+      score1: match.sideAScore,
+      score2: match.sideBScore,
+      winnerId: winnerId,
+      loserId: winnerId == 'SIDE_A'
+          ? 'SIDE_B'
+          : winnerId == 'SIDE_B'
+          ? 'SIDE_A'
+          : '',
+      status: match.status,
+      bracketPosition: const BracketPosition(round: 1, position: 1),
+      scoreDetails: match.scoreDetails,
+      team1Members: sideAMembers.map((member) => member.fullName).toList(),
+      team2Members: sideBMembers.map((member) => member.fullName).toList(),
+      team1MemberInfos: sideAMembers,
+      team2MemberInfos: sideBMembers,
+      team1LogoUrl: sideAMembers.length == 1
+          ? sideAMembers.first.avatarUrl
+          : null,
+      team2LogoUrl: sideBMembers.length == 1
+          ? sideBMembers.first.avatarUrl
+          : null,
+      tournamentConfig: const {
+        'isLite': true,
+        'mode': 'LITE',
+        'scoringMode': 'FREE',
+      },
+      sportRules: const {'mode': 'LITE', 'scoringMode': 'FREE'},
+      updatedAt: DateTime.now(),
+    );
   }
 
-  Future<void> _save(bool complete) async {
-    final l10n = AppLocalizations.of(context)!;
-    setState(() => _saving = true);
-    try {
-      await ref
-          .read(clubMatchSessionRepositoryProvider)
-          .updateScore(widget.match, sideA, sideB, complete: complete);
-      ref.invalidate(clubSessionDetailProvider(widget.sessionId));
-    } catch (error) {
-      if (error is DioException && error.response?.statusCode == 409) {
-        ref.invalidate(clubSessionDetailProvider(widget.sessionId));
-      }
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorParser.parse(error, '', l10n))),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
+  void _openScoring(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _ClubSessionMatchScoringEntry(matchId: match.id),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final editable =
-        widget.canEdit &&
-        !_saving &&
-        !['COMPLETED', 'CANCELLED'].contains(widget.match.status);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            Text(_localizedMatchStatus(l10n, widget.match.status)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  tooltip: l10n.clubMatchSessionDecreaseSideA,
-                  onPressed: editable
-                      ? () => setState(
-                          () => sideA = (sideA - 1).clamp(0, 99).toInt(),
-                        )
-                      : null,
-                  icon: const Icon(Icons.remove),
-                ),
-                Text(
-                  '$sideA',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                IconButton(
-                  tooltip: l10n.clubMatchSessionIncreaseSideA,
-                  onPressed: editable ? () => setState(() => sideA++) : null,
-                  icon: const Icon(Icons.add),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(':'),
-                ),
-                IconButton(
-                  tooltip: l10n.clubMatchSessionDecreaseSideB,
-                  onPressed: editable
-                      ? () => setState(
-                          () => sideB = (sideB - 1).clamp(0, 99).toInt(),
-                        )
-                      : null,
-                  icon: const Icon(Icons.remove),
-                ),
-                Text(
-                  '$sideB',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                IconButton(
-                  tooltip: l10n.clubMatchSessionIncreaseSideB,
-                  onPressed: editable ? () => setState(() => sideB++) : null,
-                  icon: const Icon(Icons.add),
-                ),
-              ],
-            ),
-            if (widget.canEdit &&
-                !['COMPLETED', 'CANCELLED'].contains(widget.match.status))
-              Wrap(
-                spacing: 8,
-                children: [
-                  OutlinedButton(
-                    onPressed: _saving ? null : () => _save(false),
-                    child: Text(l10n.clubMatchSessionSaveScore),
-                  ),
-                  FilledButton(
-                    onPressed: _saving || sideA == sideB
-                        ? null
-                        : () => _save(true),
-                    child: Text(l10n.clubMatchSessionComplete),
-                  ),
-                ],
-              ),
-            Text(
-              _localizedEloStatus(l10n, widget.match.eloStatus),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            if (widget.match.eloStatus == 'APPLIED' &&
-                widget.match.eloDelta.isNotEmpty)
-              Text(
-                l10n.clubMatchSessionEloDelta(
-                  widget.match.eloDelta.values.fold<int>(
-                    0,
-                    (sum, value) => sum + value.abs(),
-                  ),
-                ),
-              ),
-          ],
+    final sharedMatch = _asSharedMatch();
+    final status = match.status.trim().toUpperCase();
+    final delta = match.eloDelta.values.fold<int>(
+      0,
+      (sum, value) => sum + value.abs(),
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        LiveMatchCardV2(
+          match: sharedMatch,
+          isLive: status == 'ONGOING',
+          isCompleted: status == 'COMPLETED',
+          onTap: () => _openScoring(context),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, right: 4, top: 0, bottom: 8),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '${_localizedEloStatus(l10n, match.eloStatus)}${match.eloStatus == 'APPLIED' && delta > 0 ? ' · ${l10n.clubMatchSessionEloDelta(delta)}' : ''}',
+              style: TextStyle(
+                color: context.colors.textMuted,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ClubSessionMatchScoringEntry extends ConsumerWidget {
+  final String matchId;
+
+  const _ClubSessionMatchScoringEntry({required this.matchId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final matchAsync = ref.watch(
+      singleMatchProvider((tournamentId: '', matchId: matchId)),
+    );
+    return matchAsync.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, _) => Scaffold(
+        appBar: AppBar(),
+        body: Center(child: Text('Không tải được trận đấu: $error')),
       ),
+      data: (match) => match == null
+          ? const Scaffold(
+              body: Center(child: Text('Không tìm thấy trận đấu.')),
+            )
+          : OfficialScorePage(tournamentId: '', matchId: matchId, match: match),
     );
   }
 }

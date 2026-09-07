@@ -29,6 +29,7 @@ class MatchController {
     ref.invalidate(
       singleMatchProvider((tournamentId: tournamentId, matchId: matchId)),
     );
+    if (tournamentId.isEmpty) return;
     ref.invalidate(matchesProvider(tournamentId));
     ref.invalidate(liveMatchesProvider(tournamentId));
     ref.invalidate(bracketMatchesProvider(tournamentId));
@@ -64,7 +65,9 @@ class MatchController {
     String? refereeName,
   }) async {
     final currentMatch = match;
-    final tournament = ref.read(tournamentProvider(tournamentId)).value;
+    final tournament = tournamentId.isNotEmpty
+        ? ref.read(tournamentProvider(tournamentId)).value
+        : null;
     await ref
         .read(matchRepositoryProvider)
         .startMatch(
@@ -216,7 +219,9 @@ class MatchController {
       'updateSetsWithDetails: $p1SetsWon-$p2SetsWon, ${scoreDetails.length} sets',
     );
     final currentMatch = match;
-    final tournament = ref.read(tournamentProvider(tournamentId)).value;
+    final tournament = tournamentId.isNotEmpty
+        ? ref.read(tournamentProvider(tournamentId)).value
+        : null;
     await ref
         .read(matchRepositoryProvider)
         .updateScoreDetails(

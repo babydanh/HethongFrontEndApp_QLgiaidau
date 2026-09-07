@@ -7,6 +7,17 @@ import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+const List<Color> _kSlotAvatarColors = [
+  Color(0xFF10B981), // Emerald
+  Color(0xFF3B82F6), // Blue
+  Color(0xFFF59E0B), // Amber
+  Color(0xFF8B5CF6), // Purple
+  Color(0xFFF43F5E), // Rose
+  Color(0xFF6366F1), // Indigo
+  Color(0xFF14B8A6), // Teal
+  Color(0xFF06B6D4), // Cyan
+];
+
 class CommunityClubMatchSessionRosterWidget extends ConsumerStatefulWidget {
   final String sessionId;
   final String communityId;
@@ -54,23 +65,96 @@ class _CommunityClubMatchSessionRosterWidgetState
     }
   }
 
-  Future<void> _joinOrWithdraw() async {
+  String _getInitials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts[0].isEmpty) return '?';
+    if (parts.length == 1) {
+      return parts[0].length >= 2
+          ? parts[0].substring(0, 2).toUpperCase()
+          : parts[0].toUpperCase();
+    }
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+  }
+
+  Color _getColorByName(String name) {
+    int hash = 0;
+    for (int i = 0; i < name.length; i++) {
+      hash = name.codeUnitAt(i) + ((hash << 5) - hash);
+    }
+    return _kSlotAvatarColors[hash.abs() % _kSlotAvatarColors.length];
+  }
+
+  Future<void> _confirmWithdrawDialog(
+    ClubMatchParticipantModel participant,
+  ) async {
     final session = _session;
     if (session == null || _busy) return;
     final l10n = AppLocalizations.of(context)!;
+    final sessionName = session.resolvedName;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: Color(0xFFEF4444),
+              size: 24,
+            ),
+            SizedBox(width: 8),
+            Text(
+              'Hủy tham gia giao lưu',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          'Bạn có chắc chắn muốn hủy tham gia "$sessionName" không?',
+          style: const TextStyle(fontSize: 13, color: Color(0xFF475569)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text(
+              'Hủy bỏ',
+              style: TextStyle(color: Color(0xFF64748B)),
+            ),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Xác nhận hủy'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
     setState(() => _busy = true);
     try {
       final repo = ref.read(clubMatchSessionRepositoryProvider);
-      if (session.canWithdraw) {
-        await repo.withdraw(session.id);
-      } else {
-        await repo.selfJoin(session.id);
+      await repo.withdraw(session.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.clubMatchSessionWithdrawn),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
       }
       await _load();
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorParser.parse(error, '', l10n))),
+          SnackBar(
+            content: Text(ErrorParser.parse(error, '', l10n)),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
         );
       }
     } finally {
@@ -78,49 +162,30 @@ class _CommunityClubMatchSessionRosterWidgetState
     }
   }
 
-  Future<void> _createMock() async {
+  Future<void> _handleJoin() async {
     final session = _session;
     if (session == null || _busy) return;
     final l10n = AppLocalizations.of(context)!;
-    final controller = TextEditingController();
-    final name = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.clubMatchSessionCreateMock),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLength: 255,
-          decoration: InputDecoration(
-            hintText: l10n.clubMatchSessionMockNameHint,
-          ),
-          onSubmitted: (value) => Navigator.pop(dialogContext, value.trim()),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () =>
-                Navigator.pop(dialogContext, controller.text.trim()),
-            child: Text(l10n.clubMatchSessionCreateMock),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (name == null || name.isEmpty || !mounted) return;
     setState(() => _busy = true);
     try {
-      await ref
-          .read(clubMatchSessionRepositoryProvider)
-          .createMockParticipant(session.id, name);
+      final repo = ref.read(clubMatchSessionRepositoryProvider);
+      await repo.selfJoin(session.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.clubMatchSessionJoined),
+            backgroundColor: const Color(0xFF10B981),
+          ),
+        );
+      }
       await _load();
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorParser.parse(error, '', l10n))),
+          SnackBar(
+            content: Text(ErrorParser.parse(error, '', l10n)),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
         );
       }
     } finally {
@@ -146,6 +211,13 @@ class _CommunityClubMatchSessionRosterWidgetState
     final totalSlots = session.maxParticipants < active.length
         ? active.length
         : session.maxParticipants;
+    final currentUserId = session.viewerUserId ?? '';
+
+    final formatBadge = switch (session.registrationMode.toUpperCase()) {
+      'PAIR' => 'Đánh đôi',
+      'SINGLE' => 'Đánh đơn',
+      _ => 'Ghép tự do',
+    };
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -158,58 +230,72 @@ class _CommunityClubMatchSessionRosterWidgetState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 12, 12),
+            padding: const EdgeInsets.fromLTRB(16, 14, 12, 10),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Text(
-                    '${l10n.clubMatchSessionParticipants} · ${active.length}',
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                ),
-                Text(
-                  '${active.length}/$totalSlots',
-                  style: TextStyle(
-                    color: colors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                if (session.canJoin || session.canWithdraw)
-                  FilledButton.tonal(
-                    onPressed: _busy || session.status != 'OPEN'
-                        ? null
-                        : _joinOrWithdraw,
-                    child: Text(
-                      session.canWithdraw
-                          ? l10n.clubMatchSessionWithdraw
-                          : l10n.clubMatchSessionJoin,
+                Row(
+                  children: [
+                    Text(
+                      '${l10n.clubMatchSessionParticipants} · ${active.length}',
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w800,
+                        color: colors.textPrimary,
+                      ),
                     ),
-                  ),
-                OutlinedButton(
-                  onPressed: () => Navigator.of(context).push(
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: const Color(0xFFDBEAFE),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Text(
+                        formatBadge,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF2563EB),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) =>
                           ClubMatchSessionDetailPage(session: session),
                     ),
                   ),
-                  child: Text(l10n.clubMatchSessionTitle),
-                ),
-                if (session.canManage && session.status == 'OPEN')
-                  OutlinedButton.icon(
-                    onPressed: _busy ? null : _createMock,
-                    icon: const Icon(Icons.person_add_alt_rounded, size: 16),
-                    label: Text(l10n.clubMatchSessionCreateMock),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${active.length}/$totalSlots',
+                        style: TextStyle(
+                          color: colors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 16,
+                        color: colors.textMuted,
+                      ),
+                    ],
                   ),
+                ),
               ],
             ),
           ),
@@ -221,72 +307,188 @@ class _CommunityClubMatchSessionRosterWidgetState
               crossAxisCount: 4,
               mainAxisSpacing: 16,
               crossAxisSpacing: 8,
-              childAspectRatio: .72,
+              childAspectRatio: 0.76,
             ),
             itemCount: totalSlots,
             itemBuilder: (context, index) {
               final item = index < active.length ? active[index] : null;
-              final name = item?.displayName.trim().isNotEmpty == true
-                  ? item!.displayName
-                  : '${l10n.clubMatchSessionMockPlayer} ${index + 1}';
-              final canTapEmptySlot =
-                  item == null &&
-                  (session.canJoin || session.canWithdraw) &&
-                  session.status == 'OPEN';
-              return InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: canTapEmptySlot ? _joinOrWithdraw : null,
-                child: Padding(
-                  padding: const EdgeInsets.all(2),
+              final isSelf = item != null &&
+                  currentUserId.isNotEmpty &&
+                  item.userId == currentUserId;
+              final displayName = item?.displayName.trim().isNotEmpty == true
+                  ? item!.displayName.trim()
+                  : (item?.isMock == true
+                      ? '${l10n.clubMatchSessionMockPlayer} ${index + 1}'
+                      : 'VĐV');
+
+              if (item != null) {
+                return GestureDetector(
+                  onTap: isSelf && session.canWithdraw
+                      ? () => _confirmWithdrawDialog(item)
+                      : () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) =>
+                                  ClubMatchSessionDetailPage(session: session),
+                            ),
+                          ),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      CircleAvatar(
-                        radius: 27,
-                        backgroundColor: item == null
-                            ? colors.bgSurface
-                            : item.isMock
-                            ? colors.warning.withValues(alpha: .18)
-                            : colors.info.withValues(alpha: .16),
-                        child: item == null
-                            ? Icon(Icons.add_rounded, color: colors.textMuted)
-                            : Text(
-                                name
-                                    .substring(
-                                      0,
-                                      name.length > 2 ? 2 : name.length,
+                      Stack(
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: _getColorByName(displayName),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSelf
+                                    ? const Color(0xFF3B82F6)
+                                    : Colors.white,
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: ClipOval(
+                              child: item.avatarUrl != null &&
+                                      item.avatarUrl!.isNotEmpty
+                                  ? Image.network(
+                                      item.avatarUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              Center(
+                                        child: Text(
+                                          _getInitials(displayName),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
                                     )
-                                    .toUpperCase(),
-                                style: TextStyle(
-                                  color: item.isMock
-                                      ? colors.warning
-                                      : colors.info,
-                                  fontWeight: FontWeight.w800,
+                                  : Center(
+                                      child: Text(
+                                        _getInitials(displayName),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          if (isSelf)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: Container(
+                                width: 18,
+                                height: 18,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFEF4444),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close_rounded,
+                                  size: 12,
+                                  color: Colors.white,
                                 ),
                               ),
+                            ),
+                        ],
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 5),
                       Text(
-                        item == null ? 'Slot #${index + 1}' : name,
+                        displayName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: item == null
-                              ? colors.textMuted
-                              : colors.textPrimary,
                           fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                          fontWeight:
+                              isSelf ? FontWeight.w800 : FontWeight.w600,
+                          color: isSelf
+                              ? const Color(0xFF2563EB)
+                              : colors.textPrimary,
                         ),
                       ),
-                      if (item?.isMock == true)
+                      if (isSelf)
+                        const Text(
+                          '(Bạn)',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2563EB),
+                          ),
+                        )
+                      else if (item.isMock)
                         Text(
                           l10n.clubMatchSessionMockPlayer,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: colors.warning, fontSize: 9),
+                          style: TextStyle(
+                            color: colors.warning,
+                            fontSize: 9,
+                          ),
                         ),
                     ],
                   ),
+                );
+              }
+
+              // Empty Slot
+              final canTapEmptySlot =
+                  session.canJoin && session.status == 'OPEN';
+              return GestureDetector(
+                onTap: canTapEmptySlot && !_busy ? _handleJoin : null,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFFCBD5E1),
+                          width: 1.5,
+                          strokeAlign: BorderSide.strokeAlignCenter,
+                        ),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.add_rounded,
+                          size: 22,
+                          color: canTapEmptySlot
+                              ? const Color(0xFF3B82F6)
+                              : const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      'Slot #${index + 1}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF94A3B8),
+                      ),
+                    ),
+                  ],
                 ),
               );
             },

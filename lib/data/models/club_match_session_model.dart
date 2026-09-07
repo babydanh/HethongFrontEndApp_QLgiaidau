@@ -126,6 +126,7 @@ class ClubMatchParticipantModel {
   final String id;
   final String userId;
   final String displayName;
+  final String? avatarUrl;
   final String source;
   final String status;
   final bool isMock;
@@ -135,6 +136,7 @@ class ClubMatchParticipantModel {
     required this.id,
     required this.userId,
     required this.displayName,
+    this.avatarUrl,
     required this.source,
     required this.status,
     this.isMock = false,
@@ -147,12 +149,35 @@ class ClubMatchParticipantModel {
       id: participant['id']?.toString() ?? '',
       userId: participant['userId']?.toString() ?? '',
       displayName: json['fullName']?.toString() ?? '',
+      avatarUrl: json['avatarUrl']?.toString(),
       source: participant['source']?.toString() ?? 'SELF',
       status: participant['status']?.toString() ?? 'ACTIVE',
       isMock: json['isMock'] == true || participant['isMock'] == true,
       version: (participant['version'] as num?)?.toInt() ?? 1,
     );
   }
+}
+
+class ClubSessionMatchMemberModel {
+  final String userId;
+  final String displayName;
+  final String? avatarUrl;
+  final bool isMock;
+
+  const ClubSessionMatchMemberModel({
+    required this.userId,
+    required this.displayName,
+    this.avatarUrl,
+    this.isMock = false,
+  });
+
+  factory ClubSessionMatchMemberModel.fromJson(Map<String, dynamic> json) =>
+      ClubSessionMatchMemberModel(
+        userId: json['userId']?.toString() ?? json['id']?.toString() ?? '',
+        displayName: json['fullName']?.toString().trim() ?? '',
+        avatarUrl: json['avatarUrl']?.toString(),
+        isMock: json['isMock'] == true,
+      );
 }
 
 class ClubSessionMatchModel {
@@ -166,6 +191,18 @@ class ClubSessionMatchModel {
   final String eloStatus;
   final Map<String, dynamic> scoreDetails;
   final Map<String, int> eloDelta;
+  final List<ClubSessionMatchMemberModel> sideAMembers;
+  final List<ClubSessionMatchMemberModel> sideBMembers;
+
+  List<String> get sideANames => sideAMembers
+      .map((member) => member.displayName)
+      .where((name) => name.isNotEmpty)
+      .toList();
+
+  List<String> get sideBNames => sideBMembers
+      .map((member) => member.displayName)
+      .where((name) => name.isNotEmpty)
+      .toList();
 
   const ClubSessionMatchModel({
     required this.id,
@@ -178,29 +215,48 @@ class ClubSessionMatchModel {
     required this.eloStatus,
     this.scoreDetails = const {},
     this.eloDelta = const {},
+    this.sideAMembers = const [],
+    this.sideBMembers = const [],
   });
 
-  factory ClubSessionMatchModel.fromJson(Map<String, dynamic> json) =>
-      ClubSessionMatchModel(
-        id: json['id']?.toString() ?? '',
-        status: json['status']?.toString() ?? 'SCHEDULED',
-        sideAUserIds: (json['sideAUserIds'] as List<dynamic>? ?? const [])
-            .map((value) => value.toString())
-            .toList(),
-        sideBUserIds: (json['sideBUserIds'] as List<dynamic>? ?? const [])
-            .map((value) => value.toString())
-            .toList(),
-        sideAScore: (json['p1SetsWon'] as num?)?.toInt() ?? 0,
-        sideBScore: (json['p2SetsWon'] as num?)?.toInt() ?? 0,
-        revision: (json['revision'] as num?)?.toInt() ?? 1,
-        eloStatus: json['eloStatus']?.toString() ?? 'PENDING',
-        scoreDetails: json['scoreDetails'] is Map
-            ? Map<String, dynamic>.from(json['scoreDetails'] as Map)
-            : const {},
-        eloDelta: json['eloDelta'] is Map
-            ? Map<String, dynamic>.from(
-                json['eloDelta'] as Map,
-              ).map((key, value) => MapEntry(key, (value as num).toInt()))
-            : const {},
-      );
+  factory ClubSessionMatchModel.fromJson(Map<String, dynamic> json) {
+    List<ClubSessionMatchMemberModel> parseMembers(dynamic participant) {
+      if (participant is! Map) return const [];
+      final members = participant['members'];
+      if (members is! List) return const [];
+      return members
+          .whereType<Map>()
+          .map(
+            (member) => ClubSessionMatchMemberModel.fromJson(
+              Map<String, dynamic>.from(member),
+            ),
+          )
+          .toList();
+    }
+
+    return ClubSessionMatchModel(
+      id: json['id']?.toString() ?? '',
+      status: json['status']?.toString() ?? 'SCHEDULED',
+      sideAUserIds: (json['sideAUserIds'] as List<dynamic>? ?? const [])
+          .map((value) => value.toString())
+          .toList(),
+      sideBUserIds: (json['sideBUserIds'] as List<dynamic>? ?? const [])
+          .map((value) => value.toString())
+          .toList(),
+      sideAScore: (json['p1SetsWon'] as num?)?.toInt() ?? 0,
+      sideBScore: (json['p2SetsWon'] as num?)?.toInt() ?? 0,
+      revision: (json['revision'] as num?)?.toInt() ?? 1,
+      eloStatus: json['eloStatus']?.toString() ?? 'PENDING',
+      scoreDetails: json['scoreDetails'] is Map
+          ? Map<String, dynamic>.from(json['scoreDetails'] as Map)
+          : const {},
+      eloDelta: json['eloDelta'] is Map
+          ? Map<String, dynamic>.from(
+              json['eloDelta'] as Map,
+            ).map((key, value) => MapEntry(key, (value as num).toInt()))
+          : const {},
+      sideAMembers: parseMembers(json['participant1']),
+      sideBMembers: parseMembers(json['participant2']),
+    );
+  }
 }
