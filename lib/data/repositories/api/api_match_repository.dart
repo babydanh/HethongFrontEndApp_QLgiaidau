@@ -336,7 +336,10 @@ class ApiMatchRepository implements IMatchRepository {
     return controller.stream;
   }
 
-  Future<MatchModel?> _getMatchById(String matchId) async {
+  Future<MatchModel?> _getMatchById(
+    String matchId, {
+    String? tournamentId,
+  }) async {
     Future<MatchModel?> request(String path) async {
       try {
         final response = await _dioClient.dio.get(path);
@@ -353,9 +356,13 @@ class ApiMatchRepository implements IMatchRepository {
       return null;
     }
 
-    // A social-session match has no tournament id. Keep the shared route as
-    // the first path for compatibility, then use the authenticated canonical
-    // session route when the generic match route cannot project it.
+    // A social-session match has no tournament id. Prefer its canonical
+    // session projection so the response keeps clubMatchSessionId and the
+    // session card can be invalidated immediately after a score write.
+    if (tournamentId?.isEmpty == true) {
+      return await request('/club-match-sessions/matches/$matchId') ??
+          await request('/matches/$matchId');
+    }
     return await request('/matches/$matchId') ??
         await request('/club-match-sessions/matches/$matchId');
   }
@@ -771,6 +778,7 @@ class ApiMatchRepository implements IMatchRepository {
         // current match after this bounded initial snapshot.
         final initialMatch = await _getMatchById(
           matchId,
+          tournamentId: tournamentId,
         ).timeout(const Duration(seconds: 8), onTimeout: () => null);
         if (initialMatch != null) {
           latestMatch = initialMatch;
@@ -816,7 +824,10 @@ class ApiMatchRepository implements IMatchRepository {
         reconciliationTimer = Timer.periodic(const Duration(seconds: 12), (
           _,
         ) async {
-          final refreshed = await _getMatchById(matchId);
+          final refreshed = await _getMatchById(
+            matchId,
+            tournamentId: tournamentId,
+          );
           if (refreshed != null && !controller.isClosed) {
             latestMatch = refreshed;
             controller.add(refreshed);

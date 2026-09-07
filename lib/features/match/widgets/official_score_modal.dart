@@ -379,11 +379,8 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                               ),
                             ),
                           ],
-                          Wrap(
-                            alignment: WrapAlignment.spaceBetween,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: 12,
-                            runSpacing: 8,
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               if (state.errorMessage != null)
                                 Padding(
@@ -400,247 +397,277 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                                     ),
                                   ),
                                 ),
-                              // Super Lite also keeps every manually closed
-                              // set. It is not a fixed BO format, so this
-                              // history grows only as sets are closed.
-                              if (historySets.isNotEmpty)
-                                SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: SetHistoryBar(
-                                    finishedSets: historySets,
-                                    team1SetWins: state.team1SetWins,
-                                    team2SetWins: state.team2SetWins,
-                                  ),
-                                ),
-                              // Action Buttons
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 6,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                alignment: WrapAlignment.end,
+                              // Keep the set history beside the actions so a
+                              // long session cannot push the buttons below
+                              // the phone viewport.
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  // Toggle Ngoại lệ
-                                  if (!state.isOpenScoring)
-                                    FilterChip(
-                                      selected: state.overrideEnabled,
-                                      onSelected: (sel) => n.setOverride(
-                                        sel,
-                                        state.overrideReason,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      label: Text(
-                                        state.overrideEnabled
-                                            ? 'Ngoại lệ: BẬT'
-                                            : l10n.matchOverrideLabel,
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: state.overrideEnabled
-                                              ? colors.warning
-                                              : colors.textMuted,
+                                  if (historySets.isNotEmpty)
+                                    Expanded(
+                                      child: SizedBox(
+                                        height: 32,
+                                        child: SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          child: SetHistoryBar(
+                                            finishedSets: historySets,
+                                            team1SetWins: state.team1SetWins,
+                                            team2SetWins: state.team2SetWins,
+                                          ),
                                         ),
                                       ),
-                                      selectedColor: colors.warning.withValues(
-                                        alpha: 0.16,
-                                      ),
-                                      backgroundColor: colors.bgCard,
-                                      visualDensity: VisualDensity.compact,
                                     ),
+                                  if (historySets.isNotEmpty)
+                                    const SizedBox(width: 8),
+                                  // Action Buttons
+                                  Flexible(
+                                    child: SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: Wrap(
+                                        spacing: 8,
+                                        runSpacing: 6,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        alignment: WrapAlignment.end,
+                                        children: [
+                                          // Toggle Ngoại lệ
+                                          if (!state.isOpenScoring)
+                                            FilterChip(
+                                              selected: state.overrideEnabled,
+                                              onSelected: (sel) =>
+                                                  n.setOverride(
+                                                    sel,
+                                                    state.overrideReason,
+                                                  ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              label: Text(
+                                                state.overrideEnabled
+                                                    ? 'Ngoại lệ: BẬT'
+                                                    : l10n.matchOverrideLabel,
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: state.overrideEnabled
+                                                      ? colors.warning
+                                                      : colors.textMuted,
+                                                ),
+                                              ),
+                                              selectedColor: colors.warning
+                                                  .withValues(alpha: 0.16),
+                                              backgroundColor: colors.bgCard,
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                            ),
 
-                                  if (widget.onForceWin != null)
-                                    FilledButton(
-                                      onPressed: widget.onForceWin,
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor: colors.error,
-                                        minimumSize: const Size(0, 36),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 14,
-                                          vertical: 0,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        l10n.matchForceWin,
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  if (showFinishSetButton)
-                                    OutlinedButton(
-                                      onPressed:
-                                          state.isSubmitting ||
-                                              finishSetMessage == null
-                                          ? null
-                                          : () async {
-                                              final confirmed = await showDialog<bool>(
-                                                context: context,
-                                                builder: (dialogContext) => AlertDialog(
-                                                  title: Text(
-                                                    state.isOpenScoring
-                                                        ? l10n.matchFinishSetLiteNumber(
-                                                            n.currentSetNumber,
-                                                          )
-                                                        : l10n.matchFinishSet,
-                                                  ),
-                                                  content: Text(
-                                                    finishSetMessage,
-                                                  ),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () =>
-                                                          Navigator.pop(
-                                                            dialogContext,
-                                                            false,
-                                                          ),
-                                                      child: Text(
-                                                        l10n.officialScoreCancel,
-                                                      ),
+                                          if (widget.onForceWin != null)
+                                            FilledButton(
+                                              onPressed: widget.onForceWin,
+                                              style: FilledButton.styleFrom(
+                                                backgroundColor: colors.error,
+                                                minimumSize: const Size(0, 36),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 14,
+                                                      vertical: 0,
                                                     ),
-                                                    FilledButton(
-                                                      onPressed: () =>
-                                                          Navigator.pop(
-                                                            dialogContext,
-                                                            true,
-                                                          ),
-                                                      child: Text(
-                                                        state.isOpenScoring
-                                                            ? l10n.matchFinishSetLiteNumber(
-                                                                n.currentSetNumber,
-                                                              )
-                                                            : l10n.matchFinishSet,
-                                                      ),
-                                                    ),
-                                                  ],
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
                                                 ),
-                                              );
-                                              if (confirmed == true) {
-                                                await n.finishSet();
-                                              }
-                                            },
-                                      style: OutlinedButton.styleFrom(
-                                        minimumSize: const Size(0, 36),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 14,
-                                          vertical: 0,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        state.isOpenScoring
-                                            ? l10n.matchFinishSetLiteNumber(
-                                                n.currentSetNumber,
-                                              )
-                                            : l10n.matchFinishSet,
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  if ((state.isOpenScoring && canSaveResult) ||
-                                      (!state.isOpenScoring &&
-                                          (state.isMatchComplete ||
-                                              state.overrideEnabled)))
-                                    FilledButton(
-                                      onPressed:
-                                          state.isSubmitting ||
-                                              (state.overrideEnabled &&
-                                                  state.overrideReason
-                                                      .trim()
-                                                      .isEmpty) ||
-                                              !canSaveResult
-                                          ? null
-                                          : () async {
-                                              final winnerTeam = selectedWinner;
-                                              final confirmed = await showDialog<bool>(
-                                                context: context,
-                                                builder: (dialogContext) => AlertDialog(
-                                                  title: Text(
+                                              ),
+                                              child: Text(
+                                                l10n.matchForceWin,
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          if (showFinishSetButton)
+                                            OutlinedButton(
+                                              onPressed:
+                                                  state.isSubmitting ||
+                                                      finishSetMessage == null
+                                                  ? null
+                                                  : () async {
+                                                      final confirmed = await showDialog<bool>(
+                                                        context: context,
+                                                        builder: (dialogContext) => AlertDialog(
+                                                          title: Text(
+                                                            state.isOpenScoring
+                                                                ? l10n.matchFinishSetLiteNumber(
+                                                                    n.currentSetNumber,
+                                                                  )
+                                                                : l10n.matchFinishSet,
+                                                          ),
+                                                          content: Text(
+                                                            finishSetMessage,
+                                                          ),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                    dialogContext,
+                                                                    false,
+                                                                  ),
+                                                              child: Text(
+                                                                l10n.officialScoreCancel,
+                                                              ),
+                                                            ),
+                                                            FilledButton(
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                    dialogContext,
+                                                                    true,
+                                                                  ),
+                                                              child: Text(
+                                                                state.isOpenScoring
+                                                                    ? l10n.matchFinishSetLiteNumber(
+                                                                        n.currentSetNumber,
+                                                                      )
+                                                                    : l10n.matchFinishSet,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                      if (confirmed == true) {
+                                                        await n.finishSet();
+                                                      }
+                                                    },
+                                              style: OutlinedButton.styleFrom(
+                                                minimumSize: const Size(0, 36),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 14,
+                                                      vertical: 0,
+                                                    ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                              ),
+                                              child: Text(
+                                                state.isOpenScoring
+                                                    ? l10n.matchFinishSetLiteNumber(
+                                                        n.currentSetNumber,
+                                                      )
+                                                    : l10n.matchFinishSet,
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          if ((state.isOpenScoring &&
+                                                  canSaveResult) ||
+                                              (!state.isOpenScoring &&
+                                                  (state.isMatchComplete ||
+                                                      state.overrideEnabled)))
+                                            FilledButton(
+                                              onPressed:
+                                                  state.isSubmitting ||
+                                                      (state.overrideEnabled &&
+                                                          state.overrideReason
+                                                              .trim()
+                                                              .isEmpty) ||
+                                                      !canSaveResult
+                                                  ? null
+                                                  : () async {
+                                                      final winnerTeam =
+                                                          selectedWinner;
+                                                      final confirmed = await showDialog<bool>(
+                                                        context: context,
+                                                        builder: (dialogContext) => AlertDialog(
+                                                          title: Text(
+                                                            state.isMatchComplete
+                                                                ? l10n.officialScore_completeTitle
+                                                                : l10n.officialScore_saveTitle,
+                                                          ),
+                                                          content: Text(
+                                                            state.isMatchComplete
+                                                                ? l10n.officialScore_completeContent
+                                                                : l10n.officialScore_saveContent,
+                                                          ),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                    dialogContext,
+                                                                    false,
+                                                                  ),
+                                                              child: Text(
+                                                                l10n.matchCancel,
+                                                              ),
+                                                            ),
+                                                            FilledButton(
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                    dialogContext,
+                                                                    true,
+                                                                  ),
+                                                              child: Text(
+                                                                l10n.matchConfirm,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                      if (confirmed != true)
+                                                        return;
+                                                      await n.completeMatch(
+                                                        winnerTeam,
+                                                      );
+                                                      final latest = ref.read(
+                                                        scorePanelNotifierProvider(
+                                                          params,
+                                                        ),
+                                                      );
+                                                      if (context.mounted &&
+                                                          !latest
+                                                              .isSubmitting &&
+                                                          latest.errorMessage ==
+                                                              null) {
+                                                        Navigator.of(
+                                                          context,
+                                                        ).pop();
+                                                      }
+                                                    },
+                                              style: FilledButton.styleFrom(
+                                                backgroundColor:
                                                     state.isMatchComplete
-                                                        ? l10n.officialScore_completeTitle
-                                                        : l10n.officialScore_saveTitle,
-                                                  ),
-                                                  content: Text(
-                                                    state.isMatchComplete
-                                                        ? l10n.officialScore_completeContent
-                                                        : l10n.officialScore_saveContent,
-                                                  ),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () =>
-                                                          Navigator.pop(
-                                                            dialogContext,
-                                                            false,
-                                                          ),
-                                                      child: Text(
-                                                        l10n.matchCancel,
-                                                      ),
+                                                    ? colors.success
+                                                    : colors.warning,
+                                                minimumSize: const Size(0, 36),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 14,
+                                                      vertical: 0,
                                                     ),
-                                                    FilledButton(
-                                                      onPressed: () =>
-                                                          Navigator.pop(
-                                                            dialogContext,
-                                                            true,
-                                                          ),
-                                                      child: Text(
-                                                        l10n.matchConfirm,
-                                                      ),
-                                                    ),
-                                                  ],
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
                                                 ),
-                                              );
-                                              if (confirmed != true) return;
-                                              await n.completeMatch(winnerTeam);
-                                              final latest = ref.read(
-                                                scorePanelNotifierProvider(
-                                                  params,
+                                              ),
+                                              child: Text(
+                                                state.isSubmitting
+                                                    ? l10n.officialScore_saving
+                                                    : (state.isMatchComplete
+                                                          ? l10n.matchSaveMatch
+                                                          : l10n.matchSaveResult),
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
                                                 ),
-                                              );
-                                              if (context.mounted &&
-                                                  !latest.isSubmitting &&
-                                                  latest.errorMessage == null) {
-                                                Navigator.of(context).pop();
-                                              }
-                                            },
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor: state.isMatchComplete
-                                            ? colors.success
-                                            : colors.warning,
-                                        minimumSize: const Size(0, 36),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 14,
-                                          vertical: 0,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        state.isSubmitting
-                                            ? l10n.officialScore_saving
-                                            : (state.isMatchComplete
-                                                  ? l10n.matchSaveMatch
-                                                  : l10n.matchSaveResult),
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                              ),
+                                            ),
+                                        ],
                                       ),
                                     ),
+                                  ),
                                 ],
                               ),
                             ],

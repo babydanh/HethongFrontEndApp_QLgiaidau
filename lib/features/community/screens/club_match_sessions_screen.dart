@@ -435,6 +435,8 @@ class ClubMatchSessionDetailPage extends ConsumerStatefulWidget {
 
 class _ClubMatchSessionDetailPageState
     extends ConsumerState<ClubMatchSessionDetailPage> {
+  StreamSubscription<Map<String, dynamic>>? _sessionMatchSubscription;
+  Timer? _sessionRefreshTimer;
   int _currentPage = 1;
   static const int _slotsPerPage = 16;
   static const List<Color> _kSlotAvatarColors = [
@@ -468,6 +470,44 @@ class _ClubMatchSessionDetailPageState
   }
 
   ClubMatchSessionModel get session => widget.session;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_connectSessionSocket());
+  }
+
+  Future<void> _connectSessionSocket() async {
+    final socket = ref.read(matchSocketServiceProvider);
+    await socket.connect(null, joinMatch: false);
+    if (!mounted) return;
+
+    // This page can be opened directly from the club feed/detail page, where
+    // the list screen is not alive to own the session room subscription.
+    // Subscribe before joining so the first score event cannot be missed.
+    _sessionMatchSubscription = socket.onTournamentMatchUpdate.listen((event) {
+      final eventSessionId = (event['clubMatchSessionId'] ?? event['sessionId'])
+          ?.toString();
+      if (eventSessionId != session.id) return;
+      _scheduleSessionRefresh();
+    });
+    socket.joinClubMatchSession(session.id);
+  }
+
+  void _scheduleSessionRefresh() {
+    _sessionRefreshTimer?.cancel();
+    _sessionRefreshTimer = Timer(const Duration(milliseconds: 80), () {
+      if (mounted) ref.invalidate(clubSessionDetailProvider(session.id));
+    });
+  }
+
+  @override
+  void dispose() {
+    _sessionMatchSubscription?.cancel();
+    _sessionRefreshTimer?.cancel();
+    ref.read(matchSocketServiceProvider).leaveClubMatchSession(session.id);
+    super.dispose();
+  }
 
   Future<void> _mutation(
     BuildContext context,
@@ -879,7 +919,7 @@ class _ClubMatchSessionDetailPageState
   ) {
     final l10n = AppLocalizations.of(context)!;
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Column(
         children: [
           Material(
@@ -890,6 +930,7 @@ class _ClubMatchSessionDetailPageState
                 Tab(text: l10n.organizer_tabOverview),
                 Tab(text: l10n.clubMatchSessionParticipants),
                 Tab(text: l10n.clubMatchSessionMatches),
+                Tab(text: l10n.club_statsSection),
               ],
             ),
           ),
@@ -899,6 +940,7 @@ class _ClubMatchSessionDetailPageState
                 _buildOverviewTab(context, ref, value),
                 _buildParticipantsTab(context, ref, value),
                 _buildMatchesTab(context, ref, value),
+                _buildStatsTab(context, ref, value),
               ],
             ),
           ),
@@ -2017,6 +2059,135 @@ class _ClubMatchSessionDetailPageState
     );
   }
 
+  Widget _buildStatsTab(
+    BuildContext context,
+    WidgetRef ref,
+    ClubSessionDetail value,
+  ) {
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final stats = _buildClubMemberStats(value);
+    final completedMatches = value.matches
+        .where((match) => match.status.trim().toUpperCase() == 'COMPLETED')
+        .length;
+    final liveMatches = value.matches
+        .where((match) => match.status.trim().toUpperCase() == 'ONGOING')
+        .length;
+    final playedStats = stats.where((stat) => stat.played > 0).toList();
+    final topWins = playedStats.isEmpty
+        ? null
+        : playedStats.reduce((a, b) => b.wins > a.wins ? b : a);
+    final topLosses = playedStats.isEmpty
+        ? null
+        : playedStats.reduce((a, b) => b.losses > a.losses ? b : a);
+
+    return _refreshableTab(
+      context,
+      ref,
+      ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        children: [
+          _SessionSectionTitle(
+            icon: Icons.insights_outlined,
+            title: l10n.club_statsSection,
+            count: stats.length,
+          ),
+          Card(
+            margin: EdgeInsets.zero,
+            elevation: 0,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  _StatsMetric(
+                    value: value.matches.length.toString(),
+                    label: l10n.totalMatchesLabel,
+                    color: colors.info,
+                  ),
+                  _StatsMetric(
+                    value: completedMatches.toString(),
+                    label: l10n.completedMatchesLabel,
+                    color: colors.success,
+                  ),
+                  _StatsMetric(
+                    value: liveMatches.toString(),
+                    label: l10n.liveMatchesLabel,
+                    color: const Color(0xFFDC2626),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (topWins != null || topLosses != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                if (topWins != null)
+                  Expanded(
+                    child: _StatsHighlight(
+                      label: 'Thắng nhiều nhất',
+                      stat: topWins,
+                      icon: Icons.emoji_events_outlined,
+                      color: colors.success,
+                    ),
+                  ),
+                if (topWins != null && topLosses != null)
+                  const SizedBox(width: 10),
+                if (topLosses != null)
+                  Expanded(
+                    child: _StatsHighlight(
+                      label: 'Thua nhiều nhất',
+                      stat: topLosses,
+                      icon: Icons.trending_down_rounded,
+                      color: const Color(0xFFDC2626),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 16),
+          Text(
+            l10n.clubMatchSessionParticipants,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 10),
+          if (stats.isEmpty)
+            Card(
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Center(child: Text(l10n.noParticipants)),
+              ),
+            )
+          else
+            Card(
+              margin: EdgeInsets.zero,
+              elevation: 0,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Column(
+                  children: [
+                    for (var index = 0; index < stats.length; index++) ...[
+                      _ClubMemberStatRow(stat: stats[index]),
+                      if (index < stats.length - 1)
+                        Divider(
+                          height: 1,
+                          indent: 62,
+                          endIndent: 12,
+                          color: colors.border.withValues(alpha: .65),
+                        ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _refreshableTab(BuildContext context, WidgetRef ref, Widget child) =>
       RefreshIndicator(
         onRefresh: () async =>
@@ -2104,6 +2275,316 @@ class _SessionSectionTitle extends StatelessWidget {
       ],
     ),
   );
+}
+
+List<_ClubMemberStat> _buildClubMemberStats(ClubSessionDetail value) {
+  final stats = <String, _ClubMemberStat>{};
+
+  void addMember(ClubSessionMatchMemberModel member) {
+    if (member.userId.trim().isEmpty) return;
+    stats.putIfAbsent(member.userId, () => _ClubMemberStat(member: member));
+  }
+
+  for (final participant in value.participants) {
+    if (participant.status == 'ACTIVE') {
+      addMember(
+        ClubSessionMatchMemberModel(
+          userId: participant.userId,
+          displayName: participant.displayName,
+          avatarUrl: participant.avatarUrl,
+          isMock: participant.isMock,
+        ),
+      );
+    }
+  }
+
+  for (final match in value.matches) {
+    for (final member in [...match.sideAMembers, ...match.sideBMembers]) {
+      addMember(member);
+    }
+    if (match.status.trim().toUpperCase() != 'COMPLETED' ||
+        match.sideAScore == match.sideBScore) {
+      continue;
+    }
+
+    final sideAWon = match.sideAScore > match.sideBScore;
+    final sideAIds = <String>{};
+    for (final member in match.sideAMembers) {
+      if (sideAIds.add(member.userId)) {
+        stats[member.userId]?.record(
+          won: sideAWon,
+          eloDelta: match.eloDelta[member.userId] ?? 0,
+        );
+      }
+    }
+    final sideBIds = <String>{};
+    for (final member in match.sideBMembers) {
+      if (sideBIds.add(member.userId)) {
+        stats[member.userId]?.record(
+          won: !sideAWon,
+          eloDelta: match.eloDelta[member.userId] ?? 0,
+        );
+      }
+    }
+  }
+
+  final result = stats.values.toList();
+  result.sort((a, b) {
+    final byWins = b.wins.compareTo(a.wins);
+    if (byWins != 0) return byWins;
+    final byElo = b.eloDelta.compareTo(a.eloDelta);
+    if (byElo != 0) return byElo;
+    final byPlayed = b.played.compareTo(a.played);
+    if (byPlayed != 0) return byPlayed;
+    return a.member.displayName.toLowerCase().compareTo(
+      b.member.displayName.toLowerCase(),
+    );
+  });
+  return result;
+}
+
+class _ClubMemberStat {
+  final ClubSessionMatchMemberModel member;
+  int played = 0;
+  int wins = 0;
+  int losses = 0;
+  int eloDelta = 0;
+  bool _streakClosed = false;
+  bool? _streakWon;
+  int currentStreak = 0;
+
+  _ClubMemberStat({required this.member});
+
+  void record({required bool won, required int eloDelta}) {
+    played++;
+    if (won) {
+      wins++;
+    } else {
+      losses++;
+    }
+    this.eloDelta += eloDelta;
+
+    // The API returns matches newest-first, so this is the current streak.
+    if (_streakClosed) return;
+    if (_streakWon == null || _streakWon == won) {
+      _streakWon = won;
+      currentStreak++;
+    } else {
+      _streakClosed = true;
+    }
+  }
+}
+
+class _StatsMetric extends StatelessWidget {
+  final String value;
+  final String label;
+  final Color color;
+
+  const _StatsMetric({
+    required this.value,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) => Expanded(
+    child: Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: context.colors.textMuted,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _StatsHighlight extends StatelessWidget {
+  final String label;
+  final _ClubMemberStat stat;
+  final IconData icon;
+  final Color color;
+
+  const _StatsHighlight({
+    required this.label,
+    required this.stat,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.border),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colors.textMuted,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '${stat.member.displayName} · ${stat.wins}/${stat.losses}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ClubMemberStatRow extends StatelessWidget {
+  final _ClubMemberStat stat;
+
+  const _ClubMemberStatRow({required this.stat});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final eloColor = stat.eloDelta > 0
+        ? colors.success
+        : stat.eloDelta < 0
+        ? const Color(0xFFDC2626)
+        : colors.textMuted;
+    final eloText = stat.member.isMock
+        ? '— ELO'
+        : '${stat.eloDelta > 0 ? '+' : ''}${stat.eloDelta} ELO';
+    final streakText = stat.currentStreak >= 2
+        ? '${stat._streakWon == true ? '🔥' : '↘'} ${stat.currentStreak} liên tiếp'
+        : null;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: colors.info.withValues(alpha: .12),
+            backgroundImage: stat.member.avatarUrl?.trim().isNotEmpty == true
+                ? NetworkImage(stat.member.avatarUrl!.trim())
+                : null,
+            child: stat.member.avatarUrl?.trim().isNotEmpty == true
+                ? null
+                : Text(
+                    stat.member.displayName.isEmpty
+                        ? '?'
+                        : stat.member.displayName[0].toUpperCase(),
+                    style: TextStyle(
+                      color: colors.info,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  stat.member.displayName.isEmpty
+                      ? 'VĐV chưa đặt tên'
+                      : stat.member.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '${stat.played} ${l10n.ranking_matchesLabel} · ${l10n.series_recordSummary(stat.wins, stat.losses)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: colors.textMuted, fontSize: 11),
+                ),
+                if (stat.member.isMock)
+                  Text(
+                    l10n.clubMatchSessionMockEloDisabled,
+                    style: TextStyle(
+                      color: colors.textMuted,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                eloText,
+                style: TextStyle(
+                  color: eloColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              if (streakText != null) ...[
+                const SizedBox(height: 3),
+                Text(
+                  streakText,
+                  style: TextStyle(
+                    color: colors.textMuted,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ClubMatchScoreCard extends StatelessWidget {
@@ -2197,12 +2678,19 @@ class _ClubMatchScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final sharedMatch = _asSharedMatch();
     final status = match.status.trim().toUpperCase();
     final delta = match.eloDelta.values.fold<int>(
       0,
       (sum, value) => sum + value.abs(),
+    );
+    final sideADelta = match.sideAMembers.fold<int>(
+      0,
+      (sum, member) => sum + (match.eloDelta[member.userId] ?? 0),
+    );
+    final sideBDelta = match.sideBMembers.fold<int>(
+      0,
+      (sum, member) => sum + (match.eloDelta[member.userId] ?? 0),
     );
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -2212,25 +2700,77 @@ class _ClubMatchScoreCard extends StatelessWidget {
           isLive: status == 'ONGOING',
           isCompleted: status == 'COMPLETED',
           onTap: () => _openScoring(context, sharedMatch),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 4, right: 4, top: 0, bottom: 8),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              '${_localizedEloStatus(l10n, match.eloStatus)}${match.eloStatus == 'APPLIED' && delta > 0 ? ' · ${l10n.clubMatchSessionEloDelta(delta)}' : ''}',
-              style: TextStyle(
-                color: context.colors.textMuted,
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+          footer: _ClubMatchEloFooter(
+            status: match.eloStatus,
+            delta: delta,
+            sideADelta: sideADelta,
+            sideBDelta: sideBDelta,
           ),
         ),
       ],
     );
   }
 }
+
+class _ClubMatchEloFooter extends StatelessWidget {
+  final String status;
+  final int delta;
+  final int sideADelta;
+  final int sideBDelta;
+
+  const _ClubMatchEloFooter({
+    required this.status,
+    required this.delta,
+    required this.sideADelta,
+    required this.sideBDelta,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    final isApplied = status == 'APPLIED' && delta > 0;
+    final sideChanges = isApplied && (sideADelta != 0 || sideBDelta != 0)
+        ? 'A ${_signedElo(sideADelta)} · B ${_signedElo(sideBDelta)} ELO'
+        : null;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+      decoration: BoxDecoration(
+        color: colors.bgSurface.withValues(alpha: .65),
+        border: Border(
+          top: BorderSide(color: colors.border.withValues(alpha: .55)),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.trending_flat_rounded,
+            size: 15,
+            color: isApplied ? colors.success : colors.textMuted,
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              '${_localizedEloStatus(l10n, status)}${sideChanges != null
+                  ? ' · $sideChanges'
+                  : isApplied
+                  ? ' · ${l10n.clubMatchSessionEloDelta(delta)}'
+                  : ''}',
+              style: TextStyle(
+                color: isApplied ? colors.success : colors.textMuted,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _signedElo(int value) => '${value > 0 ? '+' : ''}$value';
 
 class _ClubSessionMatchScoringEntry extends ConsumerWidget {
   final String matchId;

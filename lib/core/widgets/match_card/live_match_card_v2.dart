@@ -13,12 +13,17 @@ class LiveMatchCardV2 extends StatefulWidget {
   final bool isCompleted;
   final VoidCallback? onTap;
 
+  /// Optional content rendered inside the card, below the score details.
+  /// Existing callers are unchanged when this is omitted.
+  final Widget? footer;
+
   const LiveMatchCardV2({
     super.key,
     required this.match,
     this.isLive = false,
     this.isCompleted = false,
     this.onTap,
+    this.footer,
   });
 
   @override
@@ -144,6 +149,8 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                 if (widget.match.scheduledTime != null ||
                     widget.match.refereeName != null)
                   _buildBottomInfo(context),
+
+                if (widget.footer != null) widget.footer!,
               ],
             ),
           ),

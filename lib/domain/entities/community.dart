@@ -54,6 +54,14 @@ class Community {
         ? (rawJson['community'] as Map<String, dynamic>)
         : rawJson;
 
+    String? firstNonBlank(Iterable<dynamic> values) {
+      for (final value in values) {
+        final text = value?.toString().trim() ?? '';
+        if (text.isNotEmpty) return text;
+      }
+      return null;
+    }
+
     // 1. Môn thể thao — backend trả `categories` (List<Category>); fallback `sports`, `communitySports`
     final List<String> parsedSports = [];
     for (final src in [
@@ -151,29 +159,29 @@ class Community {
       id: json['id']?.toString() ?? rawJson['id']?.toString() ?? '',
       name: json['name']?.toString() ?? rawJson['name']?.toString() ?? '',
       description: json['description'] ?? rawJson['description'],
-      logoUrl:
-          json['logoUrl'] ??
-          json['logo_url'] ??
-          json['logo'] ??
-          (json['images'] is Map ? (json['images'] as Map)['logoUrl'] : null) ??
-          rawJson['logoUrl'] ??
-          rawJson['logo_url'],
-      bannerUrl:
-          json['bannerUrl'] ??
-          json['banner_url'] ??
-          json['banner'] ??
-          json['coverUrl'] ??
-          json['cover_url'] ??
-          json['coverImageUrl'] ??
-          json['cover_image_url'] ??
-          (json['images'] is Map
-              ? (json['images'] as Map)['bannerUrl']
-              : null) ??
-          rawJson['bannerUrl'] ??
-          rawJson['banner_url'] ??
-          rawJson['banner'] ??
-          rawJson['coverUrl'] ??
-          rawJson['cover_url'],
+      logoUrl: firstNonBlank([
+        json['logoUrl'],
+        json['logo_url'],
+        json['logo'],
+        json['images'] is Map ? (json['images'] as Map)['logoUrl'] : null,
+        rawJson['logoUrl'],
+        rawJson['logo_url'],
+      ]),
+      bannerUrl: firstNonBlank([
+        json['bannerUrl'],
+        json['banner_url'],
+        json['banner'],
+        json['coverUrl'],
+        json['cover_url'],
+        json['coverImageUrl'],
+        json['cover_image_url'],
+        json['images'] is Map ? (json['images'] as Map)['bannerUrl'] : null,
+        rawJson['bannerUrl'],
+        rawJson['banner_url'],
+        rawJson['banner'],
+        rawJson['coverUrl'],
+        rawJson['cover_url'],
+      ]),
       locationAddress:
           json['locationAddress'] ??
           json['location_address'] ??

@@ -505,17 +505,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              _forceWinMatch(match.team1Id, match.team2Id);
+              await _forceWinMatch(match.team1Id, match.team2Id);
             },
             child: Text(match.team1Name),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              _forceWinMatch(match.team2Id, match.team1Id);
+              await _forceWinMatch(match.team2Id, match.team1Id);
             },
             child: Text(match.team2Name),
           ),
@@ -524,7 +524,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
-  void _forceWinMatch(String winnerId, String loserId) {
+  Future<void> _forceWinMatch(String winnerId, String loserId) async {
     final effectiveId = _effectiveTournamentId();
     final match = ref
         .read(
@@ -543,22 +543,33 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       match,
       ref.read(scorePanelNotifierProvider(scorePanelParams)),
     );
-    ref
-        .read(matchControllerProvider(scorePanelParams))
-        .completeMatchWithDetails(
-          winnerId: winnerId,
-          loserId: loserId,
-          finalSets: [
-            SetScoreData(
-              score1: currentScore.score1,
-              score2: currentScore.score2,
-              isFinished: true,
-            ),
-          ],
-          overrideReason: 'Xử thắng trực tiếp (force win)',
-          expectedRevision: match.revision,
-        );
-    context.pop();
+    try {
+      await ref
+          .read(matchControllerProvider(scorePanelParams))
+          .completeMatchWithDetails(
+            winnerId: winnerId,
+            loserId: loserId,
+            finalSets: [
+              SetScoreData(
+                score1: currentScore.score1,
+                score2: currentScore.score2,
+                isFinished: true,
+              ),
+            ],
+            overrideReason: 'Xử thắng trực tiếp (force win)',
+            expectedRevision: match.revision,
+          );
+      if (mounted) context.pop();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.scorePanel_completeError(error),
+          ),
+        ),
+      );
+    }
   }
 
   @override
