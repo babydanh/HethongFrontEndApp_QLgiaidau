@@ -115,8 +115,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 tournament.isClubLite ||
                 (tournament.communityId != null &&
                     tournament.communityId!.isNotEmpty) ||
-                tournament.visibility == 'PRIVATE' ||
-                tournament.isLite;
+                tournament.visibility == 'PRIVATE';
 
             if (isClubRestricted &&
                 activeInvite == null &&
@@ -394,8 +393,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         tournament.isClubLite ||
         (tournament.communityId != null &&
             tournament.communityId!.isNotEmpty) ||
-        tournament.visibility == 'PRIVATE' ||
-        tournament.isLite;
+        tournament.visibility == 'PRIVATE';
 
     if (isClubRestricted && !isCreator && !isAdmin && !hasInvite) {
       final membership =
