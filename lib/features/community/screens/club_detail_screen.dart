@@ -55,7 +55,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   bool _isJoinLoading = false;
   String _tournamentStatusFilter = 'ALL';
   String _tournamentSportFilter = 'ALL';
-  String _tournamentTypeFilter = 'ALL'; // 'ALL' | 'TOURNAMENT' | 'SESSION'
   bool _isAddingGalleryImage = false;
   String? _activitySearchQuery;
   // Cache future cho card Trạng thái nhanh — tránh gọi lại API mỗi lần rebuild.
@@ -2210,10 +2209,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
   Widget _buildTournamentFilters(
     AppColorsExtension colors,
-    List<String> sports, {
-    int tournamentCount = 0,
-    int sessionCount = 0,
-  }) {
+    List<String> sports,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     final options = <(String, String)>[
       ('ALL', l10n.clubDetailAllStatuses),
@@ -2226,159 +2223,52 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ),
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Type filter pills: Tất cả / Giải đấu / Buổi giao lưu
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: Container(
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              color: colors.bgSurface,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: colors.border),
-            ),
-            child: Row(
-              children: [
-                _buildTypeFilterSegment(
-                  label: l10n.infoAll,
-                  count: tournamentCount + sessionCount,
-                  isSelected: _tournamentTypeFilter == 'ALL',
-                  onTap: () => setState(() => _tournamentTypeFilter = 'ALL'),
-                  colors: colors,
-                ),
-                _buildTypeFilterSegment(
-                  label: l10n.club_tabTournaments,
-                  count: tournamentCount,
-                  isSelected: _tournamentTypeFilter == 'TOURNAMENT',
-                  onTap: () => setState(() => _tournamentTypeFilter = 'TOURNAMENT'),
-                  colors: colors,
-                ),
-                _buildTypeFilterSegment(
-                  label: l10n.clubMatchSessionTitle,
-                  count: sessionCount,
-                  isSelected: _tournamentTypeFilter == 'SESSION',
-                  onTap: () => setState(() => _tournamentTypeFilter = 'SESSION'),
-                  colors: colors,
-                ),
-              ],
-            ),
-          ),
-        ),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Row(
+        children: options.map((option) {
+          final isSportOption = option.$1.startsWith('SPORT_');
+          final isSelected = isSportOption
+              ? _tournamentSportFilter == option.$1.substring(6)
+              : (_tournamentStatusFilter == option.$1 &&
+                    _tournamentSportFilter == 'ALL');
 
-        // Status & Sport chips
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: Row(
-            children: options.map((option) {
-              final isSportOption = option.$1.startsWith('SPORT_');
-              final isSelected = isSportOption
-                  ? _tournamentSportFilter == option.$1.substring(6)
-                  : (_tournamentStatusFilter == option.$1 &&
-                        _tournamentSportFilter == 'ALL');
-
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  label: Text(
-                    option.$2,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  selected: isSelected,
-                  onSelected: (_) {
-                    setState(() {
-                      if (isSportOption) {
-                        final sportKey = option.$1.substring(6);
-                        _tournamentSportFilter =
-                            _tournamentSportFilter == sportKey
-                                ? 'ALL'
-                                : sportKey;
-                      } else {
-                        _tournamentStatusFilter = option.$1;
-                        _tournamentSportFilter = 'ALL';
-                      }
-                    });
-                  },
-                  selectedColor: AppTheme.primary.withValues(alpha: 0.14),
-                  side: BorderSide(
-                    color: isSelected ? AppTheme.primary : colors.border,
-                  ),
-                  labelStyle: TextStyle(
-                    color: isSelected ? AppTheme.primary : colors.textSecondary,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTypeFilterSegment({
-    required String label,
-    required int count,
-    required bool isSelected,
-    required VoidCallback onTap,
-    required AppColorsExtension colors,
-  }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 7),
-          decoration: BoxDecoration(
-            color: isSelected ? colors.bgCard : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(
+                option.$2,
+                style: const TextStyle(
                   fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                  color: isSelected ? AppTheme.primary : colors.textSecondary,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              if (count > 0) ...[
-                const SizedBox(width: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppTheme.primary.withValues(alpha: 0.15)
-                        : colors.border.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '$count',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: isSelected ? AppTheme.primary : colors.textMuted,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
+              selected: isSelected,
+              onSelected: (_) {
+                setState(() {
+                  if (isSportOption) {
+                    final sportKey = option.$1.substring(6);
+                    _tournamentSportFilter =
+                        _tournamentSportFilter == sportKey
+                            ? 'ALL'
+                            : sportKey;
+                  } else {
+                    _tournamentStatusFilter = option.$1;
+                    _tournamentSportFilter = 'ALL';
+                  }
+                });
+              },
+              selectedColor: AppTheme.primary.withValues(alpha: 0.14),
+              side: BorderSide(
+                color: isSelected ? AppTheme.primary : colors.border,
+              ),
+              labelStyle: TextStyle(
+                color: isSelected ? AppTheme.primary : colors.textSecondary,
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -2490,37 +2380,28 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         .toList();
 
     // Filter tournaments
-    final filteredTourneys = _tournamentTypeFilter == 'SESSION'
-        ? <CommunityTournamentModel>[]
-        : tourneys.where((t) {
-            if (!isAdmin && StatusHelper.isTournamentDraft(t.status)) {
-              return false;
-            }
-            if (_tournamentSportFilter != 'ALL' &&
-                t.sport != _tournamentSportFilter) {
-              return false;
-            }
-            return _matchesTournamentStatus(t.status, _tournamentStatusFilter);
-          }).toList();
+    final filteredTourneys = tourneys.where((t) {
+      if (!isAdmin && StatusHelper.isTournamentDraft(t.status)) {
+        return false;
+      }
+      if (_tournamentSportFilter != 'ALL' &&
+          t.sport != _tournamentSportFilter) {
+        return false;
+      }
+      return _matchesTournamentStatus(t.status, _tournamentStatusFilter);
+    }).toList();
 
     // Filter sessions
-    final filteredSessions = _tournamentTypeFilter == 'TOURNAMENT'
-        ? <ClubMatchSessionModel>[]
-        : sessions.where((s) {
-            return _matchesSessionStatus(s.status, _tournamentStatusFilter);
-          }).toList();
+    final filteredSessions = sessions.where((s) {
+      return _matchesSessionStatus(s.status, _tournamentStatusFilter);
+    }).toList();
 
     final totalItems = filteredTourneys.length + filteredSessions.length;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
       children: [
-        _buildTournamentFilters(
-          colors,
-          sports,
-          tournamentCount: tourneys.length,
-          sessionCount: sessions.length,
-        ),
+        _buildTournamentFilters(colors, sports),
         if (totalItems == 0)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 32, 16, 40),
@@ -2542,7 +2423,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 ),
                 TextButton(
                   onPressed: () => setState(() {
-                    _tournamentTypeFilter = 'ALL';
                     _tournamentStatusFilter = 'ALL';
                     _tournamentSportFilter = 'ALL';
                   }),
@@ -2552,9 +2432,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
           )
         else ...[
-          // Hiển thị danh sách Buổi giao lưu trước (nếu có và tab cho phép)
+          // Hiển thị danh sách Buổi giao lưu
           if (filteredSessions.isNotEmpty) ...[
-            if (_tournamentTypeFilter == 'ALL' && filteredTourneys.isNotEmpty) ...[
+            if (filteredTourneys.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.fromLTRB(2, 6, 2, 10),
                 child: Row(
@@ -2619,7 +2499,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
           // Hiển thị danh sách Giải đấu
           if (filteredTourneys.isNotEmpty) ...[
-            if (_tournamentTypeFilter == 'ALL' && filteredSessions.isNotEmpty) ...[
+            if (filteredSessions.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.fromLTRB(2, 14, 2, 10),
                 child: Row(
