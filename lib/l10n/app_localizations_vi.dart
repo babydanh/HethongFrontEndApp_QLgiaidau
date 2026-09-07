@@ -12088,6 +12088,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clubMatchSessionDescription => 'Mô tả';
 
   @override
+  String get clubMatchSessionBasicInfo => 'Thông tin buổi giao lưu';
+
+  @override
   String get clubMatchSessionRegistrationMode => 'Cách tham gia';
 
   @override
@@ -12223,6 +12226,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get clubMatchSessionOptionalDate => 'Không bắt buộc — chạm để chọn';
+
+  @override
+  String get clubMatchSessionSchedule => 'Lịch giao lưu';
+
+  @override
+  String get clubMatchSessionInvalidDateRange =>
+      'Thời gian kết thúc phải sau thời gian bắt đầu';
 
   @override
   String get clubMatchSessionCloseRegistration => 'Đóng đăng ký';

@@ -12127,6 +12127,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubMatchSessionDescription => 'Description';
 
   @override
+  String get clubMatchSessionBasicInfo => 'Session details';
+
+  @override
   String get clubMatchSessionRegistrationMode => 'Participation mode';
 
   @override
@@ -12263,6 +12266,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clubMatchSessionOptionalDate => 'Optional — tap to choose';
+
+  @override
+  String get clubMatchSessionSchedule => 'Session schedule';
+
+  @override
+  String get clubMatchSessionInvalidDateRange =>
+      'The end time must be after the start time';
 
   @override
   String get clubMatchSessionCloseRegistration => 'Close registration';

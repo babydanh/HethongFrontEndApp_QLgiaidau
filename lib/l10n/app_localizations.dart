@@ -22030,6 +22030,12 @@ abstract class AppLocalizations {
   /// **'Mô tả'**
   String get clubMatchSessionDescription;
 
+  /// No description provided for @clubMatchSessionBasicInfo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin buổi giao lưu'**
+  String get clubMatchSessionBasicInfo;
+
   /// No description provided for @clubMatchSessionRegistrationMode.
   ///
   /// In vi, this message translates to:
@@ -22281,6 +22287,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Không bắt buộc — chạm để chọn'**
   String get clubMatchSessionOptionalDate;
+
+  /// No description provided for @clubMatchSessionSchedule.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch giao lưu'**
+  String get clubMatchSessionSchedule;
+
+  /// No description provided for @clubMatchSessionInvalidDateRange.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời gian kết thúc phải sau thời gian bắt đầu'**
+  String get clubMatchSessionInvalidDateRange;
 
   /// No description provided for @clubMatchSessionCloseRegistration.
   ///

@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/community/screens/club_match_session_create_screen.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:dio/dio.dart';
@@ -70,162 +71,17 @@ class _ClubMatchSessionsScreenState
 
   Future<void> _showCreateDialog() async {
     final l10n = AppLocalizations.of(context)!;
-    final nameController = TextEditingController();
-    final descriptionController = TextEditingController();
-    var registrationMode = 'MIXED';
-    var ranked = true;
-    DateTime? startAt;
-    DateTime? endAt;
-    final shouldCreate = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(l10n.clubMatchSessionCreateTitle),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: l10n.clubMatchSessionName,
-                    hintText: l10n.clubMatchSessionNameHint,
-                  ),
-                ),
-                TextField(
-                  controller: descriptionController,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    labelText: l10n.clubMatchSessionDescription,
-                  ),
-                ),
-                DropdownButtonFormField<String>(
-                  initialValue: registrationMode,
-                  decoration: InputDecoration(
-                    labelText: l10n.clubMatchSessionRegistrationMode,
-                  ),
-                  items: [
-                    DropdownMenuItem(
-                      value: 'MIXED',
-                      child: Text(l10n.clubMatchSessionRegistrationMixed),
-                    ),
-                    DropdownMenuItem(
-                      value: 'SELF',
-                      child: Text(l10n.clubMatchSessionRegistrationSelf),
-                    ),
-                    DropdownMenuItem(
-                      value: 'MANAGER_ASSIGN',
-                      child: Text(l10n.clubMatchSessionRegistrationManager),
-                    ),
-                  ],
-                  onChanged: (value) =>
-                      setDialogState(() => registrationMode = value ?? 'MIXED'),
-                ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.clubMatchSessionRanked),
-                  value: ranked,
-                  onChanged: (value) => setDialogState(() => ranked = value),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.clubMatchSessionStartAt),
-                  subtitle: Text(
-                    startAt == null
-                        ? l10n.clubMatchSessionOptionalDate
-                        : MaterialLocalizations.of(
-                            context,
-                          ).formatFullDate(startAt!),
-                  ),
-                  trailing: const Icon(Icons.event_rounded),
-                  onTap: () async {
-                    final value = await _pickDateTime(context, startAt);
-                    if (value != null) setDialogState(() => startAt = value);
-                  },
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.clubMatchSessionEndAt),
-                  subtitle: Text(
-                    endAt == null
-                        ? l10n.clubMatchSessionOptionalDate
-                        : MaterialLocalizations.of(
-                            context,
-                          ).formatFullDate(endAt!),
-                  ),
-                  trailing: const Icon(Icons.event_available_rounded),
-                  onTap: () async {
-                    final value = await _pickDateTime(context, endAt);
-                    if (value != null) setDialogState(() => endAt = value);
-                  },
-                ),
-                Text(
-                  l10n.clubMatchSessionNoBracketHint,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(l10n.clubMatchSessionCreate),
-            ),
-          ],
-        ),
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) =>
+            ClubMatchSessionCreateScreen(communityId: widget.communityId),
       ),
     );
-    if (shouldCreate != true || !mounted) return;
-    try {
-      await ref
-          .read(clubMatchSessionsProvider(widget.communityId).notifier)
-          .create(
-            name: nameController.text,
-            description: descriptionController.text,
-            registrationMode: registrationMode,
-            isRanked: ranked,
-            startAt: startAt,
-            endAt: endAt,
-          );
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.clubMatchSessionCreated)));
-      }
-    } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorParser.parse(error, '', l10n))),
-        );
-      }
-    } finally {
-      nameController.dispose();
-      descriptionController.dispose();
+    if (created == true && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.clubMatchSessionCreated)));
     }
-  }
-
-  Future<DateTime?> _pickDateTime(
-    BuildContext context,
-    DateTime? current,
-  ) async {
-    final now = DateTime.now();
-    final date = await showDatePicker(
-      context: context,
-      initialDate: current ?? now,
-      firstDate: now.subtract(const Duration(days: 1)),
-      lastDate: now.add(const Duration(days: 730)),
-    );
-    if (date == null || !context.mounted) return null;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(current ?? now),
-    );
-    if (time == null) return null;
-    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
   }
 
   Future<void> _openSession(ClubMatchSessionModel session) async {
