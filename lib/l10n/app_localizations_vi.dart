@@ -12130,6 +12130,23 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clubMatchSessionCreateMatch => 'Tạo trận tự do';
 
   @override
+  String get clubMatchSessionPairingHint =>
+      'Chọn người rồi gán vào bên A hoặc bên B. 1–1 là trận đơn, 2–2 là trận đôi.';
+
+  @override
+  String get clubMatchSessionInvalidSides =>
+      'Cần chọn 1 hoặc 2 người ở mỗi bên và chia đều hai bên.';
+
+  @override
+  String get clubMatchSessionSideA => 'Bên A';
+
+  @override
+  String get clubMatchSessionSideB => 'Bên B';
+
+  @override
+  String get clubMatchSessionNoPlayers => 'Chưa chọn';
+
+  @override
   String get clubMatchSessionDoubles => 'Trận đôi';
 
   @override
@@ -12245,7 +12262,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clubMatchSessionParticipantRemoved => 'Đã xóa người tham gia';
 
   @override
-  String get clubMatchSessionStatusOpen => 'Đang mở';
+  String get clubMatchSessionStatusOpen => 'Đang mở đăng ký';
 
   @override
   String get clubMatchSessionStatusLive => 'Đang diễn ra';

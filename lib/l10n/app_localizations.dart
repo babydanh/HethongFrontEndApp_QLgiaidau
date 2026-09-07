@@ -22108,6 +22108,36 @@ abstract class AppLocalizations {
   /// **'Tạo trận tự do'**
   String get clubMatchSessionCreateMatch;
 
+  /// No description provided for @clubMatchSessionPairingHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn người rồi gán vào bên A hoặc bên B. 1–1 là trận đơn, 2–2 là trận đôi.'**
+  String get clubMatchSessionPairingHint;
+
+  /// No description provided for @clubMatchSessionInvalidSides.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần chọn 1 hoặc 2 người ở mỗi bên và chia đều hai bên.'**
+  String get clubMatchSessionInvalidSides;
+
+  /// No description provided for @clubMatchSessionSideA.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bên A'**
+  String get clubMatchSessionSideA;
+
+  /// No description provided for @clubMatchSessionSideB.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bên B'**
+  String get clubMatchSessionSideB;
+
+  /// No description provided for @clubMatchSessionNoPlayers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa chọn'**
+  String get clubMatchSessionNoPlayers;
+
   /// No description provided for @clubMatchSessionDoubles.
   ///
   /// In vi, this message translates to:
@@ -22321,7 +22351,7 @@ abstract class AppLocalizations {
   /// No description provided for @clubMatchSessionStatusOpen.
   ///
   /// In vi, this message translates to:
-  /// **'Đang mở'**
+  /// **'Đang mở đăng ký'**
   String get clubMatchSessionStatusOpen;
 
   /// No description provided for @clubMatchSessionStatusLive.

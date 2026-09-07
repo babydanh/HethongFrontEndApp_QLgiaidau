@@ -166,15 +166,15 @@ class ApiClubMatchSessionRepository {
     String sessionId,
     List<String> sideA,
     List<String> sideB,
-    String matchType,
     String key, {
+    String? matchType,
     bool confirmWarnings = false,
   }) => _client.dio.post(
     '/club-match-sessions/$sessionId/matches',
     data: {
       'sideAUserIds': sideA,
       'sideBUserIds': sideB,
-      'matchType': matchType,
+      ...?matchType == null ? null : {'matchType': matchType},
       'confirmWarnings': confirmWarnings,
     },
     options: _idempotency(key),

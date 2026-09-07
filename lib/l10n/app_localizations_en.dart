@@ -12169,6 +12169,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubMatchSessionCreateMatch => 'Create free-pair match';
 
   @override
+  String get clubMatchSessionPairingHint =>
+      'Choose players and assign them to Side A or Side B. One per side is singles; two per side is doubles.';
+
+  @override
+  String get clubMatchSessionInvalidSides =>
+      'Choose 1 or 2 players on each side with equal side sizes.';
+
+  @override
+  String get clubMatchSessionSideA => 'Side A';
+
+  @override
+  String get clubMatchSessionSideB => 'Side B';
+
+  @override
+  String get clubMatchSessionNoPlayers => 'Not selected';
+
+  @override
   String get clubMatchSessionDoubles => 'Doubles match';
 
   @override
@@ -12284,7 +12301,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubMatchSessionParticipantRemoved => 'Participant removed';
 
   @override
-  String get clubMatchSessionStatusOpen => 'Open';
+  String get clubMatchSessionStatusOpen => 'Registration open';
 
   @override
   String get clubMatchSessionStatusLive => 'Live';

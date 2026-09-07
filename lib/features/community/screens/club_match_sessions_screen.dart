@@ -416,7 +416,6 @@ class ClubMatchSessionDetailPage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final sideA = <String>{};
     final sideB = <String>{};
-    var doubles = false;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -426,16 +425,43 @@ class ClubMatchSessionDetailPage extends ConsumerWidget {
             width: 420,
             child: SingleChildScrollView(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SwitchListTile(
-                    title: Text(l10n.clubMatchSessionDoubles),
-                    value: doubles,
-                    onChanged: (value) => setState(() {
-                      doubles = value;
-                      sideA.clear();
-                      sideB.clear();
-                    }),
+                  Text(
+                    l10n.clubMatchSessionPairingHint,
+                    style: TextStyle(color: context.colors.textSecondary),
                   ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _MatchSideSummary(
+                          label: l10n.clubMatchSessionSideA,
+                          emptyLabel: l10n.clubMatchSessionNoPlayers,
+                          count: sideA.length,
+                          names: participants
+                              .where((item) => sideA.contains(item.userId))
+                              .map((item) => item.displayName)
+                              .toList(),
+                          color: context.colors.info,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _MatchSideSummary(
+                          label: l10n.clubMatchSessionSideB,
+                          emptyLabel: l10n.clubMatchSessionNoPlayers,
+                          count: sideB.length,
+                          names: participants
+                              .where((item) => sideB.contains(item.userId))
+                              .map((item) => item.displayName)
+                              .toList(),
+                          color: context.colors.warning,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   ...participants
                       .where((item) => item.status == 'ACTIVE')
                       .map(
@@ -474,7 +500,11 @@ class ClubMatchSessionDetailPage extends ConsumerWidget {
               child: Text(l10n.commonCancel),
             ),
             FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
+              onPressed: sideA.isNotEmpty &&
+                      sideA.length == sideB.length &&
+                      sideA.length <= 2
+                  ? () => Navigator.pop(dialogContext, true)
+                  : null,
               child: Text(l10n.clubMatchSessionCreateMatch),
             ),
           ],
@@ -482,26 +512,23 @@ class ClubMatchSessionDetailPage extends ConsumerWidget {
       ),
     );
     if (confirmed != true) return;
-    final needed = doubles ? 4 : 2;
-    final sideSize = doubles ? 2 : 1;
-    if (sideA.length != sideSize || sideB.length != sideSize) {
+    if (sideA.isEmpty || sideA.length != sideB.length || sideA.length > 2) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.clubMatchSessionPlayerCount(needed))),
+          SnackBar(content: Text(l10n.clubMatchSessionInvalidSides)),
         );
       }
       return;
     }
     if (!context.mounted) return;
     final repository = ref.read(clubMatchSessionRepositoryProvider);
-    final matchType = doubles ? 'DOUBLES' : 'SINGLES';
+    final requestKey = const Uuid().v4();
     try {
       await repository.createMatch(
         session.id,
         sideA.toList(),
         sideB.toList(),
-        matchType,
-        const Uuid().v4(),
+        requestKey,
       );
     } on DioException catch (error) {
       final body = error.response?.data;
@@ -530,8 +557,7 @@ class ClubMatchSessionDetailPage extends ConsumerWidget {
         session.id,
         sideA.toList(),
         sideB.toList(),
-        matchType,
-        const Uuid().v4(),
+        requestKey,
         confirmWarnings: true,
       );
     }
@@ -1166,6 +1192,54 @@ class _SessionBadge extends StatelessWidget {
     child: Text(
       label,
       style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12),
+    ),
+  );
+}
+
+class _MatchSideSummary extends StatelessWidget {
+  final String label;
+  final String emptyLabel;
+  final int count;
+  final List<String> names;
+  final Color color;
+
+  const _MatchSideSummary({
+    required this.label,
+    required this.emptyLabel,
+    required this.count,
+    required this.names,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(10),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: .08),
+      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      border: Border.all(color: color.withValues(alpha: .28)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: TextStyle(color: color, fontWeight: FontWeight.w800),
+            ),
+            Text('$count/2', style: TextStyle(color: color)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          names.isEmpty ? emptyLabel : names.join(' · '),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
+        ),
+      ],
     ),
   );
 }
