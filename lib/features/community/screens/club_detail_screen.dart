@@ -34,6 +34,10 @@ import 'package:app_quanly_giaidau/features/community/widgets/club_activity_tab.
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_elo_adjust_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart';
+import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
+import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
+import 'package:app_quanly_giaidau/features/community/screens/club_match_sessions_screen.dart';
+import 'package:app_quanly_giaidau/features/community/screens/club_match_session_create_screen.dart';
 
 class ClubDetailScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -51,6 +55,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   bool _isJoinLoading = false;
   String _tournamentStatusFilter = 'ALL';
   String _tournamentSportFilter = 'ALL';
+  String _tournamentTypeFilter = 'ALL'; // 'ALL' | 'TOURNAMENT' | 'SESSION'
   bool _isAddingGalleryImage = false;
   String? _activitySearchQuery;
   // Cache future cho card Trạng thái nhanh — tránh gọi lại API mỗi lần rebuild.
@@ -2189,6 +2194,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     return true;
   }
 
+  bool _matchesSessionStatus(String status, String filter) {
+    if (filter == 'ALL') return true;
+    if (filter == 'UPCOMING') return status == 'OPEN';
+    if (filter == 'ONGOING') return status == 'LIVE';
+    if (filter == 'COMPLETED') return status == 'CLOSED' || status == 'ENDED';
+    return true;
+  }
+
   String _tournamentSportLabel(String sport, AppLocalizations l10n) {
     final key = sport.trim().toLowerCase();
     final localized = l10n.sportDisplayName(key);
@@ -2197,8 +2210,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
   Widget _buildTournamentFilters(
     AppColorsExtension colors,
-    List<String> sports,
-  ) {
+    List<String> sports, {
+    int tournamentCount = 0,
+    int sessionCount = 0,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final options = <(String, String)>[
       ('ALL', l10n.clubDetailAllStatuses),
@@ -2211,51 +2226,159 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ),
     ];
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Row(
-        children: options.map((option) {
-          final isSportOption = option.$1.startsWith('SPORT_');
-          final isSelected = isSportOption
-              ? _tournamentSportFilter == option.$1.substring(6)
-              : (_tournamentStatusFilter == option.$1 &&
-                    _tournamentSportFilter == 'ALL');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Type filter pills: Tất cả / Giải đấu / Buổi giao lưu
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: colors.bgSurface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: colors.border),
+            ),
+            child: Row(
+              children: [
+                _buildTypeFilterSegment(
+                  label: l10n.infoAll,
+                  count: tournamentCount + sessionCount,
+                  isSelected: _tournamentTypeFilter == 'ALL',
+                  onTap: () => setState(() => _tournamentTypeFilter = 'ALL'),
+                  colors: colors,
+                ),
+                _buildTypeFilterSegment(
+                  label: l10n.club_tabTournaments,
+                  count: tournamentCount,
+                  isSelected: _tournamentTypeFilter == 'TOURNAMENT',
+                  onTap: () => setState(() => _tournamentTypeFilter = 'TOURNAMENT'),
+                  colors: colors,
+                ),
+                _buildTypeFilterSegment(
+                  label: l10n.clubMatchSessionTitle,
+                  count: sessionCount,
+                  isSelected: _tournamentTypeFilter == 'SESSION',
+                  onTap: () => setState(() => _tournamentTypeFilter = 'SESSION'),
+                  colors: colors,
+                ),
+              ],
+            ),
+          ),
+        ),
 
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(
-                option.$2,
-                style: const TextStyle(
+        // Status & Sport chips
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Row(
+            children: options.map((option) {
+              final isSportOption = option.$1.startsWith('SPORT_');
+              final isSelected = isSportOption
+                  ? _tournamentSportFilter == option.$1.substring(6)
+                  : (_tournamentStatusFilter == option.$1 &&
+                        _tournamentSportFilter == 'ALL');
+
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(
+                    option.$2,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  selected: isSelected,
+                  onSelected: (_) {
+                    setState(() {
+                      if (isSportOption) {
+                        final sportKey = option.$1.substring(6);
+                        _tournamentSportFilter =
+                            _tournamentSportFilter == sportKey
+                                ? 'ALL'
+                                : sportKey;
+                      } else {
+                        _tournamentStatusFilter = option.$1;
+                        _tournamentSportFilter = 'ALL';
+                      }
+                    });
+                  },
+                  selectedColor: AppTheme.primary.withValues(alpha: 0.14),
+                  side: BorderSide(
+                    color: isSelected ? AppTheme.primary : colors.border,
+                  ),
+                  labelStyle: TextStyle(
+                    color: isSelected ? AppTheme.primary : colors.textSecondary,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTypeFilterSegment({
+    required String label,
+    required int count,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required AppColorsExtension colors,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 7),
+          decoration: BoxDecoration(
+            color: isSelected ? colors.bgCard : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                  color: isSelected ? AppTheme.primary : colors.textSecondary,
                 ),
               ),
-              selected: isSelected,
-              onSelected: (_) {
-                setState(() {
-                  if (isSportOption) {
-                    final sportKey = option.$1.substring(6);
-                    _tournamentSportFilter = _tournamentSportFilter == sportKey
-                        ? 'ALL'
-                        : sportKey;
-                  } else {
-                    _tournamentStatusFilter = option.$1;
-                    _tournamentSportFilter = 'ALL';
-                  }
-                });
-              },
-              selectedColor: AppTheme.primary.withValues(alpha: 0.14),
-              side: BorderSide(
-                color: isSelected ? AppTheme.primary : colors.border,
-              ),
-              labelStyle: TextStyle(
-                color: isSelected ? AppTheme.primary : colors.textSecondary,
-              ),
-            ),
-          );
-        }).toList(),
+              if (count > 0) ...[
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppTheme.primary.withValues(alpha: 0.15)
+                        : colors.border.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '$count',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: isSelected ? AppTheme.primary : colors.textMuted,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -2265,105 +2388,25 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final tourneysAsync = ref.watch(
       communityTournamentsProvider(widget.clubId),
     );
+    final sessionsAsync = ref.watch(
+      clubMatchSessionsProvider(widget.clubId),
+    );
     final isAdmin =
         _myMembership?.role == 'OWNER' ||
         _myMembership?.role == 'ADMIN' ||
         _myMembership?.role == 'MODERATOR';
-    return tourneysAsync.when(
-      data: (tourneys) {
-        if (tourneys.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.emoji_events_outlined,
-                  size: 48,
-                  color: colors.textMuted,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.club_noTournaments,
-                  style: TextStyle(color: colors.textSecondary, fontSize: 14),
-                ),
-                if (isAdmin) ...[
-                  const SizedBox(height: 20),
-                  FilledButton.icon(
-                    onPressed: () => _showCreateTournamentTypeSheet(),
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: Text(l10n.club_createTournament),
-                    style: FilledButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          );
-        }
-        final sports = tourneys
-            .map((t) => t.sport)
-            .where((s) => s.isNotEmpty)
-            .toSet()
-            .toList();
-        final filteredTourneys = tourneys.where((t) {
-          if (!isAdmin && StatusHelper.isTournamentDraft(t.status)) {
-            return false;
-          }
-          if (_tournamentSportFilter != 'ALL' &&
-              t.sport != _tournamentSportFilter) {
-            return false;
-          }
-          return _matchesTournamentStatus(t.status, _tournamentStatusFilter);
-        }).toList();
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-          itemCount:
-              filteredTourneys.length + 1 + (filteredTourneys.isEmpty ? 1 : 0),
-          itemBuilder: (context, i) {
-            if (i == 0) {
-              return _buildTournamentFilters(colors, sports);
-            }
-            if (filteredTourneys.isEmpty) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(16, 32, 16, 40),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.filter_alt_off_rounded,
-                      size: 42,
-                      color: colors.textMuted,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      l10n.clubDetailNoFilteredTournaments,
-                      style: TextStyle(
-                        color: colors.textSecondary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    TextButton(
-                      onPressed: () => setState(() {
-                        _tournamentStatusFilter = 'ALL';
-                        _tournamentSportFilter = 'ALL';
-                      }),
-                      child: Text(l10n.clubDetailClearFilters),
-                    ),
-                  ],
-                ),
-              );
-            }
-            final index = i - 1;
-            return _buildTourneyCard(filteredTourneys[index], club, colors);
-          },
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) {
-        _log.error('Lỗi tải giải đấu của CLB', e, st);
+
+    if (tourneysAsync.isLoading && sessionsAsync.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final tourneys = tourneysAsync.asData?.value ?? const [];
+    final sessions = sessionsAsync.asData?.value ?? const [];
+
+    final hasData = tourneys.isNotEmpty || sessions.isNotEmpty;
+
+    if (!hasData) {
+      if (tourneysAsync.hasError && sessionsAsync.hasError) {
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -2377,7 +2420,507 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ],
           ),
         );
+      }
+
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.sports_tennis_rounded,
+                size: 52,
+                color: colors.textMuted,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.club_noTournaments,
+                style: TextStyle(color: colors.textSecondary, fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                alignment: WrapAlignment.center,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => ClubMatchSessionsScreen(
+                            communityId: widget.clubId,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.groups_rounded, size: 18),
+                    label: Text(l10n.clubMatchSessionTitle),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: colors.border),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  if (isAdmin)
+                    FilledButton.icon(
+                      onPressed: () => _showCreateTournamentTypeSheet(),
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: Text(l10n.club_createTournament),
+                      style: FilledButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final sports = tourneys
+        .map((t) => t.sport)
+        .where((s) => s.isNotEmpty)
+        .toSet()
+        .toList();
+
+    // Filter tournaments
+    final filteredTourneys = _tournamentTypeFilter == 'SESSION'
+        ? <CommunityTournamentModel>[]
+        : tourneys.where((t) {
+            if (!isAdmin && StatusHelper.isTournamentDraft(t.status)) {
+              return false;
+            }
+            if (_tournamentSportFilter != 'ALL' &&
+                t.sport != _tournamentSportFilter) {
+              return false;
+            }
+            return _matchesTournamentStatus(t.status, _tournamentStatusFilter);
+          }).toList();
+
+    // Filter sessions
+    final filteredSessions = _tournamentTypeFilter == 'TOURNAMENT'
+        ? <ClubMatchSessionModel>[]
+        : sessions.where((s) {
+            return _matchesSessionStatus(s.status, _tournamentStatusFilter);
+          }).toList();
+
+    final totalItems = filteredTourneys.length + filteredSessions.length;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+      children: [
+        _buildTournamentFilters(
+          colors,
+          sports,
+          tournamentCount: tourneys.length,
+          sessionCount: sessions.length,
+        ),
+        if (totalItems == 0)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 32, 16, 40),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.filter_alt_off_rounded,
+                  size: 42,
+                  color: colors.textMuted,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  l10n.clubDetailNoFilteredTournaments,
+                  style: TextStyle(
+                    color: colors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                TextButton(
+                  onPressed: () => setState(() {
+                    _tournamentTypeFilter = 'ALL';
+                    _tournamentStatusFilter = 'ALL';
+                    _tournamentSportFilter = 'ALL';
+                  }),
+                  child: Text(l10n.clubDetailClearFilters),
+                ),
+              ],
+            ),
+          )
+        else ...[
+          // Hiển thị danh sách Buổi giao lưu trước (nếu có và tab cho phép)
+          if (filteredSessions.isNotEmpty) ...[
+            if (_tournamentTypeFilter == 'ALL' && filteredTourneys.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(2, 6, 2, 10),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.groups_rounded,
+                      size: 16,
+                      color: Color(0xFF10B981),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      l10n.clubMatchSessionTitle.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF10B981),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => ClubMatchSessionsScreen(
+                              communityId: widget.clubId,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.infoAll,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colors.textMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            size: 14,
+                            color: colors.textMuted,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            ...filteredSessions.map(
+              (session) => _buildSessionCard(session, club, colors),
+            ),
+          ],
+
+          // Hiển thị danh sách Giải đấu
+          if (filteredTourneys.isNotEmpty) ...[
+            if (_tournamentTypeFilter == 'ALL' && filteredSessions.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(2, 14, 2, 10),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.emoji_events_rounded,
+                      size: 16,
+                      color: Color(0xFFF59E0B),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      l10n.club_tabTournaments.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFFF59E0B),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            ...filteredTourneys.map(
+              (tourney) => _buildTourneyCard(tourney, club, colors),
+            ),
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSessionCard(
+    ClubMatchSessionModel session,
+    Community club,
+    AppColorsExtension colors,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final (badgeBg, badgeTextColor, statusDotColor, statusText) = switch (
+        session.status) {
+      'OPEN' => (
+        const Color(0xFF10B981).withValues(alpha: 0.12),
+        const Color(0xFF059669),
+        const Color(0xFF10B981),
+        l10n.clubMatchSessionStatusOpen,
+      ),
+      'LIVE' => (
+        const Color(0xFFEF4444).withValues(alpha: 0.12),
+        const Color(0xFFDC2626),
+        const Color(0xFFEF4444),
+        l10n.clubMatchSessionStatusLive,
+      ),
+      'CLOSED' => (
+        const Color(0xFFF59E0B).withValues(alpha: 0.12),
+        const Color(0xFFD97706),
+        const Color(0xFFF59E0B),
+        l10n.clubMatchSessionStatusClosed,
+      ),
+      'ENDED' => (
+        colors.bgSurface,
+        colors.textMuted,
+        colors.textMuted,
+        l10n.clubMatchSessionStatusEnded,
+      ),
+      'CANCELLED' => (
+        colors.bgSurface,
+        colors.textMuted,
+        colors.textMuted,
+        l10n.clubMatchSessionStatusCancelled,
+      ),
+      _ => (
+        colors.bgSurface,
+        colors.textMuted,
+        colors.textMuted,
+        session.status,
+      ),
+    };
+
+    String dateStr = '';
+    if (session.startAt != null) {
+      final s = session.startAt!;
+      dateStr =
+          '${s.day.toString().padLeft(2, '0')}/${s.month.toString().padLeft(2, '0')}/${s.year} ${s.hour.toString().padLeft(2, '0')}:${s.minute.toString().padLeft(2, '0')}';
+    }
+
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ClubMatchSessionDetailPage(session: session),
+          ),
+        );
       },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.border.withValues(alpha: 0.8)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.sports_tennis_rounded,
+                      color: Color(0xFF059669),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          session.resolvedName,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: colors.textPrimary,
+                            height: 1.25,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: session.isRanked
+                                    ? const Color(0xFF0284C7)
+                                        .withValues(alpha: 0.12)
+                                    : colors.bgSurface,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: session.isRanked
+                                      ? const Color(0xFF0284C7)
+                                          .withValues(alpha: 0.25)
+                                      : colors.border,
+                                ),
+                              ),
+                              child: Text(
+                                session.isRanked
+                                    ? l10n.clubMatchSessionRankedShort
+                                    : l10n.clubMatchSessionUnrankedShort,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: session.isRanked
+                                      ? const Color(0xFF0284C7)
+                                      : colors.textMuted,
+                                ),
+                              ),
+                            ),
+                            if (dateStr.isNotEmpty)
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.schedule_rounded,
+                                    size: 13,
+                                    color: colors.textMuted,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    dateStr,
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      color: colors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: badgeBg,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: statusDotColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          statusText,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: badgeTextColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Divider(height: 1, color: colors.border.withValues(alpha: 0.6)),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.groups_rounded,
+                        size: 15,
+                        color: colors.textSecondary,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        '${session.participantCount ?? 0}/${session.maxParticipants} người tham gia',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                      if (session.matchCount != null &&
+                          session.matchCount! > 0) ...[
+                        const SizedBox(width: 10),
+                        Text('•', style: TextStyle(color: colors.textMuted)),
+                        const SizedBox(width: 10),
+                        Text(
+                          '${session.matchCount} trận',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Vào giao lưu',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF059669),
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 13,
+                        color: Color(0xFF059669),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -3000,6 +3543,98 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                           const SizedBox(height: 4),
                           Text(
                             l10n.club_advancedDesc,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colors.textSecondary,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Option 3: Buổi Giao Lưu CLB
+            InkWell(
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.of(context).push(
+                  MaterialPageRoute<bool>(
+                    builder: (_) => ClubMatchSessionCreateScreen(
+                      communityId: widget.clubId,
+                    ),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.sports_tennis_rounded,
+                        color: Color(0xFF059669),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                l10n.clubMatchSessionTitle,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF10B981),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text(
+                                  'GIAO LƯU',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Ghép trận tự do, không nhánh đấu, có tính ELO CLB hoặc giao lưu vui vẻ',
                             style: TextStyle(
                               fontSize: 12,
                               color: colors.textSecondary,

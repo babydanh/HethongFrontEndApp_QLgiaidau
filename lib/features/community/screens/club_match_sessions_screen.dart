@@ -101,7 +101,7 @@ class _ClubMatchSessionsScreenState
     if (!mounted) return;
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => _ClubMatchSessionDetailPage(session: session),
+        builder: (_) => ClubMatchSessionDetailPage(session: session),
       ),
     );
     socket.leaveClubMatchSession(session.id);
@@ -377,9 +377,9 @@ class _ClubMatchSessionsScreenState
   }
 }
 
-class _ClubMatchSessionDetailPage extends ConsumerWidget {
+class ClubMatchSessionDetailPage extends ConsumerWidget {
   final ClubMatchSessionModel session;
-  const _ClubMatchSessionDetailPage({required this.session});
+  const ClubMatchSessionDetailPage({super.key, required this.session});
 
   Future<void> _mutation(
     BuildContext context,
