@@ -45,157 +45,96 @@ class TennisScorePanel extends ConsumerWidget {
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = !isLandscape && constraints.maxWidth < 620;
-        return Column(
-          children: [
-            if (t.isTiebreak)
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
+    final team1Widget = _buildTeamControl(
+      isTeam1: true,
+      t: t,
+      notifier: notifier,
+      colors: colors,
+      teamName: team1Name,
+      l10n: l10n,
+    );
+
+    final team2Widget = _buildTeamControl(
+      isTeam1: false,
+      t: t,
+      notifier: notifier,
+      colors: colors,
+      teamName: team2Name,
+      l10n: l10n,
+    );
+
+    final tiebreakBanner = t.isTiebreak
+        ? Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFF7A00), Color(0xFFFF4500)],
+              ),
+              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.white,
+                  size: 16,
                 ),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF7A00), Color(0xFFFF4500)],
-                  ),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.warning_amber_rounded,
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    l10n.tennisTiebreakInfo(ts.tiebreakPoints ?? 7),
+                    style: const TextStyle(
                       color: Colors.white,
-                      size: 18,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l10n.tennisTiebreakInfo(ts.tiebreakPoints ?? 7),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.fromLTRB(4, 4, 4, 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colors.bgSurface,
-                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                border: Border.all(color: colors.border),
-              ),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.center,
-                children: [
-                  _infoPill(
-                    l10n.tennisGameLabel,
-                    t.isTiebreak
-                        ? l10n.tennisTiebreakLabel
-                        : l10n.tennisScorePointsGuide,
-                  ),
-                  _infoPill(
-                    l10n.tennisScoreSetLabel,
-                    '${ts.pointsPerSet} game/set',
-                  ),
-                  _infoPill(
-                    l10n.tennisScoreFormatLabel,
-                    l10n.tennisScoreSetsToWin(ts.setsToWin),
-                  ),
-                  if (isDeuce)
-                    _infoPill(l10n.tennisScoreStatusLabel, l10n.tennisDeuce),
-                ],
-              ),
+              ],
             ),
-            Expanded(
-              child: compact
-                  ? Column(
-                      children: [
-                        Expanded(
-                          child: _buildTeamControl(
-                            isTeam1: true,
-                            t: t,
-                            notifier: notifier,
-                            colors: colors,
-                            teamName: team1Name,
-                            compact: compact,
-                            l10n: l10n,
-                          ),
+          )
+        : null;
+
+    final deuceWidget = (isDeuce || t.isTiebreak)
+        ? _buildCenterState(colors, isDeuce, t.isTiebreak, l10n)
+        : null;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      child: Column(
+        children: [
+          ?tiebreakBanner,
+          Expanded(
+            child: isLandscape
+                ? Row(
+                    children: [
+                      Expanded(child: team1Widget),
+                      if (deuceWidget != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: deuceWidget,
                         ),
-                        if (isDeuce || t.isTiebreak)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: _buildCenterState(
-                              colors,
-                              isDeuce,
-                              t.isTiebreak,
-                              l10n,
-                            ),
-                          ),
-                        Expanded(
-                          child: _buildTeamControl(
-                            isTeam1: false,
-                            t: t,
-                            notifier: notifier,
-                            colors: colors,
-                            teamName: team2Name,
-                            compact: compact,
-                            l10n: l10n,
-                          ),
+                      const SizedBox(width: 8),
+                      Expanded(child: team2Widget),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      Expanded(child: team1Widget),
+                      if (deuceWidget != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: deuceWidget,
                         ),
-                      ],
-                    )
-                  : Row(
-                      children: [
-                        Expanded(
-                          child: _buildTeamControl(
-                            isTeam1: true,
-                            t: t,
-                            notifier: notifier,
-                            colors: colors,
-                            teamName: team1Name,
-                            compact: compact,
-                            l10n: l10n,
-                          ),
-                        ),
-                        if (isDeuce || t.isTiebreak)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: _buildCenterState(
-                              colors,
-                              isDeuce,
-                              t.isTiebreak,
-                              l10n,
-                            ),
-                          ),
-                        Expanded(
-                          child: _buildTeamControl(
-                            isTeam1: false,
-                            t: t,
-                            notifier: notifier,
-                            colors: colors,
-                            teamName: team2Name,
-                            compact: compact,
-                            l10n: l10n,
-                          ),
-                        ),
-                      ],
-                    ),
-            ),
-          ],
-        );
-      },
+                      const SizedBox(height: 8),
+                      Expanded(child: team2Widget),
+                    ],
+                  ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -205,7 +144,6 @@ class TennisScorePanel extends ConsumerWidget {
     required ScorePanelNotifier notifier,
     required AppColorsExtension colors,
     required String teamName,
-    required bool compact,
     required AppLocalizations l10n,
   }) {
     final displayPoints = formatTennisPoint(
@@ -217,87 +155,130 @@ class TennisScorePanel extends ConsumerWidget {
     final rawPoints = isTeam1 ? t.team1GamePoints : t.team2GamePoints;
 
     return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: compact ? 0 : 4,
-        vertical: compact ? 4 : 0,
-      ),
-      padding: EdgeInsets.all(compact ? 10 : 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withValues(alpha: 0.14),
-            color.withValues(alpha: 0.06),
-          ],
-        ),
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: color.withValues(alpha: 0.18)),
+        border: Border.all(color: color.withValues(alpha: 0.35), width: 1.8),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            teamName,
-            style: TextStyle(
-              fontSize: compact ? 13 : 14,
-              fontWeight: FontWeight.w700,
-              color: colors.textPrimary,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          SizedBox(height: compact ? 5 : 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              l10n.tennisCurrentPoint(rawPoints),
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: colors.textMuted,
+          // Tên đội / VĐV
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  teamName,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
+                    height: 1.15,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-            ),
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  l10n.tennisCurrentPoint(rawPoints),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: compact ? 7 : 12),
-          Text(
-            displayPoints,
-            style: TextStyle(
-              fontSize: compact ? 48 : 62,
-              fontWeight: FontWeight.w700,
-              color: color,
-              height: 0.95,
-            ),
-          ),
-          SizedBox(height: compact ? 8 : 14),
-          if (!isReadOnly)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+          const SizedBox(height: 6),
+
+          // HÀNG NGANG: [-] | [ĐIỂM SỐ TENNIS] | [+]
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _roundBtn(
-                  Icons.remove_rounded,
-                  () => notifier.tennisRemovePoint(isTeam1),
-                  colors,
-                  size: compact ? 40 : 48,
-                  iconSize: compact ? 20 : 24,
+                // Nút -
+                if (!isReadOnly)
+                  GestureDetector(
+                    onTap: () => notifier.tennisRemovePoint(isTeam1),
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: colors.bgSurface,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: colors.border, width: 1.5),
+                      ),
+                      child: Icon(
+                        Icons.remove_rounded,
+                        size: 26,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  )
+                else
+                  const SizedBox(width: 48),
+
+                // Điểm số Tennis hiển thị to ở giữa
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        displayPoints,
+                        style: TextStyle(
+                          fontSize: 72,
+                          fontWeight: FontWeight.w900,
+                          color: color,
+                          height: 1.0,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
                 ),
-                SizedBox(width: compact ? 10 : 16),
-                _roundBtn(
-                  Icons.add_rounded,
-                  () => notifier.tennisAwardPoint(isTeam1),
-                  colors,
-                  primary: true,
-                  color: color,
-                  size: compact ? 40 : 48,
-                  iconSize: compact ? 20 : 24,
-                ),
+
+                // Nút +
+                if (!isReadOnly)
+                  GestureDetector(
+                    onTap: () => notifier.tennisAwardPoint(isTeam1),
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.16),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: color.withValues(alpha: 0.45),
+                          width: 1.8,
+                        ),
+                      ),
+                      child: Icon(Icons.add_rounded, size: 32, color: color),
+                    ),
+                  )
+                else
+                  const SizedBox(width: 52),
               ],
             ),
+          ),
         ],
       ),
     );
@@ -313,7 +294,7 @@ class TennisScorePanel extends ConsumerWidget {
       return const SizedBox.shrink();
     }
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: isTiebreak
             ? const Color(0xFFFF7A00).withValues(alpha: 0.12)
@@ -330,71 +311,8 @@ class TennisScorePanel extends ConsumerWidget {
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
-          color: isTiebreak
-              ? const Color(0xFFFF7A00)
-              : Colors.amber.shade700,
+          color: isTiebreak ? const Color(0xFFFF7A00) : Colors.amber.shade700,
           letterSpacing: 0.6,
-        ),
-      ),
-    );
-  }
-
-  Widget _infoPill(String label, String value) {
-    return Builder(
-      builder: (context) {
-        final colors = context.colors;
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-          decoration: BoxDecoration(
-            color: colors.bgCard,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: colors.border),
-          ),
-          child: RichText(
-            text: TextSpan(
-              style: TextStyle(fontSize: 11, color: colors.textMuted),
-              children: [
-                TextSpan(text: '$label: '),
-                TextSpan(
-                  text: value,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _roundBtn(
-    IconData icon,
-    VoidCallback onTap,
-    AppColorsExtension colors, {
-    bool primary = false,
-    Color color = AppTheme.primary,
-    double size = 48,
-    double iconSize = 24,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: primary ? color.withValues(alpha: 0.15) : colors.bgSurface,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: primary ? color.withValues(alpha: 0.3) : colors.border,
-          ),
-        ),
-        child: Icon(
-          icon,
-          size: iconSize,
-          color: primary ? color : colors.textSecondary,
         ),
       ),
     );

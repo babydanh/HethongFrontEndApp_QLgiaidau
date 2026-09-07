@@ -11,6 +11,10 @@ import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/community/providers/user_club_rank_provider.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
+import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
+import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
 
 class ClubActivityTab extends ConsumerStatefulWidget {
   final String communityId;
@@ -86,55 +90,136 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     try {
       final dio = ref.read(dioClientProvider).dio;
       // 1. Lấy danh sách giải đấu thuộc CLB
-      final tourRes = await dio.get(
-        '/communities/${widget.communityId}/tournaments',
-      );
-      final rawTours = tourRes.data is Map
-          ? (tourRes.data['data'] ?? tourRes.data)
-          : tourRes.data;
-      final tourList = (rawTours is List ? rawTours : const [])
-          .whereType<Map<String, dynamic>>()
-          .toList();
-
-      if (tourList.isEmpty) {
-        if (mounted) {
-          setState(() {
-            _matches = [];
-            _isLoading = false;
-          });
-        }
-        return;
-      }
-
-      // Lấy 5 giải mới nhất
-      final recentTours = tourList.take(5).toList();
       final List<MatchModel> allMatches = [];
+      try {
+        final tourRes = await dio.get(
+          '/communities/${widget.communityId}/tournaments',
+        );
+        final rawTours = tourRes.data is Map
+            ? (tourRes.data['data'] ?? tourRes.data)
+            : tourRes.data;
+        final tourList = (rawTours is List ? rawTours : const [])
+            .whereType<Map<String, dynamic>>()
+            .toList();
 
-      for (final tour in recentTours) {
-        final tourId = tour['id']?.toString();
-        final tourName = tour['name']?.toString() ?? 'Giải đấu';
-        if (tourId == null) continue;
+        final recentTours = tourList.take(5).toList();
 
-        try {
-          final matchRes = await dio.get(
-            '/matches',
-            queryParameters: {'tournament_id': tourId, 'limit': 50},
-          );
-          final rawMatches = matchRes.data is Map
-              ? (matchRes.data['data'] ?? matchRes.data)
-              : matchRes.data;
-          final matchList = rawMatches is List ? rawMatches : const [];
-          for (final mJson in matchList) {
-            if (mJson is Map<String, dynamic>) {
-              final id = mJson['id']?.toString() ?? '';
-              final match = MatchModel.fromJson(mJson, id);
-              if (isRenderablePublicMatch(match)) {
-                allMatches.add(match.copyWith(tournamentName: tourName));
+        for (final tour in recentTours) {
+          final tourId = tour['id']?.toString();
+          final tourName = tour['name']?.toString() ?? 'Giải đấu';
+          if (tourId == null) continue;
+
+          try {
+            final matchRes = await dio.get(
+              '/matches',
+              queryParameters: {'tournament_id': tourId, 'limit': 50},
+            );
+            final rawMatches = matchRes.data is Map
+                ? (matchRes.data['data'] ?? matchRes.data)
+                : matchRes.data;
+            final matchList = rawMatches is List ? rawMatches : const [];
+            for (final mJson in matchList) {
+              if (mJson is Map<String, dynamic>) {
+                final id = mJson['id']?.toString() ?? '';
+                final match = MatchModel.fromJson(mJson, id);
+                if (isRenderablePublicMatch(match)) {
+                  allMatches.add(match.copyWith(tournamentName: tourName));
+                }
               }
             }
-          }
-        } catch (_) {}
-      }
+          } catch (_) {}
+        }
+      } catch (_) {}
+
+      // 2. Lấy danh sách các trận giao lưu nội bộ của CLB
+      try {
+        final sessionRepo = ref.read(clubMatchSessionRepositoryProvider);
+        final sessions = await sessionRepo.list(widget.communityId);
+        // Lấy 8 buổi giao lưu gần nhất
+        for (final session in sessions.take(8)) {
+          try {
+            final sessionMatches = await sessionRepo.matches(session.id);
+            for (final sm in sessionMatches) {
+              final sideAMembers = sm.sideAMembers
+                  .map(
+                    (m) => MatchMemberInfo(
+                      userId: m.userId,
+                      fullName: m.displayName,
+                      avatarUrl: m.avatarUrl,
+                      isMock: m.isMock,
+                    ),
+                  )
+                  .toList(growable: false);
+              final sideBMembers = sm.sideBMembers
+                  .map(
+                    (m) => MatchMemberInfo(
+                      userId: m.userId,
+                      fullName: m.displayName,
+                      avatarUrl: m.avatarUrl,
+                      isMock: m.isMock,
+                    ),
+                  )
+                  .toList(growable: false);
+              final sideAName = sm.sideANames.join(' · ').trim();
+              final sideBName = sm.sideBNames.join(' · ').trim();
+              final winnerId = switch (sm.status.toUpperCase()) {
+                'COMPLETED' when sm.sideAScore > sm.sideBScore => 'SIDE_A',
+                'COMPLETED' when sm.sideBScore > sm.sideAScore => 'SIDE_B',
+                _ => '',
+              };
+
+              final matchModel = MatchModel(
+                id: sm.id,
+                clubMatchSessionId: sm.sessionId,
+                tournamentName: session.resolvedName.isNotEmpty
+                    ? session.resolvedName
+                    : 'Giao lưu CLB',
+                round: 0,
+                matchNumber: 1,
+                team1Id: 'SIDE_A',
+                team2Id: 'SIDE_B',
+                team1Name: sideAName.isEmpty ? 'Đội A' : sideAName,
+                team2Name: sideBName.isEmpty ? 'Đội B' : sideBName,
+                score1: sm.sideAScore,
+                score2: sm.sideBScore,
+                winnerId: winnerId,
+                loserId: winnerId == 'SIDE_A'
+                    ? 'SIDE_B'
+                    : winnerId == 'SIDE_B'
+                    ? 'SIDE_A'
+                    : '',
+                status: sm.status,
+                bracketPosition: const BracketPosition(round: 1, position: 1),
+                scoreDetails: sm.scoreDetails,
+                team1Members: sideAMembers.map((m) => m.fullName).toList(),
+                team2Members: sideBMembers.map((m) => m.fullName).toList(),
+                team1MemberInfos: sideAMembers,
+                team2MemberInfos: sideBMembers,
+                team1LogoUrl: sideAMembers.length == 1
+                    ? sideAMembers.first.avatarUrl
+                    : null,
+                team2LogoUrl: sideBMembers.length == 1
+                    ? sideBMembers.first.avatarUrl
+                    : null,
+                tournamentConfig: const {
+                  'isLite': true,
+                  'mode': 'LITE',
+                  'scoringMode': 'FREE',
+                },
+                sportRules: {
+                  'kind': sm.sportKey,
+                  'mode': 'LITE',
+                  'scoringMode': 'FREE',
+                },
+                revision: sm.revision,
+                updatedAt: session.startAt ?? DateTime.now(),
+              );
+
+              allMatches.add(matchModel);
+            }
+          } catch (_) {}
+        }
+      } catch (_) {}
 
       // Sắp xếp: Trận đang diễn ra lên đầu, sau đó theo thời gian gần nhất
       allMatches.sort((a, b) {
@@ -696,24 +781,29 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
         ? 'Vòng ${match.round}'
         : 'Trận #${match.matchNumber}';
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.bgCard,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isOngoing ? const Color(0xFF3B82F6) : colors.border,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isOngoing
-                ? const Color(0x1A3B82F6)
-                : Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+        onTap: () => _openMatch(context, match),
+        child: Container(
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isOngoing ? const Color(0xFF3B82F6) : colors.border,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isOngoing
+                    ? const Color(0x1A3B82F6)
+                    : Colors.black.withValues(alpha: 0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
+          child: Column(
         children: [
           // Header Bar: Tournament Name, Round & Status
           Container(
@@ -848,7 +938,40 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
           ),
         ],
       ),
+        ),
+      ),
     );
+  }
+
+  void _openMatch(BuildContext context, MatchModel match) {
+    if (match.clubMatchSessionId != null &&
+        match.clubMatchSessionId!.isNotEmpty) {
+      final repository = ref.read(matchRepositoryProvider);
+      if (repository is ApiMatchRepository) {
+        repository.primeMatch(match);
+      }
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => OfficialScorePage(
+            tournamentId: '',
+            matchId: match.id,
+            match: match,
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (match.tournamentId != null && match.tournamentId!.isNotEmpty) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => LiveScoreScreen(
+            tournamentId: match.tournamentId!,
+            matchId: match.id,
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildTeamRow({

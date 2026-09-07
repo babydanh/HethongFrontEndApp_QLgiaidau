@@ -357,7 +357,10 @@ class MatchController {
   }
 }
 
-final matchControllerProvider = Provider.autoDispose
-    .family<MatchController, MatchControlParams>((ref, arg) {
-      return MatchController(ref, arg.tournamentId, arg.matchId);
-    });
+// Controller methods await network writes and invalidate match providers when
+// they finish. Keep the controller alive for that async operation; reading an
+// autoDispose controller from a notifier would dispose its Ref mid-request.
+final matchControllerProvider =
+    Provider.family<MatchController, MatchControlParams>(
+      (ref, arg) => MatchController(ref, arg.tournamentId, arg.matchId),
+    );

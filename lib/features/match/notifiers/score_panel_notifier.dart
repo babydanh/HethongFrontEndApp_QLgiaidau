@@ -75,6 +75,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   bool _liveSyncPending = false;
   bool _liveSyncInFlight = false;
   int? _lastLocalWriteRevision;
+  bool _isDisposed = false;
 
   ScorePanelNotifier(this.arg);
 
@@ -84,15 +85,16 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   @override
   ScorePanelState build() {
     ref.onDispose(() {
+      _isDisposed = true;
       _liveSyncTimer?.cancel();
       _footballSyncTimer?.cancel();
       if (_pendingFootballSync != null) {
-        unawaited(_flushFootballSync().then<void>((_) {}));
+        // The notifier Ref is already disposing here. The owning match
+        // controller remains alive for explicit writes; do not start a new
+        // Ref-dependent request from onDispose.
+        _pendingFootballSync = null;
       }
-      // Do not lose the last tap when the scoring panel is popped before the
-      // 250ms debounce fires. The request is best-effort and is protected by
-      // expectedRevision on the API.
-      if (_liveSyncPending) unawaited(_syncLiveScore());
+      _liveSyncPending = false;
     });
     final config = _initConfig(ref, arg);
     ref.listen<AsyncValue<MatchModel?>>(singleMatchProvider(arg), (prev, next) {
@@ -1041,24 +1043,27 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       final loserId = winnerTeam == 1
           ? match?.team2Id ?? ''
           : match?.team1Id ?? '';
-      await ref
-          .read(matchControllerProvider(arg))
-          .completeMatchWithDetails(
-            winnerId: winnerId,
-            loserId: loserId,
-            finalSets: finalSets,
-            overrideReason: state.overrideEnabled
-                ? state.overrideReason.trim()
-                : null,
-            expectedRevision: _nextExpectedRevision() ?? match?.revision,
-          );
+      if (_isDisposed) return;
+      final controller = ref.read(matchControllerProvider(arg));
+      await controller.completeMatchWithDetails(
+        winnerId: winnerId,
+        loserId: loserId,
+        finalSets: finalSets,
+        overrideReason: state.overrideEnabled
+            ? state.overrideReason.trim()
+            : null,
+        expectedRevision: _nextExpectedRevision() ?? match?.revision,
+      );
+      if (_isDisposed) return;
       state = state.copyWith(isSubmitting: false, errorMessage: null);
     } catch (e, stack) {
       _log.error('Lỗi kết thúc trận', e, stack);
-      state = state.copyWith(
-        isSubmitting: false,
-        errorMessage: _l10n.scorePanel_completeError(e.toString()),
-      );
+      if (!_isDisposed) {
+        state = state.copyWith(
+          isSubmitting: false,
+          errorMessage: _l10n.scorePanel_completeError(e.toString()),
+        );
+      }
     }
   }
 
@@ -1173,6 +1178,12 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         );
         return;
       }
+      // Keep the next open set locally for Lite/Free scoring. Without an
+      // explicit 0-0 set, the footer has no active set after Set 1 is closed
+      // and the next game can look like it disappeared until a refetch.
+      if (state.isOpenScoring) {
+        newSets = [...newSets, const SetScoreData(score1: 0, score2: 0)];
+      }
       state = state.copyWith(
         finishedSets: newSets,
         tennis: const TennisGameState(),
@@ -1234,6 +1245,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   Future<void> _syncSetsToBackend() async {
     await _flushLiveScoreBeforeSetSync();
+    if (_isDisposed) return;
     _markLocalScorePending();
     final setsToSubmit = _setsForSubmission(includeEmptyLiteActiveSet: true);
     final (p1Sets, p2Sets) = computeMatchSetsWon(setsToSubmit);
@@ -1242,15 +1254,16 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       if (state.isMatchComplete) {
         await completeMatch(state.winnerTeam);
       } else {
-        await ref
-            .read(matchControllerProvider(arg))
-            .updateSetsWithDetails(
-              p1SetsWon: p1Sets,
-              p2SetsWon: p2Sets,
-              scoreDetails: setsToSubmit,
-              expectedRevision: expectedRevision,
-            );
+        if (_isDisposed) return;
+        final controller = ref.read(matchControllerProvider(arg));
+        await controller.updateSetsWithDetails(
+          p1SetsWon: p1Sets,
+          p2SetsWon: p2Sets,
+          scoreDetails: setsToSubmit,
+          expectedRevision: expectedRevision,
+        );
       }
+      if (_isDisposed) return;
       if (expectedRevision != null) {
         _lastLocalWriteRevision = expectedRevision + 1;
       }
@@ -1259,6 +1272,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       // the newly closed set survives leaving/re-entering the live panel.
       ref.invalidate(singleMatchProvider(arg));
     } on Exception catch (e) {
+      if (_isDisposed) return;
       final msg = e.toString();
       if (msg.contains('409') || msg.contains('thay đổi từ thiết bị khác')) {
         _log.warning(
@@ -1323,6 +1337,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       _liveSyncPending = false;
       return;
     }
+    if (_isDisposed) {
+      _liveSyncPending = false;
+      return;
+    }
     final sets = List<SetScoreData>.from(state.finishedSets);
     Map<String, dynamic>? liveState;
     if (rally != null) {
@@ -1352,18 +1370,19 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     _liveSyncPending = false;
     _liveSyncInFlight = true;
     try {
-      await ref
-          .read(matchControllerProvider(arg))
-          .updateSetsWithDetails(
-            p1SetsWon: p1Sets,
-            p2SetsWon: p2Sets,
-            scoreDetails: sets,
-            scoreDetailsExtras: liveState == null
-                ? null
-                : {'liveState': liveState},
-            expectedRevision: expectedRevision,
-            refreshSurfaces: false,
-          );
+      if (_isDisposed) return;
+      final controller = ref.read(matchControllerProvider(arg));
+      await controller.updateSetsWithDetails(
+        p1SetsWon: p1Sets,
+        p2SetsWon: p2Sets,
+        scoreDetails: sets,
+        scoreDetailsExtras: liveState == null
+            ? null
+            : {'liveState': liveState},
+        expectedRevision: expectedRevision,
+        refreshSurfaces: false,
+      );
+      if (_isDisposed) return;
       if (expectedRevision != null) {
         _lastLocalWriteRevision = expectedRevision + 1;
       }
@@ -1375,6 +1394,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       // optimistic local state and a refetch here causes visible jitter and
       // can replay an older score before the socket echo arrives.
     } catch (e, stack) {
+      if (_isDisposed) return;
       final msg = e.toString();
       if (msg.contains('409') || msg.contains('thay đổi từ thiết bị khác')) {
         _log.warning('Conflict 409 in live sync. Refetching latest match...');
@@ -1388,7 +1408,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       state = state.copyWith(errorMessage: _l10n.scorePanel_liveSyncError);
     } finally {
       _liveSyncInFlight = false;
-      if (_liveSyncPending && !state.isMatchComplete) {
+      if (!_isDisposed && _liveSyncPending && !state.isMatchComplete) {
         _liveSyncTimer?.cancel();
         _liveSyncTimer = Timer(
           const Duration(milliseconds: 50),
