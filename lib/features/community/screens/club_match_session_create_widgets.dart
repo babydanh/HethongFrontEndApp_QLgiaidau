@@ -9,11 +9,13 @@ class ClubMatchSessionIntroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final onPrimary = Theme.of(context).colorScheme.onPrimary;
+    final titleColor = context.colors.textPrimary;
+    final bodyColor = context.colors.textSecondary;
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: context.primaryGradient,
+        color: context.colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        border: Border.all(color: context.colors.border),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppTheme.spacingMD),
@@ -24,10 +26,14 @@ class ClubMatchSessionIntroCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: onPrimary.withValues(alpha: 0.18),
+                color: context.colors.info.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
               ),
-              child: Icon(Icons.groups_rounded, color: onPrimary, size: 26),
+              child: Icon(
+                Icons.groups_rounded,
+                color: context.colors.info,
+                size: 26,
+              ),
             ),
             const SizedBox(width: AppTheme.spacingMD),
             Expanded(
@@ -37,7 +43,7 @@ class ClubMatchSessionIntroCard extends StatelessWidget {
                   Text(
                     l10n.clubMatchSessionCreateTitle,
                     style: TextStyle(
-                      color: onPrimary,
+                      color: titleColor,
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                     ),
@@ -46,7 +52,7 @@ class ClubMatchSessionIntroCard extends StatelessWidget {
                   Text(
                     l10n.clubMatchSessionNoBracketHint,
                     style: TextStyle(
-                      color: onPrimary.withValues(alpha: 0.88),
+                      color: bodyColor,
                       fontSize: 12,
                       height: 1.35,
                     ),
@@ -61,86 +67,69 @@ class ClubMatchSessionIntroCard extends StatelessWidget {
   }
 }
 
-class ClubMatchSessionModeCard extends StatelessWidget {
-  final String value;
-  final bool selected;
+class ClubMatchSessionChoice {
   final String label;
-  final IconData icon;
-  final VoidCallback onTap;
+  final int? value;
 
-  const ClubMatchSessionModeCard({
+  const ClubMatchSessionChoice({required this.label, required this.value});
+}
+
+class ClubMatchSessionChoiceRow extends StatelessWidget {
+  final List<ClubMatchSessionChoice> options;
+  final int? selectedValue;
+  final ValueChanged<int?> onSelected;
+
+  const ClubMatchSessionChoiceRow({
     super.key,
-    required this.value,
-    required this.selected,
-    required this.label,
-    required this.icon,
-    required this.onTap,
+    required this.options,
+    required this.selectedValue,
+    required this.onSelected,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.all(AppTheme.spacingSM),
-          decoration: BoxDecoration(
-            color: selected
-                ? context.colors.info.withValues(alpha: 0.10)
-                : context.colors.bgCard,
+    return Wrap(
+      spacing: AppTheme.spacingSM,
+      runSpacing: AppTheme.spacingSM,
+      children: options.map((option) {
+        final selected = option.value == selectedValue;
+        return Semantics(
+          button: true,
+          selected: selected,
+          label: option.label,
+          child: InkWell(
             borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-            border: Border.all(
-              color: selected ? context.colors.info : context.colors.border,
-              width: selected ? 1.5 : 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
+            onTap: () => onSelected(option.value),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacingMD,
+                vertical: AppTheme.spacingSM,
+              ),
+              decoration: BoxDecoration(
+                color: selected
+                    ? context.colors.info.withValues(alpha: 0.10)
+                    : context.colors.bgCard,
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                border: Border.all(
+                  color: selected ? context.colors.info : context.colors.border,
+                  width: selected ? 1.5 : 1,
+                ),
+              ),
+              child: Text(
+                option.label,
+                style: TextStyle(
                   color: selected
                       ? context.colors.info
-                      : context.colors.bgSurface,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                ),
-                child: Icon(
-                  icon,
-                  color: selected
-                      ? Theme.of(context).colorScheme.onPrimary
                       : context.colors.textSecondary,
-                  size: 21,
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                 ),
               ),
-              const SizedBox(width: AppTheme.spacingSM),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: context.colors.textPrimary,
-                    fontSize: 14,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                  ),
-                ),
-              ),
-              Icon(
-                selected
-                    ? Icons.radio_button_checked_rounded
-                    : Icons.radio_button_unchecked_rounded,
-                color: selected
-                    ? context.colors.info
-                    : context.colors.textMuted,
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      }).toList(),
     );
   }
 }
@@ -215,42 +204,6 @@ class ClubMatchSessionDateChoice extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class ClubMatchSessionNoBracketHint extends StatelessWidget {
-  final AppLocalizations l10n;
-
-  const ClubMatchSessionNoBracketHint({super.key, required this.l10n});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spacingSM),
-      padding: const EdgeInsets.all(AppTheme.spacingMD),
-      decoration: BoxDecoration(
-        color: context.colors.info.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        border: Border.all(color: context.colors.info.withValues(alpha: 0.22)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.info_outline_rounded, color: context.colors.info),
-          const SizedBox(width: AppTheme.spacingSM),
-          Expanded(
-            child: Text(
-              l10n.clubMatchSessionNoBracketHint,
-              style: TextStyle(
-                color: context.colors.textSecondary,
-                fontSize: 12,
-                height: 1.35,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

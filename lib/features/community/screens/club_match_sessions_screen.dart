@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_match_session_create_screen.dart';
@@ -582,146 +585,501 @@ class _ClubMatchSessionDetailPage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final detail = ref.watch(clubSessionDetailProvider(session.id));
     return Scaffold(
-      appBar: AppBar(title: Text(session.resolvedName)),
+      appBar: AppBar(
+        title: Text(session.resolvedName),
+        actions: [
+          IconButton(
+            tooltip: l10n.share,
+            onPressed: () => AppShareModal.show(
+              context: context,
+              title: session.resolvedName,
+              subtitle: l10n.clubMatchSessionTitle,
+              webUrl:
+                  '${AppConstants.appDomain}/communities/${session.communityId}/match-sessions/${session.id}',
+            ),
+            icon: const Icon(Icons.share_outlined),
+          ),
+          IconButton(
+            tooltip: l10n.infoRetry,
+            onPressed: () =>
+                ref.invalidate(clubSessionDetailProvider(session.id)),
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      ),
       body: detail.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => Center(child: Text(l10n.clubMatchSessionLoadFailed)),
-        data: (value) => RefreshIndicator(
-          onRefresh: () async =>
-              ref.invalidate(clubSessionDetailProvider(session.id)),
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Text(
-                value.session.description ?? l10n.clubMatchSessionNoDescription,
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                children: [
-                  if (value.session.canJoin)
-                    FilledButton(
-                      onPressed: () => _mutation(
-                        context,
-                        ref,
-                        () => ref
-                            .read(clubMatchSessionRepositoryProvider)
-                            .selfJoin(session.id),
-                        l10n.clubMatchSessionJoined,
-                      ),
-                      child: Text(l10n.clubMatchSessionJoin),
-                    ),
-                  if (value.session.canWithdraw)
-                    OutlinedButton(
-                      onPressed: () => _mutation(
-                        context,
-                        ref,
-                        () => ref
-                            .read(clubMatchSessionRepositoryProvider)
-                            .withdraw(session.id),
-                        l10n.clubMatchSessionWithdrawn,
-                      ),
-                      child: Text(l10n.clubMatchSessionWithdraw),
-                    ),
-                  if (value.session.canCreateMatch)
-                    FilledButton.tonal(
-                      onPressed: () =>
-                          _createMatch(context, ref, value.participants),
-                      child: Text(l10n.clubMatchSessionCreateMatch),
-                    ),
-                  if (value.session.canManage)
-                    OutlinedButton(
-                      onPressed: () => _forceParticipants(context, ref),
-                      child: Text(l10n.clubMatchSessionAssignMembers),
-                    ),
-                  if (value.session.viewerIsActive)
-                    OutlinedButton(
-                      onPressed: () => _editPreferences(
-                        context,
-                        ref,
-                        value.participants,
-                        value.session,
-                      ),
-                      child: Text(l10n.clubMatchSessionPreferences),
-                    ),
-                  if (value.session.canManage &&
-                      (value.session.status == 'OPEN' ||
-                          value.session.status == 'LIVE'))
-                    OutlinedButton(
-                      onPressed: () =>
-                          _transition(context, ref, 'CLOSE', value.session),
-                      child: Text(l10n.clubMatchSessionCloseRegistration),
-                    ),
-                  if (value.session.canManage &&
-                      value.session.status != 'ENDED' &&
-                      value.session.status != 'CANCELLED')
-                    OutlinedButton(
-                      onPressed: () =>
-                          _transition(context, ref, 'END', value.session),
-                      child: Text(l10n.clubMatchSessionEnd),
-                    ),
-                  if (value.session.canManage &&
-                      value.session.status != 'ENDED' &&
-                      value.session.status != 'CANCELLED')
-                    OutlinedButton(
-                      onPressed: () =>
-                          _transition(context, ref, 'CANCEL', value.session),
-                      child: Text(l10n.clubMatchSessionCancel),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Text(
-                l10n.clubMatchSessionParticipants,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              ...value.participants.map(
-                (item) => ListTile(
-                  title: Text(item.displayName),
-                  subtitle: Text(
-                    item.source == 'MANDATORY'
-                        ? l10n.clubMatchSessionMandatorySource
-                        : l10n.clubMatchSessionSelfSource,
-                  ),
-                  trailing: value.session.canManage && item.status == 'ACTIVE'
-                      ? IconButton(
-                          tooltip: l10n.clubMatchSessionRemoveParticipant,
-                          onPressed: () =>
-                              _removeParticipant(context, ref, item),
-                          icon: const Icon(Icons.person_remove_rounded),
-                        )
-                      : null,
-                ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                l10n.clubMatchSessionMatches,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              if (value.matches.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Text(l10n.clubMatchSessionNoMatches),
-                ),
-              ...value.matches.map(
-                (match) => _ClubMatchScoreCard(
-                  match: match,
-                  sessionId: session.id,
-                  canEdit:
-                      value.session.canManage ||
-                      (value.session.viewerUserId != null &&
-                          [
-                            ...match.sideAUserIds,
-                            ...match.sideBUserIds,
-                          ].contains(value.session.viewerUserId)),
-                ),
-              ),
-            ],
+        data: (value) => _buildDetailTabs(context, ref, value),
+      ),
+    );
+  }
+
+  Widget _buildDetailTabs(
+    BuildContext context,
+    WidgetRef ref,
+    ClubSessionDetail value,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    return DefaultTabController(
+      length: 3,
+      child: Column(
+        children: [
+          Material(
+            color: context.colors.bgCard,
+            child: TabBar(
+              isScrollable: true,
+              tabs: [
+                Tab(text: l10n.organizer_tabOverview),
+                Tab(text: l10n.clubMatchSessionParticipants),
+                Tab(text: l10n.clubMatchSessionMatches),
+              ],
+            ),
           ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                _buildOverviewTab(context, ref, value),
+                _buildParticipantsTab(context, ref, value),
+                _buildMatchesTab(context, ref, value),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSessionHeader(
+    BuildContext context,
+    ClubMatchSessionModel currentSession,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 0,
+      color: colors.bgCard,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        side: BorderSide(color: colors.border),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _SessionBadge(
+                  label: _localizedSessionStatus(l10n, currentSession.status),
+                  color: currentSession.status == 'LIVE'
+                      ? colors.success
+                      : colors.info,
+                ),
+                _SessionBadge(
+                  label: currentSession.isRanked
+                      ? l10n.clubMatchSessionRankedShort
+                      : l10n.clubMatchSessionUnrankedShort,
+                  color: currentSession.isRanked
+                      ? colors.warning
+                      : colors.textMuted,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              currentSession.resolvedName,
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              currentSession.description ?? l10n.clubMatchSessionNoDescription,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+
+  Widget _buildOverviewTab(
+    BuildContext context,
+    WidgetRef ref,
+    ClubSessionDetail value,
+  ) {
+    return _refreshableTab(
+      context,
+      ref,
+      ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        children: [
+          _buildSessionHeader(context, value.session),
+          const SizedBox(height: 12),
+          _SessionStats(
+            participantCount: value.participants.length,
+            matchCount: value.matches.length,
+          ),
+          const SizedBox(height: 12),
+          _buildActions(context, ref, value),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActions(
+    BuildContext context,
+    WidgetRef ref,
+    ClubSessionDetail value,
+  ) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        if (value.session.canJoin)
+          FilledButton.icon(
+            icon: const Icon(Icons.how_to_reg_rounded),
+            onPressed: () => _mutation(
+              context,
+              ref,
+              () => ref
+                  .read(clubMatchSessionRepositoryProvider)
+                  .selfJoin(session.id),
+              AppLocalizations.of(context)!.clubMatchSessionJoined,
+            ),
+            label: Text(AppLocalizations.of(context)!.clubMatchSessionJoin),
+          ),
+        if (value.session.canWithdraw)
+          OutlinedButton.icon(
+            icon: const Icon(Icons.logout_rounded),
+            onPressed: () => _mutation(
+              context,
+              ref,
+              () => ref
+                  .read(clubMatchSessionRepositoryProvider)
+                  .withdraw(session.id),
+              AppLocalizations.of(context)!.clubMatchSessionWithdrawn,
+            ),
+            label: Text(AppLocalizations.of(context)!.clubMatchSessionWithdraw),
+          ),
+        if (value.session.canCreateMatch)
+          FilledButton.tonalIcon(
+            icon: const Icon(Icons.add_rounded),
+            onPressed: () => _createMatch(context, ref, value.participants),
+            label: Text(
+              AppLocalizations.of(context)!.clubMatchSessionCreateMatch,
+            ),
+          ),
+        if (value.session.canManage)
+          OutlinedButton.icon(
+            icon: const Icon(Icons.person_add_alt_1_rounded),
+            onPressed: () => _forceParticipants(context, ref),
+            label: Text(
+              AppLocalizations.of(context)!.clubMatchSessionAssignMembers,
+            ),
+          ),
+        if (value.session.viewerIsActive)
+          OutlinedButton.icon(
+            icon: const Icon(Icons.tune_rounded),
+            onPressed: () => _editPreferences(
+              context,
+              ref,
+              value.participants,
+              value.session,
+            ),
+            label: Text(
+              AppLocalizations.of(context)!.clubMatchSessionPreferences,
+            ),
+          ),
+        if (value.session.canManage &&
+            (value.session.status == 'OPEN' || value.session.status == 'LIVE'))
+          OutlinedButton(
+            onPressed: () => _transition(context, ref, 'CLOSE', value.session),
+            child: Text(
+              AppLocalizations.of(context)!.clubMatchSessionCloseRegistration,
+            ),
+          ),
+        if (value.session.canManage &&
+            value.session.status != 'ENDED' &&
+            value.session.status != 'CANCELLED')
+          OutlinedButton(
+            onPressed: () => _transition(context, ref, 'END', value.session),
+            child: Text(AppLocalizations.of(context)!.clubMatchSessionEnd),
+          ),
+        if (value.session.canManage &&
+            value.session.status != 'ENDED' &&
+            value.session.status != 'CANCELLED')
+          OutlinedButton(
+            onPressed: () => _transition(context, ref, 'CANCEL', value.session),
+            child: Text(AppLocalizations.of(context)!.clubMatchSessionCancel),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildParticipantsTab(
+    BuildContext context,
+    WidgetRef ref,
+    ClubSessionDetail value,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    return _refreshableTab(
+      context,
+      ref,
+      ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        children: [
+          _SessionSectionTitle(
+            icon: Icons.people_alt_outlined,
+            title: l10n.clubMatchSessionParticipants,
+            count: value.participants.length,
+          ),
+          Card(
+            margin: EdgeInsets.zero,
+            elevation: 0,
+            child: Column(
+              children: value.participants.isEmpty
+                  ? [
+                      Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Text(l10n.noParticipants),
+                      ),
+                    ]
+                  : value.participants
+                        .map(
+                          (item) => ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: colors.info.withValues(
+                                alpha: .12,
+                              ),
+                              child: Text(
+                                item.displayName.isEmpty
+                                    ? '?'
+                                    : item.displayName[0].toUpperCase(),
+                                style: TextStyle(color: colors.info),
+                              ),
+                            ),
+                            title: Text(item.displayName),
+                            subtitle: Text(
+                              item.source == 'MANDATORY'
+                                  ? l10n.clubMatchSessionMandatorySource
+                                  : l10n.clubMatchSessionSelfSource,
+                            ),
+                            trailing:
+                                value.session.canManage &&
+                                    item.status == 'ACTIVE'
+                                ? IconButton(
+                                    tooltip:
+                                        l10n.clubMatchSessionRemoveParticipant,
+                                    onPressed: () =>
+                                        _removeParticipant(context, ref, item),
+                                    icon: const Icon(
+                                      Icons.person_remove_rounded,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        )
+                        .toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMatchesTab(
+    BuildContext context,
+    WidgetRef ref,
+    ClubSessionDetail value,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    return _refreshableTab(
+      context,
+      ref,
+      ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        children: [
+          _SessionSectionTitle(
+            icon: Icons.sports_tennis_outlined,
+            title: l10n.clubMatchSessionMatches,
+            count: value.matches.length,
+            action: value.session.canCreateMatch
+                ? FilledButton.tonalIcon(
+                    onPressed: () =>
+                        _createMatch(context, ref, value.participants),
+                    icon: const Icon(Icons.add_rounded),
+                    label: Text(l10n.clubMatchSessionCreateMatch),
+                  )
+                : null,
+          ),
+          if (value.matches.isEmpty)
+            Card(
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Center(child: Text(l10n.clubMatchSessionNoMatches)),
+              ),
+            ),
+          ...value.matches.map(
+            (match) => _ClubMatchScoreCard(
+              match: match,
+              sessionId: session.id,
+              canEdit:
+                  value.session.canManage ||
+                  (value.session.viewerUserId != null &&
+                      [
+                        ...match.sideAUserIds,
+                        ...match.sideBUserIds,
+                      ].contains(value.session.viewerUserId)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _refreshableTab(BuildContext context, WidgetRef ref, Widget child) =>
+      RefreshIndicator(
+        onRefresh: () async =>
+            ref.invalidate(clubSessionDetailProvider(session.id)),
+        child: child,
+      );
+}
+
+class _SessionBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _SessionBadge({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: .12),
+      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12),
+    ),
+  );
+}
+
+class _SessionStats extends StatelessWidget {
+  final int participantCount;
+  final int matchCount;
+
+  const _SessionStats({
+    required this.participantCount,
+    required this.matchCount,
+  });
+
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.zero,
+    elevation: 0,
+    color: context.colors.bgSurface,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      side: BorderSide(color: context.colors.border),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          _SessionStat(
+            icon: Icons.people_alt_outlined,
+            label: AppLocalizations.of(context)!.clubMatchSessionParticipants,
+            value: '$participantCount',
+          ),
+          _SessionStat(
+            icon: Icons.sports_tennis_outlined,
+            label: AppLocalizations.of(context)!.clubMatchSessionMatches,
+            value: '$matchCount',
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _SessionStat extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  const _SessionStat({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 140,
+    child: Row(
+      children: [
+        Icon(icon, size: 20, color: context.colors.info),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
+              Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: context.colors.textMuted, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _SessionSectionTitle extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final int count;
+  final Widget? action;
+  const _SessionSectionTitle({
+    required this.icon,
+    required this.title,
+    required this.count,
+    this.action,
+  });
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Row(
+      children: [
+        Icon(icon, color: context.colors.info),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            '$title ($count)',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+        ),
+        ...?(action == null ? null : <Widget>[action!]),
+      ],
+    ),
+  );
 }
 
 class _ClubMatchScoreCard extends ConsumerStatefulWidget {

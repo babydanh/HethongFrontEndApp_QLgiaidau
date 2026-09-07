@@ -12091,19 +12091,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clubMatchSessionBasicInfo => 'Thông tin buổi giao lưu';
 
   @override
-  String get clubMatchSessionRegistrationMode => 'Cách tham gia';
-
-  @override
-  String get clubMatchSessionRegistrationMixed =>
-      'Tự đăng ký hoặc BQT chỉ định';
-
-  @override
-  String get clubMatchSessionRegistrationSelf => 'Thành viên tự đăng ký';
-
-  @override
-  String get clubMatchSessionRegistrationManager => 'BQT chỉ định';
-
-  @override
   String get clubMatchSessionRanked => 'Tính ELO cho các trận hợp lệ';
 
   @override
@@ -12331,4 +12318,41 @@ class AppLocalizationsVi extends AppLocalizations {
   String clubMatchSessionEloDelta(int value) {
     return 'Biến động $value ELO';
   }
+
+  @override
+  String get clubMatchSessionDuration => 'Thời lượng';
+
+  @override
+  String get clubMatchSessionDurationOneHour => '1 giờ';
+
+  @override
+  String get clubMatchSessionDurationNinetyMinutes => '1 giờ 30 phút';
+
+  @override
+  String get clubMatchSessionDurationCustom => 'Tự nhập';
+
+  @override
+  String get clubMatchSessionDurationCustomLabel => 'Số phút';
+
+  @override
+  String get clubMatchSessionDurationCustomHint => 'Ví dụ: 120';
+
+  @override
+  String get clubMatchSessionDurationInvalid => 'Nhập từ 30 đến 720 phút';
+
+  @override
+  String get clubMatchSessionMaxParticipants => 'Số người tối đa';
+
+  @override
+  String get clubMatchSessionMaxParticipantsCustom => 'Tự nhập';
+
+  @override
+  String get clubMatchSessionMaxParticipantsCustomLabel => 'Số người';
+
+  @override
+  String get clubMatchSessionMaxParticipantsCustomHint => 'Mặc định 16 người';
+
+  @override
+  String get clubMatchSessionMaxParticipantsInvalid =>
+      'Nhập từ 2 đến 128 người';
 }

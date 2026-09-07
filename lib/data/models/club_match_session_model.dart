@@ -6,6 +6,7 @@ class ClubMatchSessionModel {
   final String status;
   final String registrationMode;
   final bool isRanked;
+  final int maxParticipants;
   final int version;
   final bool canManage;
   final bool canJoin;
@@ -25,6 +26,7 @@ class ClubMatchSessionModel {
     required this.status,
     required this.registrationMode,
     required this.isRanked,
+    this.maxParticipants = 16,
     required this.version,
     required this.canManage,
     this.canJoin = false,
@@ -50,6 +52,7 @@ class ClubMatchSessionModel {
     status: json['status']?.toString() ?? 'OPEN',
     registrationMode: json['registrationMode']?.toString() ?? 'MIXED',
     isRanked: json['isRanked'] != false,
+    maxParticipants: (json['maxParticipants'] as num?)?.toInt() ?? 16,
     version: (json['version'] as num?)?.toInt() ?? 1,
     canManage: (json['capabilities'] as Map?)?['canManage'] == true,
     canJoin: (json['capabilities'] as Map?)?['canJoin'] == true,

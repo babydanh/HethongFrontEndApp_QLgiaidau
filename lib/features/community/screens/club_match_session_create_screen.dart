@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/features/community/screens/club_match_session
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ClubMatchSessionCreateScreen extends ConsumerStatefulWidget {
@@ -27,27 +28,28 @@ class _ClubMatchSessionCreateScreenState
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  String _registrationMode = 'MIXED';
   bool _isRanked = true;
   DateTime? _startAt;
-  DateTime? _endAt;
+  int _durationMinutes = 60;
+  int _maxParticipants = 16;
+  bool _isCustomDuration = false;
+  bool _isCustomParticipants = false;
+  final _customDurationController = TextEditingController();
+  final _customParticipantsController = TextEditingController();
   bool _isSubmitting = false;
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    _customDurationController.dispose();
+    _customParticipantsController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
-    if (_startAt != null && _endAt != null && _endAt!.isBefore(_startAt!)) {
-      _showError(l10n.clubMatchSessionInvalidDateRange);
-      return;
-    }
-
     setState(() => _isSubmitting = true);
     try {
       await ref
@@ -55,10 +57,11 @@ class _ClubMatchSessionCreateScreenState
           .create(
             name: _nameController.text.trim(),
             description: _descriptionController.text.trim(),
-            registrationMode: _registrationMode,
+            registrationMode: 'MIXED',
             isRanked: _isRanked,
             startAt: _startAt,
-            endAt: _endAt,
+            endAt: _startAt?.add(Duration(minutes: _durationMinutes)),
+            maxParticipants: _maxParticipants,
           );
       if (mounted) Navigator.of(context).pop(true);
     } catch (error, stackTrace) {
@@ -75,9 +78,9 @@ class _ClubMatchSessionCreateScreenState
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _selectDateTime({required bool isStart}) async {
+  Future<void> _selectDateTime() async {
     final now = DateTime.now();
-    final current = isStart ? _startAt : _endAt;
+    final current = _startAt;
     final date = await showDatePicker(
       context: context,
       initialDate: current ?? now,
@@ -100,12 +103,7 @@ class _ClubMatchSessionCreateScreenState
       time.minute,
     );
     setState(() {
-      if (isStart) {
-        _startAt = value;
-        if (_endAt != null && _endAt!.isBefore(value)) _endAt = null;
-      } else {
-        _endAt = value;
-      }
+      _startAt = value;
     });
   }
 
@@ -156,10 +154,6 @@ class _ClubMatchSessionCreateScreenState
                       child: _buildBasicInfo(l10n),
                     ),
                     FormSection(
-                      title: l10n.clubMatchSessionRegistrationMode,
-                      child: _buildRegistrationModes(l10n),
-                    ),
-                    FormSection(
                       title: l10n.clubMatchSessionRanked,
                       child: _buildRankedSection(l10n),
                     ),
@@ -167,7 +161,14 @@ class _ClubMatchSessionCreateScreenState
                       title: l10n.clubMatchSessionSchedule,
                       child: _buildScheduleSection(l10n),
                     ),
-                    ClubMatchSessionNoBracketHint(l10n: l10n),
+                    FormSection(
+                      title: l10n.clubMatchSessionDuration,
+                      child: _buildDurationSection(l10n),
+                    ),
+                    FormSection(
+                      title: l10n.clubMatchSessionMaxParticipants,
+                      child: _buildParticipantsSection(l10n),
+                    ),
                   ],
                 ),
               ),
@@ -206,36 +207,6 @@ class _ClubMatchSessionCreateScreenState
     );
   }
 
-  Widget _buildRegistrationModes(AppLocalizations l10n) {
-    return Column(
-      children: [
-        ClubMatchSessionModeCard(
-          value: 'MIXED',
-          selected: _registrationMode == 'MIXED',
-          label: l10n.clubMatchSessionRegistrationMixed,
-          icon: Icons.groups_rounded,
-          onTap: () => setState(() => _registrationMode = 'MIXED'),
-        ),
-        const SizedBox(height: AppTheme.spacingSM),
-        ClubMatchSessionModeCard(
-          value: 'SELF',
-          selected: _registrationMode == 'SELF',
-          label: l10n.clubMatchSessionRegistrationSelf,
-          icon: Icons.person_add_alt_1_rounded,
-          onTap: () => setState(() => _registrationMode = 'SELF'),
-        ),
-        const SizedBox(height: AppTheme.spacingSM),
-        ClubMatchSessionModeCard(
-          value: 'MANAGER_ASSIGN',
-          selected: _registrationMode == 'MANAGER_ASSIGN',
-          label: l10n.clubMatchSessionRegistrationManager,
-          icon: Icons.admin_panel_settings_rounded,
-          onTap: () => setState(() => _registrationMode = 'MANAGER_ASSIGN'),
-        ),
-      ],
-    );
-  }
-
   Widget _buildRankedSection(AppLocalizations l10n) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,24 +232,128 @@ class _ClubMatchSessionCreateScreenState
   }
 
   Widget _buildScheduleSection(AppLocalizations l10n) {
+    return ClubMatchSessionDateChoice(
+      label: l10n.clubMatchSessionStartAt,
+      valueLabel: _dateTimeLabel(context, _startAt),
+      hasValue: _startAt != null,
+      icon: Icons.event_rounded,
+      onTap: _selectDateTime,
+    );
+  }
+
+  Widget _buildDurationSection(AppLocalizations l10n) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ClubMatchSessionDateChoice(
-          label: l10n.clubMatchSessionStartAt,
-          valueLabel: _dateTimeLabel(context, _startAt),
-          hasValue: _startAt != null,
-          icon: Icons.event_rounded,
-          onTap: () => _selectDateTime(isStart: true),
+        ClubMatchSessionChoiceRow(
+          options: [
+            ClubMatchSessionChoice(
+              label: l10n.clubMatchSessionDurationOneHour,
+              value: 60,
+            ),
+            ClubMatchSessionChoice(
+              label: l10n.clubMatchSessionDurationNinetyMinutes,
+              value: 90,
+            ),
+            ClubMatchSessionChoice(
+              label: l10n.clubMatchSessionDurationCustom,
+              value: null,
+            ),
+          ],
+          selectedValue: _isCustomDuration ? null : _durationMinutes,
+          onSelected: (value) {
+            setState(() {
+              _isCustomDuration = value == null;
+              _durationMinutes = value ?? _durationMinutes;
+              if (value != null) _customDurationController.clear();
+            });
+          },
         ),
-        const SizedBox(height: AppTheme.spacingSM),
-        ClubMatchSessionDateChoice(
-          label: l10n.clubMatchSessionEndAt,
-          valueLabel: _dateTimeLabel(context, _endAt),
-          hasValue: _endAt != null,
-          icon: Icons.event_available_rounded,
-          onTap: () => _selectDateTime(isStart: false),
-        ),
+        if (_isCustomDuration)
+          Padding(
+            padding: const EdgeInsets.only(top: AppTheme.spacingSM),
+            child: AppTextFormField(
+              controller: _customDurationController,
+              label: l10n.clubMatchSessionDurationCustomLabel,
+              hint: l10n.clubMatchSessionDurationCustomHint,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              validator: (value) => _validatePositiveNumber(
+                value,
+                l10n.clubMatchSessionDurationInvalid,
+                minimum: 30,
+                maximum: 720,
+              ),
+              onChanged: (value) {
+                final parsed = int.tryParse(value);
+                if (parsed != null) _durationMinutes = parsed;
+                setState(() {});
+              },
+            ),
+          ),
       ],
     );
+  }
+
+  Widget _buildParticipantsSection(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClubMatchSessionChoiceRow(
+          options: [
+            ClubMatchSessionChoice(label: '8', value: 8),
+            ClubMatchSessionChoice(label: '16', value: 16),
+            ClubMatchSessionChoice(label: '32', value: 32),
+            ClubMatchSessionChoice(label: '64', value: 64),
+            ClubMatchSessionChoice(
+              label: l10n.clubMatchSessionMaxParticipantsCustom,
+              value: null,
+            ),
+          ],
+          selectedValue: _isCustomParticipants ? null : _maxParticipants,
+          onSelected: (value) {
+            setState(() {
+              _isCustomParticipants = value == null;
+              _maxParticipants = value ?? _maxParticipants;
+              if (value != null) _customParticipantsController.clear();
+            });
+          },
+        ),
+        if (_isCustomParticipants)
+          Padding(
+            padding: const EdgeInsets.only(top: AppTheme.spacingSM),
+            child: AppTextFormField(
+              controller: _customParticipantsController,
+              label: l10n.clubMatchSessionMaxParticipantsCustomLabel,
+              hint: l10n.clubMatchSessionMaxParticipantsCustomHint,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              validator: (value) => _validatePositiveNumber(
+                value,
+                l10n.clubMatchSessionMaxParticipantsInvalid,
+                minimum: 2,
+                maximum: 128,
+              ),
+              onChanged: (value) {
+                final parsed = int.tryParse(value);
+                if (parsed != null) _maxParticipants = parsed;
+                setState(() {});
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  String? _validatePositiveNumber(
+    String? value,
+    String error, {
+    required int minimum,
+    required int maximum,
+  }) {
+    final parsed = int.tryParse(value ?? '');
+    return parsed == null || parsed < minimum || parsed > maximum
+        ? error
+        : null;
   }
 }

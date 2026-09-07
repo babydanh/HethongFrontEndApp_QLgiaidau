@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
+import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/features/chat/read_receipt_state.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_poll_dialog.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_room_settings_sheet.dart';
@@ -18,6 +19,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.da
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -566,11 +568,51 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     final text = (customContent ?? _messageController.text).trim();
     if (text.isEmpty && _pendingMedia.isEmpty && pollData == null) return;
     if (_isSending) return;
+    final media = [..._pendingMedia];
+
+    final aiMatch = RegExp(
+      r'(^|\s)@AISportO\b',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (aiMatch != null && media.isEmpty && pollData == null) {
+      final question = text
+          .replaceFirst(RegExp(r'(^|\s)@AISportO\b', caseSensitive: false), ' ')
+          .trim();
+      if (question.isEmpty) return;
+      setState(() => _isSending = true);
+      _messageController.clear();
+      try {
+        final dio = ref.read(dioClientProvider).dio;
+        final res = await dio.post(
+          '/ai/message',
+          data: {'message': question, 'isMobile': true},
+        );
+        final raw = res.data is Map ? res.data : <String, dynamic>{};
+        final reply =
+            (raw['reply'] ?? raw['data'] ?? raw['content'])?.toString() ??
+            'AISportO chưa có phản hồi.';
+        final aiMessage = ChatMessageModel(
+          id: 'ai-${DateTime.now().microsecondsSinceEpoch}',
+          roomId: widget.roomId,
+          senderId: 'ai-sporto',
+          senderName: 'AISportO',
+          content: reply,
+          createdAt: DateTime.now(),
+        );
+        if (mounted) setState(() => _messages.insert(0, aiMessage));
+      } catch (e) {
+        if (mounted)
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Không thể kết nối AISportO')));
+      } finally {
+        if (mounted) setState(() => _isSending = false);
+      }
+      return;
+    }
 
     setState(() => _isSending = true);
     final replyId = _replyingTo?.id;
-    final media = [..._pendingMedia];
-
     _messageController.clear();
     setState(() {
       _replyingTo = null;
@@ -633,6 +675,32 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
   void _sendThumbsUp() {
     _sendMessage(customContent: '👍');
+  }
+
+  void _openMemberProfile(String userId) {
+    if (userId.isEmpty) return;
+    final communityQuery = widget.communityId == null
+        ? ''
+        : '?communityId=${Uri.encodeComponent(widget.communityId!)}';
+    context.push('/user/$userId$communityQuery');
+  }
+
+  bool get _isTypingMention {
+    final value = _messageController.text;
+    return RegExp(r'(?:^|\s)@[A-Za-z0-9_]*$').hasMatch(value);
+  }
+
+  void _insertAssistantMention() {
+    final value = _messageController.text;
+    final match = RegExp(r'(?:^|\s)@[A-Za-z0-9_]*$').firstMatch(value);
+    if (match == null) return;
+    final prefix = value.substring(0, match.start);
+    _messageController.value = TextEditingValue(
+      text: '${prefix}@AISportO ',
+      selection: TextSelection.collapsed(offset: '${prefix}@AISportO '.length),
+    );
+    setState(() {});
+    _focusNode.requestFocus();
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -1425,6 +1493,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                         .toList(growable: false) ??
                                     const <String>[],
                                 tagPresets: tagPresets,
+                                memberDirectory: memberDirectory,
                               ),
                               if (msg.isMine)
                                 Align(
@@ -1629,101 +1698,160 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             ),
             child: SafeArea(
               top: false,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Attachment Icon Button
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(
-                      Icons.image_outlined,
-                      color: AppTheme.primary,
-                      size: 22,
-                    ),
-                    tooltip: l10n!.chatDetailSendImage,
-                    onPressed: () => _pickImage(ImageSource.gallery),
-                  ),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(
-                      Icons.camera_alt_outlined,
-                      color: AppTheme.primary,
-                      size: 22,
-                    ),
-                    tooltip: l10n!.chatDetailTakePhoto,
-                    onPressed: () => _pickImage(ImageSource.camera),
-                  ),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(
-                      Icons.poll_outlined,
-                      color: AppTheme.primary,
-                      size: 22,
-                    ),
-                    tooltip: l10n!.chatDetailPollTooltip,
-                    onPressed: _isSending ? null : _openCreatePollDialog,
-                  ),
-
-                  // Pill TextField
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? const Color(0xFF3A3B3C)
-                            : const Color(0xFFF0F2F5),
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      child: TextField(
-                        controller: _messageController,
-                        focusNode: _focusNode,
-                        minLines: 1,
-                        maxLines: 5,
-                        style: const TextStyle(fontSize: 14.5),
-                        onChanged: (v) => setState(() {}),
-                        decoration: InputDecoration(
-                          hintText: l10n!.chatDetailMessageHint,
-                          hintStyle: TextStyle(
-                            color: colors.textMuted,
-                            fontSize: 14.5,
-                          ),
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: const EdgeInsets.fromLTRB(
-                            14,
-                            10,
-                            14,
-                            10,
+                  if (_isTypingMention)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 52, bottom: 6),
+                        child: Material(
+                          color: colors.bgCard,
+                          elevation: 6,
+                          borderRadius: BorderRadius.circular(12),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: _insertAssistantMention,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 9,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const CircleAvatar(
+                                    radius: 13,
+                                    backgroundColor: Color(0xFFEDE9FE),
+                                    child: Icon(
+                                      Icons.auto_awesome,
+                                      size: 15,
+                                      color: Color(0xFF7C3AED),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'AISportO',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      color: colors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    'Trợ lý AI',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: colors.textMuted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Attachment Icon Button
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(
+                          Icons.image_outlined,
+                          color: AppTheme.primary,
+                          size: 22,
+                        ),
+                        tooltip: l10n!.chatDetailSendImage,
+                        onPressed: () => _pickImage(ImageSource.gallery),
+                      ),
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(
+                          Icons.camera_alt_outlined,
+                          color: AppTheme.primary,
+                          size: 22,
+                        ),
+                        tooltip: l10n!.chatDetailTakePhoto,
+                        onPressed: () => _pickImage(ImageSource.camera),
+                      ),
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(
+                          Icons.poll_outlined,
+                          color: AppTheme.primary,
+                          size: 22,
+                        ),
+                        tooltip: l10n!.chatDetailPollTooltip,
+                        onPressed: _isSending ? null : _openCreatePollDialog,
+                      ),
 
-                  // Send or Thumbs-up Button
-                  if (_messageController.text.trim().isNotEmpty ||
-                      _pendingMedia.isNotEmpty)
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      icon: Icon(
-                        Icons.send_rounded,
-                        color: _isSending ? colors.textMuted : AppTheme.primary,
-                        size: 22,
+                      // Pill TextField
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(0xFF3A3B3C)
+                                : const Color(0xFFF0F2F5),
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          child: TextField(
+                            controller: _messageController,
+                            focusNode: _focusNode,
+                            minLines: 1,
+                            maxLines: 5,
+                            style: const TextStyle(fontSize: 14.5),
+                            onChanged: (v) => setState(() {}),
+                            decoration: InputDecoration(
+                              hintText: l10n!.chatDetailMessageHint,
+                              hintStyle: TextStyle(
+                                color: colors.textMuted,
+                                fontSize: 14.5,
+                              ),
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: const EdgeInsets.fromLTRB(
+                                14,
+                                10,
+                                14,
+                                10,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                      tooltip: l10n!.chatDetailSend,
-                      onPressed: _isSending ? null : () => _sendMessage(),
-                    )
-                  else
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      icon: const Icon(
-                        Icons.thumb_up_rounded,
-                        color: AppTheme.primary,
-                        size: 22,
-                      ),
-                      tooltip: l10n!.chatDetailLike,
-                      onPressed: _sendThumbsUp,
-                    ),
+                      const SizedBox(width: 6),
+
+                      // Send or Thumbs-up Button
+                      if (_messageController.text.trim().isNotEmpty ||
+                          _pendingMedia.isNotEmpty)
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          icon: Icon(
+                            Icons.send_rounded,
+                            color: _isSending
+                                ? colors.textMuted
+                                : AppTheme.primary,
+                            size: 22,
+                          ),
+                          tooltip: l10n!.chatDetailSend,
+                          onPressed: _isSending ? null : () => _sendMessage(),
+                        )
+                      else
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(
+                            Icons.thumb_up_rounded,
+                            color: AppTheme.primary,
+                            size: 22,
+                          ),
+                          tooltip: l10n!.chatDetailLike,
+                          onPressed: _sendThumbsUp,
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -1741,6 +1869,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     required bool isLastInGroup,
     required List<String> senderTags,
     List<CommunityTagPreset>? tagPresets,
+    Map<String, CommunityMemberModel>? memberDirectory,
   }) {
     final l10n = AppLocalizations.of(context)!;
     final isMine = msg.isMine;
@@ -1790,25 +1919,29 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           // Other's Avatar (only on last message of group)
           if (!isMine) ...[
             if (isLastInGroup)
-              CircleAvatar(
-                radius: 14,
-                backgroundColor: AppTheme.primaryLight,
-                backgroundImage:
-                    msg.senderAvatarUrl != null &&
-                        msg.senderAvatarUrl!.isNotEmpty
-                    ? NetworkImage(_resolveMediaUrl(msg.senderAvatarUrl!))
-                    : null,
-                child:
-                    msg.senderAvatarUrl == null || msg.senderAvatarUrl!.isEmpty
-                    ? Text(
-                        msg.senderName.characters.first.toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryDark,
-                        ),
-                      )
-                    : null,
+              GestureDetector(
+                onTap: () => _openMemberProfile(msg.senderId),
+                child: CircleAvatar(
+                  radius: 14,
+                  backgroundColor: AppTheme.primaryLight,
+                  backgroundImage:
+                      msg.senderAvatarUrl != null &&
+                          msg.senderAvatarUrl!.isNotEmpty
+                      ? NetworkImage(_resolveMediaUrl(msg.senderAvatarUrl!))
+                      : null,
+                  child:
+                      msg.senderAvatarUrl == null ||
+                          msg.senderAvatarUrl!.isEmpty
+                      ? Text(
+                          msg.senderName.characters.first.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryDark,
+                          ),
+                        )
+                      : null,
+                ),
               )
             else
               const SizedBox(width: 28),
@@ -1836,12 +1969,15 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         runSpacing: 3,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Text(
-                            msg.senderName,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textMuted,
+                          GestureDetector(
+                            onTap: () => _openMemberProfile(msg.senderId),
+                            child: Text(
+                              msg.senderName,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textMuted,
+                              ),
                             ),
                           ),
                           ...senderTags.map(
@@ -2095,20 +2231,13 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
                               // Text Content
                               if (textContent.isNotEmpty)
-                                Text(
+                                _buildMentionText(
                                   textContent,
-                                  style: TextStyle(
-                                    fontSize: 14.5,
-                                    height: 1.35,
-                                    fontStyle: msg.isRevoked
-                                        ? FontStyle.italic
-                                        : FontStyle.normal,
-                                    color: msg.isRevoked
-                                        ? (isMine
-                                              ? Colors.white70
-                                              : colors.textMuted)
-                                        : textColor,
-                                  ),
+                                  msg,
+                                  isMine,
+                                  textColor,
+                                  colors,
+                                  memberDirectory,
                                 ),
 
                               // Message Time
@@ -2225,6 +2354,60 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         }
         return _buildLinkPreviewCard(preview, colors, isMine);
       },
+    );
+  }
+
+  Widget _buildMentionText(
+    String content,
+    ChatMessageModel message,
+    bool isMine,
+    Color textColor,
+    AppColorsExtension colors,
+    Map<String, CommunityMemberModel>? directory,
+  ) {
+    final baseStyle = TextStyle(
+      fontSize: 14.5,
+      height: 1.35,
+      fontStyle: message.isRevoked ? FontStyle.italic : FontStyle.normal,
+      color: message.isRevoked
+          ? (isMine ? Colors.white70 : colors.textMuted)
+          : textColor,
+    );
+    if (directory == null || directory.isEmpty || message.isRevoked) {
+      return Text(content, style: baseStyle);
+    }
+    final byName = <String, String>{
+      for (final entry in directory.entries)
+        if ((entry.value.userFullName ?? '').trim().isNotEmpty)
+          entry.value.userFullName!.trim().toLowerCase(): entry.key,
+    };
+    final mentionPattern = RegExp(r'@[A-Za-zÀ-ỹĐđ0-9_.-]+');
+    final spans = <TextSpan>[];
+    var cursor = 0;
+    for (final match in mentionPattern.allMatches(content)) {
+      if (match.start > cursor)
+        spans.add(TextSpan(text: content.substring(cursor, match.start)));
+      final token = match.group(0)!;
+      final userId = byName[token.substring(1).toLowerCase()];
+      spans.add(
+        TextSpan(
+          text: token,
+          style: baseStyle.copyWith(
+            fontWeight: FontWeight.w700,
+            color: isMine ? Colors.white : AppTheme.primary,
+          ),
+          recognizer: userId == null
+              ? null
+              : (TapGestureRecognizer()
+                  ..onTap = () => _openMemberProfile(userId)),
+        ),
+      );
+      cursor = match.end;
+    }
+    if (cursor < content.length)
+      spans.add(TextSpan(text: content.substring(cursor)));
+    return RichText(
+      text: TextSpan(style: baseStyle, children: spans),
     );
   }
 

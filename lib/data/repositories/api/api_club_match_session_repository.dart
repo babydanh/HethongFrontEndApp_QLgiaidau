@@ -63,6 +63,7 @@ class ApiClubMatchSessionRepository {
     String? description,
     required String registrationMode,
     required bool isRanked,
+    int maxParticipants = 16,
     DateTime? startAt,
     DateTime? endAt,
   }) async {
@@ -75,6 +76,7 @@ class ApiClubMatchSessionRepository {
           'description': description!.trim(),
         'registrationMode': registrationMode,
         'isRanked': isRanked,
+        'maxParticipants': maxParticipants,
         if (startAt != null) 'startAt': startAt.toIso8601String(),
         if (endAt != null) 'endAt': endAt.toIso8601String(),
       },

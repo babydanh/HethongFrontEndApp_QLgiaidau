@@ -29,6 +29,7 @@ class ClubMatchSessionsNotifier
     String? description,
     required String registrationMode,
     required bool isRanked,
+    int maxParticipants = 16,
     DateTime? startAt,
     DateTime? endAt,
   }) async {
@@ -40,6 +41,7 @@ class ClubMatchSessionsNotifier
           description: description,
           registrationMode: registrationMode,
           isRanked: isRanked,
+          maxParticipants: maxParticipants,
           startAt: startAt,
           endAt: endAt,
         );

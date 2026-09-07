@@ -154,13 +154,26 @@ class Community {
       logoUrl:
           json['logoUrl'] ??
           json['logo_url'] ??
+          json['logo'] ??
+          (json['images'] is Map ? (json['images'] as Map)['logoUrl'] : null) ??
           rawJson['logoUrl'] ??
           rawJson['logo_url'],
       bannerUrl:
           json['bannerUrl'] ??
           json['banner_url'] ??
+          json['banner'] ??
+          json['coverUrl'] ??
+          json['cover_url'] ??
+          json['coverImageUrl'] ??
+          json['cover_image_url'] ??
+          (json['images'] is Map
+              ? (json['images'] as Map)['bannerUrl']
+              : null) ??
           rawJson['bannerUrl'] ??
-          rawJson['banner_url'],
+          rawJson['banner_url'] ??
+          rawJson['banner'] ??
+          rawJson['coverUrl'] ??
+          rawJson['cover_url'],
       locationAddress:
           json['locationAddress'] ??
           json['location_address'] ??

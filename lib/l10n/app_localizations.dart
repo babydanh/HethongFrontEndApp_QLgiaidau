@@ -22036,30 +22036,6 @@ abstract class AppLocalizations {
   /// **'Thông tin buổi giao lưu'**
   String get clubMatchSessionBasicInfo;
 
-  /// No description provided for @clubMatchSessionRegistrationMode.
-  ///
-  /// In vi, this message translates to:
-  /// **'Cách tham gia'**
-  String get clubMatchSessionRegistrationMode;
-
-  /// No description provided for @clubMatchSessionRegistrationMixed.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tự đăng ký hoặc BQT chỉ định'**
-  String get clubMatchSessionRegistrationMixed;
-
-  /// No description provided for @clubMatchSessionRegistrationSelf.
-  ///
-  /// In vi, this message translates to:
-  /// **'Thành viên tự đăng ký'**
-  String get clubMatchSessionRegistrationSelf;
-
-  /// No description provided for @clubMatchSessionRegistrationManager.
-  ///
-  /// In vi, this message translates to:
-  /// **'BQT chỉ định'**
-  String get clubMatchSessionRegistrationManager;
-
   /// No description provided for @clubMatchSessionRanked.
   ///
   /// In vi, this message translates to:
@@ -22485,6 +22461,78 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Biến động {value} ELO'**
   String clubMatchSessionEloDelta(int value);
+
+  /// No description provided for @clubMatchSessionDuration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời lượng'**
+  String get clubMatchSessionDuration;
+
+  /// No description provided for @clubMatchSessionDurationOneHour.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 giờ'**
+  String get clubMatchSessionDurationOneHour;
+
+  /// No description provided for @clubMatchSessionDurationNinetyMinutes.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 giờ 30 phút'**
+  String get clubMatchSessionDurationNinetyMinutes;
+
+  /// No description provided for @clubMatchSessionDurationCustom.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự nhập'**
+  String get clubMatchSessionDurationCustom;
+
+  /// No description provided for @clubMatchSessionDurationCustomLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số phút'**
+  String get clubMatchSessionDurationCustomLabel;
+
+  /// No description provided for @clubMatchSessionDurationCustomHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ: 120'**
+  String get clubMatchSessionDurationCustomHint;
+
+  /// No description provided for @clubMatchSessionDurationInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập từ 30 đến 720 phút'**
+  String get clubMatchSessionDurationInvalid;
+
+  /// No description provided for @clubMatchSessionMaxParticipants.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số người tối đa'**
+  String get clubMatchSessionMaxParticipants;
+
+  /// No description provided for @clubMatchSessionMaxParticipantsCustom.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự nhập'**
+  String get clubMatchSessionMaxParticipantsCustom;
+
+  /// No description provided for @clubMatchSessionMaxParticipantsCustomLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số người'**
+  String get clubMatchSessionMaxParticipantsCustomLabel;
+
+  /// No description provided for @clubMatchSessionMaxParticipantsCustomHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mặc định 16 người'**
+  String get clubMatchSessionMaxParticipantsCustomHint;
+
+  /// No description provided for @clubMatchSessionMaxParticipantsInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập từ 2 đến 128 người'**
+  String get clubMatchSessionMaxParticipantsInvalid;
 }
 
 class _AppLocalizationsDelegate

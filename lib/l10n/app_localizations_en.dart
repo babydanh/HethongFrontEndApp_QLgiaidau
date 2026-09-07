@@ -12130,19 +12130,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubMatchSessionBasicInfo => 'Session details';
 
   @override
-  String get clubMatchSessionRegistrationMode => 'Participation mode';
-
-  @override
-  String get clubMatchSessionRegistrationMixed =>
-      'Self-registration or manager assignment';
-
-  @override
-  String get clubMatchSessionRegistrationSelf => 'Member self-registration';
-
-  @override
-  String get clubMatchSessionRegistrationManager => 'Manager assignment';
-
-  @override
   String get clubMatchSessionRanked => 'Apply ELO to eligible matches';
 
   @override
@@ -12371,4 +12358,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String clubMatchSessionEloDelta(int value) {
     return '$value ELO change';
   }
+
+  @override
+  String get clubMatchSessionDuration => 'Duration';
+
+  @override
+  String get clubMatchSessionDurationOneHour => '1 hour';
+
+  @override
+  String get clubMatchSessionDurationNinetyMinutes => '1 hour 30 minutes';
+
+  @override
+  String get clubMatchSessionDurationCustom => 'Custom';
+
+  @override
+  String get clubMatchSessionDurationCustomLabel => 'Minutes';
+
+  @override
+  String get clubMatchSessionDurationCustomHint => 'Example: 120';
+
+  @override
+  String get clubMatchSessionDurationInvalid =>
+      'Enter between 30 and 720 minutes';
+
+  @override
+  String get clubMatchSessionMaxParticipants => 'Maximum participants';
+
+  @override
+  String get clubMatchSessionMaxParticipantsCustom => 'Custom';
+
+  @override
+  String get clubMatchSessionMaxParticipantsCustomLabel => 'Number of people';
+
+  @override
+  String get clubMatchSessionMaxParticipantsCustomHint => 'Default: 16 people';
+
+  @override
+  String get clubMatchSessionMaxParticipantsInvalid =>
+      'Enter between 2 and 128 people';
 }
