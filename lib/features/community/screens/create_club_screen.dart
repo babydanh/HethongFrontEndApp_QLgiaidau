@@ -311,6 +311,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
     }
     try {
       final bytes = await picked.readAsBytes();
+      if (!mounted) return;
       if (bytes.length > (banner ? 10 : 5) * 1024 * 1024) {
         throw StateError(
           l10n.createClub_imageTooLarge(

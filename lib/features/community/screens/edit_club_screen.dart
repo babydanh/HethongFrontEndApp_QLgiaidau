@@ -135,6 +135,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     setState(() => _isLoading = true);
     try {
       final bytes = await picked.readAsBytes();
+      if (!mounted) return;
       final uploadBytes = isLogo
           ? await ImageCropDialog.show(
               context,
