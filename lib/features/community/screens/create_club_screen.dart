@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
@@ -109,9 +110,13 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
           final now = DateTime.now();
           final timeParts = startTime.split(':');
           final startHour = int.tryParse(timeParts.first) ?? 18;
-          final startMinute = timeParts.length > 1 ? (int.tryParse(timeParts[1]) ?? 0) : 0;
+          final startMinute = timeParts.length > 1
+              ? (int.tryParse(timeParts[1]) ?? 0)
+              : 0;
           final targetDayOfWeek = allDays.first; // 0 = CN, 1 = T2, ..., 6 = T7
-          final currentWeekday = now.weekday % 7; // DateTime weekday: 1 (Mon) -> 7 (Sun) -> % 7 thành 0 (Sun) -> 6 (Sat)
+          final currentWeekday =
+              now.weekday %
+              7; // DateTime weekday: 1 (Mon) -> 7 (Sun) -> % 7 thành 0 (Sun) -> 6 (Sat)
           int daysToAdd = (targetDayOfWeek - currentWeekday) % 7;
           if (daysToAdd < 0) daysToAdd += 7;
 
@@ -126,7 +131,9 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
             nextOccurrence = nextOccurrence.add(const Duration(days: 7));
           }
 
-          final calculatedEndDate = nextOccurrence.add(Duration(minutes: durationMinutes));
+          final calculatedEndDate = nextOccurrence.add(
+            Duration(minutes: durationMinutes),
+          );
 
           await dio.post(
             '/tournaments/lite',
@@ -151,7 +158,9 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               'recurringAdvanceDays': 0,
             },
           );
-          _log.info('Tạo template giải đấu định kỳ thành công cho CLB: $clubId');
+          _log.info(
+            'Tạo template giải đấu định kỳ thành công cho CLB: $clubId',
+          );
         } catch (templateErr) {
           _log.warning('Không thể tự tạo giải định kỳ mẫu: $templateErr');
         }
@@ -310,9 +319,17 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
           ),
         );
       }
+      final uploadBytes = banner
+          ? bytes
+          : await ImageCropDialog.show(
+              context,
+              bytes: bytes,
+              title: l10n.createClub_logoTitle,
+            );
+      if (uploadBytes == null) return;
       final url = await ref
           .read(communitySocialRepositoryProvider)
-          .uploadImage(bytes, picked.name);
+          .uploadImage(uploadBytes, banner ? picked.name : 'club_logo.png');
       if (!mounted) return;
       setState(() {
         if (banner) {
@@ -410,8 +427,6 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               ),
               const SizedBox(height: 20),
 
-
-
               _buildImagePickers(),
               const SizedBox(height: 20),
 
@@ -483,7 +498,6 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
       ),
     );
   }
-
 
   Widget _buildImagePickers() {
     final l10n = AppLocalizations.of(context)!;
@@ -929,10 +943,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                     const SizedBox(height: 2),
                     Text(
                       l10n.createClub_recurringSubtitle,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: colors.textMuted,
-                      ),
+                      style: TextStyle(fontSize: 11, color: colors.textMuted),
                     ),
                   ],
                 ),
@@ -1067,12 +1078,14 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                                     initialTime: initialTime,
                                   );
                                   if (picked != null) {
-                                    final hh = picked.hour
-                                        .toString()
-                                        .padLeft(2, '0');
-                                    final mm = picked.minute
-                                        .toString()
-                                        .padLeft(2, '0');
+                                    final hh = picked.hour.toString().padLeft(
+                                      2,
+                                      '0',
+                                    );
+                                    final mm = picked.minute.toString().padLeft(
+                                      2,
+                                      '0',
+                                    );
                                     setState(() {
                                       slot['startTime'] = '$hh:$mm';
                                     });

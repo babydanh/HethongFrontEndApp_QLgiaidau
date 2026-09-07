@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/club_region_select
 import 'package:app_quanly_giaidau/features/community/widgets/club_social_links_editor.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_visibility_selector.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
+import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Màn hình chỉnh sửa thông tin câu lạc bộ — đồng bộ web (SettingsTab.tsx).
@@ -90,7 +91,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     return selected.id;
   }
 
-    Future<void> _pickAndUploadImage({required bool isLogo}) async {
+  Future<void> _pickAndUploadImage({required bool isLogo}) async {
     final l10n = AppLocalizations.of(context)!;
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
@@ -134,9 +135,17 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     setState(() => _isLoading = true);
     try {
       final bytes = await picked.readAsBytes();
+      final uploadBytes = isLogo
+          ? await ImageCropDialog.show(
+              context,
+              bytes: bytes,
+              title: l10n.editClub_logoTitle,
+            )
+          : bytes;
+      if (uploadBytes == null) return;
       final url = await ref
           .read(communitySocialRepositoryProvider)
-          .uploadImage(bytes, picked.name);
+          .uploadImage(uploadBytes, isLogo ? 'club_logo.png' : picked.name);
       await ref.read(communityRepositoryProvider).updateCommunity(
         widget.clubId,
         {isLogo ? 'logoUrl' : 'bannerUrl': url},
@@ -146,9 +155,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              isLogo
-                  ? l10n.editClub_logoUpdated
-                  : l10n.editClub_bannerUpdated,
+              isLogo ? l10n.editClub_logoUpdated : l10n.editClub_bannerUpdated,
             ),
           ),
         );
@@ -156,9 +163,9 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     } catch (e, stack) {
       _log.error('Lỗi cập nhật ảnh CLB', e, stack);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.editClub_imageUpdateError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.editClub_imageUpdateError)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -169,15 +176,15 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (_selectedSport.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.editClub_primarySportError)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.editClub_primarySportError)));
       return;
     }
     if (_region.provinceCode.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.editClub_provinceRequired)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.editClub_provinceRequired)));
       return;
     }
 
@@ -227,7 +234,11 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.editClub_saveError(e.toString().replaceAll('Exception: ', ''))),
+            content: Text(
+              l10n.editClub_saveError(
+                e.toString().replaceAll('Exception: ', ''),
+              ),
+            ),
             backgroundColor: context.colors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -352,7 +363,11 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _fieldLabel(l10n.editClub_clubName, isRequired: true, colors: colors),
+                  _fieldLabel(
+                    l10n.editClub_clubName,
+                    isRequired: true,
+                    colors: colors,
+                  ),
                   const SizedBox(height: 6),
                   AppTextFormField(
                     controller: _nameCtrl,
@@ -367,7 +382,11 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  _fieldLabel(l10n.editClub_primarySport, isRequired: true, colors: colors),
+                  _fieldLabel(
+                    l10n.editClub_primarySport,
+                    isRequired: true,
+                    colors: colors,
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     l10n.editClub_primarySportDescription,
@@ -398,7 +417,11 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _fieldLabel(l10n.editClub_administrativeArea, isRequired: true, colors: colors),
+                  _fieldLabel(
+                    l10n.editClub_administrativeArea,
+                    isRequired: true,
+                    colors: colors,
+                  ),
                   const SizedBox(height: 6),
                   ClubRegionSelector(
                     initialProvinceCode: club?.provinceCode ?? '',
@@ -427,7 +450,11 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _fieldLabel(l10n.editClub_visibility, isRequired: true, colors: colors),
+                  _fieldLabel(
+                    l10n.editClub_visibility,
+                    isRequired: true,
+                    colors: colors,
+                  ),
                   const SizedBox(height: 6),
                   ClubVisibilitySelector(
                     value: _visibility,
@@ -435,7 +462,11 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  _fieldLabel(l10n.editClub_memberJoinMethod, isRequired: true, colors: colors),
+                  _fieldLabel(
+                    l10n.editClub_memberJoinMethod,
+                    isRequired: true,
+                    colors: colors,
+                  ),
                   const SizedBox(height: 6),
                   _buildJoinModeSelector(),
                   const SizedBox(height: 16),
@@ -494,7 +525,10 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                               _joinQuestionCtrl.clear();
                             });
                           },
-                          icon: const Icon(Icons.add_rounded, color: Colors.white),
+                          icon: const Icon(
+                            Icons.add_rounded,
+                            color: Colors.white,
+                          ),
                           style: IconButton.styleFrom(
                             backgroundColor: AppTheme.primary,
                             padding: const EdgeInsets.all(12),
@@ -508,7 +542,10 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                       ..._joinQuestions.asMap().entries.map(
                         (entry) => Container(
                           margin: const EdgeInsets.only(bottom: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: colors.bgDark,
                             borderRadius: BorderRadius.circular(8),
@@ -536,11 +573,16 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                                 ),
                               ),
                               IconButton(
-                                icon: Icon(Icons.close_rounded, size: 16, color: colors.textSecondary),
+                                icon: Icon(
+                                  Icons.close_rounded,
+                                  size: 16,
+                                  color: colors.textSecondary,
+                                ),
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
-                                onPressed: () =>
-                                    setState(() => _joinQuestions.removeAt(entry.key)),
+                                onPressed: () => setState(
+                                  () => _joinQuestions.removeAt(entry.key),
+                                ),
                               ),
                             ],
                           ),
@@ -643,10 +685,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           const SizedBox(height: 2),
           Text(
             subtitle,
-            style: TextStyle(
-              fontSize: 11,
-              color: colors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 11, color: colors.textSecondary),
           ),
           const SizedBox(height: 14),
           child,
@@ -655,7 +694,11 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     );
   }
 
-  Widget _fieldLabel(String text, {bool isRequired = false, required AppColorsExtension colors}) {
+  Widget _fieldLabel(
+    String text, {
+    bool isRequired = false,
+    required AppColorsExtension colors,
+  }) {
     return RichText(
       text: TextSpan(
         text: text,
@@ -668,7 +711,10 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           if (isRequired)
             const TextSpan(
               text: ' *',
-              style: TextStyle(color: Color(0xFFE11D48), fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Color(0xFFE11D48),
+                fontWeight: FontWeight.bold,
+              ),
             ),
         ],
       ),
@@ -788,15 +834,27 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           const SizedBox(height: 6),
           Text(
             l10n.editClub_dangerDescription,
-            style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.4),
+            style: TextStyle(
+              fontSize: 12,
+              color: colors.textSecondary,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: _isLoading ? null : _confirmDeleteClub,
-            icon: Icon(Icons.delete_forever_rounded, size: 18, color: colors.error),
+            icon: Icon(
+              Icons.delete_forever_rounded,
+              size: 18,
+              color: colors.error,
+            ),
             label: Text(
               l10n.editClub_deleteClub,
-              style: TextStyle(color: colors.error, fontWeight: FontWeight.w700, fontSize: 13),
+              style: TextStyle(
+                color: colors.error,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
             ),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: colors.error.withValues(alpha: 0.5)),
@@ -827,9 +885,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l10n.editClub_deleteDescription(expected),
-                ),
+                Text(l10n.editClub_deleteDescription(expected)),
                 const SizedBox(height: 12),
                 Text(l10n.editClub_confirmName(expected)),
                 const SizedBox(height: 8),
@@ -868,9 +924,9 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           .deleteCommunity(widget.clubId);
       invalidateCommunityCollections(ref);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.editClub_deleted)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.editClub_deleted)));
         context.go('/home');
       }
     } catch (e, stack) {
@@ -879,7 +935,9 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l10n.editClub_deleteError(e.toString().replaceAll('Exception: ', '')),
+              l10n.editClub_deleteError(
+                e.toString().replaceAll('Exception: ', ''),
+              ),
             ),
           ),
         );
