@@ -13,6 +13,13 @@ final communitySocialRepositoryProvider = Provider<ICommunitySocialRepository>((
   return ApiCommunitySocialRepository(ref.watch(dioClientProvider));
 });
 
+/// Provider danh sách bài viết chờ duyệt (Moderator / Admin thấy).
+final pendingPostsProvider = FutureProvider.autoDispose
+    .family<List<CommunityPostModel>, String>((ref, communityId) async {
+      final repo = ref.watch(communitySocialRepositoryProvider);
+      return repo.getPendingPosts(communityId);
+    });
+
 class CommunityFeedNotifier extends Notifier<CommunityFeedState> {
   static const _log = AppLogger('CommunityFeedNotifier');
   final String communityId;

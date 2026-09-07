@@ -168,10 +168,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                 children: [
                   _buildStatsRow(colors),
-                  if (_pendingPosts.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    _buildPendingPostsSection(colors),
-                  ],
+                  const SizedBox(height: 16),
+                  _buildJoinRequestsSection(colors),
+                  const SizedBox(height: 16),
+                  _buildPendingPostsSection(colors),
                   if (_reports.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     _buildReportsSection(colors),
@@ -182,10 +182,6 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                   _buildRecurringSchedulesSection(colors),
                   const SizedBox(height: 16),
                   _buildEloCoordinationSection(colors),
-                  if (_joinRequests.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    _buildJoinRequestsSection(colors),
-                  ],
                   const SizedBox(height: 16),
                   _buildInviteSection(colors),
                   if (_invitedMembers.isNotEmpty) ...[
@@ -222,9 +218,33 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
           ),
           const SizedBox(height: 10),
           if (!hasPosts)
-            Text(
-              _l10n.club_noPendingPosts,
-              style: TextStyle(color: colors.textMuted, fontSize: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.borderLight),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.mark_email_read_outlined,
+                    size: 20,
+                    color: Color(0xFF10B981),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _l10n.club_noPendingPosts,
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             )
           else
             ..._pendingPosts.map((post) => _buildPendingPostCard(post, colors)),
@@ -1874,19 +1894,57 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   // ─── Join Requests ───────────────────────────────────────────
   Widget _buildJoinRequestsSection(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
-    if (_joinRequests.isEmpty) return const SizedBox.shrink();
+    final hasRequests = _joinRequests.isNotEmpty;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionHeader(
-          l10n.club_joinRequestSection(_joinRequests.length),
-          const Color(0xFFF59E0B),
-          colors,
-        ),
-        const SizedBox(height: 8),
-        ..._joinRequests.map((req) => _buildRequestCard(req, colors)),
-      ],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader(
+            l10n.club_joinRequestSection(_joinRequests.length),
+            const Color(0xFFF59E0B),
+            colors,
+          ),
+          const SizedBox(height: 10),
+          if (!hasRequests)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.borderLight),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.how_to_reg_outlined,
+                    size: 20,
+                    color: Color(0xFF10B981),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.club_noPendingJoinRequests,
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            ..._joinRequests.map((req) => _buildRequestCard(req, colors)),
+        ],
+      ),
     );
   }
 
@@ -1984,9 +2042,12 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
           .read(communityRepositoryProvider)
           .reviewJoinRequest(
             widget.clubId,
-            req.id.isNotEmpty ? req.id : req.userId,
+            req.userId.isNotEmpty ? req.userId : req.id,
             action,
           );
+      ref.invalidate(joinRequestsProvider(widget.clubId));
+      ref.invalidate(communityMembersProvider(widget.clubId));
+      ref.invalidate(communityDetailProvider(widget.clubId));
       _loadData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

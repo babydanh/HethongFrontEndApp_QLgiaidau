@@ -191,6 +191,14 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
             incomingRevision >= _lastLocalWriteRevision!)) {
       _lastLocalWriteRevision = incomingRevision;
     }
+    // A socket echo normally changes only the server revision. Replacing the
+    // whole notifier state for that identical score makes the lower action
+    // bar visibly blink and briefly recompute its set/button labels.
+    if (_scoreSignature(hydrated) == _scoreSignature(state) &&
+        hydrated.isServerTerminal == state.isServerTerminal &&
+        hydrated.isLite == state.isLite) {
+      return;
+    }
     state = hydrated;
   }
 
@@ -909,7 +917,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   List<SetScoreData> _setsForSubmission({
     bool includeEmptyLiteActiveSet = false,
   }) {
-    final finalSets = List<SetScoreData>.from(state.finishedSets);
+    final finalSets = state.config.scoringModel == SportScoringModel.tennisSet
+        ? state.finishedSets.where((set) => set.isFinished).toList()
+        : List<SetScoreData>.from(state.finishedSets);
     if (state.config.scoringModel != SportScoringModel.tennisSet &&
         state.rally != null) {
       final rally = state.rally!;
@@ -1050,14 +1060,31 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   //  USER-ACTIONS: Finish Set & Override
   // ═══════════════════════════════════════════════════════════
 
+  int? get _activeTennisSetIndex {
+    if (state.config.scoringModel != SportScoringModel.tennisSet) return null;
+    for (var index = state.finishedSets.length - 1; index >= 0; index--) {
+      if (!state.finishedSets[index].isFinished) return index;
+    }
+    return null;
+  }
+
+  /// Number of the set currently being played, including a persisted 0-0
+  /// placeholder created after closing the previous Super Lite set.
+  int get currentSetNumber {
+    final activeIndex = _activeTennisSetIndex;
+    if (activeIndex != null) return activeIndex + 1;
+    return state.finishedSets.length + 1;
+  }
+
   /// Get confirmation message for finishing current set, or null if no set to finish.
   String? finishSetConfirmMessage() {
     final rally = state.rally;
     final tennis = state.tennis;
     if (state.config.scoringModel == SportScoringModel.tennisSet) {
-      final currentSet = state.finishedSets.isNotEmpty
-          ? state.finishedSets.last
-          : null;
+      final activeIndex = _activeTennisSetIndex;
+      final currentSet = activeIndex == null
+          ? null
+          : state.finishedSets[activeIndex];
       // Tennis point values (0/15/30/40/deuce) are not a set score. The
       // scorer must finish the current game first; this button closes the
       // whole set represented by the accumulated game score.
@@ -1069,7 +1096,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
           currentSet.score1 + currentSet.score2 == 0) {
         return null;
       }
-      final setNum = state.finishedSets.length;
+      final setNum = activeIndex! + 1;
       return _l10n.scorePanel_finishSetWithScore(
         setNum,
         currentSet.score1,
@@ -1115,9 +1142,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         );
         return;
       }
-      final curSet = state.finishedSets.isNotEmpty
-          ? state.finishedSets.last
-          : null;
+      final activeSetIndex = _activeTennisSetIndex;
+      final curSet = activeSetIndex == null
+          ? null
+          : state.finishedSets[activeSetIndex];
       List<SetScoreData> newSets;
       if (curSet != null && !curSet.isFinished) {
         if (!_validateSetBeforeFinish(curSet)) {
@@ -1125,8 +1153,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
           return;
         }
         newSets = [
-          ...state.finishedSets.sublist(0, state.finishedSets.length - 1),
+          ...state.finishedSets.sublist(0, activeSetIndex!),
           curSet.copyWith(isFinished: true),
+          ...state.finishedSets.sublist(activeSetIndex + 1),
         ];
       } else {
         state = state.copyWith(

@@ -317,17 +317,25 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final sets = _scoreDetailsSets(match);
     final activeSet = sets.where((set) => !set.isFinished).lastOrNull;
     final rally = scorePanelState?.rally;
+    final localActiveSet = scorePanelState?.finishedSets
+        .where((set) => !set.isFinished)
+        .lastOrNull;
     // Prefer a local optimistic point while it is ahead of the server echo,
     // but do not let a stale 0-0 notifier state hide a newer active set from
     // scoreDetails.
     if (rally != null && (rally.currentP1 > 0 || rally.currentP2 > 0)) {
       return SetScoreData(score1: rally.currentP1, score2: rally.currentP2);
     }
+    if (localActiveSet != null) return localActiveSet;
     if (activeSet != null) return activeSet;
     // After closing a set the next set starts at 0-0. Keep that local zero
     // instead of falling back to the previous finished set's score.
     if (rally != null) {
       return SetScoreData(score1: rally.currentP1, score2: rally.currentP2);
+    }
+    if (scorePanelState?.config.scoringModel == SportScoringModel.tennisSet &&
+        !match.isCompleted) {
+      return const SetScoreData(score1: 0, score2: 0);
     }
     if (sets.isNotEmpty) return sets.last;
     return SetScoreData(score1: match.score1, score2: match.score2);
@@ -2657,9 +2665,14 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     // deliberately has no fixed BO/max-set limit: every manually closed set
     // is retained and one open set is shown after it.
     final serverSets = _scoreDetailsSets(match);
-    final finishedSets = notifierState.finishedSets.isNotEmpty
+    // The notifier keeps Tennis' open set in the same list so it can survive
+    // a socket/refetch. The viewer history must only contain closed sets; the
+    // open set is rendered once in the current-set slot below. This keeps the
+    // app count aligned with the web (no extra 0-0/set N+1 card).
+    final allSets = notifierState.finishedSets.isNotEmpty
         ? notifierState.finishedSets
-        : serverSets.where((set) => set.isFinished).toList();
+        : serverSets;
+    final finishedSets = allSets.where((set) => set.isFinished).toList();
     final team1SetWins = finishedSets
         .where((set) => set.score1 > set.score2)
         .length;
@@ -3064,63 +3077,67 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(setCount, (index) {
-                final isPlayed = index < finishedSets.length;
-                final currentPlaying = index == finishedSets.length;
-                String scoreDisplay = '-';
-                Color boxBg = colors.bgSurface;
-                Color borderCol = colors.border;
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(setCount, (index) {
+                  final isPlayed = index < finishedSets.length;
+                  final currentPlaying = index == finishedSets.length;
+                  String scoreDisplay = '-';
+                  Color boxBg = colors.bgSurface;
+                  Color borderCol = colors.border;
 
-                if (isPlayed) {
-                  final setScore = finishedSets[index];
-                  scoreDisplay = '${setScore.score1} - ${setScore.score2}';
-                  boxBg = Colors.green.withValues(alpha: 0.06);
-                  borderCol = Colors.green.withValues(alpha: 0.2);
-                } else if (currentPlaying && !match.isCompleted) {
-                  scoreDisplay =
-                      '${currentScore.score1} - ${currentScore.score2}';
-                  boxBg = AppTheme.primary.withValues(alpha: 0.05);
-                  borderCol = AppTheme.primary.withValues(alpha: 0.3);
-                }
+                  if (isPlayed) {
+                    final setScore = finishedSets[index];
+                    scoreDisplay = '${setScore.score1} - ${setScore.score2}';
+                    boxBg = Colors.green.withValues(alpha: 0.06);
+                    borderCol = Colors.green.withValues(alpha: 0.2);
+                  } else if (currentPlaying && !match.isCompleted) {
+                    scoreDisplay =
+                        '${currentScore.score1} - ${currentScore.score2}';
+                    boxBg = AppTheme.primary.withValues(alpha: 0.05);
+                    borderCol = AppTheme.primary.withValues(alpha: 0.3);
+                  }
 
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 6),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: boxBg,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                    border: Border.all(color: borderCol, width: 1.5),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        '${l10n.tennisInfoSet} ${index + 1}',
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: colors.textMuted,
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: boxBg,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                      border: Border.all(color: borderCol, width: 1.5),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          '${l10n.tennisInfoSet} ${index + 1}',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: colors.textMuted,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        scoreDisplay,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: isPlayed || currentPlaying
-                              ? colors.textPrimary
-                              : colors.textMuted.withValues(alpha: 0.5),
+                        const SizedBox(height: 6),
+                        Text(
+                          scoreDisplay,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: isPlayed || currentPlaying
+                                ? colors.textPrimary
+                                : colors.textMuted.withValues(alpha: 0.5),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
+                      ],
+                    ),
+                  );
+                }),
+              ),
             ),
           ],
 

@@ -3900,6 +3900,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_noPendingPosts => 'Không có bài viết chờ duyệt.';
 
   @override
+  String get club_noPendingJoinRequests =>
+      'Không có yêu cầu tham gia nào đang chờ duyệt.';
+
+  @override
+  String club_pendingPostsBanner(Object count) {
+    return 'Có $count bài viết đang chờ duyệt';
+  }
+
+  @override
   String get club_rejectPost => 'Từ chối';
 
   @override

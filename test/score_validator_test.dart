@@ -118,7 +118,7 @@ void main() {
   });
 
   test('Super Lite không tự khóa sau khi chốt một set', () {
-    const state = ScorePanelState(
+    final state = ScorePanelState(
       config: rallyConfig,
       isLite: true,
       finishedSets: [SetScoreData(score1: 11, score2: 7, isFinished: true)],
@@ -207,5 +207,27 @@ void main() {
     expect(config.isOpenScoring, isTrue);
     expect(state.isMatchComplete, isFalse);
     expect(state.winnerTeam, 0);
+  });
+
+  test('Tennis không tính set đang đánh vào số set thắng', () {
+    final config = resolveSportConfig({
+      'kind': 'TENNIS',
+      'mode': 'STRICT',
+      'scoringModel': 'TENNIS_SET',
+      'bestOf': 3,
+      'pointsPerSet': 6,
+      'maxPoints': 7,
+    });
+    final state = ScorePanelState(
+      config: config,
+      finishedSets: [
+        SetScoreData(score1: 6, score2: 3, isFinished: true),
+        SetScoreData(score1: 1, score2: 0),
+      ],
+    );
+
+    expect(state.team1SetWins, 1);
+    expect(state.team2SetWins, 0);
+    expect(state.isMatchComplete, isFalse);
   });
 }

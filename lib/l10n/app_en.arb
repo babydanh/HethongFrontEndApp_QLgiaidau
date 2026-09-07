@@ -1504,6 +1504,8 @@
   "club_cancelInvite": "Cancel invitation",
   "club_pendingPostsSection": "Posts awaiting review ({count})",
   "club_noPendingPosts": "No posts are awaiting review.",
+  "club_noPendingJoinRequests": "No join requests are awaiting review.",
+  "club_pendingPostsBanner": "{count} posts are awaiting review",
   "club_rejectPost": "Reject",
   "club_approvePost": "Approve",
   "club_postApproved": "Post approved.",
@@ -1541,6 +1543,11 @@
   "club_viewTournament": "View tournament",
   "club_manageTournament": "Manage tournament",
   "club_loadTournamentsError": "Unable to load tournaments. Please try again.",
+  "@club_pendingPostsBanner": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "@club_pendingPostsSection": {
     "placeholders": {
       "count": {}

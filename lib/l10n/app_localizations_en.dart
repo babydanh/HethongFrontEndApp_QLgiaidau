@@ -3911,6 +3911,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get club_noPendingPosts => 'No posts are awaiting review.';
 
   @override
+  String get club_noPendingJoinRequests =>
+      'No join requests are awaiting review.';
+
+  @override
+  String club_pendingPostsBanner(Object count) {
+    return '$count posts are awaiting review';
+  }
+
+  @override
   String get club_rejectPost => 'Reject';
 
   @override

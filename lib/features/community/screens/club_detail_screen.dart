@@ -506,6 +506,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         : l10n.club_sportFallback;
     final Color sColor = _sportColor(sportName);
     final String emoji = _sportEmoji(sportName);
+    final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
+    final isCreator = club.ownerId != null && club.ownerId == currentUserId;
+    final isOwner = isCreator ||
+        club.myRole == 'OWNER' ||
+        _myMembership?.role == 'OWNER';
+    final isClubAdmin = isOwner ||
+        club.myRole == 'ADMIN' ||
+        club.myRole == 'MODERATOR' ||
+        _myMembership?.role == 'ADMIN' ||
+        _myMembership?.role == 'MODERATOR';
 
     return NestedScrollView(
       headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -541,9 +551,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           centerTitle: false,
           actions: [
             _buildFollowFavoriteButtons(club, colors, l10n),
-            if (_myMembership?.role == 'OWNER' ||
-                _myMembership?.role == 'ADMIN' ||
-                _myMembership?.role == 'MODERATOR') ...[
+            if (isClubAdmin) ...[
               PopupMenuButton<String>(
                 icon: Container(
                   padding: const EdgeInsets.all(7),
@@ -564,7 +572,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   } else if (val == 'manage') {
                     context.push(
                       '/club/${widget.clubId}/manage',
-                      extra: _myMembership?.role == 'OWNER',
+                      extra: isOwner,
                     );
                   } else if (val == 'edit') {
                     context.push('/club/${widget.clubId}/edit');
@@ -646,7 +654,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             color: colors.bgCard,
             child: Row(
               children: [
-                if (_isMember) ...[
+                if (_isMember || isClubAdmin) ...[
                   // Nút 1: Đã tham gia (Dropdown mở menu tùy chọn/rời CLB)
                   Expanded(
                     child: OutlinedButton(
@@ -728,6 +736,39 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         style: FilledButton.styleFrom(
                           backgroundColor: AppTheme.primary,
                           foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  // Nút 3: Quản lý nhanh cho Chủ nhiệm / Quản trị viên
+                  if (isClubAdmin) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.push(
+                          '/club/${widget.clubId}/manage',
+                          extra: isOwner,
+                        ),
+                        icon: const Icon(
+                          Icons.tune_rounded,
+                          size: 16,
+                          color: AppTheme.primary,
+                        ),
+                        label: Text(
+                          l10n.club_manageShort,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: AppTheme.primary,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: AppTheme.primary.withValues(alpha: 0.08),
+                          side: BorderSide(color: AppTheme.primary.withValues(alpha: 0.4)),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -3041,7 +3082,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     }
     final l10n = AppLocalizations.of(context)!;
     final membersAsync = ref.watch(communityMembersProvider(widget.clubId));
-    final isAdmin =
+    final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
+    final isCreator = club.ownerId != null && club.ownerId == currentUserId;
+    final isAdmin = isCreator ||
+        club.myRole == 'OWNER' ||
+        club.myRole == 'ADMIN' ||
+        club.myRole == 'MODERATOR' ||
         _myMembership?.role == 'OWNER' ||
         _myMembership?.role == 'ADMIN' ||
         _myMembership?.role == 'MODERATOR';
@@ -3422,21 +3468,21 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         case 'promote_admin':
           await repo.updateMemberRole(
             widget.clubId,
-            m.id.isNotEmpty ? m.id : m.userId,
+            m.userId.isNotEmpty ? m.userId : m.id,
             'ADMIN',
           );
           break;
         case 'promote_mod':
           await repo.updateMemberRole(
             widget.clubId,
-            m.id.isNotEmpty ? m.id : m.userId,
+            m.userId.isNotEmpty ? m.userId : m.id,
             'MODERATOR',
           );
           break;
         case 'demote':
           await repo.updateMemberRole(
             widget.clubId,
-            m.id.isNotEmpty ? m.id : m.userId,
+            m.userId.isNotEmpty ? m.userId : m.id,
             'MEMBER',
           );
           break;
@@ -3466,7 +3512,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           if (confirm != true) return;
           await repo.updateMemberRole(
             widget.clubId,
-            m.id.isNotEmpty ? m.id : m.userId,
+            m.userId.isNotEmpty ? m.userId : m.id,
             'OWNER',
           );
           break;
@@ -3803,7 +3849,39 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     return joinRequestsAsync.when(
       data: (requests) {
         final pending = requests.where((r) => r.status == 'PENDING').toList();
-        if (pending.isEmpty) return const SizedBox.shrink();
+        if (pending.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: colors.bgCard,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.borderLight),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.how_to_reg_outlined,
+                    size: 18,
+                    color: Color(0xFF10B981),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.club_noPendingJoinRequests,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -3918,7 +3996,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     .read(communityRepositoryProvider)
                     .reviewJoinRequest(
                       widget.clubId,
-                      req.id.isNotEmpty ? req.id : req.userId,
+                      req.userId.isNotEmpty ? req.userId : req.id,
                       'APPROVE',
                     );
                 ref.invalidate(joinRequestsProvider(widget.clubId));
@@ -3967,7 +4045,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     .read(communityRepositoryProvider)
                     .reviewJoinRequest(
                       widget.clubId,
-                      req.id.isNotEmpty ? req.id : req.userId,
+                      req.userId.isNotEmpty ? req.userId : req.id,
                       'REJECT',
                     );
                 ref.invalidate(joinRequestsProvider(widget.clubId));
@@ -4441,8 +4519,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   // ════════════════════════════════════
   Widget _buildSettingsTab(Community club, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
-    final isAdmin =
-        _myMembership?.role == 'OWNER' ||
+    final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
+    final isCreator = club.ownerId != null && club.ownerId == currentUserId;
+    final isOwner = isCreator ||
+        club.myRole == 'OWNER' ||
+        _myMembership?.role == 'OWNER';
+    final isAdmin = isOwner ||
+        club.myRole == 'ADMIN' ||
+        club.myRole == 'MODERATOR' ||
         _myMembership?.role == 'ADMIN' ||
         _myMembership?.role == 'MODERATOR';
 
@@ -4470,7 +4554,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             color: AppTheme.primary,
             onTap: () => context.push(
               '/club/${widget.clubId}/manage',
-              extra: _myMembership?.role == 'OWNER',
+              extra: isOwner,
             ),
           ),
           const SizedBox(height: 8),

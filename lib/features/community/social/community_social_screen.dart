@@ -234,6 +234,11 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
         (socialSettings.postingPolicy == 'MEMBERS' && isJoined) ||
         (socialSettings.postingPolicy == 'ADMINS' && canManageMemberTags);
 
+    final pendingPostsAsync = isModerator
+        ? ref.watch(pendingPostsProvider(widget.communityId))
+        : null;
+    final pendingCount = pendingPostsAsync?.value?.length ?? 0;
+
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final canvasColor = isDark ? const Color(0xFF18191A) : const Color(0xFFF0F2F5);
@@ -256,6 +261,49 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                   child: _CompactHighlights(communityName: widget.communityName),
                 ),
               ],
+              if (isModerator && pendingCount > 0)
+                Container(
+                  margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.35)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.shield_outlined, size: 20, color: Color(0xFFD97706)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          l10n.club_pendingPostsBanner(pendingCount),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFFD97706),
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => context.push('/club/${widget.communityId}/manage'),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          backgroundColor: const Color(0xFFD97706),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          l10n.club_approve,
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               if (canPost)
                 Container(
                   color: colors.bgCard,

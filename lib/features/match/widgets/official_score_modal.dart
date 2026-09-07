@@ -278,9 +278,17 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                       scorePanelNotifierProvider(params).notifier,
                     );
                     final liteRally = state.rally;
-                    final openSets = List<SetScoreData>.from(
-                      state.finishedSets,
-                    );
+                    // The scorer needs the current open Tennis set as well as
+                    // completed sets. The public live viewer filters the open
+                    // set separately; removing it here hides the set score
+                    // from the scoring panel.
+                    final historySets = state.finishedSets;
+                    final openSets =
+                        state.config.scoringModel == SportScoringModel.tennisSet
+                        ? state.finishedSets
+                              .where((set) => set.isFinished)
+                              .toList()
+                        : List<SetScoreData>.from(state.finishedSets);
                     if (state.isOpenScoring &&
                         liteRally != null &&
                         (liteRally.currentP1 > 0 || liteRally.currentP2 > 0)) {
@@ -310,6 +318,12 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                         : (state.team1SetWins >= state.team2SetWins ? 1 : 2);
                     final canSaveResult =
                         selectedWinner != 0 && n.canCompleteAs(selectedWinner);
+                    final finishSetMessage = n.finishSetConfirmMessage();
+                    final showFinishSetButton =
+                        !state.isMatchComplete &&
+                        (finishSetMessage != null ||
+                            state.config.scoringModel ==
+                                SportScoringModel.tennisSet);
                     return Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -388,11 +402,11 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                               // Super Lite also keeps every manually closed
                               // set. It is not a fixed BO format, so this
                               // history grows only as sets are closed.
-                              if (state.finishedSets.isNotEmpty)
+                              if (historySets.isNotEmpty)
                                 SingleChildScrollView(
                                   scrollDirection: Axis.horizontal,
                                   child: SetHistoryBar(
-                                    finishedSets: state.finishedSets,
+                                    finishedSets: historySets,
                                     team1SetWins: state.team1SetWins,
                                     team2SetWins: state.team2SetWins,
                                   ),
@@ -458,31 +472,26 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                                         ),
                                       ),
                                     ),
-                                  if (!state.isMatchComplete &&
-                                      n.finishSetConfirmMessage() != null)
+                                  if (showFinishSetButton)
                                     OutlinedButton(
-                                      onPressed: state.isSubmitting
+                                      onPressed:
+                                          state.isSubmitting ||
+                                              finishSetMessage == null
                                           ? null
                                           : () async {
-                                              final message = n
-                                                  .finishSetConfirmMessage();
-                                              if (message == null) {
-                                                return;
-                                              }
                                               final confirmed = await showDialog<bool>(
                                                 context: context,
                                                 builder: (dialogContext) => AlertDialog(
                                                   title: Text(
                                                     state.isOpenScoring
                                                         ? l10n.matchFinishSetLiteNumber(
-                                                            state
-                                                                    .finishedSets
-                                                                    .length +
-                                                                1,
+                                                            n.currentSetNumber,
                                                           )
                                                         : l10n.matchFinishSet,
                                                   ),
-                                                  content: Text(message),
+                                                  content: Text(
+                                                    finishSetMessage,
+                                                  ),
                                                   actions: [
                                                     TextButton(
                                                       onPressed: () =>
@@ -503,10 +512,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                                                       child: Text(
                                                         state.isOpenScoring
                                                             ? l10n.matchFinishSetLiteNumber(
-                                                                state
-                                                                        .finishedSets
-                                                                        .length +
-                                                                    1,
+                                                                n.currentSetNumber,
                                                               )
                                                             : l10n.matchFinishSet,
                                                       ),
@@ -533,7 +539,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                                       child: Text(
                                         state.isOpenScoring
                                             ? l10n.matchFinishSetLiteNumber(
-                                                state.finishedSets.length + 1,
+                                                n.currentSetNumber,
                                               )
                                             : l10n.matchFinishSet,
                                         style: const TextStyle(

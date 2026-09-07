@@ -7340,6 +7340,18 @@ abstract class AppLocalizations {
   /// **'Không có bài viết chờ duyệt.'**
   String get club_noPendingPosts;
 
+  /// No description provided for @club_noPendingJoinRequests.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có yêu cầu tham gia nào đang chờ duyệt.'**
+  String get club_noPendingJoinRequests;
+
+  /// No description provided for @club_pendingPostsBanner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có {count} bài viết đang chờ duyệt'**
+  String club_pendingPostsBanner(Object count);
+
   /// No description provided for @club_rejectPost.
   ///
   /// In vi, this message translates to:

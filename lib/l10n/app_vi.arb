@@ -1504,6 +1504,8 @@
   "club_cancelInvite": "Hủy lời mời",
   "club_pendingPostsSection": "Bài viết chờ duyệt ({count})",
   "club_noPendingPosts": "Không có bài viết chờ duyệt.",
+  "club_noPendingJoinRequests": "Không có yêu cầu tham gia nào đang chờ duyệt.",
+  "club_pendingPostsBanner": "Có {count} bài viết đang chờ duyệt",
   "club_rejectPost": "Từ chối",
   "club_approvePost": "Duyệt",
   "club_postApproved": "Đã duyệt bài viết.",
@@ -1563,6 +1565,11 @@
     }
   },
   "@club_joinRequestSection": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@club_pendingPostsBanner": {
     "placeholders": {
       "count": {}
     }

@@ -194,7 +194,7 @@ class ScorePanelState {
   /// Số set thắng.
   int get team1SetWins {
     int t = 0;
-    for (final s in finishedSets) {
+    for (final s in _setsThatCountForMatch) {
       if (s.score1 > s.score2) t++;
     }
     return t;
@@ -202,11 +202,18 @@ class ScorePanelState {
 
   int get team2SetWins {
     int t = 0;
-    for (final s in finishedSets) {
+    for (final s in _setsThatCountForMatch) {
       if (s.score2 > s.score1) t++;
     }
     return t;
   }
+
+  /// Tennis keeps the current in-progress set in the same list as history.
+  /// It must not count as a won set until the scorer closes that set.
+  Iterable<SetScoreData> get _setsThatCountForMatch =>
+      config.scoringModel == SportScoringModel.tennisSet
+      ? finishedSets.where((set) => set.isFinished)
+      : finishedSets;
 
   /// A scoring preset can be open even when the legacy `isLite` flag was not
   /// carried by an older match snapshot. Keep the resolved rule as a second
