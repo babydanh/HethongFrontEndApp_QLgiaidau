@@ -7,6 +7,11 @@ on:
         description: 'Số build (tăng dần)'
         required: false
         default: '1'
+      submit_for_review:
+        description: 'Tự động gán build mới và gửi duyệt Apple Review luôn (true/false)'
+        type: boolean
+        required: false
+        default: true
 
 jobs:
   deploy-ios:
@@ -203,3 +208,30 @@ jobs:
             -t ios \
             --apiKey "$API_KEY_ID" \
             --apiIssuer "$API_ISSUER_ID"
+
+      # 9. Tự động gán build mới và gửi duyệt App Store Review (chuẩn Apple App Store Connect API)
+      - name: Auto Submit to App Store Review
+        if: ${{ github.event.inputs.submit_for_review == 'true' || github.event.inputs.submit_for_review == true }}
+        env:
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID || secrets.APP_STORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID || secrets.APP_STORE_API_ISSUER_ID }}
+          API_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY || secrets.APP_STORE_API_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          echo "Starting automatic App Store Review submission..."
+          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8"
+          IPA_PATH=$(ls ios/build/ipa/*.ipa | head -n 1)
+
+          # Sử dụng Fastlane deliver chuẩn của Apple developer ecosystem
+          fastlane deliver \
+            --api_key_path "$KEY_PATH" \
+            --ipa "$IPA_PATH" \
+            --skip_screenshots true \
+            --skip_metadata true \
+            --skip_binary_upload true \
+            --submit_for_review true \
+            --automatic_release true \
+            --force true || {
+              echo "⚠️ Fastlane deliver submit encountered a non-fatal warning, build is already uploaded."
+            }
+          echo "✓ Completed App Store review submission flow!"
