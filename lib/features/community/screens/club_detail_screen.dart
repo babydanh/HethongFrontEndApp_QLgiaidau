@@ -766,43 +766,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       ),
                     ),
                   ],
-                  // Nút 3: Quản lý nhanh cho Chủ nhiệm / Quản trị viên
-                  if (isClubAdmin) ...[
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => context.push(
-                          '/club/${widget.clubId}/manage',
-                          extra: isOwner,
-                        ),
-                        icon: const Icon(
-                          Icons.tune_rounded,
-                          size: 16,
-                          color: AppTheme.primary,
-                        ),
-                        label: Text(
-                          l10n.club_manageShort,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                            color: AppTheme.primary,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: AppTheme.primary.withValues(
-                            alpha: 0.08,
-                          ),
-                          side: BorderSide(
-                            color: AppTheme.primary.withValues(alpha: 0.4),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
                 ] else ...[
                   Expanded(
                     child: Container(

@@ -48,21 +48,30 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
     _transform.value = Matrix4.identity();
   }
 
+  void _setZoom(double value) {
+    final translation = _transform.value.getTranslation();
+    setState(() => _zoom = value);
+    _transform.value = Matrix4.identity()
+      ..translateByDouble(translation.x, translation.y, 0, 1)
+      ..scaleByDouble(value, value, value, 1);
+  }
+
   Uint8List _crop() {
     const viewport = 280.0;
-    final scale =
-        (_source.width > _source.height ? _source.width : _source.height) /
-        viewport /
-        _zoom;
+    final longest =
+        (_source.width > _source.height ? _source.width : _source.height)
+            .toDouble();
+    final displayScale = longest / viewport * _zoom;
     final matrix = _transform.value;
-    final dx = matrix.getTranslation().x / _zoom;
-    final dy = matrix.getTranslation().y / _zoom;
-    final size = (viewport * scale).round().clamp(
+    final translation = matrix.getTranslation();
+    final size = (longest / displayScale).round().clamp(
       1,
       _source.width < _source.height ? _source.width : _source.height,
     );
-    final centerX = _source.width / 2 - dx * scale;
-    final centerY = _source.height / 2 - dy * scale;
+    final centerX =
+        _source.width / 2 - translation.x / displayScale * longest / viewport;
+    final centerY =
+        _source.height / 2 - translation.y / displayScale * longest / viewport;
     final left = (centerX - size / 2).round().clamp(0, _source.width - size);
     final top = (centerY - size / 2).round().clamp(0, _source.height - size);
     final cropped = img.copyCrop(
@@ -108,7 +117,7 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
                     value: _zoom,
                     min: 1,
                     max: 4,
-                    onChanged: (value) => setState(() => _zoom = value),
+                    onChanged: _setZoom,
                   ),
                 ),
                 const Icon(Icons.zoom_in, size: 18),

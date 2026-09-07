@@ -6,6 +6,7 @@ import 'package:shimmer/shimmer.dart';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
 
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -149,6 +150,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (pickedFile == null) return;
 
     final bytes = await pickedFile.readAsBytes();
+    if (!mounted) return;
     final fileName = pickedFile.name;
 
     if (isCover) {
@@ -182,10 +184,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         if (mounted) setState(() => _uploadingCover = false);
       }
     } else {
+      final croppedBytes = await ImageCropDialog.show(
+        context,
+        bytes: bytes,
+        title: l10n.profileChangeAvatar,
+      );
+      if (croppedBytes == null) return;
       setState(() => _uploading = true);
       try {
         final repo = ref.read(userRepositoryProvider);
-        await repo.uploadAvatar(bytes, fileName);
+        await repo.uploadAvatar(croppedBytes, 'profile_avatar.png');
         ref.invalidate(userProfileProvider);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -517,8 +525,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-
-
   Widget _buildTabButton(int index, String label, IconData icon) {
     final colors = context.colors;
     final isSelected = _activeTab == index;
@@ -567,7 +573,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         const <PlayerRanking>[];
     final eligibleRankings =
         rankings
-            .where((r) => r.isLeaderboardEligible && (r.eloPoints > 0 || r.tierName.isNotEmpty))
+            .where(
+              (r) =>
+                  r.isLeaderboardEligible &&
+                  (r.eloPoints > 0 || r.tierName.isNotEmpty),
+            )
             .toList()
           ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
     final allRankings = rankings.toList()
@@ -910,8 +920,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         .toList(growable: false);
   }
 
-
-
   // ─── INFO CARD ──────────────────────────────────────────────────────
   Widget _buildInfoCard(BuildContext context, UserProfile profile) {
     final colors = context.colors;
@@ -1152,7 +1160,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ];
         final seenIds = <String>{};
-        final deduplicatedItems = <({dynamic tournament, ({String label, IconData icon, Color color}) role})>[];
+        final deduplicatedItems =
+            <
+              ({
+                dynamic tournament,
+                ({String label, IconData icon, Color color}) role,
+              })
+            >[];
 
         for (final group in roleGroups) {
           for (final item in group.items) {
@@ -1246,7 +1260,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   onPressed: () => context.go('/dashboard'),
                   icon: const Icon(Icons.open_in_new_rounded, size: 16),
                   label: Text(
-                    l10n.profileViewAllCount(deduplicatedItems.length.toString()),
+                    l10n.profileViewAllCount(
+                      deduplicatedItems.length.toString(),
+                    ),
                   ),
                 ),
               ),
@@ -1894,7 +1910,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       },
       child: InkWell(
         onTap: () {
-          final isManager = roleLabel == l10n.profileOwnerTournamentRole ||
+          final isManager =
+              roleLabel == l10n.profileOwnerTournamentRole ||
               roleLabel == l10n.profileOrganizerTournamentRole;
           if (isManager) {
             if (t.isClubLite) {
@@ -1928,7 +1945,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    if (t is Tournament && t.communityName != null && t.communityName!.isNotEmpty) ...[
+                    if (t is Tournament &&
+                        t.communityName != null &&
+                        t.communityName!.isNotEmpty) ...[
                       Row(
                         children: [
                           Icon(
@@ -1955,9 +1974,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ],
                     Text(
                       t.isClubLite
-                          ? (t is Tournament && t.communityName != null && t.communityName!.isNotEmpty
-                              ? 'Giải Siêu Lite • ${t.communityName}'
-                              : l10n.profileLiteTournamentHint)
+                          ? (t is Tournament &&
+                                    t.communityName != null &&
+                                    t.communityName!.isNotEmpty
+                                ? 'Giải Siêu Lite • ${t.communityName}'
+                                : l10n.profileLiteTournamentHint)
                           : l10n.profileAdvancedTournamentHint,
                       style: TextStyle(
                         fontSize: 9,
