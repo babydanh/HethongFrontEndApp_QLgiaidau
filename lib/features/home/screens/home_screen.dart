@@ -2503,84 +2503,89 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         }
         return false;
       },
-      child: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-        SliverToBoxAdapter(child: SizedBox(height: _headerHeight + 52.0)),
-        SliverToBoxAdapter(child: const SizedBox(height: 8)),
-        if (_isClubInitialLoading && currentList.isEmpty)
-          const SliverFillRemaining(
-            child: Center(
-              child: CircularProgressIndicator(color: AppTheme.primary),
-            ),
-          )
-        else if (currentList.isEmpty)
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 72.0,
-                    height: 72.0,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(20.0),
-                    ),
-                    child: const Icon(
-                      Icons.group_off_rounded,
-                      size: 36,
-                      color: Color(0xFFB0BEC5),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.homeNoClubs,
-                    style: const TextStyle(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    l10n.homeNoClubsHint,
-                    style: const TextStyle(
-                      fontSize: 13.0,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ),
-                  const SizedBox(height: 80),
-                ],
-              ),
-            ),
-          )
-        else
-          SliverMainAxisGroup(
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) => _buildClubCardPremium(currentList[i]),
-                    childCount: currentList.length,
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: _buildCursorLoadMoreBar(
-                  isLoadingMore: _isClubLoadingMore,
-                  hasMore: _serverClubHasMore,
-                  loadMoreLabel: 'Xem thêm câu lạc bộ',
-                  allLoadedLabel: 'Đã hiển thị tất cả câu lạc bộ',
-                  onLoadMore: () =>
-                      _fetchServerClubPage(isLoadMore: true),
-                ),
-              ),
-            ],
+      child: RefreshIndicator(
+        onRefresh: () => _fetchServerClubPage(isLoadMore: false),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
           ),
-      ],
+          slivers: [
+          SliverToBoxAdapter(child: SizedBox(height: _headerHeight + 52.0)),
+          SliverToBoxAdapter(child: const SizedBox(height: 8)),
+          if (_isClubInitialLoading && currentList.isEmpty)
+            const SliverFillRemaining(
+              child: Center(
+                child: CircularProgressIndicator(color: AppTheme.primary),
+              ),
+            )
+          else if (currentList.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 72.0,
+                      height: 72.0,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(20.0),
+                      ),
+                      child: const Icon(
+                        Icons.group_off_rounded,
+                        size: 36,
+                        color: Color(0xFFB0BEC5),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.homeNoClubs,
+                      style: const TextStyle(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      l10n.homeNoClubsHint,
+                      style: const TextStyle(
+                        fontSize: 13.0,
+                        color: Color(0xFF94A3B8),
+                      ),
+                    ),
+                    const SizedBox(height: 80),
+                  ],
+                ),
+              ),
+            )
+          else
+            SliverMainAxisGroup(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, i) => _buildClubCardPremium(currentList[i]),
+                      childCount: currentList.length,
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildCursorLoadMoreBar(
+                    isLoadingMore: _isClubLoadingMore,
+                    hasMore: _serverClubHasMore,
+                    loadMoreLabel: 'Xem thêm câu lạc bộ',
+                    allLoadedLabel: 'Đã hiển thị tất cả câu lạc bộ',
+                    onLoadMore: () =>
+                        _fetchServerClubPage(isLoadMore: true),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
     ),
   );
   }
@@ -2764,155 +2769,215 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   // ─── Content Area ───
                   Padding(
-                    padding: const EdgeInsets.all(14),
+                    padding: EdgeInsets.fromLTRB(16, hasLogo ? 0 : 12, 16, 14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (hasLogo) ...[
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: context.colors.bgSurface,
-                                  border: Border.all(
-                                    color: context.colors.border,
-                                    width: 1.5,
+                              Transform.translate(
+                                offset: const Offset(0, -22),
+                                child: Container(
+                                  width: 52,
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2.5,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.12),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                child: ClipOval(
-                                  child: Image.network(
-                                    club.logoUrl!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, _, _) => Center(
-                                      child: Text(
-                                        club.name.isNotEmpty
-                                            ? club.name.characters.first.toUpperCase()
-                                            : 'C',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                          color: sportColor,
+                                  child: ClipOval(
+                                    child: Image.network(
+                                      club.logoUrl!.split(',')[0],
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, _, _) => Center(
+                                        child: Text(
+                                          club.name.isNotEmpty
+                                              ? club.name.characters.first.toUpperCase()
+                                              : 'C',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20,
+                                            color: sportColor,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 12),
                             ],
                             Expanded(
-                              child: Text(
-                                club.name,
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w900,
-                                  color: context.colors.textPrimary,
-                                  letterSpacing: -0.2,
+                              child: Padding(
+                                padding: EdgeInsets.only(top: hasLogo ? 8 : 0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      club.name,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900,
+                                        color: context.colors.textPrimary,
+                                        letterSpacing: -0.2,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.people_rounded,
+                                          size: 13,
+                                          color: context.colors.textMuted,
+                                        ),
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          l10n.homeMembersCount(
+                                            club.memberCount > 0 ? club.memberCount : 1,
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: context.colors.textSecondary,
+                                          ),
+                                        ),
+                                        if (club.tournamentCount > 0) ...[
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                                            child: Text('•', style: TextStyle(color: context.colors.textMuted, fontSize: 12)),
+                                          ),
+                                          Icon(
+                                            Icons.emoji_events_rounded,
+                                            size: 13,
+                                            color: context.colors.textMuted,
+                                          ),
+                                          const SizedBox(width: 3),
+                                          Text(
+                                            '${club.tournamentCount} giải đấu',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: context.colors.textSecondary,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: hasLogo ? 4 : 8),
 
-                        // Stats (Members & Location)
+                        // Badges Row (Sports + Location + Mode)
                         Row(
                           children: [
-                            Icon(
-                              Icons.people_rounded,
-                              size: 14,
-                              color: context.colors.textSecondary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              l10n.homeMembersCount(
-                                club.memberCount > 0 ? club.memberCount : 2,
-                              ),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: context.colors.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Icon(
-                              Icons.location_on_rounded,
-                              size: 14,
-                              color: context.colors.textMuted,
-                            ),
-                            const SizedBox(width: 4),
                             Expanded(
-                              child: Text(
-                                (club.locationAddress != null &&
-                                        club.locationAddress!.trim().isNotEmpty)
-                                    ? club.locationAddress!.trim()
-                                    : l10n.vietnam,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: context.colors.textMuted,
-                                  fontWeight: FontWeight.w600,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                physics: const BouncingScrollPhysics(),
+                                child: Row(
+                                  children: [
+                                    ...(() {
+                                      final List<String> sports = [];
+                                      if (club.sports.isNotEmpty) {
+                                        for (final s in club.sports) {
+                                          final sTrim = s.trim();
+                                          if (sTrim.isEmpty) continue;
+                                          final mapped = l10n.sportDisplayName(sTrim);
+                                          if (!sports.contains(mapped)) {
+                                            sports.add(mapped);
+                                          }
+                                        }
+                                      }
+                                      if (sports.isEmpty) {
+                                        sports.add(l10n.homeSportFallback);
+                                      }
+                                      return sports.map((sName) {
+                                        return Container(
+                                          margin: const EdgeInsets.only(right: 6),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 3,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: sportColor.withValues(alpha: 0.12),
+                                            borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(
+                                              color: sportColor.withValues(alpha: 0.25),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            sName.toUpperCase(),
+                                            style: TextStyle(
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.w900,
+                                              color: sportColor,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                        );
+                                      }).toList();
+                                    })(),
+                                    if (club.locationAddress != null &&
+                                        club.locationAddress!.trim().isNotEmpty) ...[
+                                      Container(
+                                        margin: const EdgeInsets.only(right: 6),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: context.colors.bgSurface,
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(
+                                            color: context.colors.border,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.location_on_rounded,
+                                              size: 11,
+                                              color: context.colors.textMuted,
+                                            ),
+                                            const SizedBox(width: 3),
+                                            Text(
+                                              club.locationAddress!.trim(),
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: context.colors.textMuted,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 10),
-
-                        // All Sports Tags (Pills)
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          physics: const BouncingScrollPhysics(),
-                          child: Row(
-                            children: (() {
-                              final List<String> sports = [];
-                              if (club.sports.isNotEmpty) {
-                                for (final s in club.sports) {
-                                  final sTrim = s.trim();
-                                  if (sTrim.isEmpty) continue;
-                                  final mapped = l10n.sportDisplayName(sTrim);
-                                  if (!sports.contains(mapped)) {
-                                    sports.add(mapped);
-                                  }
-                                }
-                              }
-                              if (sports.isEmpty) {
-                                sports.add(l10n.homeSportFallback);
-                              }
-                              return sports.map((sName) {
-                                return Container(
-                                  margin: const EdgeInsets.only(right: 6),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 9,
-                                    vertical: 3.5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: sportColor.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                      color: sportColor.withValues(alpha: 0.25),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    sName.toUpperCase(),
-                                    style: TextStyle(
-                                      fontSize: 9.5,
-                                      fontWeight: FontWeight.w900,
-                                      color: sportColor,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                );
-                              }).toList();
-                            })(),
-                          ),
                         ),
                       ],
                     ),
