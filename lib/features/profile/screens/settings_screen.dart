@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
@@ -250,11 +251,19 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       maxWidth: 800,
     );
     if (file == null) return;
+    final originalBytes = await file.readAsBytes();
+    if (!mounted) return;
+    final croppedBytes = await ImageCropDialog.show(
+      context,
+      bytes: originalBytes,
+      title: l10n.profileChangeAvatar,
+    );
+    if (croppedBytes == null) return;
     setState(() => _isUploadingAvatar = true);
     try {
       await ref
           .read(userRepositoryProvider)
-          .uploadAvatar(await file.readAsBytes(), file.name);
+          .uploadAvatar(croppedBytes, 'profile_avatar.png');
       ref.invalidate(userProfileProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
