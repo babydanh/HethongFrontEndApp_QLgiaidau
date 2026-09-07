@@ -2141,6 +2141,7 @@ class _ClubMatchScoreCard extends StatelessWidget {
 
     return MatchModel(
       id: match.id,
+      clubMatchSessionId: match.sessionId,
       round: 1,
       matchNumber: 1,
       team1Id: 'SIDE_A',

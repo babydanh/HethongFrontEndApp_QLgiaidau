@@ -2748,11 +2748,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         );
                                       },
                                       errorBuilder: (_, _, _) =>
-                                          _buildCardBannerPlaceholder(
-                                            sportColor,
-                                          ),
+                                          _buildCardBannerFallback(sportColor),
                                     )
-                                  : _buildCardBannerPlaceholder(sportColor);
+                                  : _buildCardBannerFallback(sportColor);
                             },
                           )
                         else

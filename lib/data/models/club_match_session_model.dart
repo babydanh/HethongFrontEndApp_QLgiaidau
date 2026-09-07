@@ -183,6 +183,7 @@ class ClubSessionMatchMemberModel {
 class ClubSessionMatchModel {
   final String id;
   final String status;
+  final String sessionId;
   final String sportKey;
   final List<String> sideAUserIds;
   final List<String> sideBUserIds;
@@ -208,6 +209,7 @@ class ClubSessionMatchModel {
   const ClubSessionMatchModel({
     required this.id,
     required this.status,
+    this.sessionId = '',
     this.sportKey = '',
     required this.sideAUserIds,
     required this.sideBUserIds,
@@ -239,6 +241,12 @@ class ClubSessionMatchModel {
     return ClubSessionMatchModel(
       id: json['id']?.toString() ?? '',
       status: json['status']?.toString() ?? 'SCHEDULED',
+      sessionId:
+          (json['sessionId'] ??
+                  json['session_id'] ??
+                  json['clubMatchSessionId'])
+              ?.toString() ??
+          '',
       sportKey:
           (json['sport'] ?? json['sportKey'] ?? json['categorySlug'])
               ?.toString() ??

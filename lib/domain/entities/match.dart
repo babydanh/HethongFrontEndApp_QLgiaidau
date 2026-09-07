@@ -127,6 +127,9 @@ class MatchModel {
   /// the model lets the app fan one cursor-paginated response back into the
   /// tournament sections without issuing one request per tournament.
   final String? tournamentId;
+
+  /// Owning bracket-free club session, when this is a social-session match.
+  final String? clubMatchSessionId;
   final int round;
 
   /// Persisted encounter leg when the tournament has multiple legs.
@@ -196,6 +199,7 @@ class MatchModel {
   const MatchModel({
     required this.id,
     this.tournamentId,
+    this.clubMatchSessionId,
     required this.round,
     this.leg,
     required this.matchNumber,
@@ -391,6 +395,11 @@ class MatchModel {
           (json['tournament'] is Map
               ? (json['tournament'] as Map)['id']?.toString()
               : null),
+      clubMatchSessionId:
+          json['clubMatchSessionId']?.toString() ??
+          json['club_match_session_id']?.toString() ??
+          json['sessionId']?.toString() ??
+          json['session_id']?.toString(),
       round: parseInt(json['round'], fallback: 1),
       leg: json['leg'] is num
           ? (json['leg'] as num).toInt()
@@ -570,6 +579,7 @@ class MatchModel {
       'timeLimitMinutes': timeLimitMinutes,
       'updatedAt': updatedAt.toIso8601String(),
       if (revision != null) 'revision': revision,
+      if (clubMatchSessionId != null) 'clubMatchSessionId': clubMatchSessionId,
       if (refereeName != null) 'refereeName': refereeName,
       if (refereeId != null) 'refereeId': refereeId,
       'penalties': penalties.map((p) => p.toJson()).toList(),
@@ -594,6 +604,7 @@ class MatchModel {
   MatchModel copyWith({
     String? id,
     String? tournamentId,
+    String? clubMatchSessionId,
     int? round,
     int? leg,
     int? matchNumber,
@@ -647,6 +658,7 @@ class MatchModel {
     return MatchModel(
       id: id ?? this.id,
       tournamentId: tournamentId ?? this.tournamentId,
+      clubMatchSessionId: clubMatchSessionId ?? this.clubMatchSessionId,
       round: round ?? this.round,
       leg: leg ?? this.leg,
       matchNumber: matchNumber ?? this.matchNumber,

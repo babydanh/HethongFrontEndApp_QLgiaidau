@@ -78,12 +78,10 @@ class ApiCommunityRepository implements ICommunityRepository {
   }
 
   @override
-  Future<({
-    List<Community> communities,
-    String? nextCursor,
-    bool hasMore,
-    int total,
-  })> getCommunitiesPaged({
+  Future<
+    ({List<Community> communities, String? nextCursor, bool hasMore, int total})
+  >
+  getCommunitiesPaged({
     String? cursor,
     int limit = 6,
     String? search,
@@ -102,9 +100,7 @@ class ApiCommunityRepository implements ICommunityRepository {
       if (provinceCode != null && provinceCode.isNotEmpty) {
         params['provinceCode'] = provinceCode;
       }
-      if (categoryId != null &&
-          categoryId != 'all' &&
-          categoryId.isNotEmpty) {
+      if (categoryId != null && categoryId != 'all' && categoryId.isNotEmpty) {
         params['categoryId'] = categoryId;
       }
 
@@ -114,16 +110,17 @@ class ApiCommunityRepository implements ICommunityRepository {
       );
       if (response.statusCode == 200) {
         final raw = response.data;
-        final payload =
-            raw is Map && raw.containsKey('data') ? raw['data'] : raw;
+        final payload = raw is Map && raw.containsKey('data')
+            ? raw['data']
+            : raw;
         final meta = raw is Map && raw.containsKey('meta')
             ? raw['meta'] as Map<String, dynamic>?
             : null;
         final list = payload is List
             ? payload
             : (payload is Map && payload.containsKey('items')
-                ? payload['items'] as List
-                : const []);
+                  ? payload['items'] as List
+                  : const []);
         final communities = list
             .map((e) => Community.fromJson(e as Map<String, dynamic>))
             .where(
@@ -132,9 +129,11 @@ class ApiCommunityRepository implements ICommunityRepository {
                   c.visibility.toUpperCase() != 'PRIVATE',
             )
             .toList();
-        final nextCursor = meta?['nextCursor']?.toString() ??
+        final nextCursor =
+            meta?['nextCursor']?.toString() ??
             (raw is Map ? raw['nextCursor']?.toString() : null);
-        final hasMore = meta?['hasMore'] == true ||
+        final hasMore =
+            meta?['hasMore'] == true ||
             (nextCursor != null && nextCursor.isNotEmpty);
         final total = meta?['total'] is int
             ? meta!['total'] as int
@@ -153,20 +152,19 @@ class ApiCommunityRepository implements ICommunityRepository {
         total: 0,
       );
     } catch (e, stack) {
-      _log.error('Lỗi getCommunitiesPaged, fallback sang getCommunities', e, stack);
-      final fallback = await getCommunities(
-        search: search,
-        provinceCode: provinceCode,
+      _log.error(
+        'Lỗi getCommunitiesPaged, fallback sang getCommunities',
+        e,
+        stack,
       );
       return (
-        communities: fallback,
+        communities: <Community>[],
         nextCursor: null,
         hasMore: false,
-        total: fallback.length,
+        total: 0,
       );
     }
   }
-
 
   @override
   Future<List<Community>> getMyCommunities() async {
@@ -329,12 +327,15 @@ class ApiCommunityRepository implements ICommunityRepository {
   }
 
   @override
-  Future<({
-    List<CommunityTournamentModel> tournaments,
-    String? nextCursor,
-    bool hasMore,
-    int total,
-  })> getTournamentsPaged(
+  Future<
+    ({
+      List<CommunityTournamentModel> tournaments,
+      String? nextCursor,
+      bool hasMore,
+      int total,
+    })
+  >
+  getTournamentsPaged(
     String communityId, {
     String? cursor,
     int limit = 6,
@@ -641,15 +642,13 @@ class ApiCommunityRepository implements ICommunityRepository {
     required int points,
     required String reason,
   }) async {
-    _log.info('Điều phối ELO cho user $userId trong CLB $communityId ($operation $points)');
+    _log.info(
+      'Điều phối ELO cho user $userId trong CLB $communityId ($operation $points)',
+    );
     try {
       final response = await _dioClient.dio.post(
         '/communities/$communityId/members/$userId/elo',
-        data: {
-          'operation': operation,
-          'points': points,
-          'reason': reason,
-        },
+        data: {'operation': operation, 'points': points, 'reason': reason},
       );
       final raw = response.data;
       if (raw is Map && raw['data'] is Map) {

@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_event_model.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 
@@ -29,7 +30,10 @@ class MatchController {
     ref.invalidate(
       singleMatchProvider((tournamentId: tournamentId, matchId: matchId)),
     );
-    if (tournamentId.isEmpty) return;
+    if (tournamentId.isEmpty) {
+      _invalidateClubSessionSurface(currentMatch);
+      return;
+    }
     ref.invalidate(matchesProvider(tournamentId));
     ref.invalidate(liveMatchesProvider(tournamentId));
     ref.invalidate(bracketMatchesProvider(tournamentId));
@@ -42,6 +46,12 @@ class MatchController {
     ref.invalidate(matchesWithDivisionProvider(params));
     ref.invalidate(liteBracketMatchesWithDivisionProvider(params));
     ref.invalidate(bracketMatchesWithDivisionProvider(params));
+  }
+
+  void _invalidateClubSessionSurface(MatchModel? currentMatch) {
+    final sessionId = currentMatch?.clubMatchSessionId?.trim();
+    if (sessionId == null || sessionId.isEmpty) return;
+    ref.invalidate(clubSessionDetailProvider(sessionId));
   }
 
   Future<void> updateConfig({
@@ -222,6 +232,12 @@ class MatchController {
     final tournament = tournamentId.isNotEmpty
         ? ref.read(tournamentProvider(tournamentId)).value
         : null;
+    // A club-session card is already backed by the canonical session-match
+    // endpoint. Let that endpoint read the current row revision itself so a
+    // delayed socket echo from the previous set cannot make the next point
+    // fail with a stale client revision. Tournament matches keep the stricter
+    // client-provided optimistic lock unchanged.
+    final requestRevision = tournamentId.isEmpty ? null : expectedRevision;
     await ref
         .read(matchRepositoryProvider)
         .updateScoreDetails(
@@ -233,7 +249,7 @@ class MatchController {
           scoreDetailsExtras: scoreDetailsExtras,
           winnerId: winnerId,
           overrideReason: overrideReason,
-          expectedRevision: expectedRevision,
+          expectedRevision: requestRevision,
           useLiteParticipantAccess: isSuperLiteTournament(
             tournamentConfig: currentMatch?.tournamentConfig,
             tournamentIsLite: tournament?.isLite == true,
@@ -246,6 +262,11 @@ class MatchController {
     // set or finalize a match keep the durable surface refresh enabled.
     if (refreshSurfaces) {
       _invalidateMatchSurfaces(currentMatch);
+    } else if (tournamentId.isEmpty) {
+      // Refresh the outer session card without invalidating the scoring
+      // provider itself; invalidating that provider on every live tap makes
+      // the scorer visibly jump while the debounced write is in flight.
+      _invalidateClubSessionSurface(currentMatch);
     }
   }
 
