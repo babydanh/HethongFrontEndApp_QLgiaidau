@@ -56,8 +56,13 @@ class AppUpdateService {
       '/app/version',
       queryParameters: {'platform': platform},
     );
-    final data = response.data is Map
-        ? Map<String, dynamic>.from(response.data as Map)
+    final raw = response.data;
+    final data = raw is Map
+        ? Map<String, dynamic>.from(
+            (raw.containsKey('data') && raw['data'] is Map)
+                ? raw['data'] as Map
+                : raw,
+          )
         : null;
     if (data == null) return null;
     return AppUpdateInfo(
