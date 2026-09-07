@@ -431,91 +431,134 @@ class _ClubMatchSessionCreateScreenState
   }
 
   Widget _buildRecurringSection(AppLocalizations l10n) {
+    final colors = context.colors;
     final weekly =
         _recurringFrequency == 'WEEKLY' || _recurringFrequency == 'BIWEEKLY';
+
+    InputDecoration inputDecoration(String labelText) {
+      return InputDecoration(
+        labelText: labelText,
+        labelStyle: TextStyle(
+          fontSize: 13,
+          color: colors.textSecondary,
+          fontWeight: FontWeight.w500,
+        ),
+        filled: true,
+        fillColor: colors.bgSurface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colors.info, width: 1.5),
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SwitchListTile.adaptive(
           contentPadding: EdgeInsets.zero,
           value: _isRecurring,
-          title: Text(l10n.clubMatchSessionRecurringEnabled),
-          subtitle: Text(l10n.clubMatchSessionRecurringHint),
+          activeTrackColor: colors.info,
+          title: Text(
+            l10n.clubMatchSessionRecurringEnabled,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
+          subtitle: Text(
+            l10n.clubMatchSessionRecurringHint,
+            style: TextStyle(
+              fontSize: 12,
+              color: colors.textSecondary,
+            ),
+          ),
           onChanged: (value) => setState(() => _isRecurring = value),
         ),
         if (_isRecurring) ...[
+          const SizedBox(height: AppTheme.spacingMD),
           DropdownButtonFormField<String>(
             initialValue: _recurringFrequency,
-            decoration: InputDecoration(
-              labelText: l10n.clubMatchSessionRecurringFrequency,
-            ),
+            decoration: inputDecoration(l10n.clubMatchSessionRecurringFrequency),
+            dropdownColor: colors.bgCard,
+            icon: Icon(Icons.keyboard_arrow_down_rounded, color: colors.textMuted),
             items: [
               DropdownMenuItem(
                 value: 'DAILY',
-                child: Text(l10n.clubMatchSessionRecurringDaily),
+                child: Text(l10n.clubMatchSessionRecurringDaily, style: TextStyle(color: colors.textPrimary, fontSize: 13.5)),
               ),
               DropdownMenuItem(
                 value: 'WEEKLY',
-                child: Text(l10n.clubMatchSessionRecurringWeekly),
+                child: Text(l10n.clubMatchSessionRecurringWeekly, style: TextStyle(color: colors.textPrimary, fontSize: 13.5)),
               ),
               DropdownMenuItem(
                 value: 'BIWEEKLY',
-                child: Text(l10n.clubMatchSessionRecurringBiweekly),
+                child: Text(l10n.clubMatchSessionRecurringBiweekly, style: TextStyle(color: colors.textPrimary, fontSize: 13.5)),
               ),
               DropdownMenuItem(
                 value: 'MONTHLY',
-                child: Text(l10n.clubMatchSessionRecurringMonthly),
+                child: Text(l10n.clubMatchSessionRecurringMonthly, style: TextStyle(color: colors.textPrimary, fontSize: 13.5)),
               ),
             ],
             onChanged: (value) => setState(
               () => _recurringFrequency = value ?? _recurringFrequency,
             ),
           ),
-          if (weekly)
+          if (weekly) ...[
+            const SizedBox(height: AppTheme.spacingMD),
             DropdownButtonFormField<int>(
               initialValue: _recurringDayOfWeek,
-              decoration: InputDecoration(
-                labelText: l10n.clubMatchSessionRecurringWeekday,
-              ),
+              decoration: inputDecoration(l10n.clubMatchSessionRecurringWeekday),
+              dropdownColor: colors.bgCard,
+              icon: Icon(Icons.keyboard_arrow_down_rounded, color: colors.textMuted),
               items: [
                 DropdownMenuItem(
                   value: 1,
-                  child: Text(l10n.clubMatchSessionWeekdayMonday),
+                  child: Text(l10n.clubMatchSessionWeekdayMonday, style: TextStyle(color: colors.textPrimary, fontSize: 13.5)),
                 ),
                 DropdownMenuItem(
                   value: 2,
-                  child: Text(l10n.clubMatchSessionWeekdayTuesday),
+                  child: Text(l10n.clubMatchSessionWeekdayTuesday, style: TextStyle(color: colors.textPrimary, fontSize: 13.5)),
                 ),
                 DropdownMenuItem(
                   value: 3,
-                  child: Text(l10n.clubMatchSessionWeekdayWednesday),
+                  child: Text(l10n.clubMatchSessionWeekdayWednesday, style: TextStyle(color: colors.textPrimary, fontSize: 13.5)),
                 ),
                 DropdownMenuItem(
                   value: 4,
-                  child: Text(l10n.clubMatchSessionWeekdayThursday),
+                  child: Text(l10n.clubMatchSessionWeekdayThursday, style: TextStyle(color: colors.textPrimary, fontSize: 13.5)),
                 ),
                 DropdownMenuItem(
                   value: 5,
-                  child: Text(l10n.clubMatchSessionWeekdayFriday),
+                  child: Text(l10n.clubMatchSessionWeekdayFriday, style: TextStyle(color: colors.textPrimary, fontSize: 13.5)),
                 ),
                 DropdownMenuItem(
                   value: 6,
-                  child: Text(l10n.clubMatchSessionWeekdaySaturday),
+                  child: Text(l10n.clubMatchSessionWeekdaySaturday, style: TextStyle(color: colors.textPrimary, fontSize: 13.5)),
                 ),
                 DropdownMenuItem(
                   value: 0,
-                  child: Text(l10n.clubMatchSessionWeekdaySunday),
+                  child: Text(l10n.clubMatchSessionWeekdaySunday, style: TextStyle(color: colors.textPrimary, fontSize: 13.5)),
                 ),
               ],
               onChanged: (value) => setState(
                 () => _recurringDayOfWeek = value ?? _recurringDayOfWeek,
               ),
             ),
-          ClubMatchSessionDateChoice(
-            label: l10n.clubMatchSessionRecurringTime,
-            valueLabel: _recurringTime.format(context),
-            hasValue: true,
-            icon: Icons.schedule_rounded,
+          ],
+          const SizedBox(height: AppTheme.spacingMD),
+          InkWell(
+            borderRadius: BorderRadius.circular(12),
             onTap: () async {
               final value = await showTimePicker(
                 context: context,
@@ -525,12 +568,52 @@ class _ClubMatchSessionCreateScreenState
                 setState(() => _recurringTime = value);
               }
             },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.border),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.access_time_rounded, size: 18, color: colors.info),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.clubMatchSessionRecurringTime,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: colors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _recurringTime.format(context),
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            color: colors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded, size: 20, color: colors.textMuted),
+                ],
+              ),
+            ),
           ),
+          const SizedBox(height: AppTheme.spacingMD),
           DropdownButtonFormField<int>(
             initialValue: _recurringAdvanceDays,
-            decoration: InputDecoration(
-              labelText: l10n.clubMatchSessionRecurringAdvanceDays,
-            ),
+            decoration: inputDecoration(l10n.clubMatchSessionRecurringAdvanceDays),
+            dropdownColor: colors.bgCard,
+            icon: Icon(Icons.keyboard_arrow_down_rounded, color: colors.textMuted),
             items: List.generate(
               8,
               (days) => DropdownMenuItem(
@@ -539,6 +622,7 @@ class _ClubMatchSessionCreateScreenState
                   days == 0
                       ? l10n.clubMatchSessionRecurringSameDay
                       : l10n.clubMatchSessionRecurringBeforeDays(days),
+                  style: TextStyle(color: colors.textPrimary, fontSize: 13.5),
                 ),
               ),
             ),
