@@ -10,7 +10,6 @@ import 'package:app_quanly_giaidau/core/utils/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
-import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -134,37 +133,43 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         final dataList = raw is Map<String, dynamic>
             ? (raw['data'] as List<dynamic>? ?? const [])
             : (raw as List<dynamic>? ?? const []);
-        final teams = dataList.map((item) {
-          final json = item as Map<String, dynamic>;
-          final name =
-              (json['teamName'] ??
-                      json['team_name'] ??
-                      l10n.clubRankingTeamFallback)
-                  .toString();
-          return PlayerRanking(
-            id: (json['id'] ?? json['teamId'] ?? name).toString(),
-            userId: '',
-            fullName: name,
-            avatarUrl:
-                json['logoUrl']?.toString() ?? json['logo_url']?.toString(),
-            categoryId: categoryId,
-            matchType: 'SINGLES',
-            genderRestriction: 'MIXED',
-            eloPoints:
-                ((json['eloPoints'] ?? json['elo_points'] ?? 1000) as num)
-                    .toInt(),
-            peakElo: ((json['peakElo'] ?? json['peak_elo']) as num?)?.toInt(),
-            matchesPlayed:
-                ((json['matchesPlayed'] ?? json['matches_played'] ?? 0) as num)
-                    .toInt(),
-            matchesWon:
-                ((json['matchesWon'] ?? json['matches_won'] ?? 0) as num)
-                    .toInt(),
-            winStreak: ((json['winStreak'] ?? json['win_streak'] ?? 0) as num)
-                .toInt(),
-            tierName: json['tierName']?.toString() ?? '',
-          );
-        }).toList();
+        final teams = dataList
+            .map((item) {
+              final json = item as Map<String, dynamic>;
+              final name =
+                  (json['teamName'] ??
+                          json['team_name'] ??
+                          l10n.clubRankingTeamFallback)
+                      .toString();
+              return PlayerRanking(
+                id: (json['id'] ?? json['teamId'] ?? name).toString(),
+                userId: '',
+                fullName: name,
+                avatarUrl:
+                    json['logoUrl']?.toString() ?? json['logo_url']?.toString(),
+                categoryId: categoryId,
+                matchType: 'SINGLES',
+                genderRestriction: 'MIXED',
+                eloPoints:
+                    ((json['eloPoints'] ?? json['elo_points'] ?? 1000) as num)
+                        .toInt(),
+                peakElo: ((json['peakElo'] ?? json['peak_elo']) as num?)
+                    ?.toInt(),
+                matchesPlayed:
+                    ((json['matchesPlayed'] ?? json['matches_played'] ?? 0)
+                            as num)
+                        .toInt(),
+                matchesWon:
+                    ((json['matchesWon'] ?? json['matches_won'] ?? 0) as num)
+                        .toInt(),
+                winStreak:
+                    ((json['winStreak'] ?? json['win_streak'] ?? 0) as num)
+                        .toInt(),
+                tierName: json['tierName']?.toString() ?? '',
+              );
+            })
+            .where((team) => team.matchesPlayed > 0)
+            .toList();
         if (mounted) {
           setState(() {
             _rankings = teams;
@@ -188,40 +193,12 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
       final List<dynamic> dataList = raw is Map<String, dynamic>
           ? (raw['data'] as List<dynamic>? ?? [])
           : (raw as List<dynamic>? ?? []);
+      // Chỉ hiển thị người đã có dữ liệu thi đấu thật. Không biến thành viên
+      // CLB chưa đánh trận thành một bảng hạng giả với ELO mặc định 1000/LTD.
       var rankings = dataList
           .map((json) => PlayerRanking.fromJson(json as Map<String, dynamic>))
+          .where((ranking) => ranking.matchesPlayed > 0)
           .toList();
-      if (rankings.isEmpty && _selectedMatchType == 'SINGLES') {
-        final membersResponse = await dio.get(
-          '/communities/${widget.clubId}/members',
-        );
-        final rawMembers = membersResponse.data is Map<String, dynamic>
-            ? (membersResponse.data['data'] as List<dynamic>? ?? const [])
-            : (membersResponse.data as List<dynamic>? ?? const []);
-        rankings = rawMembers
-            .map(
-              (item) =>
-                  CommunityMemberModel.fromJson(item as Map<String, dynamic>),
-            )
-            .where((member) => member.status == 'JOINED')
-            .map(
-              (member) => PlayerRanking(
-                id: 'community-member-${member.id}',
-                userId: member.userId,
-                fullName:
-                    member.userFullName ??
-                    member.userEmail ??
-                    l10n.clubRankingMemberFallback,
-                avatarUrl: member.userAvatarUrl,
-                categoryId: categoryId,
-                matchType: _selectedMatchType,
-                genderRestriction: _selectedGender,
-                eloPoints: 1000,
-                tierName: l10n.clubRankingUnranked,
-              ),
-            )
-            .toList();
-      }
       if (mounted) {
         setState(() {
           _rankings = rankings;
@@ -316,11 +293,14 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
             controller: _searchController,
             onChanged: (value) {
               _searchDebounceTimer?.cancel();
-              _searchDebounceTimer = Timer(const Duration(milliseconds: 250), () {
-                if (mounted) {
-                  setState(() => _searchQuery = value);
-                }
-              });
+              _searchDebounceTimer = Timer(
+                const Duration(milliseconds: 250),
+                () {
+                  if (mounted) {
+                    setState(() => _searchQuery = value);
+                  }
+                },
+              );
             },
             decoration: InputDecoration(
               hintText: l10n.clubRankingSearchHint,

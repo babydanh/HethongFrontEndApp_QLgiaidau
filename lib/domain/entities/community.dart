@@ -49,19 +49,27 @@ class Community {
   });
 
   factory Community.fromJson(Map<String, dynamic> rawJson) {
-    final Map<String, dynamic> json = (rawJson['community'] is Map<String, dynamic>)
+    final Map<String, dynamic> json =
+        (rawJson['community'] is Map<String, dynamic>)
         ? (rawJson['community'] as Map<String, dynamic>)
         : rawJson;
 
     // 1. Môn thể thao — backend trả `categories` (List<Category>); fallback `sports`, `communitySports`
     final List<String> parsedSports = [];
-    for (final src in [json['categories'], json['sports'], json['communitySports']]) {
+    for (final src in [
+      json['categories'],
+      json['sports'],
+      json['communitySports'],
+    ]) {
       if (src is! List) continue;
       for (final e in src) {
         String sName = '';
         if (e is Map) {
           if (e['category'] is Map) {
-            sName = e['category']['name']?.toString() ?? e['category']['slug']?.toString() ?? '';
+            sName =
+                e['category']['name']?.toString() ??
+                e['category']['slug']?.toString() ??
+                '';
           } else {
             sName = e['name']?.toString() ?? e['id']?.toString() ?? '';
           }
@@ -85,14 +93,18 @@ class Community {
 
     // 2. Số lượng thành viên — ưu tiên `_count.members`, fallback `memberCount`
     final countObj = json['_count'] ?? rawJson['_count'];
-    int memberCount = countObj is Map ? int.tryParse(countObj['members']?.toString() ?? '') ?? 0 : 0;
+    int memberCount = countObj is Map
+        ? int.tryParse(countObj['members']?.toString() ?? '') ?? 0
+        : 0;
     if (memberCount == 0) {
       final mc = json['memberCount'] ?? rawJson['memberCount'];
       memberCount = int.tryParse(mc?.toString() ?? '') ?? 0;
     }
 
     // 3. Số giải đấu — từ `_count.tournaments`, fallback `tournamentCount`
-    int tournamentCount = countObj is Map ? int.tryParse(countObj['tournaments']?.toString() ?? '') ?? 0 : 0;
+    int tournamentCount = countObj is Map
+        ? int.tryParse(countObj['tournaments']?.toString() ?? '') ?? 0
+        : 0;
     if (tournamentCount == 0) {
       final tc = json['tournamentCount'] ?? rawJson['tournamentCount'];
       tournamentCount = int.tryParse(tc?.toString() ?? '') ?? 0;
@@ -100,14 +112,19 @@ class Community {
 
     // 4. Vai trò & Owner ID
     final ownerId = json['creatorId'] ?? json['ownerId'] ?? rawJson['ownerId'];
-    
+
     // 5. Vai trò user hiện tại — từ member row (rawJson['role']) hoặc community object
-    String? myRole = rawJson['role'] ?? rawJson['myRole'] ?? json['myRole'] ?? json['role'];
+    String? myRole =
+        rawJson['role'] ?? rawJson['myRole'] ?? json['myRole'] ?? json['role'];
     if (myRole != null) {
       myRole = myRole.toString().toUpperCase();
     }
 
-    if (myRole == 'OWNER' || myRole == 'OWNER_ROLE' || myRole == 'LEADER' || myRole == 'CREATOR' || myRole == 'HOST') {
+    if (myRole == 'OWNER' ||
+        myRole == 'OWNER_ROLE' ||
+        myRole == 'LEADER' ||
+        myRole == 'CREATOR' ||
+        myRole == 'HOST') {
       myRole = 'OWNER';
     }
 
@@ -115,24 +132,43 @@ class Community {
     List<String> joinQuestions = [];
     final jq = json['joinQuestions'] ?? rawJson['joinQuestions'];
     if (jq is List) {
-      joinQuestions = jq.map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList();
+      joinQuestions = jq
+          .map((e) => e?.toString() ?? '')
+          .where((s) => s.isNotEmpty)
+          .toList();
     }
 
     // 7. Liên kết mạng xã hội — backend jsonb {facebook, zalo, website}
     Map<String, String> socialLinks = {};
     final sl = json['socialLinks'] ?? rawJson['socialLinks'];
     if (sl is Map) {
-      socialLinks = sl.map((k, v) => MapEntry(k.toString(), v?.toString() ?? ''));
+      socialLinks = sl.map(
+        (k, v) => MapEntry(k.toString(), v?.toString() ?? ''),
+      );
     }
 
     return Community(
       id: json['id']?.toString() ?? rawJson['id']?.toString() ?? '',
       name: json['name']?.toString() ?? rawJson['name']?.toString() ?? '',
       description: json['description'] ?? rawJson['description'],
-      logoUrl: json['logoUrl'] ?? json['logo_url'] ?? rawJson['logoUrl'],
-      bannerUrl: json['bannerUrl'] ?? json['banner_url'] ?? rawJson['bannerUrl'],
-      locationAddress: json['locationAddress'] ?? json['location_address'] ?? rawJson['locationAddress'],
-      provinceCode: json['provinceCode'] ?? json['province_code'] ?? rawJson['provinceCode'],
+      logoUrl:
+          json['logoUrl'] ??
+          json['logo_url'] ??
+          rawJson['logoUrl'] ??
+          rawJson['logo_url'],
+      bannerUrl:
+          json['bannerUrl'] ??
+          json['banner_url'] ??
+          rawJson['bannerUrl'] ??
+          rawJson['banner_url'],
+      locationAddress:
+          json['locationAddress'] ??
+          json['location_address'] ??
+          rawJson['locationAddress'],
+      provinceCode:
+          json['provinceCode'] ??
+          json['province_code'] ??
+          rawJson['provinceCode'],
       districtCode: json['districtCode'] ?? rawJson['districtCode'],
       wardCode: json['wardCode'] ?? rawJson['wardCode'],
       ownerId: ownerId?.toString(),
@@ -141,13 +177,25 @@ class Community {
       tournamentCount: tournamentCount,
       maxMembers: json['maxMembers'] ?? rawJson['maxMembers'],
       sports: parsedSports,
-      status: json['status']?.toString() ?? rawJson['status']?.toString() ?? 'ACTIVE',
-      joinMode: json['joinMode']?.toString() ?? rawJson['joinMode']?.toString() ?? 'OPEN',
-      visibility: json['visibility']?.toString() ?? rawJson['visibility']?.toString() ?? 'PUBLIC',
+      status:
+          json['status']?.toString() ??
+          rawJson['status']?.toString() ??
+          'ACTIVE',
+      joinMode:
+          json['joinMode']?.toString() ??
+          rawJson['joinMode']?.toString() ??
+          'OPEN',
+      visibility:
+          json['visibility']?.toString() ??
+          rawJson['visibility']?.toString() ??
+          'PUBLIC',
       rules: json['rules'] ?? rawJson['rules'],
       joinQuestions: joinQuestions,
       socialLinks: socialLinks,
-      createdAt: json['createdAt']?.toString() ?? rawJson['createdAt']?.toString() ?? '',
+      createdAt:
+          json['createdAt']?.toString() ??
+          rawJson['createdAt']?.toString() ??
+          '',
     );
   }
 }

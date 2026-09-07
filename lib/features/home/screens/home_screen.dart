@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,6 +28,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
@@ -183,10 +185,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (mounted) {
         setState(() {
           if (isLoadMore) {
-            final existingIds =
-                _serverTournamentsList.map((t) => t.id).toSet();
-            final uniqueNew = result.tournaments
-                .where((t) => !existingIds.contains(t.id));
+            final existingIds = _serverTournamentsList.map((t) => t.id).toSet();
+            final uniqueNew = result.tournaments.where(
+              (t) => !existingIds.contains(t.id),
+            );
             _serverTournamentsList.addAll(uniqueNew);
           } else {
             _serverTournamentsList.clear();
@@ -239,8 +241,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         setState(() {
           if (isLoadMore) {
             final existingIds = _serverClubsList.map((c) => c.id).toSet();
-            final uniqueNew = result.communities
-                .where((c) => !existingIds.contains(c.id));
+            final uniqueNew = result.communities.where(
+              (c) => !existingIds.contains(c.id),
+            );
             _serverClubsList.addAll(uniqueNew);
           } else {
             _serverClubsList.clear();
@@ -529,7 +532,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     AsyncValue<List<Tournament>> tournamentsAsync,
     double headerHeight,
   ) {
-    
     switch (_currentIndex) {
       case 0:
         return KeyedSubtree(
@@ -667,8 +669,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       emptyMessage: _exploreStatus == 'live'
                           ? l10n.noLiveMatches
                           : _exploreStatus == 'scheduled'
-                              ? l10n.noUpcomingMatches
-                              : l10n.homeNoCompletedMatches,
+                          ? l10n.noUpcomingMatches
+                          : l10n.homeNoCompletedMatches,
                       onNoLiveMatches: _handleNoLiveMatches,
                     ),
 
@@ -2313,86 +2315,88 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-        SliverToBoxAdapter(child: SizedBox(height: _headerHeight + 52.0)),
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: _StatusFilterDelegate(
-            child: Container(
-              color: context.colors.bgDark,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: StatusSegment(
-                selected: _tournamentStatus,
-                onChanged: (s) {
-                  setState(() => _tournamentStatus = s);
-                  _resetTournamentCursorPagination();
-                },
-                items: [
-                  (key: "all", label: l10n.filterAll),
-                  (key: "registration", label: l10n.matchesFilterRegistration),
-                  (key: "upcoming", label: l10n.matchesFilterScheduled),
-                  (key: "in_progress", label: l10n.homeInProgressStatus),
-                  (key: "completed", label: l10n.matchesStatusCompleted),
-                ],
-              ),
-            ),
-          ),
-        ),
-        if (_isTournamentInitialLoading && currentList.isEmpty)
-          const SliverFillRemaining(
-            child: Center(
-              child: CircularProgressIndicator(color: AppTheme.primary),
-            ),
-          )
-        else if (currentList.isEmpty)
-          SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.search_off,
-                    size: 48.0,
-                    color: context.colors.textMuted,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.homeNoMatchingTournaments,
-                    style: TextStyle(
-                      fontSize: 16.0,
-                      color: context.colors.textSecondary,
+          SliverToBoxAdapter(child: SizedBox(height: _headerHeight + 52.0)),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _StatusFilterDelegate(
+              child: Container(
+                color: context.colors.bgDark,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: StatusSegment(
+                  selected: _tournamentStatus,
+                  onChanged: (s) {
+                    setState(() => _tournamentStatus = s);
+                    _resetTournamentCursorPagination();
+                  },
+                  items: [
+                    (key: "all", label: l10n.filterAll),
+                    (
+                      key: "registration",
+                      label: l10n.matchesFilterRegistration,
                     ),
-                  ),
-                ],
-              ),
-            ),
-          )
-        else ...[
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, i) => TournamentCardWithBanner(
-                  tournament: currentList[i],
-                  onTap: () => context.push("/intro/${currentList[i].id}"),
+                    (key: "upcoming", label: l10n.matchesFilterScheduled),
+                    (key: "in_progress", label: l10n.homeInProgressStatus),
+                    (key: "completed", label: l10n.matchesStatusCompleted),
+                  ],
                 ),
-                childCount: currentList.length,
               ),
             ),
           ),
-          SliverToBoxAdapter(
-            child: _buildCursorLoadMoreBar(
-              isLoadingMore: _isTournamentLoadingMore,
-              hasMore: _serverTournamentHasMore,
-              loadMoreLabel: 'Xem thêm giải đấu',
-              allLoadedLabel: 'Đã hiển thị tất cả giải đấu',
-              onLoadMore: () =>
-                  _fetchServerTournamentPage(isLoadMore: true),
+          if (_isTournamentInitialLoading && currentList.isEmpty)
+            const SliverFillRemaining(
+              child: Center(
+                child: CircularProgressIndicator(color: AppTheme.primary),
+              ),
+            )
+          else if (currentList.isEmpty)
+            SliverFillRemaining(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.search_off,
+                      size: 48.0,
+                      color: context.colors.textMuted,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.homeNoMatchingTournaments,
+                      style: TextStyle(
+                        fontSize: 16.0,
+                        color: context.colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else ...[
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, i) => TournamentCardWithBanner(
+                    tournament: currentList[i],
+                    onTap: () => context.push("/intro/${currentList[i].id}"),
+                  ),
+                  childCount: currentList.length,
+                ),
+              ),
             ),
-          ),
+            SliverToBoxAdapter(
+              child: _buildCursorLoadMoreBar(
+                isLoadingMore: _isTournamentLoadingMore,
+                hasMore: _serverTournamentHasMore,
+                loadMoreLabel: 'Xem thêm giải đấu',
+                allLoadedLabel: 'Đã hiển thị tất cả giải đấu',
+                onLoadMore: () => _fetchServerTournamentPage(isLoadMore: true),
+              ),
+            ),
+          ],
         ],
-      ],
-    ),
-  );
+      ),
+    );
   }
 
   Widget _buildCursorLoadMoreBar({
@@ -2416,7 +2420,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     backgroundColor: colors.bgCard,
                     foregroundColor: AppTheme.primary,
                     side: BorderSide(
-                        color: colors.border.withValues(alpha: 0.8)),
+                      color: colors.border.withValues(alpha: 0.8),
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -2510,84 +2515,83 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             parent: BouncingScrollPhysics(),
           ),
           slivers: [
-          SliverToBoxAdapter(child: SizedBox(height: _headerHeight + 52.0)),
-          SliverToBoxAdapter(child: const SizedBox(height: 8)),
-          if (_isClubInitialLoading && currentList.isEmpty)
-            const SliverFillRemaining(
-              child: Center(
-                child: CircularProgressIndicator(color: AppTheme.primary),
-              ),
-            )
-          else if (currentList.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 72.0,
-                      height: 72.0,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                      child: const Icon(
-                        Icons.group_off_rounded,
-                        size: 36,
-                        color: Color(0xFFB0BEC5),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.homeNoClubs,
-                      style: const TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      l10n.homeNoClubsHint,
-                      style: const TextStyle(
-                        fontSize: 13.0,
-                        color: Color(0xFF94A3B8),
-                      ),
-                    ),
-                    const SizedBox(height: 80),
-                  ],
+            SliverToBoxAdapter(child: SizedBox(height: _headerHeight + 52.0)),
+            SliverToBoxAdapter(child: const SizedBox(height: 8)),
+            if (_isClubInitialLoading && currentList.isEmpty)
+              const SliverFillRemaining(
+                child: Center(
+                  child: CircularProgressIndicator(color: AppTheme.primary),
                 ),
-              ),
-            )
-          else
-            SliverMainAxisGroup(
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, i) => _buildClubCardPremium(currentList[i]),
-                      childCount: currentList.length,
-                    ),
+              )
+            else if (currentList.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 72.0,
+                        height: 72.0,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        child: const Icon(
+                          Icons.group_off_rounded,
+                          size: 36,
+                          color: Color(0xFFB0BEC5),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.homeNoClubs,
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        l10n.homeNoClubsHint,
+                        style: const TextStyle(
+                          fontSize: 13.0,
+                          color: Color(0xFF94A3B8),
+                        ),
+                      ),
+                      const SizedBox(height: 80),
+                    ],
                   ),
                 ),
-                SliverToBoxAdapter(
-                  child: _buildCursorLoadMoreBar(
-                    isLoadingMore: _isClubLoadingMore,
-                    hasMore: _serverClubHasMore,
-                    loadMoreLabel: 'Xem thêm câu lạc bộ',
-                    allLoadedLabel: 'Đã hiển thị tất cả câu lạc bộ',
-                    onLoadMore: () =>
-                        _fetchServerClubPage(isLoadMore: true),
+              )
+            else
+              SliverMainAxisGroup(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, i) => _buildClubCardPremium(currentList[i]),
+                        childCount: currentList.length,
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
-        ],
+                  SliverToBoxAdapter(
+                    child: _buildCursorLoadMoreBar(
+                      isLoadingMore: _isClubLoadingMore,
+                      hasMore: _serverClubHasMore,
+                      loadMoreLabel: 'Xem thêm câu lạc bộ',
+                      allLoadedLabel: 'Đã hiển thị tất cả câu lạc bộ',
+                      onLoadMore: () => _fetchServerClubPage(isLoadMore: true),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
   }
 
   /// ─── Helpers ───
@@ -2652,6 +2656,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// ═══════════════════════════════════════════════════════
   ///  PREMIUM CLUB CARD — Full-width, inspired by web
   /// ═══════════════════════════════════════════════════════
+  String _resolveClubImageUrl(String? url) {
+    final value = url?.trim() ?? '';
+    if (value.isEmpty || value.startsWith('data:')) {
+      return '';
+    }
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      if (Platform.isAndroid && value.contains('localhost')) {
+        return value.replaceFirst('localhost', '10.0.2.2');
+      }
+      if (Platform.isAndroid && value.contains('127.0.0.1')) {
+        return value.replaceFirst('127.0.0.1', '10.0.2.2');
+      }
+      return value;
+    }
+
+    var apiBase = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
+    if (Platform.isAndroid && apiBase.contains('localhost')) {
+      apiBase = apiBase.replaceAll('localhost', '10.0.2.2');
+    }
+    final host = apiBase.replaceFirst(RegExp(r'/api/v1/?$'), '');
+    return '${host.replaceFirst(RegExp(r'/$'), '')}/${value.replaceFirst(RegExp(r'^/'), '')}';
+  }
+
   Widget _buildClubCardPremium(Community club) {
     final l10n = AppLocalizations.of(context)!;
     final sportName = club.sports.isNotEmpty ? club.sports.first : "";
@@ -2659,8 +2686,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final String emoji = _getSportEmoji(sportName);
     final String joinLabel = _getJoinModeLabel(club.joinMode, l10n);
     final Color joinColor = _getJoinModeColor(club.joinMode);
-    final bool hasBanner = club.bannerUrl != null && club.bannerUrl!.isNotEmpty;
-    final bool hasLogo = club.logoUrl != null && club.logoUrl!.trim().isNotEmpty;
+    final bannerUrl = _resolveClubImageUrl(club.bannerUrl);
+    // Một số CLB chỉ lưu banner, giống cách web hiển thị banner làm avatar.
+    // Chỉ dùng chữ cái khi cả logo và banner đều không có.
+    final logoUrl = _resolveClubImageUrl(
+      (club.logoUrl?.trim().isNotEmpty ?? false)
+          ? club.logoUrl!.split(',').first
+          : club.bannerUrl,
+    );
+    final bool hasBanner = bannerUrl.isNotEmpty;
+    final bool hasLogo = logoUrl.isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -2694,7 +2729,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       children: [
                         if (hasBanner)
                           Image.network(
-                            club.bannerUrl!,
+                            bannerUrl,
                             fit: BoxFit.cover,
                             errorBuilder: (_, _, _) =>
                                 _buildCardBannerFallback(sportColor, emoji),
@@ -2791,7 +2826,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.12),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.12,
+                                        ),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -2799,12 +2836,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ),
                                   child: ClipOval(
                                     child: Image.network(
-                                      club.logoUrl!.split(',')[0],
+                                      logoUrl,
                                       fit: BoxFit.cover,
                                       errorBuilder: (_, _, _) => Center(
                                         child: Text(
                                           club.name.isNotEmpty
-                                              ? club.name.characters.first.toUpperCase()
+                                              ? club.name.characters.first
+                                                    .toUpperCase()
                                               : 'C',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
@@ -2847,7 +2885,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         const SizedBox(width: 3),
                                         Text(
                                           l10n.homeMembersCount(
-                                            club.memberCount > 0 ? club.memberCount : 1,
+                                            club.memberCount > 0
+                                                ? club.memberCount
+                                                : 1,
                                           ),
                                           style: TextStyle(
                                             fontSize: 12,
@@ -2857,8 +2897,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         ),
                                         if (club.tournamentCount > 0) ...[
                                           Padding(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6),
-                                            child: Text('•', style: TextStyle(color: context.colors.textMuted, fontSize: 12)),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                            ),
+                                            child: Text(
+                                              '•',
+                                              style: TextStyle(
+                                                color: context.colors.textMuted,
+                                                fontSize: 12,
+                                              ),
+                                            ),
                                           ),
                                           Icon(
                                             Icons.emoji_events_rounded,
@@ -2871,7 +2919,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                             style: TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w600,
-                                              color: context.colors.textSecondary,
+                                              color:
+                                                  context.colors.textSecondary,
                                             ),
                                           ),
                                         ],
@@ -2900,7 +2949,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         for (final s in club.sports) {
                                           final sTrim = s.trim();
                                           if (sTrim.isEmpty) continue;
-                                          final mapped = l10n.sportDisplayName(sTrim);
+                                          final mapped = l10n.sportDisplayName(
+                                            sTrim,
+                                          );
                                           if (!sports.contains(mapped)) {
                                             sports.add(mapped);
                                           }
@@ -2911,16 +2962,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       }
                                       return sports.map((sName) {
                                         return Container(
-                                          margin: const EdgeInsets.only(right: 6),
+                                          margin: const EdgeInsets.only(
+                                            right: 6,
+                                          ),
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 8,
                                             vertical: 3,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: sportColor.withValues(alpha: 0.12),
-                                            borderRadius: BorderRadius.circular(6),
+                                            color: sportColor.withValues(
+                                              alpha: 0.12,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
                                             border: Border.all(
-                                              color: sportColor.withValues(alpha: 0.25),
+                                              color: sportColor.withValues(
+                                                alpha: 0.25,
+                                              ),
                                             ),
                                           ),
                                           child: Text(
@@ -2936,7 +2995,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       }).toList();
                                     })(),
                                     if (club.locationAddress != null &&
-                                        club.locationAddress!.trim().isNotEmpty) ...[
+                                        club.locationAddress!
+                                            .trim()
+                                            .isNotEmpty) ...[
                                       Container(
                                         margin: const EdgeInsets.only(right: 6),
                                         padding: const EdgeInsets.symmetric(
@@ -2945,7 +3006,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: context.colors.bgSurface,
-                                          borderRadius: BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
                                           border: Border.all(
                                             color: context.colors.border,
                                           ),
@@ -2990,7 +3053,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-
 
   Widget _buildCardBannerFallback(Color sportColor, String emoji) {
     final isDark = Theme.of(context).brightness == Brightness.dark;

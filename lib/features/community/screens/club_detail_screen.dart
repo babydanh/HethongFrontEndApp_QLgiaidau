@@ -1,4 +1,7 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -112,10 +115,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       final dio = ref.read(dioClientProvider).dio;
       final res = await dio.get(
         '/chat/rooms',
-        queryParameters: {
-          'type': 'CLUB',
-          'communityId': club.id,
-        },
+        queryParameters: {'type': 'CLUB', 'communityId': club.id},
       );
       final raw = res.data is Map ? (res.data['data'] ?? res.data) : res.data;
       final room = raw is List
@@ -508,10 +508,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final String emoji = _sportEmoji(sportName);
     final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
     final isCreator = club.ownerId != null && club.ownerId == currentUserId;
-    final isOwner = isCreator ||
-        club.myRole == 'OWNER' ||
-        _myMembership?.role == 'OWNER';
-    final isClubAdmin = isOwner ||
+    final isOwner =
+        isCreator || club.myRole == 'OWNER' || _myMembership?.role == 'OWNER';
+    final isClubAdmin =
+        isOwner ||
         club.myRole == 'ADMIN' ||
         club.myRole == 'MODERATOR' ||
         _myMembership?.role == 'ADMIN' ||
@@ -767,8 +767,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          backgroundColor: AppTheme.primary.withValues(alpha: 0.08),
-                          side: BorderSide(color: AppTheme.primary.withValues(alpha: 0.4)),
+                          backgroundColor: AppTheme.primary.withValues(
+                            alpha: 0.08,
+                          ),
+                          side: BorderSide(
+                            color: AppTheme.primary.withValues(alpha: 0.4),
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -1008,8 +1012,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
   Future<void> _confirmCancelJoinRequest() async {
     final l10n = AppLocalizations.of(context)!;
-    final userId = ref.read(userProfileProvider).asData?.value.id ??
-        _myMembership?.userId;
+    final userId =
+        ref.read(userProfileProvider).asData?.value.id ?? _myMembership?.userId;
     if (userId == null || userId.isEmpty || !_isPending) return;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -1043,9 +1047,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         await _fetchMembership();
         ref.invalidate(communityDetailProvider(widget.clubId));
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.clubDetailCancelJoinSuccess)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.clubDetailCancelJoinSuccess)),
+        );
       } else {
         ScaffoldMessenger.of(
           context,
@@ -1301,7 +1305,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (club.logoUrl != null && club.logoUrl!.trim().isNotEmpty) ...[
+                  if (club.logoUrl != null &&
+                      club.logoUrl!.trim().isNotEmpty) ...[
                     Container(
                       width: 64,
                       height: 64,
@@ -1557,7 +1562,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     );
   }
 
-
   Widget _bannerGradient(Color c, String emoji) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // Taste: màu phẳng, không gradient.
@@ -1615,8 +1619,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     }
 
     final hasRules = club.rules != null && club.rules!.trim().isNotEmpty;
-    final hasDesc = club.description != null && club.description!.trim().isNotEmpty;
-    final hasSocial = club.socialLinks.entries.any((e) => e.value.trim().isNotEmpty);
+    final hasDesc =
+        club.description != null && club.description!.trim().isNotEmpty;
+    final hasSocial = club.socialLinks.entries.any(
+      (e) => e.value.trim().isNotEmpty,
+    );
 
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -1626,10 +1633,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                AppTheme.primary.withValues(alpha: 0.1),
-                colors.bgCard,
-              ],
+              colors: [AppTheme.primary.withValues(alpha: 0.1), colors.bgCard],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -1689,7 +1693,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               ),
               if (createdDateText.isNotEmpty)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.bgSurface,
                     borderRadius: BorderRadius.circular(8),
@@ -1789,7 +1796,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             color: colors.bgCard,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: hasRules ? const Color(0xFFF59E0B).withValues(alpha: 0.35) : colors.border,
+              color: hasRules
+                  ? const Color(0xFFF59E0B).withValues(alpha: 0.35)
+                  : colors.border,
             ),
             boxShadow: [
               BoxShadow(
@@ -1805,7 +1814,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
@@ -1832,16 +1844,24 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     ),
                   ),
                   const Spacer(),
-                  if (_myMembership?.role == 'OWNER' || _myMembership?.role == 'ADMIN')
+                  if (_myMembership?.role == 'OWNER' ||
+                      _myMembership?.role == 'ADMIN')
                     InkWell(
                       onTap: () => context.push('/club/${widget.clubId}/edit'),
                       borderRadius: BorderRadius.circular(6),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.edit_note_rounded, size: 16, color: AppTheme.primary),
+                            Icon(
+                              Icons.edit_note_rounded,
+                              size: 16,
+                              color: AppTheme.primary,
+                            ),
                             const SizedBox(width: 3),
                             Text(
                               l10n.club_tabSettings,
@@ -1984,8 +2004,15 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   .map(
                     (entry) => ActionChip(
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      avatar: Icon(_socialIcon(entry.key), size: 16, color: AppTheme.primary),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      avatar: Icon(
+                        _socialIcon(entry.key),
+                        size: 16,
+                        color: AppTheme.primary,
+                      ),
                       label: Text(
                         _socialLabel(entry.key),
                         style: TextStyle(
@@ -2129,12 +2156,20 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     if (url == null || url.trim().isEmpty) return '';
     final trimmed = url.trim();
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      if (Platform.isAndroid && trimmed.contains('localhost')) {
+        return trimmed.replaceFirst('localhost', '10.0.2.2');
+      }
+      if (Platform.isAndroid && trimmed.contains('127.0.0.1')) {
+        return trimmed.replaceFirst('127.0.0.1', '10.0.2.2');
+      }
       return trimmed;
     }
-    if (trimmed.startsWith('/')) {
-      return 'https://sporto.asia$trimmed';
+    var apiBase = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
+    if (Platform.isAndroid && apiBase.contains('localhost')) {
+      apiBase = apiBase.replaceFirst('localhost', '10.0.2.2');
     }
-    return 'https://sporto.asia/$trimmed';
+    final host = apiBase.replaceFirst(RegExp(r'/api/v1/?$'), '');
+    return '${host.replaceFirst(RegExp(r'/$'), '')}/${trimmed.replaceFirst(RegExp(r'^/'), '')}';
   }
 
   bool _matchesTournamentStatus(String status, String filter) {
@@ -2182,7 +2217,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           final isSportOption = option.$1.startsWith('SPORT_');
           final isSelected = isSportOption
               ? _tournamentSportFilter == option.$1.substring(6)
-              : (_tournamentStatusFilter == option.$1 && _tournamentSportFilter == 'ALL');
+              : (_tournamentStatusFilter == option.$1 &&
+                    _tournamentSportFilter == 'ALL');
 
           return Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -2199,7 +2235,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 setState(() {
                   if (isSportOption) {
                     final sportKey = option.$1.substring(6);
-                    _tournamentSportFilter = _tournamentSportFilter == sportKey ? 'ALL' : sportKey;
+                    _tournamentSportFilter = _tournamentSportFilter == sportKey
+                        ? 'ALL'
+                        : sportKey;
                   } else {
                     _tournamentStatusFilter = option.$1;
                     _tournamentSportFilter = 'ALL';
@@ -2280,7 +2318,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         }).toList();
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-          itemCount: filteredTourneys.length + 1 + (filteredTourneys.isEmpty ? 1 : 0),
+          itemCount:
+              filteredTourneys.length + 1 + (filteredTourneys.isEmpty ? 1 : 0),
           itemBuilder: (context, i) {
             if (i == 0) {
               return _buildTournamentFilters(colors, sports);
@@ -2356,15 +2395,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final isQuick = t.isLite;
 
     // Ảnh đại diện banner: giải đấu bannerUrl/logoUrl -> fallback sang club bannerUrl/logoUrl
-    final effectiveImageUrl = (t.bannerUrl != null && t.bannerUrl!.trim().isNotEmpty)
+    final effectiveImageUrl =
+        (t.bannerUrl != null && t.bannerUrl!.trim().isNotEmpty)
         ? t.bannerUrl!.trim()
         : ((t.logoUrl != null && t.logoUrl!.trim().isNotEmpty)
-            ? t.logoUrl!.trim()
-            : ((club.bannerUrl != null && club.bannerUrl!.trim().isNotEmpty)
-                ? club.bannerUrl!.trim()
-                : ((club.logoUrl != null && club.logoUrl!.trim().isNotEmpty)
-                    ? club.logoUrl!.trim()
-                    : '')));
+              ? t.logoUrl!.trim()
+              : ((club.bannerUrl != null && club.bannerUrl!.trim().isNotEmpty)
+                    ? club.bannerUrl!.trim()
+                    : ((club.logoUrl != null && club.logoUrl!.trim().isNotEmpty)
+                          ? club.logoUrl!.trim()
+                          : '')));
 
     final resolvedImageUrl = _resolveImageUrl(effectiveImageUrl);
     final hasImage = resolvedImageUrl.isNotEmpty;
@@ -2373,7 +2413,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ? t.categoryName
         : (t.sport.isNotEmpty ? l10n.sportDisplayName(t.sport) : '');
 
-    final formatLabel = t.format.isNotEmpty ? l10n.formatDisplayName(t.format) : '';
+    final formatLabel = t.format.isNotEmpty
+        ? l10n.formatDisplayName(t.format)
+        : '';
 
     return InkWell(
       onTap: () => context.push('/intro/${t.id}'),
@@ -2407,7 +2449,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     Image.network(
                       resolvedImageUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => _bannerGradient(AppTheme.primary, '🏆'),
+                      errorBuilder: (_, _, _) =>
+                          _bannerGradient(AppTheme.primary, '🏆'),
                     )
                   else
                     _bannerGradient(AppTheme.primary, '🏆'),
@@ -2469,10 +2512,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                                 vertical: 3.5,
                               ),
                               decoration: BoxDecoration(
-                                color: (t.tournamentType == 'CLUB'
-                                        ? const Color(0xFFD97706)
-                                        : const Color(0xFF2563EB))
-                                    .withValues(alpha: 0.9),
+                                color:
+                                    (t.tournamentType == 'CLUB'
+                                            ? const Color(0xFFD97706)
+                                            : const Color(0xFF2563EB))
+                                        .withValues(alpha: 0.9),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -2589,10 +2633,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     runSpacing: 4,
                     children: [
                       if (formatLabel.isNotEmpty)
-                        _tournamentBadge(
-                          formatLabel,
-                          colors.textSecondary,
-                        ),
+                        _tournamentBadge(formatLabel, colors.textSecondary),
                       if (t.isRanked)
                         _tournamentBadge(
                           l10n.clubDetailRankedBadge,
@@ -2636,7 +2677,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   ),
 
                   // Địa điểm thi đấu (nếu có)
-                  if (t.locationAddress != null && t.locationAddress!.isNotEmpty) ...[
+                  if (t.locationAddress != null &&
+                      t.locationAddress!.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Row(
                       children: [
@@ -2663,7 +2705,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   ],
 
                   const SizedBox(height: 10),
-                  Divider(height: 1, color: colors.border.withValues(alpha: 0.6)),
+                  Divider(
+                    height: 1,
+                    color: colors.border.withValues(alpha: 0.6),
+                  ),
                   const SizedBox(height: 10),
 
                   // Footer: Số đội / Lệ phí và nút Xem chi tiết
@@ -2687,10 +2732,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                             ),
                           ),
                           const SizedBox(width: 10),
-                          Text(
-                            '•',
-                            style: TextStyle(color: colors.textMuted),
-                          ),
+                          Text('•', style: TextStyle(color: colors.textMuted)),
                           const SizedBox(width: 10),
                           Text(
                             t.entryFee > 0
@@ -2965,10 +3007,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         ],
                       ),
                     ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: colors.textMuted,
-                    ),
+                    Icon(Icons.chevron_right_rounded, color: colors.textMuted),
                   ],
                 ),
               ),
@@ -3045,7 +3084,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             const SizedBox(height: 22),
             if (!_isMember)
               FilledButton.icon(
-                onPressed: _isJoinLoading ? null : () => _handleJoinAction(club),
+                onPressed: _isJoinLoading
+                    ? null
+                    : () => _handleJoinAction(club),
                 icon: Icon(_getJoinIcon(), size: 16),
                 label: Text(_getJoinLabel()),
                 style: FilledButton.styleFrom(
@@ -3084,7 +3125,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final membersAsync = ref.watch(communityMembersProvider(widget.clubId));
     final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
     final isCreator = club.ownerId != null && club.ownerId == currentUserId;
-    final isAdmin = isCreator ||
+    final isAdmin =
+        isCreator ||
         club.myRole == 'OWNER' ||
         club.myRole == 'ADMIN' ||
         club.myRole == 'MODERATOR' ||
@@ -3136,14 +3178,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ],
             if (isAdmin) _buildJoinRequestsSection(joinRequestsAsync, colors),
             if (approvedMembers.isEmpty) const SizedBox.shrink(),
-            ...approvedMembers.map((m) => _buildMemberItem(
-                  m,
-                  colors,
-                  isAdmin,
-                  rankedMemberIds.contains(m.userId)
-                      ? memberEloMap[m.userId]
-                      : null,
-                )),
+            ...approvedMembers.map(
+              (m) => _buildMemberItem(
+                m,
+                colors,
+                isAdmin,
+                rankedMemberIds.contains(m.userId)
+                    ? memberEloMap[m.userId]
+                    : null,
+              ),
+            ),
           ],
         );
       },
@@ -3281,7 +3325,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                             style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w800,
-                              color: isOwner ? Colors.amber.shade800 : Colors.blue,
+                              color: isOwner
+                                  ? Colors.amber.shade800
+                                  : Colors.blue,
                             ),
                           ),
                         ),
@@ -3341,7 +3387,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   value: 'promote_admin',
                   child: Row(
                     children: [
-                      const Icon(Icons.shield_outlined, size: 16, color: Colors.blue),
+                      const Icon(
+                        Icons.shield_outlined,
+                        size: 16,
+                        color: Colors.blue,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         l10n.club_setAdmin,
@@ -3354,7 +3404,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   value: 'promote_mod',
                   child: Row(
                     children: [
-                      const Icon(Icons.security_rounded, size: 16, color: Colors.blue),
+                      const Icon(
+                        Icons.security_rounded,
+                        size: 16,
+                        color: Colors.blue,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         l10n.club_setMod,
@@ -3368,7 +3422,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     value: 'demote',
                     child: Row(
                       children: [
-                        const Icon(Icons.person_outline, size: 16, color: Colors.orange),
+                        const Icon(
+                          Icons.person_outline,
+                          size: 16,
+                          color: Colors.orange,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           l10n.club_demoteToMember,
@@ -3382,7 +3440,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     value: 'transfer_owner',
                     child: Row(
                       children: [
-                        const Icon(Icons.workspace_premium_rounded, size: 16, color: Colors.amber),
+                        const Icon(
+                          Icons.workspace_premium_rounded,
+                          size: 16,
+                          color: Colors.amber,
+                        ),
                         const SizedBox(width: 8),
                         const Text(
                           'Chuyển chủ sở hữu',
@@ -3395,12 +3457,13 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   value: 'adjust_elo',
                   child: Row(
                     children: [
-                      const Icon(Icons.military_tech_rounded, size: 16, color: AppTheme.primary),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Chỉnh ELO',
-                        style: TextStyle(fontSize: 13),
+                      const Icon(
+                        Icons.military_tech_rounded,
+                        size: 16,
+                        color: AppTheme.primary,
                       ),
+                      const SizedBox(width: 8),
+                      const Text('Chỉnh ELO', style: TextStyle(fontSize: 13)),
                     ],
                   ),
                 ),
@@ -3426,7 +3489,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   value: 'kick',
                   child: Row(
                     children: [
-                      const Icon(Icons.person_remove_rounded, size: 16, color: Colors.red),
+                      const Icon(
+                        Icons.person_remove_rounded,
+                        size: 16,
+                        color: Colors.red,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         l10n.club_kickFromClub,
@@ -3439,7 +3506,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   value: 'ban',
                   child: Row(
                     children: [
-                      const Icon(Icons.block_rounded, size: 16, color: Colors.red),
+                      const Icon(
+                        Icons.block_rounded,
+                        size: 16,
+                        color: Colors.red,
+                      ),
                       const SizedBox(width: 8),
                       const Text(
                         'Cấm khỏi câu lạc bộ',
@@ -3502,9 +3573,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   child: Text(l10n.matchesCancel),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber.shade700),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber.shade700,
+                  ),
                   onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('Xác nhận chuyển', style: TextStyle(color: Colors.white)),
+                  child: const Text(
+                    'Xác nhận chuyển',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             ),
@@ -3576,7 +3652,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   onPressed: () => Navigator.pop(ctx, true),
                   child: const Text(
                     'Cấm thành viên',
-                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -4521,10 +4600,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final l10n = AppLocalizations.of(context)!;
     final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
     final isCreator = club.ownerId != null && club.ownerId == currentUserId;
-    final isOwner = isCreator ||
-        club.myRole == 'OWNER' ||
-        _myMembership?.role == 'OWNER';
-    final isAdmin = isOwner ||
+    final isOwner =
+        isCreator || club.myRole == 'OWNER' || _myMembership?.role == 'OWNER';
+    final isAdmin =
+        isOwner ||
         club.myRole == 'ADMIN' ||
         club.myRole == 'MODERATOR' ||
         _myMembership?.role == 'ADMIN' ||
@@ -4552,10 +4631,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             title: l10n.club_manageClub,
             subtitle: l10n.club_manageClubSubtitle,
             color: AppTheme.primary,
-            onTap: () => context.push(
-              '/club/${widget.clubId}/manage',
-              extra: isOwner,
-            ),
+            onTap: () =>
+                context.push('/club/${widget.clubId}/manage', extra: isOwner),
           ),
           const SizedBox(height: 8),
           _settingsTile(
