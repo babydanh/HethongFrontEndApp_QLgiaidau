@@ -1530,52 +1530,6 @@ class _ClubMatchSessionDetailPageState
                   ),
                 ],
 
-                // Action buttons (Tham gia / Rút lui / Tùy chọn ghép cặp)
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    if (currentSession.canJoin)
-                      FilledButton.icon(
-                        icon: const Icon(Icons.how_to_reg_rounded, size: 16),
-                        onPressed: () => _mutation(
-                          context,
-                          ref,
-                          () => ref
-                              .read(clubMatchSessionRepositoryProvider)
-                              .selfJoin(session.id),
-                          l10n.clubMatchSessionJoined,
-                        ),
-                        label: Text(l10n.clubMatchSessionJoin),
-                      ),
-                    if (currentSession.canWithdraw)
-                      OutlinedButton.icon(
-                        icon: const Icon(Icons.logout_rounded, size: 16),
-                        onPressed: () => _mutation(
-                          context,
-                          ref,
-                          () => ref
-                              .read(clubMatchSessionRepositoryProvider)
-                              .withdraw(session.id),
-                          l10n.clubMatchSessionWithdrawn,
-                        ),
-                        label: Text(l10n.clubMatchSessionWithdraw),
-                      ),
-                    if (currentSession.viewerIsActive)
-                      OutlinedButton.icon(
-                        icon: const Icon(Icons.tune_rounded, size: 16),
-                        onPressed: () => _editPreferences(
-                          context,
-                          ref,
-                          value.participants,
-                          currentSession,
-                        ),
-                        label: Text(l10n.clubMatchSessionPreferences),
-                      ),
-                  ],
-                ),
-
                 const SizedBox(height: 14),
 
                 // 4-Column Circular Slots Grid
