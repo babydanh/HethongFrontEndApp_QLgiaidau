@@ -16,6 +16,7 @@ import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1551,7 +1552,8 @@ class _ClubMatchSessionDetailPageState
                                     ],
                                   ),
                                   child: ClipOval(
-                                    child: item.avatarUrl != null &&
+                                    child:
+                                        item.avatarUrl != null &&
                                             item.avatarUrl!.isNotEmpty
                                         ? Image.network(
                                             item.avatarUrl!,
@@ -1559,15 +1561,18 @@ class _ClubMatchSessionDetailPageState
                                             errorBuilder:
                                                 (context, error, stackTrace) =>
                                                     Center(
-                                              child: Text(
-                                                _getInitials(displayName),
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w800,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ),
+                                                      child: Text(
+                                                        _getInitials(
+                                                          displayName,
+                                                        ),
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                          fontSize: 14,
+                                                        ),
+                                                      ),
+                                                    ),
                                           )
                                         : Center(
                                             child: Text(
@@ -2168,15 +2173,23 @@ class _ClubMatchScoreCard extends StatelessWidget {
         'mode': 'LITE',
         'scoringMode': 'FREE',
       },
-      sportRules: const {'mode': 'LITE', 'scoringMode': 'FREE'},
+      sportRules: {
+        'kind': match.sportKey,
+        'mode': 'LITE',
+        'scoringMode': 'FREE',
+      },
+      revision: match.revision,
       updatedAt: DateTime.now(),
     );
   }
 
-  void _openScoring(BuildContext context) {
+  void _openScoring(BuildContext context, MatchModel initialMatch) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => _ClubSessionMatchScoringEntry(matchId: match.id),
+        builder: (_) => _ClubSessionMatchScoringEntry(
+          matchId: match.id,
+          initialMatch: initialMatch,
+        ),
       ),
     );
   }
@@ -2197,7 +2210,7 @@ class _ClubMatchScoreCard extends StatelessWidget {
           match: sharedMatch,
           isLive: status == 'ONGOING',
           isCompleted: status == 'COMPLETED',
-          onTap: () => _openScoring(context),
+          onTap: () => _openScoring(context, sharedMatch),
         ),
         Padding(
           padding: const EdgeInsets.only(left: 4, right: 4, top: 0, bottom: 8),
@@ -2220,26 +2233,26 @@ class _ClubMatchScoreCard extends StatelessWidget {
 
 class _ClubSessionMatchScoringEntry extends ConsumerWidget {
   final String matchId;
+  final MatchModel initialMatch;
 
-  const _ClubSessionMatchScoringEntry({required this.matchId});
+  const _ClubSessionMatchScoringEntry({
+    required this.matchId,
+    required this.initialMatch,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final repository = ref.read(matchRepositoryProvider);
+    if (repository is ApiMatchRepository) {
+      repository.primeMatch(initialMatch);
+    }
     final matchAsync = ref.watch(
       singleMatchProvider((tournamentId: '', matchId: matchId)),
     );
-    return matchAsync.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (error, _) => Scaffold(
-        appBar: AppBar(),
-        body: Center(child: Text('Không tải được trận đấu: $error')),
-      ),
-      data: (match) => match == null
-          ? const Scaffold(
-              body: Center(child: Text('Không tìm thấy trận đấu.')),
-            )
-          : OfficialScorePage(tournamentId: '', matchId: matchId, match: match),
-    );
+    // Open with the authoritative card snapshot immediately. The provider
+    // continues to reconcile the match and supplies the live score state;
+    // this avoids a blank tap while the dedicated social endpoint responds.
+    final match = matchAsync.value ?? initialMatch;
+    return OfficialScorePage(tournamentId: '', matchId: matchId, match: match);
   }
 }

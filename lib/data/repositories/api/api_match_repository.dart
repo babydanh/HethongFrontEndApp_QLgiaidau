@@ -93,12 +93,24 @@ class ApiMatchRepository implements IMatchRepository {
   }
 
   final Map<String, List<MatchModel>> _matchesCache = {};
+  final Map<String, MatchModel> _seededMatches = {};
   final Map<String, Future<List<MatchModel>>> _inflightTournamentMatches = {};
   Future<List<MatchModel>>? _inflightPublicMatches;
   List<MatchModel>? _publicMatchesCache;
   DateTime? _publicMatchesFetchedAt;
 
   static const _publicMatchesCacheTtl = Duration(seconds: 10);
+
+  /// Seeds a match card into the shared scoring provider before its REST
+  /// snapshot arrives. This is needed for club-session matches because they
+  /// intentionally have no tournament id, while the scoring widgets still
+  /// subscribe through the shared match provider.
+  void primeMatch(MatchModel match) {
+    final current = _seededMatches[match.id];
+    if (current == null || (match.revision ?? 0) >= (current.revision ?? 0)) {
+      _seededMatches[match.id] = match;
+    }
+  }
 
   List<dynamic> _extractList(dynamic payload) {
     dynamic value = payload;
@@ -325,15 +337,56 @@ class ApiMatchRepository implements IMatchRepository {
   }
 
   Future<MatchModel?> _getMatchById(String matchId) async {
-    try {
-      final response = await _dioClient.dio.get('/matches/$matchId');
-      if (response.statusCode == 200) {
-        final json = response.data['data'] ?? response.data;
-        return _parseMatch(json);
-      }
-    } catch (_) {}
-    return null;
+    Future<MatchModel?> request(String path) async {
+      try {
+        final response = await _dioClient.dio.get(path);
+        if (response.statusCode == 200) {
+          final body = response.data;
+          final json = body is Map && body['data'] is Map
+              ? Map<String, dynamic>.from(body['data'] as Map)
+              : body is Map
+              ? Map<String, dynamic>.from(body)
+              : null;
+          if (json != null) return _parseMatch(json);
+        }
+      } catch (_) {}
+      return null;
+    }
+
+    // A social-session match has no tournament id. Keep the shared route as
+    // the first path for compatibility, then use the authenticated canonical
+    // session route when the generic match route cannot project it.
+    return await request('/matches/$matchId') ??
+        await request('/club-match-sessions/matches/$matchId');
   }
+
+  List<MatchMemberInfo> _parseMemberInfos(
+    dynamic participant,
+    dynamic explicitMembers,
+  ) {
+    final raw = explicitMembers is List
+        ? explicitMembers
+        : participant is Map
+        ? (participant['members'] ?? participant['rosters'])
+        : null;
+    if (raw is! List) return const [];
+    return raw
+        .map((member) {
+          if (member is Map) {
+            return MatchMemberInfo.fromJson(Map<String, dynamic>.from(member));
+          }
+          return MatchMemberInfo(fullName: member.toString());
+        })
+        .where((member) => member.fullName.trim().isNotEmpty)
+        .toList(growable: false);
+  }
+
+  // Kept as a separate helper so the social envelope can be parsed without
+  // making the tournament parser depend on a synthetic roster shape.
+  List<String> _memberNames(List<MatchMemberInfo> members) => members
+      .map((member) => member.fullName.trim())
+      .where((name) => name.isNotEmpty)
+      .toList(growable: false);
 
   // ── Status mapping ───────────────────────────────────────────────────────
   static String _mapMatchStatus(String? status) {
@@ -451,20 +504,16 @@ class ApiMatchRepository implements IMatchRepository {
                           : null))
                   ?.toString() ??
               'TBD';
-    final rosters1 = json['participant1']?['rosters'] as List<dynamic>?;
-    final team1Members =
-        rosters1
-            ?.map((r) => r['fullName']?.toString() ?? '')
-            .where((n) => n.isNotEmpty)
-            .toList() ??
-        <String>[];
-    final rosters2 = json['participant2']?['rosters'] as List<dynamic>?;
-    final team2Members =
-        rosters2
-            ?.map((r) => r['fullName']?.toString() ?? '')
-            .where((n) => n.isNotEmpty)
-            .toList() ??
-        <String>[];
+    final team1MemberInfos = _parseMemberInfos(
+      json['participant1'],
+      json['team1MemberInfos'] ?? json['team1Members'],
+    );
+    final team2MemberInfos = _parseMemberInfos(
+      json['participant2'],
+      json['team2MemberInfos'] ?? json['team2Members'],
+    );
+    final team1Members = _memberNames(team1MemberInfos);
+    final team2Members = _memberNames(team2MemberInfos);
 
     int parseNum(dynamic val) {
       if (val is num) return val.toInt();
@@ -666,6 +715,8 @@ class ApiMatchRepository implements IMatchRepository {
       setsToWin: json['setsToWin'] as int?,
       team1Members: team1Members,
       team2Members: team2Members,
+      team1MemberInfos: team1MemberInfos,
+      team2MemberInfos: team2MemberInfos,
       groupName: groupName,
       stageName: stageName,
       stageType: stageType,
@@ -707,6 +758,13 @@ class ApiMatchRepository implements IMatchRepository {
         _log.info('Connecting socket listener for match $matchId');
         _socketService.connect(matchId);
 
+        // Emit the card snapshot immediately so scoring controls use the real
+        // team names/rules while the authenticated REST request is pending.
+        latestMatch = _seededMatches[matchId];
+        if (latestMatch != null && !controller.isClosed) {
+          controller.add(latestMatch);
+        }
+
         // Fetch initial state
         // Do not let the Dio retry chain leave the live screen spinning for
         // tens of seconds. Socket/reconciliation can still recover the
@@ -714,9 +772,12 @@ class ApiMatchRepository implements IMatchRepository {
         final initialMatch = await _getMatchById(
           matchId,
         ).timeout(const Duration(seconds: 8), onTimeout: () => null);
-        latestMatch = initialMatch;
+        if (initialMatch != null) {
+          latestMatch = initialMatch;
+          _seededMatches.remove(matchId);
+        }
         if (!controller.isClosed) {
-          controller.add(initialMatch);
+          controller.add(latestMatch);
         }
 
         scoreSub = _socketService.onScoreUpdate.listen((data) {
@@ -921,12 +982,16 @@ class ApiMatchRepository implements IMatchRepository {
     bool useLiteParticipantAccess = false,
   }) async {
     _log.info('Starting match $matchId via API');
-    await _dioClient.dio.patch(
-      useLiteParticipantAccess
-          ? '/matches/$matchId/lite-status'
-          : '/matches/$matchId/status',
-      data: {'status': 'ONGOING'},
-    );
+    final path = tournamentId.isEmpty
+        ? '/club-match-sessions/matches/$matchId/start'
+        : useLiteParticipantAccess
+        ? '/matches/$matchId/lite-status'
+        : '/matches/$matchId/status';
+    if (tournamentId.isEmpty) {
+      await _dioClient.dio.post(path, data: const {});
+      return;
+    }
+    await _dioClient.dio.patch(path, data: {'status': 'ONGOING'});
   }
 
   @override
@@ -979,12 +1044,18 @@ class ApiMatchRepository implements IMatchRepository {
     }
 
     try {
-      await _dioClient.dio.patch(
-        useLiteParticipantAccess
-            ? '/matches/$matchId/lite-score'
-            : '/matches/$matchId/score',
-        data: payload,
-      );
+      final path = tournamentId.isEmpty
+          ? (winnerId == null
+                ? '/club-match-sessions/matches/$matchId/score'
+                : '/club-match-sessions/matches/$matchId/complete')
+          : useLiteParticipantAccess
+          ? '/matches/$matchId/lite-score'
+          : '/matches/$matchId/score';
+      if (tournamentId.isEmpty && winnerId != null) {
+        await _dioClient.dio.post(path, data: payload);
+      } else {
+        await _dioClient.dio.patch(path, data: payload);
+      }
     } on DioException catch (error) {
       final body = error.response?.data;
       final rawMessage = body is Map ? body['message'] : null;

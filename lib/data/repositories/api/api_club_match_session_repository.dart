@@ -103,6 +103,7 @@ class ApiClubMatchSessionRepository {
   Future<List<ClubMatchParticipantModel>> participants(String sessionId) async {
     final rows = await _allCursorRows(
       '/club-match-sessions/$sessionId/participants',
+      query: const {'status': 'ACTIVE'},
     );
     return rows.map(ClubMatchParticipantModel.fromJson).toList();
   }

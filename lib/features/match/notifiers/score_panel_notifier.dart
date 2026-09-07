@@ -542,7 +542,13 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         ? state.finishedSets.last
         : null;
     if (curSet == null) return;
-    if (!state.overrideEnabled && isSetComplete(curSet, state.config)) {
+    // Strict tournament tennis can close a set automatically at the preset
+    // limit. Lite/Free tennis is intentionally open-ended: reaching 6 games
+    // only makes the set ready; the scorer must press "Chốt set N" so the
+    // current set remains editable and the next set can be started manually.
+    if (!state.isOpenScoring &&
+        !state.overrideEnabled &&
+        isSetComplete(curSet, state.config)) {
       final idx = state.finishedSets.length - 1;
       final newSets = [...state.finishedSets];
       newSets[idx] = newSets[idx].copyWith(isFinished: true);
@@ -1132,7 +1138,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
     if (state.config.scoringModel == SportScoringModel.tennisSet) {
       if (tennis == null) {
-        state = state.copyWith(isSubmitting: false);
+        state = state.copyWith(
+          isSubmitting: false,
+          errorMessage: _l10n.scorePanel_matchNotReady,
+        );
         return;
       }
       if (tennis.team1GamePoints != 0 || tennis.team2GamePoints != 0) {
@@ -1170,7 +1179,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       );
     } else {
       if (rally == null) {
-        state = state.copyWith(isSubmitting: false);
+        state = state.copyWith(
+          isSubmitting: false,
+          errorMessage: _l10n.scorePanel_matchNotReady,
+        );
         return;
       }
       final currentSet = SetScoreData(

@@ -514,11 +514,11 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
             const SizedBox(height: 16),
             _buildSportOption(ctx, colors, '', l10n.matchesFilterAll, null),
             ...[
-              AppConstants.sportFootball,
+              AppConstants.sportPickleball,
               AppConstants.sportBadminton,
               AppConstants.sportTennis,
-              AppConstants.sportPickleball,
               AppConstants.sportTableTennis,
+              AppConstants.sportFootball,
             ].map(
               (sportKey) => _buildSportOption(
                 ctx,

@@ -28,7 +28,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   final _descCtrl = TextEditingController();
   final _questionCtrl = TextEditingController();
 
-  String _selectedSport = AppConstants.sportBadminton;
+  String _selectedSport = AppConstants.sportPickleball;
   String _joinMode = 'OPEN';
   String _visibility = 'PUBLIC';
   String? _provinceCode;
@@ -744,14 +744,14 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
     final l10n = AppLocalizations.of(context)!;
     final sports = [
       (
-        AppConstants.sportBadminton,
-        l10n.createClubTournament_sportBadminton,
-        '🏸',
-      ),
-      (
         AppConstants.sportPickleball,
         l10n.createClubTournament_sportPickleball,
         '🏓',
+      ),
+      (
+        AppConstants.sportBadminton,
+        l10n.createClubTournament_sportBadminton,
+        '🏸',
       ),
       (AppConstants.sportTennis, l10n.createClubTournament_sportTennis, '🎾'),
       (

@@ -20,8 +20,9 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 SportRuleKind _resolveMatchSportKind(MatchModel match) {
   final sportRules = match.sportRules;
-  if (sportRules != null && sportRules.isNotEmpty) {
-    return SportRuleKind.fromString(sportRules['kind']?.toString());
+  final configuredKind = sportRules?['kind']?.toString().trim();
+  if (configuredKind != null && configuredKind.isNotEmpty) {
+    return SportRuleKind.fromString(configuredKind);
   }
   return SportRuleKind.fromString(match.sportKey);
 }

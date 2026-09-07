@@ -183,6 +183,7 @@ class ClubSessionMatchMemberModel {
 class ClubSessionMatchModel {
   final String id;
   final String status;
+  final String sportKey;
   final List<String> sideAUserIds;
   final List<String> sideBUserIds;
   final int sideAScore;
@@ -207,6 +208,7 @@ class ClubSessionMatchModel {
   const ClubSessionMatchModel({
     required this.id,
     required this.status,
+    this.sportKey = '',
     required this.sideAUserIds,
     required this.sideBUserIds,
     required this.sideAScore,
@@ -237,6 +239,10 @@ class ClubSessionMatchModel {
     return ClubSessionMatchModel(
       id: json['id']?.toString() ?? '',
       status: json['status']?.toString() ?? 'SCHEDULED',
+      sportKey:
+          (json['sport'] ?? json['sportKey'] ?? json['categorySlug'])
+              ?.toString() ??
+          '',
       sideAUserIds: (json['sideAUserIds'] as List<dynamic>? ?? const [])
           .map((value) => value.toString())
           .toList(),

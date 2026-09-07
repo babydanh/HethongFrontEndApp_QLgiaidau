@@ -36,7 +36,7 @@ class _CreatePublicQuickTournamentScreenState
   final _descController = TextEditingController();
   final _maxTeamsController = TextEditingController(text: '16');
 
-  String _sport = AppConstants.sportBadminton;
+  String _sport = AppConstants.sportPickleball;
   String _formatKey = 'MALE_DOUBLES'; // MALE_SINGLES, FEMALE_SINGLES, MALE_DOUBLES, FEMALE_DOUBLES, MIXED_DOUBLES, FOOTBALL_MALE, FOOTBALL_FEMALE, FOOTBALL_MIXED
   String _bracket = AppConstants.bracketSingleElimination;
   String? _selectedCommunityId;
@@ -142,7 +142,7 @@ class _CreatePublicQuickTournamentScreenState
       case AppConstants.sportFootball:
         return 'football';
       default:
-        return 'badminton';
+        return 'pickleball';
     }
   }
 
@@ -760,8 +760,8 @@ class _CreatePublicQuickTournamentScreenState
         final activeCategories = ref.watch(categoriesProvider).value ?? const [];
 
         final sportsMeta = {
-          'badminton': ('Cầu lông', Icons.sports_tennis_rounded),
           'pickleball': ('Pickleball', Icons.sports_baseball_rounded),
+          'badminton': ('Cầu lông', Icons.sports_tennis_rounded),
           'tennis': ('Tennis', Icons.sports_tennis_outlined),
           'table_tennis': ('Bóng bàn', Icons.sports_cricket_rounded),
           'football': ('Bóng đá', Icons.sports_soccer_rounded),
@@ -772,7 +772,7 @@ class _CreatePublicQuickTournamentScreenState
           final slug = cat.slug.toLowerCase();
           final metaKey = sportsMeta.keys.firstWhere(
             (k) => slug.contains(k) || k.contains(slug),
-            orElse: () => 'badminton',
+            orElse: () => 'pickleball',
           );
           final meta = sportsMeta[metaKey] ?? (cat.name, Icons.sports_rounded);
           return (metaKey, cat.name.isNotEmpty ? cat.name : meta.$1, meta.$2);

@@ -28,7 +28,7 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   final _descCtrl = TextEditingController();
   final _maxTeamsCtrl = TextEditingController(text: '16');
 
-  String _selectedSport = AppConstants.sportBadminton;
+  String _selectedSport = AppConstants.sportPickleball;
   String _selectedFormat = AppConstants.formatDoubles;
   String _selectedBracket = AppConstants.bracketSingleElimination;
   DateTime? _startDate;
@@ -60,15 +60,15 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
       case AppConstants.sportPickleball: return 'pickleball';
       case AppConstants.sportTableTennis: return 'table_tennis';
       case AppConstants.sportFootball: return 'football';
-      default: return 'badminton';
+      default: return 'pickleball';
     }
   }
 
   String? _mapClubSport(String value) {
     final slug = value.toLowerCase().trim();
+    if (slug.contains('pickleball')) return AppConstants.sportPickleball;
     if (slug.contains('cầu lông') || slug.contains('cau long') || slug.contains('badminton')) return AppConstants.sportBadminton;
     if (slug.contains('tennis') || slug.contains('quần vợt') || slug.contains('quan vot')) return AppConstants.sportTennis;
-    if (slug.contains('pickleball')) return AppConstants.sportPickleball;
     if (slug.contains('bóng bàn') || slug.contains('bong ban') || slug.contains('table')) return AppConstants.sportTableTennis;
     if (slug.contains('bóng đá') || slug.contains('bong da') || slug.contains('football')) return AppConstants.sportFootball;
     return null;
@@ -89,12 +89,12 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
 
   String _getSportDisplayName(String sport, AppLocalizations l10n) {
     switch (sport) {
+      case AppConstants.sportPickleball: return l10n.createClubTournament_sportPickleball;
       case AppConstants.sportBadminton: return l10n.createClubTournament_sportBadminton;
       case AppConstants.sportTennis: return l10n.createClubTournament_sportTennis;
-      case AppConstants.sportPickleball: return l10n.createClubTournament_sportPickleball;
       case AppConstants.sportTableTennis: return l10n.createClubTournament_sportTableTennis;
       case AppConstants.sportFootball: return l10n.createClubTournament_sportFootball;
-      default: return l10n.createClubTournament_sportBadminton;
+      default: return l10n.createClubTournament_sportPickleball;
     }
   }
 
@@ -676,9 +676,9 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   Widget _buildSportSelector({String? lockedSport}) {
     final l10n = AppLocalizations.of(context)!;
     final sports = [
+      (AppConstants.sportPickleball, l10n.createClubTournament_sportPickleball, AppConstants.sportIcons[AppConstants.sportPickleball] ?? 'assets/icons/pickleball.png'),
       (AppConstants.sportBadminton, l10n.createClubTournament_sportBadminton, '🏸'),
       (AppConstants.sportTennis, l10n.createClubTournament_sportTennis, '🎾'),
-      (AppConstants.sportPickleball, l10n.createClubTournament_sportPickleball, AppConstants.sportIcons[AppConstants.sportPickleball] ?? 'assets/icons/pickleball.png'),
       (AppConstants.sportTableTennis, l10n.createClubTournament_sportTableTennis, '🏓'),
       (AppConstants.sportFootball, l10n.createClubTournament_sportFootball, '⚽'),
     ];

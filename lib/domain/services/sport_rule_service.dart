@@ -231,7 +231,10 @@ SportConfig resolveSportConfig(
   final source = nestedScoring is Map
       ? {...sportRules, ...Map<String, dynamic>.from(nestedScoring)}
       : sportRules;
-  final kind = SportRuleKind.fromString(source['kind']?.toString());
+  final rawKind = source['kind']?.toString().trim();
+  final kind = rawKind == null || rawKind.isEmpty
+      ? fallback
+      : SportRuleKind.fromString(rawKind);
   final defaults = _sportDefaults[kind]!;
 
   // Nếu sportRules có scoringModel override
