@@ -319,8 +319,17 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
       'COMPLETED' when sm.sideBScore > sm.sideAScore => 'SIDE_B',
       _ => '',
     };
-    final displaySets = parseClubSessionScoreDetails(sm.scoreDetails)
-        .take(10)
+    // The API can include a placeholder for the next set. Keep the current
+    // set, but do not show trailing empty sets until somebody scores in them.
+    final parsedDisplaySets = parseClubSessionScoreDetails(
+      sm.scoreDetails,
+    ).take(10).toList(growable: true);
+    while (parsedDisplaySets.length > 1 &&
+        parsedDisplaySets.last.sideAScore == 0 &&
+        parsedDisplaySets.last.sideBScore == 0) {
+      parsedDisplaySets.removeLast();
+    }
+    final displaySets = parsedDisplaySets
         .map(
           (score) =>
               SetScore(score1: score.sideAScore, score2: score.sideBScore),
@@ -1251,53 +1260,92 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     required List<MatchMemberInfo> memberInfos,
     required AppColorsExtension colors,
   }) {
-    // Lấy userId của VĐV đầu tiên nếu có
+    final isDoubles = memberInfos.length >= 2;
+    final displayMembers = isDoubles
+        ? memberInfos.take(2).toList(growable: false)
+        : const <MatchMemberInfo>[];
     final firstMember = memberInfos.isNotEmpty ? memberInfos.first : null;
     final targetUserId = firstMember?.userId;
     final eloIsNegative = eloDelta?.startsWith('-') == true;
 
     return Row(
       children: [
-        // Avatar click mở UserProfileBottomSheet
-        GestureDetector(
-          onTap: targetUserId != null && targetUserId.isNotEmpty
-              ? () => _showMemberSheet(context, targetUserId, name, logoUrl)
-              : null,
-          child: Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isWinner ? const Color(0xFF2563EB) : colors.bgSurface,
-              border: Border.all(
-                color: isWinner ? const Color(0xFF2563EB) : colors.borderLight,
-                width: 1.5,
-              ),
+        // Đội đôi dùng cụm hai avatar tách nhẹ; mỗi avatar vẫn mở đúng hồ sơ VĐV.
+        if (isDoubles)
+          SizedBox(
+            width: 54,
+            height: 36,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  left: 0,
+                  top: 2,
+                  child: _buildMemberAvatar(
+                    context: context,
+                    member: displayMembers[0],
+                    isWinner: isWinner,
+                    colors: colors,
+                  ),
+                ),
+                Positioned(
+                  left: 22,
+                  top: 2,
+                  child: _buildMemberAvatar(
+                    context: context,
+                    member: displayMembers[1],
+                    isWinner: isWinner,
+                    colors: colors,
+                  ),
+                ),
+              ],
             ),
-            child: ClipOval(
-              child: logoUrl != null && logoUrl.isNotEmpty
-                  ? Image.network(
-                      logoUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _avatarFallback(name, isWinner),
-                    )
-                  : _avatarFallback(name, isWinner),
+          )
+        else
+          GestureDetector(
+            onTap: targetUserId != null && targetUserId.isNotEmpty
+                ? () => _showMemberSheet(context, targetUserId, name, logoUrl)
+                : null,
+            child: _buildTeamAvatar(
+              name: name,
+              logoUrl: logoUrl,
+              isWinner: isWinner,
+              colors: colors,
             ),
           ),
-        ),
         const SizedBox(width: 10),
-        // Name & ELO Delta
+        // Đội đôi: mỗi VĐV một dòng, chỉ hiển thị tên cuối để luôn đủ tên.
         Expanded(
           child: GestureDetector(
             onTap: targetUserId != null && targetUserId.isNotEmpty
                 ? () => _showMemberSheet(context, targetUserId, name, logoUrl)
                 : null,
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Flexible(
-                  child: Text(
+                if (isDoubles)
+                  for (final member in displayMembers)
+                    Text(
+                      _lastTwoNameWords(member.fullName),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        height: 1.15,
+                        fontWeight: isWinner
+                            ? FontWeight.w900
+                            : FontWeight.w600,
+                        color: isWinner
+                            ? colors.textPrimary
+                            : colors.textSecondary,
+                      ),
+                    )
+                else
+                  Text(
                     name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: isWinner ? FontWeight.w900 : FontWeight.w600,
@@ -1305,12 +1353,9 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                           ? colors.textPrimary
                           : colors.textSecondary,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
                 if (eloDelta != null) ...[
-                  const SizedBox(width: 6),
+                  const SizedBox(height: 2),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 5,
@@ -1407,6 +1452,74 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
         }(),
       ],
     );
+  }
+
+  Widget _buildMemberAvatar({
+    required BuildContext context,
+    required MatchMemberInfo member,
+    required bool isWinner,
+    required AppColorsExtension colors,
+  }) {
+    final userId = member.userId;
+    return GestureDetector(
+      onTap: userId != null && userId.isNotEmpty
+          ? () => _showMemberSheet(
+              context,
+              userId,
+              member.fullName,
+              member.avatarUrl,
+            )
+          : null,
+      child: _buildTeamAvatar(
+        name: member.fullName,
+        logoUrl: member.avatarUrl,
+        isWinner: isWinner,
+        colors: colors,
+        borderColor: colors.bgCard,
+      ),
+    );
+  }
+
+  Widget _buildTeamAvatar({
+    required String name,
+    required String? logoUrl,
+    required bool isWinner,
+    required AppColorsExtension colors,
+    Color? borderColor,
+  }) {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isWinner ? const Color(0xFF2563EB) : colors.bgSurface,
+        border: Border.all(
+          color:
+              borderColor ??
+              (isWinner ? const Color(0xFF2563EB) : colors.borderLight),
+          width: borderColor != null ? 2 : 1.5,
+        ),
+      ),
+      child: ClipOval(
+        child: logoUrl != null && logoUrl.isNotEmpty
+            ? Image.network(
+                logoUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    _avatarFallback(name, isWinner),
+              )
+            : _avatarFallback(name, isWinner),
+      ),
+    );
+  }
+
+  String _lastTwoNameWords(String fullName) {
+    final normalized = fullName.trim();
+    if (normalized.isEmpty) return '?';
+    final words = normalized.split(RegExp(r'\s+'));
+    return words.length <= 2
+        ? normalized
+        : words.sublist(words.length - 2).join(' ');
   }
 
   Widget _avatarFallback(String name, bool isWinner) {
