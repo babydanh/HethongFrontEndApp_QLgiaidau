@@ -16,24 +16,38 @@ class MatchSocketService {
   final _joinedClubSessionIds = <String>{};
   final TokenManager? _tokenManager;
 
-  MatchSocketService({TokenManager? tokenManager}) : _tokenManager = tokenManager;
+  MatchSocketService({TokenManager? tokenManager})
+    : _tokenManager = tokenManager;
 
   // Stream controllers to broadcast incoming events
-  final _scoreUpdateController = StreamController<Map<String, dynamic>>.broadcast();
-  final _matchStatusController = StreamController<Map<String, dynamic>>.broadcast();
-  final _viewerCountController = StreamController<Map<String, dynamic>>.broadcast();
-  final _commentNewController = StreamController<Map<String, dynamic>>.broadcast();
-  final _cheerUpdateController = StreamController<Map<String, dynamic>>.broadcast();
-  final _tournamentMatchUpdateController = StreamController<Map<String, dynamic>>.broadcast();
-  final _registrationUpdateController = StreamController<Map<String, dynamic>>.broadcast();
+  final _scoreUpdateController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _matchStatusController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _viewerCountController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _commentNewController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _cheerUpdateController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _tournamentMatchUpdateController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _registrationUpdateController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
-  Stream<Map<String, dynamic>> get onScoreUpdate => _scoreUpdateController.stream;
-  Stream<Map<String, dynamic>> get onMatchStatus => _matchStatusController.stream;
-  Stream<Map<String, dynamic>> get onViewerCount => _viewerCountController.stream;
+  Stream<Map<String, dynamic>> get onScoreUpdate =>
+      _scoreUpdateController.stream;
+  Stream<Map<String, dynamic>> get onMatchStatus =>
+      _matchStatusController.stream;
+  Stream<Map<String, dynamic>> get onViewerCount =>
+      _viewerCountController.stream;
   Stream<Map<String, dynamic>> get onCommentNew => _commentNewController.stream;
-  Stream<Map<String, dynamic>> get onCheerUpdate => _cheerUpdateController.stream;
-  Stream<Map<String, dynamic>> get onTournamentMatchUpdate => _tournamentMatchUpdateController.stream;
-  Stream<Map<String, dynamic>> get onRegistrationUpdate => _registrationUpdateController.stream;
+  Stream<Map<String, dynamic>> get onCheerUpdate =>
+      _cheerUpdateController.stream;
+  Stream<Map<String, dynamic>> get onTournamentMatchUpdate =>
+      _tournamentMatchUpdateController.stream;
+  Stream<Map<String, dynamic>> get onRegistrationUpdate =>
+      _registrationUpdateController.stream;
 
   /// An toàn parse socket payload: accept Map hoặc JSON string.
   /// Log warning nếu format lạ, không throw.
@@ -85,7 +99,8 @@ class MatchSocketService {
     }
 
     try {
-      var rawBaseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
+      var rawBaseUrl =
+          dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
       // Trên Android emulator, localhost trỏ vào chính emulator, không tới host.
       // Giống dio_client: đổi localhost/127.0.0.1 -> 10.0.2.2, nếu không socket
       // /live không kết nối được -> lượt xem (viewer count) không bao giờ lên.
@@ -180,11 +195,26 @@ class MatchSocketService {
       });
 
       _socket!.onDisconnect((_) => _log.info('Match Socket disconnected'));
-      _socket!.onError((err) => _log.error('Match Socket error', err.toString()));
+      _socket!.onError(
+        (err) => _log.error('Match Socket error', err.toString()),
+      );
 
       _socket!.connect();
     } catch (e, stack) {
       _log.error('Lỗi kết nối match socket', e, stack);
+    }
+  }
+
+  /// Theo dõi một trận sau khi socket đã được khởi tạo.
+  ///
+  /// Tách khỏi [connect] để các màn hình danh sách có thể đăng ký nhiều
+  /// phòng trận mà không tạo ra nhiều lần kết nối cạnh tranh nhau.
+  void join(String matchId) {
+    final normalizedMatchId = matchId.trim();
+    if (normalizedMatchId.isEmpty) return;
+    _joinedMatchIds.add(normalizedMatchId);
+    if (_socket?.connected == true) {
+      _socket!.emit('joinMatch', normalizedMatchId);
     }
   }
 

@@ -130,6 +130,7 @@ class MatchModel {
 
   /// Owning bracket-free club session, when this is a social-session match.
   final String? clubMatchSessionId;
+
   /// True for a club activity match that belongs to no session/tournament.
   final bool isStandaloneMatch;
   final int round;
@@ -410,6 +411,37 @@ class MatchModel {
             parsedRules.containsKey('rulesPreset')
         ? parsedRules
         : {...parsedRules, 'scoringMode': openScoringMarker};
+    final contextType = json['contextType']?.toString().toUpperCase();
+    final sessionPayload = json['session'];
+    final tournamentPayloadHasId =
+        tournamentPayload is Map &&
+        tournamentPayload['id']?.toString().trim().isNotEmpty == true;
+    final hasSessionOwner =
+        (json['clubMatchSessionId'] ??
+                    json['club_match_session_id'] ??
+                    json['sessionId'] ??
+                    json['session_id'])
+                ?.toString()
+                .trim()
+                .isNotEmpty ==
+            true ||
+        (sessionPayload is Map &&
+            sessionPayload['id']?.toString().trim().isNotEmpty == true);
+    final hasTournamentOwner =
+        (json['tournamentId'] ?? json['tournament_id'])
+                ?.toString()
+                .trim()
+                .isNotEmpty ==
+            true ||
+        tournamentPayloadHasId;
+    final isStandalonePayload =
+        contextType == 'CLUB_STANDALONE_MATCH' ||
+        (contextType != 'CLUB_SOCIAL_MATCH_SESSION' &&
+            !hasSessionOwner &&
+            !hasTournamentOwner &&
+            (json['isStandaloneMatch'] == true ||
+                json['is_standalone_match'] == true ||
+                json['standaloneMatchId'] != null));
 
     return MatchModel(
       id: id,
@@ -424,11 +456,9 @@ class MatchModel {
           json['club_match_session_id']?.toString() ??
           json['sessionId']?.toString() ??
           json['session_id']?.toString(),
-      isStandaloneMatch:
-          json['isStandaloneMatch'] == true ||
-          json['is_standalone_match'] == true ||
-          json['contextType']?.toString() == 'CLUB_STANDALONE_MATCH' ||
-          json['standaloneMatchId'] != null,
+      // A session match can carry legacy standalone fields in a merged
+      // payload. Prefer the explicit context and the owning session.
+      isStandaloneMatch: isStandalonePayload,
       round: parseInt(json['round'], fallback: 1),
       leg: json['leg'] is num
           ? (json['leg'] as num).toInt()

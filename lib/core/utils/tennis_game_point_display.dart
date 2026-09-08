@@ -26,9 +26,11 @@ TennisGamePointDisplay? readTennisGamePointDisplay(
 }) {
   if (!isLive || !_isTennisMatch(match)) return null;
 
-  final liveState = match.scoreDetails?['liveState'];
-  if (liveState is! Map) return null;
-  final pointState = liveState['tennisPointState'];
+  final details = match.scoreDetails;
+  final liveState = details?['liveState'];
+  final pointState = liveState is Map
+      ? liveState['tennisPointState']
+      : details?['tennisPointState'] ?? details?['gamePoints'];
   if (pointState is! Map) return null;
 
   int parsePoint(dynamic value) {

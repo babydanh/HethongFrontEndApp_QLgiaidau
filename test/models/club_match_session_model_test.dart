@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -104,5 +105,20 @@ void main() {
 
     expect(match.sideANames, ['Người chơi A']);
     expect(match.sideBNames, ['Người chơi B']);
+  });
+
+  test('does not relabel a social-session match as standalone', () {
+    final match = MatchModel.fromJson({
+      'id': 'match-social',
+      'contextType': 'CLUB_SOCIAL_MATCH_SESSION',
+      'isStandaloneMatch': true,
+      'standaloneMatchId': 'legacy-standalone-id',
+      'clubMatchSessionId': 'session-1',
+      'status': 'ONGOING',
+      'updatedAt': '2026-09-08T00:00:00.000Z',
+    }, 'match-social');
+
+    expect(match.clubMatchSessionId, 'session-1');
+    expect(match.isStandaloneMatch, isFalse);
   });
 }

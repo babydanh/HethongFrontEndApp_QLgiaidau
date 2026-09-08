@@ -48,6 +48,13 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   Timer? _searchDebounceTimer;
   String _searchQuery = '';
   Timer? _refreshTimer;
+  Timer? _socketRefreshTimer;
+  StreamSubscription<Map<String, dynamic>>? _socketScoreSubscription;
+  StreamSubscription<Map<String, dynamic>>? _socketStatusSubscription;
+  StreamSubscription<Map<String, dynamic>>? _socketMatchSubscription;
+  final Set<String> _joinedActivityMatchIds = <String>{};
+  final Set<String> _joinedActivitySessionIds = <String>{};
+  final Set<String> _joinedActivityTournamentIds = <String>{};
 
   @override
   void initState() {
@@ -58,9 +65,61 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
       _searchQuery = widget.initialSearchQuery!;
     }
     _fetchMatches();
+    _listenForActivityMatchUpdates();
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) _fetchMatches(silent: true);
     });
+  }
+
+  void _listenForActivityMatchUpdates() {
+    final socket = ref.read(matchSocketServiceProvider);
+    _socketScoreSubscription = socket.onScoreUpdate.listen(
+      _handleSocketMatchUpdate,
+    );
+    _socketStatusSubscription = socket.onMatchStatus.listen(
+      _handleSocketMatchUpdate,
+    );
+    _socketMatchSubscription = socket.onTournamentMatchUpdate.listen(
+      _handleSocketMatchUpdate,
+    );
+    unawaited(socket.connect(null, joinMatch: false));
+  }
+
+  void _handleSocketMatchUpdate(Map<String, dynamic> payload) {
+    final matchId = (payload['id'] ?? payload['matchId'])?.toString().trim();
+    if (matchId == null || matchId.isEmpty) return;
+
+    // Socket events are the fast path. Re-read the authoritative activity
+    // projection so liveState (including tennis game points) and set scores
+    // are updated together instead of merging a partial payload.
+    _socketRefreshTimer?.cancel();
+    _socketRefreshTimer = Timer(const Duration(milliseconds: 180), () {
+      if (mounted) unawaited(_fetchMatches(silent: true));
+    });
+  }
+
+  void _syncActivitySocketRooms() {
+    final socket = ref.read(matchSocketServiceProvider);
+    unawaited(socket.connect(null, joinMatch: false));
+    for (final match in _matches) {
+      if (match.isStandaloneMatch) {
+        if (_joinedActivityMatchIds.add(match.id)) socket.join(match.id);
+        continue;
+      }
+      final sessionId = match.clubMatchSessionId;
+      if (sessionId != null && sessionId.isNotEmpty) {
+        if (_joinedActivitySessionIds.add(sessionId)) {
+          socket.joinClubMatchSession(sessionId);
+        }
+        continue;
+      }
+      final tournamentId = match.tournamentId;
+      if (tournamentId != null && tournamentId.isNotEmpty) {
+        if (_joinedActivityTournamentIds.add(tournamentId)) {
+          socket.joinTournament(tournamentId);
+        }
+      }
+    }
   }
 
   @override
@@ -79,6 +138,20 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   @override
   void dispose() {
     _searchDebounceTimer?.cancel();
+    _socketRefreshTimer?.cancel();
+    _socketScoreSubscription?.cancel();
+    _socketStatusSubscription?.cancel();
+    _socketMatchSubscription?.cancel();
+    final socket = ref.read(matchSocketServiceProvider);
+    for (final matchId in _joinedActivityMatchIds) {
+      socket.leave(matchId);
+    }
+    for (final sessionId in _joinedActivitySessionIds) {
+      socket.leaveClubMatchSession(sessionId);
+    }
+    for (final tournamentId in _joinedActivityTournamentIds) {
+      socket.leaveTournament(tournamentId);
+    }
     _refreshTimer?.cancel();
     _searchController.dispose();
     super.dispose();
@@ -196,6 +269,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
           _matches = allMatches;
           _isLoading = false;
         });
+        _syncActivitySocketRooms();
       }
     } catch (e) {
       if (mounted) {
@@ -245,13 +319,20 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     };
     final displaySets = parseClubSessionScoreDetails(sm.scoreDetails)
         .take(10)
-        .map((score) => SetScore(score1: score.sideAScore, score2: score.sideBScore))
+        .map(
+          (score) =>
+              SetScore(score1: score.sideAScore, score2: score.sideBScore),
+        )
         .toList(growable: false);
     final kind = sm.sportKey.isNotEmpty ? sm.sportKey : 'pickleball';
     return MatchModel(
       id: sm.id,
-      isStandaloneMatch: standalone || sm.standaloneMatchId != null,
-      clubMatchSessionId: standalone ? null : (sm.sessionId.isNotEmpty ? sm.sessionId : null),
+      // The endpoint is authoritative: session rows are social-session
+      // matches; rows from /standalone-matches are private club matches.
+      isStandaloneMatch: standalone,
+      clubMatchSessionId: standalone
+          ? null
+          : (sm.sessionId.isNotEmpty ? sm.sessionId : null),
       tournamentName: tournamentName,
       round: 0,
       matchNumber: 1,
@@ -263,9 +344,18 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
       score2: sm.sideBScore,
       sets: displaySets.isNotEmpty
           ? displaySets
-          : [SetScore(score1: status == 'COMPLETED' ? sm.sideAScore : 0, score2: status == 'COMPLETED' ? sm.sideBScore : 0)],
+          : [
+              SetScore(
+                score1: status == 'COMPLETED' ? sm.sideAScore : 0,
+                score2: status == 'COMPLETED' ? sm.sideBScore : 0,
+              ),
+            ],
       winnerId: winnerId,
-      loserId: winnerId == 'SIDE_A' ? 'SIDE_B' : winnerId == 'SIDE_B' ? 'SIDE_A' : '',
+      loserId: winnerId == 'SIDE_A'
+          ? 'SIDE_B'
+          : winnerId == 'SIDE_B'
+          ? 'SIDE_A'
+          : '',
       status: sm.status,
       bracketPosition: const BracketPosition(round: 1, position: 1),
       scoreDetails: sm.scoreDetails,
@@ -275,15 +365,29 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
       team2MemberInfos: sideBMembers,
       eloDelta: sm.eloDelta,
       eloStatus: sm.eloStatus,
-      team1LogoUrl: sideAMembers.length == 1 ? sideAMembers.first.avatarUrl : null,
-      team2LogoUrl: sideBMembers.length == 1 ? sideBMembers.first.avatarUrl : null,
+      team1LogoUrl: sideAMembers.length == 1
+          ? sideAMembers.first.avatarUrl
+          : null,
+      team2LogoUrl: sideBMembers.length == 1
+          ? sideBMembers.first.avatarUrl
+          : null,
       sportKey: kind,
       tournamentConfig: sm.tournamentConfig.isNotEmpty
           ? sm.tournamentConfig
-          : const {'isLite': true, 'mode': 'LITE', 'scoringMode': 'FREE', 'maxSets': 10},
+          : const {
+              'isLite': true,
+              'mode': 'LITE',
+              'scoringMode': 'FREE',
+              'maxSets': 10,
+            },
       sportRules: sm.sportRules.isNotEmpty
           ? sm.sportRules
-          : {'kind': kind, 'mode': 'LITE', 'scoringMode': 'FREE', 'maxSets': 10},
+          : {
+              'kind': kind,
+              'mode': 'LITE',
+              'scoringMode': 'FREE',
+              'maxSets': 10,
+            },
       revision: sm.revision,
       updatedAt: updatedAt ?? DateTime.now(),
     );
@@ -864,9 +968,11 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
       isLive: isOngoing,
     );
 
-    final roundLabel = match.round > 0
-        ? 'Vòng ${match.round}'
-        : 'Trận #${match.matchNumber}';
+    final headerTitle = match.isStandaloneMatch
+        ? l10n.club_standaloneMatch
+        : (match.tournamentName?.trim().isNotEmpty == true
+              ? match.tournamentName!.trim()
+              : 'Buổi giao lưu CLB');
 
     return Material(
       color: Colors.transparent,
@@ -878,12 +984,12 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
             color: colors.bgCard,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isOngoing ? const Color(0xFF3B82F6) : colors.border,
+              color: isOngoing ? const Color(0xFFEF4444) : colors.border,
             ),
             boxShadow: [
               BoxShadow(
                 color: isOngoing
-                    ? const Color(0x1A3B82F6)
+                    ? const Color(0x1AEF4444)
                     : Colors.black.withValues(alpha: 0.02),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
@@ -899,11 +1005,17 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: colors.bgSurface,
+                  color: isOngoing ? const Color(0xFFFEF2F2) : colors.bgSurface,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(13),
                   ),
-                  border: Border(bottom: BorderSide(color: colors.borderLight)),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isOngoing
+                          ? const Color(0xFFFECACA)
+                          : colors.borderLight,
+                    ),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -912,29 +1024,9 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            match.clubMatchSessionId != null &&
-                                    match.clubMatchSessionId!.isNotEmpty
-                                ? Icons.sports_tennis_rounded
-                                : Icons.emoji_events_rounded,
-                            size: 14,
-                            color: const Color(0xFF2563EB),
-                          ),
-                          const SizedBox(width: 5),
                           Flexible(
                             child: Text(
-                              (match.clubMatchSessionId != null &&
-                                          match
-                                              .clubMatchSessionId!
-                                              .isNotEmpty) ||
-                                      match.tournamentName == 'Giao lưu CLB' ||
-                                      match.tournamentName == null ||
-                                      match.tournamentName!.isEmpty ||
-                                      match.tournamentName!
-                                          .toLowerCase()
-                                          .contains('giao lưu')
-                                  ? l10n.club_standaloneMatch
-                                  : match.tournamentName!,
+                              headerTitle,
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w800,
@@ -942,26 +1034,6 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 1.5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colors.bgCard,
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: colors.borderLight),
-                            ),
-                            child: Text(
-                              roundLabel,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: colors.textSecondary,
-                              ),
                             ),
                           ),
                         ],
@@ -997,20 +1069,32 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+                              color: const Color(
+                                0xFFEF4444,
+                              ).withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                                color: const Color(
+                                  0xFFEF4444,
+                                ).withValues(alpha: 0.3),
                               ),
                             ),
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.fiber_manual_record_rounded, size: 8, color: Color(0xFF2563EB)),
+                                Icon(
+                                  Icons.fiber_manual_record_rounded,
+                                  size: 8,
+                                  color: Color(0xFFDC2626),
+                                ),
                                 SizedBox(width: 4),
                                 Text(
                                   'Đang diễn ra',
-                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF2563EB)),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFFDC2626),
+                                  ),
                                 ),
                               ],
                             ),
@@ -1018,7 +1102,10 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                         else if (isCompleted)
                           Text(
                             'Đã kết thúc',
-                            style: TextStyle(fontSize: 11, color: colors.textMuted),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colors.textMuted,
+                            ),
                           ),
                       ],
                     ),
@@ -1125,7 +1212,9 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     );
     if (confirmed != true || !mounted) return;
     try {
-      await ref.read(clubMatchSessionRepositoryProvider).deleteStandaloneMatch(match.id);
+      await ref
+          .read(clubMatchSessionRepositoryProvider)
+          .deleteStandaloneMatch(match.id);
       if (!mounted) return;
       setState(() => _matches.removeWhere((item) => item.id == match.id));
       messenger.showSnackBar(
@@ -1137,7 +1226,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
         SnackBar(
           content: Text(
             error.response?.data is Map
-                ? (error.response?.data['message']?.toString() ?? 'Không thể xóa trận')
+                ? (error.response?.data['message']?.toString() ??
+                      'Không thể xóa trận')
                 : 'Không thể xóa trận',
           ),
           backgroundColor: Colors.red,
