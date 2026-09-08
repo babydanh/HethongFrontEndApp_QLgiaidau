@@ -157,58 +157,63 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
               children: [
                 // 1. TOP HEADER BAR: Match Title & Info Popup Button
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 4,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   color: colors.bgSurface,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${widget.match.team1Name} ${l10n.matchVsLabel} ${widget.match.team2Name}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: colors.textPrimary,
+                  child: SizedBox(
+                    height: 34,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${widget.match.team1Name} ${l10n.matchVsLabel} ${widget.match.team2Name}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textPrimary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      // NÚT ICON (i) ĐỂ HIỂN THỊ POPUP THÔNG TIN CÀI ĐẶT GIẢI
-                      IconButton(
-                        icon: Icon(
-                          Icons.info_outline_rounded,
-                          size: 20,
-                          color: AppTheme.primary,
+                        IconButton(
+                          icon: Icon(
+                            Icons.info_outline_rounded,
+                            size: 19,
+                            color: AppTheme.primary,
+                          ),
+                          tooltip: l10n.matchMatchInfo,
+                          visualDensity: VisualDensity.compact,
+                          constraints: const BoxConstraints(
+                            minWidth: 30,
+                            minHeight: 30,
+                          ),
+                          padding: EdgeInsets.zero,
+                          onPressed: () {
+                            _showMatchInfoDialog(
+                              context,
+                              widget.match,
+                              config,
+                              kind,
+                              colors,
+                              l10n,
+                              isLite: isLite,
+                            );
+                          },
                         ),
-                        tooltip: l10n.matchMatchInfo,
-                        visualDensity: VisualDensity.compact,
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(6),
-                        onPressed: () {
-                          _showMatchInfoDialog(
-                            context,
-                            widget.match,
-                            config,
-                            kind,
-                            colors,
-                            l10n,
-                            isLite: isLite,
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 20),
-                        visualDensity: VisualDensity.compact,
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(6),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
+                        const SizedBox(width: 2),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 19),
+                          visualDensity: VisualDensity.compact,
+                          constraints: const BoxConstraints(
+                            minWidth: 30,
+                            minHeight: 30,
+                          ),
+                          padding: EdgeInsets.zero,
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const Divider(height: 1, thickness: 1),

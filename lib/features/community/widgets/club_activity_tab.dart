@@ -438,6 +438,20 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     );
     final isClubMember =
         membership.asData?.value?.status.toUpperCase() == 'JOINED';
+    final socialSettings = ref
+        .watch(communitySocialSettingsProvider(widget.communityId))
+        .asData
+        ?.value;
+    final memberRole =
+        membership.asData?.value?.role ?? widget.club?.myRole ?? '';
+    final isClubManager = const {
+      'OWNER',
+      'ADMIN',
+      'MODERATOR',
+    }.contains(memberRole.toUpperCase());
+    final canCreateStandalone =
+        isClubMember &&
+        (isClubManager || socialSettings?.memberMatchCreationEnabled != false);
     final currentUserId = currentUser?.id ?? '';
     final currentUserName = (currentUser?.fullName ?? '').toLowerCase();
 
@@ -765,35 +779,37 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              FilledButton.icon(
-                onPressed: () {
-                  ClubStandaloneMatchDialog.show(
-                    context,
-                    communityId: widget.communityId,
-                    clubName: widget.club?.name,
-                    onMatchCreated: () => _fetchMatches(),
-                  );
-                },
-                icon: const Icon(Icons.add_rounded, size: 16),
-                label: Text(
-                  l10n.club_createMatchStandalone,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
+              if (canCreateStandalone) ...[
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  onPressed: () {
+                    ClubStandaloneMatchDialog.show(
+                      context,
+                      communityId: widget.communityId,
+                      clubName: widget.club?.name,
+                      onMatchCreated: () => _fetchMatches(),
+                    );
+                  },
+                  icon: const Icon(Icons.add_rounded, size: 16),
+                  label: Text(
+                    l10n.club_createMatchStandalone,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 11,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 11,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
+              ],
             ],
           ),
           const SizedBox(height: 10),
@@ -1055,7 +1071,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (match.isStandaloneMatch)
+                        if (match.isStandaloneMatch &&
+                            match.normalizedStatus == 'COMPLETED')
                           PopupMenuButton<String>(
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(

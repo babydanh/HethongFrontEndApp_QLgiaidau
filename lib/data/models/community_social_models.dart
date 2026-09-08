@@ -350,6 +350,10 @@ class CommunitySocialSettings {
   final bool chatEnabled;
   final bool publicFeed;
   final String memberTaggingPolicy;
+  final bool memberMatchCreationEnabled;
+  final bool memberMatchScoringEnabled;
+  final bool memberMatchDeletionEnabled;
+  final Map<String, dynamic> matchScoringPresets;
 
   const CommunitySocialSettings({
     this.postingPolicy = 'MEMBERS',
@@ -358,6 +362,10 @@ class CommunitySocialSettings {
     this.chatEnabled = true,
     this.publicFeed = true,
     this.memberTaggingPolicy = 'MEMBERS',
+    this.memberMatchCreationEnabled = true,
+    this.memberMatchScoringEnabled = true,
+    this.memberMatchDeletionEnabled = false,
+    this.matchScoringPresets = const {},
   });
 
   factory CommunitySocialSettings.fromJson(Map<String, dynamic> json) =>
@@ -369,6 +377,10 @@ class CommunitySocialSettings {
         publicFeed: json['publicFeed'] != false,
         memberTaggingPolicy:
             json['memberTaggingPolicy']?.toString() ?? 'MEMBERS',
+        memberMatchCreationEnabled: json['memberMatchCreationEnabled'] != false,
+        memberMatchScoringEnabled: json['memberMatchScoringEnabled'] != false,
+        memberMatchDeletionEnabled: json['memberMatchDeletionEnabled'] == true,
+        matchScoringPresets: _asMap(json['matchScoringPresets']),
       );
 
   Map<String, dynamic> toJson() => {
@@ -378,6 +390,10 @@ class CommunitySocialSettings {
     'chatEnabled': chatEnabled,
     'publicFeed': publicFeed,
     'memberTaggingPolicy': memberTaggingPolicy,
+    'memberMatchCreationEnabled': memberMatchCreationEnabled,
+    'memberMatchScoringEnabled': memberMatchScoringEnabled,
+    'memberMatchDeletionEnabled': memberMatchDeletionEnabled,
+    'matchScoringPresets': matchScoringPresets,
   };
 
   CommunitySocialSettings copyWith({
@@ -387,6 +403,10 @@ class CommunitySocialSettings {
     bool? chatEnabled,
     bool? publicFeed,
     String? memberTaggingPolicy,
+    bool? memberMatchCreationEnabled,
+    bool? memberMatchScoringEnabled,
+    bool? memberMatchDeletionEnabled,
+    Map<String, dynamic>? matchScoringPresets,
   }) => CommunitySocialSettings(
     postingPolicy: postingPolicy ?? this.postingPolicy,
     postApprovalRequired: postApprovalRequired ?? this.postApprovalRequired,
@@ -394,6 +414,13 @@ class CommunitySocialSettings {
     chatEnabled: chatEnabled ?? this.chatEnabled,
     publicFeed: publicFeed ?? this.publicFeed,
     memberTaggingPolicy: memberTaggingPolicy ?? this.memberTaggingPolicy,
+    memberMatchCreationEnabled:
+        memberMatchCreationEnabled ?? this.memberMatchCreationEnabled,
+    memberMatchScoringEnabled:
+        memberMatchScoringEnabled ?? this.memberMatchScoringEnabled,
+    memberMatchDeletionEnabled:
+        memberMatchDeletionEnabled ?? this.memberMatchDeletionEnabled,
+    matchScoringPresets: matchScoringPresets ?? this.matchScoringPresets,
   );
 }
 
