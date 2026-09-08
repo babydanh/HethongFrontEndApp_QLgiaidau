@@ -843,15 +843,15 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          ClubActivityTab(
-            communityId: club.id,
-            club: club,
-            initialSearchQuery: _activitySearchQuery,
-          ),
           CommunitySocialScreen(
             communityId: club.id,
             communityName: club.name,
             showHeader: false,
+          ),
+          ClubActivityTab(
+            communityId: club.id,
+            club: club,
+            initialSearchQuery: _activitySearchQuery,
           ),
           _buildTournamentsTab(club, colors),
           _buildRankingsTab(colors, club),
@@ -3756,7 +3756,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         setState(() {
           _activitySearchQuery = query;
         });
-        _tabController.animateTo(0); // Tab 0: Hoạt động
+        _tabController.animateTo(1); // Tab 1: Hoạt động
       },
     );
   }
@@ -5676,8 +5676,8 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
         labelPadding: const EdgeInsets.symmetric(horizontal: 12),
         isScrollable: true,
         tabs: [
-          Tab(text: l10n.club_tabActivity),
           Tab(text: l10n.clubDetailFeedTab),
+          Tab(text: l10n.club_tabActivity),
           Tab(text: l10n.club_tabTournaments),
           Tab(text: l10n.club_tabRankings),
           Tab(text: l10n.club_tabAbout),
