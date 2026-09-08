@@ -11,8 +11,6 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 import 'package:app_quanly_giaidau/core/utils/tennis_game_point_display.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
-import 'package:app_quanly_giaidau/features/community/providers/user_club_rank_provider.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
@@ -457,19 +455,6 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     final currentUserId = currentUser?.id ?? '';
     final currentUserName = (currentUser?.fullName ?? '').toLowerCase();
 
-    // Lấy thông số HUD của user trong CLB
-    final clubRank = isClubMember && currentUserId.isNotEmpty
-        ? ref
-              .watch(
-                userClubRankProvider((
-                  userId: currentUserId,
-                  communityId: widget.communityId,
-                )),
-              )
-              .asData
-              ?.value
-        : null;
-
     // Lọc trận đấu của tôi
     final userMatches = isClubMember
         ? _matches.where((m) {
@@ -527,199 +512,6 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
         padding: const EdgeInsets.all(16),
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
-          // ─── 1. HUD THÔNG SỐ CÁ NHÂN TRONG CLB ───────────────────
-          if (isClubMember && currentUser != null) ...[
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: colors.border),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      RankAvatar(
-                        imageUrl: currentUser.avatarUrl,
-                        name: currentUser.fullName ?? 'Tôi',
-                        elo: clubRank?.eloPoints ?? 1000,
-                        tierName: clubRank?.tierName ?? 'Low Tier D',
-                        matchesPlayed: clubRank?.matchesPlayed ?? 0,
-                        size: 46,
-                        ringWidth: 2.5,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    currentUser.fullName ?? 'Thành viên CLB',
-                                    style: TextStyle(
-                                      fontSize: 14.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: colors.textPrimary,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Hồ sơ và thông số thi đấu trong câu lạc bộ',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: colors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // Telemetry pills
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 7,
-                            horizontal: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.bgSurface,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: colors.borderLight),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'ĐIỂM CLB',
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w800,
-                                  color: colors.textMuted,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${clubRank?.eloPoints ?? 1000} ELO',
-                                style: const TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w900,
-                                  fontFamily: 'monospace',
-                                  color: Color(0xFF2563EB),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 7,
-                            horizontal: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.bgSurface,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: colors.borderLight),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'TRẬN TRONG CLB',
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w800,
-                                  color: colors.textMuted,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${userMatches.length} trận',
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w900,
-                                  fontFamily: 'monospace',
-                                  color: colors.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      if (clubRank != null && clubRank.streakCount > 0) ...[
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 7,
-                              horizontal: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(
-                                0xFF10B981,
-                              ).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: const Color(
-                                  0xFF10B981,
-                                ).withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'PHONG ĐỘ',
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w800,
-                                    color: Color(0xFF059669),
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'W${clubRank.streakCount}',
-                                  style: const TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w900,
-                                    fontFamily: 'monospace',
-                                    color: Color(0xFF059669),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-
           // ─── 2. THANH LỌC & TÌM KIẾM & TẠO TRẬN ĐẤU ───────────────────
           Row(
             children: [
@@ -765,7 +557,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                     ),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
-                      vertical: 10,
+                      vertical: 7,
                       horizontal: 12,
                     ),
                     fillColor: colors.bgCard,
@@ -804,7 +596,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                     backgroundColor: AppTheme.primary,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
-                      vertical: 11,
+                      vertical: 8,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -814,34 +606,16 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
               ],
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
 
-          // Filter Chips Row
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _filterChip(
-                  'Tất cả (${_matches.length})',
-                  _ActivityFilter.all,
-                  colors,
-                ),
-                const SizedBox(width: 6),
-                if (isClubMember && currentUser != null) ...[
-                  _filterChip(
-                    'Trận của tôi (${userMatches.length})',
-                    _ActivityFilter.myMatches,
-                    colors,
-                  ),
-                  const SizedBox(width: 6),
-                ],
-                _filterChip('Đang diễn ra', _ActivityFilter.ongoing, colors),
-                const SizedBox(width: 6),
-                _filterChip('Đã kết thúc', _ActivityFilter.completed, colors),
-              ],
-            ),
+          // Filter Dropdown Row
+          _buildFilterDropdown(
+            colors: colors,
+            isClubMember: isClubMember,
+            currentUser: currentUser,
+            userMatches: userMatches,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           // ─── 3. DANH SÁCH TRẬN ĐẤU TIMELINE ───────────────────────
           if (_isLoading) ...[
@@ -932,30 +706,86 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     );
   }
 
-  Widget _filterChip(
-    String label,
-    _ActivityFilter f,
-    AppColorsExtension colors,
-  ) {
-    final isSelected = _filter == f;
-    return GestureDetector(
-      onTap: () => setState(() => _filter = f),
+  Widget _buildFilterDropdown({
+    required AppColorsExtension colors,
+    required bool isClubMember,
+    required dynamic currentUser,
+    required List<dynamic> userMatches,
+  }) {
+    String filterLabel(_ActivityFilter f) {
+      switch (f) {
+        case _ActivityFilter.all:
+          return 'Tất cả (${_matches.length})';
+        case _ActivityFilter.myMatches:
+          return 'Trận của tôi (${userMatches.length})';
+        case _ActivityFilter.ongoing:
+          return 'Đang diễn ra';
+        case _ActivityFilter.completed:
+          return 'Đã kết thúc';
+      }
+    }
+
+    final options = <_ActivityFilter>[
+      _ActivityFilter.all,
+      if (isClubMember && currentUser != null) _ActivityFilter.myMatches,
+      _ActivityFilter.ongoing,
+      _ActivityFilter.completed,
+    ];
+
+    return PopupMenuButton<_ActivityFilter>(
+      initialValue: _filter,
+      onSelected: (f) => setState(() => _filter = f),
+      offset: const Offset(0, 36),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      itemBuilder: (_) => options.map((f) {
+        final isSelected = _filter == f;
+        return PopupMenuItem<_ActivityFilter>(
+          value: f,
+          height: 40,
+          child: Row(
+            children: [
+              if (isSelected)
+                Icon(Icons.check_rounded, size: 14, color: AppTheme.primary)
+              else
+                const SizedBox(width: 14),
+              const SizedBox(width: 6),
+              Text(
+                filterLabel(f),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? AppTheme.primary : colors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primary : colors.bgCard,
+          color: colors.bgCard,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected ? AppTheme.primary : colors.border,
-          ),
+          border: Border.all(color: colors.border),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            color: isSelected ? Colors.white : colors.textSecondary,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              filterLabel(_filter),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: colors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 16,
+              color: colors.textSecondary,
+            ),
+          ],
         ),
       ),
     );
