@@ -3448,6 +3448,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lite_createMockPlayers => 'Create Mock Players';
 
   @override
+  String get lite_addClubMember => 'Add club member';
+
+  @override
+  String get lite_addClubMemberTitle => 'Add club member to tournament';
+
+  @override
+  String get lite_addClubMemberDescription =>
+      'Choose an active club member to add to this Super Lite tournament.';
+
+  @override
+  String get lite_clubMemberSearchPlaceholder => 'Search club members...';
+
+  @override
+  String get lite_clubMemberStatus => 'Active club member';
+
+  @override
+  String get lite_addMemberAction => 'Add';
+
+  @override
+  String get lite_memberAlreadyAdded => 'Added';
+
+  @override
+  String get lite_noClubMembers =>
+      'No active club members are available to add.';
+
+  @override
+  String get lite_allClubMembersAdded =>
+      'All matching club members are already in the tournament.';
+
+  @override
+  String get lite_clubMembersLoadError => 'Could not load club members.';
+
+  @override
+  String get lite_addMemberSuccess => 'Club member added to the tournament.';
+
+  @override
+  String get lite_addMemberError =>
+      'Could not add club member to the tournament.';
+
+  @override
+  String get lite_memberRosterNote =>
+      'If the member later leaves the club, they remain in this tournament and its match history.';
+
+  @override
   String get lite_quantity => 'Quantity';
 
   @override

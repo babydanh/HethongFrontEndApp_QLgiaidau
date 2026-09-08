@@ -6488,6 +6488,84 @@ abstract class AppLocalizations {
   /// **'Tạo VĐV ảo'**
   String get lite_createMockPlayers;
 
+  /// No description provided for @lite_addClubMember.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm thành viên CLB'**
+  String get lite_addClubMember;
+
+  /// No description provided for @lite_addClubMemberTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm thành viên CLB vào giải'**
+  String get lite_addClubMemberTitle;
+
+  /// No description provided for @lite_addClubMemberDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn thành viên đang hoạt động trong CLB để thêm vào Super Lite.'**
+  String get lite_addClubMemberDescription;
+
+  /// No description provided for @lite_clubMemberSearchPlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm tên thành viên CLB...'**
+  String get lite_clubMemberSearchPlaceholder;
+
+  /// No description provided for @lite_clubMemberStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên đang hoạt động'**
+  String get lite_clubMemberStatus;
+
+  /// No description provided for @lite_addMemberAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm'**
+  String get lite_addMemberAction;
+
+  /// No description provided for @lite_memberAlreadyAdded.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm'**
+  String get lite_memberAlreadyAdded;
+
+  /// No description provided for @lite_noClubMembers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có thành viên CLB đang hoạt động để thêm.'**
+  String get lite_noClubMembers;
+
+  /// No description provided for @lite_allClubMembersAdded.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các thành viên phù hợp đã được thêm vào giải.'**
+  String get lite_allClubMembersAdded;
+
+  /// No description provided for @lite_clubMembersLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách thành viên CLB.'**
+  String get lite_clubMembersLoadError;
+
+  /// No description provided for @lite_addMemberSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm thành viên vào giải.'**
+  String get lite_addMemberSuccess;
+
+  /// No description provided for @lite_addMemberError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể thêm thành viên vào giải.'**
+  String get lite_addMemberError;
+
+  /// No description provided for @lite_memberRosterNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nếu thành viên rời CLB sau khi được thêm, người đó vẫn giữ nguyên trong giải và lịch sử trận.'**
+  String get lite_memberRosterNote;
+
   /// No description provided for @lite_quantity.
   ///
   /// In vi, this message translates to:

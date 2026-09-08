@@ -3433,6 +3433,50 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lite_createMockPlayers => 'Tạo VĐV ảo';
 
   @override
+  String get lite_addClubMember => 'Thêm thành viên CLB';
+
+  @override
+  String get lite_addClubMemberTitle => 'Thêm thành viên CLB vào giải';
+
+  @override
+  String get lite_addClubMemberDescription =>
+      'Chọn thành viên đang hoạt động trong CLB để thêm vào Super Lite.';
+
+  @override
+  String get lite_clubMemberSearchPlaceholder => 'Tìm tên thành viên CLB...';
+
+  @override
+  String get lite_clubMemberStatus => 'Thành viên đang hoạt động';
+
+  @override
+  String get lite_addMemberAction => 'Thêm';
+
+  @override
+  String get lite_memberAlreadyAdded => 'Đã thêm';
+
+  @override
+  String get lite_noClubMembers =>
+      'Không có thành viên CLB đang hoạt động để thêm.';
+
+  @override
+  String get lite_allClubMembersAdded =>
+      'Các thành viên phù hợp đã được thêm vào giải.';
+
+  @override
+  String get lite_clubMembersLoadError =>
+      'Không tải được danh sách thành viên CLB.';
+
+  @override
+  String get lite_addMemberSuccess => 'Đã thêm thành viên vào giải.';
+
+  @override
+  String get lite_addMemberError => 'Không thể thêm thành viên vào giải.';
+
+  @override
+  String get lite_memberRosterNote =>
+      'Nếu thành viên rời CLB sau khi được thêm, người đó vẫn giữ nguyên trong giải và lịch sử trận.';
+
+  @override
   String get lite_quantity => 'Số lượng';
 
   @override

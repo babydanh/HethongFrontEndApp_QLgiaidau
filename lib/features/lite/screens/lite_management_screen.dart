@@ -12,9 +12,11 @@ import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/widgets/football_registration_groups.dart';
@@ -371,11 +373,18 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 value: 'delete',
                 child: Row(
                   children: [
-                    const Icon(Icons.delete_outline_rounded, color: Colors.red, size: 20),
+                    const Icon(
+                      Icons.delete_outline_rounded,
+                      color: Colors.red,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       l10n.deleteTournament,
-                      style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -691,7 +700,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     );
   }
 
-  Widget _buildDangerZoneCard(AppColorsExtension colors, LiteManagementState state) {
+  Widget _buildDangerZoneCard(
+    AppColorsExtension colors,
+    LiteManagementState state,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
@@ -705,7 +717,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         children: [
           Row(
             children: [
-              const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 20),
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.red,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 l10n.deleteTournament,
@@ -736,12 +752,16 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               ),
               onPressed: _isDeleting
                   ? null
-                  : () => _confirmAndDeleteTournament(state.tournamentName ?? ''),
+                  : () =>
+                        _confirmAndDeleteTournament(state.tournamentName ?? ''),
               icon: _isDeleting
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.red,
+                      ),
                     )
                   : const Icon(Icons.delete_forever_rounded, size: 18),
               label: Text(
@@ -776,7 +796,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
               l10n.deleteTournament,
-              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -2595,6 +2618,16 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     final allPaired = state.completeParticipants;
     final isDoubles = state.isDoubles;
     final bracketLocked = _isBracketLockedForRecreation(state);
+    final liteTournament = state.tournament;
+    final canAddClubMember =
+        liteTournament?.isClubLite == true &&
+        !state.hasBracket &&
+        !state.rosterConfirmed &&
+        !liteTournament!.isRegistrationLocked &&
+        const {
+          'REGISTRATION_OPEN',
+          'UPCOMING',
+        }.contains(liteTournament.status.toUpperCase());
 
     return RefreshIndicator(
       onRefresh: () => notifier.refresh(widget.tournamentId),
@@ -2606,6 +2639,20 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             const Padding(
               padding: EdgeInsets.only(bottom: 12),
               child: LinearProgressIndicator(),
+            ),
+
+          if (canAddClubMember)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: () =>
+                      _showClubMemberPicker(colors, state, notifier),
+                  icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                  label: Text(l10n.lite_addClubMember),
+                ),
+              ),
             ),
 
           if (state.hasBracket) ...[
@@ -3033,6 +3080,29 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             ],
           ],
         ],
+      ),
+    );
+  }
+
+  Future<void> _showClubMemberPicker(
+    AppColorsExtension colors,
+    LiteManagementState state,
+    LiteManagementNotifier notifier,
+  ) async {
+    final communityId = state.tournament?.communityId;
+    if (communityId == null || communityId.isEmpty) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _LiteClubMemberPickerSheet(
+        communityId: communityId,
+        tournamentId: widget.tournamentId,
+        participants: state.participants,
+        notifier: notifier,
+        colors: colors,
       ),
     );
   }
@@ -3867,5 +3937,354 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         );
       }
     }
+  }
+}
+
+class _LiteClubMemberPickerSheet extends ConsumerStatefulWidget {
+  final String communityId;
+  final String tournamentId;
+  final List<LiteParticipant> participants;
+  final LiteManagementNotifier notifier;
+  final AppColorsExtension colors;
+
+  const _LiteClubMemberPickerSheet({
+    required this.communityId,
+    required this.tournamentId,
+    required this.participants,
+    required this.notifier,
+    required this.colors,
+  });
+
+  @override
+  ConsumerState<_LiteClubMemberPickerSheet> createState() =>
+      _LiteClubMemberPickerSheetState();
+}
+
+class _LiteClubMemberPickerSheetState
+    extends ConsumerState<_LiteClubMemberPickerSheet> {
+  List<CommunityMemberModel> _members = const [];
+  late final Set<String> _addedIds;
+  String _query = '';
+  String? _error;
+  String? _addingId;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _addedIds = {
+      for (final participant in widget.participants)
+        for (final member in participant.members)
+          if (member.id.isNotEmpty) member.id,
+    };
+    _loadMembers();
+  }
+
+  Future<void> _loadMembers() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final members = await ref
+          .read(communityRepositoryProvider)
+          .getMembers(widget.communityId, status: 'JOINED', limit: 200);
+      if (!mounted) return;
+      setState(() {
+        _members = members
+            .where((member) => member.status.toUpperCase() == 'JOINED')
+            .toList(growable: false);
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = AppLocalizations.of(context)!.lite_clubMembersLoadError;
+      });
+    }
+  }
+
+  Future<void> _addMember(CommunityMemberModel member) async {
+    final userId = member.userId;
+    if (userId.isEmpty || _addedIds.contains(userId) || _addingId != null) {
+      return;
+    }
+    setState(() => _addingId = userId);
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await widget.notifier.addClubMember(widget.tournamentId, userId);
+      if (!mounted) return;
+      setState(() {
+        _addedIds.add(userId);
+        _addingId = null;
+      });
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(SnackBar(content: Text(l10n.lite_addMemberSuccess)));
+    } catch (error) {
+      if (!mounted) return;
+      final responseData = error is DioException ? error.response?.data : null;
+      final serverMessage = responseData is Map
+          ? responseData['message']?.toString()
+          : null;
+      setState(() => _addingId = null);
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(content: Text(serverMessage ?? l10n.lite_addMemberError)),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final normalizedQuery = _query.trim().toLowerCase();
+    final filtered = _members
+        .where((member) {
+          final name = (member.userFullName ?? '').trim();
+          return normalizedQuery.isEmpty ||
+              name.toLowerCase().contains(normalizedQuery);
+        })
+        .toList(growable: false);
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.82;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: Material(
+        color: widget.colors.bgCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        clipBehavior: Clip.antiAlias,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 42,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: widget.colors.border,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.lite_addClubMemberTitle,
+                              style: TextStyle(
+                                color: widget.colors.textPrimary,
+                                fontSize: 19,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              l10n.lite_addClubMemberDescription,
+                              style: TextStyle(
+                                color: widget.colors.textSecondary,
+                                fontSize: 12,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: l10n.close,
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: widget.colors.info.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: widget.colors.info.withValues(alpha: 0.22),
+                      ),
+                    ),
+                    child: Text(
+                      l10n.lite_memberRosterNote,
+                      style: TextStyle(
+                        color: widget.colors.textSecondary,
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    onChanged: (value) => setState(() => _query = value),
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      hintText: l10n.lite_clubMemberSearchPlaceholder,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      isDense: true,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  if (_loading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 32),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (_error != null)
+                    _PickerMessage(
+                      icon: Icons.cloud_off_rounded,
+                      message: _error!,
+                      actionLabel: l10n.infoRetry,
+                      onAction: _loadMembers,
+                      colors: widget.colors,
+                    )
+                  else if (filtered.isEmpty)
+                    _PickerMessage(
+                      icon: Icons.people_outline_rounded,
+                      message: _members.isEmpty
+                          ? l10n.lite_noClubMembers
+                          : l10n.lite_allClubMembersAdded,
+                      colors: widget.colors,
+                    )
+                  else
+                    Flexible(
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, _) => Divider(
+                          height: 1,
+                          color: widget.colors.border.withValues(alpha: 0.6),
+                        ),
+                        itemBuilder: (context, index) {
+                          final member = filtered[index];
+                          final name =
+                              (member.userFullName ?? '').trim().isEmpty
+                              ? l10n.infoPlayer
+                              : member.userFullName!.trim();
+                          final userId = member.userId;
+                          final isAdded = _addedIds.contains(userId);
+                          final isAdding = _addingId == userId;
+                          final avatar = member.userAvatarUrl;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 20,
+                                  backgroundColor: widget.colors.info
+                                      .withValues(alpha: 0.12),
+                                  backgroundImage:
+                                      avatar == null || avatar.isEmpty
+                                      ? null
+                                      : NetworkImage(avatar),
+                                  child: avatar == null || avatar.isEmpty
+                                      ? Text(
+                                          name.characters.first.toUpperCase(),
+                                          style: TextStyle(
+                                            color: widget.colors.info,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    name,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: widget.colors.textPrimary,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                OutlinedButton(
+                                  onPressed: isAdded || _addingId != null
+                                      ? null
+                                      : () => _addMember(member),
+                                  child: isAdding
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : Text(
+                                          isAdded
+                                              ? l10n.lite_memberAlreadyAdded
+                                              : l10n.lite_addMemberAction,
+                                        ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PickerMessage extends StatelessWidget {
+  final IconData icon;
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  final AppColorsExtension colors;
+
+  const _PickerMessage({
+    required this.icon,
+    required this.message,
+    required this.colors,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 8),
+      child: Column(
+        children: [
+          Icon(icon, size: 32, color: colors.textMuted),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: colors.textSecondary, fontSize: 13),
+          ),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 12),
+            OutlinedButton(onPressed: onAction, child: Text(actionLabel!)),
+          ],
+        ],
+      ),
+    );
   }
 }

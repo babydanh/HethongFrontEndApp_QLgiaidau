@@ -831,8 +831,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
           ),
         ),
-        // Không pin tab bar: banner + nút + tab trượt theo nội dung,
-        // chỉ giữ app bar (SliverAppBar pinned ở trên) cố định — 1 scroll liền mạch.
+        // Tab gọn kiểu mạng xã hội: trượt theo nội dung, chỉ app bar cố định.
         SliverPersistentHeader(
           pinned: false,
           delegate: _TabBarDelegate(
@@ -844,21 +843,21 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          CommunitySocialScreen(
-            communityId: club.id,
-            communityName: club.name,
-            showHeader: false,
-          ),
-          _buildAboutTab(club, colors),
           ClubActivityTab(
             communityId: club.id,
             club: club,
             initialSearchQuery: _activitySearchQuery,
           ),
+          CommunitySocialScreen(
+            communityId: club.id,
+            communityName: club.name,
+            showHeader: false,
+          ),
           _buildTournamentsTab(club, colors),
+          _buildRankingsTab(colors, club),
+          _buildAboutTab(club, colors),
           _buildMembersTab(club, colors),
           _buildGalleryTab(club, colors),
-          _buildRankingsTab(colors, club),
           _buildSettingsTab(club, colors),
         ],
       ),
@@ -1274,23 +1273,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final bannerUrl = _resolveImageUrl(club.bannerUrl);
     final logoUrl = _resolveImageUrl(club.logoUrl);
     final bool hasBanner = bannerUrl.isNotEmpty;
-    final List<Widget> sportTagWidgets = [];
-    if (club.sports.isNotEmpty) {
-      for (final s in club.sports) {
-        final sTrim = s.trim();
-        if (sTrim.isEmpty) continue;
-        final mapped = l10n.sportDisplayName(sTrim);
-        sportTagWidgets.add(_buildSportTag(mapped, sColor));
-        sportTagWidgets.add(const SizedBox(width: 6));
-      }
-    }
-    if (sportTagWidgets.isEmpty) {
-      sportTagWidgets.add(
-        _buildSportTag(l10n.club_sportFallback.toUpperCase(), sColor),
-      );
-      sportTagWidgets.add(const SizedBox(width: 6));
-    }
-
     Widget fallbackBanner() {
       if (logoUrl.isEmpty) return _bannerGradient(sColor, emoji);
       final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1308,286 +1290,189 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Stack(
-          children: [
-            Container(
-              height: 240,
-              width: double.infinity,
-              color: colors.bgCard,
-              child: hasBanner
-                  ? ClubNetworkImage(
-                      bannerUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          fallbackBanner(),
-                    )
-                  : fallbackBanner(),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (logoUrl.isNotEmpty) ...[
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: colors.bgCard,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: colors.border, width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: ClipOval(
-                        child: ClubNetworkImage(
-                          logoUrl,
+    final sportLabel = club.sports.isNotEmpty
+        ? l10n.sportDisplayName(club.sports.first.trim())
+        : l10n.club_sportFallback.toUpperCase();
+
+    return Container(
+      color: colors.bgCard,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: 210,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned.fill(
+                  child: hasBanner
+                      ? ClubNetworkImage(
+                          bannerUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
-                              _logoSportBg(sColor, emoji),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                  ],
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          physics: const BouncingScrollPhysics(),
-                          child: Row(
-                            children: [
-                              ...sportTagWidgets,
-                              if (_myMembership?.role == 'OWNER') ...[
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFF6366F1,
-                                    ).withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                      color: const Color(
-                                        0xFF6366F1,
-                                      ).withValues(alpha: 0.3),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(
-                                        Icons.shield_rounded,
-                                        size: 11,
-                                        color: Color(0xFF6366F1),
-                                      ),
-                                      SizedBox(width: 3),
-                                      Text(
-                                        l10n.club_owner,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w800,
-                                          color: Color(0xFF6366F1),
-                                          letterSpacing: 0.2,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                              ] else if (_myMembership?.role == 'ADMIN' ||
-                                  _myMembership?.role == 'MODERATOR') ...[
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFFF59E0B,
-                                    ).withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                      color: const Color(
-                                        0xFFF59E0B,
-                                      ).withValues(alpha: 0.3),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(
-                                        Icons.admin_panel_settings_rounded,
-                                        size: 11,
-                                        color: Color(0xFFF59E0B),
-                                      ),
-                                      SizedBox(width: 3),
-                                      Text(
-                                        l10n.club_admin,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w800,
-                                          color: Color(0xFFF59E0B),
-                                          letterSpacing: 0.2,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                              ],
-                              const SizedBox(width: 2),
-                              _buildJoinModeBadge(club.joinMode),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          club.name.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
-                            color: colors.textPrimary,
-                            height: 1.25,
-                            letterSpacing: -0.2,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on_outlined,
-                              size: 14,
-                              color: colors.textMuted,
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                club.locationAddress ?? l10n.vietnam,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: colors.textSecondary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.group_rounded,
-                              size: 14,
-                              color: colors.textMuted,
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                l10n.club_memberCount(club.memberCount),
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: colors.textSecondary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              if ((club.description ?? '').isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Text(
-                  club.description ?? '',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: colors.textSecondary,
-                    height: 1.5,
+                              fallbackBanner(),
+                        )
+                      : fallbackBanner(),
+                ),
+                Positioned(
+                  left: 20,
+                  bottom: -38,
+                  child: _buildClubAvatar(
+                    logoUrl: logoUrl,
+                    colors: colors,
+                    sColor: sColor,
+                    emoji: emoji,
                   ),
                 ),
               ],
-              const SizedBox(height: 16),
-              Divider(color: colors.border, height: 1.0),
-            ],
+            ),
           ),
-        ),
-      ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 50, 16, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  club.name,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: colors.textPrimary,
+                    height: 1.15,
+                    letterSpacing: -0.35,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 7),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: [
+                      Icon(
+                        club.visibility.toUpperCase() == 'PRIVATE'
+                            ? Icons.lock_outline_rounded
+                            : Icons.public_outlined,
+                        size: 15,
+                        color: colors.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        club.visibility.toUpperCase() == 'PRIVATE'
+                            ? l10n.clubDetailPrivateVisibility
+                            : l10n.rank_public,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      _buildMetaDot(colors),
+                      Icon(
+                        Icons.group_outlined,
+                        size: 15,
+                        color: colors.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        l10n.club_memberCount(club.memberCount),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      _buildMetaDot(colors),
+                      Text(
+                        sportLabel,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: sColor,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if ((club.locationAddress ?? '').trim().isNotEmpty) ...[
+                  const SizedBox(height: 5),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 16,
+                        color: colors.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          club.locationAddress!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildSportTag(String sportName, Color sColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: sColor.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: sColor.withValues(alpha: 0.2)),
-      ),
+  Widget _buildMetaDot(AppColorsExtension colors) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Text(
-        sportName.toUpperCase(),
+        '·',
         style: TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.bold,
-          color: sColor,
-          letterSpacing: 0.8,
+          color: colors.textMuted,
+          fontSize: 17,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );
   }
 
-  Widget _buildJoinModeBadge(String mode) {
-    final l10n = AppLocalizations.of(context)!;
-    String label = l10n.club_joinModeOpen;
-    Color color = const Color(0xFF059669);
-    if (mode == 'INVITE_ONLY') {
-      label = l10n.club_joinModeInvite;
-      color = const Color(0xFFE11D48);
-    } else if (mode == 'APPROVAL') {
-      label = l10n.club_joinModeApproval;
-      color = const Color(0xFFF59E0B);
-    }
+  Widget _buildClubAvatar({
+    required String logoUrl,
+    required AppColorsExtension colors,
+    required Color sColor,
+    required String emoji,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      width: 82,
+      height: 82,
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        color: colors.bgCard,
+        shape: BoxShape.circle,
+        border: Border.all(color: sColor.withValues(alpha: 0.55), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
-      child: Text(
-        label.toUpperCase(),
-        style: TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.bold,
-          color: color,
-          letterSpacing: 0.8,
-        ),
+      child: ClipOval(
+        child: logoUrl.isNotEmpty
+            ? ClubNetworkImage(
+                logoUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    _logoSportBg(sColor, emoji),
+              )
+            : _logoSportBg(sColor, emoji),
       ),
     );
   }
@@ -3871,7 +3756,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         setState(() {
           _activitySearchQuery = query;
         });
-        _tabController.animateTo(2); // Tab 2: Hoạt động
+        _tabController.animateTo(0); // Tab 0: Hoạt động
       },
     );
   }
@@ -5774,35 +5659,30 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
       ),
       child: TabBar(
         controller: tabController,
-        // Đồng bộ với Web: tab active là pill emerald, không dùng gạch
-        // chân xanh riêng của theme mobile.
-        indicator: BoxDecoration(
-          color: AppTheme.primary,
-          borderRadius: BorderRadius.circular(8),
+        indicator: UnderlineTabIndicator(
+          borderSide: BorderSide(color: AppTheme.primary, width: 2.5),
+          insets: const EdgeInsets.symmetric(horizontal: 10),
         ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        indicatorPadding: const EdgeInsets.symmetric(
-          vertical: 6,
-          horizontal: 3,
-        ),
-        dividerColor: Colors.transparent,
-        labelColor: Colors.white,
+        indicatorSize: TabBarIndicatorSize.label,
+        indicatorPadding: EdgeInsets.zero,
+        dividerColor: colors.border.withValues(alpha: 0.65),
+        labelColor: AppTheme.primary,
         unselectedLabelColor: const Color(0xFF475569),
-        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
         unselectedLabelStyle: const TextStyle(
           fontSize: 13,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
         ),
-        labelPadding: const EdgeInsets.symmetric(horizontal: 14),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 12),
         isScrollable: true,
         tabs: [
-          Tab(text: l10n.clubDetailFeedTab),
-          Tab(text: l10n.club_tabAbout),
           Tab(text: l10n.club_tabActivity),
+          Tab(text: l10n.clubDetailFeedTab),
           Tab(text: l10n.club_tabTournaments),
+          Tab(text: l10n.club_tabRankings),
+          Tab(text: l10n.club_tabAbout),
           Tab(text: l10n.club_tabMembers),
           Tab(text: l10n.club_tabGallery),
-          Tab(text: l10n.club_tabRankings),
           Tab(text: l10n.club_tabSettings),
         ],
       ),
@@ -5810,9 +5690,9 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 48.0;
+  double get maxExtent => 44.0;
   @override
-  double get minExtent => 48.0;
+  double get minExtent => 44.0;
   @override
   bool shouldRebuild(_TabBarDelegate oldDelegate) => true;
 }
