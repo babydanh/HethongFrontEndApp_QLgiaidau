@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -40,9 +41,14 @@ class TournamentAvatar extends StatelessWidget {
   }
 
   String _getInitials(String name) {
-    final clean = name.replaceFirst(RegExp(r'^(Giải|GIẢI)\s+', caseSensitive: false), '').trim();
+    final clean = name
+        .replaceFirst(RegExp(r'^(Giải|GIẢI)\s+', caseSensitive: false), '')
+        .trim();
     if (clean.isEmpty) return 'T';
-    final parts = clean.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    final parts = clean
+        .split(RegExp(r'\s+'))
+        .where((p) => p.isNotEmpty)
+        .toList();
     if (parts.length >= 2) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
@@ -90,7 +96,8 @@ class TournamentAvatar extends StatelessWidget {
             ? Image.network(
                 resolvedUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => _buildFallback(initials, emoji),
+                errorBuilder: (context, error, stackTrace) =>
+                    _buildFallback(initials, emoji),
               )
             : _buildFallback(initials, emoji),
       ),
@@ -99,25 +106,13 @@ class TournamentAvatar extends StatelessWidget {
 
   Widget _buildFallback(String initials, String emoji) {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFEFF6FF),
-            Color(0xFFDBEAFE),
-          ],
-        ),
-      ),
+      color: const Color(0xFFF8FAFC),
       alignment: Alignment.center,
-      child: Text(
-        initials.isNotEmpty ? initials : emoji,
-        style: TextStyle(
-          color: const Color(0xFF1D4ED8),
-          fontSize: size * 0.36,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -0.2,
-        ),
+      padding: EdgeInsets.all(size * 0.12),
+      child: SvgPicture.asset(
+        'assets/images/sporto_v1.svg',
+        fit: BoxFit.contain,
+        semanticsLabel: 'SportO',
       ),
     );
   }

@@ -9,6 +9,35 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
+  String get club_createMatchStandalone => 'Tạo trận đấu';
+
+  @override
+  String get club_standaloneMatch => 'Trận đấu riêng';
+
+  @override
+  String get club_standaloneMatchDesc =>
+      'Trận giao lưu riêng giữa các thành viên';
+
+  @override
+  String get club_searchMemberHint => 'Tìm theo tên thành viên...';
+
+  @override
+  String get club_selectPlayersSideA => 'Chọn Đội A';
+
+  @override
+  String get club_selectPlayersSideB => 'Chọn Đội B';
+
+  @override
+  String get club_startMatchAndScore => 'Bắt đầu & Tính điểm';
+
+  @override
+  String get club_errorNeedEqualSides =>
+      'Mỗi đội cần 1 VĐV (đơn) hoặc 2 VĐV (đôi)';
+
+  @override
+  String get club_noMembersFound => 'Không tìm thấy thành viên phù hợp';
+
+  @override
   String get appTagline => 'Chơi cùng nhau';
 
   @override

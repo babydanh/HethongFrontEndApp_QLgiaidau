@@ -9,6 +9,35 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get club_createMatchStandalone => 'Create Match';
+
+  @override
+  String get club_standaloneMatch => 'Standalone Match';
+
+  @override
+  String get club_standaloneMatchDesc =>
+      'Casual friendly match between club members';
+
+  @override
+  String get club_searchMemberHint => 'Search member name...';
+
+  @override
+  String get club_selectPlayersSideA => 'Select Side A';
+
+  @override
+  String get club_selectPlayersSideB => 'Select Side B';
+
+  @override
+  String get club_startMatchAndScore => 'Start & Score';
+
+  @override
+  String get club_errorNeedEqualSides =>
+      'Each side needs 1 player (singles) or 2 players (doubles)';
+
+  @override
+  String get club_noMembersFound => 'No matching members found';
+
+  @override
   String get appTagline => 'Play together';
 
   @override

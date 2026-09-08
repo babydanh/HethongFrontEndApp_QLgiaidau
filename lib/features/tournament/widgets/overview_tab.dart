@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
+import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
 
 class OverviewTab extends StatefulWidget {
   final Tournament tournament;
@@ -140,8 +141,10 @@ class _OverviewTabState extends State<OverviewTab> {
 
   final GlobalKey _divisionsKey = GlobalKey();
 
-
-  String _getBracketFormatLabel(String? bracketType, [String? fallbackBracketType]) {
+  String _getBracketFormatLabel(
+    String? bracketType, [
+    String? fallbackBracketType,
+  ]) {
     return BracketFormatIcons.getFormatLabel(
       context,
       bracketType,
@@ -170,12 +173,14 @@ class _OverviewTabState extends State<OverviewTab> {
     final l10n = AppLocalizations.of(context)!;
     final formatStr = (t.format).toLowerCase();
     final sportStr = (t.sport).toLowerCase();
-    final isFootball = sportStr.contains('bóng đá') || sportStr.contains('football');
+    final isFootball =
+        sportStr.contains('bóng đá') || sportStr.contains('football');
 
     if (isFootball) {
       return l10n.tournamentCategoryFootballMen;
     }
-    final isDoubles = formatStr.contains('doubles') || formatStr.contains('đôi');
+    final isDoubles =
+        formatStr.contains('doubles') || formatStr.contains('đôi');
     return isDoubles
         ? l10n.createClubTournament_formatDoubles
         : l10n.createClubTournament_formatSingles;
@@ -205,7 +210,9 @@ class _OverviewTabState extends State<OverviewTab> {
           if (diffMinutes > 0 && diffMinutes < 24 * 60) {
             final h = diffMinutes ~/ 60;
             final m = diffMinutes % 60;
-            durationStr = h > 0 ? (m > 0 ? ' (${h}h${m}p)' : ' (${h}h)') : ' (${m}p)';
+            durationStr = h > 0
+                ? (m > 0 ? ' (${h}h${m}p)' : ' (${h}h)')
+                : ' (${m}p)';
           }
         }
         dateRangeStr = '$dateStr$timeStr$durationStr';
@@ -216,8 +223,8 @@ class _OverviewTabState extends State<OverviewTab> {
       dateRangeStr = (t.startDate != null && t.endDate != null)
           ? '${_formatDate(t.startDate)} - ${_formatDate(t.endDate)}'
           : (t.startDate != null
-              ? _formatDate(t.startDate)
-              : 'Chưa cập nhật thời gian');
+                ? _formatDate(t.startDate)
+                : 'Chưa cập nhật thời gian');
     }
     final locationStr = TournamentLocationFormatter.tournamentFullLocation(t);
     final desc = t.description.trim();
@@ -257,11 +264,17 @@ class _OverviewTabState extends State<OverviewTab> {
                       children: [
                         _buildSportBadge(t.sport),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFEFF6FF),
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: const Color(0xFFDBEAFE), width: 0.8),
+                            border: Border.all(
+                              color: const Color(0xFFDBEAFE),
+                              width: 0.8,
+                            ),
                           ),
                           child: Text(
                             _resolveFormatBadge(t),
@@ -276,20 +289,28 @@ class _OverviewTabState extends State<OverviewTab> {
                         if (t.isRanked) _buildRankingBadge(true),
                       ],
                     ),
-                    if (!hasCustomLogo && (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty))
+                    if (!hasCustomLogo &&
+                        (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty))
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: colors.bgSurface,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: colors.border.withValues(alpha: 0.5)),
+                          border: Border.all(
+                            color: colors.border.withValues(alpha: 0.5),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             CircleAvatar(
                               radius: 10,
-                              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                              backgroundColor: AppTheme.primary.withValues(
+                                alpha: 0.1,
+                              ),
                               backgroundImage: resolvedAvatar.isNotEmpty
                                   ? NetworkImage(resolvedAvatar)
                                   : null,
@@ -413,12 +434,12 @@ class _OverviewTabState extends State<OverviewTab> {
                   builder: (context, ref, _) {
                     final authState = ref.watch(authProvider);
                     final userProfile = ref.watch(userProfileProvider).value;
-                    final isCreator = userProfile != null &&
+                    final isCreator =
+                        userProfile != null &&
                         userProfile.id.isNotEmpty &&
                         userProfile.id == t.creatorId;
-                    final canManage = authState.isAdmin ||
-                        authState.isOrganizer ||
-                        isCreator;
+                    final canManage =
+                        authState.isAdmin || authState.isOrganizer || isCreator;
 
                     if (!canManage) return const SizedBox.shrink();
 
@@ -487,10 +508,15 @@ class _OverviewTabState extends State<OverviewTab> {
                               if (t.isLite) {
                                 context.push('/lite-manage/${t.id}');
                               } else {
-                                context.push('/organizer/tournaments/${t.id}/ops');
+                                context.push(
+                                  '/organizer/tournaments/${t.id}/ops',
+                                );
                               }
                             },
-                            icon: const Icon(Icons.settings_suggest_rounded, size: 16),
+                            icon: const Icon(
+                              Icons.settings_suggest_rounded,
+                              size: 16,
+                            ),
                             label: const Text(
                               'Quản lý',
                               style: TextStyle(
@@ -554,10 +580,7 @@ class _OverviewTabState extends State<OverviewTab> {
                             ),
                           ),
                           onPressed: _scrollToDivisions,
-                          icon: const Icon(
-                            Icons.layers_outlined,
-                            size: 16,
-                          ),
+                          icon: const Icon(Icons.layers_outlined, size: 16),
                           label: const Text(
                             'Nội dung',
                             style: TextStyle(
@@ -605,12 +628,19 @@ class _OverviewTabState extends State<OverviewTab> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
+                  Divider(
+                    color: colors.border.withValues(alpha: 0.6),
+                    height: 1,
+                  ),
                   const SizedBox(height: 16),
                 ],
 
                 // ─── LƯỚI XÁC NHẬN THAM GIA 16/32 SLOT (ĐỒNG BỘ CHUẨN WEB) ───
-                if (isClubLite || ((t.communityId != null && t.communityId!.isNotEmpty) && (t.isLite || t.divisions.isEmpty || t.divisions.length <= 1))) ...[
+                if (isClubLite ||
+                    ((t.communityId != null && t.communityId!.isNotEmpty) &&
+                        (t.isLite ||
+                            t.divisions.isEmpty ||
+                            t.divisions.length <= 1))) ...[
                   CommunityTournamentRosterWidget(
                     tournamentId: t.id,
                     communityId: t.communityId,
@@ -629,12 +659,17 @@ class _OverviewTabState extends State<OverviewTab> {
                 if (!isClubLite && t.divisions.isNotEmpty) ...[
                   KeyedSubtree(
                     key: _divisionsKey,
-                    child: _buildSectionHeader('NỘI DUNG THI ĐẤU (${t.divisions.length})'),
+                    child: _buildSectionHeader(
+                      'NỘI DUNG THI ĐẤU (${t.divisions.length})',
+                    ),
                   ),
                   const SizedBox(height: 10),
                   ...t.divisions.map((div) => _buildDivisionItem(div, colors)),
                   const SizedBox(height: 20),
-                  Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
+                  Divider(
+                    color: colors.border.withValues(alpha: 0.6),
+                    height: 1,
+                  ),
                   const SizedBox(height: 16),
                 ],
 
@@ -642,9 +677,15 @@ class _OverviewTabState extends State<OverviewTab> {
                 if (!isClubLite) ...[
                   _buildSectionHeader('THỜI GIAN ĐĂNG KÝ & LỆ PHÍ'),
                   const SizedBox(height: 10),
-                  _buildMetaRow('Mở đăng ký:', _formatDate(t.registrationStartDate)),
+                  _buildMetaRow(
+                    'Mở đăng ký:',
+                    _formatDate(t.registrationStartDate),
+                  ),
                   const SizedBox(height: 8),
-                  _buildMetaRow('Hạn chót:', _formatDate(t.registrationEndDate)),
+                  _buildMetaRow(
+                    'Hạn chót:',
+                    _formatDate(t.registrationEndDate),
+                  ),
                   const SizedBox(height: 8),
                   _buildMetaRow(
                     'Lệ phí tham gia:',
@@ -656,7 +697,10 @@ class _OverviewTabState extends State<OverviewTab> {
                 // ─── 5. GIỚI THIỆU CHI TIẾT ───
                 if (desc.isNotEmpty) ...[
                   const SizedBox(height: 20),
-                  Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
+                  Divider(
+                    color: colors.border.withValues(alpha: 0.6),
+                    height: 1,
+                  ),
                   const SizedBox(height: 16),
                   _buildSectionHeader('THÔNG TIN GIỚI THIỆU'),
                   const SizedBox(height: 10),
@@ -668,7 +712,10 @@ class _OverviewTabState extends State<OverviewTab> {
                     t.prizeDescription != null &&
                     t.prizeDescription!.isNotEmpty) ...[
                   const SizedBox(height: 20),
-                  Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
+                  Divider(
+                    color: colors.border.withValues(alpha: 0.6),
+                    height: 1,
+                  ),
                   const SizedBox(height: 16),
                   _buildSectionHeader('CƠ CẤU GIẢI THƯỞNG'),
                   const SizedBox(height: 10),
@@ -676,9 +723,13 @@ class _OverviewTabState extends State<OverviewTab> {
                 ],
 
                 // ─── 7. NGƯỜI SÁNG LẬP GIẢI ĐẤU (ĐẶT Ở CUỐI KHI GIẢI CÓ LOGO) ───
-                if (hasCustomLogo && (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty)) ...[
+                if (hasCustomLogo &&
+                    (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty)) ...[
                   const SizedBox(height: 20),
-                  Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
+                  Divider(
+                    color: colors.border.withValues(alpha: 0.6),
+                    height: 1,
+                  ),
                   const SizedBox(height: 16),
                   _buildSectionHeader('NGƯỜI SÁNG LẬP GIẢI ĐẤU'),
                   const SizedBox(height: 10),
@@ -687,19 +738,25 @@ class _OverviewTabState extends State<OverviewTab> {
                     decoration: BoxDecoration(
                       color: colors.bgSurface,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+                      border: Border.all(
+                        color: colors.border.withValues(alpha: 0.7),
+                      ),
                     ),
                     child: Row(
                       children: [
                         CircleAvatar(
                           radius: 18,
-                          backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                          backgroundColor: AppTheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
                           backgroundImage: resolvedAvatar.isNotEmpty
                               ? NetworkImage(resolvedAvatar)
                               : null,
                           child: resolvedAvatar.isEmpty
                               ? Text(
-                                  creatorName.isNotEmpty ? creatorName[0].toUpperCase() : 'B',
+                                  creatorName.isNotEmpty
+                                      ? creatorName[0].toUpperCase()
+                                      : 'B',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
@@ -759,7 +816,9 @@ class _OverviewTabState extends State<OverviewTab> {
         color: colors.bgSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isExpanded ? AppTheme.primary : colors.border.withValues(alpha: 0.7),
+          color: isExpanded
+              ? AppTheme.primary
+              : colors.border.withValues(alpha: 0.7),
           width: isExpanded ? 1.5 : 1,
         ),
       ),
@@ -810,12 +869,17 @@ class _OverviewTabState extends State<OverviewTab> {
                           style: TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w700,
-                            color: isExpanded ? AppTheme.primary : colors.textPrimary,
+                            color: isExpanded
+                                ? AppTheme.primary
+                                : colors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          _getBracketFormatLabel(div.bracketType, widget.tournament.bracketType),
+                          _getBracketFormatLabel(
+                            div.bracketType,
+                            widget.tournament.bracketType,
+                          ),
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
@@ -883,7 +947,9 @@ class _OverviewTabState extends State<OverviewTab> {
                   ),
                   const SizedBox(width: 4),
                   Icon(
-                    isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                    isExpanded
+                        ? Icons.expand_less_rounded
+                        : Icons.expand_more_rounded,
                     size: 18,
                     color: isExpanded ? AppTheme.primary : colors.textMuted,
                   ),
@@ -901,7 +967,10 @@ class _OverviewTabState extends State<OverviewTab> {
                   _buildInlineInfo(
                     icon: Icons.sports_score_rounded,
                     label: 'Thể thức:',
-                    value: _getBracketFormatLabel(div.bracketType, widget.tournament.bracketType),
+                    value: _getBracketFormatLabel(
+                      div.bracketType,
+                      widget.tournament.bracketType,
+                    ),
                     colors: colors,
                   ),
                   const SizedBox(height: 6),
@@ -911,7 +980,8 @@ class _OverviewTabState extends State<OverviewTab> {
                     value: div.matchType == 'DOUBLES' ? 'Đánh Đôi' : 'Đánh Đơn',
                     colors: colors,
                   ),
-                  if (div.genderRestriction != null && div.genderRestriction!.isNotEmpty) ...[
+                  if (div.genderRestriction != null &&
+                      div.genderRestriction!.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     _buildInlineInfo(
                       icon: Icons.wc_rounded,
@@ -935,7 +1005,9 @@ class _OverviewTabState extends State<OverviewTab> {
                         backgroundColor: AppTheme.primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       onPressed: () {
                         if (widget.onSelectDivision != null) {
@@ -945,7 +1017,10 @@ class _OverviewTabState extends State<OverviewTab> {
                       icon: const Icon(Icons.account_tree_outlined, size: 16),
                       label: const Text(
                         'Xem Bảng đấu phân hạng này',
-                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -971,12 +1046,9 @@ class _OverviewTabState extends State<OverviewTab> {
     if (images.isEmpty) {
       return Container(
         color: context.colors.bgSurface,
-        child: Center(
-          child: Icon(
-            Icons.emoji_events_outlined,
-            size: 48,
-            color: context.colors.textMuted.withValues(alpha: 0.4),
-          ),
+        child: const SportoBrandFallback(
+          withTagline: true,
+          semanticsLabel: 'SportO tournament fallback banner',
         ),
       );
     }
@@ -989,7 +1061,10 @@ class _OverviewTabState extends State<OverviewTab> {
           fit: BoxFit.cover,
           errorBuilder: (ctx, err, stack) => Container(
             color: context.colors.bgSurface,
-            child: const Center(child: Icon(Icons.broken_image, size: 36)),
+            child: const SportoBrandFallback(
+              withTagline: true,
+              semanticsLabel: 'SportO tournament fallback banner',
+            ),
           ),
         ),
         Container(

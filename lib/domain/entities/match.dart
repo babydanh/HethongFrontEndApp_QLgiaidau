@@ -130,6 +130,8 @@ class MatchModel {
 
   /// Owning bracket-free club session, when this is a social-session match.
   final String? clubMatchSessionId;
+  /// True for a club activity match that belongs to no session/tournament.
+  final bool isStandaloneMatch;
   final int round;
 
   /// Persisted encounter leg when the tournament has multiple legs.
@@ -188,6 +190,12 @@ class MatchModel {
   final int? team1EloPoints;
   final int? team2EloPoints;
 
+  /// Signed ELO changes returned by the API after a ranked match is applied.
+  /// An empty map means that the backend has not applied ELO (or the match is
+  /// not ranked); the UI must not infer a value from the winner or score.
+  final Map<String, int> eloDelta;
+  final String eloStatus;
+
   final String? groupName;
   final String? stageName;
   final String? stageType;
@@ -200,6 +208,7 @@ class MatchModel {
     required this.id,
     this.tournamentId,
     this.clubMatchSessionId,
+    this.isStandaloneMatch = false,
     required this.round,
     this.leg,
     required this.matchNumber,
@@ -246,6 +255,8 @@ class MatchModel {
     this.team2IsMock = false,
     this.team1EloPoints,
     this.team2EloPoints,
+    this.eloDelta = const {},
+    this.eloStatus = 'PENDING',
     this.groupName,
     this.stageName,
     this.stageType,
@@ -298,6 +309,19 @@ class MatchModel {
       return value is num
           ? value.toInt()
           : int.tryParse(value?.toString() ?? '');
+    }
+
+    Map<String, int> parseEloDelta(dynamic raw) {
+      if (raw is! Map) return const {};
+      final parsed = <String, int>{};
+      for (final entry in raw.entries) {
+        final value = entry.value;
+        final delta = value is num
+            ? value.toInt()
+            : int.tryParse(value?.toString() ?? '');
+        if (delta != null) parsed[entry.key.toString()] = delta;
+      }
+      return parsed;
     }
 
     final scoreDetails = json['scoreDetails'] is Map
@@ -400,6 +424,11 @@ class MatchModel {
           json['club_match_session_id']?.toString() ??
           json['sessionId']?.toString() ??
           json['session_id']?.toString(),
+      isStandaloneMatch:
+          json['isStandaloneMatch'] == true ||
+          json['is_standalone_match'] == true ||
+          json['contextType']?.toString() == 'CLUB_STANDALONE_MATCH' ||
+          json['standaloneMatchId'] != null,
       round: parseInt(json['round'], fallback: 1),
       leg: json['leg'] is num
           ? (json['leg'] as num).toInt()
@@ -507,6 +536,11 @@ class MatchModel {
               (json['participant2'] as Map)['is_mock'] == true),
       team1EloPoints: participantElo(json['participant1']),
       team2EloPoints: participantElo(json['participant2']),
+      eloDelta: parseEloDelta(json['eloDelta'] ?? json['elo_delta']),
+      eloStatus:
+          json['eloStatus']?.toString() ??
+          json['elo_status']?.toString() ??
+          'PENDING',
       groupName:
           json['groupName']?.toString() ??
           json['group_name']?.toString() ??
@@ -593,11 +627,14 @@ class MatchModel {
       'team2IsMock': team2IsMock,
       if (team1EloPoints != null) 'team1EloPoints': team1EloPoints,
       if (team2EloPoints != null) 'team2EloPoints': team2EloPoints,
+      if (eloDelta.isNotEmpty) 'eloDelta': eloDelta,
+      'eloStatus': eloStatus,
       if (groupName != null) 'groupName': groupName,
       if (stageName != null) 'stageName': stageName,
       if (stageType != null) 'stageType': stageType,
       if (divisionId != null) 'divisionId': divisionId,
       'isBye': isBye,
+      'isStandaloneMatch': isStandaloneMatch,
     };
   }
 
@@ -605,6 +642,7 @@ class MatchModel {
     String? id,
     String? tournamentId,
     String? clubMatchSessionId,
+    bool? isStandaloneMatch,
     int? round,
     int? leg,
     int? matchNumber,
@@ -649,6 +687,8 @@ class MatchModel {
     bool? team2IsMock,
     int? team1EloPoints,
     int? team2EloPoints,
+    Map<String, int>? eloDelta,
+    String? eloStatus,
     String? groupName,
     String? stageName,
     String? stageType,
@@ -659,6 +699,7 @@ class MatchModel {
       id: id ?? this.id,
       tournamentId: tournamentId ?? this.tournamentId,
       clubMatchSessionId: clubMatchSessionId ?? this.clubMatchSessionId,
+      isStandaloneMatch: isStandaloneMatch ?? this.isStandaloneMatch,
       round: round ?? this.round,
       leg: leg ?? this.leg,
       matchNumber: matchNumber ?? this.matchNumber,
@@ -703,6 +744,8 @@ class MatchModel {
       team2IsMock: team2IsMock ?? this.team2IsMock,
       team1EloPoints: team1EloPoints ?? this.team1EloPoints,
       team2EloPoints: team2EloPoints ?? this.team2EloPoints,
+      eloDelta: eloDelta ?? this.eloDelta,
+      eloStatus: eloStatus ?? this.eloStatus,
       groupName: groupName ?? this.groupName,
       stageName: stageName ?? this.stageName,
       stageType: stageType ?? this.stageType,

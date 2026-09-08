@@ -38,7 +38,7 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_match_sessions_screen.dart';
-import 'package:app_quanly_giaidau/features/community/screens/club_match_session_create_screen.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_dialog.dart';
 
 class ClubDetailScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -572,8 +572,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 ),
                 tooltip: l10n.clubDetailManageTooltip,
                 onSelected: (val) {
-                  if (val == 'create_tournament') {
-                    _showCreateTournamentTypeSheet();
+                  if (val == 'create_match') {
+                    ClubStandaloneMatchDialog.show(
+                      context,
+                      communityId: widget.clubId,
+                      clubName: club.name,
+                    );
                   } else if (val == 'match_sessions') {
                     context.push('/club/${widget.clubId}/match-sessions');
                   } else if (val == 'manage') {
@@ -587,6 +591,26 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 },
                 itemBuilder: (ctx) => [
                   PopupMenuItem(
+                    value: 'create_match',
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.sports_tennis_rounded,
+                          size: 18,
+                          color: AppTheme.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          l10n.club_createMatchStandalone,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
                     value: 'match_sessions',
                     child: Row(
                       children: [
@@ -598,26 +622,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         const SizedBox(width: 10),
                         Text(
                           l10n.clubMatchSessionTitle,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'create_tournament',
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.add_circle_outline_rounded,
-                          size: 18,
-                          color: AppTheme.primary,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          l10n.club_createTournament,
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
@@ -779,7 +783,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                               borderRadius: BorderRadius.circular(14),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+                                  color: const Color(
+                                    0xFF2563EB,
+                                  ).withValues(alpha: 0.35),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -844,12 +850,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             showHeader: false,
           ),
           _buildAboutTab(club, colors),
-          _buildTournamentsTab(club, colors),
           ClubActivityTab(
             communityId: club.id,
             club: club,
             initialSearchQuery: _activitySearchQuery,
           ),
+          _buildTournamentsTab(club, colors),
           _buildMembersTab(club, colors),
           _buildGalleryTab(club, colors),
           _buildRankingsTab(colors, club),
@@ -1285,6 +1291,23 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       sportTagWidgets.add(const SizedBox(width: 6));
     }
 
+    Widget fallbackBanner() {
+      if (logoUrl.isEmpty) return _bannerGradient(sColor, emoji);
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return Container(
+        color: isDark ? const Color(0xFF16233A) : const Color(0xFFE8EEFB),
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+        child: Center(
+          child: ClubNetworkImage(
+            logoUrl,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) =>
+                _bannerGradient(sColor, emoji),
+          ),
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1299,9 +1322,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       bannerUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
-                          _bannerGradient(sColor, emoji),
+                          fallbackBanner(),
                     )
-                  : _bannerGradient(sColor, emoji),
+                  : fallbackBanner(),
             ),
           ],
         ),
@@ -2251,10 +2274,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 setState(() {
                   if (isSportOption) {
                     final sportKey = option.$1.substring(6);
-                    _tournamentSportFilter =
-                        _tournamentSportFilter == sportKey
-                            ? 'ALL'
-                            : sportKey;
+                    _tournamentSportFilter = _tournamentSportFilter == sportKey
+                        ? 'ALL'
+                        : sportKey;
                   } else {
                     _tournamentStatusFilter = option.$1;
                     _tournamentSportFilter = 'ALL';
@@ -2280,9 +2302,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final tourneysAsync = ref.watch(
       communityTournamentsProvider(widget.clubId),
     );
-    final sessionsAsync = ref.watch(
-      clubMatchSessionsProvider(widget.clubId),
-    );
+    final sessionsAsync = ref.watch(clubMatchSessionsProvider(widget.clubId));
     final isAdmin =
         _myMembership?.role == 'OWNER' ||
         _myMembership?.role == 'ADMIN' ||
@@ -2356,17 +2376,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       ),
                     ),
                   ),
-                  if (isAdmin)
-                    FilledButton.icon(
-                      onPressed: () => _showCreateTournamentTypeSheet(),
-                      icon: const Icon(Icons.add_rounded, size: 18),
-                      label: Text(l10n.club_createTournament),
-                      style: FilledButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ],
@@ -2460,7 +2469,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF0D9488).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
@@ -2478,76 +2490,39 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     ),
                   ),
                   const Spacer(),
-                  if (isAdmin) ...[
-                    InkWell(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => ClubMatchSessionCreateScreen(
-                              communityId: widget.clubId,
-                            ),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => ClubMatchSessionsScreen(
+                            communityId: widget.clubId,
                           ),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(6),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.add_rounded,
-                              size: 14,
-                              color: Color(0xFF0D9488),
-                            ),
-                            SizedBox(width: 2),
-                            Text(
-                              'Tạo buổi giao lưu',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF0D9488),
-                              ),
-                            ),
-                          ],
                         ),
-                      ),
-                    ),
-                  ] else ...[
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                      ),
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => ClubMatchSessionsScreen(
-                              communityId: widget.clubId,
-                            ),
-                          ),
-                        );
-                      },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            l10n.infoAll,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colors.textMuted,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            size: 14,
+                      );
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n.infoAll,
+                          style: TextStyle(
+                            fontSize: 12,
                             color: colors.textMuted,
+                            fontWeight: FontWeight.w600,
                           ),
-                        ],
-                      ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 14,
+                          color: colors.textMuted,
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),
@@ -2587,7 +2562,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF2563EB).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
@@ -2625,8 +2603,13 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Phân tích trạng thái
-    final (badgeBg, badgeBorder, badgeTextColor, statusDotColor, statusText) =
-        switch (session.status) {
+    final (
+      badgeBg,
+      badgeBorder,
+      badgeTextColor,
+      statusDotColor,
+      statusText,
+    ) = switch (session.status) {
       'OPEN' => (
         const Color(0xFFECFDF5),
         const Color(0xFF6EE7B7),
@@ -2692,8 +2675,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           Icons.sports_tennis_rounded,
         );
       }
-      if (sportLower.contains('tennis') ||
-          sportLower.contains('quần vợt')) {
+      if (sportLower.contains('tennis') || sportLower.contains('quần vợt')) {
         return (
           const [Color(0xFFF59E0B), Color(0xFFEA580C), Color(0xFFE11D48)],
           'TENNIS',
@@ -2865,7 +2847,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                               color: Colors.white.withValues(alpha: 0.45),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                              ),
                               child: Text(
                                 sportName.toUpperCase(),
                                 style: TextStyle(
@@ -3010,11 +2994,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            sportIconData,
-                            size: 11,
-                            color: Colors.white,
-                          ),
+                          Icon(sportIconData, size: 11, color: Colors.white),
                           const SizedBox(width: 4),
                           Text(
                             sportName,
@@ -3112,12 +3092,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                             vertical: 2.5,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0D9488)
-                                .withValues(alpha: 0.1),
+                            color: const Color(
+                              0xFF0D9488,
+                            ).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(5),
                             border: Border.all(
-                              color: const Color(0xFF0D9488)
-                                  .withValues(alpha: 0.25),
+                              color: const Color(
+                                0xFF0D9488,
+                              ).withValues(alpha: 0.25),
                             ),
                           ),
                           child: const Text(
@@ -3661,318 +3643,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     );
   }
 
-  void _showCreateTournamentTypeSheet() {
-    final colors = context.colors;
-    final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colors.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.club_selectTournamentType,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.club_selectTournamentDesc,
-              style: TextStyle(fontSize: 12, color: colors.textMuted),
-            ),
-            const SizedBox(height: 20),
-
-            // Option 1: Giải Nhanh (Lite)
-            InkWell(
-              onTap: () {
-                Navigator.pop(ctx);
-                context.push('/club/${widget.clubId}/create-tournament');
-              },
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.bolt_rounded,
-                        color: Color(0xFFF59E0B),
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                l10n.club_liteTournament,
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: colors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF59E0B),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  l10n.club_30sOnApp,
-                                  style: const TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l10n.club_liteDesc,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colors.textSecondary,
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.chevron_right_rounded, color: colors.textMuted),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Option 2: Giải Nâng Cao (Full)
-            InkWell(
-              onTap: () {
-                Navigator.pop(ctx);
-                context.push(
-                  '/tournaments/create-advanced?communityId=${widget.clubId}',
-                );
-              },
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.workspace_premium_rounded,
-                        color: Color(0xFF3B82F6),
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                l10n.club_advancedTournament,
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: colors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF2563EB),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Text(
-                                  'FULL',
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l10n.club_advancedDesc,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colors.textSecondary,
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.chevron_right_rounded, color: colors.textMuted),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Option 3: Buổi Giao Lưu CLB
-            InkWell(
-              onTap: () {
-                Navigator.pop(ctx);
-                Navigator.of(context).push(
-                  MaterialPageRoute<bool>(
-                    builder: (_) => ClubMatchSessionCreateScreen(
-                      communityId: widget.clubId,
-                    ),
-                  ),
-                );
-              },
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.sports_tennis_rounded,
-                        color: Color(0xFF059669),
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                l10n.clubMatchSessionTitle,
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: colors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Text(
-                                  'GIAO LƯU',
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Ghép trận tự do, không nhánh đấu, có tính ELO CLB hoặc giao lưu vui vẻ',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colors.textSecondary,
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.chevron_right_rounded, color: colors.textMuted),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildPrivateLockView({
     required IconData icon,
@@ -4045,7 +3715,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+                            color: const Color(
+                              0xFF2563EB,
+                            ).withValues(alpha: 0.35),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -6126,8 +5798,8 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
         tabs: [
           Tab(text: l10n.clubDetailFeedTab),
           Tab(text: l10n.club_tabAbout),
-          Tab(text: l10n.club_tabTournaments),
           Tab(text: l10n.club_tabActivity),
+          Tab(text: l10n.club_tabTournaments),
           Tab(text: l10n.club_tabMembers),
           Tab(text: l10n.club_tabGallery),
           Tab(text: l10n.club_tabRankings),
@@ -6157,22 +5829,14 @@ class _AthleticBannerPainter extends CustomPainter {
       ..color = Colors.white.withValues(alpha: 0.14)
       ..strokeWidth = 28
       ..style = PaintingStyle.stroke;
-    canvas.drawLine(
-      Offset(-20, h + 20),
-      Offset(w * 0.75, -20),
-      sweepPaint,
-    );
+    canvas.drawLine(Offset(-20, h + 20), Offset(w * 0.75, -20), sweepPaint);
 
     // Diagonal thin line
     final thinLinePaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.10)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
-    canvas.drawLine(
-      Offset(10, h + 10),
-      Offset(w * 0.85, -15),
-      thinLinePaint,
-    );
+    canvas.drawLine(Offset(10, h + 10), Offset(w * 0.85, -15), thinLinePaint);
 
     // Court border
     final courtPaint = Paint()
@@ -6187,22 +5851,14 @@ class _AthleticBannerPainter extends CustomPainter {
     canvas.drawRRect(courtRect, courtPaint);
 
     // Center circle
-    canvas.drawCircle(
-      Offset(w / 2, h / 2),
-      h * 0.36,
-      courtPaint,
-    );
+    canvas.drawCircle(Offset(w / 2, h / 2), h * 0.36, courtPaint);
 
     // Center dashed line
     final centerLinePaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.12)
       ..strokeWidth = 1.2
       ..style = PaintingStyle.stroke;
-    canvas.drawLine(
-      Offset(w / 2, 12),
-      Offset(w / 2, h - 12),
-      centerLinePaint,
-    );
+    canvas.drawLine(Offset(w / 2, 12), Offset(w / 2, h - 12), centerLinePaint);
 
     // Corner accents
     final accentPaint = Paint()

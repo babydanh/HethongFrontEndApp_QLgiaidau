@@ -225,7 +225,7 @@ List<ClubSessionScoreModel> parseClubSessionScoreDetails(
         .map(parseSet)
         .whereType<ClubSessionScoreModel>()
         .toList(growable: false);
-    if (parsedSets.isNotEmpty) return parsedSets;
+    if (parsedSets.isNotEmpty) return parsedSets.take(10).toList(growable: false);
   }
 
   final football = scoreDetails['football'];
@@ -263,6 +263,7 @@ List<ClubSessionScoreModel> parseClubSessionScoreDetails(
         return parsePair(parts[0], parts[1]);
       })
       .whereType<ClubSessionScoreModel>()
+      .take(10)
       .toList(growable: false);
 }
 
@@ -270,6 +271,8 @@ class ClubSessionMatchModel {
   final String id;
   final String status;
   final String sessionId;
+  final String? standaloneMatchId;
+  final String? communityId;
   final String sportKey;
   final List<String> sideAUserIds;
   final List<String> sideBUserIds;
@@ -278,6 +281,9 @@ class ClubSessionMatchModel {
   final int revision;
   final String eloStatus;
   final Map<String, dynamic> scoreDetails;
+  final Map<String, dynamic> sportRules;
+  final Map<String, dynamic> tournamentConfig;
+  final bool isRanked;
   final Map<String, int> eloDelta;
   final List<ClubSessionMatchMemberModel> sideAMembers;
   final List<ClubSessionMatchMemberModel> sideBMembers;
@@ -296,6 +302,8 @@ class ClubSessionMatchModel {
     required this.id,
     required this.status,
     this.sessionId = '',
+    this.standaloneMatchId,
+    this.communityId,
     this.sportKey = '',
     required this.sideAUserIds,
     required this.sideBUserIds,
@@ -304,6 +312,9 @@ class ClubSessionMatchModel {
     required this.revision,
     required this.eloStatus,
     this.scoreDetails = const {},
+    this.sportRules = const {},
+    this.tournamentConfig = const {},
+    this.isRanked = true,
     this.eloDelta = const {},
     this.sideAMembers = const [],
     this.sideBMembers = const [],
@@ -350,6 +361,13 @@ class ClubSessionMatchModel {
                   json['clubMatchSessionId'])
               ?.toString() ??
           '',
+      standaloneMatchId: (json['standaloneMatchId'] ??
+                  json['standalone_match_id'])
+              ?.toString(),
+      communityId: (json['communityId'] ?? json['community_id'])?.toString() ??
+          (json['community'] is Map
+              ? (json['community'] as Map)['id']?.toString()
+              : null),
       sportKey:
           (json['sport'] ?? json['sportKey'] ?? json['categorySlug'])
               ?.toString() ??
@@ -367,6 +385,15 @@ class ClubSessionMatchModel {
       scoreDetails: json['scoreDetails'] is Map
           ? Map<String, dynamic>.from(json['scoreDetails'] as Map)
           : const {},
+      sportRules: json['effectiveSportRules'] is Map
+          ? Map<String, dynamic>.from(json['effectiveSportRules'] as Map)
+          : json['sportRules'] is Map
+          ? Map<String, dynamic>.from(json['sportRules'] as Map)
+          : const {},
+      tournamentConfig: json['tournamentConfig'] is Map
+          ? Map<String, dynamic>.from(json['tournamentConfig'] as Map)
+          : const {},
+      isRanked: json['isRanked'] != false && json['is_ranked'] != false,
       eloDelta: json['eloDelta'] is Map
           ? Map<String, dynamic>.from(
               json['eloDelta'] as Map,

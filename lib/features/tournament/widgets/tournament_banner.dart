@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -12,6 +11,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
 import 'package:app_quanly_giaidau/shared/widgets/app_image_viewer.dart';
+import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
 
 class TournamentHeaderView extends StatefulWidget {
   final Tournament tournament;
@@ -102,10 +102,7 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
                           ],
                         ),
                 ),
-                _HeaderInfo(
-                  tournament: widget.tournament,
-                  compact: compact,
-                ),
+                _HeaderInfo(tournament: widget.tournament, compact: compact),
                 SizedBox(height: compact ? 8 : 10),
                 _HeaderMeta(
                   tournament: widget.tournament,
@@ -240,24 +237,9 @@ class _BannerCarousel extends StatelessWidget {
 class _FallbackBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return SvgPicture.network(
-      "https://sporto.asia/sporto_v1.svg",
-      fit: BoxFit.contain,
-      placeholderBuilder: (_) => Container(
-        color: const Color(0xFF1E293B),
-        child: Center(
-          child: Text(
-            l10n.sporto,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              color: Colors.white24,
-              letterSpacing: 4,
-            ),
-          ),
-        ),
-      ),
+    return const SportoBrandFallback(
+      withTagline: true,
+      semanticsLabel: 'SportO tournament fallback banner',
     );
   }
 }
@@ -344,7 +326,9 @@ class _HeaderMeta extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
-    final locationLabel = TournamentLocationFormatter.tournamentFullLocation(tournament);
+    final locationLabel = TournamentLocationFormatter.tournamentFullLocation(
+      tournament,
+    );
     final divisions = tournament.divisions;
 
     final selected =
@@ -588,14 +572,15 @@ class _TournamentLogo extends StatelessWidget {
           _resolveImageUrl(logoUrl),
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) =>
-              const SizedBox.shrink(),
+              const SportoBrandFallback(
+                semanticsLabel: 'SportO fallback tournament logo',
+                padding: EdgeInsets.all(8),
+              ),
         ),
       ),
     );
   }
 }
-
-
 
 String _resolveImageUrl(String url) {
   if (url.startsWith("http")) return url;
@@ -657,23 +642,9 @@ class _TournamentBannerState extends State<TournamentBanner> {
               width: double.infinity,
               color: colors.bgCard,
               child: images.isEmpty
-                  ? SvgPicture.network(
-                      "https://sporto.asia/sporto_v1.svg",
-                      fit: BoxFit.contain,
-                      placeholderBuilder: (_) => Container(
-                        color: const Color(0xFF1E293B),
-                        child: Center(
-                          child: Text(
-                            l10n.sporto,
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white24,
-                              letterSpacing: 4,
-                            ),
-                          ),
-                        ),
-                      ),
+                  ? const SportoBrandFallback(
+                      withTagline: true,
+                      semanticsLabel: 'SportO tournament fallback banner',
                     )
                   : PageView.builder(
                       controller: _pageController,
@@ -691,23 +662,10 @@ class _TournamentBannerState extends State<TournamentBanner> {
                           imgUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
-                            return SvgPicture.network(
-                              "https://sporto.asia/sporto_v1.svg",
-                              fit: BoxFit.contain,
-                              placeholderBuilder: (_) => Container(
-                                color: const Color(0xFF1E293B),
-                                child: Center(
-                                  child: Text(
-                                    l10n.sporto,
-                                    style: TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white24,
-                                      letterSpacing: 4,
-                                    ),
-                                  ),
-                                ),
-                              ),
+                            return const SportoBrandFallback(
+                              withTagline: true,
+                              semanticsLabel:
+                                  'SportO tournament fallback banner',
                             );
                           },
                         );
@@ -786,20 +744,17 @@ class _TournamentBannerState extends State<TournamentBanner> {
                                   : "https://sporto.asia${widget.tournament.logoUrl!}",
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
-                                  SvgPicture.network(
-                                    "https://sporto.asia/sporto_v1_with_text.svg",
-                                    fit: BoxFit.contain,
-                                    placeholderBuilder: (_) => const Icon(
-                                      Icons.emoji_events,
-                                      size: 28,
-                                    ),
+                                  const SportoBrandFallback(
+                                    withTagline: true,
+                                    semanticsLabel:
+                                        'SportO fallback tournament logo',
+                                    padding: EdgeInsets.all(8),
                                   ),
                             )
-                          : SvgPicture.network(
-                              "https://sporto.asia/sporto_v1_with_text.svg",
-                              fit: BoxFit.contain,
-                              placeholderBuilder: (_) =>
-                                  const Icon(Icons.emoji_events, size: 28),
+                          : const SportoBrandFallback(
+                              withTagline: true,
+                              semanticsLabel: 'SportO fallback tournament logo',
+                              padding: EdgeInsets.all(8),
                             ),
                     ),
                   ),

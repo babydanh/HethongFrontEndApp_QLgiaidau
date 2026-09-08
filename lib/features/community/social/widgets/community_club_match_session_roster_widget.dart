@@ -17,6 +17,7 @@ const List<Color> _kSlotAvatarColors = [
   Color(0xFF14B8A6), // Teal
   Color(0xFF06B6D4), // Cyan
 ];
+const int _kRosterSlotsPerPage = 16;
 
 class CommunityClubMatchSessionRosterWidget extends ConsumerStatefulWidget {
   final String sessionId;
@@ -39,6 +40,7 @@ class _CommunityClubMatchSessionRosterWidgetState
   List<ClubMatchParticipantModel> _participants = [];
   bool _loading = true;
   bool _busy = false;
+  int _rosterPage = 1;
 
   @override
   void initState() {
@@ -211,6 +213,14 @@ class _CommunityClubMatchSessionRosterWidgetState
     final totalSlots = session.maxParticipants < active.length
         ? active.length
         : session.maxParticipants;
+    final totalPages = totalSlots <= 0
+        ? 1
+        : (totalSlots + _kRosterSlotsPerPage - 1) ~/ _kRosterSlotsPerPage;
+    final currentPage = _rosterPage > totalPages ? totalPages : _rosterPage;
+    final startIndex = (currentPage - 1) * _kRosterSlotsPerPage;
+    final visibleSlotCount = totalSlots - startIndex < _kRosterSlotsPerPage
+        ? totalSlots - startIndex
+        : _kRosterSlotsPerPage;
     final currentUserId = session.viewerUserId ?? '';
 
     final formatBadge = switch (session.registrationMode.toUpperCase()) {
@@ -237,10 +247,7 @@ class _CommunityClubMatchSessionRosterWidgetState
               ),
             ),
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: const BoxDecoration(
                 color: Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
@@ -408,28 +415,32 @@ class _CommunityClubMatchSessionRosterWidgetState
               crossAxisSpacing: 8,
               childAspectRatio: 0.76,
             ),
-            itemCount: totalSlots,
+            itemCount: visibleSlotCount,
             itemBuilder: (context, index) {
-              final item = index < active.length ? active[index] : null;
-              final isSelf = item != null &&
+              final globalSlotIndex = startIndex + index;
+              final item = globalSlotIndex < active.length
+                  ? active[globalSlotIndex]
+                  : null;
+              final isSelf =
+                  item != null &&
                   currentUserId.isNotEmpty &&
                   item.userId == currentUserId;
               final displayName = item?.displayName.trim().isNotEmpty == true
                   ? item!.displayName.trim()
                   : (item?.isMock == true
-                      ? '${l10n.clubMatchSessionMockPlayer} ${index + 1}'
-                      : 'VĐV');
+                        ? '${l10n.clubMatchSessionMockPlayer} ${globalSlotIndex + 1}'
+                        : 'VĐV');
 
               if (item != null) {
                 return GestureDetector(
                   onTap: isSelf && session.canWithdraw
                       ? () => _confirmWithdrawDialog(item)
                       : () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) =>
-                                  ClubMatchSessionDetailPage(session: session),
-                            ),
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                ClubMatchSessionDetailPage(session: session),
                           ),
+                        ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -456,7 +467,8 @@ class _CommunityClubMatchSessionRosterWidgetState
                               ],
                             ),
                             child: ClipOval(
-                              child: item.avatarUrl != null &&
+                              child:
+                                  item.avatarUrl != null &&
                                       item.avatarUrl!.isNotEmpty
                                   ? Image.network(
                                       item.avatarUrl!,
@@ -464,15 +476,15 @@ class _CommunityClubMatchSessionRosterWidgetState
                                       errorBuilder:
                                           (context, error, stackTrace) =>
                                               Center(
-                                        child: Text(
-                                          _getInitials(displayName),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ),
+                                                child: Text(
+                                                  _getInitials(displayName),
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.w800,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              ),
                                     )
                                   : Center(
                                       child: Text(
@@ -514,8 +526,9 @@ class _CommunityClubMatchSessionRosterWidgetState
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 11,
-                          fontWeight:
-                              isSelf ? FontWeight.w800 : FontWeight.w600,
+                          fontWeight: isSelf
+                              ? FontWeight.w800
+                              : FontWeight.w600,
                           color: isSelf
                               ? const Color(0xFF2563EB)
                               : colors.textPrimary,
@@ -535,10 +548,7 @@ class _CommunityClubMatchSessionRosterWidgetState
                           l10n.clubMatchSessionMockPlayer,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: colors.warning,
-                            fontSize: 9,
-                          ),
+                          style: TextStyle(color: colors.warning, fontSize: 9),
                         ),
                     ],
                   ),
@@ -577,7 +587,7 @@ class _CommunityClubMatchSessionRosterWidgetState
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      'Slot #${index + 1}',
+                      'Slot #${globalSlotIndex + 1}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
@@ -592,6 +602,37 @@ class _CommunityClubMatchSessionRosterWidgetState
               );
             },
           ),
+          if (totalPages > 1)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    tooltip: 'Trang trước',
+                    onPressed: currentPage > 1
+                        ? () => setState(() => _rosterPage = currentPage - 1)
+                        : null,
+                    icon: const Icon(Icons.chevron_left_rounded),
+                  ),
+                  Text(
+                    'Trang $currentPage/$totalPages',
+                    style: TextStyle(
+                      color: colors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Trang sau',
+                    onPressed: currentPage < totalPages
+                        ? () => setState(() => _rosterPage = currentPage + 1)
+                        : null,
+                    icon: const Icon(Icons.chevron_right_rounded),
+                  ),
+                ],
+              ),
+            ),
           const SizedBox(height: 8),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
+import 'package:app_quanly_giaidau/core/utils/tennis_game_point_display.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -40,6 +41,10 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currentTennisGamePoints = readTennisGamePointDisplay(
+      widget.match,
+      isLive: widget.isLive,
+    );
     final cardScore = widget.isLive
         ? widget.match.currentLiveScore
         : SetScore(score1: widget.match.score1, score2: widget.match.score2);
@@ -107,6 +112,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                           teamLogoUrl: widget.match.team1LogoUrl,
                           members: widget.match.team1MemberInfos,
                           score: cardScore.score1,
+                          currentGamePoint: currentTennisGamePoints?.team1,
                           isWinner:
                               widget.isCompleted &&
                               widget.match.winnerId == widget.match.team1Id,
@@ -128,6 +134,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                           teamLogoUrl: widget.match.team2LogoUrl,
                           members: widget.match.team2MemberInfos,
                           score: cardScore.score2,
+                          currentGamePoint: currentTennisGamePoints?.team2,
                           isWinner:
                               widget.isCompleted &&
                               widget.match.winnerId == widget.match.team2Id,
@@ -465,6 +472,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
     required String? teamLogoUrl,
     required List<MatchMemberInfo> members,
     required int score,
+    String? currentGamePoint,
     required bool isWinner,
     required bool isLeading,
     required CrossAxisAlignment alignment,
@@ -527,6 +535,19 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
             height: 1.05,
           ),
         ),
+        if (currentGamePoint != null)
+          Text(
+            currentGamePoint,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              fontFeatures: const [FontFeature.tabularFigures()],
+              color: widget.isLive
+                  ? const Color(0xFF2563EB)
+                  : colors.textSecondary,
+              height: 1.0,
+            ),
+          ),
       ],
     );
   }

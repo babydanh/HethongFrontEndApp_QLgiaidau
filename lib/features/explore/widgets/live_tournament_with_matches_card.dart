@@ -15,6 +15,8 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
+import 'package:app_quanly_giaidau/core/utils/cursor_pagination.dart';
+import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 
 class LiveTournamentWithMatchesCard extends ConsumerStatefulWidget {
   final Tournament tournament;
@@ -38,7 +40,6 @@ class _LiveTournamentWithMatchesCardState
 
   int _currentPageIndex = 0;
   bool _isLoading = false;
-  bool _hasMore = false;
   int _totalMatches = 0;
   final Map<int, List<MatchModel>> _pageMatches = {};
   final Map<int, String?> _pageCursors = {0: null};
@@ -68,6 +69,9 @@ class _LiveTournamentWithMatchesCardState
       return;
     }
     if (_isLoading) return;
+    if (pageIndex > 0 && (_pageCursors[pageIndex]?.trim().isNotEmpty != true)) {
+      return;
+    }
 
     setState(() => _isLoading = true);
     try {
@@ -81,14 +85,14 @@ class _LiveTournamentWithMatchesCardState
 
       if (mounted) {
         setState(() {
-          if (result.matches.isNotEmpty) {
-            _pageMatches[pageIndex] = result.matches;
-            _currentPageIndex = pageIndex;
-          }
-          _hasMore = result.hasMore;
+          _pageMatches[pageIndex] = result.matches;
+          _currentPageIndex = pageIndex;
           _totalMatches = result.total;
-          if (result.nextCursor != null && result.nextCursor!.isNotEmpty) {
-            _pageCursors[pageIndex + 1] = result.nextCursor;
+          final nextCursor = result.nextCursor?.trim();
+          if (nextCursor != null && nextCursor.isNotEmpty) {
+            _pageCursors[pageIndex + 1] = nextCursor;
+          } else {
+            _pageCursors.remove(pageIndex + 1);
           }
           _isLoading = false;
         });
@@ -105,7 +109,9 @@ class _LiveTournamentWithMatchesCardState
     final l10n = AppLocalizations.of(context)!;
 
     final currentMatches =
-        _pageMatches[_currentPageIndex] ?? const <MatchModel>[];
+        (_pageMatches[_currentPageIndex] ?? const <MatchModel>[])
+            .where(isRenderablePublicMatch)
+            .toList(growable: false);
 
     if (currentMatches.isEmpty && !_isLoading && _pageMatches.isEmpty) {
       return const SizedBox.shrink();
@@ -234,9 +240,11 @@ class _LiveTournamentWithMatchesCardState
   ) {
     final colors = context.colors;
     final canGoPrev = _currentPageIndex > 0 && !_isLoading;
-    final canGoNext =
-        (_hasMore || _pageMatches.containsKey(_currentPageIndex + 1)) &&
-        !_isLoading;
+    final canGoNext = canAdvanceCursorPage(
+      isLoading: _isLoading,
+      hasCachedPage: _pageMatches.containsKey(_currentPageIndex + 1),
+      nextCursor: _pageCursors[_currentPageIndex + 1],
+    );
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),

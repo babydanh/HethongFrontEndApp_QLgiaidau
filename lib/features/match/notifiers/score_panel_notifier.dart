@@ -64,6 +64,9 @@ FootballLiveState? _readFootballState(Map<String, dynamic> details) {
 /// Quản lý scoring logic cho tất cả môn thể thao (Tennis, Pickleball, Rally).
 class ScorePanelNotifier extends Notifier<ScorePanelState> {
   static const _log = AppLogger('ScorePanelNotifier');
+  /// Bound free/Lite scorecards so repeated taps or socket retries cannot
+  /// append an unbounded number of set placeholders.
+  static const maxMatchSets = 10;
   final MatchControlParams arg;
   Timer? _liveSyncTimer;
   Timer? _footballSyncTimer;
@@ -78,6 +81,19 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   bool _isDisposed = false;
 
   ScorePanelNotifier(this.arg);
+
+  int get _closedSetCount =>
+      state.config.scoringModel == SportScoringModel.tennisSet
+          ? state.finishedSets.where((set) => set.isFinished).length
+          : state.finishedSets.length;
+
+  bool get _hasReachedMaxSets => _closedSetCount >= maxMatchSets;
+
+  bool _rejectIfMaxSetsReached() {
+    if (!_hasReachedMaxSets) return false;
+    state = state.copyWith(errorMessage: 'Đã đạt tối đa $maxMatchSets set.');
+    return true;
+  }
 
   AppLocalizations get _l10n =>
       lookupAppLocalizations(ref.read(localeProvider));
@@ -261,9 +277,11 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     // Tennis stores the current in-progress set in `sets` as well. Keep that
     // active set when hydrating; dropping it leaves only 40/deuce in
     // liveState and loses the game/set score on the next socket/refetch.
-    final finishedSets = config.scoringModel == SportScoringModel.tennisSet
-        ? allSets
-        : allSets.where((set) => set.isFinished).toList();
+    final finishedSets = (config.scoringModel == SportScoringModel.tennisSet
+            ? allSets
+            : allSets.where((set) => set.isFinished).toList())
+        .take(maxMatchSets)
+        .toList();
 
     // 2. Tennis point state
     TennisGameState? tennisState;
@@ -453,6 +471,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   // ════════════════ TENNIS ════════════════
 
   void tennisAwardPoint(bool isTeam1) {
+    if (_rejectIfMaxSetsReached()) return;
     final t = state.tennis ?? const TennisGameState();
     state = state.copyWith(
       tennis: t.copyWith(
@@ -512,7 +531,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   void _finishTennisGame(int winnerTeam) {
-    if (state.isMatchComplete) return;
+    if (state.isMatchComplete || _hasReachedMaxSets) return;
     final curSet = state.finishedSets.isNotEmpty
         ? state.finishedSets.last
         : null;
@@ -572,6 +591,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   // ════════════════ PICKLEBALL ════════════════
 
   bool pickleballAwardPoint(bool isTeam1) {
+    if (_rejectIfMaxSetsReached()) return false;
     final pb = state.pickleball ?? const PickleballServeState();
     if (!state.isOpenScoring && pb.isTeam1Serving != isTeam1) {
       state = state.copyWith(errorMessage: _l10n.scorePanel_servingTeamOnly);
@@ -640,6 +660,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   // ════════════════ RALLY ════════════════
 
   void rallyAddPoint(bool isTeam1) {
+    if (_rejectIfMaxSetsReached()) return;
     final r = state.rally ?? const RallySetState();
     if (!_canAddRallyPoint(isTeam1 ? r.currentP1 : r.currentP2)) return;
     state = state.copyWith(
@@ -670,7 +691,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   void _checkRallySetEnd() {
-    if (state.isMatchComplete) return;
+    if (state.isMatchComplete || _hasReachedMaxSets) return;
     final r = state.rally;
     if (r == null) return;
     if (state.isOpenScoring || state.overrideEnabled) return;
@@ -928,6 +949,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     final finalSets = state.config.scoringModel == SportScoringModel.tennisSet
         ? state.finishedSets.where((set) => set.isFinished).toList()
         : List<SetScoreData>.from(state.finishedSets);
+    if (finalSets.length > maxMatchSets) {
+      finalSets.removeRange(maxMatchSets, finalSets.length);
+    }
     if (state.config.scoringModel != SportScoringModel.tennisSet &&
         state.rally != null) {
       final rally = state.rally!;
@@ -939,7 +963,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
             isFinished: true,
           ),
         );
-      } else if (state.isOpenScoring && includeEmptyLiteActiveSet) {
+      } else if (
+          state.isOpenScoring &&
+          includeEmptyLiteActiveSet &&
+          finalSets.length < maxMatchSets) {
         // Keep the next Super Lite set explicitly present on the server after
         // the previous set is closed. Without this 0-0 open entry, a reload
         // can only see the last finished set and the live page falls back to
@@ -949,7 +976,8 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     }
     if (state.isOpenScoring &&
         includeEmptyLiteActiveSet &&
-        state.config.scoringModel == SportScoringModel.tennisSet) {
+        state.config.scoringModel == SportScoringModel.tennisSet &&
+        finalSets.length < maxMatchSets) {
       // Tennis Lite resets its point/game state after a manual set close, so
       // it has no rally object to trigger the branch above. Persist the next
       // open set here as well.
@@ -1137,6 +1165,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       );
       return;
     }
+    if (_rejectIfMaxSetsReached()) return;
     final rally = state.rally;
     final tennis = state.tennis;
     state = state.copyWith(isSubmitting: true, errorMessage: null);
@@ -1181,7 +1210,8 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       // Keep the next open set locally for Lite/Free scoring. Without an
       // explicit 0-0 set, the footer has no active set after Set 1 is closed
       // and the next game can look like it disappeared until a refetch.
-      if (state.isOpenScoring) {
+      if (state.isOpenScoring &&
+          newSets.where((set) => set.isFinished).length < maxMatchSets) {
         newSets = [...newSets, const SetScoreData(score1: 0, score2: 0)];
       }
       state = state.copyWith(
@@ -1361,6 +1391,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
           'mode': tennis.isTiebreak ? 'tiebreak' : 'game',
         },
       };
+    }
+    if (sets.length > maxMatchSets) {
+      sets.removeRange(maxMatchSets, sets.length);
     }
     final (p1Sets, p2Sets) = computeMatchSetsWon(state.finishedSets);
     final requestSignature = _scoreSignature(state);

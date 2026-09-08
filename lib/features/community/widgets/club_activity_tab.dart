@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -9,6 +10,7 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
+import 'package:app_quanly_giaidau/core/utils/tennis_game_point_display.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/community/providers/user_club_rank_provider.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
@@ -16,6 +18,8 @@ import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
 import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_dialog.dart';
 
 class ClubActivityTab extends ConsumerStatefulWidget {
   final String communityId;
@@ -141,111 +145,36 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
           try {
             final sessionMatches = await sessionRepo.matches(session.id);
             for (final sm in sessionMatches) {
-              final sideAMembers = sm.sideAMembers
-                  .map(
-                    (m) => MatchMemberInfo(
-                      userId: m.userId,
-                      fullName: m.displayName,
-                      avatarUrl: m.avatarUrl,
-                      isMock: m.isMock,
-                    ),
-                  )
-                  .toList(growable: false);
-              final sideBMembers = sm.sideBMembers
-                  .map(
-                    (m) => MatchMemberInfo(
-                      userId: m.userId,
-                      fullName: m.displayName,
-                      avatarUrl: m.avatarUrl,
-                      isMock: m.isMock,
-                    ),
-                  )
-                  .toList(growable: false);
-              final sideAName = sm.sideANames.join(' · ').trim();
-              final sideBName = sm.sideBNames.join(' · ').trim();
-              final winnerId = switch (sm.status.toUpperCase()) {
-                'COMPLETED' when sm.sideAScore > sm.sideBScore => 'SIDE_A',
-                'COMPLETED' when sm.sideBScore > sm.sideAScore => 'SIDE_B',
-                _ => '',
-              };
-              final displaySets = parseClubSessionScoreDetails(sm.scoreDetails)
-                  .map(
-                    (score) => SetScore(
-                      score1: score.sideAScore,
-                      score2: score.sideBScore,
-                    ),
-                  )
-                  .toList(growable: false);
-
-              final matchModel = MatchModel(
-                id: sm.id,
-                clubMatchSessionId: sm.sessionId.isNotEmpty
-                    ? sm.sessionId
-                    : session.id,
-                tournamentName: session.resolvedName.isNotEmpty
-                    ? session.resolvedName
-                    : 'Giao lưu CLB',
-                round: 0,
-                matchNumber: 1,
-                team1Id: 'SIDE_A',
-                team2Id: 'SIDE_B',
-                team1Name: sideAName.isEmpty ? 'Đội A' : sideAName,
-                team2Name: sideBName.isEmpty ? 'Đội B' : sideBName,
-                score1: sm.sideAScore,
-                score2: sm.sideBScore,
-                // `p1SetsWon`/`p2SetsWon` are match aggregates. Only use them
-                // for an old completed record; an ongoing match without a
-                // score payload must start at 0-0, never pretend set wins are
-                // live points.
-                sets: displaySets.isNotEmpty
-                    ? displaySets
-                    : [
-                        SetScore(
-                          score1: sm.status.toUpperCase() == 'COMPLETED'
-                              ? sm.sideAScore
-                              : 0,
-                          score2: sm.status.toUpperCase() == 'COMPLETED'
-                              ? sm.sideBScore
-                              : 0,
-                        ),
-                      ],
-                winnerId: winnerId,
-                loserId: winnerId == 'SIDE_A'
-                    ? 'SIDE_B'
-                    : winnerId == 'SIDE_B'
-                    ? 'SIDE_A'
-                    : '',
-                status: sm.status,
-                bracketPosition: const BracketPosition(round: 1, position: 1),
-                scoreDetails: sm.scoreDetails,
-                team1Members: sideAMembers.map((m) => m.fullName).toList(),
-                team2Members: sideBMembers.map((m) => m.fullName).toList(),
-                team1MemberInfos: sideAMembers,
-                team2MemberInfos: sideBMembers,
-                team1LogoUrl: sideAMembers.length == 1
-                    ? sideAMembers.first.avatarUrl
-                    : null,
-                team2LogoUrl: sideBMembers.length == 1
-                    ? sideBMembers.first.avatarUrl
-                    : null,
-                tournamentConfig: const {
-                  'isLite': true,
-                  'mode': 'LITE',
-                  'scoringMode': 'FREE',
-                },
-                sportRules: {
-                  'kind': sm.sportKey,
-                  'mode': 'LITE',
-                  'scoringMode': 'FREE',
-                },
-                revision: sm.revision,
-                updatedAt: session.startAt ?? DateTime.now(),
+              allMatches.add(
+                _mapClubMatch(
+                  sm,
+                  tournamentName: session.resolvedName.isNotEmpty
+                      ? session.resolvedName
+                      : 'Giao lưu CLB',
+                  updatedAt: session.startAt,
+                ),
               );
-
-              allMatches.add(matchModel);
             }
           } catch (_) {}
         }
+      } catch (_) {}
+
+      // Trận riêng của CLB: không có session/tournament giả và có thể xóa
+      // độc lập; API trả thẳng sportRules để mở đúng bảng điểm theo môn.
+      try {
+        final sessionRepo = ref.read(clubMatchSessionRepositoryProvider);
+        final standaloneMatches = await sessionRepo.standaloneMatches(
+          widget.communityId,
+        );
+        allMatches.addAll(
+          standaloneMatches.map(
+            (sm) => _mapClubMatch(
+              sm,
+              tournamentName: l10nFallbackStandaloneMatchName,
+              standalone: true,
+            ),
+          ),
+        );
       } catch (_) {}
 
       // Sắp xếp: Trận đang diễn ra lên đầu, sau đó theo thời gian gần nhất
@@ -278,6 +207,88 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     }
   }
 
+  String get l10nFallbackStandaloneMatchName => 'Trận đấu riêng';
+
+  MatchModel _mapClubMatch(
+    ClubSessionMatchModel sm, {
+    required String tournamentName,
+    bool standalone = false,
+    DateTime? updatedAt,
+  }) {
+    final sideAMembers = sm.sideAMembers
+        .map(
+          (m) => MatchMemberInfo(
+            userId: m.userId,
+            fullName: m.displayName,
+            avatarUrl: m.avatarUrl,
+            isMock: m.isMock,
+          ),
+        )
+        .toList(growable: false);
+    final sideBMembers = sm.sideBMembers
+        .map(
+          (m) => MatchMemberInfo(
+            userId: m.userId,
+            fullName: m.displayName,
+            avatarUrl: m.avatarUrl,
+            isMock: m.isMock,
+          ),
+        )
+        .toList(growable: false);
+    final sideAName = sm.sideANames.join(' · ').trim();
+    final sideBName = sm.sideBNames.join(' · ').trim();
+    final status = sm.status.toUpperCase();
+    final winnerId = switch (status) {
+      'COMPLETED' when sm.sideAScore > sm.sideBScore => 'SIDE_A',
+      'COMPLETED' when sm.sideBScore > sm.sideAScore => 'SIDE_B',
+      _ => '',
+    };
+    final displaySets = parseClubSessionScoreDetails(sm.scoreDetails)
+        .take(10)
+        .map((score) => SetScore(score1: score.sideAScore, score2: score.sideBScore))
+        .toList(growable: false);
+    final kind = sm.sportKey.isNotEmpty ? sm.sportKey : 'pickleball';
+    return MatchModel(
+      id: sm.id,
+      isStandaloneMatch: standalone || sm.standaloneMatchId != null,
+      clubMatchSessionId: standalone ? null : (sm.sessionId.isNotEmpty ? sm.sessionId : null),
+      tournamentName: tournamentName,
+      round: 0,
+      matchNumber: 1,
+      team1Id: 'SIDE_A',
+      team2Id: 'SIDE_B',
+      team1Name: sideAName.isEmpty ? 'Đội A' : sideAName,
+      team2Name: sideBName.isEmpty ? 'Đội B' : sideBName,
+      score1: sm.sideAScore,
+      score2: sm.sideBScore,
+      sets: displaySets.isNotEmpty
+          ? displaySets
+          : [SetScore(score1: status == 'COMPLETED' ? sm.sideAScore : 0, score2: status == 'COMPLETED' ? sm.sideBScore : 0)],
+      winnerId: winnerId,
+      loserId: winnerId == 'SIDE_A' ? 'SIDE_B' : winnerId == 'SIDE_B' ? 'SIDE_A' : '',
+      status: sm.status,
+      bracketPosition: const BracketPosition(round: 1, position: 1),
+      scoreDetails: sm.scoreDetails,
+      team1Members: sideAMembers.map((m) => m.fullName).toList(),
+      team2Members: sideBMembers.map((m) => m.fullName).toList(),
+      team1MemberInfos: sideAMembers,
+      team2MemberInfos: sideBMembers,
+      eloDelta: sm.eloDelta,
+      eloStatus: sm.eloStatus,
+      team1LogoUrl: sideAMembers.length == 1 ? sideAMembers.first.avatarUrl : null,
+      team2LogoUrl: sideBMembers.length == 1 ? sideBMembers.first.avatarUrl : null,
+      sportKey: kind,
+      tournamentConfig: sm.tournamentConfig.isNotEmpty
+          ? sm.tournamentConfig
+          : const {'isLite': true, 'mode': 'LITE', 'scoringMode': 'FREE', 'maxSets': 10},
+      sportRules: sm.sportRules.isNotEmpty
+          ? sm.sportRules
+          : {'kind': kind, 'mode': 'LITE', 'scoringMode': 'FREE', 'maxSets': 10},
+      revision: sm.revision,
+      updatedAt: updatedAt ?? DateTime.now(),
+    );
+  }
+
   void _showMemberSheet(
     BuildContext context,
     String userId,
@@ -303,6 +314,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     final currentUser = ref.watch(userProfileProvider).asData?.value;
     final membership = ref.watch(
       myCommunityMembershipProvider(widget.communityId),
@@ -575,7 +587,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
             const SizedBox(height: 16),
           ],
 
-          // ─── 2. THANH LỌC & TÌM KIẾM ──────────────────────────────
+          // ─── 2. THANH LỌC & TÌM KIẾM & TẠO TRẬN ĐẤU ───────────────────
           Row(
             children: [
               Expanded(
@@ -633,6 +645,35 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       borderRadius: BorderRadius.circular(10),
                       borderSide: BorderSide(color: colors.border),
                     ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              FilledButton.icon(
+                onPressed: () {
+                  ClubStandaloneMatchDialog.show(
+                    context,
+                    communityId: widget.communityId,
+                    clubName: widget.club?.name,
+                    onMatchCreated: () => _fetchMatches(),
+                  );
+                },
+                icon: const Icon(Icons.add_rounded, size: 16),
+                label: Text(
+                  l10n.club_createMatchStandalone,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 11,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
@@ -790,22 +831,38 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     MatchModel match,
     AppColorsExtension colors,
   ) {
-    final isOngoing = match.status.toUpperCase() == 'ONGOING';
+    final l10n = AppLocalizations.of(context)!;
+    final isOngoing =
+        match.status.toUpperCase() == 'ONGOING' ||
+        match.status.toUpperCase() == 'LIVE';
     final isCompleted = match.status.toUpperCase() == 'COMPLETED';
 
-    final t1Id = match.team1Id;
-    final t2Id = match.team2Id;
-    final isT1Winner = isCompleted && match.winnerId == t1Id;
-    final isT2Winner = isCompleted && match.winnerId == t2Id;
+    final isT1Winner = isCompleted && match.winnerId == match.team1Id;
+    final isT2Winner = isCompleted && match.winnerId == match.team2Id;
 
-    // ELO Delta calculation (+16 / -14)
-    final rawEloDelta = match.scoreDetails?['eloDelta'] ?? 16;
-    final t1EloDelta = isCompleted && match.winnerId.isNotEmpty
-        ? (isT1Winner ? '+$rawEloDelta' : '-$rawEloDelta')
-        : null;
-    final t2EloDelta = isCompleted && match.winnerId.isNotEmpty
-        ? (isT2Winner ? '+$rawEloDelta' : '-$rawEloDelta')
-        : null;
+    // Only render signed deltas persisted by the API. Never derive ELO from
+    // winner/score and never use a fixed fallback value.
+    String? teamEloDelta(List<MatchMemberInfo> members) {
+      if (!isCompleted ||
+          match.eloStatus.toUpperCase() != 'APPLIED' ||
+          match.eloDelta.isEmpty) {
+        return null;
+      }
+      for (final member in members) {
+        final userId = member.userId;
+        if (userId == null || userId.isEmpty) continue;
+        final delta = match.eloDelta[userId];
+        if (delta != null) return '${delta > 0 ? '+' : ''}$delta';
+      }
+      return null;
+    }
+
+    final t1EloDelta = teamEloDelta(match.team1MemberInfos);
+    final t2EloDelta = teamEloDelta(match.team2MemberInfos);
+    final currentTennisGamePoints = readTennisGamePointDisplay(
+      match,
+      isLive: isOngoing,
+    );
 
     final roundLabel = match.round > 0
         ? 'Vòng ${match.round}'
@@ -855,15 +912,29 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
-                            Icons.emoji_events_rounded,
+                          Icon(
+                            match.clubMatchSessionId != null &&
+                                    match.clubMatchSessionId!.isNotEmpty
+                                ? Icons.sports_tennis_rounded
+                                : Icons.emoji_events_rounded,
                             size: 14,
-                            color: Color(0xFF2563EB),
+                            color: const Color(0xFF2563EB),
                           ),
                           const SizedBox(width: 5),
                           Flexible(
                             child: Text(
-                              match.tournamentName ?? 'Giải đấu',
+                              (match.clubMatchSessionId != null &&
+                                          match
+                                              .clubMatchSessionId!
+                                              .isNotEmpty) ||
+                                      match.tournamentName == 'Giao lưu CLB' ||
+                                      match.tournamentName == null ||
+                                      match.tournamentName!.isEmpty ||
+                                      match.tournamentName!
+                                          .toLowerCase()
+                                          .contains('giao lưu')
+                                  ? l10n.club_standaloneMatch
+                                  : match.tournamentName!,
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w800,
@@ -896,48 +967,61 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                         ],
                       ),
                     ),
-                    if (isOngoing)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF3B82F6,
-                          ).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: const Color(
-                              0xFF3B82F6,
-                            ).withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.fiber_manual_record_rounded,
-                              size: 8,
-                              color: Color(0xFF2563EB),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (match.isStandaloneMatch)
+                          PopupMenuButton<String>(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 30,
+                              minHeight: 30,
                             ),
-                            SizedBox(width: 4),
-                            Text(
-                              'Đang diễn ra',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF2563EB),
+                            iconSize: 18,
+                            onSelected: (value) {
+                              if (value == 'delete') {
+                                _deleteStandaloneMatch(context, match);
+                              }
+                            },
+                            itemBuilder: (_) => const [
+                              PopupMenuItem<String>(
+                                value: 'delete',
+                                child: Text('Xóa trận'),
+                              ),
+                            ],
+                          ),
+                        if (isOngoing)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
                               ),
                             ),
-                          ],
-                        ),
-                      )
-                    else if (isCompleted)
-                      Text(
-                        'Đã kết thúc',
-                        style: TextStyle(fontSize: 11, color: colors.textMuted),
-                      ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.fiber_manual_record_rounded, size: 8, color: Color(0xFF2563EB)),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Đang diễn ra',
+                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF2563EB)),
+                                ),
+                              ],
+                            ),
+                          )
+                        else if (isCompleted)
+                          Text(
+                            'Đã kết thúc',
+                            style: TextStyle(fontSize: 11, color: colors.textMuted),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -955,6 +1039,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       isWinner: isT1Winner,
                       eloDelta: t1EloDelta,
                       sets: match.sets.map((s) => s.score1).toList(),
+                      currentGamePoint: currentTennisGamePoints?.team1,
                       memberInfos: match.team1MemberInfos,
                       colors: colors,
                     ),
@@ -967,6 +1052,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       isWinner: isT2Winner,
                       eloDelta: t2EloDelta,
                       sets: match.sets.map((s) => s.score2).toList(),
+                      currentGamePoint: currentTennisGamePoints?.team2,
                       memberInfos: match.team2MemberInfos,
                       colors: colors,
                     ),
@@ -981,8 +1067,9 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   }
 
   void _openMatch(BuildContext context, MatchModel match) {
-    if (match.clubMatchSessionId != null &&
-        match.clubMatchSessionId!.isNotEmpty) {
+    if (match.isStandaloneMatch ||
+        (match.clubMatchSessionId != null &&
+            match.clubMatchSessionId!.isNotEmpty)) {
       final repository = ref.read(matchRepositoryProvider);
       if (repository is ApiMatchRepository) {
         repository.primeMatch(match);
@@ -1011,6 +1098,54 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     }
   }
 
+  Future<void> _deleteStandaloneMatch(
+    BuildContext context,
+    MatchModel match,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Xóa trận đấu?'),
+        content: const Text(
+          'Trận sẽ bị gỡ khỏi hoạt động CLB. Nếu đã tính ELO, điểm và lịch sử của trận sẽ được hoàn nguyên.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Xóa trận'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await ref.read(clubMatchSessionRepositoryProvider).deleteStandaloneMatch(match.id);
+      if (!mounted) return;
+      setState(() => _matches.removeWhere((item) => item.id == match.id));
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Đã xóa trận và hoàn nguyên ELO nếu có.')),
+      );
+    } on DioException catch (error) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            error.response?.data is Map
+                ? (error.response?.data['message']?.toString() ?? 'Không thể xóa trận')
+                : 'Không thể xóa trận',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Widget _buildTeamRow({
     required BuildContext context,
     required String name,
@@ -1018,12 +1153,14 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     required bool isWinner,
     required String? eloDelta,
     required List<int> sets,
+    String? currentGamePoint,
     required List<MatchMemberInfo> memberInfos,
     required AppColorsExtension colors,
   }) {
     // Lấy userId của VĐV đầu tiên nếu có
     final firstMember = memberInfos.isNotEmpty ? memberInfos.first : null;
     final targetUserId = firstMember?.userId;
+    final eloIsNegative = eloDelta?.startsWith('-') == true;
 
     return Row(
       children: [
@@ -1086,14 +1223,14 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       vertical: 1.5,
                     ),
                     decoration: BoxDecoration(
-                      color: isWinner
-                          ? const Color(0xFF10B981).withValues(alpha: 0.12)
-                          : const Color(0xFFEF4444).withValues(alpha: 0.12),
+                      color: eloIsNegative
+                          ? const Color(0xFFEF4444).withValues(alpha: 0.12)
+                          : const Color(0xFF10B981).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: isWinner
-                            ? const Color(0xFF10B981).withValues(alpha: 0.3)
-                            : const Color(0xFFEF4444).withValues(alpha: 0.3),
+                        color: eloIsNegative
+                            ? const Color(0xFFEF4444).withValues(alpha: 0.3)
+                            : const Color(0xFF10B981).withValues(alpha: 0.3),
                       ),
                     ),
                     child: Text(
@@ -1102,9 +1239,9 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         fontFamily: 'monospace',
-                        color: isWinner
-                            ? const Color(0xFF059669)
-                            : const Color(0xFFDC2626),
+                        color: eloIsNegative
+                            ? const Color(0xFFDC2626)
+                            : const Color(0xFF059669),
                       ),
                     ),
                   ),
@@ -1113,31 +1250,67 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
             ),
           ),
         ),
-        // Set Scores
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: sets.map((s) {
-            return Container(
-              width: 26,
-              height: 26,
-              margin: const EdgeInsets.only(left: 4),
-              decoration: BoxDecoration(
-                color: isWinner ? const Color(0xFF2563EB) : colors.bgSurface,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                '$s',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isWinner ? FontWeight.w900 : FontWeight.w700,
-                  fontFamily: 'monospace',
-                  color: isWinner ? Colors.white : colors.textSecondary,
+        // Set Scores (giới hạn tối đa 5 set gần nhất & cuộn ngang an toàn tránh tràn màn hình)
+        () {
+          final displaySets = sets.length > 5
+              ? sets.sublist(sets.length - 5)
+              : sets;
+          return Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  reverse: true,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: displaySets.map((s) {
+                      return Container(
+                        width: 26,
+                        height: 26,
+                        margin: const EdgeInsets.only(left: 4),
+                        decoration: BoxDecoration(
+                          color: isWinner
+                              ? const Color(0xFF2563EB)
+                              : colors.bgSurface,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '$s',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: isWinner
+                                ? FontWeight.w900
+                                : FontWeight.w700,
+                            fontFamily: 'monospace',
+                            color: isWinner
+                                ? Colors.white
+                                : colors.textSecondary,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ),
-              ),
-            );
-          }).toList(),
-        ),
+                if (currentGamePoint != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      currentGamePoint,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        color: colors.textSecondary,
+                        height: 1,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        }(),
       ],
     );
   }

@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_match_session_create_screen.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_dialog.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
@@ -437,6 +438,7 @@ class _ClubMatchSessionDetailPageState
     extends ConsumerState<ClubMatchSessionDetailPage> {
   StreamSubscription<Map<String, dynamic>>? _sessionMatchSubscription;
   Timer? _sessionRefreshTimer;
+  bool _sessionRefreshScheduled = false;
   int _currentPage = 1;
   static const int _slotsPerPage = 16;
   static const List<Color> _kSlotAvatarColors = [
@@ -497,6 +499,19 @@ class _ClubMatchSessionDetailPageState
   void _scheduleSessionRefresh() {
     _sessionRefreshTimer?.cancel();
     _sessionRefreshTimer = Timer(const Duration(milliseconds: 80), () {
+      _scheduleSessionDetailRefresh();
+    });
+  }
+
+  /// Refresh after the current route/menu frame has finished its teardown.
+  ///
+  /// Invalidating while a PopupMenu/Dialog is still being removed can make
+  /// the tab tree deactivate while DefaultTabController still has dependents.
+  void _scheduleSessionDetailRefresh() {
+    if (!mounted || _sessionRefreshScheduled) return;
+    _sessionRefreshScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _sessionRefreshScheduled = false;
       if (mounted) ref.invalidate(clubSessionDetailProvider(session.id));
     });
   }
@@ -518,7 +533,7 @@ class _ClubMatchSessionDetailPageState
     final l10n = AppLocalizations.of(context)!;
     try {
       await action();
-      ref.invalidate(clubSessionDetailProvider(session.id));
+      _scheduleSessionDetailRefresh();
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
@@ -526,7 +541,7 @@ class _ClubMatchSessionDetailPageState
       }
     } catch (error) {
       if (error is DioException && error.response?.statusCode == 409) {
-        ref.invalidate(clubSessionDetailProvider(session.id));
+        _scheduleSessionDetailRefresh();
       }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -541,180 +556,12 @@ class _ClubMatchSessionDetailPageState
     WidgetRef ref,
     List<ClubMatchParticipantModel> participants,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
-    final sideA = <String>{};
-    final sideB = <String>{};
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(l10n.clubMatchSessionCreateMatch),
-          content: SizedBox(
-            width: 420,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.clubMatchSessionPairingHint,
-                    style: TextStyle(color: context.colors.textSecondary),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _MatchSideSummary(
-                          label: l10n.clubMatchSessionSideA,
-                          emptyLabel: l10n.clubMatchSessionNoPlayers,
-                          count: sideA.length,
-                          names: participants
-                              .where((item) => sideA.contains(item.userId))
-                              .map((item) => item.displayName)
-                              .toList(),
-                          color: context.colors.info,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _MatchSideSummary(
-                          label: l10n.clubMatchSessionSideB,
-                          emptyLabel: l10n.clubMatchSessionNoPlayers,
-                          count: sideB.length,
-                          names: participants
-                              .where((item) => sideB.contains(item.userId))
-                              .map((item) => item.displayName)
-                              .toList(),
-                          color: context.colors.warning,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ...participants
-                      .where((item) => item.status == 'ACTIVE')
-                      .map(
-                        (item) => ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage:
-                                item.avatarUrl?.trim().isNotEmpty == true
-                                ? NetworkImage(item.avatarUrl!.trim())
-                                : null,
-                            backgroundColor: context.colors.info.withValues(
-                              alpha: .12,
-                            ),
-                            child: item.avatarUrl?.trim().isNotEmpty == true
-                                ? null
-                                : Text(
-                                    item.displayName.isEmpty
-                                        ? '?'
-                                        : item.displayName[0].toUpperCase(),
-                                    style: TextStyle(
-                                      color: context.colors.info,
-                                    ),
-                                  ),
-                          ),
-                          title: Text(item.displayName),
-                          trailing: SegmentedButton<String>(
-                            segments: const [
-                              ButtonSegment(value: 'A', label: Text('A')),
-                              ButtonSegment(value: 'B', label: Text('B')),
-                            ],
-                            selected: {
-                              if (sideA.contains(item.userId)) 'A',
-                              if (sideB.contains(item.userId)) 'B',
-                            },
-                            emptySelectionAllowed: true,
-                            onSelectionChanged: (selection) => setState(() {
-                              sideA.remove(item.userId);
-                              sideB.remove(item.userId);
-                              if (selection.contains('A')) {
-                                sideA.add(item.userId);
-                              }
-                              if (selection.contains('B')) {
-                                sideB.add(item.userId);
-                              }
-                            }),
-                          ),
-                        ),
-                      ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed:
-                  sideA.isNotEmpty &&
-                      sideA.length == sideB.length &&
-                      sideA.length <= 2
-                  ? () => Navigator.pop(dialogContext, true)
-                  : null,
-              child: Text(l10n.clubMatchSessionCreateMatch),
-            ),
-          ],
-        ),
-      ),
+    await ClubStandaloneMatchDialog.show(
+      context,
+      communityId: session.communityId,
+      sessionId: session.id,
+      onMatchCreated: () => _scheduleSessionDetailRefresh(),
     );
-    if (confirmed != true) return;
-    if (sideA.isEmpty || sideA.length != sideB.length || sideA.length > 2) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.clubMatchSessionInvalidSides)),
-        );
-      }
-      return;
-    }
-    if (!context.mounted) return;
-    final repository = ref.read(clubMatchSessionRepositoryProvider);
-    final requestKey = const Uuid().v4();
-    try {
-      await repository.createMatch(
-        session.id,
-        sideA.toList(),
-        sideB.toList(),
-        requestKey,
-      );
-    } on DioException catch (error) {
-      final body = error.response?.data;
-      final code = body is Map ? body['code']?.toString() : null;
-      if (code != 'PAIRING_WARNINGS_REQUIRE_CONFIRMATION' || !context.mounted) {
-        rethrow;
-      }
-      final shouldContinue = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          content: Text(l10n.clubMatchSessionPairingWarning),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(l10n.matchConfirm),
-            ),
-          ],
-        ),
-      );
-      if (shouldContinue != true) return;
-      await repository.createMatch(
-        session.id,
-        sideA.toList(),
-        sideB.toList(),
-        requestKey,
-        confirmWarnings: true,
-      );
-    }
-    ref.invalidate(clubSessionDetailProvider(session.id));
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.clubMatchSessionMatchCreated)),
-      );
-    }
   }
 
   Future<void> _forceParticipants(BuildContext context, WidgetRef ref) async {
@@ -898,16 +745,22 @@ class _ClubMatchSessionDetailPageState
           ),
           IconButton(
             tooltip: l10n.infoRetry,
-            onPressed: () =>
-                ref.invalidate(clubSessionDetailProvider(session.id)),
+            onPressed: _scheduleSessionDetailRefresh,
             icon: const Icon(Icons.refresh_rounded),
           ),
         ],
       ),
-      body: detail.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => Center(child: Text(l10n.clubMatchSessionLoadFailed)),
-        data: (value) => _buildDetailTabs(context, ref, value),
+      body: DefaultTabController(
+        length: 4,
+        child: detail.when(
+          // Keep the existing tab tree mounted during a refresh. This avoids
+          // tearing down DefaultTabController between the API response and
+          // the next frame after creating a mock participant.
+          skipLoadingOnRefresh: true,
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, _) => Center(child: Text(l10n.clubMatchSessionLoadFailed)),
+          data: (value) => _buildDetailTabs(context, ref, value),
+        ),
       ),
     );
   }
@@ -918,34 +771,31 @@ class _ClubMatchSessionDetailPageState
     ClubSessionDetail value,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    return DefaultTabController(
-      length: 4,
-      child: Column(
-        children: [
-          Material(
-            color: context.colors.bgCard,
-            child: TabBar(
-              isScrollable: true,
-              tabs: [
-                Tab(text: l10n.organizer_tabOverview),
-                Tab(text: l10n.clubMatchSessionParticipants),
-                Tab(text: l10n.clubMatchSessionMatches),
-                Tab(text: l10n.club_statsSection),
-              ],
-            ),
+    return Column(
+      children: [
+        Material(
+          color: context.colors.bgCard,
+          child: TabBar(
+            isScrollable: true,
+            tabs: [
+              Tab(text: l10n.organizer_tabOverview),
+              Tab(text: l10n.clubMatchSessionParticipants),
+              Tab(text: l10n.clubMatchSessionMatches),
+              Tab(text: l10n.club_statsSection),
+            ],
           ),
-          Expanded(
-            child: TabBarView(
-              children: [
-                _buildOverviewTab(context, ref, value),
-                _buildParticipantsTab(context, ref, value),
-                _buildMatchesTab(context, ref, value),
-                _buildStatsTab(context, ref, value),
-              ],
-            ),
+        ),
+        Expanded(
+          child: TabBarView(
+            children: [
+              _buildOverviewTab(context, ref, value),
+              _buildParticipantsTab(context, ref, value),
+              _buildMatchesTab(context, ref, value),
+              _buildStatsTab(context, ref, value),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -2190,59 +2040,11 @@ class _ClubMatchSessionDetailPageState
 
   Widget _refreshableTab(BuildContext context, WidgetRef ref, Widget child) =>
       RefreshIndicator(
-        onRefresh: () async =>
-            ref.invalidate(clubSessionDetailProvider(session.id)),
+        onRefresh: () async => _scheduleSessionDetailRefresh(),
         child: child,
       );
 }
 
-class _MatchSideSummary extends StatelessWidget {
-  final String label;
-  final String emptyLabel;
-  final int count;
-  final List<String> names;
-  final Color color;
-
-  const _MatchSideSummary({
-    required this.label,
-    required this.emptyLabel,
-    required this.count,
-    required this.names,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(10),
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: .08),
-      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-      border: Border.all(color: color.withValues(alpha: .28)),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: TextStyle(color: color, fontWeight: FontWeight.w800),
-            ),
-            Text('$count/2', style: TextStyle(color: color)),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          names.isEmpty ? emptyLabel : names.join(' · '),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
-        ),
-      ],
-    ),
-  );
-}
 
 class _SessionSectionTitle extends StatelessWidget {
   final IconData icon;
@@ -2650,15 +2452,19 @@ class _ClubMatchScoreCard extends StatelessWidget {
       team2LogoUrl: sideBMembers.length == 1
           ? sideBMembers.first.avatarUrl
           : null,
+      sportKey: match.sportKey.isNotEmpty ? match.sportKey : 'pickleball',
       tournamentConfig: const {
-        'isLite': true,
-        'mode': 'LITE',
-        'scoringMode': 'FREE',
+        'isLite': false,
+        'scoringMode': 'STANDARD',
       },
       sportRules: {
-        'kind': match.sportKey,
-        'mode': 'LITE',
-        'scoringMode': 'FREE',
+        'kind': match.sportKey.isNotEmpty ? match.sportKey : 'pickleball',
+        'mode': 'STANDARD',
+        'scoringMode': 'STANDARD',
+        'bestOf': 3,
+        'setsToWin': 2,
+        'pointsPerSet': 11,
+        'mustWinByTwo': true,
       },
       revision: match.revision,
       updatedAt: DateTime.now(),

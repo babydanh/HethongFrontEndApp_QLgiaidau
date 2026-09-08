@@ -115,6 +115,48 @@ class ApiClubMatchSessionRepository {
     return rows.map(ClubSessionMatchModel.fromJson).toList();
   }
 
+  Future<List<ClubSessionMatchModel>> standaloneMatches(
+    String communityId,
+  ) async {
+    final rows = await _allCursorRows(
+      '/club-match-sessions/standalone-matches',
+      query: {'communityId': communityId},
+    );
+    return rows.map(ClubSessionMatchModel.fromJson).toList();
+  }
+
+  Future<ClubSessionMatchModel> createStandaloneMatch({
+    required String communityId,
+    required List<String> sideA,
+    required List<String> sideB,
+    required String key,
+    required bool isRanked,
+    String? matchType,
+  }) async {
+    final response = await _client.dio.post(
+      '/club-match-sessions/standalone-matches',
+      data: {
+        'communityId': communityId,
+        'sideAUserIds': sideA,
+        'sideBUserIds': sideB,
+        'isRanked': isRanked,
+        ...?(matchType == null ? null : {'matchType': matchType}),
+      },
+      options: _idempotency(key),
+    );
+    final payload = _payload(response.data);
+    final rawMatch = payload is Map
+        ? (payload['match'] as Map?) ?? payload
+        : payload;
+    return ClubSessionMatchModel.fromJson(
+      Map<String, dynamic>.from(rawMatch as Map),
+    );
+  }
+
+  Future<void> deleteStandaloneMatch(String matchId) => _client.dio.delete(
+    '/club-match-sessions/standalone-matches/$matchId',
+  );
+
   Future<void> selfJoin(String sessionId) =>
       _client.dio.post('/club-match-sessions/$sessionId/participants/self');
 

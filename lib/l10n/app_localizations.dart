@@ -98,6 +98,60 @@ abstract class AppLocalizations {
     Locale('vi'),
   ];
 
+  /// No description provided for @club_createMatchStandalone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo trận đấu'**
+  String get club_createMatchStandalone;
+
+  /// No description provided for @club_standaloneMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đấu riêng'**
+  String get club_standaloneMatch;
+
+  /// No description provided for @club_standaloneMatchDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận giao lưu riêng giữa các thành viên'**
+  String get club_standaloneMatchDesc;
+
+  /// No description provided for @club_searchMemberHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm theo tên thành viên...'**
+  String get club_searchMemberHint;
+
+  /// No description provided for @club_selectPlayersSideA.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn Đội A'**
+  String get club_selectPlayersSideA;
+
+  /// No description provided for @club_selectPlayersSideB.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn Đội B'**
+  String get club_selectPlayersSideB;
+
+  /// No description provided for @club_startMatchAndScore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu & Tính điểm'**
+  String get club_startMatchAndScore;
+
+  /// No description provided for @club_errorNeedEqualSides.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi đội cần 1 VĐV (đơn) hoặc 2 VĐV (đôi)'**
+  String get club_errorNeedEqualSides;
+
+  /// No description provided for @club_noMembersFound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy thành viên phù hợp'**
+  String get club_noMembersFound;
+
   /// No description provided for @appTagline.
   ///
   /// In vi, this message translates to:
