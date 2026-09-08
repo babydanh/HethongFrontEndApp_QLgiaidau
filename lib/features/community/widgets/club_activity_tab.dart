@@ -224,6 +224,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                   tournamentName: session.resolvedName.isNotEmpty
                       ? session.resolvedName
                       : 'Giao lưu CLB',
+                  sessionId: session.id,
                   updatedAt: session.startAt,
                 ),
               );
@@ -287,6 +288,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     ClubSessionMatchModel sm, {
     required String tournamentName,
     bool standalone = false,
+    String? sessionId,
     DateTime? updatedAt,
   }) {
     final sideAMembers = sm.sideAMembers
@@ -332,7 +334,9 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
       isStandaloneMatch: standalone,
       clubMatchSessionId: standalone
           ? null
-          : (sm.sessionId.isNotEmpty ? sm.sessionId : null),
+          : ((sessionId ?? sm.sessionId).trim().isNotEmpty
+                ? (sessionId ?? sm.sessionId).trim()
+                : null),
       tournamentName: tournamentName,
       round: 0,
       matchNumber: 1,
