@@ -14,6 +14,7 @@ class MatchSocketService {
   final _joinedMatchIds = <String>{};
   final _joinedTournamentIds = <String>{};
   final _joinedClubSessionIds = <String>{};
+  final _joinedClubCommunityIds = <String>{};
   final TokenManager? _tokenManager;
 
   MatchSocketService({TokenManager? tokenManager})
@@ -254,6 +255,24 @@ class MatchSocketService {
     }
   }
 
+  void joinClubCommunity(String communityId) {
+    final normalizedCommunityId = communityId.trim();
+    if (normalizedCommunityId.isEmpty) return;
+    _joinedClubCommunityIds.add(normalizedCommunityId);
+    if (_socket?.connected == true) {
+      _socket!.emit('joinClubCommunity', normalizedCommunityId);
+    }
+  }
+
+  void leaveClubCommunity(String communityId) {
+    final normalizedCommunityId = communityId.trim();
+    if (normalizedCommunityId.isEmpty) return;
+    _joinedClubCommunityIds.remove(normalizedCommunityId);
+    if (_socket?.connected == true) {
+      _socket!.emit('leaveClubCommunity', normalizedCommunityId);
+    }
+  }
+
   void disconnect() {
     if (_socket != null) {
       _log.info('Disconnecting match socket');
@@ -264,6 +283,7 @@ class MatchSocketService {
     _joinedMatchIds.clear();
     _joinedTournamentIds.clear();
     _joinedClubSessionIds.clear();
+    _joinedClubCommunityIds.clear();
   }
 
   void _joinTrackedRooms() {
@@ -277,6 +297,9 @@ class MatchSocketService {
     }
     for (final sessionId in _joinedClubSessionIds) {
       socket!.emit('joinClubMatchSession', sessionId);
+    }
+    for (final communityId in _joinedClubCommunityIds) {
+      socket!.emit('joinClubCommunity', communityId);
     }
   }
 }

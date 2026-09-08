@@ -7,23 +7,17 @@ import 'package:flutter/material.dart';
 class CommunitySocialSettingsSheet extends StatefulWidget {
   final ICommunityRepository repository;
   final String communityId;
-  final String? sportSlug;
-  final String? sportName;
 
   const CommunitySocialSettingsSheet({
     super.key,
     required this.repository,
     required this.communityId,
-    this.sportSlug,
-    this.sportName,
   });
 
   static Future<CommunitySocialSettings?> show(
     BuildContext context, {
     required ICommunityRepository repository,
     required String communityId,
-    String? sportSlug,
-    String? sportName,
   }) => showModalBottomSheet<CommunitySocialSettings>(
     context: context,
     isScrollControlled: true,
@@ -31,8 +25,6 @@ class CommunitySocialSettingsSheet extends StatefulWidget {
     builder: (_) => CommunitySocialSettingsSheet(
       repository: repository,
       communityId: communityId,
-      sportSlug: sportSlug,
-      sportName: sportName,
     ),
   );
 
@@ -382,9 +374,6 @@ class _CommunitySocialSettingsSheetState
   }
 
   Widget _buildMatchPermissions(AppColorsExtension colors) {
-    final sport = _normalizedSportSlug(widget.sportSlug);
-    final preset = _presetForSport(sport);
-    final defaults = _defaultPreset(sport);
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
       decoration: BoxDecoration(
@@ -435,171 +424,8 @@ class _CommunitySocialSettingsSheetState
               ),
             ),
           ),
-          if (sport.isNotEmpty) ...[
-            const Divider(height: 16),
-            Text(
-              'Preset chấm điểm${widget.sportName?.trim().isNotEmpty == true ? ' · ${widget.sportName!.trim()}' : ''}',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Áp dụng cho trận tạo mới, trận đang đánh giữ nguyên luật cũ.',
-              style: TextStyle(fontSize: 11, color: colors.textSecondary),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _numberSelect(
-                    'Set thắng',
-                    _presetInt(preset, 'setsToWin', defaults['setsToWin']!),
-                    const [1, 2, 3, 4, 5],
-                    (value) => _updatePreset(sport, 'setsToWin', value),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _numberSelect(
-                    'Điểm mỗi set',
-                    _presetInt(
-                      preset,
-                      'pointsPerSet',
-                      defaults['pointsPerSet']!,
-                    ),
-                    const [1, 7, 11, 15, 21, 25, 30, 40, 99],
-                    (value) => _updatePreset(sport, 'pointsPerSet', value),
-                  ),
-                ),
-              ],
-            ),
-            _numberSelect(
-              'Giới hạn điểm tối đa',
-              _presetInt(preset, 'maxPoints', defaults['maxPoints']!),
-              const [1, 7, 11, 15, 21, 25, 30, 40, 99],
-              (value) => _updatePreset(sport, 'maxPoints', value),
-            ),
-            _toggle(
-              'Phải hơn 2 điểm',
-              _presetBool(
-                preset,
-                'mustWinByTwo',
-                defaults['mustWinByTwo']! == 1,
-              ),
-              (value) => _updatePreset(sport, 'mustWinByTwo', value),
-            ),
-          ],
         ],
       ),
-    );
-  }
-
-  Widget _numberSelect(
-    String label,
-    int value,
-    List<int> values,
-    ValueChanged<int> onChanged,
-  ) {
-    final effectiveValue = values.contains(value) ? value : values.first;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: DropdownButtonFormField<int>(
-        key: ValueKey('${label}_$effectiveValue'),
-        initialValue: effectiveValue,
-        isDense: true,
-        decoration: InputDecoration(labelText: label, isDense: true),
-        items: values
-            .map((item) => DropdownMenuItem(value: item, child: Text('$item')))
-            .toList(),
-        onChanged: (next) {
-          if (next != null) onChanged(next);
-        },
-      ),
-    );
-  }
-
-  String _normalizedSportSlug(String? value) {
-    final raw = value?.trim().toLowerCase() ?? '';
-    if (raw.isEmpty) return '';
-    if (raw.contains('pickle')) return 'pickleball';
-    if (raw.contains('badminton') || raw.contains('cầu lông')) {
-      return 'badminton';
-    }
-    if (raw.contains('table') || raw.contains('bóng bàn')) {
-      return 'table_tennis';
-    }
-    if (raw.contains('football') ||
-        raw.contains('soccer') ||
-        raw.contains('bóng đá')) {
-      return 'football';
-    }
-    if (raw.contains('tennis')) return 'tennis';
-    return raw.replaceAll(RegExp(r'\s+'), '_');
-  }
-
-  Map<String, dynamic> _presetForSport(String sport) {
-    final raw = _settings.matchScoringPresets[sport];
-    return raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{};
-  }
-
-  Map<String, int> _defaultPreset(String sport) {
-    switch (sport) {
-      case 'tennis':
-        return const {
-          'setsToWin': 2,
-          'pointsPerSet': 6,
-          'maxPoints': 7,
-          'mustWinByTwo': 1,
-        };
-      case 'badminton':
-        return const {
-          'setsToWin': 2,
-          'pointsPerSet': 21,
-          'maxPoints': 30,
-          'mustWinByTwo': 1,
-        };
-      case 'table_tennis':
-        return const {
-          'setsToWin': 3,
-          'pointsPerSet': 11,
-          'maxPoints': 99,
-          'mustWinByTwo': 1,
-        };
-      case 'football':
-        return const {
-          'setsToWin': 1,
-          'pointsPerSet': 1,
-          'maxPoints': 99,
-          'mustWinByTwo': 0,
-        };
-      default:
-        return const {
-          'setsToWin': 2,
-          'pointsPerSet': 11,
-          'maxPoints': 15,
-          'mustWinByTwo': 1,
-        };
-    }
-  }
-
-  int _presetInt(Map<String, dynamic> preset, String key, int fallback) {
-    final value = preset[key];
-    return value is num ? value.toInt() : int.tryParse('$value') ?? fallback;
-  }
-
-  bool _presetBool(Map<String, dynamic> preset, String key, bool fallback) =>
-      preset[key] is bool ? preset[key] as bool : fallback;
-
-  void _updatePreset(String sport, String key, Object value) {
-    final presets = Map<String, dynamic>.from(_settings.matchScoringPresets);
-    final preset = _presetForSport(sport);
-    preset[key] = value;
-    presets[sport] = preset;
-    setState(
-      () => _settings = _settings.copyWith(matchScoringPresets: presets),
     );
   }
 

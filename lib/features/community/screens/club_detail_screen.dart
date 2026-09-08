@@ -5295,8 +5295,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 context,
                 repository: ref.read(communityRepositoryProvider),
                 communityId: widget.clubId,
-                sportSlug: club.sports.isNotEmpty ? club.sports.first : null,
-                sportName: club.sports.isNotEmpty ? club.sports.first : null,
               );
               if (updated != null && mounted) {
                 ref.invalidate(communitySocialSettingsProvider(widget.clubId));

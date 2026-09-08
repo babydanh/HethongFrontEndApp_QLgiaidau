@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/community_social_settings_sheet.dart';
@@ -33,55 +33,65 @@ class FakeCommunityRepository extends Fake implements ICommunityRepository {
 }
 
 void main() {
-  testWidgets('CommunitySocialSettingsSheet loads settings and renders without crashing', (tester) async {
-    final fakeRepo = FakeCommunityRepository();
+  testWidgets(
+    'CommunitySocialSettingsSheet loads settings and renders without crashing',
+    (tester) async {
+      final fakeRepo = FakeCommunityRepository();
 
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.lightTheme,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('vi'),
-        home: Scaffold(
-          body: CommunitySocialSettingsSheet(
-            repository: fakeRepo,
-            communityId: 'test-community-id',
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('vi'),
+          home: Scaffold(
+            body: CommunitySocialSettingsSheet(
+              repository: fakeRepo,
+              communityId: 'test-community-id',
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    // Complete loading
-    await tester.pumpAndSettle();
+      // Complete loading
+      await tester.pumpAndSettle();
 
-    // Verify content rendered
-    expect(find.text('Cài đặt bảng tin & sinh hoạt'), findsOneWidget);
-    expect(find.text('Quyền đăng bài'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-  });
+      // Verify content rendered
+      expect(find.text('Cài đặt bảng tin & sinh hoạt'), findsOneWidget);
+      expect(find.text('Quyền đăng bài'), findsOneWidget);
+      expect(find.text('Quyền trận đấu'), findsOneWidget);
+      expect(find.text('Thành viên được tạo trận'), findsOneWidget);
+      expect(find.text('Thành viên được chấm điểm'), findsOneWidget);
+      expect(find.text('Preset chấm điểm'), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    },
+  );
 
-  testWidgets('CommunitySocialSettingsSheet handles error gracefully without getting stuck', (tester) async {
-    final failingRepo = FakeCommunityRepository(shouldFail: true);
+  testWidgets(
+    'CommunitySocialSettingsSheet handles error gracefully without getting stuck',
+    (tester) async {
+      final failingRepo = FakeCommunityRepository(shouldFail: true);
 
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.lightTheme,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('vi'),
-        home: Scaffold(
-          body: CommunitySocialSettingsSheet(
-            repository: failingRepo,
-            communityId: 'test-community-id',
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('vi'),
+          home: Scaffold(
+            body: CommunitySocialSettingsSheet(
+              repository: failingRepo,
+              communityId: 'test-community-id',
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    // Verify it doesn't get stuck in loading
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-    expect(find.text('Cài đặt bảng tin & sinh hoạt'), findsOneWidget);
-  });
+      // Verify it doesn't get stuck in loading
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.text('Cài đặt bảng tin & sinh hoạt'), findsOneWidget);
+    },
+  );
 }

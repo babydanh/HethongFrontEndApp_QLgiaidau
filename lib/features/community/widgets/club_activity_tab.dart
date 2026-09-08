@@ -82,6 +82,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     _socketMatchSubscription = socket.onTournamentMatchUpdate.listen(
       _handleSocketMatchUpdate,
     );
+    socket.joinClubCommunity(widget.communityId);
     unawaited(socket.connect(null, joinMatch: false));
   }
 
@@ -152,6 +153,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     for (final tournamentId in _joinedActivityTournamentIds) {
       socket.leaveTournament(tournamentId);
     }
+    socket.leaveClubCommunity(widget.communityId);
     _refreshTimer?.cancel();
     _searchController.dispose();
     super.dispose();
