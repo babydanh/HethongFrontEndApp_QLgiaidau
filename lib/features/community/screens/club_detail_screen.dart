@@ -3643,7 +3643,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     );
   }
 
-
   Widget _buildPrivateLockView({
     required IconData icon,
     required String title,
@@ -3872,7 +3871,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         setState(() {
           _activitySearchQuery = query;
         });
-        _tabController.animateTo(3); // Tab 3: Hoạt động
+        _tabController.animateTo(2); // Tab 2: Hoạt động
       },
     );
   }

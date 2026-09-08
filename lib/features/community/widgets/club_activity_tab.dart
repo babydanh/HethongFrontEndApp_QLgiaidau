@@ -1314,142 +1314,163 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
             ),
           ),
         const SizedBox(width: 10),
-        // Đội đôi: mỗi VĐV một dòng, chỉ hiển thị tên cuối để luôn đủ tên.
         Expanded(
-          child: GestureDetector(
-            onTap: targetUserId != null && targetUserId.isNotEmpty
-                ? () => _showMemberSheet(context, targetUserId, name, logoUrl)
-                : null,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isDoubles)
-                  for (final member in displayMembers)
-                    Text(
-                      _lastTwoNameWords(member.fullName),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        height: 1.15,
-                        fontWeight: isWinner
-                            ? FontWeight.w900
-                            : FontWeight.w600,
-                        color: isWinner
-                            ? colors.textPrimary
-                            : colors.textSecondary,
-                      ),
-                    )
-                else
-                  Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: isWinner ? FontWeight.w900 : FontWeight.w600,
-                      color: isWinner
-                          ? colors.textPrimary
-                          : colors.textSecondary,
-                    ),
-                  ),
-                if (eloDelta != null) ...[
-                  const SizedBox(height: 2),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 1.5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: eloIsNegative
-                          ? const Color(0xFFEF4444).withValues(alpha: 0.12)
-                          : const Color(0xFF10B981).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: eloIsNegative
-                            ? const Color(0xFFEF4444).withValues(alpha: 0.3)
-                            : const Color(0xFF10B981).withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Text(
-                      eloDelta,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        fontFamily: 'monospace',
-                        color: eloIsNegative
-                            ? const Color(0xFFDC2626)
-                            : const Color(0xFF059669),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-        // Set Scores (giới hạn tối đa 5 set gần nhất & cuộn ngang an toàn tránh tràn màn hình)
-        () {
-          final displaySets = sets.length > 5
-              ? sets.sublist(sets.length - 5)
-              : sets;
-          return Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  reverse: true,
-                  child: Row(
+          child: Row(
+            children: [
+              // Đội đôi: mỗi VĐV một dòng, chỉ hiển thị tên cuối để luôn đủ tên.
+              Expanded(
+                child: GestureDetector(
+                  onTap: targetUserId != null && targetUserId.isNotEmpty
+                      ? () => _showMemberSheet(
+                          context,
+                          targetUserId,
+                          name,
+                          logoUrl,
+                        )
+                      : null,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
-                    children: displaySets.map((s) {
-                      return Container(
-                        width: 26,
-                        height: 26,
-                        margin: const EdgeInsets.only(left: 4),
-                        decoration: BoxDecoration(
-                          color: isWinner
-                              ? const Color(0xFF2563EB)
-                              : colors.bgSurface,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          '$s',
+                    children: [
+                      if (isDoubles)
+                        for (final member in displayMembers)
+                          Text(
+                            _lastTwoNameWords(member.fullName),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              height: 1.15,
+                              fontWeight: isWinner
+                                  ? FontWeight.w900
+                                  : FontWeight.w600,
+                              color: isWinner
+                                  ? colors.textPrimary
+                                  : colors.textSecondary,
+                            ),
+                          )
+                      else
+                        Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 13.5,
                             fontWeight: isWinner
                                 ? FontWeight.w900
-                                : FontWeight.w700,
-                            fontFamily: 'monospace',
+                                : FontWeight.w600,
                             color: isWinner
-                                ? Colors.white
+                                ? colors.textPrimary
                                 : colors.textSecondary,
                           ),
                         ),
-                      );
-                    }).toList(),
+                      if (eloDelta != null) ...[
+                        const SizedBox(height: 2),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1.5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: eloIsNegative
+                                ? const Color(
+                                    0xFFEF4444,
+                                  ).withValues(alpha: 0.12)
+                                : const Color(
+                                    0xFF10B981,
+                                  ).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: eloIsNegative
+                                  ? const Color(
+                                      0xFFEF4444,
+                                    ).withValues(alpha: 0.3)
+                                  : const Color(
+                                      0xFF10B981,
+                                    ).withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Text(
+                            eloDelta,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              fontFamily: 'monospace',
+                              color: eloIsNegative
+                                  ? const Color(0xFFDC2626)
+                                  : const Color(0xFF059669),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                if (currentGamePoint != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      currentGamePoint,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                        color: colors.textSecondary,
-                        height: 1,
+              ),
+              const SizedBox(width: 8),
+              // Neo cụm điểm vào mép phải; set mới xuất hiện bên phải và
+              // tự đẩy các set trước đó sang trái.
+              () {
+                final displaySets = sets.length > 5
+                    ? sets.sublist(sets.length - 5)
+                    : sets;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      reverse: true,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: displaySets.map((s) {
+                          return Container(
+                            width: 26,
+                            height: 26,
+                            margin: const EdgeInsets.only(left: 4),
+                            decoration: BoxDecoration(
+                              color: isWinner
+                                  ? const Color(0xFF2563EB)
+                                  : colors.bgSurface,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '$s',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: isWinner
+                                    ? FontWeight.w900
+                                    : FontWeight.w700,
+                                fontFamily: 'monospace',
+                                color: isWinner
+                                    ? Colors.white
+                                    : colors.textSecondary,
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
                     ),
-                  ),
-              ],
-            ),
-          );
-        }(),
+                    if (currentGamePoint != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          currentGamePoint,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                            color: colors.textSecondary,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              }(),
+            ],
+          ),
+        ),
       ],
     );
   }
