@@ -219,12 +219,29 @@ jobs:
         run: |
           set -euo pipefail
           echo "Starting automatic App Store Review submission..."
-          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8"
+
+          # Tạo file JSON AuthKey chuẩn định dạng cho Fastlane Spaceship
+          python3 -c '
+import json, os
+key_id = os.environ.get("API_KEY_ID", "").strip()
+issuer_id = os.environ.get("API_ISSUER_ID", "").strip()
+key = os.environ.get("API_PRIVATE_KEY", "").strip()
+data = {
+    "key_id": key_id,
+    "issuer_id": issuer_id,
+    "key": key,
+    "in_house": False
+}
+with open(os.path.expanduser("~/app_store_connect_key.json"), "w") as f:
+    json.dump(data, f)
+'
+
           IPA_PATH=$(ls ios/build/ipa/*.ipa | head -n 1)
+          echo "Using IPA: $IPA_PATH"
 
           # Sử dụng Fastlane deliver chuẩn của Apple developer ecosystem
           fastlane deliver \
-            --api_key_path "$KEY_PATH" \
+            --api_key_path "$HOME/app_store_connect_key.json" \
             --ipa "$IPA_PATH" \
             --skip_screenshots true \
             --skip_metadata true \
