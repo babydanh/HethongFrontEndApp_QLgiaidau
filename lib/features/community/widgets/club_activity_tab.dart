@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/community/providers/user_club_rank_provider.dart';
@@ -167,29 +168,20 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                 'COMPLETED' when sm.sideBScore > sm.sideAScore => 'SIDE_B',
                 _ => '',
               };
-              final displaySets = sm.scoreDetails['sets'] is List
-                  ? (sm.scoreDetails['sets'] as List)
-                        .whereType<Map>()
-                        .map(
-                          (rawSet) => SetScore(
-                            score1: _parseScoreValue(
-                              rawSet['team1Score'] ??
-                                  rawSet['score1'] ??
-                                  rawSet['p1'],
-                            ),
-                            score2: _parseScoreValue(
-                              rawSet['team2Score'] ??
-                                  rawSet['score2'] ??
-                                  rawSet['p2'],
-                            ),
-                          ),
-                        )
-                        .toList(growable: false)
-                  : const <SetScore>[];
+              final displaySets = parseClubSessionScoreDetails(sm.scoreDetails)
+                  .map(
+                    (score) => SetScore(
+                      score1: score.sideAScore,
+                      score2: score.sideBScore,
+                    ),
+                  )
+                  .toList(growable: false);
 
               final matchModel = MatchModel(
                 id: sm.id,
-                clubMatchSessionId: sm.sessionId,
+                clubMatchSessionId: sm.sessionId.isNotEmpty
+                    ? sm.sessionId
+                    : session.id,
                 tournamentName: session.resolvedName.isNotEmpty
                     ? session.resolvedName
                     : 'Giao lưu CLB',
@@ -201,9 +193,22 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                 team2Name: sideBName.isEmpty ? 'Đội B' : sideBName,
                 score1: sm.sideAScore,
                 score2: sm.sideBScore,
+                // `p1SetsWon`/`p2SetsWon` are match aggregates. Only use them
+                // for an old completed record; an ongoing match without a
+                // score payload must start at 0-0, never pretend set wins are
+                // live points.
                 sets: displaySets.isNotEmpty
                     ? displaySets
-                    : [SetScore(score1: sm.sideAScore, score2: sm.sideBScore)],
+                    : [
+                        SetScore(
+                          score1: sm.status.toUpperCase() == 'COMPLETED'
+                              ? sm.sideAScore
+                              : 0,
+                          score2: sm.status.toUpperCase() == 'COMPLETED'
+                              ? sm.sideBScore
+                              : 0,
+                        ),
+                      ],
                 winnerId: winnerId,
                 loserId: winnerId == 'SIDE_A'
                     ? 'SIDE_B'
@@ -973,11 +978,6 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
         ),
       ),
     );
-  }
-
-  int _parseScoreValue(dynamic value) {
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 
   void _openMatch(BuildContext context, MatchModel match) {

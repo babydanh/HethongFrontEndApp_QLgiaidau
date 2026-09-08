@@ -180,6 +180,92 @@ class ClubSessionMatchMemberModel {
       );
 }
 
+/// The web activity timeline accepts both the current `sets` payload and the
+/// legacy `set1`/`game1` string payload. Keep the app timeline on the same
+/// contract so `p1SetsWon`/`p2SetsWon` are never rendered as point scores.
+class ClubSessionScoreModel {
+  final int sideAScore;
+  final int sideBScore;
+
+  const ClubSessionScoreModel({
+    required this.sideAScore,
+    required this.sideBScore,
+  });
+}
+
+List<ClubSessionScoreModel> parseClubSessionScoreDetails(
+  Map<String, dynamic> scoreDetails,
+) {
+  int? parseScore(dynamic value) {
+    if (value is num) return value.isFinite ? value.toInt() : null;
+    final parsed = int.tryParse(value?.toString().trim() ?? '');
+    return parsed;
+  }
+
+  ClubSessionScoreModel? parsePair(dynamic sideA, dynamic sideB) {
+    final scoreA = parseScore(sideA);
+    final scoreB = parseScore(sideB);
+    if (scoreA == null || scoreB == null || scoreA < 0 || scoreB < 0) {
+      return null;
+    }
+    return ClubSessionScoreModel(sideAScore: scoreA, sideBScore: scoreB);
+  }
+
+  ClubSessionScoreModel? parseSet(dynamic rawSet) {
+    if (rawSet is! Map) return null;
+    return parsePair(
+      rawSet['team1Score'] ?? rawSet['score1'] ?? rawSet['p1'],
+      rawSet['team2Score'] ?? rawSet['score2'] ?? rawSet['p2'],
+    );
+  }
+
+  final rawSets = scoreDetails['sets'];
+  if (rawSets is List) {
+    final parsedSets = rawSets
+        .map(parseSet)
+        .whereType<ClubSessionScoreModel>()
+        .toList(growable: false);
+    if (parsedSets.isNotEmpty) return parsedSets;
+  }
+
+  final football = scoreDetails['football'];
+  if (football is Map) {
+    final parsedFootball = parsePair(
+      football['team1Goals'],
+      football['team2Goals'],
+    );
+    if (parsedFootball != null) return [parsedFootball];
+  }
+
+  final legacyKeys =
+      scoreDetails.keys
+          .where(
+            (key) =>
+                RegExp(r'^(set|game)\d+$', caseSensitive: false).hasMatch(key),
+          )
+          .toList()
+        ..sort((left, right) {
+          final leftNumber =
+              int.tryParse(RegExp(r'\d+$').firstMatch(left)?.group(0) ?? '') ??
+              0;
+          final rightNumber =
+              int.tryParse(RegExp(r'\d+$').firstMatch(right)?.group(0) ?? '') ??
+              0;
+          return leftNumber.compareTo(rightNumber);
+        });
+
+  return legacyKeys
+      .map((key) {
+        final value = scoreDetails[key];
+        if (value is! String) return null;
+        final parts = value.split('-');
+        if (parts.length != 2) return null;
+        return parsePair(parts[0], parts[1]);
+      })
+      .whereType<ClubSessionScoreModel>()
+      .toList(growable: false);
+}
+
 class ClubSessionMatchModel {
   final String id;
   final String status;
@@ -245,12 +331,13 @@ class ClubSessionMatchModel {
 
     List<ClubSessionMatchMemberModel> parseMembers(
       dynamic participant,
-      dynamic explicitMembers,
+      List<dynamic> explicitMembers,
     ) {
       final participantMap = participant is Map ? participant : null;
-      final raw = explicitMembers is List
-          ? explicitMembers
-          : participantMap?['members'] ?? participantMap?['rosters'];
+      final raw = explicitMembers.firstWhere(
+        (candidate) => candidate is List && candidate.isNotEmpty,
+        orElse: () => participantMap?['members'] ?? participantMap?['rosters'],
+      );
       return parseMemberList(raw);
     }
 
@@ -285,14 +372,14 @@ class ClubSessionMatchModel {
               json['eloDelta'] as Map,
             ).map((key, value) => MapEntry(key, (value as num).toInt()))
           : const {},
-      sideAMembers: parseMembers(
-        json['participant1'],
-        json['team1MemberInfos'] ?? json['team1Members'],
-      ),
-      sideBMembers: parseMembers(
-        json['participant2'],
-        json['team2MemberInfos'] ?? json['team2Members'],
-      ),
+      sideAMembers: parseMembers(json['participant1'], [
+        json['team1MemberInfos'],
+        json['team1Members'],
+      ]),
+      sideBMembers: parseMembers(json['participant2'], [
+        json['team2MemberInfos'],
+        json['team2Members'],
+      ]),
     );
   }
 }
