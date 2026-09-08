@@ -221,20 +221,7 @@ jobs:
           echo "Starting automatic App Store Review submission..."
 
           # Tạo file JSON AuthKey chuẩn định dạng cho Fastlane Spaceship
-          python3 -c '
-import json, os
-key_id = os.environ.get("API_KEY_ID", "").strip()
-issuer_id = os.environ.get("API_ISSUER_ID", "").strip()
-key = os.environ.get("API_PRIVATE_KEY", "").strip()
-data = {
-    "key_id": key_id,
-    "issuer_id": issuer_id,
-    "key": key,
-    "in_house": False
-}
-with open(os.path.expanduser("~/app_store_connect_key.json"), "w") as f:
-    json.dump(data, f)
-'
+          python3 -c "import json, os; data={'key_id': os.environ.get('API_KEY_ID','').strip(), 'issuer_id': os.environ.get('API_ISSUER_ID','').strip(), 'key': os.environ.get('API_PRIVATE_KEY','').strip(), 'in_house': False}; json.dump(data, open(os.path.expanduser('~/app_store_connect_key.json'), 'w'))"
 
           IPA_PATH=$(ls ios/build/ipa/*.ipa | head -n 1)
           echo "Using IPA: $IPA_PATH"
