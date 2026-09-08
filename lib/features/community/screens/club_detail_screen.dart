@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/club_network_image.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -1294,7 +1295,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               width: double.infinity,
               color: colors.bgCard,
               child: hasBanner
-                  ? Image.network(
+                  ? ClubNetworkImage(
                       bannerUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
@@ -1329,7 +1330,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         ],
                       ),
                       child: ClipOval(
-                        child: Image.network(
+                        child: ClubNetworkImage(
                           logoUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
@@ -5303,7 +5304,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            Image.network(
+                            ClubNetworkImage(
                               resolvedUrl,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
@@ -5447,7 +5448,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         child: InteractiveViewer(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: Image.network(
+            child: ClubNetworkImage(
               url,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) => Container(
@@ -6227,4 +6228,3 @@ class _AthleticBannerPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
