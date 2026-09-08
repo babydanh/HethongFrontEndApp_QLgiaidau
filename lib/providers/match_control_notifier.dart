@@ -232,12 +232,10 @@ class MatchController {
     final tournament = tournamentId.isNotEmpty
         ? ref.read(tournamentProvider(tournamentId)).value
         : null;
-    // A club-session card is already backed by the canonical session-match
-    // endpoint. Let that endpoint read the current row revision itself so a
-    // delayed socket echo from the previous set cannot make the next point
-    // fail with a stale client revision. Tournament matches keep the stricter
-    // client-provided optimistic lock unchanged.
-    final requestRevision = tournamentId.isEmpty ? null : expectedRevision;
+    // Club-session score writes are full score snapshots. Keep the optimistic
+    // revision for them too: two scorers must not silently overwrite one
+    // another; the stale writer receives 409 and the score panel refetches.
+    final requestRevision = expectedRevision;
     await ref
         .read(matchRepositoryProvider)
         .updateScoreDetails(

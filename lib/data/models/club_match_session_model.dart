@@ -224,18 +224,34 @@ class ClubSessionMatchModel {
   });
 
   factory ClubSessionMatchModel.fromJson(Map<String, dynamic> json) {
-    List<ClubSessionMatchMemberModel> parseMembers(dynamic participant) {
-      if (participant is! Map) return const [];
-      final members = participant['members'];
-      if (members is! List) return const [];
-      return members
-          .whereType<Map>()
-          .map(
-            (member) => ClubSessionMatchMemberModel.fromJson(
-              Map<String, dynamic>.from(member),
-            ),
+    List<ClubSessionMatchMemberModel> parseMemberList(dynamic raw) {
+      if (raw is! List) return const [];
+      return raw
+          .map((member) {
+            if (member is Map) {
+              return ClubSessionMatchMemberModel.fromJson(
+                Map<String, dynamic>.from(member),
+              );
+            }
+            final name = member?.toString().trim() ?? '';
+            return ClubSessionMatchMemberModel(userId: '', displayName: name);
+          })
+          .where(
+            (member) =>
+                member.displayName.isNotEmpty || member.userId.isNotEmpty,
           )
           .toList();
+    }
+
+    List<ClubSessionMatchMemberModel> parseMembers(
+      dynamic participant,
+      dynamic explicitMembers,
+    ) {
+      final participantMap = participant is Map ? participant : null;
+      final raw = explicitMembers is List
+          ? explicitMembers
+          : participantMap?['members'] ?? participantMap?['rosters'];
+      return parseMemberList(raw);
     }
 
     return ClubSessionMatchModel(
@@ -269,8 +285,14 @@ class ClubSessionMatchModel {
               json['eloDelta'] as Map,
             ).map((key, value) => MapEntry(key, (value as num).toInt()))
           : const {},
-      sideAMembers: parseMembers(json['participant1']),
-      sideBMembers: parseMembers(json['participant2']),
+      sideAMembers: parseMembers(
+        json['participant1'],
+        json['team1MemberInfos'] ?? json['team1Members'],
+      ),
+      sideBMembers: parseMembers(
+        json['participant2'],
+        json['team2MemberInfos'] ?? json['team2Members'],
+      ),
     );
   }
 }

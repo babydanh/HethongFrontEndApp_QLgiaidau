@@ -167,6 +167,25 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                 'COMPLETED' when sm.sideBScore > sm.sideAScore => 'SIDE_B',
                 _ => '',
               };
+              final displaySets = sm.scoreDetails['sets'] is List
+                  ? (sm.scoreDetails['sets'] as List)
+                        .whereType<Map>()
+                        .map(
+                          (rawSet) => SetScore(
+                            score1: _parseScoreValue(
+                              rawSet['team1Score'] ??
+                                  rawSet['score1'] ??
+                                  rawSet['p1'],
+                            ),
+                            score2: _parseScoreValue(
+                              rawSet['team2Score'] ??
+                                  rawSet['score2'] ??
+                                  rawSet['p2'],
+                            ),
+                          ),
+                        )
+                        .toList(growable: false)
+                  : const <SetScore>[];
 
               final matchModel = MatchModel(
                 id: sm.id,
@@ -182,6 +201,9 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                 team2Name: sideBName.isEmpty ? 'Đội B' : sideBName,
                 score1: sm.sideAScore,
                 score2: sm.sideBScore,
+                sets: displaySets.isNotEmpty
+                    ? displaySets
+                    : [SetScore(score1: sm.sideAScore, score2: sm.sideBScore)],
                 winnerId: winnerId,
                 loserId: winnerId == 'SIDE_A'
                     ? 'SIDE_B'
@@ -556,11 +578,14 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                   controller: _searchController,
                   onChanged: (val) {
                     _searchDebounceTimer?.cancel();
-                    _searchDebounceTimer = Timer(const Duration(milliseconds: 250), () {
-                      if (mounted) {
-                        setState(() => _searchQuery = val);
-                      }
-                    });
+                    _searchDebounceTimer = Timer(
+                      const Duration(milliseconds: 250),
+                      () {
+                        if (mounted) {
+                          setState(() => _searchQuery = val);
+                        }
+                      },
+                    );
                   },
                   style: TextStyle(fontSize: 13, color: colors.textPrimary),
                   decoration: InputDecoration(
@@ -804,143 +829,155 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
             ],
           ),
           child: Column(
-        children: [
-          // Header Bar: Tournament Name, Round & Status
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: colors.bgSurface,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(13),
-              ),
-              border: Border(bottom: BorderSide(color: colors.borderLight)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.emoji_events_rounded,
-                        size: 14,
-                        color: Color(0xFF2563EB),
-                      ),
-                      const SizedBox(width: 5),
-                      Flexible(
-                        child: Text(
-                          match.tournamentName ?? 'Giải đấu',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
+            children: [
+              // Header Bar: Tournament Name, Round & Status
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: colors.bgSurface,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(13),
+                  ),
+                  border: Border(bottom: BorderSide(color: colors.borderLight)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.emoji_events_rounded,
+                            size: 14,
                             color: Color(0xFF2563EB),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                          const SizedBox(width: 5),
+                          Flexible(
+                            child: Text(
+                              match.tournamentName ?? 'Giải đấu',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF2563EB),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 1.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colors.bgCard,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: colors.borderLight),
+                            ),
+                            child: Text(
+                              roundLabel,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
+                    ),
+                    if (isOngoing)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 1.5,
+                          horizontal: 7,
+                          vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: colors.bgCard,
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: colors.borderLight),
-                        ),
-                        child: Text(
-                          roundLabel,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: colors.textSecondary,
+                          color: const Color(
+                            0xFF3B82F6,
+                          ).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: const Color(
+                              0xFF3B82F6,
+                            ).withValues(alpha: 0.3),
                           ),
                         ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.fiber_manual_record_rounded,
+                              size: 8,
+                              color: Color(0xFF2563EB),
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Đang diễn ra',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF2563EB),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (isCompleted)
+                      Text(
+                        'Đã kết thúc',
+                        style: TextStyle(fontSize: 11, color: colors.textMuted),
                       ),
-                    ],
-                  ),
+                  ],
                 ),
-                if (isOngoing)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.fiber_manual_record_rounded,
-                          size: 8,
-                          color: Color(0xFF2563EB),
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          'Đang diễn ra',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF2563EB),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else if (isCompleted)
-                  Text(
-                    'Đã kết thúc',
-                    style: TextStyle(fontSize: 11, color: colors.textMuted),
-                  ),
-              ],
-            ),
-          ),
+              ),
 
-          // Scores & Teams
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                // Team 1 Row
-                _buildTeamRow(
-                  context: context,
-                  name: match.team1Name,
-                  logoUrl: match.team1LogoUrl,
-                  isWinner: isT1Winner,
-                  eloDelta: t1EloDelta,
-                  sets: match.sets.map((s) => s.score1).toList(),
-                  memberInfos: match.team1MemberInfos,
-                  colors: colors,
+              // Scores & Teams
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    // Team 1 Row
+                    _buildTeamRow(
+                      context: context,
+                      name: match.team1Name,
+                      logoUrl: match.team1LogoUrl,
+                      isWinner: isT1Winner,
+                      eloDelta: t1EloDelta,
+                      sets: match.sets.map((s) => s.score1).toList(),
+                      memberInfos: match.team1MemberInfos,
+                      colors: colors,
+                    ),
+                    const SizedBox(height: 10),
+                    // Team 2 Row
+                    _buildTeamRow(
+                      context: context,
+                      name: match.team2Name,
+                      logoUrl: match.team2LogoUrl,
+                      isWinner: isT2Winner,
+                      eloDelta: t2EloDelta,
+                      sets: match.sets.map((s) => s.score2).toList(),
+                      memberInfos: match.team2MemberInfos,
+                      colors: colors,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                // Team 2 Row
-                _buildTeamRow(
-                  context: context,
-                  name: match.team2Name,
-                  logoUrl: match.team2LogoUrl,
-                  isWinner: isT2Winner,
-                  eloDelta: t2EloDelta,
-                  sets: match.sets.map((s) => s.score2).toList(),
-                  memberInfos: match.team2MemberInfos,
-                  colors: colors,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
         ),
       ),
     );
+  }
+
+  int _parseScoreValue(dynamic value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 
   void _openMatch(BuildContext context, MatchModel match) {
