@@ -270,117 +270,139 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Section Header ──
-        Row(
-          children: [
-            Icon(
-              Icons.emoji_events_rounded,
-              size: 16,
-              color: colors.textSecondary,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              l10n.clubRankingTitle,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Icon(
+                Icons.emoji_events_rounded,
+                size: 16,
                 color: colors.textSecondary,
-                letterSpacing: 0.3,
               ),
-            ),
-          ],
+              const SizedBox(width: 6),
+              Text(
+                l10n.clubRankingTitle,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textSecondary,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 10),
 
         // ── Podium Row (Top 3) ──
         if (!widget.compact) ...[
-          TextField(
-            controller: _searchController,
-            onChanged: (value) {
-              _searchDebounceTimer?.cancel();
-              _searchDebounceTimer = Timer(
-                const Duration(milliseconds: 250),
-                () {
-                  if (mounted) {
-                    setState(() => _searchQuery = value);
-                  }
-                },
-              );
-            },
-            decoration: InputDecoration(
-              hintText: l10n.clubRankingSearchHint,
-              prefixIcon: const Icon(Icons.search_rounded, size: 18),
-              isDense: true,
-              filled: true,
-              fillColor: colors.bgCard,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: colors.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: colors.border),
-              ),
-              suffixIcon: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _searchController,
-                    builder: (context, val, _) {
-                      if (val.text.isEmpty) return const SizedBox.shrink();
-                      return IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 16),
-                        visualDensity: VisualDensity.compact,
-                        onPressed: () {
-                          _searchDebounceTimer?.cancel();
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      );
-                    },
-                  ),
-                  IconButton(
-                    tooltip: l10n.clubRankingFilterTooltip,
-                    visualDensity: VisualDensity.compact,
-                    onPressed: _openFilterSheet,
-                    icon: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        const Icon(Icons.tune_rounded, size: 19),
-                        if (_activeFilterCount > 0)
-                          Positioned(
-                            top: -3,
-                            right: -3,
-                            child: Container(
-                              width: 7,
-                              height: 7,
-                              decoration: const BoxDecoration(
-                                color: AppTheme.primary,
-                                shape: BoxShape.circle,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) {
+                _searchDebounceTimer?.cancel();
+                _searchDebounceTimer = Timer(
+                  const Duration(milliseconds: 250),
+                  () {
+                    if (mounted) {
+                      setState(() => _searchQuery = value);
+                    }
+                  },
+                );
+              },
+              decoration: InputDecoration(
+                hintText: l10n.clubRankingSearchHint,
+                prefixIcon: const Icon(Icons.search_rounded, size: 18),
+                isDense: true,
+                filled: true,
+                fillColor: colors.bgCard,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: _searchController,
+                      builder: (context, val, _) {
+                        if (val.text.isEmpty) return const SizedBox.shrink();
+                        return IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 16),
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () {
+                            _searchDebounceTimer?.cancel();
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                        );
+                      },
+                    ),
+                    IconButton(
+                      tooltip: l10n.clubRankingFilterTooltip,
+                      visualDensity: VisualDensity.compact,
+                      onPressed: _openFilterSheet,
+                      icon: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          const Icon(Icons.tune_rounded, size: 19),
+                          if (_activeFilterCount > 0)
+                            Positioned(
+                              top: -3,
+                              right: -3,
+                              child: Container(
+                                width: 7,
+                                height: 7,
+                                decoration: const BoxDecoration(
+                                  color: AppTheme.primary,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
           if (myRanking != null) ...[
             const SizedBox(height: 8),
-            _buildMyRankingCard(myRanking, myRank, colors, l10n),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildMyRankingCard(myRanking, myRank, colors, l10n),
+            ),
           ],
         ],
         // ── Nội dung: dữ liệu / trống / lỗi (search + filter luôn hiện) ──
         if (_error != null)
-          _buildEmptyRanking(colors, l10n, error: true)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildEmptyRanking(colors, l10n, error: true),
+          )
         else if (allRankings.isEmpty)
-          _buildEmptyRanking(colors, l10n)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildEmptyRanking(colors, l10n),
+          )
         else if (filteredRankings.isEmpty)
-          _buildEmptyRanking(colors, l10n, searching: true)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildEmptyRanking(colors, l10n, searching: true),
+          )
         else ...[
-          if (!isSearching) _buildPodiumRow(filteredRankings),
-          // ── Ranks 4-10 List ──
+          if (!isSearching)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildPodiumRow(filteredRankings),
+            ),
+          // ── Ranks 4-10 List (Tràn viền edge-to-edge) ──
           if (!widget.compact &&
               filteredRankings.length > (isSearching ? 0 : 3)) ...[
             const SizedBox(height: 10),
@@ -947,12 +969,12 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     final tierInfo = _getEloTierInfo(player);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 5),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        border: Border.all(color: colors.border),
+        border: Border(
+          bottom: BorderSide(color: colors.borderLight, width: 0.8),
+        ),
       ),
       child: Row(
         children: [

@@ -1733,109 +1733,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     );
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       children: [
-        // ─── Document Header Header Banner ───
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppTheme.primary.withValues(alpha: 0.1), colors.bgCard],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: AppTheme.primary,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primary.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.menu_book_rounded,
-                  color: Colors.white,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      club.name.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: colors.textPrimary,
-                        letterSpacing: 0.2,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      l10n.club_aboutOfficialDocumentBadge,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.primary,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (createdDateText.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.bgSurface,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: colors.border),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        l10n.club_aboutEstablishedDate,
-                        style: TextStyle(
-                          fontSize: 9,
-                          color: colors.textMuted,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        createdDateText,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-
         // ─── Phần 1: Giới thiệu & Sứ mệnh ───
         if (hasDesc) ...[
           _buildEditorialSectionHeader(
@@ -1845,49 +1744,24 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           ),
           const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.all(18),
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: colors.bgCard,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: colors.border),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colors.borderLight),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.format_quote_rounded,
-                      size: 22,
-                      color: AppTheme.primary.withValues(alpha: 0.6),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        club.description!.trim(),
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          color: colors.textPrimary,
-                          height: 1.65,
-                          letterSpacing: 0.1,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            child: Text(
+              club.description!.trim(),
+              style: TextStyle(
+                fontSize: 14,
+                color: colors.textPrimary,
+                height: 1.55,
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 20),
         ],
 
         // ─── Phần 2: Điều lệ & Quy chế hoạt động ───
@@ -1898,120 +1772,77 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ),
         const SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.all(18),
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: colors.bgCard,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: hasRules
-                  ? const Color(0xFFF59E0B).withValues(alpha: 0.35)
-                  : colors.border,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colors.borderLight),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.verified_user_rounded,
-                          size: 13,
-                          color: Color(0xFFD97706),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          l10n.clubDetailRulesTitle.toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFFD97706),
-                            letterSpacing: 0.5,
+              if (_myMembership?.role == 'OWNER' ||
+                  _myMembership?.role == 'ADMIN') ...[
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    onTap: () => context.push('/club/${widget.clubId}/edit'),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.edit_note_rounded,
+                            size: 16,
+                            color: colors.textSecondary,
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  if (_myMembership?.role == 'OWNER' ||
-                      _myMembership?.role == 'ADMIN')
-                    InkWell(
-                      onTap: () => context.push('/club/${widget.clubId}/edit'),
-                      borderRadius: BorderRadius.circular(6),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.edit_note_rounded,
-                              size: 16,
-                              color: AppTheme.primary,
+                          const SizedBox(width: 4),
+                          Text(
+                            l10n.club_tabSettings,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: colors.textSecondary,
                             ),
-                            const SizedBox(width: 3),
-                            Text(
-                              l10n.club_tabSettings,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.primary,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                ],
-              ),
-              const SizedBox(height: 14),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               if (hasRules)
                 Text(
                   club.rules!.trim(),
                   style: TextStyle(
                     fontSize: 13.5,
                     color: colors.textPrimary,
-                    height: 1.7,
-                    letterSpacing: 0.15,
+                    height: 1.6,
                   ),
                 )
               else
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.shield_outlined,
-                      size: 20,
+                      size: 18,
                       color: colors.textMuted,
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         l10n.club_aboutRegulationsDefault,
                         style: TextStyle(
-                          fontSize: 12.5,
-                          color: colors.textSecondary,
-                          height: 1.5,
+                          fontSize: 13,
+                          color: colors.textMuted,
                           fontStyle: FontStyle.italic,
                         ),
                       ),
@@ -2021,9 +1852,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ],
           ),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 20),
 
-        // ─── Phần 3: Thể thức sinh hoạt & Thông tin CLB ───
+        // ─── Phần 3: Thông tin chi tiết CLB (Facebook Style) ───
         _buildEditorialSectionHeader(
           icon: Icons.grid_view_rounded,
           title: l10n.club_infoSection,
@@ -2034,8 +1865,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           padding: const EdgeInsets.symmetric(vertical: 4),
           decoration: BoxDecoration(
             color: colors.bgCard,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.border),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colors.borderLight),
           ),
           child: Column(
             children: [
@@ -2051,16 +1882,25 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               ),
               _divider(colors),
               _infoRow(
-                Icons.people_rounded,
+                Icons.people_alt_outlined,
                 l10n.club_memberInfo,
                 club.maxMembers != null
                     ? "${club.memberCount} / ${club.maxMembers} thành viên tối đa"
                     : "${club.memberCount} thành viên",
                 colors,
               ),
+              if (createdDateText.isNotEmpty) ...[
+                _divider(colors),
+                _infoRow(
+                  Icons.calendar_today_rounded,
+                  l10n.club_aboutEstablishedDate,
+                  createdDateText,
+                  colors,
+                ),
+              ],
               _divider(colors),
               _infoRow(
-                Icons.location_on_rounded,
+                Icons.location_on_outlined,
                 l10n.club_location,
                 club.locationAddress ?? l10n.notUpdated,
                 colors,
@@ -2086,7 +1926,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ],
           ),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 20),
 
         // ─── Phần 4: Kênh liên hệ & Mạng xã hội ───
         if (hasSocial) ...[
@@ -2097,15 +1937,15 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           ),
           const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: colors.bgCard,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: colors.border),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colors.borderLight),
             ),
             child: Wrap(
-              spacing: 10,
-              runSpacing: 10,
+              spacing: 8,
+              runSpacing: 8,
               children: club.socialLinks.entries
                   .where((entry) => entry.value.trim().isNotEmpty)
                   .map(
@@ -2118,19 +1958,19 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       avatar: Icon(
                         _socialIcon(entry.key),
                         size: 16,
-                        color: AppTheme.primary,
+                        color: colors.textSecondary,
                       ),
                       label: Text(
                         _socialLabel(entry.key),
                         style: TextStyle(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           fontSize: 12,
                           color: colors.textPrimary,
                         ),
                       ),
                       backgroundColor: colors.bgSurface,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(8),
                         side: BorderSide(color: colors.borderLight),
                       ),
                       onPressed: () => _openSocialLink(entry.value),
@@ -2151,18 +1991,17 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     required AppColorsExtension colors,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(left: 4),
+      padding: const EdgeInsets.only(left: 2),
       child: Row(
         children: [
-          Icon(icon, size: 15, color: AppTheme.primary),
+          Icon(icon, size: 16, color: colors.textSecondary),
           const SizedBox(width: 8),
           Text(
-            title.toUpperCase(),
+            title,
             style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w900,
-              color: colors.textSecondary,
-              letterSpacing: 0.6,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
             ),
           ),
         ],
@@ -3895,9 +3734,13 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             .where((m) => m.status.toUpperCase() == 'JOINED')
             .toList();
         return ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           children: [
-            if (isAdmin) _buildJoinRequestsSection(joinRequestsAsync, colors),
+            if (isAdmin)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _buildJoinRequestsSection(joinRequestsAsync, colors),
+              ),
             if (approvedMembers.isEmpty) const SizedBox.shrink(),
             ...approvedMembers.map(
               (m) => _buildMemberItem(
@@ -3959,12 +3802,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final isCurrentOwner = _myMembership?.role == 'OWNER';
     final canViewProfile = m.userId.isNotEmpty;
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: colors.bgCard,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
+        border: Border(
+          bottom: BorderSide(color: colors.borderLight, width: 0.8),
+        ),
       ),
       child: Row(
         children: [
@@ -5026,7 +4869,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     // search, polling status, and the current user's ELO card.
     // Truyền môn của CLB để bộ lọc Môn chỉ hiện môn CLB đã đăng ký (giống web).
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       children: [
         ClubRankingWidget(clubId: widget.clubId, clubSportKeys: club.sports),
       ],
