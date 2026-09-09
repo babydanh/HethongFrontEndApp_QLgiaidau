@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -16,6 +18,8 @@ class AppUpdateGate extends ConsumerStatefulWidget {
 
 class _AppUpdateGateState extends ConsumerState<AppUpdateGate> {
   bool _checked = false;
+  bool _checking = false;
+  Timer? _retryTimer;
 
   @override
   void initState() {
@@ -23,22 +27,47 @@ class _AppUpdateGateState extends ConsumerState<AppUpdateGate> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
   }
 
+  @override
+  void dispose() {
+    _retryTimer?.cancel();
+    super.dispose();
+  }
+
   Future<void> _checkForUpdate() async {
-    if (_checked || !mounted) return;
-    _checked = true;
+    if (_checked || _checking || !mounted) return;
+    _checking = true;
     try {
       final info = await AppUpdateService(ref.read(dioProvider)).check();
-      if (!mounted || info == null || !info.hasUpdate || info.storeUrl.isEmpty) {
+      if (!mounted) return;
+      if (info == null) {
+        _scheduleRetry();
         return;
       }
+      // Only stop retrying after a valid response. A startup/network failure
+      // must not permanently disable the update gate for this app session.
+      _checked = true;
+      if (!info.hasUpdate) return;
       await showDialog<void>(
         context: context,
         barrierDismissible: !info.isRequired,
         builder: (_) => _UpdateDialog(info: info),
       );
     } catch (_) {
-      // Version checking must never block startup when the backend is unavailable.
+      // Version checking must never block startup when the backend is
+      // unavailable. Retry shortly so a transient startup failure does not
+      // make an outdated app miss the gate permanently.
+      _scheduleRetry();
+    } finally {
+      _checking = false;
     }
+  }
+
+  void _scheduleRetry() {
+    if (_checked || _retryTimer != null || !mounted) return;
+    _retryTimer = Timer(const Duration(seconds: 15), () {
+      _retryTimer = null;
+      _checkForUpdate();
+    });
   }
 
   @override

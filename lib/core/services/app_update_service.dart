@@ -19,7 +19,8 @@ class AppUpdateInfo {
     required this.releaseNotes,
   });
 
-  bool get hasUpdate => _compare(latestVersion, currentVersion) > 0;
+  bool get hasUpdate =>
+      _compare(latestVersion, currentVersion) > 0 || isRequired;
   bool get isRequired => _compare(minimumVersion, currentVersion) > 0;
 
   static int _compare(String left, String right) {
@@ -44,6 +45,11 @@ class AppUpdateInfo {
 }
 
 class AppUpdateService {
+  static const _androidStoreUrl =
+      'https://play.google.com/store/apps/details?id=vn.Sporto.quanlygiaidau';
+  static const _iosStoreUrl =
+      'https://apps.apple.com/vn/app/Sporto/id6795829694';
+
   final Dio dio;
 
   const AppUpdateService(this.dio);
@@ -55,6 +61,10 @@ class AppUpdateService {
     final response = await dio.get(
       '/app/version',
       queryParameters: {'platform': platform},
+      // Version config must never come from the in-memory GET cache. The
+      // profile shows the installed PackageInfo version, so compare it with
+      // the current backend config on every gate check.
+      options: Options(extra: {'noCache': true}),
     );
     final raw = response.data;
     final data = raw is Map
@@ -65,11 +75,14 @@ class AppUpdateService {
           )
         : null;
     if (data == null) return null;
+    final configuredStoreUrl = '${data['storeUrl'] ?? ''}'.trim();
     return AppUpdateInfo(
       currentVersion: packageInfo.version,
       latestVersion: '${data['latestVersion'] ?? packageInfo.version}',
       minimumVersion: '${data['minimumVersion'] ?? '0.0.0'}',
-      storeUrl: '${data['storeUrl'] ?? ''}',
+      storeUrl: configuredStoreUrl.isEmpty
+          ? (Platform.isIOS ? _iosStoreUrl : _androidStoreUrl)
+          : configuredStoreUrl,
       releaseNotes: '${data['releaseNotes'] ?? ''}',
     );
   }
