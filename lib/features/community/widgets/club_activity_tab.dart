@@ -435,7 +435,11 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   }
 
   bool _onActivityScroll(ScrollNotification notification) {
-    if (notification.metrics.extentAfter < 520) {
+    if (notification.metrics.axis == Axis.vertical &&
+        _hasMoreActivity &&
+        !_isLoadingMore &&
+        notification.metrics.pixels >=
+            notification.metrics.maxScrollExtent - 400) {
       unawaited(_fetchMatches(loadMore: true));
     }
     return false;
@@ -1020,10 +1024,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
             children: [
               // Header Bar: Tournament Name, Round & Status
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 5,
-                ),
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
                   color: isOngoing ? const Color(0xFFFEF2F2) : colors.bgSurface,
                   border: Border(
@@ -1036,6 +1038,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                   ),
                 ),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(

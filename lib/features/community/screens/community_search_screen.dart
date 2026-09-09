@@ -94,40 +94,72 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
       backgroundColor: colors.bgDark,
       appBar: AppBar(
         backgroundColor: colors.bgCard,
+        toolbarHeight: 56,
         titleSpacing: 0,
         leading: IconButton(
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
         ),
-        title: TextField(
-          controller: _controller,
-          autofocus: true,
-          textInputAction: TextInputAction.search,
-          onChanged: _onQueryChanged,
-          onSubmitted: (value) {
-            final query = value.trim();
-            if (query.length >= 2) setState(() => _activeQuery = query);
-          },
-          style: TextStyle(color: colors.textPrimary, fontSize: 16),
-          decoration: InputDecoration(
-            hintText: l10n.communitySearchHint,
-            hintStyle: TextStyle(color: colors.textMuted, fontSize: 15),
-            border: InputBorder.none,
-            suffixIcon: ValueListenableBuilder<TextEditingValue>(
-              valueListenable: _controller,
-              builder: (_, value, _) => value.text.isEmpty
-                  ? const SizedBox.shrink()
-                  : IconButton(
-                      tooltip: MaterialLocalizations.of(
-                        context,
-                      ).deleteButtonTooltip,
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () {
-                        _controller.clear();
-                        setState(() => _activeQuery = '');
-                      },
-                    ),
+        title: SizedBox(
+          height: 44,
+          child: TextField(
+            controller: _controller,
+            autofocus: true,
+            textInputAction: TextInputAction.search,
+            onChanged: _onQueryChanged,
+            onSubmitted: (value) {
+              final query = value.trim();
+              if (query.length >= 2) setState(() => _activeQuery = query);
+            },
+            style: TextStyle(color: colors.textPrimary, fontSize: 15),
+            decoration: InputDecoration(
+              hintText: l10n.communitySearchHint,
+              hintStyle: TextStyle(color: colors.textMuted, fontSize: 14),
+              isDense: true,
+              constraints: const BoxConstraints.tightFor(height: 40),
+              filled: true,
+              fillColor: colors.bgSurface,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: AppTheme.primary,
+                  width: 1.5,
+                ),
+              ),
+              suffixIconConstraints: const BoxConstraints.tightFor(
+                width: 40,
+                height: 40,
+              ),
+              suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _controller,
+                builder: (_, value, _) => value.text.isEmpty
+                    ? const SizedBox.shrink()
+                    : IconButton(
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).deleteButtonTooltip,
+                        constraints: const BoxConstraints.tightFor(
+                          width: 34,
+                          height: 34,
+                        ),
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                        onPressed: () {
+                          _controller.clear();
+                          setState(() => _activeQuery = '');
+                        },
+                      ),
+              ),
             ),
           ),
         ),
@@ -151,27 +183,44 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
     ];
     return Container(
       color: colors.bgCard,
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 7),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
+        physics: const ClampingScrollPhysics(),
         child: Row(
           children: [
             for (final item in items)
               Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  label: Text(item.$2),
-                  selected: _type == item.$1,
-                  onSelected: (_) => _selectType(item.$1),
-                  selectedColor: AppTheme.primary.withValues(alpha: 0.14),
-                  side: BorderSide(
-                    color: _type == item.$1 ? AppTheme.primary : colors.border,
-                  ),
-                  labelStyle: TextStyle(
-                    color: _type == item.$1
-                        ? AppTheme.primary
-                        : colors.textSecondary,
-                    fontWeight: FontWeight.w600,
+                padding: const EdgeInsets.only(right: 6),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(9),
+                  onTap: () => _selectType(item.$1),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 140),
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 11),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: _type == item.$1
+                          ? AppTheme.primary.withValues(alpha: 0.12)
+                          : colors.bgCard,
+                      borderRadius: BorderRadius.circular(9),
+                      border: Border.all(
+                        color: _type == item.$1
+                            ? AppTheme.primary
+                            : colors.border,
+                      ),
+                    ),
+                    child: Text(
+                      item.$2,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: _type == item.$1
+                            ? AppTheme.primary
+                            : colors.textSecondary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -264,6 +313,7 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
       );
     }
     return ListView(
+      key: ValueKey('${results.query}_${_type.name}'),
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
       children: sections,
     );
@@ -276,14 +326,19 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
     AppColorsExtension colors,
   ) {
     if (children.isEmpty) return const SizedBox.shrink();
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: colors.bgCard,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.border),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 3),
             child: Text(
               '$title ($count)',
               style: TextStyle(
@@ -298,6 +353,60 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
     );
   }
 
+  Widget _resultTile({
+    required Widget leading,
+    required String title,
+    required String subtitle,
+    required VoidCallback? onTap,
+    required AppColorsExtension colors,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 7, 12, 7),
+        child: Row(
+          children: [
+            SizedBox(width: 34, height: 34, child: leading),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  if (subtitle.trim().isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12, color: colors.textMuted),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (onTap != null)
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: colors.textMuted,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildPostSection(
     List posts,
     AppLocalizations l10n,
@@ -307,7 +416,7 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
     posts.length,
     posts
         .map<Widget>(
-          (post) => ListTile(
+          (post) => _resultTile(
             leading: CircleAvatar(
               backgroundImage: post.authorAvatarUrl?.trim().isNotEmpty == true
                   ? NetworkImage(post.authorAvatarUrl!.trim())
@@ -320,19 +429,12 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
                           : post.authorName[0].toUpperCase(),
                     ),
             ),
-            title: Text(
-              post.authorName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text(
-              post.text.isEmpty ? l10n.communitySearchPosts : post.text,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
+            title: post.authorName,
+            subtitle: post.text.isEmpty ? l10n.communitySearchPosts : post.text,
             onTap: () => context.push(
               '/communities/${widget.communityId}/social?name=${Uri.encodeComponent(widget.communityName)}',
             ),
+            colors: colors,
           ),
         )
         .toList(),
@@ -348,7 +450,7 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
     members.length,
     members
         .map<Widget>(
-          (member) => ListTile(
+          (member) => _resultTile(
             leading: CircleAvatar(
               backgroundImage: member.userAvatarUrl?.trim().isNotEmpty == true
                   ? NetworkImage(member.userAvatarUrl!.trim())
@@ -362,12 +464,10 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
                           .toUpperCase(),
                     ),
             ),
-            title: Text(
-              member.userFullName?.trim().isNotEmpty == true
-                  ? member.userFullName!.trim()
-                  : l10n.communitySearchMembers,
-            ),
-            subtitle: Text(member.role),
+            title: member.userFullName?.trim().isNotEmpty == true
+                ? member.userFullName!.trim()
+                : l10n.communitySearchMembers,
+            subtitle: member.role,
             onTap: member.userId.isEmpty
                 ? null
                 : () => UserProfileBottomSheet.show(
@@ -377,6 +477,7 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
                     initialFullName: member.userFullName,
                     initialAvatarUrl: member.userAvatarUrl,
                   ),
+            colors: colors,
           ),
         )
         .toList(),
@@ -392,19 +493,22 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
     matches.length,
     matches
         .map<Widget>(
-          (match) => ListTile(
+          (match) => _resultTile(
             leading: const Icon(
               Icons.sports_tennis_outlined,
               color: AppTheme.primary,
+              size: 28,
             ),
-            title: Text(
-              match.title.isEmpty
-                  ? (match.tournamentName ?? l10n.communitySearchMatches)
-                  : match.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text('${match.tournamentName ?? ''} · ${match.status}'),
+            title: match.title.isEmpty
+                ? (match.source == 'STANDALONE'
+                      ? 'Trận riêng'
+                      : l10n.communitySearchMatches)
+                : match.title,
+            subtitle: [
+              if (match.tournamentName?.trim().isNotEmpty == true)
+                match.tournamentName!.trim(),
+              match.status,
+            ].join(' · '),
             onTap: () {
               if (match.tournamentId?.isNotEmpty == true) {
                 context.push(
@@ -414,6 +518,7 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
                 context.push('/club/${widget.communityId}/match-sessions');
               }
             },
+            colors: colors,
           ),
         )
         .toList(),
@@ -429,18 +534,16 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
     tournaments.length,
     tournaments
         .map<Widget>(
-          (tournament) => ListTile(
+          (tournament) => _resultTile(
             leading: const Icon(
               Icons.emoji_events_outlined,
               color: AppTheme.primary,
+              size: 28,
             ),
-            title: Text(
-              tournament.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text(tournament.status),
+            title: tournament.name,
+            subtitle: tournament.status,
             onTap: () => context.push('/intro/${tournament.id}'),
+            colors: colors,
           ),
         )
         .toList(),

@@ -82,7 +82,13 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
   /// phối hợp scroll (2 list scroll riêng). Dùng notification để loadMore —
   /// hoạt động cả standalone lẫn nhúng trong club detail.
   bool _onFeedScroll(ScrollNotification notification) {
-    if (notification.metrics.extentAfter < 520) {
+    final feed = ref.read(communityFeedProvider(widget.communityId));
+    if (notification.metrics.axis == Axis.vertical &&
+        feed.hasMore &&
+        feed.nextCursor != null &&
+        !feed.isLoading &&
+        notification.metrics.pixels >=
+            notification.metrics.maxScrollExtent - 400) {
       ref.read(communityFeedProvider(widget.communityId).notifier).loadMore();
     }
     return false;

@@ -3841,7 +3841,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     );
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        if (notification.metrics.extentAfter < 520) {
+        if (notification.metrics.axis == Axis.vertical &&
+            membersFeed.hasMore &&
+            !membersFeed.isLoading &&
+            notification.metrics.pixels >=
+                notification.metrics.maxScrollExtent - 400) {
           unawaited(membersNotifier.loadMore());
         }
         return false;
