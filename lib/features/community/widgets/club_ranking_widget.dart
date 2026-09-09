@@ -8,7 +8,6 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
-import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -303,15 +302,6 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
               .toList();
     final filteredRankings = rankings;
     final isSearching = query.isNotEmpty;
-    final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
-    final myRanking = currentUserId == null
-        ? null
-        : allRankings
-              .where((ranking) => ranking.userId == currentUserId)
-              .firstOrNull;
-    final myRank = myRanking == null
-        ? null
-        : allRankings.indexOf(myRanking) + 1;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -419,13 +409,6 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
               ),
             ),
           ),
-          if (myRanking != null) ...[
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildMyRankingCard(myRanking, myRank, colors, l10n),
-            ),
-          ],
         ],
         // ── Nội dung: dữ liệu / trống / lỗi (search + filter luôn hiện) ──
         if (_error != null)
@@ -675,101 +658,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
 
   // ─── Gender Filter ───
 
-  Widget _buildMyRankingCard(
-    PlayerRanking ranking,
-    int? rank,
-    AppColorsExtension colors,
-    AppLocalizations l10n,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: AppTheme.primary,
-            child: Text(
-              rank == null ? '—' : '#$rank',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.clubRankingMyRank,
-                  style: TextStyle(
-                    color: AppTheme.primary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                Text(
-                  ranking.fullName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${ranking.eloPoints} ${l10n.rankingElo}',
-                style: TextStyle(
-                  color: AppTheme.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              if (ranking.winStreak > 0)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('🔥', style: TextStyle(fontSize: 10)),
-                    const SizedBox(width: 2),
-                    Text(
-                      '${ranking.winStreak}',
-                      style: TextStyle(
-                        color: AppTheme.primary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              if (ranking.peakElo != null)
-                Text(
-                  l10n.clubRankingPeak(ranking.peakElo!),
-                  style: TextStyle(
-                    color: colors.textMuted,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+
 
   // ─── Empty / Error card (hiện dưới thanh tìm kiếm khi không có dữ liệu) ───
 

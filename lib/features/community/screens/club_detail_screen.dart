@@ -580,11 +580,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     );
                   } else if (val == 'match_sessions') {
                     context.push('/club/${widget.clubId}/match-sessions');
-                  } else if (val == 'manage') {
-                    context.push(
-                      '/club/${widget.clubId}/manage',
-                      extra: isOwner,
-                    );
                   } else if (val == 'edit') {
                     context.push('/club/${widget.clubId}/edit');
                   }
@@ -622,26 +617,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         const SizedBox(width: 10),
                         Text(
                           l10n.clubMatchSessionTitle,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'manage',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.tune_rounded,
-                          size: 18,
-                          color: colors.textPrimary,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          l10n.club_manageShort,
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
