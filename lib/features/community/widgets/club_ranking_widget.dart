@@ -33,7 +33,8 @@ class ClubRankingWidget extends ConsumerStatefulWidget {
   ConsumerState<ClubRankingWidget> createState() => _ClubRankingWidgetState();
 }
 
-class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
+class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
+    with AutomaticKeepAliveClientMixin {
   List<PlayerRanking>? _rankings;
   bool _loading = true;
   String? _error;
@@ -45,6 +46,9 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   Timer? _searchDebounceTimer;
   String _searchQuery = '';
   Timer? _pollingTimer;
+
+  @override
+  bool get wantKeepAlive => true;
 
   /// Số bộ lọc đang lệch mặc định (để hiện chấm badge trên icon bộ lọc).
   int get _activeFilterCount =>
@@ -76,7 +80,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
 
   Future<void> _fetchRankings({bool showLoading = true}) async {
     final l10n = AppLocalizations.of(context)!;
-    if (showLoading) {
+    if (showLoading && _rankings == null) {
       setState(() {
         _loading = true;
         _error = null;
@@ -84,13 +88,16 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     }
     try {
       final dio = ref.read(dioProvider);
-      // Danh mục chỉ phục vụ bộ lọc. Không để request này làm cả tab
-      // Xếp hạng quay vô hạn nếu backend danh mục phản hồi chậm.
-      final allCategories = await ref
-          .read(categoriesProvider.future)
-          .timeout(const Duration(seconds: 5), onTimeout: () => const []);
-      // Lọc Môn theo setting CLB (clubSportKeys), fallback toàn bộ nếu không
-      // khớp — giống web dùng community.categories.
+
+      // 1. Tải danh mục với timeout ngắn (2.5 giây).
+      // Nếu đã có cache _availableCategories thì dùng ngay không cần đợi.
+      List<dynamic> allCategories = _availableCategories;
+      if (allCategories.isEmpty) {
+        allCategories = await ref
+            .read(categoriesProvider.future)
+            .timeout(const Duration(milliseconds: 2500), onTimeout: () => const []);
+      }
+
       var categories = allCategories;
       final clubKeys = widget.clubSportKeys;
       if (clubKeys != null && clubKeys.isNotEmpty) {
@@ -106,13 +113,12 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         categories = matched;
       }
       _availableCategories = categories;
+
       final categoryId =
           _selectedCategoryId ??
           (categories.isNotEmpty ? categories.first.id : null);
-      if (categoryId == null || categoryId.isEmpty) {
-        _selectedCategoryId = null;
-      }
-      _selectedCategoryId = categoryId;
+      _selectedCategoryId = (categoryId == null || categoryId.isEmpty) ? null : categoryId;
+
       final selectedCategory = categories
           .cast<dynamic>()
           .where((c) => c.id == categoryId)
@@ -124,6 +130,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
           categoryLabel.contains('football') ||
           categoryLabel.contains('bóng đá') ||
           categoryLabel.contains('bong da');
+
       if (isFootball && categoryId != null && categoryId.isNotEmpty) {
         final response = await dio.get(
           '/rankings/football-teams',
@@ -132,7 +139,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
             'communityId': widget.clubId,
             'limit': widget.compact ? 3 : 20,
           },
-        );
+        ).timeout(const Duration(seconds: 6));
         final raw = response.data;
         final dataList = raw is Map<String, dynamic>
             ? (raw['data'] as List<dynamic>? ?? const [])
@@ -183,6 +190,8 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         }
         return;
       }
+
+      // 2. Tải bảng xếp hạng với timeout 6 giây
       final queryParams = <String, dynamic>{
         'communityId': widget.clubId,
         'scope': 'COMMUNITY',
@@ -192,17 +201,54 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
           'categoryId': categoryId,
         'limit': widget.compact ? 3 : 20,
       };
-      final response = await dio.get('/rankings', queryParameters: queryParams);
+      final response = await dio.get(
+        '/rankings',
+        queryParameters: queryParams,
+      ).timeout(const Duration(seconds: 6));
       final raw = response.data;
       final List<dynamic> dataList = raw is Map<String, dynamic>
           ? (raw['data'] as List<dynamic>? ?? [])
           : (raw as List<dynamic>? ?? []);
-      // Chỉ hiển thị người đã có dữ liệu thi đấu thật. Không biến thành viên
-      // CLB chưa đánh trận thành một bảng hạng giả với ELO mặc định 1000/LTD.
       var rankings = dataList
           .map((json) => PlayerRanking.fromJson(json as Map<String, dynamic>))
           .where((ranking) => ranking.matchesPlayed > 0)
           .toList();
+
+      // Nếu /rankings rỗng hoặc chưa có trận đấu xếp hạng nào, fallback thử endpoint internal CLB
+      if (rankings.isEmpty) {
+        try {
+          final clubRes = await dio.get(
+            '/communities/${widget.clubId}/rankings',
+            queryParameters: {'limit': widget.compact ? 3 : 20},
+          ).timeout(const Duration(seconds: 4));
+          final clubRaw = clubRes.data;
+          final clubList = clubRaw is Map<String, dynamic>
+              ? (clubRaw['data'] as List<dynamic>? ?? [])
+              : (clubRaw as List<dynamic>? ?? []);
+          if (clubList.isNotEmpty) {
+            rankings = clubList.map((e) {
+              final json = e as Map<String, dynamic>;
+              final userId = (json['userId'] ?? json['user_id'] ?? json['id'] ?? '').toString();
+              final fullName = (json['fullName'] ?? json['full_name'] ?? json['name'] ?? '').toString();
+              final avatarUrl = (json['avatarUrl'] ?? json['avatar_url'])?.toString();
+              final elo = ((json['eloPoints'] ?? json['elo_points'] ?? json['elo'] ?? 1000) as num).toInt();
+              return PlayerRanking(
+                id: userId,
+                userId: userId,
+                fullName: fullName,
+                avatarUrl: avatarUrl,
+                categoryId: categoryId ?? '',
+                matchType: _selectedMatchType,
+                genderRestriction: _selectedGender,
+                eloPoints: elo,
+                matchesPlayed: 1, // Đã có trong bảng xếp hạng
+                matchesWon: 1,
+              );
+            }).toList();
+          }
+        } catch (_) {}
+      }
+
       if (mounted) {
         setState(() {
           _rankings = rankings;
@@ -229,6 +275,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
 
