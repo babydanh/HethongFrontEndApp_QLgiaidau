@@ -362,44 +362,26 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     AppColorsExtension colors,
     AppLocalizations l10n,
   ) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (_myMembership?.status == 'JOINED')
-          IconButton(
-            onPressed: _isOpeningClubChat ? null : () => _openClubChat(club),
-            tooltip: l10n.clubDetailChatTooltip,
-            icon: _isOpeningClubChat
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppTheme.primary,
-                    ),
-                  )
-                : const Icon(
-                    Icons.forum_outlined,
-                    color: AppTheme.primary,
-                    size: 22,
-                  ),
-          ),
-        IconButton(
-          onPressed: () {
-            AppShareModal.show(
-              context: context,
-              title: club.name,
-              subtitle:
-                  '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
-              webUrl: 'https://sporto.asia/communities/${club.id}',
-              imageUrl: club.logoUrl ?? club.bannerUrl,
-              badgeText: l10n.club_badge,
-            );
-          },
-          tooltip: l10n.clubDetailShareTooltip,
-          icon: Icon(Icons.share_outlined, color: colors.textPrimary, size: 22),
-        ),
-      ],
+    if (_myMembership?.status != 'JOINED') {
+      return const SizedBox.shrink();
+    }
+    return IconButton(
+      onPressed: _isOpeningClubChat ? null : () => _openClubChat(club),
+      tooltip: l10n.clubDetailChatTooltip,
+      icon: _isOpeningClubChat
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppTheme.primary,
+              ),
+            )
+          : const Icon(
+              Icons.forum_outlined,
+              color: AppTheme.primary,
+              size: 22,
+            ),
     );
   }
 
@@ -1200,17 +1182,37 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  club.name,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: colors.textPrimary,
-                    height: 1.15,
-                    letterSpacing: -0.35,
+                InkWell(
+                  onTap: () => _showClubAboutFullScreen(club, colors),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            club.name,
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: colors.textPrimary,
+                              height: 1.15,
+                              letterSpacing: -0.35,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 16,
+                          color: colors.textMuted,
+                        ),
+                      ],
+                    ),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 7),
                 SingleChildScrollView(
@@ -1510,6 +1512,47 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       padding: const EdgeInsets.all(10),
       child: Center(
         child: SvgPicture.asset(AppConstants.logoFullSvg, fit: BoxFit.contain),
+      ),
+    );
+  }
+
+  void _showClubAboutFullScreen(Community club, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (ctx) => Scaffold(
+          backgroundColor: colors.bgDark,
+          appBar: AppBar(
+            backgroundColor: colors.bgDark,
+            elevation: 0,
+            leading: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colors.bgCard.withValues(alpha: 0.8),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.close_rounded,
+                  color: colors.textPrimary,
+                  size: 20,
+                ),
+              ),
+              onPressed: () => Navigator.of(ctx).pop(),
+            ),
+            title: Text(
+              l10n.club_tabAbout,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: colors.textPrimary,
+              ),
+            ),
+            centerTitle: true,
+          ),
+          body: _buildAboutTab(club, colors),
+        ),
       ),
     );
   }
