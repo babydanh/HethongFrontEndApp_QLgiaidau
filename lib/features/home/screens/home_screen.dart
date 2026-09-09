@@ -31,7 +31,6 @@ import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 // ═══════════════════════════════════════════════════════
 //  WAVE HEADER PAINTER
@@ -288,6 +287,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   double get _safeAreaTop => MediaQuery.of(context).padding.top;
   double get _headerHeight => 84.0 + _safeAreaTop;
+  double get _pinnedHeaderHeight =>
+      _headerHeight + (_shouldShowSearchBar ? 52.0 : 0.0);
 
   @override
   void initState() {
@@ -396,129 +397,137 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-            // Shared Fixed Locked Top Header
+            // Shared Fixed Locked Top Header + Search Bar Block
             Positioned(
               top: 0,
               left: 0,
               right: 0,
-              height: _headerHeight,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Hero(
-                      tag: "Sporto_header_bg",
-                      child: CustomPaint(
-                        size: Size(screenSize.width, _headerHeight),
-                        painter: SportoHeaderPainter(
-                          isLoggedIn: false,
-                          colors: context.colors,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: safeAreaTop + 14.0,
-                    left: 16.0,
-                    right: 16.0,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Left: Sport filter dropdown
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: PopupMenuButton<String>(
-                            onSelected: _setActiveSportFilter,
-                            offset: const Offset(0, 40),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                color: context.colors.bgDark,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: _headerHeight,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: Hero(
+                              tag: "Sporto_header_bg",
+                              child: CustomPaint(
+                                size: Size(screenSize.width, _headerHeight),
+                                painter: SportoHeaderPainter(
+                                  isLoggedIn: false,
+                                  colors: context.colors,
+                                ),
+                              ),
                             ),
-                            color: context.colors.bgSurface,
-                            elevation: 8,
-                            itemBuilder: (context) => [
-                              if (_currentIndex != 4)
-                                _buildPopupMenuItem(l10n.filterAll, 'all'),
-                              ..._activeSportFilterItems(l10n)
-                                  .where((item) => item.$1 != 'all')
-                                  .map(
-                                    (item) =>
-                                        _buildPopupMenuItem(item.$2, item.$1),
-                                  ),
-                            ],
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.16),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    _activeSportFilter == 'all'
-                                        ? l10n.filterAll
-                                        : AppConstants
-                                                  .sportNames[_activeSportFilter] ??
-                                              _activeSportFilter,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 14,
+                          ),
+                          Positioned(
+                            top: safeAreaTop + 14.0,
+                            left: 16.0,
+                            right: 16.0,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // Left: Sport filter dropdown
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: PopupMenuButton<String>(
+                                    onSelected: _setActiveSportFilter,
+                                    offset: const Offset(0, 40),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    color: context.colors.bgSurface,
+                                    elevation: 8,
+                                    itemBuilder: (context) => [
+                                      if (_currentIndex != 4)
+                                        _buildPopupMenuItem(l10n.filterAll, 'all'),
+                                      ..._activeSportFilterItems(l10n)
+                                          .where((item) => item.$1 != 'all')
+                                          .map(
+                                            (item) =>
+                                                _buildPopupMenuItem(item.$2, item.$1),
+                                          ),
+                                    ],
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.16),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            _activeSportFilter == 'all'
+                                                ? l10n.filterAll
+                                                : AppConstants
+                                                          .sportNames[_activeSportFilter] ??
+                                                      _activeSportFilter,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          const Icon(
+                                            Icons.keyboard_arrow_down_rounded,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                  const SizedBox(width: 4),
-                                  const Icon(
-                                    Icons.keyboard_arrow_down_rounded,
-                                    color: Colors.white,
-                                    size: 18,
+                                ),
+
+                                // Center: Title for sub-tabs
+                                if (!isHomeTab)
+                                  Center(
+                                    child: Text(
+                                      _currentIndex == 1
+                                          ? l10n.navTournaments
+                                          : _currentIndex == 3
+                                          ? l10n.homeClubTab
+                                          : _currentIndex == 4
+                                          ? l10n.homeRankingsTab
+                                          : l10n.sporto,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 18,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
                                   ),
-                                ],
-                              ),
+
+                                // Right: Notification Bell & Chat
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: _buildNotificationBellHeader(),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
-
-                        // Center: Title for sub-tabs
-                        if (!isHomeTab)
-                          Center(
-                            child: Text(
-                              _currentIndex == 1
-                                  ? l10n.navTournaments
-                                  : _currentIndex == 3
-                                  ? l10n.homeClubTab
-                                  : _currentIndex == 4
-                                  ? l10n.homeRankingsTab
-                                  : l10n.sporto,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 18,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-
-                        // Right: Notification Bell & Chat
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: _buildNotificationBellHeader(),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    if (_shouldShowSearchBar)
+                      Container(
+                        color: context.colors.bgDark,
+                        padding: const EdgeInsets.fromLTRB(16.0, 6.0, 16.0, 8.0),
+                        child: _buildSearchBar(),
+                      ),
+                  ],
+                ),
               ),
             ),
-            // Floating Sticky Search Bar pinned directly below Header
-            if (_shouldShowSearchBar)
-              Positioned(
-                top: _headerHeight + 6.0,
-                left: 16.0,
-                right: 16.0,
-                child: _buildSearchBar(),
-              ),
           ],
         ),
         bottomNavigationBar: FloatingBottomNav(
@@ -626,7 +635,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   physics: const BouncingScrollPhysics(),
                   slivers: [
                     SliverToBoxAdapter(
-                      child: SizedBox(height: _headerHeight + 52.0),
+                      child: SizedBox(height: _pinnedHeaderHeight),
                     ),
                     if (!ref.watch(authProvider).isAuthenticated)
                       SliverToBoxAdapter(
@@ -687,7 +696,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 physics: const BouncingScrollPhysics(),
                 slivers: [
                   SliverToBoxAdapter(
-                    child: SizedBox(height: _headerHeight + 52.0),
+                    child: SizedBox(height: _pinnedHeaderHeight),
                   ),
                   const SliverFillRemaining(
                     child: Center(child: CircularProgressIndicator()),
@@ -699,7 +708,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 physics: const BouncingScrollPhysics(),
                 slivers: [
                   SliverToBoxAdapter(
-                    child: SizedBox(height: _headerHeight + 52.0),
+                    child: SizedBox(height: _pinnedHeaderHeight),
                   ),
                   SliverFillRemaining(child: _buildErrorState(e)),
                 ],
@@ -946,113 +955,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildSearchBar() {
     final filterCount = _activeFilterCountForTab();
-    return Container(
-      height: 38.0,
-      decoration: BoxDecoration(
-        color: context.colors.bgCard,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: context.colors.border, width: 1.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10.0,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: _activeSearchController,
-        focusNode: _searchFocusNode,
-        textInputAction: TextInputAction.search,
-        onChanged: (v) {
-          _searchDebounceTimer?.cancel();
-          _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
-            if (mounted) {
-              setState(() => _searchQueries[_currentIndex] = v);
-              if (_currentIndex == 1) {
-                _resetTournamentCursorPagination();
-              } else if (_currentIndex == 3) {
-                _resetClubCursorPagination();
-              }
+    return SportoSearchBar(
+      controller: _activeSearchController,
+      focusNode: _searchFocusNode,
+      hintText: _searchHintForTab(),
+      filterCount: filterCount,
+      onChanged: (v) {
+        _searchDebounceTimer?.cancel();
+        _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            setState(() => _searchQueries[_currentIndex] = v);
+            if (_currentIndex == 1) {
+              _resetTournamentCursorPagination();
+            } else if (_currentIndex == 3) {
+              _resetClubCursorPagination();
             }
-          });
-        },
-        onSubmitted: (_) => _submitSearch(),
-        style: TextStyle(
-          fontSize: 14.0,
-          fontWeight: FontWeight.normal,
-          color: context.colors.textPrimary,
-        ),
-        cursorColor: AppTheme.primary,
-        textAlignVertical: TextAlignVertical.center,
-        decoration: InputDecoration(
-          hintText: _searchHintForTab(),
-          hintStyle: TextStyle(color: context.colors.textMuted, fontSize: 14.0),
-          prefixIcon: Icon(
-            Icons.search,
-            color: context.colors.textSecondary,
-            size: 20.0,
-          ),
-          suffixIcon: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ValueListenableBuilder<TextEditingValue>(
-                valueListenable: _activeSearchController,
-                builder: (context, value, _) {
-                  if (value.text.isEmpty) return const SizedBox.shrink();
-                  return IconButton(
-                    icon: Icon(
-                      Icons.clear,
-                      color: context.colors.textSecondary,
-                      size: 18.0,
-                    ),
-                    onPressed: () {
-                      _searchDebounceTimer?.cancel();
-                      _activeSearchController.clear();
-                      setState(() => _searchQueries[_currentIndex] = '');
-                      if (_currentIndex == 1) {
-                        _resetTournamentCursorPagination();
-                      } else if (_currentIndex == 3) {
-                        _resetClubCursorPagination();
-                      }
-                    },
-                  );
-                },
-              ),
-              Stack(
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.tune_rounded,
-                      color: filterCount > 0
-                          ? AppTheme.primary
-                          : context.colors.textSecondary,
-                      size: 20.0,
-                    ),
-                    onPressed: _showActiveFilterSheet,
-                  ),
-                  if (filterCount > 0)
-                    Positioned(
-                      top: 6,
-                      right: 6,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.primary,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-          border: InputBorder.none,
-          isCollapsed: true,
-          contentPadding: EdgeInsets.zero,
-        ),
-      ),
+          }
+        });
+      },
+      onSubmitted: (_) => _submitSearch(),
+      onClear: () {
+        _searchDebounceTimer?.cancel();
+        setState(() => _searchQueries[_currentIndex] = '');
+        if (_currentIndex == 1) {
+          _resetTournamentCursorPagination();
+        } else if (_currentIndex == 3) {
+          _resetClubCursorPagination();
+        }
+      },
+      onFilterTap: _showActiveFilterSheet,
     );
   }
 
@@ -2317,7 +2248,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          SliverToBoxAdapter(child: SizedBox(height: _headerHeight + 52.0)),
+          SliverToBoxAdapter(child: SizedBox(height: _pinnedHeaderHeight)),
           SliverPersistentHeader(
             pinned: true,
             delegate: _StatusFilterDelegate(
@@ -2517,7 +2448,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             parent: BouncingScrollPhysics(),
           ),
           slivers: [
-            SliverToBoxAdapter(child: SizedBox(height: _headerHeight + 52.0)),
+            SliverToBoxAdapter(child: SizedBox(height: _pinnedHeaderHeight)),
             SliverToBoxAdapter(child: const SizedBox(height: 8)),
             if (_isClubInitialLoading && currentList.isEmpty)
               const SliverFillRemaining(
@@ -2570,14 +2501,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             else
               SliverMainAxisGroup(
                 slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, i) => _buildClubCardPremium(currentList[i]),
-                        childCount: currentList.length,
-                      ),
+                  SliverList.separated(
+                    itemCount: currentList.length,
+                    separatorBuilder: (context, i) => Divider(
+                      height: 1,
+                      thickness: 0.8,
+                      color: context.colors.border.withValues(alpha: 0.5),
                     ),
+                    itemBuilder: (context, i) => _buildClubItem(currentList[i]),
                   ),
                   SliverToBoxAdapter(
                     child: _buildCursorLoadMoreBar(
@@ -2596,56 +2527,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  /// ─── Helpers ───
-  Color _getSportColor(String sportName) {
-    final n = sportName.toLowerCase();
-    if (n.contains('badminton') || n.contains('cầu lông')) {
-      return const Color(0xFF0284C7);
-    }
-    if (n.contains('tennis')) {
-      return const Color(0xFFEA580C);
-    }
-    if (n.contains('pickleball')) {
-      return const Color(0xFF059669);
-    }
-    if (n.contains('table tennis') ||
-        n.contains('bóng bàn') ||
-        n.contains('bong ban')) {
-      return const Color(0xFFDC2626);
-    }
-    if (n.contains('bóng đá') || n.contains('football')) {
-      return const Color(0xFF16A34A);
-    }
-    if (n.contains('bơi') || n.contains('swim')) return const Color(0xFF2563EB);
-    if (n.contains('cờ') || n.contains('chess')) return const Color(0xFF7C3AED);
-    return const Color(0xFF0284C7);
-  }
-
-  String _getJoinModeLabel(String mode, AppLocalizations l10n) {
-    switch (mode) {
-      case 'INVITE_ONLY':
-        return l10n.homeInviteOnly;
-      case 'APPROVAL':
-        return l10n.homeApproval;
-      default:
-        return l10n.homeOpenJoin;
-    }
-  }
-
-  Color _getJoinModeColor(String mode) {
-    switch (mode) {
-      case 'INVITE_ONLY':
-        return const Color(0xFFE11D48);
-      case 'APPROVAL':
-        return const Color(0xFFF59E0B);
-      default:
-        return const Color(0xFF059669);
-    }
-  }
-
-  /// ═══════════════════════════════════════════════════════
-  ///  PREMIUM CLUB CARD — Full-width, inspired by web
-  /// ═══════════════════════════════════════════════════════
+  // ─── TAB 3: CÂU LẠC BỘ (Clubs) — Compact List Style ───
   String _resolveClubImageUrl(String? url) {
     final value = url?.trim() ?? '';
     if (value.isEmpty || value.startsWith('data:')) {
@@ -2669,434 +2551,63 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return '${host.replaceFirst(RegExp(r'/$'), '')}/${value.replaceFirst(RegExp(r'^/'), '')}';
   }
 
-  Widget _buildClubCardPremium(Community club) {
-    final l10n = AppLocalizations.of(context)!;
-    final sportName = club.sports.isNotEmpty ? club.sports.first : "";
-    final Color sportColor = _getSportColor(sportName);
-    final String joinLabel = _getJoinModeLabel(club.joinMode, l10n);
-    final Color joinColor = _getJoinModeColor(club.joinMode);
-    final bannerUrl = _resolveClubImageUrl(club.bannerUrl);
-    // Một số CLB chỉ lưu banner, giống cách web hiển thị banner làm avatar.
-    // Chỉ dùng chữ cái khi cả logo và banner đều không có.
+  Widget _buildClubItem(Community club) {
     final logoUrl = _resolveClubImageUrl(
       (club.logoUrl?.trim().isNotEmpty ?? false)
           ? club.logoUrl!.split(',').first
           : club.bannerUrl,
     );
-    final bool hasBanner = bannerUrl.isNotEmpty;
-    final bool hasLogo = logoUrl.isNotEmpty;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14.0),
-      child: GestureDetector(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         onTap: () => context.push("/club/${club.id}"),
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.colors.bgCard,
-            borderRadius: BorderRadius.circular(14.0),
-            border: Border.all(color: context.colors.border),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Stack(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          child: Row(
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ─── Banner Area (Chuẩn hoá theo chi tiết CLB ~150px gọn gàng) ───
-                  SizedBox(
-                    height: 150.0,
-                    width: double.infinity,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (hasBanner)
-                          ClubNetworkImage(
-                            bannerUrl,
+              Container(
+                width: 44.0,
+                height: 44.0,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: context.colors.bgSurface,
+                  border: Border.all(
+                    color: context.colors.border.withValues(alpha: 0.6),
+                    width: 0.8,
+                  ),
+                ),
+                child: ClipOval(
+                  child: logoUrl.isNotEmpty
+                      ? ClubNetworkImage(
+                          logoUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => Image.asset(
+                            AppConstants.appIconPng,
                             fit: BoxFit.cover,
-                            loadingBuilder: (_, child, progress) {
-                              if (progress == null) return child;
-                              return _buildCardBannerPlaceholder(sportColor);
-                            },
-                            errorBuilder: (_, _, _) =>
-                                _buildCardBannerFallback(sportColor),
-                          )
-                        else
-                          _buildCardBannerFallback(sportColor),
-
-                        // Gradient overlay
-                        Positioned(
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.transparent,
-                                  Colors.black.withValues(alpha: 0.45),
-                                ],
-                              ),
-                            ),
                           ),
+                        )
+                      : Image.asset(
+                          AppConstants.appIconPng,
+                          fit: BoxFit.cover,
                         ),
-
-                        // Join mode badge
-                        Positioned(
-                          top: 10,
-                          left: 10,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.95),
-                              borderRadius: BorderRadius.circular(6),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.08),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                    color: joinColor,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  joinLabel,
-                                  style: TextStyle(
-                                    fontSize: 8.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: joinColor,
-                                    letterSpacing: 0.3,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                ),
+              ),
+              const SizedBox(width: 14.0),
+              Expanded(
+                child: Text(
+                  club.name,
+                  style: TextStyle(
+                    fontSize: 15.0,
+                    fontWeight: FontWeight.w700,
+                    color: context.colors.textPrimary,
+                    height: 1.25,
                   ),
-
-                  // ─── Content Area ───
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(14, hasLogo ? 0 : 10, 14, 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (hasLogo) ...[
-                              Transform.translate(
-                                offset: const Offset(0, -20),
-                                child: Container(
-                                  width: 50,
-                                  height: 50,
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: context.colors.bgCard,
-                                    border: Border.all(
-                                      color: context.colors.bgCard,
-                                      width: 2,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: ClipOval(
-                                    child: ClubNetworkImage(
-                                      logoUrl,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, _, _) =>
-                                          _buildClubInitial(club, sportColor),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                            ],
-                            Expanded(
-                              child: Padding(
-                                padding: EdgeInsets.only(top: hasLogo ? 8 : 0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      club.name,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w900,
-                                        color: context.colors.textPrimary,
-                                        letterSpacing: -0.2,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.people_rounded,
-                                          size: 13,
-                                          color: context.colors.textMuted,
-                                        ),
-                                        const SizedBox(width: 3),
-                                        Text(
-                                          l10n.homeMembersCount(
-                                            club.memberCount > 0
-                                                ? club.memberCount
-                                                : 1,
-                                          ),
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: context.colors.textSecondary,
-                                          ),
-                                        ),
-                                        if (club.tournamentCount > 0) ...[
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                            ),
-                                            child: Text(
-                                              '•',
-                                              style: TextStyle(
-                                                color: context.colors.textMuted,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ),
-                                          Icon(
-                                            Icons.emoji_events_rounded,
-                                            size: 13,
-                                            color: context.colors.textMuted,
-                                          ),
-                                          const SizedBox(width: 3),
-                                          Text(
-                                            '${club.tournamentCount} giải đấu',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                              color:
-                                                  context.colors.textSecondary,
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: hasLogo ? 4 : 8),
-
-                        // Badges Row (Sports + Location + Mode)
-                        Row(
-                          children: [
-                            Expanded(
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                physics: const BouncingScrollPhysics(),
-                                child: Row(
-                                  children: [
-                                    ...(() {
-                                      final List<String> sports = [];
-                                      if (club.sports.isNotEmpty) {
-                                        for (final s in club.sports) {
-                                          final sTrim = s.trim();
-                                          if (sTrim.isEmpty) continue;
-                                          final mapped = l10n.sportDisplayName(
-                                            sTrim,
-                                          );
-                                          if (!sports.contains(mapped)) {
-                                            sports.add(mapped);
-                                          }
-                                        }
-                                      }
-                                      if (sports.isEmpty) {
-                                        sports.add(l10n.homeSportFallback);
-                                      }
-                                      return sports.map((sName) {
-                                        return Container(
-                                          margin: const EdgeInsets.only(
-                                            right: 6,
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 3,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: sportColor.withValues(
-                                              alpha: 0.12,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
-                                            border: Border.all(
-                                              color: sportColor.withValues(
-                                                alpha: 0.25,
-                                              ),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            sName.toUpperCase(),
-                                            style: TextStyle(
-                                              fontSize: 9.5,
-                                              fontWeight: FontWeight.w900,
-                                              color: sportColor,
-                                              letterSpacing: 0.5,
-                                            ),
-                                          ),
-                                        );
-                                      }).toList();
-                                    })(),
-                                    if (club.locationAddress != null &&
-                                        club.locationAddress!
-                                            .trim()
-                                            .isNotEmpty) ...[
-                                      Container(
-                                        margin: const EdgeInsets.only(right: 6),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 3,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: context.colors.bgSurface,
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                          border: Border.all(
-                                            color: context.colors.border,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.location_on_rounded,
-                                              size: 11,
-                                              color: context.colors.textMuted,
-                                            ),
-                                            const SizedBox(width: 3),
-                                            Text(
-                                              club.locationAddress!.trim(),
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                color: context.colors.textMuted,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildClubInitial(Community club, Color sportColor) {
-    return Center(
-      child: Text(
-        club.name.isNotEmpty ? club.name.characters.first.toUpperCase() : 'C',
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 20,
-          color: sportColor,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCardBannerPlaceholder(Color sportColor) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? const [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF0F172A)]
-              : const [Color(0xFFF8FAFC), Color(0xFFEFF6FF), Color(0xFFE0E7FF)],
-        ),
-      ),
-      child: Center(
-        child: Icon(
-          Icons.image_outlined,
-          size: 34,
-          color: sportColor.withValues(alpha: 0.28),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCardBannerFallback(Color sportColor) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? const [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF0F172A)]
-              : const [Color(0xFFF8FAFC), Color(0xFFEFF6FF), Color(0xFFE0E7FF)],
-        ),
-      ),
-      child: Center(
-        child: Image.asset(
-          AppConstants.logoFullPng,
-          width: 180,
-          fit: BoxFit.contain,
-          errorBuilder: (_, _, _) => Icon(
-            Icons.image_outlined,
-            size: 34,
-            color: sportColor.withValues(alpha: 0.28),
           ),
         ),
       ),

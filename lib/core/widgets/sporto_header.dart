@@ -515,3 +515,130 @@ class SportoHeaderPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
+
+/// Thanh tìm kiếm SportoSearchBar chuẩn hoá dùng chung cho ứng dụng
+class SportoSearchBar extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode? focusNode;
+  final String hintText;
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
+  final VoidCallback? onClear;
+  final VoidCallback? onFilterTap;
+  final int filterCount;
+  final bool showFilter;
+  final double height;
+  final bool autofocus;
+
+  const SportoSearchBar({
+    super.key,
+    required this.controller,
+    this.focusNode,
+    required this.hintText,
+    this.onChanged,
+    this.onSubmitted,
+    this.onClear,
+    this.onFilterTap,
+    this.filterCount = 0,
+    this.showFilter = true,
+    this.height = 38.0,
+    this.autofocus = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: colors.border, width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10.0,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        focusNode: focusNode,
+        autofocus: autofocus,
+        textInputAction: TextInputAction.search,
+        onChanged: onChanged,
+        onSubmitted: onSubmitted,
+        style: TextStyle(
+          fontSize: 14.0,
+          fontWeight: FontWeight.normal,
+          color: colors.textPrimary,
+        ),
+        cursorColor: AppTheme.primary,
+        textAlignVertical: TextAlignVertical.center,
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: TextStyle(color: colors.textMuted, fontSize: 14.0),
+          prefixIcon: Icon(
+            Icons.search,
+            color: colors.textSecondary,
+            size: 20.0,
+          ),
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: controller,
+                builder: (context, value, _) {
+                  if (value.text.isEmpty) return const SizedBox.shrink();
+                  return IconButton(
+                    icon: Icon(
+                      Icons.clear,
+                      color: colors.textSecondary,
+                      size: 18.0,
+                    ),
+                    onPressed: () {
+                      controller.clear();
+                      onClear?.call();
+                    },
+                  );
+                },
+              ),
+              if (showFilter && onFilterTap != null)
+                Stack(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.tune_rounded,
+                        color: filterCount > 0
+                            ? AppTheme.primary
+                            : colors.textSecondary,
+                        size: 20.0,
+                      ),
+                      onPressed: onFilterTap,
+                    ),
+                    if (filterCount > 0)
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+            ],
+          ),
+          border: InputBorder.none,
+          isCollapsed: true,
+          contentPadding: EdgeInsets.zero,
+        ),
+      ),
+    );
+  }
+}

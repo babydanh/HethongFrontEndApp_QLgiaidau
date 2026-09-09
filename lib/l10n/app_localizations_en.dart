@@ -9128,6 +9128,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get communitySocial_joinToPost => 'Join the club to create a post.';
 
   @override
+  String get communitySocial_joinToReact => 'Join the club to react to posts.';
+
+  @override
   String get communitySocial_openChat => 'Open club chat';
 
   @override
@@ -11049,6 +11052,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get communityFeedCreatePostError =>
       'Failed to publish the post. Please try again.';
+
+  @override
+  String get communityFeedReactError =>
+      'Failed to react to the post. Please try again.';
 
   @override
   String get paymentStatusCompleted => 'Completed';

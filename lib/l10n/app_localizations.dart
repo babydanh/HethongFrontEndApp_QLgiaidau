@@ -16778,6 +16778,12 @@ abstract class AppLocalizations {
   /// **'Hãy tham gia CLB để đăng bài.'**
   String get communitySocial_joinToPost;
 
+  /// No description provided for @communitySocial_joinToReact.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy tham gia CLB để thả cảm xúc.'**
+  String get communitySocial_joinToReact;
+
   /// No description provided for @communitySocial_openChat.
   ///
   /// In vi, this message translates to:
@@ -20067,6 +20073,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đăng bài thất bại. Vui lòng thử lại.'**
   String get communityFeedCreatePostError;
+
+  /// No description provided for @communityFeedReactError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thả cảm xúc thất bại. Vui lòng thử lại.'**
+  String get communityFeedReactError;
 
   /// No description provided for @paymentStatusCompleted.
   ///

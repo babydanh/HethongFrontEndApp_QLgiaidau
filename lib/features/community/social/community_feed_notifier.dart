@@ -118,14 +118,16 @@ class CommunityFeedNotifier extends Notifier<CommunityFeedState> {
     }
   }
 
-  Future<void> reactToPost(String postId, String reaction) async {
+  Future<bool> reactToPost(String postId, String reaction) async {
     try {
       await ref
           .read(communitySocialRepositoryProvider)
           .reactToPost(communityId, postId, reaction: reaction);
       await loadInitial();
+      return true;
     } catch (error, stack) {
       _log.error('Không thể reaction bài viết CLB', error, stack);
+      return false;
     }
   }
 }
