@@ -509,139 +509,146 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     return RefreshIndicator(
       onRefresh: () => _fetchMatches(),
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(top: 12, bottom: 24),
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           // ─── 2. THANH LỌC & TÌM KIẾM & TẠO TRẬN ĐẤU ───────────────────
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 36,
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (val) {
-                      _searchDebounceTimer?.cancel();
-                      _searchDebounceTimer = Timer(
-                        const Duration(milliseconds: 250),
-                        () {
-                          if (mounted) {
-                            setState(() => _searchQuery = val);
-                          }
-                        },
-                      );
-                    },
-                    style: TextStyle(fontSize: 12.5, color: colors.textPrimary),
-                    decoration: InputDecoration(
-                      hintText: 'Tìm theo tên VĐV hoặc giải đấu...',
-                      hintStyle: TextStyle(
-                        fontSize: 12,
-                        color: colors.textMuted,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.search_rounded,
-                        size: 16,
-                        color: colors.textMuted,
-                      ),
-                      prefixIconConstraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 36,
-                      ),
-                      suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                        valueListenable: _searchController,
-                        builder: (context, value, _) {
-                          if (value.text.isEmpty) {
-                            return const SizedBox.shrink();
-                          }
-                          return IconButton(
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 36,
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (val) {
+                            _searchDebounceTimer?.cancel();
+                            _searchDebounceTimer = Timer(
+                              const Duration(milliseconds: 250),
+                              () {
+                                if (mounted) {
+                                  setState(() => _searchQuery = val);
+                                }
+                              },
+                            );
+                          },
+                          style: TextStyle(fontSize: 12.5, color: colors.textPrimary),
+                          decoration: InputDecoration(
+                            hintText: 'Tìm theo tên VĐV hoặc giải đấu...',
+                            hintStyle: TextStyle(
+                              fontSize: 12,
+                              color: colors.textMuted,
+                            ),
+                            prefixIcon: Icon(
+                              Icons.search_rounded,
+                              size: 16,
+                              color: colors.textMuted,
+                            ),
+                            prefixIconConstraints: const BoxConstraints(
                               minWidth: 32,
                               minHeight: 36,
                             ),
-                            icon: const Icon(Icons.clear_rounded, size: 14),
-                            onPressed: () {
-                              _searchDebounceTimer?.cancel();
-                              _searchController.clear();
-                              setState(() => _searchQuery = '');
-                            },
-                          );
-                        },
-                      ),
-                      suffixIconConstraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 36,
-                      ),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 0,
-                        horizontal: 8,
-                      ),
-                      fillColor: colors.bgCard,
-                      filled: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: colors.border),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: colors.border),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: AppTheme.primary, width: 1.2),
+                            suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                              valueListenable: _searchController,
+                              builder: (context, value, _) {
+                                if (value.text.isEmpty) {
+                                  return const SizedBox.shrink();
+                                }
+                                return IconButton(
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 32,
+                                    minHeight: 36,
+                                  ),
+                                  icon: const Icon(Icons.clear_rounded, size: 14),
+                                  onPressed: () {
+                                    _searchDebounceTimer?.cancel();
+                                    _searchController.clear();
+                                    setState(() => _searchQuery = '');
+                                  },
+                                );
+                              },
+                            ),
+                            suffixIconConstraints: const BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 36,
+                            ),
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 0,
+                              horizontal: 8,
+                            ),
+                            fillColor: colors.bgCard,
+                            filled: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: colors.border),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: colors.border),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: AppTheme.primary, width: 1.2),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    if (canCreateStandalone) ...[
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        height: 36,
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            ClubStandaloneMatchDialog.show(
+                              context,
+                              communityId: widget.communityId,
+                              clubName: widget.club?.name,
+                              onMatchCreated: () => _fetchMatches(),
+                            );
+                          },
+                          icon: const Icon(Icons.add_rounded, size: 15),
+                          label: Text(
+                            l10n.club_createMatchStandalone,
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            elevation: 0,
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ),
-              if (canCreateStandalone) ...[
-                const SizedBox(width: 8),
-                SizedBox(
-                  height: 36,
-                  child: FilledButton.icon(
-                    onPressed: () {
-                      ClubStandaloneMatchDialog.show(
-                        context,
-                        communityId: widget.communityId,
-                        clubName: widget.club?.name,
-                        onMatchCreated: () => _fetchMatches(),
-                      );
-                    },
-                    icon: const Icon(Icons.add_rounded, size: 15),
-                    label: Text(
-                      l10n.club_createMatchStandalone,
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.primary,
-                      elevation: 0,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 4),
+                // Filter Dropdown Row
+                _buildFilterDropdown(
+                  colors: colors,
+                  isClubMember: isClubMember,
+                  currentUser: currentUser,
+                  userMatches: userMatches,
                 ),
               ],
-            ],
+            ),
           ),
           const SizedBox(height: 4),
-
-          // Filter Dropdown Row
-          _buildFilterDropdown(
-            colors: colors,
-            isClubMember: isClubMember,
-            currentUser: currentUser,
-            userMatches: userMatches,
-          ),
-          const SizedBox(height: 8),
 
           // ─── 3. DANH SÁCH TRẬN ĐẤU TIMELINE ───────────────────────
           if (_isLoading) ...[
@@ -681,46 +688,50 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
               ),
             ),
           ] else if (filteredMatches.isEmpty) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: colors.border),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.sports_tennis_rounded,
-                    size: 40,
-                    color: colors.textMuted,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Chưa có hoạt động trận đấu nào',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: colors.bgCard,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: colors.border),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.sports_tennis_rounded,
+                      size: 40,
+                      color: colors.textMuted,
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _filter == _ActivityFilter.myMatches
-                        ? 'Bạn chưa tham gia trận đấu nào trong các giải thuộc CLB.'
-                        : 'Khi các giải đấu diễn ra, kết quả và diễn biến sẽ xuất hiện ở đây.',
-                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    Text(
+                      'Chưa có hoạt động trận đấu nào',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _filter == _ActivityFilter.myMatches
+                          ? 'Bạn chưa tham gia trận đấu nào trong các giải thuộc CLB.'
+                          : 'Khi các giải đấu diễn ra, kết quả và diễn biến sẽ xuất hiện ở đây.',
+                      style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
             ),
           ] else ...[
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
               itemCount: filteredMatches.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final match = filteredMatches[index];
                 return _buildMatchCard(context, match, colors);
@@ -861,43 +872,33 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
         onTap: () => _openMatch(context, match),
         child: Container(
           decoration: BoxDecoration(
             color: colors.bgCard,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isOngoing ? const Color(0xFFEF4444) : colors.border,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: isOngoing
-                    ? const Color(0x1AEF4444)
-                    : Colors.black.withValues(alpha: 0.02),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+            border: Border(
+              bottom: BorderSide(
+                color: colors.borderLight,
+                width: 1,
               ),
-            ],
+            ),
           ),
           child: Column(
             children: [
               // Header Bar: Tournament Name, Round & Status
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+                  horizontal: 16,
+                  vertical: 9,
                 ),
                 decoration: BoxDecoration(
                   color: isOngoing ? const Color(0xFFFEF2F2) : colors.bgSurface,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(13),
-                  ),
                   border: Border(
                     bottom: BorderSide(
                       color: isOngoing
                           ? const Color(0xFFFECACA)
                           : colors.borderLight,
+                      width: 0.8,
                     ),
                   ),
                 ),
@@ -1000,7 +1001,10 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
 
               // Scores & Teams
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 child: Column(
                   children: [
                     // Team 1 Row
