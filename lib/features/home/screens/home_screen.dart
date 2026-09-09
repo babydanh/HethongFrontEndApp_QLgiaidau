@@ -2687,19 +2687,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final bool hasLogo = logoUrl.isNotEmpty;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.only(bottom: 14.0),
       child: GestureDetector(
         onTap: () => context.push("/club/${club.id}"),
         child: Container(
           decoration: BoxDecoration(
             color: context.colors.bgCard,
-            borderRadius: BorderRadius.circular(20.0),
+            borderRadius: BorderRadius.circular(14.0),
             border: Border.all(color: context.colors.border),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -2709,9 +2709,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ─── Banner Area ───
+                  // ─── Banner Area (Chuẩn hoá theo chi tiết CLB ~150px gọn gàng) ───
                   SizedBox(
-                    height: 185.0,
+                    height: 150.0,
                     width: double.infinity,
                     child: Stack(
                       fit: StackFit.expand,
@@ -2736,14 +2736,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           left: 0,
                           right: 0,
                           child: Container(
-                            height: 60,
+                            height: 50,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
                                 colors: [
                                   Colors.transparent,
-                                  Colors.black.withValues(alpha: 0.55),
+                                  Colors.black.withValues(alpha: 0.45),
                                 ],
                               ),
                             ),
@@ -2760,11 +2760,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.92),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                              ),
+                              color: Colors.white.withValues(alpha: 0.95),
+                              borderRadius: BorderRadius.circular(6),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -2781,10 +2785,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 Text(
                                   joinLabel,
                                   style: TextStyle(
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w900,
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.w800,
                                     color: joinColor,
-                                    letterSpacing: 0.5,
+                                    letterSpacing: 0.3,
                                   ),
                                 ),
                               ],
@@ -2797,7 +2801,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   // ─── Content Area ───
                   Padding(
-                    padding: EdgeInsets.fromLTRB(16, hasLogo ? 0 : 12, 16, 14),
+                    padding: EdgeInsets.fromLTRB(14, hasLogo ? 0 : 10, 14, 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -2806,23 +2810,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           children: [
                             if (hasLogo) ...[
                               Transform.translate(
-                                offset: const Offset(0, -22),
+                                offset: const Offset(0, -20),
                                 child: Container(
-                                  width: 52,
-                                  height: 52,
+                                  width: 50,
+                                  height: 50,
+                                  padding: const EdgeInsets.all(2),
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Colors.white,
+                                    color: context.colors.bgCard,
                                     border: Border.all(
-                                      color: Colors.white,
-                                      width: 2.5,
+                                      color: context.colors.bgCard,
+                                      width: 2,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black.withValues(
-                                          alpha: 0.12,
+                                          alpha: 0.1,
                                         ),
-                                        blurRadius: 8,
+                                        blurRadius: 6,
                                         offset: const Offset(0, 2),
                                       ),
                                     ],
@@ -2837,7 +2842,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 10),
                             ],
                             Expanded(
                               child: Padding(
