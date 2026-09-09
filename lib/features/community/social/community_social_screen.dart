@@ -312,8 +312,16 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                     authorName: currentAuthorName,
                     authorAvatarUrl: currentAvatarUrl,
                     onOpen: () => _openComposer(),
-                    onOpenWithPoll: () => _openComposer(startWithPoll: true),
                     onOpenWithImage: () => _openComposer(startWithImage: true),
+                    onAvatarTap: currentUserId.isNotEmpty
+                        ? () => UserProfileBottomSheet.show(
+                              context,
+                              userId: currentUserId,
+                              communityId: widget.communityId,
+                              initialFullName: currentAuthorName,
+                              initialAvatarUrl: currentAvatarUrl,
+                            )
+                        : null,
                   ),
                 ),
               if (!canPost)
