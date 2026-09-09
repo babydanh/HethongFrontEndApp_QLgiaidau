@@ -38,6 +38,43 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_noMembersFound => 'Không tìm thấy thành viên phù hợp';
 
   @override
+  String get club_loadMoreMatches => 'Xem thêm trận';
+
+  @override
+  String get club_enterStandaloneScore => 'Nhập điểm trận riêng';
+
+  @override
+  String get club_setCount => 'Số set (tối đa 10)';
+
+  @override
+  String club_setNumber(Object index) {
+    return 'Set $index';
+  }
+
+  @override
+  String get club_saveMatchResult => 'Lưu kết quả';
+
+  @override
+  String get club_openScoreboard => 'Mở bảng điểm';
+
+  @override
+  String get club_matchScoreReadOnly => 'Trận đã kết thúc, không thể sửa điểm.';
+
+  @override
+  String get club_matchScoreRequired => 'Nhập ít nhất một set đầy đủ.';
+
+  @override
+  String get club_matchScoreIncomplete =>
+      'Hãy nhập các set theo thứ tự, không bỏ trống ở giữa.';
+
+  @override
+  String get club_matchScoreWinnerRequired =>
+      'Tỉ số set phải xác định được đội thắng.';
+
+  @override
+  String get club_matchScoreSaved => 'Đã lưu và chốt kết quả trận.';
+
+  @override
   String get appTagline => 'Chơi cùng nhau';
 
   @override

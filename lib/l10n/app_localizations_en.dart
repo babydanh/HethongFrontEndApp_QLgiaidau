@@ -38,6 +38,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get club_noMembersFound => 'No matching members found';
 
   @override
+  String get club_loadMoreMatches => 'Load more matches';
+
+  @override
+  String get club_enterStandaloneScore => 'Enter standalone match score';
+
+  @override
+  String get club_setCount => 'Sets (max 10)';
+
+  @override
+  String club_setNumber(Object index) {
+    return 'Set $index';
+  }
+
+  @override
+  String get club_saveMatchResult => 'Save result';
+
+  @override
+  String get club_openScoreboard => 'Open scoreboard';
+
+  @override
+  String get club_matchScoreReadOnly =>
+      'This match is completed and cannot be edited.';
+
+  @override
+  String get club_matchScoreRequired => 'Enter at least one complete set.';
+
+  @override
+  String get club_matchScoreIncomplete => 'Enter sets in order without gaps.';
+
+  @override
+  String get club_matchScoreWinnerRequired =>
+      'The set score must determine a winner.';
+
+  @override
+  String get club_matchScoreSaved => 'Match result saved and finalized.';
+
+  @override
   String get appTagline => 'Play together';
 
   @override

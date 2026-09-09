@@ -9,7 +9,6 @@ import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
 
 class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
@@ -26,14 +25,14 @@ class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
     this.onMatchCreated,
   });
 
-  static Future<void> show(
+  static Future<MatchModel?> show(
     BuildContext context, {
     required String communityId,
     String? clubName,
     String? sessionId,
     VoidCallback? onMatchCreated,
   }) {
-    return showDialog<void>(
+    return showDialog<MatchModel>(
       context: context,
       barrierDismissible: true,
       builder: (_) => ClubStandaloneMatchDialog(
@@ -126,7 +125,7 @@ class _ClubStandaloneMatchDialogState
     return aCount > 0 && aCount == bCount && aCount <= 2;
   }
 
-  Future<void> _handleStartMatch() async {
+  Future<void> _handleCreateMatch() async {
     if (!_canSubmit) return;
     setState(() => _isCreating = true);
     final l10n = AppLocalizations.of(context)!;
@@ -217,18 +216,9 @@ class _ClubStandaloneMatchDialogState
       widget.onMatchCreated?.call();
 
       if (!mounted) return;
-      // Đóng dialog và điều hướng trực tiếp vào màn hình tính điểm
-      Navigator.of(context).pop();
-
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => OfficialScorePage(
-            tournamentId: '',
-            matchId: matchModel.id,
-            match: matchModel,
-          ),
-        ),
-      );
+      // Tạo record trước; caller sẽ mở popup nhập kết quả ngay sau khi
+      // create dialog đã đóng hoàn toàn.
+      Navigator.of(context).pop(matchModel);
     } catch (e) {
       if (mounted) {
         setState(() => _isCreating = false);
@@ -236,7 +226,9 @@ class _ClubStandaloneMatchDialogState
           SnackBar(
             content: Text(
               e is DioException
-                  ? (e.response?.data?['message']?.toString() ?? e.message ?? '')
+                  ? (e.response?.data?['message']?.toString() ??
+                        e.message ??
+                        '')
                   : e.toString(),
             ),
             backgroundColor: Colors.red.shade700,
@@ -366,10 +358,7 @@ class _ClubStandaloneMatchDialogState
                   style: TextStyle(fontSize: 13, color: colors.textPrimary),
                   decoration: InputDecoration(
                     hintText: l10n.club_searchMemberHint,
-                    hintStyle: TextStyle(
-                      fontSize: 12,
-                      color: colors.textMuted,
-                    ),
+                    hintStyle: TextStyle(fontSize: 12, color: colors.textMuted),
                     prefixIcon: Icon(
                       Icons.search_rounded,
                       size: 17,
@@ -473,7 +462,10 @@ class _ClubStandaloneMatchDialogState
                       onSelected: (value) => setState(() => _isRanked = value),
                       label: const Text(
                         'ELO',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       avatar: Icon(
                         Icons.trending_up_rounded,
@@ -493,8 +485,8 @@ class _ClubStandaloneMatchDialogState
                           _sideAUserIds.length == _sideBUserIds.length &&
                                   _sideAUserIds.isNotEmpty
                               ? (_sideAUserIds.length == 1
-                                  ? 'Trận đơn: 1 vs 1'
-                                  : 'Trận đôi: 2 vs 2')
+                                    ? 'Trận đơn: 1 vs 1'
+                                    : 'Trận đôi: 2 vs 2')
                               : l10n.club_errorNeedEqualSides,
                           style: TextStyle(
                             fontSize: 11.5,
@@ -509,7 +501,7 @@ class _ClubStandaloneMatchDialogState
                       ),
                       const SizedBox(width: 8),
                       FilledButton.icon(
-                        onPressed: _canSubmit ? _handleStartMatch : null,
+                        onPressed: _canSubmit ? _handleCreateMatch : null,
                         icon: _isCreating
                             ? const SizedBox(
                                 width: 14,
@@ -521,7 +513,7 @@ class _ClubStandaloneMatchDialogState
                               )
                             : const Icon(Icons.play_arrow_rounded, size: 18),
                         label: Text(
-                          l10n.club_startMatchAndScore,
+                          l10n.club_createMatchStandalone,
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -557,9 +549,11 @@ class _ClubStandaloneMatchDialogState
   }) {
     final names = _allMembers
         .where((m) => userIds.contains(m.userId))
-        .map((m) => m.userFullName?.trim().isNotEmpty == true
-            ? m.userFullName!.trim()
-            : 'VĐV')
+        .map(
+          (m) => m.userFullName?.trim().isNotEmpty == true
+              ? m.userFullName!.trim()
+              : 'VĐV',
+        )
         .toList();
 
     return Container(

@@ -795,13 +795,35 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       SizedBox(
                         height: 36,
                         child: FilledButton.icon(
-                          onPressed: () {
-                            ClubStandaloneMatchDialog.show(
-                              context,
-                              communityId: widget.communityId,
-                              clubName: widget.club?.name,
-                              onMatchCreated: () => _fetchMatches(),
-                            );
+                          onPressed: () async {
+                            final createdMatch =
+                                await ClubStandaloneMatchDialog.show(
+                                  context,
+                                  communityId: widget.communityId,
+                                  clubName: widget.club?.name,
+                                  onMatchCreated: () => _fetchMatches(),
+                                );
+                            if (!context.mounted || createdMatch == null) {
+                              return;
+                            }
+                            final action =
+                                await ClubStandaloneMatchResultDialog.show(
+                                  context,
+                                  match: createdMatch,
+                                );
+                            if (!context.mounted) return;
+                            if (action == ClubStandaloneMatchAction.saved) {
+                              unawaited(_fetchMatches(silent: true));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.club_matchScoreSaved,
+                                  ),
+                                ),
+                              );
+                            }
                           },
                           icon: const Icon(Icons.add_rounded, size: 15),
                           label: Text(

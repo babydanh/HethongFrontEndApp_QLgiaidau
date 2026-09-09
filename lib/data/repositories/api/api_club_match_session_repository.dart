@@ -2,12 +2,59 @@ import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:dio/dio.dart';
 
+class CursorPage<T> {
+  final List<T> data;
+  final String? nextCursor;
+  final bool hasMore;
+
+  const CursorPage({
+    required this.data,
+    required this.nextCursor,
+    required this.hasMore,
+  });
+}
+
 class ApiClubMatchSessionRepository {
   final DioClient _client;
   ApiClubMatchSessionRepository(this._client);
 
   dynamic _payload(dynamic raw) =>
       raw is Map && raw.containsKey('data') ? raw['data'] : raw;
+
+  Future<CursorPage<Map<String, dynamic>>> _cursorPage(
+    String path, {
+    Map<String, dynamic>? query,
+    String? cursor,
+    int limit = 50,
+  }) async {
+    final response = await _client.dio.get(
+      path,
+      queryParameters: {
+        ...?query,
+        'limit': limit,
+        // ignore: use_null_aware_elements
+        if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+      },
+    );
+    final envelope = response.data;
+    final pageRows = envelope is Map ? envelope['data'] : envelope;
+    final rows = (pageRows is List ? pageRows : const <dynamic>[])
+        .whereType<Map>()
+        .map((row) => Map<String, dynamic>.from(row))
+        .toList(growable: false);
+    final meta = envelope is Map ? envelope['meta'] : null;
+    final hasMore = meta is Map && meta['hasMore'] == true;
+    final next = meta is Map ? meta['nextCursor']?.toString() : null;
+    final safeNext =
+        hasMore && next != null && next.isNotEmpty && next != cursor
+        ? next
+        : null;
+    return CursorPage(
+      data: rows,
+      nextCursor: safeNext,
+      hasMore: safeNext != null,
+    );
+  }
 
   Future<List<Map<String, dynamic>>> _allCursorRows(
     String path, {
@@ -16,30 +63,23 @@ class ApiClubMatchSessionRepository {
     final rows = <Map<String, dynamic>>[];
     String? cursor;
     do {
-      final response = await _client.dio.get(
-        path,
-        queryParameters: {
-          ...?query,
-          'limit': 50,
-          // ignore: use_null_aware_elements
-          if (cursor != null) 'cursor': cursor,
-        },
-      );
-      final envelope = response.data;
-      final pageRows = envelope is Map ? envelope['data'] : envelope;
-      rows.addAll(
-        (pageRows as List<dynamic>? ?? const []).whereType<Map>().map(
-          (row) => Map<String, dynamic>.from(row),
-        ),
-      );
-      final meta = envelope is Map ? envelope['meta'] : null;
-      final hasMore = meta is Map && meta['hasMore'] == true;
-      final next = meta is Map ? meta['nextCursor']?.toString() : null;
-      cursor = hasMore && next != null && next.isNotEmpty && next != cursor
-          ? next
-          : null;
+      final page = await _cursorPage(path, query: query, cursor: cursor);
+      rows.addAll(page.data);
+      final next = page.nextCursor;
+      cursor = next != null && next != cursor ? next : null;
     } while (cursor != null);
     return rows;
+  }
+
+  CursorPage<T> _mapPage<T>(
+    CursorPage<Map<String, dynamic>> page,
+    T Function(Map<String, dynamic>) parser,
+  ) {
+    return CursorPage(
+      data: page.data.map(parser).toList(growable: false),
+      nextCursor: page.nextCursor,
+      hasMore: page.hasMore,
+    );
   }
 
   Future<List<ClubMatchSessionModel>> list(String communityId) async {
@@ -48,6 +88,20 @@ class ApiClubMatchSessionRepository {
       query: {'communityId': communityId},
     );
     return rows.map(ClubMatchSessionModel.fromJson).toList();
+  }
+
+  Future<CursorPage<ClubMatchSessionModel>> listPage(
+    String communityId, {
+    String? cursor,
+    int limit = 8,
+  }) async {
+    final page = await _cursorPage(
+      '/club-match-sessions',
+      query: {'communityId': communityId},
+      cursor: cursor,
+      limit: limit,
+    );
+    return _mapPage(page, ClubMatchSessionModel.fromJson);
   }
 
   Future<ClubMatchSessionModel> get(String sessionId) async {
@@ -115,6 +169,19 @@ class ApiClubMatchSessionRepository {
     return rows.map(ClubSessionMatchModel.fromJson).toList();
   }
 
+  Future<CursorPage<ClubSessionMatchModel>> matchesPage(
+    String sessionId, {
+    String? cursor,
+    int limit = 20,
+  }) async {
+    final page = await _cursorPage(
+      '/club-match-sessions/$sessionId/matches',
+      cursor: cursor,
+      limit: limit,
+    );
+    return _mapPage(page, ClubSessionMatchModel.fromJson);
+  }
+
   Future<List<ClubSessionMatchModel>> standaloneMatches(
     String communityId,
   ) async {
@@ -123,6 +190,20 @@ class ApiClubMatchSessionRepository {
       query: {'communityId': communityId},
     );
     return rows.map(ClubSessionMatchModel.fromJson).toList();
+  }
+
+  Future<CursorPage<ClubSessionMatchModel>> standaloneMatchesPage(
+    String communityId, {
+    String? cursor,
+    int limit = 20,
+  }) async {
+    final page = await _cursorPage(
+      '/club-match-sessions/standalone-matches',
+      query: {'communityId': communityId},
+      cursor: cursor,
+      limit: limit,
+    );
+    return _mapPage(page, ClubSessionMatchModel.fromJson);
   }
 
   Future<ClubSessionMatchModel> createStandaloneMatch({
@@ -153,9 +234,8 @@ class ApiClubMatchSessionRepository {
     );
   }
 
-  Future<void> deleteStandaloneMatch(String matchId) => _client.dio.delete(
-    '/club-match-sessions/standalone-matches/$matchId',
-  );
+  Future<void> deleteStandaloneMatch(String matchId) =>
+      _client.dio.delete('/club-match-sessions/standalone-matches/$matchId');
 
   Future<void> selfJoin(String sessionId) =>
       _client.dio.post('/club-match-sessions/$sessionId/participants/self');

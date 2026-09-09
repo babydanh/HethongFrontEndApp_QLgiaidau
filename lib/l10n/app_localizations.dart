@@ -152,6 +152,72 @@ abstract class AppLocalizations {
   /// **'Không tìm thấy thành viên phù hợp'**
   String get club_noMembersFound;
 
+  /// No description provided for @club_loadMoreMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem thêm trận'**
+  String get club_loadMoreMatches;
+
+  /// No description provided for @club_enterStandaloneScore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập điểm trận riêng'**
+  String get club_enterStandaloneScore;
+
+  /// No description provided for @club_setCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số set (tối đa 10)'**
+  String get club_setCount;
+
+  /// No description provided for @club_setNumber.
+  ///
+  /// In vi, this message translates to:
+  /// **'Set {index}'**
+  String club_setNumber(Object index);
+
+  /// No description provided for @club_saveMatchResult.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu kết quả'**
+  String get club_saveMatchResult;
+
+  /// No description provided for @club_openScoreboard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở bảng điểm'**
+  String get club_openScoreboard;
+
+  /// No description provided for @club_matchScoreReadOnly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đã kết thúc, không thể sửa điểm.'**
+  String get club_matchScoreReadOnly;
+
+  /// No description provided for @club_matchScoreRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập ít nhất một set đầy đủ.'**
+  String get club_matchScoreRequired;
+
+  /// No description provided for @club_matchScoreIncomplete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy nhập các set theo thứ tự, không bỏ trống ở giữa.'**
+  String get club_matchScoreIncomplete;
+
+  /// No description provided for @club_matchScoreWinnerRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉ số set phải xác định được đội thắng.'**
+  String get club_matchScoreWinnerRequired;
+
+  /// No description provided for @club_matchScoreSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu và chốt kết quả trận.'**
+  String get club_matchScoreSaved;
+
   /// No description provided for @appTagline.
   ///
   /// In vi, this message translates to:
