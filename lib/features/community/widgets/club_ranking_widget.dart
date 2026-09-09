@@ -162,12 +162,13 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
         });
       }
     } else if (showLoading && _rankings == null) {
-      setState(() {
-        _loading = true;
-        _error = null;
-      });
+      if (!_loading || _error != null) {
+        setState(() {
+          _loading = true;
+          _error = null;
+        });
+      }
     }
-    final l10n = AppLocalizations.of(context)!;
     try {
       final dio = ref.read(dioProvider);
 
@@ -254,13 +255,15 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
         final teams = dataList
             .map((item) {
               final json = item as Map<String, dynamic>;
-              final name =
-                  (json['teamName'] ??
-                          json['team_name'] ??
-                          l10n.clubRankingTeamFallback)
-                      .toString();
+              final rawName =
+                  (json['teamName'] ?? json['team_name'])?.toString().trim();
+              final id =
+                  (json['id'] ?? json['teamId'] ?? rawName ?? '').toString();
+              final name = (rawName != null && rawName.isNotEmpty)
+                  ? rawName
+                  : '';
               return PlayerRanking(
-                id: (json['id'] ?? json['teamId'] ?? name).toString(),
+                id: id.isNotEmpty ? id : name,
                 userId: '',
                 fullName: name,
                 avatarUrl:
@@ -460,7 +463,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
           else ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildPodiumRow(filteredRankings),
+              child: _buildPodiumRow(filteredRankings, l10n),
             ),
             // ── Ranks 4 onward (10 per explicit page) ──
             if (!widget.compact && filteredRankings.length > 3) ...[
@@ -469,7 +472,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
                 final index = i + 3;
                 final r = filteredRankings[index];
                 final actualRank = allRankings.indexOf(r) + 1;
-                return _buildListRow(r, actualRank, colors);
+                return _buildListRow(r, actualRank, colors, l10n);
               }),
             ],
           ],
@@ -806,7 +809,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
 
   // ─── Podium ───
 
-  Widget _buildPodiumRow(List<PlayerRanking> rankings) {
+  Widget _buildPodiumRow(List<PlayerRanking> rankings, AppLocalizations l10n) {
     final rank1 = rankings[0];
     final rank2 = rankings.length > 1 ? rankings[1] : null;
     final rank3 = rankings.length > 2 ? rankings[2] : null;
@@ -821,7 +824,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
           if (rank2 != null)
             Expanded(
               flex: 3,
-              child: _buildPodiumCard(rank2, 2, isCenter: false),
+              child: _buildPodiumCard(rank2, 2, isCenter: false, l10n: l10n),
             )
           else
             const Expanded(flex: 3, child: SizedBox()),
@@ -829,7 +832,10 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
           const SizedBox(width: 6),
 
           // Gold (rank 1) - center, tallest
-          Expanded(flex: 4, child: _buildPodiumCard(rank1, 1, isCenter: true)),
+          Expanded(
+            flex: 4,
+            child: _buildPodiumCard(rank1, 1, isCenter: true, l10n: l10n),
+          ),
 
           const SizedBox(width: 6),
 
@@ -837,7 +843,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
           if (rank3 != null)
             Expanded(
               flex: 3,
-              child: _buildPodiumCard(rank3, 3, isCenter: false),
+              child: _buildPodiumCard(rank3, 3, isCenter: false, l10n: l10n),
             )
           else
             const Expanded(flex: 3, child: SizedBox()),
@@ -850,11 +856,15 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
     PlayerRanking player,
     int rank, {
     required bool isCenter,
+    required AppLocalizations l10n,
   }) {
     final colors = context.colors;
     final medalColors = _medalColors(rank);
     final avatarSize = isCenter ? 40.0 : 32.0;
     final winRate = player.winRate;
+    final displayName = player.fullName.isNotEmpty
+        ? player.fullName
+        : l10n.clubRankingTeamFallback;
 
     return Container(
       height: isCenter ? 144 : 124,
@@ -912,12 +922,12 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
           ),
           const SizedBox(height: 5),
 
-          _buildPodiumAvatars(player, avatarSize),
+          _buildPodiumAvatars(player, avatarSize, l10n: l10n),
           const SizedBox(height: 5),
 
           // Name
           Text(
-            player.fullName,
+            displayName,
             style: TextStyle(
               fontSize: isCenter ? 11.5 : 10,
               fontWeight: FontWeight.bold,
@@ -981,10 +991,14 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
     PlayerRanking player,
     int rank,
     AppColorsExtension colors,
+    AppLocalizations l10n,
   ) {
     final winRate = player.matchesPlayed > 0
         ? (player.matchesWon / player.matchesPlayed) * 100
         : 0.0;
+    final displayName = player.fullName.isNotEmpty
+        ? player.fullName
+        : l10n.clubRankingTeamFallback;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1012,7 +1026,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
           // Đôi hiển thị đủ avatar của cả hai người trong cùng một hạng.
           if (player.partnerName != null) ...[
             _buildMiniAvatar(
-              player.fullName.split(' / ').first,
+              displayName.split(' / ').first,
               player.avatarUrl,
               player,
             ),
@@ -1023,13 +1037,13 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
               player,
             ),
           ] else
-            _buildMiniAvatar(player.fullName, player.avatarUrl, player),
+            _buildMiniAvatar(displayName, player.avatarUrl, player),
           const SizedBox(width: 7),
 
           // Name
           Expanded(
             child: Text(
-              player.fullName,
+              displayName,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -1095,8 +1109,15 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
     );
   }
 
-  Widget _buildPodiumAvatars(PlayerRanking player, double avatarSize) {
-    final firstName = player.fullName.split(' / ').first;
+  Widget _buildPodiumAvatars(
+    PlayerRanking player,
+    double avatarSize, {
+    required AppLocalizations l10n,
+  }) {
+    final displayName = player.fullName.isNotEmpty
+        ? player.fullName
+        : l10n.clubRankingTeamFallback;
+    final firstName = displayName.split(' / ').first;
     final avatars = <Widget>[
       _buildMiniAvatar(firstName, player.avatarUrl, player),
     ];

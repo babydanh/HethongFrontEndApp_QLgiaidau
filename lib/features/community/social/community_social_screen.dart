@@ -407,11 +407,31 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                     post: post,
                     communityId: widget.communityId,
                     commentsEnabled: socialSettings.commentsEnabled,
-                    onReact: (reaction) => ref
-                        .read(
-                          communityFeedProvider(widget.communityId).notifier,
-                        )
-                        .reactToPost(post.id, reaction),
+                    onReact: (reaction) {
+                      if (!isPlatformAdmin && !isJoined) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(l10n.communitySocial_joinToReact),
+                          ),
+                        );
+                        return;
+                      }
+                      final messenger = ScaffoldMessenger.of(context);
+                      ref
+                          .read(
+                            communityFeedProvider(widget.communityId).notifier,
+                          )
+                          .reactToPost(post.id, reaction)
+                          .then((ok) {
+                        if (!ok) {
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text(l10n.communityFeedReactError),
+                            ),
+                          );
+                        }
+                      });
+                    },
                     currentUserId: currentUserId,
                     canModerateComments: isModerator,
                     onCommentUpdated: () => ref

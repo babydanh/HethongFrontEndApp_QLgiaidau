@@ -9104,6 +9104,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get communitySocial_joinToPost => 'Hãy tham gia CLB để đăng bài.';
 
   @override
+  String get communitySocial_joinToReact => 'Hãy tham gia CLB để thả cảm xúc.';
+
+  @override
   String get communitySocial_openChat => 'Mở trò chuyện CLB';
 
   @override
@@ -11017,6 +11020,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get communityFeedCreatePostError =>
       'Đăng bài thất bại. Vui lòng thử lại.';
+
+  @override
+  String get communityFeedReactError =>
+      'Thả cảm xúc thất bại. Vui lòng thử lại.';
 
   @override
   String get paymentStatusCompleted => 'Hoàn thành';
