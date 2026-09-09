@@ -54,6 +54,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   late TabController _tabController;
   CommunityMemberModel? _myMembership;
   bool _isJoinLoading = false;
+  // Khóa toàn bộ luồng tham gia, kể cả lúc đang mở dialog câu hỏi. Nút có
+  // thể nhận 2 lần tap trước khi frame loading đầu tiên được vẽ.
+  bool _isJoinFlowActive = false;
   String _tournamentStatusFilter = 'ALL';
   String _tournamentSportFilter = 'ALL';
   bool _isAddingGalleryImage = false;
@@ -482,6 +485,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   bool get _isPending => _myMembership?.status == 'PENDING';
   bool get _isInvited => _myMembership?.status == 'INVITED';
 
+  /// Dialog route hoàn tất Future ngay khi Navigator.pop được gọi, trong khi
+  /// các inherited element bên trong dialog còn đang được deactivate ở frame
+  /// hiện tại. Chờ hết frame trước khi rebuild màn hình CLB để tránh
+  /// `InheritedElement._dependents.isEmpty`.
+  Future<void> _waitForDialogTeardown() async {
+    await WidgetsBinding.instance.endOfFrame;
+  }
+
   Widget _buildContent(Community club) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
@@ -740,6 +751,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ],
       ),
     );
+    await _waitForDialogTeardown();
     if (confirmed != true || !mounted) return;
     setState(() => _isJoinLoading = true);
     try {
@@ -792,6 +804,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ],
       ),
     );
+    await _waitForDialogTeardown();
     if (confirmed != true || !mounted) return;
     setState(() => _isJoinLoading = true);
     try {
@@ -831,62 +844,64 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         .map((_) => TextEditingController())
         .toList(growable: false);
     final formKey = GlobalKey<FormState>();
-    final answers = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.clubDetailJoinQuestionsTitle),
-        content: SingleChildScrollView(
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(l10n.clubDetailJoinQuestionsInstruction),
-                const SizedBox(height: 16),
-                ...List.generate(
-                  questions.length,
-                  (index) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: TextFormField(
-                      controller: controllers[index],
-                      maxLines: 2,
-                      decoration: InputDecoration(
-                        labelText: questions[index],
-                        border: const OutlineInputBorder(),
+    try {
+      return await showDialog<Map<String, dynamic>>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.clubDetailJoinQuestionsTitle),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(l10n.clubDetailJoinQuestionsInstruction),
+                  const SizedBox(height: 16),
+                  ...List.generate(
+                    questions.length,
+                    (index) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: TextFormField(
+                        controller: controllers[index],
+                        maxLines: 2,
+                        decoration: InputDecoration(
+                          labelText: questions[index],
+                          border: const OutlineInputBorder(),
+                        ),
+                        validator: (value) =>
+                            value == null || value.trim().isEmpty
+                            ? l10n.clubDetailJoinQuestionRequired
+                            : null,
                       ),
-                      validator: (value) =>
-                          value == null || value.trim().isEmpty
-                          ? l10n.clubDetailJoinQuestionRequired
-                          : null,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (!formKey.currentState!.validate()) return;
+                Navigator.pop(dialogContext, <String, dynamic>{
+                  for (var i = 0; i < questions.length; i++)
+                    questions[i]: controllers[i].text.trim(),
+                });
+              },
+              child: Text(l10n.clubDetailSubmitJoinRequest),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (!formKey.currentState!.validate()) return;
-              Navigator.pop(dialogContext, <String, dynamic>{
-                for (var i = 0; i < questions.length; i++)
-                  questions[i]: controllers[i].text.trim(),
-              });
-            },
-            child: Text(l10n.clubDetailSubmitJoinRequest),
-          ),
-        ],
-      ),
-    );
-    for (final controller in controllers) {
-      controller.dispose();
+      );
+    } finally {
+      for (final controller in controllers) {
+        controller.dispose();
+      }
     }
-    return answers;
   }
 
   Color? _getJoinBgColor() {
@@ -897,6 +912,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   }
 
   Future<void> _handleJoinAction(Community? club) async {
+    if (_isJoinLoading || _isJoinFlowActive) return;
+    _isJoinFlowActive = true;
+    try {
+      await _handleJoinActionInternal(club);
+    } finally {
+      _isJoinFlowActive = false;
+    }
+  }
+
+  Future<void> _handleJoinActionInternal(Community? club) async {
     final l10n = AppLocalizations.of(context)!;
     final auth = ref.read(authProvider);
     if (!auth.isAuthenticated) {
@@ -913,6 +938,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         club ?? ref.read(communityDetailProvider(widget.clubId)).value;
     if (community?.joinQuestions.isNotEmpty == true) {
       final answers = await _showJoinQuestionsDialog(community!.joinQuestions);
+      await _waitForDialogTeardown();
       if (answers == null) return;
       if (!mounted) return;
       setState(() => _isJoinLoading = true);
@@ -5596,6 +5622,8 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
           Expanded(
             child: TabBar(
               controller: tabController,
+              tabAlignment: TabAlignment.start,
+              padding: const EdgeInsets.only(left: 16),
               indicator: UnderlineTabIndicator(
                 borderSide: BorderSide(color: AppTheme.primary, width: 2),
                 insets: const EdgeInsets.symmetric(horizontal: 6),
