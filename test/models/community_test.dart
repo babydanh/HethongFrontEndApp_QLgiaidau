@@ -16,7 +16,10 @@ void main() {
         'description': 'Cau lac bo cau long',
         'sports': 'badminton',
         'communitySports': [
-          {'category': {'name': 'Cau Long', 'slug': 'badminton'}, 'categoryId': 'cat-1'}
+          {
+            'category': {'name': 'Cau Long', 'slug': 'badminton'},
+            'categoryId': 'cat-1',
+          },
         ],
         'location': 'Ha Noi',
         'locationAddress': 'Ha Noi',
@@ -38,6 +41,7 @@ void main() {
       expect(community.name, 'CLB CAU LONG HA NOI');
       expect(community.description, 'Cau lac bo cau long');
       expect(community.sports, ['Cau Long']);
+      expect(community.sportCategoryIds['Cau Long'], 'cat-1');
       expect(community.locationAddress, 'Ha Noi');
       expect(community.memberCount, 50);
       expect(community.maxMembers, 100);
@@ -45,17 +49,20 @@ void main() {
       expect(community.status, 'ACTIVE');
     });
 
-    test('TC-FLUTTER-COMMUNITY-001: should handle minimal JSON with defaults', () {
-      final json = {'id': 'club-1', 'name': 'Test Club'};
-      final community = Community.fromJson(json);
+    test(
+      'TC-FLUTTER-COMMUNITY-001: should handle minimal JSON with defaults',
+      () {
+        final json = {'id': 'club-1', 'name': 'Test Club'};
+        final community = Community.fromJson(json);
 
-      expect(community.name, 'Test Club');
-      expect(community.sports, []);
-      expect(community.memberCount, 0);
-      expect(community.joinMode, 'OPEN');
-      expect(community.status, 'ACTIVE');
-      expect(community.description, isNull);
-    });
+        expect(community.name, 'Test Club');
+        expect(community.sports, []);
+        expect(community.memberCount, 0);
+        expect(community.joinMode, 'OPEN');
+        expect(community.status, 'ACTIVE');
+        expect(community.description, isNull);
+      },
+    );
 
     test('TC-FLUTTER-COMMUNITY-001: should handle empty sports', () {
       final json = {'id': '1', 'name': 'C'};
@@ -99,8 +106,20 @@ void main() {
   group('CommunityMemberModel.fromJson', () {
     test('should parse full JSON with nested member/user', () {
       final json = {
-        'member': {'id': 'mem-1', 'userId': 'user-1', 'role': 'OWNER', 'status': 'JOINED', 'communityId': 'club-1', 'joinedAt': '2026-01-01'},
-        'user': {'id': 'user-1', 'fullName': 'Nguyen Van A', 'avatarUrl': null, 'email': 'test@test.com'},
+        'member': {
+          'id': 'mem-1',
+          'userId': 'user-1',
+          'role': 'OWNER',
+          'status': 'JOINED',
+          'communityId': 'club-1',
+          'joinedAt': '2026-01-01',
+        },
+        'user': {
+          'id': 'user-1',
+          'fullName': 'Nguyen Van A',
+          'avatarUrl': null,
+          'email': 'test@test.com',
+        },
       };
 
       final model = CommunityMemberModel.fromJson(json);
@@ -112,7 +131,12 @@ void main() {
     });
 
     test('should handle flat JSON', () {
-      final json = {'id': 'mem-1', 'userId': 'u1', 'role': 'MEMBER', 'status': 'JOINED'};
+      final json = {
+        'id': 'mem-1',
+        'userId': 'u1',
+        'role': 'MEMBER',
+        'status': 'JOINED',
+      };
       final model = CommunityMemberModel.fromJson(json);
       expect(model.role, 'MEMBER');
       expect(model.userFullName, null);
@@ -121,12 +145,16 @@ void main() {
 
   group('GalleryImageModel.fromJson', () {
     test('should parse with imageUrl', () {
-      final g = GalleryImageModel.fromJson({'imageUrl': 'https://example.com/img.jpg'});
+      final g = GalleryImageModel.fromJson({
+        'imageUrl': 'https://example.com/img.jpg',
+      });
       expect(g.imageUrl, 'https://example.com/img.jpg');
     });
 
     test('should fallback to image_url', () {
-      final g = GalleryImageModel.fromJson({'image_url': 'https://example.com/img2.jpg'});
+      final g = GalleryImageModel.fromJson({
+        'image_url': 'https://example.com/img2.jpg',
+      });
       expect(g.imageUrl, 'https://example.com/img2.jpg');
     });
 

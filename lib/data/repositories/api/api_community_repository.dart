@@ -317,7 +317,9 @@ class ApiCommunityRepository implements ICommunityRepository {
     try {
       await _dioClient.dio.post(
         '/communities/$communityId/join',
-        data: answers ?? {},
+        // Backend JoinCommunityDto nhận câu trả lời trong trường
+        // `joinAnswers`, không nhận map câu hỏi ở root của request body.
+        data: {'joinAnswers': answers ?? <String, dynamic>{}},
       );
       _log.success('Tham gia CLB $communityId thành công');
       return true;
