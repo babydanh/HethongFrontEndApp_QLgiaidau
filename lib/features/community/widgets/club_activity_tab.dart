@@ -63,6 +63,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   bool _sessionListHasMore = false;
   String? _standaloneMatchCursor;
   bool _standaloneMatchHasMore = false;
+  ScrollController? _attachedActivityScrollController;
+  bool _loadMoreQueued = false;
 
   @override
   void initState() {
@@ -72,6 +74,21 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) _fetchMatches(silent: true);
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // NestedScrollView provides the real inner controller through the
+    // PrimaryScrollController. Listen to that position directly so loading
+    // does not depend on which scroll notification depth bubbles first.
+    final controller = PrimaryScrollController.maybeOf(context);
+    if (identical(controller, _attachedActivityScrollController)) return;
+    _attachedActivityScrollController?.removeListener(
+      _onActivityScrollPosition,
+    );
+    _attachedActivityScrollController = controller;
+    controller?.addListener(_onActivityScrollPosition);
   }
 
   void _listenForActivityMatchUpdates() {
@@ -128,6 +145,9 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
 
   @override
   void dispose() {
+    _attachedActivityScrollController?.removeListener(
+      _onActivityScrollPosition,
+    );
     _socketRefreshTimer?.cancel();
     _socketScoreSubscription?.cancel();
     _socketStatusSubscription?.cancel();
@@ -145,6 +165,26 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     socket.leaveClubCommunity(widget.communityId);
     _refreshTimer?.cancel();
     super.dispose();
+  }
+
+  void _onActivityScrollPosition() {
+    final position = _attachedActivityScrollController;
+    if (position == null || !position.hasClients) return;
+    if (position.positions.any((scrollPosition) {
+      return scrollPosition.extentAfter <= 520;
+    })) {
+      _queueLoadMoreActivity();
+    }
+  }
+
+  void _queueLoadMoreActivity() {
+    if (_loadMoreQueued || _isLoadingMore || !_hasMoreActivity) return;
+    _loadMoreQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadMoreQueued = false;
+      if (!mounted || _isLoadingMore || !_hasMoreActivity) return;
+      unawaited(_fetchMatches(loadMore: true));
+    });
   }
 
   void _resetActivityPaging() {
@@ -439,7 +479,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
         _hasMoreActivity &&
         !_isLoadingMore &&
         notification.metrics.extentAfter <= 520) {
-      unawaited(_fetchMatches(loadMore: true));
+      _queueLoadMoreActivity();
     }
     return false;
   }
@@ -687,86 +727,72 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
       child: RefreshIndicator(
         onRefresh: () => _fetchMatches(),
         child: ListView(
+          primary: true,
           padding: const EdgeInsets.only(top: 12, bottom: 132),
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             // ─── 2. THANH LỌC & TÌM KIẾM & TẠO TRẬN ĐẤU ───────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      if (canCreateStandalone) ...[
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          height: 36,
-                          child: FilledButton.icon(
-                            onPressed: () async {
-                              final createdMatch =
-                                  await ClubStandaloneMatchDialog.show(
-                                    context,
-                                    communityId: widget.communityId,
-                                    clubName: widget.club?.name,
-                                    onMatchCreated: () => _fetchMatches(),
-                                  );
-                              if (!context.mounted || createdMatch == null) {
-                                return;
-                              }
-                              final action =
-                                  await ClubStandaloneMatchResultDialog.show(
-                                    context,
-                                    match: createdMatch,
-                                  );
-                              if (!context.mounted) return;
-                              if (action == ClubStandaloneMatchAction.saved) {
-                                unawaited(_fetchMatches(silent: true));
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      AppLocalizations.of(
-                                        context,
-                                      )!.club_matchScoreSaved,
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                            icon: const Icon(Icons.add_rounded, size: 15),
-                            label: Text(
-                              l10n.club_createMatchStandalone,
-                              style: const TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.2,
-                              ),
-                            ),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppTheme.primary,
-                              elevation: 0,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  // Filter Dropdown Row
+                  // Filter Dropdown: "Tất cả (0)"
                   _buildFilterDropdown(
                     colors: colors,
                     isClubMember: isClubMember,
                     currentUser: currentUser,
                     userMatches: userMatches,
                   ),
+                  const Spacer(),
+                  // Nút tạo trận đấu dạng tròn với dấu + sát lề phải
+                  if (canCreateStandalone)
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        tooltip: l10n.club_createMatchStandalone,
+                        icon: const Icon(
+                          Icons.add_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                        onPressed: () async {
+                          final createdMatch =
+                              await ClubStandaloneMatchDialog.show(
+                                context,
+                                communityId: widget.communityId,
+                                clubName: widget.club?.name,
+                                onMatchCreated: () => _fetchMatches(),
+                              );
+                          if (!context.mounted || createdMatch == null) {
+                            return;
+                          }
+                          final action =
+                              await ClubStandaloneMatchResultDialog.show(
+                                context,
+                                match: createdMatch,
+                              );
+                          if (!context.mounted) return;
+                          if (action == ClubStandaloneMatchAction.saved) {
+                            unawaited(_fetchMatches(silent: true));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.club_matchScoreSaved,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
                 ],
               ),
             ),
