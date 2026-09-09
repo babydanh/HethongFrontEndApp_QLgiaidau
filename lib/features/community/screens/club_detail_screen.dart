@@ -1148,8 +1148,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Banner cover với tỷ lệ hiển thị chuẩn (~16:9 hoặc gọn gàng 160-170px)
           SizedBox(
-            height: 210,
+            height: 165,
+            width: double.infinity,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
@@ -1163,9 +1165,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         )
                       : fallbackBanner(),
                 ),
+                // Avatar đè mép banner gọn gàng
                 Positioned(
-                  left: 20,
-                  bottom: -38,
+                  left: 16,
+                  bottom: -32,
                   child: _buildClubAvatar(
                     logoUrl: logoUrl,
                     colors: colors,
@@ -1173,16 +1176,17 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     emoji: emoji,
                   ),
                 ),
+                // Cụm nút hành động căn mép phải cùng đường chân trời với logo
                 Positioned(
                   right: 16,
-                  bottom: -28,
+                  bottom: -24,
                   child: _buildHeaderActions(club, colors, isClubAdmin),
                 ),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 50, 16, 14),
+            padding: const EdgeInsets.fromLTRB(16, 42, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1303,18 +1307,18 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     required String emoji,
   }) {
     return Container(
-      width: 82,
-      height: 82,
-      padding: const EdgeInsets.all(3),
+      width: 74,
+      height: 74,
+      padding: const EdgeInsets.all(2.5),
       decoration: BoxDecoration(
         color: colors.bgCard,
         shape: BoxShape.circle,
-        border: Border.all(color: sColor.withValues(alpha: 0.55), width: 2),
+        border: Border.all(color: colors.bgCard, width: 2.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
