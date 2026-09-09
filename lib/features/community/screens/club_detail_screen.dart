@@ -58,6 +58,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   String _tournamentSportFilter = 'ALL';
   bool _isAddingGalleryImage = false;
   String? _activitySearchQuery;
+  bool _isAboutDescExpanded = false;
+  bool _isAboutRulesExpanded = false;
   // Cache future cho card Trạng thái nhanh — tránh gọi lại API mỗi lần rebuild.
   Future<CommunitySocialSettings>? _socialSettingsFuture;
 
@@ -1732,282 +1734,518 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       (e) => e.value.trim().isNotEmpty,
     );
 
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      children: [
-        // ─── Phần 1: Giới thiệu & Sứ mệnh ───
-        if (hasDesc) ...[
-          _buildEditorialSectionHeader(
-            icon: Icons.info_outline_rounded,
-            title: l10n.club_aboutSection,
-            colors: colors,
-          ),
-          const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colors.borderLight),
-            ),
-            child: Text(
-              club.description!.trim(),
-              style: TextStyle(
-                fontSize: 14,
-                color: colors.textPrimary,
-                height: 1.55,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-        ],
+    // Xử lý danh sách quy tắc (nếu có xuống dòng hoặc số thứ tự)
+    final List<String> parsedRuleList = [];
+    if (hasRules) {
+      final rawLines = club.rules!
+          .split(RegExp(r'\r?\n'))
+          .map((l) => l.trim())
+          .where((l) => l.isNotEmpty)
+          .toList();
+      parsedRuleList.addAll(rawLines);
+    }
 
-        // ─── Phần 2: Điều lệ & Quy chế hoạt động ───
-        _buildEditorialSectionHeader(
-          icon: Icons.gavel_rounded,
-          title: l10n.club_aboutRegulationsTitle,
-          colors: colors,
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: colors.bgCard,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colors.borderLight),
-          ),
+    final isOwnerOrAdmin =
+        _myMembership?.role == 'OWNER' || _myMembership?.role == 'ADMIN';
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      children: [
+        // ─── 1. GIỚI THIỆU (Facebook Style) ───
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_myMembership?.role == 'OWNER' ||
-                  _myMembership?.role == 'ADMIN') ...[
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: InkWell(
-                    onTap: () => context.push('/club/${widget.clubId}/edit'),
-                    borderRadius: BorderRadius.circular(6),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.edit_note_rounded,
-                            size: 16,
-                            color: colors.textSecondary,
+              Text(
+                'Giới thiệu',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (hasDesc) ...[
+                Builder(
+                  builder: (context) {
+                    final descText = club.description!.trim();
+                    final isLongDesc = descText.length > 140;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          descText,
+                          maxLines: _isAboutDescExpanded || !isLongDesc ? null : 3,
+                          overflow: _isAboutDescExpanded || !isLongDesc
+                              ? TextOverflow.visible
+                              : TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: colors.textPrimary,
+                            height: 1.5,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            l10n.club_tabSettings,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                        ),
+                        if (isLongDesc)
+                          InkWell(
+                            onTap: () {
+                              setState(() {
+                                _isAboutDescExpanded = !_isAboutDescExpanded;
+                              });
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Text(
+                                _isAboutDescExpanded ? 'Thu gọn' : '... Xem thêm',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 14),
+              ],
+              // Thông tin cơ bản: Công khai / Riêng tư, Hiển thị, Lịch sử nhóm
+              _buildFbMetaRow(
+                icon: club.visibility.toUpperCase() == 'PRIVATE'
+                    ? Icons.lock_outline_rounded
+                    : Icons.public_rounded,
+                title: club.visibility.toUpperCase() == 'PRIVATE'
+                    ? l10n.club_aboutPrivacyPrivate
+                    : l10n.club_aboutPrivacyPublic,
+                subtitle: club.visibility.toUpperCase() == 'PRIVATE'
+                    ? 'Chỉ thành viên mới nhìn thấy những người trong nhóm và những gì họ đăng.'
+                    : 'Bất kỳ ai cũng có thể nhìn thấy mọi người trong nhóm và những gì họ đăng.',
+                colors: colors,
+              ),
+              const SizedBox(height: 12),
+              _buildFbMetaRow(
+                icon: Icons.visibility_outlined,
+                title: 'Hiển thị',
+                subtitle: club.visibility.toUpperCase() == 'HIDDEN'
+                    ? 'Nhóm bị ẩn, chỉ thành viên mới tìm thấy.'
+                    : 'Ai cũng có thể tìm thấy nhóm này.',
+                colors: colors,
+              ),
+              if (createdDateText.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _buildFbMetaRow(
+                  icon: Icons.access_time_rounded,
+                  title: 'Xem lịch sử nhóm',
+                  subtitle: 'Ngày tạo nhóm: $createdDateText',
+                  colors: colors,
+                ),
+              ],
+              const SizedBox(height: 12),
+              _buildFbMetaRow(
+                icon: Icons.sports_tennis_rounded,
+                title: l10n.club_sportLabel,
+                subtitle: finalSportsText,
+                colors: colors,
+              ),
+              if ((club.locationAddress ?? '').trim().isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _buildFbMetaRow(
+                  icon: Icons.location_on_outlined,
+                  title: l10n.club_location,
+                  subtitle: club.locationAddress!,
+                  colors: colors,
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 18),
+        _fbDivider(colors),
+        const SizedBox(height: 18),
+
+        // ─── 2. QUY TẮC NHÓM CỦA QUẢN TRỊ VIÊN ───
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Quy tắc nhóm của quản trị viên',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: colors.textPrimary,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ),
+                  if (isOwnerOrAdmin)
+                    InkWell(
+                      onTap: () => context.push('/club/${widget.clubId}/edit'),
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.edit_note_rounded,
+                              size: 16,
                               color: colors.textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              l10n.club_tabSettings,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              if (hasRules) ...[
+                // Hiển thị danh sách quy tắc với định dạng số thứ tự 1, 2, 3...
+                Builder(
+                  builder: (context) {
+                    final items = parsedRuleList;
+                    final isLongList = items.length > 3;
+                    final visibleCount =
+                        _isAboutRulesExpanded || !isLongList ? items.length : 3;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (int i = 0; i < visibleCount; i++) ...[
+                          _buildFbRuleItem(
+                            index: i + 1,
+                            content: items[i],
+                            colors: colors,
+                          ),
+                          if (i < visibleCount - 1) const SizedBox(height: 14),
+                        ],
+                        if (isLongList) ...[
+                          const SizedBox(height: 10),
+                          InkWell(
+                            onTap: () {
+                              setState(() {
+                                _isAboutRulesExpanded = !_isAboutRulesExpanded;
+                              });
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _isAboutRulesExpanded
+                                        ? 'Thu gọn quy tắc'
+                                        : 'Xem thêm (${items.length - 3} quy tắc khác)',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    _isAboutRulesExpanded
+                                        ? Icons.keyboard_arrow_up_rounded
+                                        : Icons.keyboard_arrow_down_rounded,
+                                    size: 18,
+                                    color: AppTheme.primary,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                  ),
+                      ],
+                    );
+                  },
                 ),
-                const SizedBox(height: 8),
-              ],
-              if (hasRules)
+              ] else ...[
                 Text(
-                  club.rules!.trim(),
+                  l10n.club_aboutRegulationsDefault,
                   style: TextStyle(
                     fontSize: 13.5,
-                    color: colors.textPrimary,
-                    height: 1.6,
+                    color: colors.textMuted,
+                    fontStyle: FontStyle.italic,
                   ),
-                )
-              else
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.shield_outlined,
-                      size: 18,
-                      color: colors.textMuted,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l10n.club_aboutRegulationsDefault,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: colors.textMuted,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-
-        // ─── Phần 3: Thông tin chi tiết CLB (Facebook Style) ───
-        _buildEditorialSectionHeader(
-          icon: Icons.grid_view_rounded,
-          title: l10n.club_infoSection,
-          colors: colors,
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          decoration: BoxDecoration(
-            color: colors.bgCard,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colors.borderLight),
-          ),
-          child: Column(
-            children: [
-              _infoRow(
-                club.visibility.toUpperCase() == 'PRIVATE'
-                    ? Icons.lock_outline_rounded
-                    : Icons.public_rounded,
-                l10n.club_aboutPrivacyLabel,
-                club.visibility.toUpperCase() == 'PRIVATE'
-                    ? l10n.club_aboutPrivacyPrivate
-                    : l10n.club_aboutPrivacyPublic,
-                colors,
-              ),
-              _divider(colors),
-              _infoRow(
-                Icons.people_alt_outlined,
-                l10n.club_memberInfo,
-                club.maxMembers != null
-                    ? "${club.memberCount} / ${club.maxMembers} thành viên tối đa"
-                    : "${club.memberCount} thành viên",
-                colors,
-              ),
-              if (createdDateText.isNotEmpty) ...[
-                _divider(colors),
-                _infoRow(
-                  Icons.calendar_today_rounded,
-                  l10n.club_aboutEstablishedDate,
-                  createdDateText,
-                  colors,
                 ),
               ],
-              _divider(colors),
-              _infoRow(
-                Icons.location_on_outlined,
-                l10n.club_location,
-                club.locationAddress ?? l10n.notUpdated,
-                colors,
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 18),
+        _fbDivider(colors),
+        const SizedBox(height: 18),
+
+        // ─── 3. HOẠT ĐỘNG TRONG NHÓM & THÀNH VIÊN ───
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Hoạt động trong nhóm',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                  letterSpacing: -0.2,
+                ),
               ),
-              _divider(colors),
-              _infoRow(
-                Icons.how_to_reg_rounded,
-                l10n.club_joinModeLabel,
-                club.joinMode == "OPEN"
-                    ? l10n.club_joinModeOpen
+              const SizedBox(height: 14),
+              _buildFbActivityItem(
+                icon: Icons.group_outlined,
+                title: 'Tổng số thành viên: ${club.memberCount}${club.maxMembers != null ? " / ${club.maxMembers}" : ""}',
+                subtitle: club.joinMode == "OPEN"
+                    ? 'Bất kỳ ai cũng có thể tự do tham gia CLB'
                     : club.joinMode == "APPROVAL"
-                    ? l10n.club_joinModeApprovalNeeded
-                    : l10n.club_joinModeInvite,
-                colors,
+                    ? 'Yêu cầu tham gia cần người quản trị phê duyệt'
+                    : 'Chỉ nhận thành viên qua lời mời',
+                colors: colors,
               ),
-              _divider(colors),
-              _infoRow(
-                Icons.sports_rounded,
-                l10n.club_sportLabel,
-                finalSportsText,
-                colors,
+              const SizedBox(height: 12),
+              _buildFbActivityItem(
+                icon: Icons.emoji_events_outlined,
+                title: '${club.tournamentCount} giải đấu đã tổ chức',
+                subtitle: 'Giao lưu thi đấu chuyên nghiệp và phong trào',
+                colors: colors,
               ),
             ],
           ),
         ),
-        const SizedBox(height: 20),
 
-        // ─── Phần 4: Kênh liên hệ & Mạng xã hội ───
+        // ─── 4. KÊNH LIÊN HỆ & MẠNG XÃ HỘI (nếu có) ───
         if (hasSocial) ...[
-          _buildEditorialSectionHeader(
-            icon: Icons.alternate_email_rounded,
-            title: l10n.club_aboutContactChannels,
-            colors: colors,
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colors.borderLight),
-            ),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: club.socialLinks.entries
-                  .where((entry) => entry.value.trim().isNotEmpty)
-                  .map(
-                    (entry) => ActionChip(
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      avatar: Icon(
-                        _socialIcon(entry.key),
-                        size: 16,
-                        color: colors.textSecondary,
-                      ),
-                      label: Text(
-                        _socialLabel(entry.key),
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                          color: colors.textPrimary,
+          const SizedBox(height: 18),
+          _fbDivider(colors),
+          const SizedBox(height: 18),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.club_aboutContactChannels,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: club.socialLinks.entries
+                      .where((entry) => entry.value.trim().isNotEmpty)
+                      .map(
+                        (entry) => ActionChip(
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          avatar: Icon(
+                            _socialIcon(entry.key),
+                            size: 16,
+                            color: colors.textSecondary,
+                          ),
+                          label: Text(
+                            _socialLabel(entry.key),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                          backgroundColor: colors.bgSurface,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(color: colors.borderLight),
+                          ),
+                          onPressed: () => _openSocialLink(entry.value),
                         ),
-                      ),
-                      backgroundColor: colors.bgSurface,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: colors.borderLight),
-                      ),
-                      onPressed: () => _openSocialLink(entry.value),
-                    ),
-                  )
-                  .toList(),
+                      )
+                      .toList(),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 24),
         ],
+        const SizedBox(height: 24),
       ],
     );
   }
 
-  Widget _buildEditorialSectionHeader({
+  Widget _buildFbMetaRow({
     required IconData icon,
     required String title,
+    required String subtitle,
     required AppColorsExtension colors,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 2),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: colors.textSecondary),
-          const SizedBox(width: 8),
-          Text(
-            title,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 22, color: colors.textPrimary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colors.textSecondary,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFbRuleItem({
+    required int index,
+    required String content,
+    required AppColorsExtension colors,
+  }) {
+    // Tách tiêu đề quy tắc và nội dung quy tắc nếu có ký tự : hoặc -
+    String ruleTitle = content;
+    String? ruleBody;
+    if (content.contains(': ')) {
+      final parts = content.split(': ');
+      ruleTitle = parts.first;
+      ruleBody = parts.sublist(1).join(': ');
+    } else if (content.contains(' - ')) {
+      final parts = content.split(' - ');
+      ruleTitle = parts.first;
+      ruleBody = parts.sublist(1).join(' - ');
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 20,
+          child: Text(
+            '$index',
             style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
               color: colors.textPrimary,
             ),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                ruleTitle,
+                style: TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textPrimary,
+                  height: 1.3,
+                ),
+              ),
+              if (ruleBody != null && ruleBody.trim().isNotEmpty) ...[
+                const SizedBox(height: 3),
+                Text(
+                  ruleBody.trim(),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
+
+  Widget _buildFbActivityItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required AppColorsExtension colors,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 22, color: colors.textPrimary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colors.textSecondary,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _fbDivider(AppColorsExtension colors) => Divider(
+    height: 1,
+    thickness: 1,
+    color: colors.borderLight.withValues(alpha: 0.6),
+  );
 
   IconData _socialIcon(String key) {
     switch (key.toLowerCase()) {
@@ -2049,51 +2287,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     }
   }
 
-  Widget _infoRow(
-    IconData icon,
-    String label,
-    String value,
-    AppColorsExtension colors,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: colors.textMuted),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: colors.textMuted,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    color: colors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _divider(AppColorsExtension colors) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    child: Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
-  );
 
   // ════════════════════════════════════
   //  TAB 2: GIẢI ĐẤU
