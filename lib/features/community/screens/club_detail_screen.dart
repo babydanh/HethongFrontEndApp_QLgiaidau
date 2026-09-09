@@ -1148,14 +1148,18 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Banner cover với tỷ lệ hiển thị chuẩn (~16:9 hoặc gọn gàng 160-170px)
+          // Banner cover với tỷ lệ hiển thị chuẩn (~16:9 hoặc gọn gàng 165px)
           SizedBox(
-            height: 165,
+            height: 200, // 165px banner + 35px không gian cho avatar & nút nhô xuống
             width: double.infinity,
             child: Stack(
-              clipBehavior: Clip.none,
               children: [
-                Positioned.fill(
+                // 1. Ảnh banner nằm ở trên cùng
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 165,
                   child: hasBanner
                       ? ClubNetworkImage(
                           bannerUrl,
@@ -1165,28 +1169,34 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         )
                       : fallbackBanner(),
                 ),
-                // Avatar đè mép banner gọn gàng
+                // 2. Hàng chứa Avatar và Nút nằm ở dưới cùng của Stack (bên trong hit test bounds 100%)
                 Positioned(
                   left: 16,
-                  bottom: -32,
-                  child: _buildClubAvatar(
-                    logoUrl: logoUrl,
-                    colors: colors,
-                    sColor: sColor,
-                    emoji: emoji,
-                  ),
-                ),
-                // Cụm nút hành động căn mép phải cùng đường chân trời với logo
-                Positioned(
                   right: 16,
-                  bottom: -24,
-                  child: _buildHeaderActions(club, colors, isClubAdmin),
+                  bottom: 0,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _buildClubAvatar(
+                        logoUrl: logoUrl,
+                        colors: colors,
+                        sColor: sColor,
+                        emoji: emoji,
+                      ),
+                      const Spacer(),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: _buildHeaderActions(club, colors, isClubAdmin),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
+          // Thông tin CLB
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 42, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
