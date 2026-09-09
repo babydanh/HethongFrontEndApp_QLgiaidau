@@ -38,7 +38,6 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_match_sessions_screen.dart';
-import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_dialog.dart';
 
 class ClubDetailScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -556,99 +555,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           centerTitle: false,
           actions: [
             _buildFollowFavoriteButtons(club, colors, l10n),
-            if (isClubAdmin) ...[
-              PopupMenuButton<String>(
-                icon: Container(
-                  padding: const EdgeInsets.all(7),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.more_vert_rounded,
-                    color: AppTheme.primary,
-                    size: 20,
-                  ),
-                ),
-                tooltip: l10n.clubDetailManageTooltip,
-                onSelected: (val) {
-                  if (val == 'create_match') {
-                    ClubStandaloneMatchDialog.show(
-                      context,
-                      communityId: widget.clubId,
-                      clubName: club.name,
-                    );
-                  } else if (val == 'match_sessions') {
-                    context.push('/club/${widget.clubId}/match-sessions');
-                  } else if (val == 'edit') {
-                    context.push('/club/${widget.clubId}/edit');
-                  }
-                },
-                itemBuilder: (ctx) => [
-                  PopupMenuItem(
-                    value: 'create_match',
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.sports_tennis_rounded,
-                          size: 18,
-                          color: AppTheme.primary,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          l10n.club_createMatchStandalone,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'match_sessions',
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.groups_rounded,
-                          size: 18,
-                          color: AppTheme.primary,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          l10n.clubMatchSessionTitle,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.edit_rounded,
-                          size: 18,
-                          color: colors.textPrimary,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          l10n.infoEdit,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 6),
-            ],
           ],
         ),
         SliverToBoxAdapter(
@@ -1328,15 +1234,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     return Container(
       width: 74,
       height: 74,
-      padding: const EdgeInsets.all(2.5),
       decoration: BoxDecoration(
         color: colors.bgCard,
         shape: BoxShape.circle,
-        border: Border.all(color: colors.bgCard, width: 2.5),
+        border: Border.all(color: colors.bgCard, width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 6,
             offset: const Offset(0, 2),
           ),
         ],
