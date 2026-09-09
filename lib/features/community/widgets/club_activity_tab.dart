@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -39,7 +40,7 @@ class ClubActivityTab extends ConsumerStatefulWidget {
 enum _ActivityFilter { all, myMatches, ongoing, completed }
 
 class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
-  static const _activityMatchPageSize = 20;
+  static const _activityMatchPageSize = 10;
   static const _activitySessionPageSize = 8;
 
   List<MatchModel> _matches = [];
@@ -199,18 +200,36 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
       _tournamentMatchHasMore.values.any((value) => value) ||
       _sessionMatchHasMore.values.any((value) => value);
 
+  bool _isOngoingMatch(MatchModel match) {
+    final status = match.status.toUpperCase();
+    return status == 'ONGOING' || status == 'LIVE';
+  }
+
+  int _activityStatusOrder(MatchModel match) {
+    if (_isOngoingMatch(match)) return 0;
+    if (match.status.toUpperCase() == 'COMPLETED') return 1;
+    return 2;
+  }
+
+  DateTime _activitySortTime(MatchModel match) {
+    return match.completedAt ??
+        match.startedAt ??
+        match.scheduledTime ??
+        match.updatedAt;
+  }
+
+  String? _activityDateLabel(MatchModel match) {
+    final time = match.completedAt ?? match.startedAt ?? match.scheduledTime;
+    return time == null ? null : DateFormatterUtils.formatDateTime(time);
+  }
+
   void _sortActivityMatches(List<MatchModel> items) {
     items.sort((a, b) {
-      final aOngoing = a.status.toUpperCase() == 'ONGOING';
-      final bOngoing = b.status.toUpperCase() == 'ONGOING';
-      if (aOngoing && !bOngoing) return -1;
-      if (bOngoing && !aOngoing) return 1;
-
-      final aTime =
-          a.completedAt ?? a.startedAt ?? a.scheduledTime ?? a.updatedAt;
-      final bTime =
-          b.completedAt ?? b.startedAt ?? b.scheduledTime ?? b.updatedAt;
-      return bTime.compareTo(aTime);
+      final statusOrder = _activityStatusOrder(
+        a,
+      ).compareTo(_activityStatusOrder(b));
+      if (statusOrder != 0) return statusOrder;
+      return _activitySortTime(b).compareTo(_activitySortTime(a));
     });
   }
 
@@ -582,7 +601,14 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
               'maxSets': 10,
             },
       revision: sm.revision,
-      updatedAt: updatedAt ?? DateTime.now(),
+      scheduledTime: sm.scheduledAt,
+      startedAt: sm.startedAt,
+      completedAt: sm.completedAt,
+      updatedAt:
+          sm.updatedAt ??
+          sm.createdAt ??
+          updatedAt ??
+          DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
     );
   }
 
@@ -1088,6 +1114,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
         : (match.tournamentName?.trim().isNotEmpty == true
               ? match.tournamentName!.trim()
               : 'Buổi giao lưu CLB');
+    final activityDate = _activityDateLabel(match);
 
     return Material(
       color: Colors.transparent,
@@ -1106,7 +1133,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 9,
+                  vertical: 5,
                 ),
                 decoration: BoxDecoration(
                   color: isOngoing ? const Color(0xFFFEF2F2) : colors.bgSurface,
@@ -1122,9 +1149,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(
+                    Expanded(
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Flexible(
                             child: Text(
@@ -1138,9 +1164,25 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          if (activityDate != null) ...[
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                activityDate,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.textMuted,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1150,7 +1192,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(
                               minWidth: 30,
-                              minHeight: 30,
+                              minHeight: 26,
                             ),
                             iconSize: 18,
                             onSelected: (value) {
