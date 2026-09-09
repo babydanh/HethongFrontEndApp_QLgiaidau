@@ -117,3 +117,7 @@ ios/Flutter/Flutter.framework
 ios/Flutter/Flutter.podspec
 ios/Flutter/App.framework
 ios/Flutter/ephemeral/
+
+# Integration Tests & Reports
+integration_test/
+test_reports/
