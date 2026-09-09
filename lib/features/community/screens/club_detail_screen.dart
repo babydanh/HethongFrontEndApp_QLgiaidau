@@ -3843,9 +3843,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       onNotification: (notification) {
         if (notification.metrics.axis == Axis.vertical &&
             membersFeed.hasMore &&
+            membersFeed.nextCursor != null &&
             !membersFeed.isLoading &&
-            notification.metrics.pixels >=
-                notification.metrics.maxScrollExtent - 400) {
+            notification.metrics.extentAfter <= 520) {
           unawaited(membersNotifier.loadMore());
         }
         return false;
@@ -3872,9 +3872,27 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               ),
             ),
             if (membersFeed.isLoading && approvedMembers.isNotEmpty)
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: CircularProgressIndicator()),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 132),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Đang tải thêm thành viên…',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             if (membersFeed.errorMessage != null && approvedMembers.isNotEmpty)
               Padding(

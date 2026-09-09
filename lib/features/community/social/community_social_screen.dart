@@ -87,8 +87,7 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
         feed.hasMore &&
         feed.nextCursor != null &&
         !feed.isLoading &&
-        notification.metrics.pixels >=
-            notification.metrics.maxScrollExtent - 400) {
+        notification.metrics.extentAfter <= 520) {
       ref.read(communityFeedProvider(widget.communityId).notifier).loadMore();
     }
     return false;
@@ -438,9 +437,32 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                 ),
               ),
               if (state.isLoading && state.posts.isNotEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(AppTheme.spacingMD),
-                  child: Center(child: CircularProgressIndicator()),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacingMD,
+                    AppTheme.spacingMD,
+                    AppTheme.spacingMD,
+                    132,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Đang tải thêm bài viết…',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
             ],
           ),

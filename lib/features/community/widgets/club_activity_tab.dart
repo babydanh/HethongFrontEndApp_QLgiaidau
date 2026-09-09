@@ -438,44 +438,34 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     if (notification.metrics.axis == Axis.vertical &&
         _hasMoreActivity &&
         !_isLoadingMore &&
-        notification.metrics.pixels >=
-            notification.metrics.maxScrollExtent - 400) {
+        notification.metrics.extentAfter <= 520) {
       unawaited(_fetchMatches(loadMore: true));
     }
     return false;
   }
 
-  Widget _buildLoadMoreButton(AppColorsExtension colors) {
-    if (!_hasMoreActivity) return const SizedBox.shrink();
+  Widget _buildLoadMoreIndicator(AppColorsExtension colors) {
+    if (!_isLoadingMore) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: SizedBox(
-        height: 36,
-        child: OutlinedButton(
-          onPressed: _isLoadingMore
-              ? null
-              : () => _fetchMatches(loadMore: true),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppTheme.primary,
-            side: BorderSide(color: colors.border),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 132),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Đang tải thêm trận đấu…',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colors.textSecondary,
             ),
           ),
-          child: _isLoadingMore
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(
-                  AppLocalizations.of(context)!.club_loadMoreMatches,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-        ),
+        ],
       ),
     );
   }
@@ -697,7 +687,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
       child: RefreshIndicator(
         onRefresh: () => _fetchMatches(),
         child: ListView(
-          padding: const EdgeInsets.only(top: 12, bottom: 24),
+          padding: const EdgeInsets.only(top: 12, bottom: 132),
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             // ─── 2. THANH LỌC & TÌM KIẾM & TẠO TRẬN ĐẤU ───────────────────
@@ -863,7 +853,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                   ),
                 ),
               ),
-              _buildLoadMoreButton(colors),
+              _buildLoadMoreIndicator(colors),
             ] else ...[
               ListView.separated(
                 shrinkWrap: true,
@@ -876,7 +866,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                   return _buildMatchCard(context, match, colors);
                 },
               ),
-              _buildLoadMoreButton(colors),
+              _buildLoadMoreIndicator(colors),
             ],
           ],
         ),
