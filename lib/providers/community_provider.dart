@@ -62,6 +62,115 @@ final communityMembersProvider =
       return repo.getMembers(communityId);
     });
 
+/// Cursor-backed member feed for the club detail tab. The legacy
+/// `communityMembersProvider` remains available for directory/mention flows
+/// that explicitly need a bounded snapshot.
+final communityMembersFeedProvider =
+    NotifierProvider.family<
+      CommunityMembersFeedNotifier,
+      CommunityMembersFeedState,
+      String
+    >(CommunityMembersFeedNotifier.new);
+
+class CommunityMembersFeedNotifier extends Notifier<CommunityMembersFeedState> {
+  final String communityId;
+
+  CommunityMembersFeedNotifier(this.communityId);
+
+  @override
+  CommunityMembersFeedState build() {
+    Future<void>.microtask(loadInitial);
+    return const CommunityMembersFeedState();
+  }
+
+  Future<void> loadInitial() async {
+    if (state.isLoading) return;
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final page = await ref
+          .read(communityRepositoryProvider)
+          .getMembersPaged(communityId, status: 'JOINED', limit: 20);
+      state = CommunityMembersFeedState(
+        members: page.items,
+        nextCursor: page.nextCursor,
+        hasMore: page.hasMore,
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Không thể tải danh sách thành viên.',
+      );
+    }
+  }
+
+  Future<void> loadMore() async {
+    final cursor = state.nextCursor;
+    if (state.isLoading || !state.hasMore || cursor == null) return;
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final page = await ref
+          .read(communityRepositoryProvider)
+          .getMembersPaged(
+            communityId,
+            cursor: cursor,
+            status: 'JOINED',
+            limit: 20,
+          );
+      final knownIds = state.members
+          .map((member) => member.id.isNotEmpty ? member.id : member.userId)
+          .toSet();
+      final fresh = page.items.where((member) {
+        final id = member.id.isNotEmpty ? member.id : member.userId;
+        return id.isEmpty || knownIds.add(id);
+      });
+      state = CommunityMembersFeedState(
+        members: [...state.members, ...fresh],
+        nextCursor: page.nextCursor,
+        hasMore: page.hasMore,
+        isLoading: false,
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Không thể tải thêm thành viên.',
+      );
+    }
+  }
+}
+
+class CommunityMembersFeedState {
+  final List<CommunityMemberModel> members;
+  final String? nextCursor;
+  final bool hasMore;
+  final bool isLoading;
+  final String? errorMessage;
+
+  const CommunityMembersFeedState({
+    this.members = const [],
+    this.nextCursor,
+    this.hasMore = false,
+    this.isLoading = false,
+    this.errorMessage,
+  });
+
+  CommunityMembersFeedState copyWith({
+    List<CommunityMemberModel>? members,
+    String? nextCursor,
+    bool? hasMore,
+    bool? isLoading,
+    String? errorMessage,
+    bool clearError = false,
+  }) {
+    return CommunityMembersFeedState(
+      members: members ?? this.members,
+      nextCursor: nextCursor ?? this.nextCursor,
+      hasMore: hasMore ?? this.hasMore,
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
+    );
+  }
+}
+
 /// Tag preset của CLB (tên + màu) — nguồn màu hiển thị tag thành viên
 /// mọi nơi có tên + avatar (bài viết, chat, danh sách, profile) như web.
 final communityTagPresetsProvider =
@@ -209,4 +318,3 @@ final communityRankingsProvider =
       final repo = ref.watch(communityRepositoryProvider);
       return repo.getRankings(communityId, limit: 200);
     });
-

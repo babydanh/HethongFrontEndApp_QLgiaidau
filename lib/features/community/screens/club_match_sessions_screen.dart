@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_match_session_create_screen.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_dialog.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_result_dialog.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
@@ -556,12 +557,20 @@ class _ClubMatchSessionDetailPageState
     WidgetRef ref,
     List<ClubMatchParticipantModel> participants,
   ) async {
-    await ClubStandaloneMatchDialog.show(
+    final createdMatch = await ClubStandaloneMatchDialog.show(
       context,
       communityId: session.communityId,
       sessionId: session.id,
       onMatchCreated: () => _scheduleSessionDetailRefresh(),
     );
+    if (!context.mounted || createdMatch == null) return;
+    final action = await ClubStandaloneMatchResultDialog.show(
+      context,
+      match: createdMatch,
+    );
+    if (action == ClubStandaloneMatchAction.saved && context.mounted) {
+      _scheduleSessionDetailRefresh();
+    }
   }
 
   Future<void> _forceParticipants(BuildContext context, WidgetRef ref) async {
@@ -2045,7 +2054,6 @@ class _ClubMatchSessionDetailPageState
       );
 }
 
-
 class _SessionSectionTitle extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -2453,10 +2461,7 @@ class _ClubMatchScoreCard extends StatelessWidget {
           ? sideBMembers.first.avatarUrl
           : null,
       sportKey: match.sportKey.isNotEmpty ? match.sportKey : 'pickleball',
-      tournamentConfig: const {
-        'isLite': false,
-        'scoringMode': 'STANDARD',
-      },
+      tournamentConfig: const {'isLite': false, 'scoringMode': 'STANDARD'},
       sportRules: {
         'kind': match.sportKey.isNotEmpty ? match.sportKey : 'pickleball',
         'mode': 'STANDARD',

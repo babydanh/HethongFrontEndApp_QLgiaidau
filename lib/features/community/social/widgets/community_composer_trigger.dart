@@ -35,7 +35,7 @@ class CommunityComposerTrigger extends StatelessWidget {
 
     return Container(
       color: colors.bgCard,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
           // 1. Avatar - Nhấn vào mở Profile Pop-up

@@ -68,7 +68,9 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
     final feed = ref.read(communityFeedProvider(widget.communityId));
     if (feed.hasMore && !feed.isLoading) {
       Future<void>.microtask(() async {
-        await ref.read(communityFeedProvider(widget.communityId).notifier).loadMore();
+        await ref
+            .read(communityFeedProvider(widget.communityId).notifier)
+            .loadMore();
         if (mounted) _scrollToTargetPost();
       });
     }
@@ -80,7 +82,12 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
   /// phối hợp scroll (2 list scroll riêng). Dùng notification để loadMore —
   /// hoạt động cả standalone lẫn nhúng trong club detail.
   bool _onFeedScroll(ScrollNotification notification) {
-    if (notification.metrics.extentAfter < 520) {
+    final feed = ref.read(communityFeedProvider(widget.communityId));
+    if (notification.metrics.axis == Axis.vertical &&
+        feed.hasMore &&
+        feed.nextCursor != null &&
+        !feed.isLoading &&
+        notification.metrics.extentAfter <= 520) {
       ref.read(communityFeedProvider(widget.communityId).notifier).loadMore();
     }
     return false;
@@ -113,9 +120,11 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                     canManageMemberTags);
     final l10n = AppLocalizations.of(context)!;
     final profile = ref.read(userProfileProvider).asData?.value;
-    final authorName = (profile?.fullName?.isNotEmpty == true
-        ? profile!.fullName!
-        : l10n.communitySocial_defaultUser).trim();
+    final authorName =
+        (profile?.fullName?.isNotEmpty == true
+                ? profile!.fullName!
+                : l10n.communitySocial_defaultUser)
+            .trim();
     final authorAvatarUrl = profile?.avatarUrl?.trim();
 
     CommunityPostComposerSheet.show(
@@ -131,7 +140,7 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
     );
   }
 
-    Future<void> _confirmDeletePost(String postId) async {
+  Future<void> _confirmDeletePost(String postId) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -172,7 +181,7 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
     }
   }
 
-    Future<void> _openMemberTagEditor(CommunityMemberModel member) async {
+  Future<void> _openMemberTagEditor(CommunityMemberModel member) async {
     final l10n = AppLocalizations.of(context)!;
     final repo = ref.read(communityRepositoryProvider);
     final presets = await repo.getTagPresets(widget.communityId);
@@ -181,7 +190,8 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
       context,
       memberName: member.userFullName?.trim().isNotEmpty == true
           ? member.userFullName!.trim()
-          : (member.userEmail?.split('@').first ?? l10n.communitySocial_defaultMember),
+          : (member.userEmail?.split('@').first ??
+                l10n.communitySocial_defaultMember),
       currentTags: member.tags,
       presets: presets,
       onSave: (tags) async {
@@ -191,13 +201,14 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
           tags,
         );
         ref.invalidate(communityMembersProvider(widget.communityId));
+        ref.invalidate(communityMembersFeedProvider(widget.communityId));
         ref.invalidate(communityMemberSearchProvider);
       },
     );
   }
 
   @override
-    Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(communityFeedProvider(widget.communityId));
     final membership = ref
@@ -206,9 +217,11 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
     final profile = ref.watch(userProfileProvider).asData?.value;
     final currentUserId = profile?.id ?? '';
     final currentAvatarUrl = profile?.avatarUrl?.trim();
-    final currentAuthorName = (profile?.fullName?.isNotEmpty == true
-        ? profile!.fullName!
-        : l10n.communitySocial_defaultUser).trim();
+    final currentAuthorName =
+        (profile?.fullName?.isNotEmpty == true
+                ? profile!.fullName!
+                : l10n.communitySocial_defaultUser)
+            .trim();
     final socialSettings =
         ref.watch(communitySocialSettingsProvider(widget.communityId)).value ??
         const CommunitySocialSettings(
@@ -241,7 +254,9 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
 
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final canvasColor = isDark ? const Color(0xFF18191A) : const Color(0xFFF0F2F5);
+    final canvasColor = isDark
+        ? const Color(0xFF18191A)
+        : const Color(0xFFF0F2F5);
 
     final feedBody = Container(
       color: canvasColor,
@@ -258,21 +273,32 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
               if (widget.showHeader) ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                  child: _CompactHighlights(communityName: widget.communityName),
+                  child: _CompactHighlights(
+                    communityName: widget.communityName,
+                  ),
                 ),
               ],
               if (isModerator && pendingCount > 0)
                 Container(
                   margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.35)),
+                    border: Border.all(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.shield_outlined, size: 20, color: Color(0xFFD97706)),
+                      const Icon(
+                        Icons.shield_outlined,
+                        size: 20,
+                        color: Color(0xFFD97706),
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -285,9 +311,13 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () => context.push('/club/${widget.communityId}/manage'),
+                        onPressed: () =>
+                            context.push('/club/${widget.communityId}/manage'),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           backgroundColor: const Color(0xFFD97706),
@@ -298,7 +328,10 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                         ),
                         child: Text(
                           l10n.club_approve,
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
@@ -315,12 +348,12 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                     onOpenWithImage: () => _openComposer(startWithImage: true),
                     onAvatarTap: currentUserId.isNotEmpty
                         ? () => UserProfileBottomSheet.show(
-                              context,
-                              userId: currentUserId,
-                              communityId: widget.communityId,
-                              initialFullName: currentAuthorName,
-                              initialAvatarUrl: currentAvatarUrl,
-                            )
+                            context,
+                            userId: currentUserId,
+                            communityId: widget.communityId,
+                            initialFullName: currentAuthorName,
+                            initialAvatarUrl: currentAvatarUrl,
+                          )
                         : null,
                   ),
                 ),
@@ -329,7 +362,7 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                   color: colors.bgCard,
                   padding: const EdgeInsets.all(14),
                   margin: const EdgeInsets.only(bottom: 8),
-child: _SocialNotice(
+                  child: _SocialNotice(
                     message: socialSettings.postingPolicy == 'OFF'
                         ? l10n.communitySocial_postingDisabled
                         : l10n.communitySocial_joinToPost,
@@ -341,7 +374,9 @@ child: _SocialNotice(
                   child: _FeedError(
                     message: state.errorMessage!,
                     onRetry: () => ref
-                        .read(communityFeedProvider(widget.communityId).notifier)
+                        .read(
+                          communityFeedProvider(widget.communityId).notifier,
+                        )
                         .loadInitial(),
                   ),
                 ),
@@ -355,8 +390,14 @@ child: _SocialNotice(
                   state.posts.isEmpty)
                 Container(
                   color: colors.bgCard,
-                  padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 40,
+                    horizontal: 20,
+                  ),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: const _FeedEmpty(),
                 ),
               ...state.posts.map(
@@ -367,12 +408,16 @@ child: _SocialNotice(
                     communityId: widget.communityId,
                     commentsEnabled: socialSettings.commentsEnabled,
                     onReact: (reaction) => ref
-                        .read(communityFeedProvider(widget.communityId).notifier)
+                        .read(
+                          communityFeedProvider(widget.communityId).notifier,
+                        )
                         .reactToPost(post.id, reaction),
                     currentUserId: currentUserId,
                     canModerateComments: isModerator,
                     onCommentUpdated: () => ref
-                        .read(communityFeedProvider(widget.communityId).notifier)
+                        .read(
+                          communityFeedProvider(widget.communityId).notifier,
+                        )
                         .loadInitial(),
                     onAuthorTap: post.authorId.isEmpty
                         ? null
@@ -392,9 +437,32 @@ child: _SocialNotice(
                 ),
               ),
               if (state.isLoading && state.posts.isNotEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(AppTheme.spacingMD),
-                  child: Center(child: CircularProgressIndicator()),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacingMD,
+                    AppTheme.spacingMD,
+                    AppTheme.spacingMD,
+                    132,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Đang tải thêm bài viết…',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
             ],
           ),
@@ -442,25 +510,25 @@ class _CompactHighlights extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return SizedBox(
-    height: 76,
-    child: ListView(
-      scrollDirection: Axis.horizontal,
-      children: [
-        _Highlight(
-          label: communityName,
-          icon: Icons.groups_rounded,
-          color: AppTheme.primary,
-        ),
-        _Highlight(
-          label: l10n.communitySocial_recentMatches,
-          icon: Icons.sports_tennis_rounded,
-          color: Color(0xFF8B5CF6),
-        ),
-        _Highlight(
-          label: l10n.communitySocial_eloBoard,
-          icon: Icons.leaderboard_rounded,
-          color: Color(0xFFF59E0B),
-        ),
+      height: 76,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          _Highlight(
+            label: communityName,
+            icon: Icons.groups_rounded,
+            color: AppTheme.primary,
+          ),
+          _Highlight(
+            label: l10n.communitySocial_recentMatches,
+            icon: Icons.sports_tennis_rounded,
+            color: Color(0xFF8B5CF6),
+          ),
+          _Highlight(
+            label: l10n.communitySocial_eloBoard,
+            icon: Icons.leaderboard_rounded,
+            color: Color(0xFFF59E0B),
+          ),
         ],
       ),
     );

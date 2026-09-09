@@ -23,6 +23,7 @@ import 'package:app_quanly_giaidau/features/tournament/screens/token_management_
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
 import 'package:app_quanly_giaidau/features/notification/screens/notification_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_detail_screen.dart';
+import 'package:app_quanly_giaidau/features/community/screens/community_search_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_tournaments_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_match_sessions_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/create_club_screen.dart';
@@ -487,7 +488,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/live/:matchId',
         builder: (context, state) {
           final matchId = state.pathParameters['matchId']!;
-          final tournamentId = state.uri.queryParameters['tournamentId'] ??
+          final tournamentId =
+              state.uri.queryParameters['tournamentId'] ??
               ref.read(authProvider).tournamentId ??
               '';
           // Public/deep-link match entries always open the shared viewer page.
@@ -612,6 +614,17 @@ final routerProvider = Provider<GoRouter>((ref) {
               return ClubMatchSessionsScreen(communityId: id);
             },
           ),
+          GoRoute(
+            path: 'search',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return CommunitySearchScreen(
+                communityId: id,
+                communityName: state.uri.queryParameters['name'] ?? '',
+                initialQuery: state.uri.queryParameters['q'],
+              );
+            },
+          ),
         ],
       ),
       GoRoute(
@@ -651,6 +664,17 @@ final routerProvider = Provider<GoRouter>((ref) {
               );
             },
           ),
+          GoRoute(
+            path: 'search',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return CommunitySearchScreen(
+                communityId: id,
+                communityName: state.uri.queryParameters['name'] ?? '',
+                initialQuery: state.uri.queryParameters['q'],
+              );
+            },
+          ),
         ],
       ),
       GoRoute(
@@ -670,7 +694,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           final isLite = state.uri.queryParameters['isLite'] == 'true';
           return BracketViewScreen(
             tournamentId: id,
-            isReferee: isLite || (auth.role == UserRole.referee && auth.tournamentId == id),
+            isReferee:
+                isLite ||
+                (auth.role == UserRole.referee && auth.tournamentId == id),
             isLite: isLite,
           );
         },

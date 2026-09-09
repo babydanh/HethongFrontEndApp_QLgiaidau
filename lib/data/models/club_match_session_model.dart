@@ -225,7 +225,9 @@ List<ClubSessionScoreModel> parseClubSessionScoreDetails(
         .map(parseSet)
         .whereType<ClubSessionScoreModel>()
         .toList(growable: false);
-    if (parsedSets.isNotEmpty) return parsedSets.take(10).toList(growable: false);
+    if (parsedSets.isNotEmpty) {
+      return parsedSets.take(10).toList(growable: false);
+    }
   }
 
   final football = scoreDetails['football'];
@@ -287,6 +289,11 @@ class ClubSessionMatchModel {
   final Map<String, int> eloDelta;
   final List<ClubSessionMatchMemberModel> sideAMembers;
   final List<ClubSessionMatchMemberModel> sideBMembers;
+  final DateTime? scheduledAt;
+  final DateTime? startedAt;
+  final DateTime? completedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   List<String> get sideANames => sideAMembers
       .map((member) => member.displayName)
@@ -318,9 +325,20 @@ class ClubSessionMatchModel {
     this.eloDelta = const {},
     this.sideAMembers = const [],
     this.sideBMembers = const [],
+    this.scheduledAt,
+    this.startedAt,
+    this.completedAt,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory ClubSessionMatchModel.fromJson(Map<String, dynamic> json) {
+    DateTime? parseTimestamp(dynamic value) {
+      if (value is DateTime) return value;
+      final raw = value?.toString().trim();
+      return raw == null || raw.isEmpty ? null : DateTime.tryParse(raw);
+    }
+
     List<ClubSessionMatchMemberModel> parseMemberList(dynamic raw) {
       if (raw is! List) return const [];
       return raw
@@ -361,10 +379,11 @@ class ClubSessionMatchModel {
                   json['clubMatchSessionId'])
               ?.toString() ??
           '',
-      standaloneMatchId: (json['standaloneMatchId'] ??
-                  json['standalone_match_id'])
+      standaloneMatchId:
+          (json['standaloneMatchId'] ?? json['standalone_match_id'])
               ?.toString(),
-      communityId: (json['communityId'] ?? json['community_id'])?.toString() ??
+      communityId:
+          (json['communityId'] ?? json['community_id'])?.toString() ??
           (json['community'] is Map
               ? (json['community'] as Map)['id']?.toString()
               : null),
@@ -407,6 +426,11 @@ class ClubSessionMatchModel {
         json['team2MemberInfos'],
         json['team2Members'],
       ]),
+      scheduledAt: parseTimestamp(json['scheduledAt'] ?? json['scheduled_at']),
+      startedAt: parseTimestamp(json['startedAt'] ?? json['started_at']),
+      completedAt: parseTimestamp(json['completedAt'] ?? json['completed_at']),
+      createdAt: parseTimestamp(json['createdAt'] ?? json['created_at']),
+      updatedAt: parseTimestamp(json['updatedAt'] ?? json['updated_at']),
     );
   }
 }

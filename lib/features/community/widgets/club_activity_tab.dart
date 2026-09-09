@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -18,18 +20,13 @@ import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_dialog.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_result_dialog.dart';
 
 class ClubActivityTab extends ConsumerStatefulWidget {
   final String communityId;
   final Community? club;
-  final String? initialSearchQuery;
 
-  const ClubActivityTab({
-    super.key,
-    required this.communityId,
-    this.club,
-    this.initialSearchQuery,
-  });
+  const ClubActivityTab({super.key, required this.communityId, this.club});
 
   @override
   ConsumerState<ClubActivityTab> createState() => _ClubActivityTabState();
@@ -38,13 +35,16 @@ class ClubActivityTab extends ConsumerStatefulWidget {
 enum _ActivityFilter { all, myMatches, ongoing, completed }
 
 class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
+  static const _activityMatchPageSize = 10;
+  static const _activitySessionPageSize = 8;
+
   List<MatchModel> _matches = [];
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMoreActivity = false;
+  int _activityDisplayLimit = _activityMatchPageSize;
   String? _errorMessage;
   _ActivityFilter _filter = _ActivityFilter.all;
-  final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounceTimer;
-  String _searchQuery = '';
   Timer? _refreshTimer;
   Timer? _socketRefreshTimer;
   StreamSubscription<Map<String, dynamic>>? _socketScoreSubscription;
@@ -53,15 +53,20 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   final Set<String> _joinedActivityMatchIds = <String>{};
   final Set<String> _joinedActivitySessionIds = <String>{};
   final Set<String> _joinedActivityTournamentIds = <String>{};
+  final List<Map<String, dynamic>> _activityTournaments = [];
+  final Map<String, ClubMatchSessionModel> _activitySessions = {};
+  final Map<String, String?> _tournamentMatchCursors = {};
+  final Map<String, bool> _tournamentMatchHasMore = {};
+  final Map<String, String?> _sessionMatchCursors = {};
+  final Map<String, bool> _sessionMatchHasMore = {};
+  String? _sessionListCursor;
+  bool _sessionListHasMore = false;
+  String? _standaloneMatchCursor;
+  bool _standaloneMatchHasMore = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialSearchQuery != null &&
-        widget.initialSearchQuery!.isNotEmpty) {
-      _searchController.text = widget.initialSearchQuery!;
-      _searchQuery = widget.initialSearchQuery!;
-    }
     _fetchMatches();
     _listenForActivityMatchUpdates();
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
@@ -122,21 +127,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   }
 
   @override
-  void didUpdateWidget(covariant ClubActivityTab oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.initialSearchQuery != oldWidget.initialSearchQuery &&
-        widget.initialSearchQuery != null) {
-      setState(() {
-        _searchController.text = widget.initialSearchQuery!;
-        _searchQuery = widget.initialSearchQuery!;
-        _filter = _ActivityFilter.all;
-      });
-    }
-  }
-
-  @override
   void dispose() {
-    _searchDebounceTimer?.cancel();
     _socketRefreshTimer?.cancel();
     _socketScoreSubscription?.cancel();
     _socketStatusSubscription?.cancel();
@@ -153,97 +144,271 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     }
     socket.leaveClubCommunity(widget.communityId);
     _refreshTimer?.cancel();
-    _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _fetchMatches({bool silent = false}) async {
-    if (!silent) {
+  void _resetActivityPaging() {
+    _activityTournaments.clear();
+    _activitySessions.clear();
+    _tournamentMatchCursors.clear();
+    _tournamentMatchHasMore.clear();
+    _sessionMatchCursors.clear();
+    _sessionMatchHasMore.clear();
+    _sessionListCursor = null;
+    _sessionListHasMore = false;
+    _standaloneMatchCursor = null;
+    _standaloneMatchHasMore = false;
+    _hasMoreActivity = false;
+    _activityDisplayLimit = _activityMatchPageSize;
+  }
+
+  String? _safeNextCursor(String? cursor, String? nextCursor, bool hasMore) {
+    if (!hasMore || nextCursor == null || nextCursor.isEmpty) return null;
+    if (nextCursor == cursor) return null;
+    return nextCursor;
+  }
+
+  bool get _hasMoreActivitySource =>
+      _sessionListHasMore ||
+      _standaloneMatchHasMore ||
+      _tournamentMatchHasMore.values.any((value) => value) ||
+      _sessionMatchHasMore.values.any((value) => value);
+
+  bool _isOngoingMatch(MatchModel match) {
+    return match.isLive;
+  }
+
+  int _activityStatusOrder(MatchModel match) {
+    if (_isOngoingMatch(match)) return 0;
+    if (match.isCompleted) return 1;
+    return 2;
+  }
+
+  DateTime _activitySortTime(MatchModel match) {
+    return match.completedAt ??
+        match.startedAt ??
+        match.scheduledTime ??
+        match.updatedAt;
+  }
+
+  String? _activityDateLabel(MatchModel match) {
+    final time = match.completedAt ?? match.startedAt ?? match.scheduledTime;
+    return time == null ? null : DateFormatterUtils.formatDateTime(time);
+  }
+
+  void _sortActivityMatches(List<MatchModel> items) {
+    items.sort((a, b) {
+      final statusOrder = _activityStatusOrder(
+        a,
+      ).compareTo(_activityStatusOrder(b));
+      if (statusOrder != 0) return statusOrder;
+      return _activitySortTime(b).compareTo(_activitySortTime(a));
+    });
+  }
+
+  void _mergeActivityMatches(
+    List<MatchModel> incoming, {
+    required bool replace,
+  }) {
+    final byId = <String, MatchModel>{};
+    if (!replace) {
+      for (final match in _matches) {
+        byId[match.id] = match;
+      }
+    }
+    for (final match in incoming) {
+      if (match.id.isNotEmpty) byId[match.id] = match;
+    }
+    final merged = byId.values.toList();
+    _sortActivityMatches(merged);
+    if (mounted) {
+      setState(() {
+        _matches = merged;
+        _hasMoreActivity =
+            merged.length > _activityDisplayLimit || _hasMoreActivitySource;
+      });
+    }
+  }
+
+  Future<void> _fetchMatches({
+    bool silent = false,
+    bool loadMore = false,
+  }) async {
+    if (loadMore && (_isLoadingMore || !_hasMoreActivity)) return;
+
+    // The activity feed merges independent cursor streams. Reveal buffered
+    // rows before requesting another remote page when no source has more.
+    if (loadMore && !_hasMoreActivitySource) {
+      if (!mounted) return;
+      setState(() {
+        _activityDisplayLimit += _activityMatchPageSize;
+        _hasMoreActivity = _matches.length > _activityDisplayLimit;
+      });
+      return;
+    }
+
+    final isFirstPage = !silent && !loadMore;
+    final isHeadRefresh = silent && !loadMore;
+    if (isFirstPage) {
+      _resetActivityPaging();
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
+    } else if (loadMore) {
+      _activityDisplayLimit += _activityMatchPageSize;
+      setState(() => _isLoadingMore = true);
     }
 
+    final pageMatches = <MatchModel>[];
     try {
       final dio = ref.read(dioClientProvider).dio;
-      // 1. Lấy danh sách giải đấu thuộc CLB
-      final List<MatchModel> allMatches = [];
+      final matchRepository = ref.read(matchRepositoryProvider);
+      final sessionRepo = ref.read(clubMatchSessionRepositoryProvider);
+
+      // 1. Giải đấu: mỗi giải là một stream cursor độc lập.
+      var tournamentRows = _activityTournaments;
+      if (isFirstPage || isHeadRefresh || tournamentRows.isEmpty) {
+        try {
+          final tourRes = await dio.get(
+            '/communities/${widget.communityId}/tournaments',
+          );
+          final rawTours = tourRes.data is Map
+              ? (tourRes.data['data'] ?? tourRes.data)
+              : tourRes.data;
+          final parsedTours = (rawTours is List ? rawTours : const <dynamic>[])
+              .whereType<Map>()
+              .map((tour) => Map<String, dynamic>.from(tour))
+              .take(5)
+              .toList(growable: false);
+          _activityTournaments
+            ..clear()
+            ..addAll(parsedTours);
+          tournamentRows = _activityTournaments;
+        } catch (_) {}
+      }
+
+      for (final tour in tournamentRows) {
+        final tourId = tour['id']?.toString();
+        final tourName = tour['name']?.toString() ?? 'Giải đấu';
+        if (tourId == null || tourId.isEmpty) continue;
+
+        final previousCursor = _tournamentMatchCursors[tourId];
+        final isNewStream = !_tournamentMatchCursors.containsKey(tourId);
+        final cursor = loadMore ? previousCursor : null;
+        try {
+          final page = await matchRepository.getTournamentMatchesPaged(
+            tournamentId: tourId,
+            cursor: cursor,
+            limit: _activityMatchPageSize,
+          );
+          if (!isHeadRefresh || isNewStream) {
+            final next = _safeNextCursor(cursor, page.nextCursor, page.hasMore);
+            _tournamentMatchCursors[tourId] = next;
+            _tournamentMatchHasMore[tourId] = next != null;
+          }
+          pageMatches.addAll(
+            page.matches
+                .where(isRenderablePublicMatch)
+                .map((match) => match.copyWith(tournamentName: tourName)),
+          );
+        } catch (_) {}
+      }
+
+      // 2. Buổi giao lưu: phân trang danh sách buổi và từng stream trận.
       try {
-        final tourRes = await dio.get(
-          '/communities/${widget.communityId}/tournaments',
-        );
-        final rawTours = tourRes.data is Map
-            ? (tourRes.data['data'] ?? tourRes.data)
-            : tourRes.data;
-        final tourList = (rawTours is List ? rawTours : const [])
-            .whereType<Map<String, dynamic>>()
-            .toList();
-
-        final recentTours = tourList.take(5).toList();
-
-        for (final tour in recentTours) {
-          final tourId = tour['id']?.toString();
-          final tourName = tour['name']?.toString() ?? 'Giải đấu';
-          if (tourId == null) continue;
-
-          try {
-            final matchRes = await dio.get(
-              '/matches',
-              queryParameters: {'tournament_id': tourId, 'limit': 50},
+        var currentSessionPage = const <ClubMatchSessionModel>[];
+        if (!loadMore || _sessionListHasMore) {
+          final sessionCursor = loadMore ? _sessionListCursor : null;
+          final sessionPage = await sessionRepo.listPage(
+            widget.communityId,
+            cursor: sessionCursor,
+            limit: _activitySessionPageSize,
+          );
+          currentSessionPage = sessionPage.data;
+          if (!isHeadRefresh) {
+            final next = _safeNextCursor(
+              sessionCursor,
+              sessionPage.nextCursor,
+              sessionPage.hasMore,
             );
-            final rawMatches = matchRes.data is Map
-                ? (matchRes.data['data'] ?? matchRes.data)
-                : matchRes.data;
-            final matchList = rawMatches is List ? rawMatches : const [];
-            for (final mJson in matchList) {
-              if (mJson is Map<String, dynamic>) {
-                final id = mJson['id']?.toString() ?? '';
-                final match = MatchModel.fromJson(mJson, id);
-                if (isRenderablePublicMatch(match)) {
-                  allMatches.add(match.copyWith(tournamentName: tourName));
-                }
-              }
-            }
-          } catch (_) {}
+            _sessionListCursor = next;
+            _sessionListHasMore = next != null;
+          }
         }
-      } catch (_) {}
 
-      // 2. Lấy danh sách các trận giao lưu nội bộ của CLB
-      try {
-        final sessionRepo = ref.read(clubMatchSessionRepositoryProvider);
-        final sessions = await sessionRepo.list(widget.communityId);
-        // Lấy 8 buổi giao lưu gần nhất
-        for (final session in sessions.take(8)) {
+        for (final session in currentSessionPage) {
+          if (session.id.isNotEmpty) _activitySessions[session.id] = session;
+        }
+        final sessionsToFetch = loadMore
+            ? _activitySessions.values.toList(growable: false)
+            : currentSessionPage;
+        for (final session in sessionsToFetch) {
+          final sessionId = session.id;
+          if (sessionId.isEmpty) continue;
+          final isNewSession = !_sessionMatchCursors.containsKey(sessionId);
+          final existingMatchCursor = _sessionMatchCursors[sessionId];
+          final shouldFetchMatches =
+              !loadMore ||
+              isNewSession ||
+              (_sessionMatchHasMore[sessionId] ?? false);
+          if (!shouldFetchMatches) continue;
+
+          final matchCursor = loadMore && !isNewSession
+              ? existingMatchCursor
+              : null;
           try {
-            final sessionMatches = await sessionRepo.matches(session.id);
-            for (final sm in sessionMatches) {
-              allMatches.add(
-                _mapClubMatch(
-                  sm,
+            final matchPage = await sessionRepo.matchesPage(
+              sessionId,
+              cursor: matchCursor,
+              limit: _activityMatchPageSize,
+            );
+            if (!isHeadRefresh || isNewSession) {
+              final next = _safeNextCursor(
+                matchCursor,
+                matchPage.nextCursor,
+                matchPage.hasMore,
+              );
+              _sessionMatchCursors[sessionId] = next;
+              _sessionMatchHasMore[sessionId] = next != null;
+            }
+            pageMatches.addAll(
+              matchPage.data.map(
+                (match) => _mapClubMatch(
+                  match,
                   tournamentName: session.resolvedName.isNotEmpty
                       ? session.resolvedName
                       : 'Giao lưu CLB',
-                  sessionId: session.id,
+                  sessionId: sessionId,
                   updatedAt: session.startAt,
                 ),
-              );
-            }
+              ),
+            );
           } catch (_) {}
         }
       } catch (_) {}
 
-      // Trận riêng của CLB: không có session/tournament giả và có thể xóa
-      // độc lập; API trả thẳng sportRules để mở đúng bảng điểm theo môn.
+      // 3. Trận riêng: stream cursor độc lập, không gán tournament/session giả.
       try {
-        final sessionRepo = ref.read(clubMatchSessionRepositoryProvider);
-        final standaloneMatches = await sessionRepo.standaloneMatches(
+        final standaloneCursor = loadMore ? _standaloneMatchCursor : null;
+        final standalonePage = await sessionRepo.standaloneMatchesPage(
           widget.communityId,
+          cursor: standaloneCursor,
+          limit: _activityMatchPageSize,
         );
-        allMatches.addAll(
-          standaloneMatches.map(
-            (sm) => _mapClubMatch(
-              sm,
+        if (!isHeadRefresh) {
+          final next = _safeNextCursor(
+            standaloneCursor,
+            standalonePage.nextCursor,
+            standalonePage.hasMore,
+          );
+          _standaloneMatchCursor = next;
+          _standaloneMatchHasMore = next != null;
+        }
+        pageMatches.addAll(
+          standalonePage.data.map(
+            (match) => _mapClubMatch(
+              match,
               tournamentName: l10nFallbackStandaloneMatchName,
               standalone: true,
             ),
@@ -251,35 +416,58 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
         );
       } catch (_) {}
 
-      // Sắp xếp: Trận đang diễn ra lên đầu, sau đó theo thời gian gần nhất
-      allMatches.sort((a, b) {
-        final aOngoing = a.status.toUpperCase() == 'ONGOING';
-        final bOngoing = b.status.toUpperCase() == 'ONGOING';
-        if (aOngoing && !bOngoing) return -1;
-        if (bOngoing && !aOngoing) return 1;
-
-        final aTime =
-            a.completedAt ?? a.startedAt ?? a.scheduledTime ?? a.updatedAt;
-        final bTime =
-            b.completedAt ?? b.startedAt ?? b.scheduledTime ?? b.updatedAt;
-        return bTime.compareTo(aTime);
-      });
-
       if (mounted) {
-        setState(() {
-          _matches = allMatches;
-          _isLoading = false;
-        });
+        _mergeActivityMatches(pageMatches, replace: isFirstPage);
         _syncActivitySocketRooms();
       }
     } catch (e) {
+      if (mounted && isFirstPage) {
+        setState(() => _errorMessage = e.toString());
+      }
+    } finally {
       if (mounted) {
         setState(() {
-          _errorMessage = e.toString();
-          _isLoading = false;
+          if (isFirstPage) _isLoading = false;
+          if (loadMore) _isLoadingMore = false;
         });
       }
     }
+  }
+
+  bool _onActivityScroll(ScrollNotification notification) {
+    if (notification.metrics.axis == Axis.vertical &&
+        _hasMoreActivity &&
+        !_isLoadingMore &&
+        notification.metrics.extentAfter <= 520) {
+      unawaited(_fetchMatches(loadMore: true));
+    }
+    return false;
+  }
+
+  Widget _buildLoadMoreIndicator(AppColorsExtension colors) {
+    if (!_isLoadingMore) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 132),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Đang tải thêm trận đấu…',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   String get l10nFallbackStandaloneMatchName => 'Trận đấu riêng';
@@ -402,7 +590,14 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
               'maxSets': 10,
             },
       revision: sm.revision,
-      updatedAt: updatedAt ?? DateTime.now(),
+      scheduledTime: sm.scheduledAt,
+      startedAt: sm.startedAt,
+      completedAt: sm.completedAt,
+      updatedAt:
+          sm.updatedAt ??
+          sm.createdAt ??
+          updatedAt ??
+          DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
     );
   }
 
@@ -419,11 +614,10 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
       initialFullName: fullName,
       initialAvatarUrl: avatarUrl,
       onFilterMatches: (query) {
-        setState(() {
-          _searchController.text = query;
-          _searchQuery = query;
-          _filter = _ActivityFilter.all;
-        });
+        final name = Uri.encodeComponent(widget.club?.name ?? '');
+        context.push(
+          '/club/${widget.communityId}/search?name=$name&q=${Uri.encodeComponent(query)}',
+        );
       },
     );
   }
@@ -471,274 +665,211 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
           }).toList()
         : <MatchModel>[];
 
-    // Lọc danh sách theo filter và search query
-    final query = _searchQuery.trim().toLowerCase();
+    // Lọc danh sách theo bộ lọc hoạt động. Tìm kiếm dùng màn hình search
+    // chung mở từ header CLB.
     final filteredMatches = _matches.where((m) {
-      final statusUpper = m.status.toUpperCase();
-      if (_filter == _ActivityFilter.ongoing && statusUpper != 'ONGOING') {
+      if (_filter == _ActivityFilter.ongoing && !m.isLive) {
         return false;
       }
-      if (_filter == _ActivityFilter.completed && statusUpper != 'COMPLETED') {
+      if (_filter == _ActivityFilter.completed && !m.isCompleted) {
         return false;
       }
       if (_filter == _ActivityFilter.myMatches) {
         if (!userMatches.contains(m)) return false;
       }
 
-      if (query.isNotEmpty) {
-        final t1 = m.team1Name.toLowerCase();
-        final t2 = m.team2Name.toLowerCase();
-        final tName = (m.tournamentName ?? '').toLowerCase();
-        final memMatch =
-            m.team1MemberInfos.any(
-              (mem) => mem.fullName.toLowerCase().contains(query),
-            ) ||
-            m.team2MemberInfos.any(
-              (mem) => mem.fullName.toLowerCase().contains(query),
-            );
-        if (!t1.contains(query) &&
-            !t2.contains(query) &&
-            !tName.contains(query) &&
-            !memMatch) {
-          return false;
-        }
-      }
       return true;
     }).toList();
+    final visibleMatches = filteredMatches.take(_activityDisplayLimit).toList();
 
-    return RefreshIndicator(
-      onRefresh: () => _fetchMatches(),
-      child: ListView(
-        padding: const EdgeInsets.only(top: 12, bottom: 24),
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          // ─── 2. THANH LỌC & TÌM KIẾM & TẠO TRẬN ĐẤU ───────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 36,
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: (val) {
-                            _searchDebounceTimer?.cancel();
-                            _searchDebounceTimer = Timer(
-                              const Duration(milliseconds: 250),
-                              () {
-                                if (mounted) {
-                                  setState(() => _searchQuery = val);
-                                }
-                              },
-                            );
-                          },
-                          style: TextStyle(fontSize: 12.5, color: colors.textPrimary),
-                          decoration: InputDecoration(
-                            hintText: 'Tìm theo tên VĐV hoặc giải đấu...',
-                            hintStyle: TextStyle(
-                              fontSize: 12,
-                              color: colors.textMuted,
-                            ),
-                            prefixIcon: Icon(
-                              Icons.search_rounded,
-                              size: 16,
-                              color: colors.textMuted,
-                            ),
-                            prefixIconConstraints: const BoxConstraints(
-                              minWidth: 32,
-                              minHeight: 36,
-                            ),
-                            suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                              valueListenable: _searchController,
-                              builder: (context, value, _) {
-                                if (value.text.isEmpty) {
-                                  return const SizedBox.shrink();
-                                }
-                                return IconButton(
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(
-                                    minWidth: 32,
-                                    minHeight: 36,
-                                  ),
-                                  icon: const Icon(Icons.clear_rounded, size: 14),
-                                  onPressed: () {
-                                    _searchDebounceTimer?.cancel();
-                                    _searchController.clear();
-                                    setState(() => _searchQuery = '');
-                                  },
-                                );
-                              },
-                            ),
-                            suffixIconConstraints: const BoxConstraints(
-                              minWidth: 32,
-                              minHeight: 36,
-                            ),
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 0,
-                              horizontal: 8,
-                            ),
-                            fillColor: colors.bgCard,
-                            filled: true,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: colors.border),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: colors.border),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: AppTheme.primary, width: 1.2),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (canCreateStandalone) ...[
-                      const SizedBox(width: 8),
-                      SizedBox(
-                        height: 36,
-                        child: FilledButton.icon(
-                          onPressed: () {
-                            ClubStandaloneMatchDialog.show(
-                              context,
-                              communityId: widget.communityId,
-                              clubName: widget.club?.name,
-                              onMatchCreated: () => _fetchMatches(),
-                            );
-                          },
-                          icon: const Icon(Icons.add_rounded, size: 15),
-                          label: Text(
-                            l10n.club_createMatchStandalone,
-                            style: const TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -0.2,
-                            ),
-                          ),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppTheme.primary,
-                            elevation: 0,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 4),
-                // Filter Dropdown Row
-                _buildFilterDropdown(
-                  colors: colors,
-                  isClubMember: isClubMember,
-                  currentUser: currentUser,
-                  userMatches: userMatches,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
-
-          // ─── 3. DANH SÁCH TRẬN ĐẤU TIMELINE ───────────────────────
-          if (_isLoading) ...[
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 40),
-                child: CircularProgressIndicator(),
-              ),
-            ),
-          ] else if (_errorMessage != null) ...[
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 30),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.error_outline_rounded,
-                      size: 36,
-                      color: colors.textMuted,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Lỗi tải hoạt động CLB: $_errorMessage',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: colors.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: () => _fetchMatches(),
-                      child: const Text('Thử lại'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ] else if (filteredMatches.isEmpty) ...[
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onActivityScroll,
+      child: RefreshIndicator(
+        onRefresh: () => _fetchMatches(),
+        child: ListView(
+          padding: const EdgeInsets.only(top: 12, bottom: 132),
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            // ─── 2. THANH LỌC & TÌM KIẾM & TẠO TRẬN ĐẤU ───────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-                decoration: BoxDecoration(
-                  color: colors.bgCard,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: colors.border),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.sports_tennis_rounded,
-                      size: 40,
-                      color: colors.textMuted,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Chưa có hoạt động trận đấu nào',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _filter == _ActivityFilter.myMatches
-                          ? 'Bạn chưa tham gia trận đấu nào trong các giải thuộc CLB.'
-                          : 'Khi các giải đấu diễn ra, kết quả và diễn biến sẽ xuất hiện ở đây.',
-                      style: TextStyle(fontSize: 12, color: colors.textSecondary),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      if (canCreateStandalone) ...[
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          height: 36,
+                          child: FilledButton.icon(
+                            onPressed: () async {
+                              final createdMatch =
+                                  await ClubStandaloneMatchDialog.show(
+                                    context,
+                                    communityId: widget.communityId,
+                                    clubName: widget.club?.name,
+                                    onMatchCreated: () => _fetchMatches(),
+                                  );
+                              if (!context.mounted || createdMatch == null) {
+                                return;
+                              }
+                              final action =
+                                  await ClubStandaloneMatchResultDialog.show(
+                                    context,
+                                    match: createdMatch,
+                                  );
+                              if (!context.mounted) return;
+                              if (action == ClubStandaloneMatchAction.saved) {
+                                unawaited(_fetchMatches(silent: true));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.club_matchScoreSaved,
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.add_rounded, size: 15),
+                            label: Text(
+                              l10n.club_createMatchStandalone,
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppTheme.primary,
+                              elevation: 0,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  // Filter Dropdown Row
+                  _buildFilterDropdown(
+                    colors: colors,
+                    isClubMember: isClubMember,
+                    currentUser: currentUser,
+                    userMatches: userMatches,
+                  ),
+                ],
               ),
             ),
-          ] else ...[
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              itemCount: filteredMatches.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final match = filteredMatches[index];
-                return _buildMatchCard(context, match, colors);
-              },
-            ),
+            const SizedBox(height: 4),
+
+            // ─── 3. DANH SÁCH TRẬN ĐẤU TIMELINE ───────────────────────
+            if (_isLoading) ...[
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ] else if (_errorMessage != null) ...[
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 30),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.error_outline_rounded,
+                        size: 36,
+                        color: colors.textMuted,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Lỗi tải hoạt động CLB: $_errorMessage',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: colors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () => _fetchMatches(),
+                        child: const Text('Thử lại'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ] else if (filteredMatches.isEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 40,
+                    horizontal: 20,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.bgCard,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: colors.border),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.sports_tennis_rounded,
+                        size: 40,
+                        color: colors.textMuted,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Chưa có hoạt động trận đấu nào',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _filter == _ActivityFilter.myMatches
+                            ? 'Bạn chưa tham gia trận đấu nào trong các giải thuộc CLB.'
+                            : 'Khi các giải đấu diễn ra, kết quả và diễn biến sẽ xuất hiện ở đây.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              _buildLoadMoreIndicator(colors),
+            ] else ...[
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                itemCount: visibleMatches.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final match = visibleMatches[index];
+                  return _buildMatchCard(context, match, colors);
+                },
+              ),
+              _buildLoadMoreIndicator(colors),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -831,10 +962,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     AppColorsExtension colors,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final isOngoing =
-        match.status.toUpperCase() == 'ONGOING' ||
-        match.status.toUpperCase() == 'LIVE';
-    final isCompleted = match.status.toUpperCase() == 'COMPLETED';
+    final isOngoing = match.isLive;
+    final isCompleted = match.isCompleted;
 
     final isT1Winner = isCompleted && match.winnerId == match.team1Id;
     final isT2Winner = isCompleted && match.winnerId == match.team2Id;
@@ -868,6 +997,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
         : (match.tournamentName?.trim().isNotEmpty == true
               ? match.tournamentName!.trim()
               : 'Buổi giao lưu CLB');
+    final activityDate = _activityDateLabel(match);
 
     return Material(
       color: Colors.transparent,
@@ -877,20 +1007,15 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
           decoration: BoxDecoration(
             color: colors.bgCard,
             border: Border(
-              bottom: BorderSide(
-                color: colors.borderLight,
-                width: 1,
-              ),
+              bottom: BorderSide(color: colors.borderLight, width: 1),
             ),
           ),
           child: Column(
             children: [
               // Header Bar: Tournament Name, Round & Status
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 9,
-                ),
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
                   color: isOngoing ? const Color(0xFFFEF2F2) : colors.bgSurface,
                   border: Border(
@@ -903,11 +1028,11 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                   ),
                 ),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(
+                    Expanded(
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Flexible(
                             child: Text(
@@ -921,9 +1046,25 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          if (activityDate != null) ...[
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                activityDate,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.textMuted,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -933,7 +1074,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(
                               minWidth: 30,
-                              minHeight: 30,
+                              minHeight: 26,
                             ),
                             iconSize: 18,
                             onSelected: (value) {
@@ -1042,23 +1183,36 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     );
   }
 
-  void _openMatch(BuildContext context, MatchModel match) {
-    if (match.isStandaloneMatch ||
-        (match.clubMatchSessionId != null &&
-            match.clubMatchSessionId!.isNotEmpty)) {
-      final repository = ref.read(matchRepositoryProvider);
+  Future<void> _openMatch(BuildContext context, MatchModel match) async {
+    final repository = ref.read(matchRepositoryProvider);
+    if (match.isStandaloneMatch) {
       if (repository is ApiMatchRepository) {
         repository.primeMatch(match);
       }
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => OfficialScorePage(
-            tournamentId: '',
-            matchId: match.id,
-            match: match,
-          ),
-        ),
+      final action = await ClubStandaloneMatchResultDialog.show(
+        context,
+        match: match,
       );
+      if (!context.mounted) return;
+      if (action == ClubStandaloneMatchAction.saved) {
+        unawaited(_fetchMatches(silent: true));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.club_matchScoreSaved),
+          ),
+        );
+      } else if (action == ClubStandaloneMatchAction.openScoreboard) {
+        _openOfficialScoreboard(context, match);
+      }
+      return;
+    }
+
+    if (match.clubMatchSessionId != null &&
+        match.clubMatchSessionId!.isNotEmpty) {
+      if (repository is ApiMatchRepository) {
+        repository.primeMatch(match);
+      }
+      _openOfficialScoreboard(context, match);
       return;
     }
 
@@ -1072,6 +1226,18 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
         ),
       );
     }
+  }
+
+  void _openOfficialScoreboard(BuildContext context, MatchModel match) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => OfficialScorePage(
+          tournamentId: '',
+          matchId: match.id,
+          match: match,
+        ),
+      ),
+    );
   }
 
   Future<void> _deleteStandaloneMatch(

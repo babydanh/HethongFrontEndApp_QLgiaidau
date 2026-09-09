@@ -38,6 +38,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get club_noMembersFound => 'No matching members found';
 
   @override
+  String get club_loadMoreMatches => 'Load more matches';
+
+  @override
+  String get club_enterStandaloneScore => 'Enter standalone match score';
+
+  @override
+  String get club_setCount => 'Sets (max 10)';
+
+  @override
+  String club_setNumber(Object index) {
+    return 'Set $index';
+  }
+
+  @override
+  String get club_saveMatchResult => 'Save result';
+
+  @override
+  String get club_openScoreboard => 'Open scoreboard';
+
+  @override
+  String get club_matchScoreReadOnly =>
+      'This match is completed and cannot be edited.';
+
+  @override
+  String get club_matchScoreRequired => 'Enter at least one complete set.';
+
+  @override
+  String get club_matchScoreIncomplete => 'Enter sets in order without gaps.';
+
+  @override
+  String get club_matchScoreWinnerRequired =>
+      'The set score must determine a winner.';
+
+  @override
+  String get club_matchScoreSaved => 'Match result saved and finalized.';
+
+  @override
   String get appTagline => 'Play together';
 
   @override
@@ -12571,4 +12608,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String clubMatchSessionRecurringBeforeDays(int count) {
     return '$count days before';
   }
+
+  @override
+  String get communitySearchTitle => 'Search in club';
+
+  @override
+  String get communitySearchHint => 'Search posts, members, matches...';
+
+  @override
+  String get communitySearchAll => 'All';
+
+  @override
+  String get communitySearchPosts => 'Posts';
+
+  @override
+  String get communitySearchMembers => 'Members';
+
+  @override
+  String get communitySearchMatches => 'Matches';
+
+  @override
+  String get communitySearchTournaments => 'Tournaments';
+
+  @override
+  String get communitySearchIdle =>
+      'Enter at least 2 characters to search this club';
+
+  @override
+  String get communitySearchEmpty => 'No matching results';
+
+  @override
+  String get communitySearchError => 'Could not load search results';
+
+  @override
+  String get communitySearchRetry => 'Retry';
 }

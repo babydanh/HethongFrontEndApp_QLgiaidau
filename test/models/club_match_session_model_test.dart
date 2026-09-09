@@ -67,6 +67,23 @@ void main() {
     expect(match.eloDelta['user-a'], 12);
   });
 
+  test('preserves activity timestamps from the match projection', () {
+    final match = ClubSessionMatchModel.fromJson({
+      'id': 'match-time',
+      'scheduledAt': '2026-09-09T08:00:00.000Z',
+      'started_at': '2026-09-09T08:05:00.000Z',
+      'completedAt': '2026-09-09T09:00:00.000Z',
+      'createdAt': '2026-09-09T07:55:00.000Z',
+      'updated_at': '2026-09-09T09:00:01.000Z',
+    });
+
+    expect(match.scheduledAt, DateTime.parse('2026-09-09T08:00:00.000Z'));
+    expect(match.startedAt, DateTime.parse('2026-09-09T08:05:00.000Z'));
+    expect(match.completedAt, DateTime.parse('2026-09-09T09:00:00.000Z'));
+    expect(match.createdAt, DateTime.parse('2026-09-09T07:55:00.000Z'));
+    expect(match.updatedAt, DateTime.parse('2026-09-09T09:00:01.000Z'));
+  });
+
   test('parses activity scores like the web, including legacy set keys', () {
     final current = parseClubSessionScoreDetails({
       'sets': [

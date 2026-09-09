@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/widgets/club_network_image.dart';
@@ -38,7 +39,6 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_match_sessions_screen.dart';
-import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_dialog.dart';
 
 class ClubDetailScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -54,10 +54,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   late TabController _tabController;
   CommunityMemberModel? _myMembership;
   bool _isJoinLoading = false;
+  // Khóa toàn bộ luồng tham gia, kể cả lúc đang mở dialog câu hỏi. Nút có
+  // thể nhận 2 lần tap trước khi frame loading đầu tiên được vẽ.
+  bool _isJoinFlowActive = false;
   String _tournamentStatusFilter = 'ALL';
   String _tournamentSportFilter = 'ALL';
   bool _isAddingGalleryImage = false;
-  String? _activitySearchQuery;
   bool _isAboutDescExpanded = false;
   bool _isAboutRulesExpanded = false;
   // Cache future cho card Trạng thái nhanh — tránh gọi lại API mỗi lần rebuild.
@@ -483,6 +485,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   bool get _isPending => _myMembership?.status == 'PENDING';
   bool get _isInvited => _myMembership?.status == 'INVITED';
 
+  /// Dialog route hoàn tất Future ngay khi Navigator.pop được gọi, trong khi
+  /// các inherited element bên trong dialog còn đang được deactivate ở frame
+  /// hiện tại. Chờ hết frame trước khi rebuild màn hình CLB để tránh
+  /// `InheritedElement._dependents.isEmpty`.
+  Future<void> _waitForDialogTeardown() async {
+    await WidgetsBinding.instance.endOfFrame;
+  }
+
   Widget _buildContent(Community club) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
@@ -555,125 +565,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           ),
           centerTitle: false,
           actions: [
-            _buildFollowFavoriteButtons(club, colors, l10n),
-            if (isClubAdmin) ...[
-              PopupMenuButton<String>(
-                icon: Container(
-                  padding: const EdgeInsets.all(7),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.more_vert_rounded,
-                    color: AppTheme.primary,
-                    size: 20,
-                  ),
-                ),
-                tooltip: l10n.clubDetailManageTooltip,
-                onSelected: (val) {
-                  if (val == 'create_match') {
-                    ClubStandaloneMatchDialog.show(
-                      context,
-                      communityId: widget.clubId,
-                      clubName: club.name,
-                    );
-                  } else if (val == 'match_sessions') {
-                    context.push('/club/${widget.clubId}/match-sessions');
-                  } else if (val == 'manage') {
-                    context.push(
-                      '/club/${widget.clubId}/manage',
-                      extra: isOwner,
-                    );
-                  } else if (val == 'edit') {
-                    context.push('/club/${widget.clubId}/edit');
-                  }
-                },
-                itemBuilder: (ctx) => [
-                  PopupMenuItem(
-                    value: 'create_match',
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.sports_tennis_rounded,
-                          size: 18,
-                          color: AppTheme.primary,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          l10n.club_createMatchStandalone,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'match_sessions',
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.groups_rounded,
-                          size: 18,
-                          color: AppTheme.primary,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          l10n.clubMatchSessionTitle,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'manage',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.tune_rounded,
-                          size: 18,
-                          color: colors.textPrimary,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          l10n.club_manageShort,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.edit_rounded,
-                          size: 18,
-                          color: colors.textPrimary,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          l10n.infoEdit,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+            IconButton(
+              tooltip: l10n.communitySearchTitle,
+              icon: const Icon(Icons.search_rounded, color: AppTheme.primary),
+              onPressed: () => context.push(
+                '/club/${club.id}/search?name=${Uri.encodeComponent(club.name)}',
               ),
-              const SizedBox(width: 6),
-            ],
+            ),
+            _buildFollowFavoriteButtons(club, colors, l10n),
           ],
         ),
         SliverToBoxAdapter(
@@ -713,11 +612,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             communityName: club.name,
             showHeader: false,
           ),
-          ClubActivityTab(
-            communityId: club.id,
-            club: club,
-            initialSearchQuery: _activitySearchQuery,
-          ),
+          ClubActivityTab(communityId: club.id, club: club),
           _buildMembersTab(club, colors),
           _buildRankingsTab(colors, club),
         ],
@@ -856,6 +751,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ],
       ),
     );
+    await _waitForDialogTeardown();
     if (confirmed != true || !mounted) return;
     setState(() => _isJoinLoading = true);
     try {
@@ -908,6 +804,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ],
       ),
     );
+    await _waitForDialogTeardown();
     if (confirmed != true || !mounted) return;
     setState(() => _isJoinLoading = true);
     try {
@@ -947,62 +844,64 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         .map((_) => TextEditingController())
         .toList(growable: false);
     final formKey = GlobalKey<FormState>();
-    final answers = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.clubDetailJoinQuestionsTitle),
-        content: SingleChildScrollView(
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(l10n.clubDetailJoinQuestionsInstruction),
-                const SizedBox(height: 16),
-                ...List.generate(
-                  questions.length,
-                  (index) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: TextFormField(
-                      controller: controllers[index],
-                      maxLines: 2,
-                      decoration: InputDecoration(
-                        labelText: questions[index],
-                        border: const OutlineInputBorder(),
+    try {
+      return await showDialog<Map<String, dynamic>>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.clubDetailJoinQuestionsTitle),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(l10n.clubDetailJoinQuestionsInstruction),
+                  const SizedBox(height: 16),
+                  ...List.generate(
+                    questions.length,
+                    (index) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: TextFormField(
+                        controller: controllers[index],
+                        maxLines: 2,
+                        decoration: InputDecoration(
+                          labelText: questions[index],
+                          border: const OutlineInputBorder(),
+                        ),
+                        validator: (value) =>
+                            value == null || value.trim().isEmpty
+                            ? l10n.clubDetailJoinQuestionRequired
+                            : null,
                       ),
-                      validator: (value) =>
-                          value == null || value.trim().isEmpty
-                          ? l10n.clubDetailJoinQuestionRequired
-                          : null,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (!formKey.currentState!.validate()) return;
+                Navigator.pop(dialogContext, <String, dynamic>{
+                  for (var i = 0; i < questions.length; i++)
+                    questions[i]: controllers[i].text.trim(),
+                });
+              },
+              child: Text(l10n.clubDetailSubmitJoinRequest),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (!formKey.currentState!.validate()) return;
-              Navigator.pop(dialogContext, <String, dynamic>{
-                for (var i = 0; i < questions.length; i++)
-                  questions[i]: controllers[i].text.trim(),
-              });
-            },
-            child: Text(l10n.clubDetailSubmitJoinRequest),
-          ),
-        ],
-      ),
-    );
-    for (final controller in controllers) {
-      controller.dispose();
+      );
+    } finally {
+      for (final controller in controllers) {
+        controller.dispose();
+      }
     }
-    return answers;
   }
 
   Color? _getJoinBgColor() {
@@ -1013,6 +912,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   }
 
   Future<void> _handleJoinAction(Community? club) async {
+    if (_isJoinLoading || _isJoinFlowActive) return;
+    _isJoinFlowActive = true;
+    try {
+      await _handleJoinActionInternal(club);
+    } finally {
+      _isJoinFlowActive = false;
+    }
+  }
+
+  Future<void> _handleJoinActionInternal(Community? club) async {
     final l10n = AppLocalizations.of(context)!;
     final auth = ref.read(authProvider);
     if (!auth.isAuthenticated) {
@@ -1029,6 +938,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         club ?? ref.read(communityDetailProvider(widget.clubId)).value;
     if (community?.joinQuestions.isNotEmpty == true) {
       final answers = await _showJoinQuestionsDialog(community!.joinQuestions);
+      await _waitForDialogTeardown();
       if (answers == null) return;
       if (!mounted) return;
       setState(() => _isJoinLoading = true);
@@ -1353,15 +1263,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     return Container(
       width: 74,
       height: 74,
-      padding: const EdgeInsets.all(2.5),
       decoration: BoxDecoration(
         color: colors.bgCard,
         shape: BoxShape.circle,
-        border: Border.all(color: colors.bgCard, width: 2.5),
+        border: Border.all(color: colors.bgCard, width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 6,
             offset: const Offset(0, 2),
           ),
         ],
@@ -1777,7 +1686,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       children: [
                         Text(
                           descText,
-                          maxLines: _isAboutDescExpanded || !isLongDesc ? null : 3,
+                          maxLines: _isAboutDescExpanded || !isLongDesc
+                              ? null
+                              : 3,
                           overflow: _isAboutDescExpanded || !isLongDesc
                               ? TextOverflow.visible
                               : TextOverflow.ellipsis,
@@ -1797,7 +1708,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 4),
                               child: Text(
-                                _isAboutDescExpanded ? 'Thu gọn' : '... Xem thêm',
+                                _isAboutDescExpanded
+                                    ? 'Thu gọn'
+                                    : '... Xem thêm',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -1926,8 +1839,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   builder: (context) {
                     final items = parsedRuleList;
                     final isLongList = items.length > 3;
-                    final visibleCount =
-                        _isAboutRulesExpanded || !isLongList ? items.length : 3;
+                    final visibleCount = _isAboutRulesExpanded || !isLongList
+                        ? items.length
+                        : 3;
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2016,7 +1930,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               const SizedBox(height: 14),
               _buildFbActivityItem(
                 icon: Icons.group_outlined,
-                title: 'Tổng số thành viên: ${club.memberCount}${club.maxMembers != null ? " / ${club.maxMembers}" : ""}',
+                title:
+                    'Tổng số thành viên: ${club.memberCount}${club.maxMembers != null ? " / ${club.maxMembers}" : ""}',
                 subtitle: club.joinMode == "OPEN"
                     ? 'Bất kỳ ai cũng có thể tự do tham gia CLB'
                     : club.joinMode == "APPROVAL"
@@ -2286,8 +2201,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       }
     }
   }
-
-
 
   // ════════════════════════════════════
   //  TAB 2: GIẢI ĐẤU
@@ -3881,7 +3794,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       );
     }
     final l10n = AppLocalizations.of(context)!;
-    final membersAsync = ref.watch(communityMembersProvider(widget.clubId));
+    final membersFeed = ref.watch(communityMembersFeedProvider(widget.clubId));
     final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
     final isCreator = club.ownerId != null && club.ownerId == currentUserId;
     final isAdmin =
@@ -3907,35 +3820,73 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       }
     });
 
-    return membersAsync.when(
-      data: (members) {
-        if (members.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.people_outline, size: 48, color: colors.textMuted),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.club_noMembers,
-                  style: TextStyle(color: colors.textSecondary, fontSize: 14),
-                ),
-              ],
+    if (membersFeed.isLoading && membersFeed.members.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (membersFeed.errorMessage != null && membersFeed.members.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+            const SizedBox(height: 12),
+            Text(
+              l10n.club_loadListError,
+              style: TextStyle(color: colors.textSecondary, fontSize: 14),
             ),
-          );
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () => ref
+                  .read(communityMembersFeedProvider(widget.clubId).notifier)
+                  .loadInitial(),
+              child: const Text('Thử lại'),
+            ),
+          ],
+        ),
+      );
+    }
+    if (membersFeed.members.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.people_outline, size: 48, color: colors.textMuted),
+            const SizedBox(height: 12),
+            Text(
+              l10n.club_noMembers,
+              style: TextStyle(color: colors.textSecondary, fontSize: 14),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final approvedMembers = membersFeed.members;
+    final membersNotifier = ref.read(
+      communityMembersFeedProvider(widget.clubId).notifier,
+    );
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification.metrics.axis == Axis.vertical &&
+            membersFeed.hasMore &&
+            membersFeed.nextCursor != null &&
+            !membersFeed.isLoading &&
+            notification.metrics.extentAfter <= 520) {
+          unawaited(membersNotifier.loadMore());
         }
-        final approvedMembers = members
-            .where((m) => m.status.toUpperCase() == 'JOINED')
-            .toList();
-        return ListView(
+        return false;
+      },
+      child: RefreshIndicator(
+        onRefresh: membersNotifier.loadInitial,
+        child: ListView(
           padding: const EdgeInsets.symmetric(vertical: 8),
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
             if (isAdmin)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _buildJoinRequestsSection(joinRequestsAsync, colors),
               ),
-            if (approvedMembers.isEmpty) const SizedBox.shrink(),
             ...approvedMembers.map(
               (m) => _buildMemberItem(
                 m,
@@ -3946,26 +3897,41 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     : null,
               ),
             ),
-          ],
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) {
-        _log.error('Lỗi tải thành viên CLB', e, st);
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
-              const SizedBox(height: 12),
-              Text(
-                l10n.club_loadListError,
-                style: TextStyle(color: colors.textSecondary, fontSize: 14),
+            if (membersFeed.isLoading && approvedMembers.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 132),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Đang tải thêm thành viên…',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
-        );
-      },
+            if (membersFeed.errorMessage != null && approvedMembers.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  membersFeed.errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: colors.textSecondary, fontSize: 12),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -3977,10 +3943,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       initialFullName: fullName,
       initialAvatarUrl: avatarUrl,
       onFilterMatches: (query) {
-        setState(() {
-          _activitySearchQuery = query;
-        });
-        _tabController.animateTo(1); // Tab 1: Hoạt động
+        final clubName =
+            ref.read(communityDetailProvider(widget.clubId)).value?.name ?? '';
+        context.push(
+          '/club/${widget.clubId}/search?name=${Uri.encodeComponent(clubName)}&q=${Uri.encodeComponent(query)}',
+        );
       },
     );
   }
@@ -4428,6 +4395,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           break;
       }
       ref.invalidate(communityMembersProvider(widget.clubId));
+      ref.invalidate(communityMembersFeedProvider(widget.clubId));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -4466,6 +4434,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           tags,
         );
         ref.invalidate(communityMembersProvider(widget.clubId));
+        ref.invalidate(communityMembersFeedProvider(widget.clubId));
       },
     );
   }
@@ -4598,6 +4567,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     );
                 ref.invalidate(joinRequestsProvider(widget.clubId));
                 ref.invalidate(communityMembersProvider(widget.clubId));
+                ref.invalidate(communityMembersFeedProvider(widget.clubId));
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -5652,6 +5622,8 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
           Expanded(
             child: TabBar(
               controller: tabController,
+              tabAlignment: TabAlignment.start,
+              padding: const EdgeInsets.only(left: 16),
               indicator: UnderlineTabIndicator(
                 borderSide: BorderSide(color: AppTheme.primary, width: 2),
                 insets: const EdgeInsets.symmetric(horizontal: 6),

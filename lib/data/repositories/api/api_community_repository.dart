@@ -262,6 +262,53 @@ class ApiCommunityRepository implements ICommunityRepository {
   }
 
   @override
+  Future<CommunityMembersPage> getMembersPaged(
+    String communityId, {
+    String? cursor,
+    int limit = 20,
+    String? status,
+    String? search,
+  }) async {
+    _log.info(
+      'Lấy thành viên CLB theo cursor: $communityId, cursor=$cursor, limit=$limit',
+    );
+    final response = await _dioClient.dio.get(
+      '/communities/$communityId/members',
+      queryParameters: {
+        'limit': limit,
+        if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+        if (status != null && status.isNotEmpty) 'status': status,
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+      },
+    );
+    final raw = response.data;
+    final data = raw is Map ? raw['data'] : null;
+    final rows = (data is List ? data : const <dynamic>[])
+        .whereType<Map>()
+        .map(
+          (row) =>
+              CommunityMemberModel.fromJson(Map<String, dynamic>.from(row)),
+        )
+        .toList(growable: false);
+    final meta = raw is Map && raw['meta'] is Map
+        ? Map<String, dynamic>.from(raw['meta'] as Map)
+        : const <String, dynamic>{};
+    final next = meta['nextCursor']?.toString().trim();
+    final safeNext =
+        meta['hasMore'] == true &&
+            next != null &&
+            next.isNotEmpty &&
+            next != cursor
+        ? next
+        : null;
+    return CommunityMembersPage(
+      items: rows,
+      nextCursor: safeNext,
+      hasMore: safeNext != null,
+    );
+  }
+
+  @override
   Future<bool> joinCommunity(
     String communityId, {
     Map<String, dynamic>? answers,

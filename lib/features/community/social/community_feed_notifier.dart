@@ -62,7 +62,7 @@ class CommunityFeedNotifier extends Notifier<CommunityFeedState> {
           .getFeed(communityId, cursor: state.nextCursor);
       final knownIds = state.posts.map((post) => post.id).toSet();
       final fresh = page.items.where((post) => !knownIds.contains(post.id));
-      state = state.copyWith(
+      state = CommunityFeedState(
         posts: [...state.posts, ...fresh],
         nextCursor: page.nextCursor,
         hasMore: page.hasMore,

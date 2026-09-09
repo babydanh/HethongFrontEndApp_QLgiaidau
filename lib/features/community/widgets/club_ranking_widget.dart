@@ -8,7 +8,6 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
-import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -33,7 +32,8 @@ class ClubRankingWidget extends ConsumerStatefulWidget {
   ConsumerState<ClubRankingWidget> createState() => _ClubRankingWidgetState();
 }
 
-class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
+class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
+    with AutomaticKeepAliveClientMixin {
   List<PlayerRanking>? _rankings;
   bool _loading = true;
   String? _error;
@@ -41,10 +41,10 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
   String _selectedGender = 'MALE';
   String? _selectedCategoryId;
   List<dynamic> _availableCategories = const [];
-  final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounceTimer;
-  String _searchQuery = '';
   Timer? _pollingTimer;
+
+  @override
+  bool get wantKeepAlive => true;
 
   /// Số bộ lọc đang lệch mặc định (để hiện chấm badge trên icon bộ lọc).
   int get _activeFilterCount =>
@@ -68,15 +68,13 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
 
   @override
   void dispose() {
-    _searchDebounceTimer?.cancel();
     _pollingTimer?.cancel();
-    _searchController.dispose();
     super.dispose();
   }
 
   Future<void> _fetchRankings({bool showLoading = true}) async {
     final l10n = AppLocalizations.of(context)!;
-    if (showLoading) {
+    if (showLoading && _rankings == null) {
       setState(() {
         _loading = true;
         _error = null;
@@ -84,13 +82,19 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
     }
     try {
       final dio = ref.read(dioProvider);
-      // Danh mục chỉ phục vụ bộ lọc. Không để request này làm cả tab
-      // Xếp hạng quay vô hạn nếu backend danh mục phản hồi chậm.
-      final allCategories = await ref
-          .read(categoriesProvider.future)
-          .timeout(const Duration(seconds: 5), onTimeout: () => const []);
-      // Lọc Môn theo setting CLB (clubSportKeys), fallback toàn bộ nếu không
-      // khớp — giống web dùng community.categories.
+
+      // 1. Tải danh mục với timeout ngắn (2.5 giây).
+      // Nếu đã có cache _availableCategories thì dùng ngay không cần đợi.
+      List<dynamic> allCategories = _availableCategories;
+      if (allCategories.isEmpty) {
+        allCategories = await ref
+            .read(categoriesProvider.future)
+            .timeout(
+              const Duration(milliseconds: 2500),
+              onTimeout: () => const [],
+            );
+      }
+
       var categories = allCategories;
       final clubKeys = widget.clubSportKeys;
       if (clubKeys != null && clubKeys.isNotEmpty) {
@@ -106,13 +110,14 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         categories = matched;
       }
       _availableCategories = categories;
+
       final categoryId =
           _selectedCategoryId ??
           (categories.isNotEmpty ? categories.first.id : null);
-      if (categoryId == null || categoryId.isEmpty) {
-        _selectedCategoryId = null;
-      }
-      _selectedCategoryId = categoryId;
+      _selectedCategoryId = (categoryId == null || categoryId.isEmpty)
+          ? null
+          : categoryId;
+
       final selectedCategory = categories
           .cast<dynamic>()
           .where((c) => c.id == categoryId)
@@ -124,15 +129,18 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
           categoryLabel.contains('football') ||
           categoryLabel.contains('bóng đá') ||
           categoryLabel.contains('bong da');
+
       if (isFootball && categoryId != null && categoryId.isNotEmpty) {
-        final response = await dio.get(
-          '/rankings/football-teams',
-          queryParameters: {
-            'categoryId': categoryId,
-            'communityId': widget.clubId,
-            'limit': widget.compact ? 3 : 20,
-          },
-        );
+        final response = await dio
+            .get(
+              '/rankings/football-teams',
+              queryParameters: {
+                'categoryId': categoryId,
+                'communityId': widget.clubId,
+                'limit': widget.compact ? 3 : 20,
+              },
+            )
+            .timeout(const Duration(seconds: 6));
         final raw = response.data;
         final dataList = raw is Map<String, dynamic>
             ? (raw['data'] as List<dynamic>? ?? const [])
@@ -183,6 +191,8 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         }
         return;
       }
+
+      // 2. Tải bảng xếp hạng với timeout 6 giây
       final queryParams = <String, dynamic>{
         'communityId': widget.clubId,
         'scope': 'COMMUNITY',
@@ -192,17 +202,66 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
           'categoryId': categoryId,
         'limit': widget.compact ? 3 : 20,
       };
-      final response = await dio.get('/rankings', queryParameters: queryParams);
+      final response = await dio
+          .get('/rankings', queryParameters: queryParams)
+          .timeout(const Duration(seconds: 6));
       final raw = response.data;
       final List<dynamic> dataList = raw is Map<String, dynamic>
           ? (raw['data'] as List<dynamic>? ?? [])
           : (raw as List<dynamic>? ?? []);
-      // Chỉ hiển thị người đã có dữ liệu thi đấu thật. Không biến thành viên
-      // CLB chưa đánh trận thành một bảng hạng giả với ELO mặc định 1000/LTD.
       var rankings = dataList
           .map((json) => PlayerRanking.fromJson(json as Map<String, dynamic>))
           .where((ranking) => ranking.matchesPlayed > 0)
           .toList();
+
+      // Nếu /rankings rỗng hoặc chưa có trận đấu xếp hạng nào, fallback thử endpoint internal CLB
+      if (rankings.isEmpty) {
+        try {
+          final clubRes = await dio
+              .get(
+                '/communities/${widget.clubId}/rankings',
+                queryParameters: {'limit': widget.compact ? 3 : 20},
+              )
+              .timeout(const Duration(seconds: 4));
+          final clubRaw = clubRes.data;
+          final clubList = clubRaw is Map<String, dynamic>
+              ? (clubRaw['data'] as List<dynamic>? ?? [])
+              : (clubRaw as List<dynamic>? ?? []);
+          if (clubList.isNotEmpty) {
+            rankings = clubList.map((e) {
+              final json = e as Map<String, dynamic>;
+              final userId =
+                  (json['userId'] ?? json['user_id'] ?? json['id'] ?? '')
+                      .toString();
+              final fullName =
+                  (json['fullName'] ?? json['full_name'] ?? json['name'] ?? '')
+                      .toString();
+              final avatarUrl = (json['avatarUrl'] ?? json['avatar_url'])
+                  ?.toString();
+              final elo =
+                  ((json['eloPoints'] ??
+                              json['elo_points'] ??
+                              json['elo'] ??
+                              1000)
+                          as num)
+                      .toInt();
+              return PlayerRanking(
+                id: userId,
+                userId: userId,
+                fullName: fullName,
+                avatarUrl: avatarUrl,
+                categoryId: categoryId ?? '',
+                matchType: _selectedMatchType,
+                genderRestriction: _selectedGender,
+                eloPoints: elo,
+                matchesPlayed: 1, // Đã có trong bảng xếp hạng
+                matchesWon: 1,
+              );
+            }).toList();
+          }
+        } catch (_) {}
+      }
+
       if (mounted) {
         setState(() {
           _rankings = rankings;
@@ -229,6 +288,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
 
@@ -242,29 +302,11 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
       );
     }
 
-    // Không early-return khi rỗng/lỗi: header + thanh tìm kiếm + icon bộ lọc
-    // phải LUÔN hiện để người dùng đổi được bộ lọc (chỉ phần danh sách
-    // chuyển sang khung "Chưa có dữ liệu" bên dưới).
+    // Không early-return khi rỗng/lỗi: header + icon bộ lọc phải LUÔN hiện
+    // để người dùng đổi được bộ lọc. Tìm kiếm dùng màn hình search chung
+    // từ header CLB, không lặp lại trong tab Xếp hạng.
     final allRankings = _rankings ?? const <PlayerRanking>[];
-    final query = _searchQuery.trim().toLowerCase();
-    final rankings = query.isEmpty
-        ? allRankings
-        : allRankings
-              .where(
-                (ranking) => ranking.fullName.toLowerCase().contains(query),
-              )
-              .toList();
-    final filteredRankings = rankings;
-    final isSearching = query.isNotEmpty;
-    final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
-    final myRanking = currentUserId == null
-        ? null
-        : allRankings
-              .where((ranking) => ranking.userId == currentUserId)
-              .firstOrNull;
-    final myRank = myRanking == null
-        ? null
-        : allRankings.indexOf(myRanking) + 1;
+    final filteredRankings = allRankings;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -294,93 +336,37 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
         ),
         const SizedBox(height: 10),
 
-        // ── Podium Row (Top 3) ──
-        if (!widget.compact) ...[
+        if (!widget.compact)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) {
-                _searchDebounceTimer?.cancel();
-                _searchDebounceTimer = Timer(
-                  const Duration(milliseconds: 250),
-                  () {
-                    if (mounted) {
-                      setState(() => _searchQuery = value);
-                    }
-                  },
-                );
-              },
-              decoration: InputDecoration(
-                hintText: l10n.clubRankingSearchHint,
-                prefixIcon: const Icon(Icons.search_rounded, size: 18),
-                isDense: true,
-                filled: true,
-                fillColor: colors.bgCard,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                tooltip: l10n.clubRankingFilterTooltip,
+                onPressed: _openFilterSheet,
+                icon: Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    ValueListenableBuilder<TextEditingValue>(
-                      valueListenable: _searchController,
-                      builder: (context, val, _) {
-                        if (val.text.isEmpty) return const SizedBox.shrink();
-                        return IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 16),
-                          visualDensity: VisualDensity.compact,
-                          onPressed: () {
-                            _searchDebounceTimer?.cancel();
-                            _searchController.clear();
-                            setState(() => _searchQuery = '');
-                          },
-                        );
-                      },
-                    ),
-                    IconButton(
-                      tooltip: l10n.clubRankingFilterTooltip,
-                      visualDensity: VisualDensity.compact,
-                      onPressed: _openFilterSheet,
-                      icon: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          const Icon(Icons.tune_rounded, size: 19),
-                          if (_activeFilterCount > 0)
-                            Positioned(
-                              top: -3,
-                              right: -3,
-                              child: Container(
-                                width: 7,
-                                height: 7,
-                                decoration: const BoxDecoration(
-                                  color: AppTheme.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                        ],
+                    const Icon(Icons.tune_rounded, size: 19),
+                    if (_activeFilterCount > 0)
+                      Positioned(
+                        top: -3,
+                        right: -3,
+                        child: Container(
+                          width: 7,
+                          height: 7,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
             ),
           ),
-          if (myRanking != null) ...[
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildMyRankingCard(myRanking, myRank, colors, l10n),
-            ),
-          ],
-        ],
-        // ── Nội dung: dữ liệu / trống / lỗi (search + filter luôn hiện) ──
+        // ── Nội dung: dữ liệu / trống / lỗi ──
         if (_error != null)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -397,19 +383,15 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
             child: _buildEmptyRanking(colors, l10n, searching: true),
           )
         else ...[
-          if (!isSearching)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildPodiumRow(filteredRankings),
-            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildPodiumRow(filteredRankings),
+          ),
           // ── Ranks 4-10 List (Tràn viền edge-to-edge) ──
-          if (!widget.compact &&
-              filteredRankings.length > (isSearching ? 0 : 3)) ...[
+          if (!widget.compact && filteredRankings.length > 3) ...[
             const SizedBox(height: 10),
-            ...List.generate(filteredRankings.length - (isSearching ? 0 : 3), (
-              i,
-            ) {
-              final index = isSearching ? i : i + 3;
+            ...List.generate(filteredRankings.length - 3, (i) {
+              final index = i + 3;
               final r = filteredRankings[index];
               final actualRank = allRankings.indexOf(r) + 1;
               return _buildListRow(r, actualRank, colors);
@@ -627,102 +609,6 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget> {
       );
 
   // ─── Gender Filter ───
-
-  Widget _buildMyRankingCard(
-    PlayerRanking ranking,
-    int? rank,
-    AppColorsExtension colors,
-    AppLocalizations l10n,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: AppTheme.primary,
-            child: Text(
-              rank == null ? '—' : '#$rank',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.clubRankingMyRank,
-                  style: TextStyle(
-                    color: AppTheme.primary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                Text(
-                  ranking.fullName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${ranking.eloPoints} ${l10n.rankingElo}',
-                style: TextStyle(
-                  color: AppTheme.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              if (ranking.winStreak > 0)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('🔥', style: TextStyle(fontSize: 10)),
-                    const SizedBox(width: 2),
-                    Text(
-                      '${ranking.winStreak}',
-                      style: TextStyle(
-                        color: AppTheme.primary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              if (ranking.peakElo != null)
-                Text(
-                  l10n.clubRankingPeak(ranking.peakElo!),
-                  style: TextStyle(
-                    color: colors.textMuted,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   // ─── Empty / Error card (hiện dưới thanh tìm kiếm khi không có dữ liệu) ───
 

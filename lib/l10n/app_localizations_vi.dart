@@ -38,6 +38,43 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_noMembersFound => 'Không tìm thấy thành viên phù hợp';
 
   @override
+  String get club_loadMoreMatches => 'Xem thêm trận';
+
+  @override
+  String get club_enterStandaloneScore => 'Nhập điểm trận riêng';
+
+  @override
+  String get club_setCount => 'Số set (tối đa 10)';
+
+  @override
+  String club_setNumber(Object index) {
+    return 'Set $index';
+  }
+
+  @override
+  String get club_saveMatchResult => 'Lưu kết quả';
+
+  @override
+  String get club_openScoreboard => 'Mở bảng điểm';
+
+  @override
+  String get club_matchScoreReadOnly => 'Trận đã kết thúc, không thể sửa điểm.';
+
+  @override
+  String get club_matchScoreRequired => 'Nhập ít nhất một set đầy đủ.';
+
+  @override
+  String get club_matchScoreIncomplete =>
+      'Hãy nhập các set theo thứ tự, không bỏ trống ở giữa.';
+
+  @override
+  String get club_matchScoreWinnerRequired =>
+      'Tỉ số set phải xác định được đội thắng.';
+
+  @override
+  String get club_matchScoreSaved => 'Đã lưu và chốt kết quả trận.';
+
+  @override
   String get appTagline => 'Chơi cùng nhau';
 
   @override
@@ -3732,7 +3769,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_pendingApproval => 'Chờ phê duyệt';
 
   @override
-  String get club_joinButton => 'Tham gia CLB';
+  String get club_joinButton => 'Tham gia';
 
   @override
   String get club_joinSuccess => 'Tham gia câu lạc bộ thành công!';
@@ -12529,4 +12566,37 @@ class AppLocalizationsVi extends AppLocalizations {
   String clubMatchSessionRecurringBeforeDays(int count) {
     return 'Trước $count ngày';
   }
+
+  @override
+  String get communitySearchTitle => 'Tìm kiếm trong CLB';
+
+  @override
+  String get communitySearchHint => 'Tìm bài viết, thành viên, trận đấu...';
+
+  @override
+  String get communitySearchAll => 'Tất cả';
+
+  @override
+  String get communitySearchPosts => 'Bài viết';
+
+  @override
+  String get communitySearchMembers => 'Thành viên';
+
+  @override
+  String get communitySearchMatches => 'Trận đấu';
+
+  @override
+  String get communitySearchTournaments => 'Giải đấu';
+
+  @override
+  String get communitySearchIdle => 'Nhập ít nhất 2 ký tự để tìm trong CLB';
+
+  @override
+  String get communitySearchEmpty => 'Không tìm thấy kết quả phù hợp';
+
+  @override
+  String get communitySearchError => 'Không thể tải kết quả tìm kiếm';
+
+  @override
+  String get communitySearchRetry => 'Thử lại';
 }

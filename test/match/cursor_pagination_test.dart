@@ -35,4 +35,15 @@ void main() {
       isFalse,
     );
   });
+
+  test('does not advance with a blank cursor and no cached page', () {
+    expect(
+      canAdvanceCursorPage(
+        isLoading: false,
+        hasCachedPage: false,
+        nextCursor: '   ',
+      ),
+      isFalse,
+    );
+  });
 }

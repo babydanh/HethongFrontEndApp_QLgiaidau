@@ -86,7 +86,9 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             .read(communitySocialRepositoryProvider)
             .getPendingPosts(widget.clubId),
         ref.read(communitySocialRepositoryProvider).getReports(widget.clubId),
-        repo.getRankings(widget.clubId, limit: 200).catchError((_) => <CommunityRankingModel>[]),
+        repo
+            .getRankings(widget.clubId, limit: 200)
+            .catchError((_) => <CommunityRankingModel>[]),
       ]);
       final all = results[0] as List<CommunityMemberModel>;
       final requests = results[1] as List<CommunityMemberModel>;
@@ -167,9 +169,11 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                 children: [
+                  if (_joinRequests.isNotEmpty) ...[
+                    _buildJoinRequestsSection(colors),
+                    const SizedBox(height: 16),
+                  ],
                   _buildStatsRow(colors),
-                  const SizedBox(height: 16),
-                  _buildJoinRequestsSection(colors),
                   const SizedBox(height: 16),
                   _buildPendingPostsSection(colors),
                   if (_reports.isNotEmpty) ...[
@@ -934,12 +938,16 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                             vertical: 1.5,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF6366F1)
-                                                .withValues(alpha: 0.15),
-                                            borderRadius: BorderRadius.circular(4),
+                                            color: const Color(
+                                              0xFF6366F1,
+                                            ).withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
                                             border: Border.all(
-                                              color: const Color(0xFF6366F1)
-                                                  .withValues(alpha: 0.3),
+                                              color: const Color(
+                                                0xFF6366F1,
+                                              ).withValues(alpha: 0.3),
                                             ),
                                           ),
                                           child: Row(
@@ -1058,7 +1066,9 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   ? const SizedBox(
                                       width: 14,
                                       height: 14,
-                                      child: CircularProgressIndicator(strokeWidth: 1.5),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 1.5,
+                                      ),
                                     )
                                   : Icon(
                                       Icons.delete_outline_rounded,
@@ -1103,7 +1113,9 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   // ─── Recurring Schedules Management (Quản lý Lịch giải Định kỳ - Cron) ───
   Widget _buildRecurringSchedulesSection(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
-    final tourneysAsync = ref.watch(communityTournamentsProvider(widget.clubId));
+    final tourneysAsync = ref.watch(
+      communityTournamentsProvider(widget.clubId),
+    );
 
     return tourneysAsync.when(
       data: (tourneys) {
@@ -1154,9 +1166,14 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                             if (recurringTourneys.isNotEmpty) ...[
                               const SizedBox(width: 6),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 1.5,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                                  color: const Color(
+                                    0xFF6366F1,
+                                  ).withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Text(
@@ -1173,7 +1190,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                         ),
                         Text(
                           l10n.createClubTournament_recurringDescription,
-                          style: TextStyle(fontSize: 11, color: colors.textMuted),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colors.textMuted,
+                          ),
                         ),
                       ],
                     ),
@@ -1184,7 +1204,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
               if (recurringTourneys.isEmpty)
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 20,
+                    horizontal: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.bgSurface,
                     borderRadius: BorderRadius.circular(12),
@@ -1192,7 +1215,11 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                   ),
                   child: Column(
                     children: [
-                      Icon(Icons.schedule_rounded, size: 28, color: colors.textMuted),
+                      Icon(
+                        Icons.schedule_rounded,
+                        size: 28,
+                        color: colors.textMuted,
+                      ),
                       const SizedBox(height: 6),
                       Text(
                         l10n.communityRecurringEmpty,
@@ -1206,7 +1233,11 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                       const SizedBox(height: 2),
                       Text(
                         l10n.communityRecurringEmptyHint,
-                        style: TextStyle(fontSize: 11, color: colors.textMuted, height: 1.35),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colors.textMuted,
+                          height: 1.35,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -1217,14 +1248,17 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: recurringTourneys.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 10),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final t = recurringTourneys[index];
                     final rec = t.recurringConfig ?? <String, dynamic>{};
                     final isEnabled = rec['enabled'] != false;
                     final timeOfDay = rec['timeOfDay']?.toString() ?? '18:00';
                     final advanceDays = rec['advanceDays'] ?? 0;
-                    final nextRunAtStr = rec['nextRunAt']?.toString() ?? rec['nextEventAt']?.toString();
+                    final nextRunAtStr =
+                        rec['nextRunAt']?.toString() ??
+                        rec['nextEventAt']?.toString();
                     DateTime? nextRunAt;
                     if (nextRunAtStr != null && nextRunAtStr.isNotEmpty) {
                       nextRunAt = DateTime.tryParse(nextRunAtStr)?.toLocal();
@@ -1232,7 +1266,9 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
 
                     List<int> days = [];
                     if (rec['daysOfWeek'] is List) {
-                      days = (rec['daysOfWeek'] as List).map((d) => int.tryParse(d.toString()) ?? 6).toList();
+                      days = (rec['daysOfWeek'] as List)
+                          .map((d) => int.tryParse(d.toString()) ?? 6)
+                          .toList();
                     } else if (rec['dayOfWeek'] != null) {
                       days = [int.tryParse(rec['dayOfWeek'].toString()) ?? 6];
                     }
@@ -1269,33 +1305,52 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: isEnabled
-                                      ? const Color(0xFF10B981).withValues(alpha: 0.12)
-                                      : const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                                      ? const Color(
+                                          0xFF10B981,
+                                        ).withValues(alpha: 0.12)
+                                      : const Color(
+                                          0xFFF59E0B,
+                                        ).withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(6),
                                   border: Border.all(
                                     color: isEnabled
-                                        ? const Color(0xFF10B981).withValues(alpha: 0.3)
-                                        : const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                                        ? const Color(
+                                            0xFF10B981,
+                                          ).withValues(alpha: 0.3)
+                                        : const Color(
+                                            0xFFF59E0B,
+                                          ).withValues(alpha: 0.3),
                                   ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
-                                      isEnabled ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                                      isEnabled
+                                          ? Icons.play_arrow_rounded
+                                          : Icons.pause_rounded,
                                       size: 11,
-                                      color: isEnabled ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                                      color: isEnabled
+                                          ? const Color(0xFF10B981)
+                                          : const Color(0xFFF59E0B),
                                     ),
                                     const SizedBox(width: 3),
                                     Text(
-                                      isEnabled ? l10n.communityRecurringActive : l10n.communityRecurringPaused,
+                                      isEnabled
+                                          ? l10n.communityRecurringActive
+                                          : l10n.communityRecurringPaused,
                                       style: TextStyle(
                                         fontSize: 9.5,
                                         fontWeight: FontWeight.w800,
-                                        color: isEnabled ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                                        color: isEnabled
+                                            ? const Color(0xFF10B981)
+                                            : const Color(0xFFF59E0B),
                                       ),
                                     ),
                                   ],
@@ -1308,7 +1363,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                             children: [
                               Text(
                                 l10n.communityRecurringDays,
-                                style: TextStyle(fontSize: 11, color: colors.textMuted),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colors.textMuted,
+                                ),
                               ),
                               const SizedBox(width: 6),
                               Wrap(
@@ -1317,12 +1375,19 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   final isSelected = days.contains(d);
                                   final dayText = d == 0 ? 'CN' : 'T${d + 1}';
                                   return Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 5,
+                                      vertical: 1.5,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: isSelected ? const Color(0xFF6366F1) : colors.bgCard,
+                                      color: isSelected
+                                          ? const Color(0xFF6366F1)
+                                          : colors.bgCard,
                                       borderRadius: BorderRadius.circular(4),
                                       border: Border.all(
-                                        color: isSelected ? const Color(0xFF6366F1) : colors.borderLight,
+                                        color: isSelected
+                                            ? const Color(0xFF6366F1)
+                                            : colors.borderLight,
                                       ),
                                     ),
                                     child: Text(
@@ -1330,14 +1395,20 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                       style: TextStyle(
                                         fontSize: 9,
                                         fontWeight: FontWeight.w800,
-                                        color: isSelected ? Colors.white : colors.textMuted,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : colors.textMuted,
                                       ),
                                     ),
                                   );
                                 }).toList(),
                               ),
                               const SizedBox(width: 10),
-                              Icon(Icons.schedule_rounded, size: 12, color: colors.textMuted),
+                              Icon(
+                                Icons.schedule_rounded,
+                                size: 12,
+                                color: colors.textMuted,
+                              ),
                               const SizedBox(width: 3),
                               Text(
                                 timeOfDay,
@@ -1355,11 +1426,16 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                               children: [
                                 Text(
                                   l10n.communityRecurringNextRun,
-                                  style: TextStyle(fontSize: 10.5, color: colors.textMuted),
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    color: colors.textMuted,
+                                  ),
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  DateFormat('HH:mm - dd/MM/yyyy').format(nextRunAt),
+                                  DateFormat(
+                                    'HH:mm - dd/MM/yyyy',
+                                  ).format(nextRunAt),
                                   style: TextStyle(
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.w700,
@@ -1370,7 +1446,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   const SizedBox(width: 6),
                                   Text(
                                     '(${l10n.createClubTournament_beforeDays(advanceDays)})',
-                                    style: TextStyle(fontSize: 10, color: colors.textMuted),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: colors.textMuted,
+                                    ),
                                   ),
                                 ],
                               ],
@@ -1381,38 +1460,62 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               OutlinedButton.icon(
-                                onPressed: (isToggling || _deletingRecurringId == t.id)
+                                onPressed:
+                                    (isToggling || _deletingRecurringId == t.id)
                                     ? null
-                                    : () => _toggleRecurringTournament(t.id, !isEnabled),
+                                    : () => _toggleRecurringTournament(
+                                        t.id,
+                                        !isEnabled,
+                                      ),
                                 icon: isToggling
                                     ? const SizedBox(
                                         width: 12,
                                         height: 12,
-                                        child: CircularProgressIndicator(strokeWidth: 1.5),
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 1.5,
+                                        ),
                                       )
                                     : Icon(
-                                        isEnabled ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                        isEnabled
+                                            ? Icons.pause_rounded
+                                            : Icons.play_arrow_rounded,
                                         size: 13,
                                       ),
                                 label: Text(
-                                  isEnabled ? l10n.communityRecurringPaused : l10n.communityRecurringActive,
-                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                  isEnabled
+                                      ? l10n.communityRecurringPaused
+                                      : l10n.communityRecurringActive,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),
                               IconButton(
-                                onPressed: (_deletingRecurringId == t.id || isToggling)
+                                onPressed:
+                                    (_deletingRecurringId == t.id || isToggling)
                                     ? null
-                                    : () => _deleteRecurringTournament(t.id, t.name),
+                                    : () => _deleteRecurringTournament(
+                                        t.id,
+                                        t.name,
+                                      ),
                                 icon: _deletingRecurringId == t.id
                                     ? const SizedBox(
                                         width: 14,
                                         height: 14,
-                                        child: CircularProgressIndicator(strokeWidth: 1.5),
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 1.5,
+                                        ),
                                       )
                                     : Icon(
                                         Icons.delete_outline_rounded,
@@ -1425,7 +1528,9 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                     side: BorderSide(
-                                      color: colors.error.withValues(alpha: 0.3),
+                                      color: colors.error.withValues(
+                                        alpha: 0.3,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1446,7 +1551,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
     );
   }
 
-  Future<void> _toggleRecurringTournament(String tournamentId, bool enable) async {
+  Future<void> _toggleRecurringTournament(
+    String tournamentId,
+    bool enable,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _togglingRecurringId = tournamentId);
     try {
@@ -1460,9 +1568,13 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              enable ? l10n.communityRecurringResume : l10n.communityRecurringPause,
+              enable
+                  ? l10n.communityRecurringResume
+                  : l10n.communityRecurringPause,
             ),
-            backgroundColor: enable ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+            backgroundColor: enable
+                ? const Color(0xFF10B981)
+                : const Color(0xFFF59E0B),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -1483,7 +1595,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
     }
   }
 
-  Future<void> _deleteRecurringTournament(String tournamentId, String tournamentName) async {
+  Future<void> _deleteRecurringTournament(
+    String tournamentId,
+    String tournamentName,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -1502,7 +1617,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
               l10n.delete,
-              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -1541,7 +1659,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
     }
   }
 
-  Future<void> _deleteTournament(String tournamentId, String tournamentName) async {
+  Future<void> _deleteTournament(
+    String tournamentId,
+    String tournamentName,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -1560,7 +1681,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
               l10n.deleteTournament,
-              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -1716,7 +1840,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
               ),
               filled: true,
               fillColor: colors.bgSurface,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide.none,
@@ -1757,7 +1884,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                   final hasRank = _memberEloMap.containsKey(m.userId);
                   final elo = _memberEloMap[m.userId] ?? 1000;
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: colors.bgSurface,
                       borderRadius: BorderRadius.circular(12),
@@ -1768,16 +1898,18 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                         GestureDetector(
                           onTap: m.userId.isNotEmpty
                               ? () => UserProfileBottomSheet.show(
-                                    context,
-                                    userId: m.userId,
-                                    communityId: widget.clubId,
-                                    initialFullName: m.userFullName,
-                                    initialAvatarUrl: m.userAvatarUrl,
-                                  )
+                                  context,
+                                  userId: m.userId,
+                                  communityId: widget.clubId,
+                                  initialFullName: m.userFullName,
+                                  initialAvatarUrl: m.userAvatarUrl,
+                                )
                               : null,
                           child: CircleAvatar(
                             radius: 18,
-                            backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
+                            backgroundColor: AppTheme.primary.withValues(
+                              alpha: 0.12,
+                            ),
                             child: Text(
                               (m.userFullName?.isNotEmpty == true
                                       ? m.userFullName![0]
@@ -1810,10 +1942,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                               if (hasRank)
                                 Row(
                                   children: [
-                                    EloTierBadge(
-                                      elo: elo,
-                                      scale: 0.8,
-                                    ),
+                                    EloTierBadge(elo: elo, scale: 0.8),
                                     const SizedBox(width: 6),
                                     Text(
                                       '$elo ELO',
@@ -1827,12 +1956,19 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                 )
                               else
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: colors.textMuted.withValues(alpha: 0.12),
+                                    color: colors.textMuted.withValues(
+                                      alpha: 0.12,
+                                    ),
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
-                                      color: colors.textMuted.withValues(alpha: 0.25),
+                                      color: colors.textMuted.withValues(
+                                        alpha: 0.25,
+                                      ),
                                     ),
                                   ),
                                   child: Text(
@@ -1895,6 +2031,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
   Widget _buildJoinRequestsSection(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     final hasRequests = _joinRequests.isNotEmpty;
+    if (!hasRequests) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1912,37 +2049,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             colors,
           ),
           const SizedBox(height: 10),
-          if (!hasRequests)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
-              decoration: BoxDecoration(
-                color: colors.bgSurface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colors.borderLight),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.how_to_reg_outlined,
-                    size: 20,
-                    color: Color(0xFF10B981),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      l10n.club_noPendingJoinRequests,
-                      style: TextStyle(
-                        color: colors.textSecondary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            ..._joinRequests.map((req) => _buildRequestCard(req, colors)),
+          ..._joinRequests.map((req) => _buildRequestCard(req, colors)),
         ],
       ),
     );
@@ -1984,8 +2091,9 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                 children: [
                   CircleAvatar(
                     radius: 20,
-                    backgroundColor:
-                        const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                    backgroundColor: const Color(
+                      0xFFF59E0B,
+                    ).withValues(alpha: 0.15),
                     child: Text(
                       (req.userFullName?.isNotEmpty == true
                               ? req.userFullName![0]
@@ -2404,8 +2512,9 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                 children: [
                   CircleAvatar(
                     radius: 18,
-                    backgroundColor:
-                        const Color(0xFF6366F1).withValues(alpha: 0.1),
+                    backgroundColor: const Color(
+                      0xFF6366F1,
+                    ).withValues(alpha: 0.1),
                     child: Text(
                       (m.userFullName?.isNotEmpty == true
                               ? m.userFullName![0]
@@ -2534,8 +2643,9 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                 children: [
                   CircleAvatar(
                     radius: 18,
-                    backgroundColor:
-                        const Color(0xFFEF4444).withValues(alpha: 0.1),
+                    backgroundColor: const Color(
+                      0xFFEF4444,
+                    ).withValues(alpha: 0.1),
                     child: Text(
                       (m.userFullName?.isNotEmpty == true
                               ? m.userFullName![0]
