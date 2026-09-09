@@ -39,7 +39,6 @@ class ClubStandaloneMatchResultDialog extends ConsumerStatefulWidget {
 class _ClubStandaloneMatchResultDialogState
     extends ConsumerState<ClubStandaloneMatchResultDialog> {
   static const _maxSets = 10;
-  static const _defaultSetCount = 5;
 
   late final List<TextEditingController> _sideAControllers;
   late final List<TextEditingController> _sideBControllers;
@@ -56,10 +55,7 @@ class _ClubStandaloneMatchResultDialogState
     _sideBControllers = List.generate(_maxSets, (_) => TextEditingController());
 
     final history = widget.match.scoreHistory;
-    final historyCount = history.length;
-    _setCount = historyCount > _defaultSetCount
-        ? (historyCount > _maxSets ? _maxSets : historyCount)
-        : _defaultSetCount;
+    _setCount = history.isEmpty ? 1 : history.length.clamp(1, _maxSets);
     for (var index = 0; index < history.length && index < _maxSets; index++) {
       final set = history[index];
       final hasScore = set.score1 != 0 || set.score2 != 0 || _isReadOnly;
@@ -93,16 +89,15 @@ class _ClubStandaloneMatchResultDialogState
         foundEmptyRow = true;
         continue;
       }
-      if (rawA.isEmpty || rawB.isEmpty) {
-        validation = AppLocalizations.of(context)!.club_matchScoreRequired;
-        break;
-      }
       if (foundEmptyRow) {
         validation = AppLocalizations.of(context)!.club_matchScoreIncomplete;
         break;
       }
-      final scoreA = int.tryParse(rawA);
-      final scoreB = int.tryParse(rawB);
+      // A missing side in an otherwise entered set is an intentional zero.
+      // Keep a completely blank row unused so adding extra set rows does not
+      // submit unplayed 0-0 sets.
+      final scoreA = rawA.isEmpty ? 0 : int.tryParse(rawA);
+      final scoreB = rawB.isEmpty ? 0 : int.tryParse(rawB);
       if (scoreA == null || scoreB == null) {
         validation = AppLocalizations.of(context)!.club_matchScoreRequired;
         break;
@@ -458,42 +453,42 @@ class _ClubStandaloneMatchResultDialogState
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          l10n.club_setCount,
-          style: TextStyle(
-            color: colors.textPrimary,
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
+        Expanded(
+          child: Text(
+            '${l10n.club_setCount}: $_setCount/$_maxSets',
+            style: TextStyle(
+              color: colors.textPrimary,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
-        Container(
+        SizedBox(
+          width: 34,
           height: 34,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: colors.bgSurface,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: colors.borderLight),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<int>(
-              value: _setCount,
-              isDense: true,
-              borderRadius: BorderRadius.circular(8),
-              style: TextStyle(
-                color: colors.textPrimary,
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
+          child: IconButton(
+            tooltip: 'Thêm set',
+            onPressed: _isSaving || _isReadOnly || _setCount >= _maxSets
+                ? null
+                : () {
+                    setState(() {
+                      _setCount += 1;
+                      _errorMessage = null;
+                    });
+                  },
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
+            style: IconButton.styleFrom(
+              foregroundColor: AppTheme.primary,
+              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+              disabledForegroundColor: colors.textMuted,
+              disabledBackgroundColor: colors.bgSurface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(color: colors.borderLight),
               ),
-              items: [
-                for (var count = 1; count <= _maxSets; count++)
-                  DropdownMenuItem(value: count, child: Text('$count')),
-              ],
-              onChanged: _isSaving
-                  ? null
-                  : (value) {
-                      if (value != null) setState(() => _setCount = value);
-                    },
             ),
+            icon: const Icon(Icons.add_rounded, size: 20),
           ),
         ),
       ],
@@ -582,6 +577,12 @@ class _ClubStandaloneMatchResultDialogState
         ),
         decoration: InputDecoration(
           labelText: label,
+          hintText: '0',
+          hintStyle: TextStyle(
+            color: colors.textMuted,
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+          ),
           labelStyle: TextStyle(
             color: accent,
             fontSize: 10,

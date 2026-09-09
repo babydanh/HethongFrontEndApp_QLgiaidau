@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/services/match_socket_service.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
@@ -63,10 +65,18 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   bool _sessionListHasMore = false;
   String? _standaloneMatchCursor;
   bool _standaloneMatchHasMore = false;
+  ScrollController? _attachedActivityScrollController;
+  bool _loadMoreQueued = false;
+  bool _activityLoadMoreArmed = true;
+  bool _activityScrollStarted = false;
+  late final MatchSocketService _matchSocket;
 
   @override
   void initState() {
     super.initState();
+    // Capture the provider-owned service while the ConsumerState is mounted.
+    // dispose() must not call ref.read after Riverpod has unmounted this state.
+    _matchSocket = ref.read(matchSocketServiceProvider);
     _fetchMatches();
     _listenForActivityMatchUpdates();
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
@@ -74,8 +84,23 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // NestedScrollView provides the real inner controller through the
+    // PrimaryScrollController. Listen to that position directly so loading
+    // does not depend on which scroll notification depth bubbles first.
+    final controller = PrimaryScrollController.maybeOf(context);
+    if (identical(controller, _attachedActivityScrollController)) return;
+    _attachedActivityScrollController?.removeListener(
+      _onActivityScrollPosition,
+    );
+    _attachedActivityScrollController = controller;
+    controller?.addListener(_onActivityScrollPosition);
+  }
+
   void _listenForActivityMatchUpdates() {
-    final socket = ref.read(matchSocketServiceProvider);
+    final socket = _matchSocket;
     _socketScoreSubscription = socket.onScoreUpdate.listen(
       _handleSocketMatchUpdate,
     );
@@ -103,7 +128,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   }
 
   void _syncActivitySocketRooms() {
-    final socket = ref.read(matchSocketServiceProvider);
+    final socket = _matchSocket;
     unawaited(socket.connect(null, joinMatch: false));
     for (final match in _matches) {
       if (match.isStandaloneMatch) {
@@ -128,11 +153,14 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
 
   @override
   void dispose() {
+    _attachedActivityScrollController?.removeListener(
+      _onActivityScrollPosition,
+    );
     _socketRefreshTimer?.cancel();
     _socketScoreSubscription?.cancel();
     _socketStatusSubscription?.cancel();
     _socketMatchSubscription?.cancel();
-    final socket = ref.read(matchSocketServiceProvider);
+    final socket = _matchSocket;
     for (final matchId in _joinedActivityMatchIds) {
       socket.leave(matchId);
     }
@@ -145,6 +173,37 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     socket.leaveClubCommunity(widget.communityId);
     _refreshTimer?.cancel();
     super.dispose();
+  }
+
+  void _onActivityScrollPosition() {
+    final position = _attachedActivityScrollController;
+    if (position == null || !position.hasClients) return;
+    final isNearEnd = position.positions.any((scrollPosition) {
+      return scrollPosition.extentAfter <= 520;
+    });
+    if (!isNearEnd) _activityLoadMoreArmed = true;
+    if (isNearEnd && _activityScrollStarted) {
+      _queueLoadMoreActivity();
+    }
+  }
+
+  void _queueLoadMoreActivity() {
+    if (!_activityLoadMoreArmed ||
+        _loadMoreQueued ||
+        _isLoadingMore ||
+        !_hasMoreActivity) {
+      return;
+    }
+    // Appending a page can leave the position inside the threshold. Disarm
+    // until the user leaves the end zone and approaches it again, otherwise a
+    // single drag would recursively fetch several pages.
+    _activityLoadMoreArmed = false;
+    _loadMoreQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadMoreQueued = false;
+      if (!mounted || _isLoadingMore || !_hasMoreActivity) return;
+      unawaited(_fetchMatches(loadMore: true));
+    });
   }
 
   void _resetActivityPaging() {
@@ -160,6 +219,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     _standaloneMatchHasMore = false;
     _hasMoreActivity = false;
     _activityDisplayLimit = _activityMatchPageSize;
+    _activityLoadMoreArmed = true;
+    _activityScrollStarted = false;
   }
 
   String? _safeNextCursor(String? cursor, String? nextCursor, bool hasMore) {
@@ -236,8 +297,21 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   }) async {
     if (loadMore && (_isLoadingMore || !_hasMoreActivity)) return;
 
-    // The activity feed merges independent cursor streams. Reveal buffered
-    // rows before requesting another remote page when no source has more.
+    // The activity feed merges independent cursor streams. A first request can
+    // legitimately buffer more than one visible page because each source has
+    // its own cursor. Reveal that buffer in fixed windows before requesting
+    // another remote page; otherwise one scroll would fan out to every source
+    // and appear to load 25+ matches at once.
+    if (loadMore && _matches.length > _activityDisplayLimit) {
+      if (!mounted) return;
+      setState(() {
+        _activityDisplayLimit += _activityMatchPageSize;
+        _hasMoreActivity =
+            _matches.length > _activityDisplayLimit || _hasMoreActivitySource;
+      });
+      return;
+    }
+
     if (loadMore && !_hasMoreActivitySource) {
       if (!mounted) return;
       setState(() {
@@ -435,11 +509,23 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   }
 
   bool _onActivityScroll(ScrollNotification notification) {
-    if (notification.metrics.axis == Axis.vertical &&
-        _hasMoreActivity &&
-        !_isLoadingMore &&
-        notification.metrics.extentAfter <= 520) {
-      unawaited(_fetchMatches(loadMore: true));
+    if (notification.metrics.axis != Axis.vertical) return false;
+
+    final isScrollStart =
+        notification is ScrollStartNotification ||
+        (notification is UserScrollNotification &&
+            notification.direction != ScrollDirection.idle);
+    final isScrollEnd = notification is ScrollEndNotification;
+    if (isScrollStart) _activityScrollStarted = true;
+
+    final isNearEnd = notification.metrics.extentAfter <= 520;
+    if (!isNearEnd) _activityLoadMoreArmed = true;
+    if (isNearEnd && (_activityScrollStarted || isScrollEnd)) {
+      _queueLoadMoreActivity();
+    }
+
+    if (isScrollEnd) {
+      _activityScrollStarted = false;
     }
     return false;
   }
@@ -687,86 +773,72 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
       child: RefreshIndicator(
         onRefresh: () => _fetchMatches(),
         child: ListView(
+          primary: true,
           padding: const EdgeInsets.only(top: 12, bottom: 132),
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             // ─── 2. THANH LỌC & TÌM KIẾM & TẠO TRẬN ĐẤU ───────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      if (canCreateStandalone) ...[
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          height: 36,
-                          child: FilledButton.icon(
-                            onPressed: () async {
-                              final createdMatch =
-                                  await ClubStandaloneMatchDialog.show(
-                                    context,
-                                    communityId: widget.communityId,
-                                    clubName: widget.club?.name,
-                                    onMatchCreated: () => _fetchMatches(),
-                                  );
-                              if (!context.mounted || createdMatch == null) {
-                                return;
-                              }
-                              final action =
-                                  await ClubStandaloneMatchResultDialog.show(
-                                    context,
-                                    match: createdMatch,
-                                  );
-                              if (!context.mounted) return;
-                              if (action == ClubStandaloneMatchAction.saved) {
-                                unawaited(_fetchMatches(silent: true));
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      AppLocalizations.of(
-                                        context,
-                                      )!.club_matchScoreSaved,
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                            icon: const Icon(Icons.add_rounded, size: 15),
-                            label: Text(
-                              l10n.club_createMatchStandalone,
-                              style: const TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.2,
-                              ),
-                            ),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppTheme.primary,
-                              elevation: 0,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  // Filter Dropdown Row
+                  // Filter Dropdown: "Tất cả (0)"
                   _buildFilterDropdown(
                     colors: colors,
                     isClubMember: isClubMember,
                     currentUser: currentUser,
                     userMatches: userMatches,
                   ),
+                  const Spacer(),
+                  // Nút tạo trận đấu dạng tròn với dấu + sát lề phải
+                  if (canCreateStandalone)
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        tooltip: l10n.club_createMatchStandalone,
+                        icon: const Icon(
+                          Icons.add_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                        onPressed: () async {
+                          final createdMatch =
+                              await ClubStandaloneMatchDialog.show(
+                                context,
+                                communityId: widget.communityId,
+                                clubName: widget.club?.name,
+                                onMatchCreated: () => _fetchMatches(),
+                              );
+                          if (!context.mounted || createdMatch == null) {
+                            return;
+                          }
+                          final action =
+                              await ClubStandaloneMatchResultDialog.show(
+                                context,
+                                match: createdMatch,
+                              );
+                          if (!context.mounted) return;
+                          if (action == ClubStandaloneMatchAction.saved) {
+                            unawaited(_fetchMatches(silent: true));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.club_matchScoreSaved,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -883,9 +955,9 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     String filterLabel(_ActivityFilter f) {
       switch (f) {
         case _ActivityFilter.all:
-          return 'Tất cả (${_matches.length})';
+          return 'Tất cả';
         case _ActivityFilter.myMatches:
-          return 'Trận của tôi (${userMatches.length})';
+          return 'Trận của tôi';
         case _ActivityFilter.ongoing:
           return 'Đang diễn ra';
         case _ActivityFilter.completed:

@@ -90,6 +90,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           .read(communityRepositoryProvider)
           .getMyMembership(widget.clubId);
       if (!mounted) return;
+      // A successful join changes several conditional tab subtrees at once.
+      // Apply that structural update on the next frame, after the current
+      // route/API callback has finished, so inherited dependents can detach
+      // cleanly instead of being deactivated mid-build.
+      await _waitForUiFrame();
+      if (!mounted) return;
       if (membership == null) {
         // 404 (chưa phải member) hoặc lỗi → viewer thuần
         setState(() => _myMembership = null);
@@ -485,11 +491,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   bool get _isPending => _myMembership?.status == 'PENDING';
   bool get _isInvited => _myMembership?.status == 'INVITED';
 
-  /// Dialog route hoàn tất Future ngay khi Navigator.pop được gọi, trong khi
-  /// các inherited element bên trong dialog còn đang được deactivate ở frame
-  /// hiện tại. Chờ hết frame trước khi rebuild màn hình CLB để tránh
-  /// `InheritedElement._dependents.isEmpty`.
-  Future<void> _waitForDialogTeardown() async {
+  /// Chờ hết frame hiện tại trước khi dựng lại các subtree phụ thuộc vào
+  /// membership hoặc vừa được đóng khỏi một dialog route.
+  Future<void> _waitForUiFrame() async {
     await WidgetsBinding.instance.endOfFrame;
   }
 
@@ -607,14 +611,30 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          CommunitySocialScreen(
-            communityId: club.id,
-            communityName: club.name,
-            showHeader: false,
+          _LazyClubTab(
+            controller: _tabController,
+            index: 0,
+            builder: (_) => CommunitySocialScreen(
+              communityId: club.id,
+              communityName: club.name,
+              showHeader: false,
+            ),
           ),
-          ClubActivityTab(communityId: club.id, club: club),
-          _buildMembersTab(club, colors),
-          _buildRankingsTab(colors, club),
+          _LazyClubTab(
+            controller: _tabController,
+            index: 1,
+            builder: (_) => ClubActivityTab(communityId: club.id, club: club),
+          ),
+          _LazyClubTab(
+            controller: _tabController,
+            index: 2,
+            builder: (_) => _buildMembersTab(club, colors),
+          ),
+          _LazyClubTab(
+            controller: _tabController,
+            index: 3,
+            builder: (_) => _buildRankingsTab(colors, club),
+          ),
         ],
       ),
     );
@@ -751,7 +771,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ],
       ),
     );
-    await _waitForDialogTeardown();
+    await _waitForUiFrame();
     if (confirmed != true || !mounted) return;
     setState(() => _isJoinLoading = true);
     try {
@@ -804,7 +824,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ],
       ),
     );
-    await _waitForDialogTeardown();
+    await _waitForUiFrame();
     if (confirmed != true || !mounted) return;
     setState(() => _isJoinLoading = true);
     try {
@@ -840,68 +860,21 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     List<String> questions,
   ) async {
     final l10n = AppLocalizations.of(context)!;
-    final controllers = questions
-        .map((_) => TextEditingController())
-        .toList(growable: false);
-    final formKey = GlobalKey<FormState>();
-    try {
-      return await showDialog<Map<String, dynamic>>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text(l10n.clubDetailJoinQuestionsTitle),
-          content: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(l10n.clubDetailJoinQuestionsInstruction),
-                  const SizedBox(height: 16),
-                  ...List.generate(
-                    questions.length,
-                    (index) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TextFormField(
-                        controller: controllers[index],
-                        maxLines: 2,
-                        decoration: InputDecoration(
-                          labelText: questions[index],
-                          border: const OutlineInputBorder(),
-                        ),
-                        validator: (value) =>
-                            value == null || value.trim().isEmpty
-                            ? l10n.clubDetailJoinQuestionRequired
-                            : null,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                if (!formKey.currentState!.validate()) return;
-                Navigator.pop(dialogContext, <String, dynamic>{
-                  for (var i = 0; i < questions.length; i++)
-                    questions[i]: controllers[i].text.trim(),
-                });
-              },
-              child: Text(l10n.clubDetailSubmitJoinRequest),
-            ),
-          ],
-        ),
-      );
-    } finally {
-      for (final controller in controllers) {
-        controller.dispose();
-      }
-    }
+    // Dialog có State riêng để controller sống tới khi route thực sự được tháo
+    // khỏi cây widget. Không dispose controller trong `finally` của
+    // `showDialog`: Future trả kết quả ngay lúc pop, sớm hơn lúc reverse
+    // transition hoàn tất và có thể làm Flutter báo `_dependents.isEmpty`.
+    return showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (_) => _JoinQuestionsDialog(
+        questions: questions,
+        title: l10n.clubDetailJoinQuestionsTitle,
+        instruction: l10n.clubDetailJoinQuestionsInstruction,
+        requiredMessage: l10n.clubDetailJoinQuestionRequired,
+        cancelLabel: l10n.commonCancel,
+        submitLabel: l10n.clubDetailSubmitJoinRequest,
+      ),
+    );
   }
 
   Color? _getJoinBgColor() {
@@ -938,7 +911,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         club ?? ref.read(communityDetailProvider(widget.clubId)).value;
     if (community?.joinQuestions.isNotEmpty == true) {
       final answers = await _showJoinQuestionsDialog(community!.joinQuestions);
-      await _waitForDialogTeardown();
+      await _waitForUiFrame();
       if (answers == null) return;
       if (!mounted) return;
       setState(() => _isJoinLoading = true);
@@ -5029,13 +5002,17 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   //  TAB 5: BẢNG XẾP HẠNG (Rankings)
   // ════════════════════════════════════
   Widget _buildRankingsTab(AppColorsExtension colors, Community club) {
-    // The ranking widget already contains the podium, Top 4-20 list,
-    // search, polling status, and the current user's ELO card.
+    // The ranking widget owns the podium, paged ranking list, filters,
+    // polling status, and the current user's ELO card.
     // Truyền môn của CLB để bộ lọc Môn chỉ hiện môn CLB đã đăng ký (giống web).
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 8),
       children: [
-        ClubRankingWidget(clubId: widget.clubId, clubSportKeys: club.sports),
+        ClubRankingWidget(
+          clubId: widget.clubId,
+          clubSportKeys: club.sports,
+          clubSportCategoryIds: club.sportCategoryIds,
+        ),
       ],
     );
   }
@@ -5770,6 +5747,56 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(_TabBarDelegate oldDelegate) => true;
 }
 
+/// Chỉ khởi tạo tab nặng khi tab đó thực sự được chọn.
+///
+/// `TabBarView` vẫn cần một child cho từng trang để giữ layout, nhưng các
+/// widget bên trong (socket, timer, ranking request) không nên chạy ngay khi
+/// người dùng chỉ đang xem Bảng tin.
+class _LazyClubTab extends StatefulWidget {
+  final TabController controller;
+  final int index;
+  final WidgetBuilder builder;
+
+  const _LazyClubTab({
+    required this.controller,
+    required this.index,
+    required this.builder,
+  });
+
+  @override
+  State<_LazyClubTab> createState() => _LazyClubTabState();
+}
+
+class _LazyClubTabState extends State<_LazyClubTab> {
+  late bool _hasBuilt;
+
+  @override
+  void initState() {
+    super.initState();
+    _hasBuilt = widget.controller.index == widget.index;
+    widget.controller.addListener(_onTabChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onTabChanged);
+    super.dispose();
+  }
+
+  void _onTabChanged() {
+    if (_hasBuilt || widget.controller.index != widget.index || !mounted) {
+      return;
+    }
+    setState(() => _hasBuilt = true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_hasBuilt) return const SizedBox.expand();
+    return widget.builder(context);
+  }
+}
+
 /// CustomPainter vẽ các đường kẻ sân thể thao & geometric accents cho Banner thể thao
 class _AthleticBannerPainter extends CustomPainter {
   @override
@@ -5836,4 +5863,131 @@ class _AthleticBannerPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Form tham gia CLB được tách thành một route widget độc lập.
+///
+/// `showDialog` hoàn tất Future ngay khi Navigator nhận lệnh pop, nhưng route
+/// còn reverse transition. Vì vậy controller phải được sở hữu bởi State của
+/// dialog và chỉ dispose trong `State.dispose`, sau khi route đã tháo xong.
+class _JoinQuestionsDialog extends StatefulWidget {
+  final List<String> questions;
+  final String title;
+  final String instruction;
+  final String requiredMessage;
+  final String cancelLabel;
+  final String submitLabel;
+
+  const _JoinQuestionsDialog({
+    required this.questions,
+    required this.title,
+    required this.instruction,
+    required this.requiredMessage,
+    required this.cancelLabel,
+    required this.submitLabel,
+  });
+
+  @override
+  State<_JoinQuestionsDialog> createState() => _JoinQuestionsDialogState();
+}
+
+class _JoinQuestionsDialogState extends State<_JoinQuestionsDialog> {
+  late final List<TextEditingController> _controllers;
+  late final List<String?> _validationErrors;
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controllers = widget.questions
+        .map((_) => TextEditingController())
+        .toList(growable: false);
+    _validationErrors = List<String?>.filled(widget.questions.length, null);
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _close([Map<String, dynamic>? result]) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.of(context).pop(result);
+    });
+  }
+
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
+
+    var isValid = true;
+    for (var i = 0; i < _controllers.length; i++) {
+      final isEmpty = _controllers[i].text.trim().isEmpty;
+      _validationErrors[i] = isEmpty ? widget.requiredMessage : null;
+      if (isEmpty) isValid = false;
+    }
+    if (!isValid) {
+      setState(() {});
+      return;
+    }
+
+    final result = <String, dynamic>{
+      for (var i = 0; i < widget.questions.length; i++)
+        widget.questions[i]: _controllers[i].text.trim(),
+    };
+    setState(() => _isSubmitting = true);
+
+    // Cho TextField/FocusScope hoàn tất frame hiện tại trước khi tháo route.
+    await WidgetsBinding.instance.endOfFrame;
+    if (mounted) _close(result);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(widget.instruction),
+            const SizedBox(height: 16),
+            ...List.generate(
+              widget.questions.length,
+              (index) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: TextField(
+                  controller: _controllers[index],
+                  maxLines: 2,
+                  onChanged: (_) {
+                    if (_validationErrors[index] != null) {
+                      setState(() => _validationErrors[index] = null);
+                    }
+                  },
+                  decoration: InputDecoration(
+                    labelText: widget.questions[index],
+                    border: const OutlineInputBorder(),
+                    errorText: _validationErrors[index],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isSubmitting ? null : _close,
+          child: Text(widget.cancelLabel),
+        ),
+        FilledButton(
+          onPressed: _isSubmitting ? null : _submit,
+          child: Text(widget.submitLabel),
+        ),
+      ],
+    );
+  }
 }

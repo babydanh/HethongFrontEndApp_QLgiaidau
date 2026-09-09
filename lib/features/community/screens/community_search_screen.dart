@@ -90,85 +90,88 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
         ? null
         : ref.watch(communitySearchProvider(request));
 
-    return Scaffold(
-      backgroundColor: colors.bgDark,
-      appBar: AppBar(
-        backgroundColor: colors.bgCard,
-        toolbarHeight: 56,
-        titleSpacing: 0,
-        leading: IconButton(
-          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
-        ),
-        title: SizedBox(
-          height: 44,
-          child: TextField(
-            controller: _controller,
-            autofocus: true,
-            textInputAction: TextInputAction.search,
-            onChanged: _onQueryChanged,
-            onSubmitted: (value) {
-              final query = value.trim();
-              if (query.length >= 2) setState(() => _activeQuery = query);
-            },
-            style: TextStyle(color: colors.textPrimary, fontSize: 15),
-            decoration: InputDecoration(
-              hintText: l10n.communitySearchHint,
-              hintStyle: TextStyle(color: colors.textMuted, fontSize: 14),
-              isDense: true,
-              constraints: const BoxConstraints.tightFor(height: 40),
-              filled: true,
-              fillColor: colors.bgSurface,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: colors.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: colors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: AppTheme.primary,
-                  width: 1.5,
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.15,
+      child: Scaffold(
+        backgroundColor: colors.bgDark,
+        appBar: AppBar(
+          backgroundColor: colors.bgCard,
+          toolbarHeight: 56,
+          titleSpacing: 0,
+          leading: IconButton(
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () => context.pop(),
+          ),
+          title: SizedBox(
+            height: 40,
+            child: TextField(
+              controller: _controller,
+              autofocus: true,
+              textInputAction: TextInputAction.search,
+              onChanged: _onQueryChanged,
+              onSubmitted: (value) {
+                final query = value.trim();
+                if (query.length >= 2) setState(() => _activeQuery = query);
+              },
+              style: TextStyle(color: colors.textPrimary, fontSize: 15),
+              decoration: InputDecoration(
+                hintText: l10n.communitySearchHint,
+                hintStyle: TextStyle(color: colors.textMuted, fontSize: 14),
+                isDense: true,
+                constraints: const BoxConstraints.tightFor(height: 40),
+                filled: true,
+                fillColor: colors.bgSurface,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.border),
                 ),
-              ),
-              suffixIconConstraints: const BoxConstraints.tightFor(
-                width: 40,
-                height: 40,
-              ),
-              suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                valueListenable: _controller,
-                builder: (_, value, _) => value.text.isEmpty
-                    ? const SizedBox.shrink()
-                    : IconButton(
-                        tooltip: MaterialLocalizations.of(
-                          context,
-                        ).deleteButtonTooltip,
-                        constraints: const BoxConstraints.tightFor(
-                          width: 34,
-                          height: 34,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: AppTheme.primary,
+                    width: 1.5,
+                  ),
+                ),
+                suffixIconConstraints: const BoxConstraints.tightFor(
+                  width: 40,
+                  height: 40,
+                ),
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _controller,
+                  builder: (_, value, _) => value.text.isEmpty
+                      ? const SizedBox.shrink()
+                      : IconButton(
+                          tooltip: MaterialLocalizations.of(
+                            context,
+                          ).deleteButtonTooltip,
+                          constraints: const BoxConstraints.tightFor(
+                            width: 34,
+                            height: 34,
+                          ),
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.close_rounded, size: 20),
+                          onPressed: () {
+                            _controller.clear();
+                            setState(() => _activeQuery = '');
+                          },
                         ),
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.close_rounded, size: 20),
-                        onPressed: () {
-                          _controller.clear();
-                          setState(() => _activeQuery = '');
-                        },
-                      ),
+                ),
               ),
             ),
           ),
         ),
-      ),
-      body: Column(
-        children: [
-          _buildTypeChips(l10n, colors),
-          Expanded(child: _buildResults(resultAsync, l10n, colors)),
-        ],
+        body: Column(
+          children: [
+            _buildTypeChips(l10n, colors),
+            Expanded(child: _buildResults(resultAsync, l10n, colors)),
+          ],
+        ),
       ),
     );
   }
@@ -183,7 +186,7 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
     ];
     return Container(
       color: colors.bgCard,
-      padding: const EdgeInsets.fromLTRB(12, 6, 12, 7),
+      padding: const EdgeInsets.fromLTRB(12, 5, 12, 6),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         physics: const ClampingScrollPhysics(),
@@ -197,8 +200,8 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
                   onTap: () => _selectType(item.$1),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 140),
-                    height: 36,
-                    padding: const EdgeInsets.symmetric(horizontal: 11),
+                    height: 34,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: _type == item.$1
@@ -214,7 +217,7 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
                     child: Text(
                       item.$2,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12.5,
                         color: _type == item.$1
                             ? AppTheme.primary
                             : colors.textSecondary,

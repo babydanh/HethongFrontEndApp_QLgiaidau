@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
-import 'package:app_quanly_giaidau/core/utils/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
@@ -21,11 +20,16 @@ class ClubRankingWidget extends ConsumerStatefulWidget {
   /// `community.categories`); rỗng/null → hiện toàn bộ môn toàn cục.
   final List<String>? clubSportKeys;
 
+  /// Category UUIDs already returned with the club detail response. Using
+  /// them avoids a second `/categories` round-trip before the first ranking.
+  final Map<String, String>? clubSportCategoryIds;
+
   const ClubRankingWidget({
     super.key,
     required this.clubId,
     this.compact = false,
     this.clubSportKeys,
+    this.clubSportCategoryIds,
   });
 
   @override
@@ -34,9 +38,16 @@ class ClubRankingWidget extends ConsumerStatefulWidget {
 
 class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
     with AutomaticKeepAliveClientMixin {
+  static const _rankingPageSize = 10;
+
   List<PlayerRanking>? _rankings;
   bool _loading = true;
+  bool _loadingMore = false;
+  bool _hasMore = false;
+  String? _nextCursor;
+  int _requestVersion = 0;
   String? _error;
+  String? _loadMoreError;
   String _selectedMatchType = 'SINGLES';
   String _selectedGender = 'MALE';
   String? _selectedCategoryId;
@@ -60,10 +71,12 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
   void initState() {
     super.initState();
     _fetchRankings();
-    _pollingTimer = Timer.periodic(
-      const Duration(seconds: 30),
-      (_) => _fetchRankings(showLoading: false),
-    );
+    _pollingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      // Không làm mất các trang người dùng đã mở bằng nút "Hiện thêm".
+      // Bản xếp hạng mở rộng sẽ chỉ tải lại khi đổi bộ lọc hoặc refresh.
+      if ((_rankings?.length ?? 0) > _rankingPageSize) return;
+      _fetchRankings(showLoading: false);
+    });
   }
 
   @override
@@ -72,25 +85,117 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
     super.dispose();
   }
 
-  Future<void> _fetchRankings({bool showLoading = true}) async {
-    final l10n = AppLocalizations.of(context)!;
-    if (showLoading && _rankings == null) {
+  List<dynamic> _responseRows(dynamic raw) {
+    if (raw is Map && raw['data'] is List) {
+      return List<dynamic>.from(raw['data'] as List);
+    }
+    return raw is List ? List<dynamic>.from(raw) : const <dynamic>[];
+  }
+
+  String? _responseNextCursor(dynamic raw, String? currentCursor) {
+    if (raw is! Map || raw['meta'] is! Map) return null;
+    final meta = Map<String, dynamic>.from(raw['meta'] as Map);
+    if (meta['hasMore'] != true) return null;
+    final next = meta['nextCursor']?.toString().trim();
+    if (next == null || next.isEmpty || next == currentCursor) return null;
+    return next;
+  }
+
+  List<PlayerRanking> _mergeRankingRows(
+    List<PlayerRanking> current,
+    List<PlayerRanking> incoming,
+  ) {
+    final byId = <String, PlayerRanking>{};
+    for (final ranking in [...current, ...incoming]) {
+      final key = ranking.id.isNotEmpty
+          ? ranking.id
+          : '${ranking.userId}:${ranking.categoryId}:${ranking.matchType}';
+      if (key.isNotEmpty) byId[key] = ranking;
+    }
+    return byId.values.toList(growable: false);
+  }
+
+  void _applyRankingPage(
+    List<PlayerRanking> page, {
+    required String? nextCursor,
+    required bool loadMore,
+    required int requestVersion,
+  }) {
+    if (!mounted || requestVersion != _requestVersion) return;
+    final current = _rankings ?? const <PlayerRanking>[];
+    final merged = loadMore ? _mergeRankingRows(current, page) : page;
+    final visibleRows = loadMore
+        ? merged
+        : merged.take(widget.compact ? 3 : _rankingPageSize).toList();
+    setState(() {
+      _rankings = visibleRows;
+      _nextCursor = nextCursor;
+      _hasMore = nextCursor != null;
+      _loading = false;
+      _loadingMore = false;
+      _error = null;
+      _loadMoreError = null;
+    });
+  }
+
+  Future<void> _fetchRankings({
+    bool showLoading = true,
+    bool loadMore = false,
+  }) async {
+    if (loadMore && (_loadingMore || !_hasMore || _nextCursor == null)) {
+      return;
+    }
+    if (!loadMore && !showLoading && _loading) return;
+    final requestVersion = ++_requestVersion;
+    final currentCursor = loadMore ? _nextCursor : null;
+    if (!loadMore) {
+      _nextCursor = null;
+      _hasMore = false;
+      _loadingMore = false;
+      _loadMoreError = null;
+    }
+    if (loadMore) {
+      if (mounted) {
+        setState(() {
+          _loadingMore = true;
+          _loadMoreError = null;
+        });
+      }
+    } else if (showLoading && _rankings == null) {
       setState(() {
         _loading = true;
         _error = null;
       });
     }
+    final l10n = AppLocalizations.of(context)!;
     try {
       final dio = ref.read(dioProvider);
 
-      // 1. Tải danh mục với timeout ngắn (2.5 giây).
-      // Nếu đã có cache _availableCategories thì dùng ngay không cần đợi.
+      // 1. Tải danh mục với timeout ngắn để bảng xếp hạng không bị treo lâu.
+      // Nếu detail CLB đã trả category UUID thì dùng ngay, không tạo thêm
+      // round-trip `/categories` trước khi tải bảng xếp hạng đầu tiên.
       List<dynamic> allCategories = _availableCategories;
+      final clubCategoryIds = widget.clubSportCategoryIds ?? const {};
+      if (allCategories.isEmpty && clubCategoryIds.isNotEmpty) {
+        final seenCategoryIds = <String>{};
+        allCategories = clubCategoryIds.entries
+            .where((entry) => seenCategoryIds.add(entry.value))
+            .map(
+              (entry) => CategoryModel(
+                id: entry.value,
+                name: entry.key,
+                slug: entry.key.toLowerCase().replaceAll(' ', '_'),
+                description: '',
+                isActive: true,
+              ),
+            )
+            .toList(growable: false);
+      }
       if (allCategories.isEmpty) {
         allCategories = await ref
             .read(categoriesProvider.future)
             .timeout(
-              const Duration(milliseconds: 2500),
+              const Duration(milliseconds: 1200),
               onTimeout: () => const [],
             );
       }
@@ -137,14 +242,15 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
               queryParameters: {
                 'categoryId': categoryId,
                 'communityId': widget.clubId,
-                'limit': widget.compact ? 3 : 20,
+                'limit': widget.compact ? 3 : _rankingPageSize,
+                ...?(currentCursor == null
+                    ? null
+                    : <String, dynamic>{'cursor': currentCursor}),
               },
             )
             .timeout(const Duration(seconds: 6));
         final raw = response.data;
-        final dataList = raw is Map<String, dynamic>
-            ? (raw['data'] as List<dynamic>? ?? const [])
-            : (raw as List<dynamic>? ?? const []);
+        final dataList = _responseRows(raw);
         final teams = dataList
             .map((item) {
               final json = item as Map<String, dynamic>;
@@ -182,105 +288,72 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
             })
             .where((team) => team.matchesPlayed > 0)
             .toList();
-        if (mounted) {
-          setState(() {
-            _rankings = teams;
-            _loading = false;
-            _error = null;
-          });
-        }
+        _applyRankingPage(
+          teams,
+          nextCursor: _responseNextCursor(raw, currentCursor),
+          loadMore: loadMore,
+          requestVersion: requestVersion,
+        );
         return;
       }
 
-      // 2. Tải bảng xếp hạng với timeout 6 giây
-      final queryParams = <String, dynamic>{
-        'communityId': widget.clubId,
-        'scope': 'COMMUNITY',
-        'matchType': _selectedMatchType,
-        'genderRestriction': _selectedGender,
-        if (categoryId != null && categoryId.isNotEmpty)
+      // 2. Tải bảng xếp hạng theo đúng category. API này yêu cầu categoryId.
+      // Không fallback sang projection cũ vì projection đó không có bộ lọc
+      // môn/match type và có thể hiển thị nhầm bảng xếp hạng.
+      var rankings = <PlayerRanking>[];
+      String? rankingNextCursor;
+      if (categoryId != null && categoryId.isNotEmpty) {
+        final queryParams = <String, dynamic>{
+          'communityId': widget.clubId,
+          'scope': 'COMMUNITY',
+          'matchType': _selectedMatchType,
+          'genderRestriction': _selectedGender,
           'categoryId': categoryId,
-        'limit': widget.compact ? 3 : 20,
-      };
-      final response = await dio
-          .get('/rankings', queryParameters: queryParams)
-          .timeout(const Duration(seconds: 6));
-      final raw = response.data;
-      final List<dynamic> dataList = raw is Map<String, dynamic>
-          ? (raw['data'] as List<dynamic>? ?? [])
-          : (raw as List<dynamic>? ?? []);
-      var rankings = dataList
-          .map((json) => PlayerRanking.fromJson(json as Map<String, dynamic>))
-          .where((ranking) => ranking.matchesPlayed > 0)
-          .toList();
-
-      // Nếu /rankings rỗng hoặc chưa có trận đấu xếp hạng nào, fallback thử endpoint internal CLB
-      if (rankings.isEmpty) {
-        try {
-          final clubRes = await dio
-              .get(
-                '/communities/${widget.clubId}/rankings',
-                queryParameters: {'limit': widget.compact ? 3 : 20},
-              )
-              .timeout(const Duration(seconds: 4));
-          final clubRaw = clubRes.data;
-          final clubList = clubRaw is Map<String, dynamic>
-              ? (clubRaw['data'] as List<dynamic>? ?? [])
-              : (clubRaw as List<dynamic>? ?? []);
-          if (clubList.isNotEmpty) {
-            rankings = clubList.map((e) {
-              final json = e as Map<String, dynamic>;
-              final userId =
-                  (json['userId'] ?? json['user_id'] ?? json['id'] ?? '')
-                      .toString();
-              final fullName =
-                  (json['fullName'] ?? json['full_name'] ?? json['name'] ?? '')
-                      .toString();
-              final avatarUrl = (json['avatarUrl'] ?? json['avatar_url'])
-                  ?.toString();
-              final elo =
-                  ((json['eloPoints'] ??
-                              json['elo_points'] ??
-                              json['elo'] ??
-                              1000)
-                          as num)
-                      .toInt();
-              return PlayerRanking(
-                id: userId,
-                userId: userId,
-                fullName: fullName,
-                avatarUrl: avatarUrl,
-                categoryId: categoryId ?? '',
-                matchType: _selectedMatchType,
-                genderRestriction: _selectedGender,
-                eloPoints: elo,
-                matchesPlayed: 1, // Đã có trong bảng xếp hạng
-                matchesWon: 1,
-              );
-            }).toList();
-          }
-        } catch (_) {}
+          'limit': widget.compact ? 3 : _rankingPageSize,
+          ...?(currentCursor == null
+              ? null
+              : <String, dynamic>{'cursor': currentCursor}),
+        };
+        final response = await dio
+            .get('/rankings', queryParameters: queryParams)
+            .timeout(const Duration(seconds: 5));
+        final raw = response.data;
+        rankingNextCursor = _responseNextCursor(raw, currentCursor);
+        final dataList = _responseRows(raw);
+        rankings = dataList
+            .map((json) => PlayerRanking.fromJson(json as Map<String, dynamic>))
+            .where((ranking) => ranking.matchesPlayed > 0)
+            .toList();
       }
 
-      if (mounted) {
-        setState(() {
-          _rankings = rankings;
-          _loading = false;
-          _error = null;
-        });
-      }
+      _applyRankingPage(
+        rankings,
+        nextCursor: rankingNextCursor,
+        loadMore: loadMore,
+        requestVersion: requestVersion,
+      );
     } on DioException catch (e) {
-      if (mounted) {
+      if (mounted && requestVersion == _requestVersion) {
         setState(() {
-          _error = e.message;
-          _loading = false;
+          if (loadMore) {
+            _loadMoreError = e.message;
+          } else {
+            _error = e.message;
+            _loading = false;
+          }
+          _loadingMore = false;
         });
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && requestVersion == _requestVersion) {
         setState(() {
-          _error = e.toString();
-          _loading = false;
+          if (loadMore) {
+            _loadMoreError = e.toString();
+          } else {
+            _error = e.toString();
+            _loading = false;
+          }
+          _loadingMore = false;
         });
       }
     }
@@ -308,131 +381,187 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
     final allRankings = _rankings ?? const <PlayerRanking>[];
     final filteredRankings = allRankings;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ── Section Header ──
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              Icon(
-                Icons.emoji_events_rounded,
-                size: 16,
-                color: colors.textSecondary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                l10n.clubRankingTitle,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: colors.textSecondary,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-
-        if (!widget.compact)
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.15,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Section Header ──
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: IconButton(
-                tooltip: l10n.clubRankingFilterTooltip,
-                onPressed: _openFilterSheet,
-                icon: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    const Icon(Icons.tune_rounded, size: 19),
-                    if (_activeFilterCount > 0)
-                      Positioned(
-                        top: -3,
-                        right: -3,
-                        child: Container(
-                          width: 7,
-                          height: 7,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.primary,
-                            shape: BoxShape.circle,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.emoji_events_rounded,
+                  size: 16,
+                  color: colors.textSecondary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  l10n.clubRankingTitle,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textSecondary,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          if (!widget.compact)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  tooltip: l10n.clubRankingFilterTooltip,
+                  onPressed: _openFilterSheet,
+                  icon: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      const Icon(Icons.tune_rounded, size: 19),
+                      if (_activeFilterCount > 0)
+                        Positioned(
+                          top: -3,
+                          right: -3,
+                          child: Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              color: AppTheme.primary,
+                              shape: BoxShape.circle,
+                            ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        // ── Nội dung: dữ liệu / trống / lỗi ──
-        if (_error != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildEmptyRanking(colors, l10n, error: true),
-          )
-        else if (allRankings.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildEmptyRanking(colors, l10n),
-          )
-        else if (filteredRankings.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildEmptyRanking(colors, l10n, searching: true),
-          )
-        else ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildPodiumRow(filteredRankings),
-          ),
-          // ── Ranks 4-10 List (Tràn viền edge-to-edge) ──
-          if (!widget.compact && filteredRankings.length > 3) ...[
-            const SizedBox(height: 10),
-            ...List.generate(filteredRankings.length - 3, (i) {
-              final index = i + 3;
-              final r = filteredRankings[index];
-              final actualRank = allRankings.indexOf(r) + 1;
-              return _buildListRow(r, actualRank, colors);
-            }),
-          ],
-        ],
-        // ── Xem tất cả (compact mode) ──
-        if (!widget.compact) ...[
-          const SizedBox(height: 8),
-          Center(
-            child: Text(
-              l10n.clubRankingAutoRefresh,
-              style: TextStyle(fontSize: 10, color: colors.textMuted),
-            ),
-          ),
-        ],
-
-        if (widget.compact) ...[
-          const SizedBox(height: 8),
-          GestureDetector(
-            onTap: () => context.push('/club/${widget.clubId}'),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-              ),
-              child: Center(
-                child: Text(
-                  l10n.clubRankingViewAll,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.primary,
+                    ],
                   ),
                 ),
               ),
             ),
-          ),
+          // ── Nội dung: dữ liệu / trống / lỗi ──
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildEmptyRanking(colors, l10n, error: true),
+            )
+          else if (allRankings.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildEmptyRanking(colors, l10n),
+            )
+          else if (filteredRankings.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildEmptyRanking(colors, l10n, searching: true),
+            )
+          else ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildPodiumRow(filteredRankings),
+            ),
+            // ── Ranks 4 onward (10 per explicit page) ──
+            if (!widget.compact && filteredRankings.length > 3) ...[
+              const SizedBox(height: 10),
+              ...List.generate(filteredRankings.length - 3, (i) {
+                final index = i + 3;
+                final r = filteredRankings[index];
+                final actualRank = allRankings.indexOf(r) + 1;
+                return _buildListRow(r, actualRank, colors);
+              }),
+            ],
+          ],
+          if (!widget.compact && _hasMore && allRankings.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 36,
+                child: OutlinedButton(
+                  onPressed: _loadingMore
+                      ? null
+                      : () => _fetchRankings(loadMore: true),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primary,
+                    side: BorderSide(color: colors.border),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: _loadingMore
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text(
+                          'Hiện thêm 10 người',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+            if (_loadMoreError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Center(
+                  child: TextButton(
+                    onPressed: _loadingMore
+                        ? null
+                        : () => _fetchRankings(loadMore: true),
+                    child: Text(
+                      'Không tải được. Thử lại',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+          // ── Xem tất cả (compact mode) ──
+          if (!widget.compact) ...[
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
+                l10n.clubRankingAutoRefresh,
+                style: TextStyle(fontSize: 10, color: colors.textMuted),
+              ),
+            ),
+          ],
+
+          if (widget.compact) ...[
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () => context.push('/club/${widget.clubId}'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                ),
+                child: Center(
+                  child: Text(
+                    l10n.clubRankingViewAll,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 
@@ -684,7 +813,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      height: 164,
+      height: 148,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -724,11 +853,11 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
   }) {
     final colors = context.colors;
     final medalColors = _medalColors(rank);
-    final avatarSize = isCenter ? 42.0 : 34.0;
-    final tierInfo = _getEloTierInfo(player);
+    final avatarSize = isCenter ? 40.0 : 32.0;
+    final winRate = player.winRate;
 
     return Container(
-      height: isCenter ? 160 : 138,
+      height: isCenter ? 144 : 124,
       padding: EdgeInsets.symmetric(horizontal: 6, vertical: isCenter ? 8 : 6),
       decoration: BoxDecoration(
         color: medalColors.bg.withValues(alpha: 0.08),
@@ -800,44 +929,48 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
           ),
           const SizedBox(height: 3),
 
-          // ELO points + Tier badge
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '${player.eloPoints}',
-                  style: TextStyle(
-                    fontSize: isCenter ? 13 : 11,
-                    fontWeight: FontWeight.w900,
-                    color: medalColors.elo,
-                  ),
-                ),
-                const SizedBox(width: 3),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 1,
-                  ),
-                  decoration: BoxDecoration(
-                    color: tierInfo.bgColor,
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: tierInfo.borderColor, width: 0.5),
-                  ),
-                  child: Text(
-                    tierInfo.label,
-                    style: TextStyle(
-                      fontSize: 7.5,
-                      fontWeight: FontWeight.w800,
-                      color: tierInfo.textColor,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildPodiumStat(
+                'ELO',
+                '${player.eloPoints}',
+                medalColors.elo,
+                isCenter,
+              ),
+              const SizedBox(width: 4),
+              _buildPodiumStat(
+                'TL thắng',
+                '${winRate.toStringAsFixed(0)}%',
+                colors.success,
+                isCenter,
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPodiumStat(
+    String label,
+    String value,
+    Color color,
+    bool isCenter,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Text(
+        '$label $value',
+        style: TextStyle(
+          fontSize: isCenter ? 8.5 : 7.5,
+          fontWeight: FontWeight.w800,
+          color: color,
+        ),
       ),
     );
   }
@@ -852,10 +985,9 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
     final winRate = player.matchesPlayed > 0
         ? (player.matchesWon / player.matchesPlayed) * 100
         : 0.0;
-    final tierInfo = _getEloTierInfo(player);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: colors.bgCard,
         border: Border(
@@ -909,93 +1041,37 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
           ),
           const SizedBox(width: 6),
 
-          // Win rate
-          Text(
-            '${winRate.toStringAsFixed(0)}%',
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              color: colors.textMuted,
-            ),
-          ),
-          const SizedBox(width: 6),
-
-          Text(
-            '${player.matchesWon}-${player.matchesPlayed - player.matchesWon}',
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w700,
-              color: colors.textSecondary,
-            ),
-          ),
-          const SizedBox(width: 6),
-
-          // ELO points + tier badge
+          // Chỉ hiển thị hai chỉ số người chơi cần: ELO và tỉ lệ thắng.
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
             decoration: BoxDecoration(
               color: AppTheme.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '${player.eloPoints}',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 3),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 3,
-                    vertical: 0.5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: tierInfo.bgColor,
-                    borderRadius: BorderRadius.circular(3),
-                    border: Border.all(color: tierInfo.borderColor, width: 0.5),
-                  ),
-                  child: Text(
-                    tierInfo.label,
-                    style: TextStyle(
-                      fontSize: 6.5,
-                      fontWeight: FontWeight.w700,
-                      color: tierInfo.textColor,
-                    ),
-                  ),
-                ),
-              ],
+            child: Text(
+              'ELO ${player.eloPoints}',
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.primary,
+              ),
             ),
           ),
           const SizedBox(width: 6),
 
-          // Win rate bar
-          SizedBox(
-            width: 40,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const SizedBox(height: 2),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(2),
-                  child: LinearProgressIndicator(
-                    value: winRate / 100,
-                    minHeight: 3,
-                    backgroundColor: colors.borderLight,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      winRate >= 60
-                          ? colors.success
-                          : winRate >= 40
-                          ? colors.warning
-                          : colors.error,
-                    ),
-                  ),
-                ),
-              ],
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+            decoration: BoxDecoration(
+              color: colors.success.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+            ),
+            child: Text(
+              'Thắng ${winRate.toStringAsFixed(0)}%',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: colors.success,
+              ),
             ),
           ),
         ],
@@ -1080,19 +1156,6 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
         );
     }
   }
-
-  _EloTierInfo _getEloTierInfo(PlayerRanking player) {
-    final tier = resolveEloTier(
-      elo: player.eloPoints,
-      tierName: player.tierName,
-    );
-    return _EloTierInfo(
-      label: tier.shortCode,
-      bgColor: tier.backgroundColor.withValues(alpha: 0.15),
-      textColor: tier.textColor,
-      borderColor: tier.borderColor.withValues(alpha: 0.45),
-    );
-  }
 }
 
 class _MedalColors {
@@ -1106,19 +1169,5 @@ class _MedalColors {
     required this.border,
     required this.icon,
     required this.elo,
-  });
-}
-
-class _EloTierInfo {
-  final String label;
-  final Color bgColor;
-  final Color textColor;
-  final Color borderColor;
-
-  const _EloTierInfo({
-    required this.label,
-    required this.bgColor,
-    required this.textColor,
-    required this.borderColor,
   });
 }

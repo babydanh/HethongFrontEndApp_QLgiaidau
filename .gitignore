@@ -121,3 +121,4 @@ ios/Flutter/ephemeral/
 # Integration Tests & Reports
 integration_test/
 test_reports/
+.codex-runtime*

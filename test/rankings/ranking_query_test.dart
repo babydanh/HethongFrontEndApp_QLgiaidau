@@ -1,6 +1,6 @@
 /// Test cho `ranking_query_helpers.dart` — sanitize query params cho ranking API.
 ///
-/// Backend `GET /rankings` nhận: page, limit, categoryId, matchType,
+/// Backend `GET /rankings` nhận: cursor, limit, categoryId, matchType,
 /// genderRestriction, scope, provinceCode, communityId.
 /// Backend KHÔNG hỗ trợ search param, nên search chỉ dùng local.
 library;
@@ -65,7 +65,7 @@ void main() {
         genderRestriction: '  ',
         provinceCode: '  ',
       );
-      expect(params.keys, unorderedEquals(['scope', 'page', 'limit']));
+      expect(params.keys, unorderedEquals(['scope', 'limit']));
     });
 
     test('trims valid optional params before sending to API', () {
@@ -119,10 +119,7 @@ void main() {
     });
 
     test('preserves limit without legacy page offset', () {
-      final params = buildRankingQueryParams(
-        categoryId: 'uuid-cat',
-        limit: 50,
-      );
+      final params = buildRankingQueryParams(categoryId: 'uuid-cat', limit: 50);
       expect(params['limit'], 50);
     });
 
@@ -138,10 +135,9 @@ void main() {
         genderRestriction: null,
         provinceCode: null,
       );
-      // Chỉ còn scope, page, limit
-      expect(params.keys.length, 3);
+      // Chỉ còn scope, limit
+      expect(params.keys.length, 2);
       expect(params['scope'], 'PUBLIC');
-      expect(params['page'], 1);
       expect(params['limit'], 100);
     });
   });

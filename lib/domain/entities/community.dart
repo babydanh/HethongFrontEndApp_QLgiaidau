@@ -15,6 +15,7 @@ class Community {
   final int tournamentCount;
   final int? maxMembers;
   final List<String> sports; // tên môn thể thao
+  final Map<String, String> sportCategoryIds; // tên/slug môn → category UUID
   final String? rules; // Nội quy CLB
   final List<String> joinQuestions; // Câu hỏi khi tham gia
   final Map<String, String> socialLinks; // facebook / zalo / website
@@ -39,6 +40,7 @@ class Community {
     this.tournamentCount = 0,
     this.maxMembers,
     this.sports = const [],
+    this.sportCategoryIds = const {},
     this.rules,
     this.joinQuestions = const [],
     this.socialLinks = const {},
@@ -64,6 +66,7 @@ class Community {
 
     // 1. Môn thể thao — backend trả `categories` (List<Category>); fallback `sports`, `communitySports`
     final List<String> parsedSports = [];
+    final Map<String, String> parsedSportCategoryIds = {};
     for (final src in [
       json['categories'],
       json['sports'],
@@ -72,14 +75,23 @@ class Community {
       if (src is! List) continue;
       for (final e in src) {
         String sName = '';
+        String sSlug = '';
+        String sId = '';
         if (e is Map) {
           if (e['category'] is Map) {
             sName =
                 e['category']['name']?.toString() ??
                 e['category']['slug']?.toString() ??
                 '';
+            sSlug = e['category']['slug']?.toString() ?? '';
+            sId =
+                e['categoryId']?.toString() ??
+                e['category']['id']?.toString() ??
+                '';
           } else {
             sName = e['name']?.toString() ?? e['id']?.toString() ?? '';
+            sSlug = e['slug']?.toString() ?? '';
+            sId = e['id']?.toString() ?? '';
           }
         } else {
           sName = e.toString();
@@ -87,6 +99,12 @@ class Community {
         sName = sName.trim();
         if (sName.isNotEmpty && !parsedSports.contains(sName)) {
           parsedSports.add(sName);
+        }
+        if (sName.isNotEmpty && sId.isNotEmpty) {
+          parsedSportCategoryIds[sName] = sId;
+          if (sSlug.trim().isNotEmpty) {
+            parsedSportCategoryIds[sSlug.trim()] = sId;
+          }
         }
       }
     }
@@ -198,6 +216,7 @@ class Community {
       tournamentCount: tournamentCount,
       maxMembers: json['maxMembers'] ?? rawJson['maxMembers'],
       sports: parsedSports,
+      sportCategoryIds: parsedSportCategoryIds,
       status:
           json['status']?.toString() ??
           rawJson['status']?.toString() ??
