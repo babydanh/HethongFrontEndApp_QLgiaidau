@@ -7103,7 +7103,7 @@ abstract class AppLocalizations {
   /// No description provided for @club_joinButton.
   ///
   /// In vi, this message translates to:
-  /// **'Tham gia CLB'**
+  /// **'Tham gia'**
   String get club_joinButton;
 
   /// No description provided for @club_joinSuccess.

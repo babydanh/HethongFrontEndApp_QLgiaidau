@@ -3769,7 +3769,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_pendingApproval => 'Chờ phê duyệt';
 
   @override
-  String get club_joinButton => 'Tham gia CLB';
+  String get club_joinButton => 'Tham gia';
 
   @override
   String get club_joinSuccess => 'Tham gia câu lạc bộ thành công!';
