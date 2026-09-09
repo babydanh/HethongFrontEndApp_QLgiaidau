@@ -22923,6 +22923,72 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Trước {count} ngày'**
   String clubMatchSessionRecurringBeforeDays(int count);
+
+  /// No description provided for @communitySearchTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm trong CLB'**
+  String get communitySearchTitle;
+
+  /// No description provided for @communitySearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm bài viết, thành viên, trận đấu...'**
+  String get communitySearchHint;
+
+  /// No description provided for @communitySearchAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get communitySearchAll;
+
+  /// No description provided for @communitySearchPosts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài viết'**
+  String get communitySearchPosts;
+
+  /// No description provided for @communitySearchMembers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên'**
+  String get communitySearchMembers;
+
+  /// No description provided for @communitySearchMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đấu'**
+  String get communitySearchMatches;
+
+  /// No description provided for @communitySearchTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu'**
+  String get communitySearchTournaments;
+
+  /// No description provided for @communitySearchIdle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập ít nhất 2 ký tự để tìm trong CLB'**
+  String get communitySearchIdle;
+
+  /// No description provided for @communitySearchEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy kết quả phù hợp'**
+  String get communitySearchEmpty;
+
+  /// No description provided for @communitySearchError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải kết quả tìm kiếm'**
+  String get communitySearchError;
+
+  /// No description provided for @communitySearchRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get communitySearchRetry;
 }
 
 class _AppLocalizationsDelegate

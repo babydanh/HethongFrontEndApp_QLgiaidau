@@ -14,12 +14,10 @@ abstract class ICommunityRepository {
     String? provinceCode,
     int limit = 20,
   });
-  Future<({
-    List<Community> communities,
-    String? nextCursor,
-    bool hasMore,
-    int total,
-  })> getCommunitiesPaged({
+  Future<
+    ({List<Community> communities, String? nextCursor, bool hasMore, int total})
+  >
+  getCommunitiesPaged({
     String? cursor,
     int limit = 6,
     String? search,
@@ -35,18 +33,28 @@ abstract class ICommunityRepository {
     String? search,
     bool mentionableOnly = false,
   });
+  Future<CommunityMembersPage> getMembersPaged(
+    String communityId, {
+    String? cursor,
+    int limit = 20,
+    String? status,
+    String? search,
+  });
   Future<bool> joinCommunity(
     String communityId, {
     Map<String, dynamic>? answers,
   });
   Future<bool> leaveCommunity(String communityId, String userId);
   Future<List<CommunityTournamentModel>> getTournaments(String communityId);
-  Future<({
-    List<CommunityTournamentModel> tournaments,
-    String? nextCursor,
-    bool hasMore,
-    int total,
-  })> getTournamentsPaged(
+  Future<
+    ({
+      List<CommunityTournamentModel> tournaments,
+      String? nextCursor,
+      bool hasMore,
+      int total,
+    })
+  >
+  getTournamentsPaged(
     String communityId, {
     String? cursor,
     int limit = 6,
@@ -203,7 +211,10 @@ abstract class ICommunityRepository {
 
   /// Cập nhật cài đặt thông báo của cá nhân trong câu lạc bộ (ALL, MENTIONS_ONLY, MUTED)
   /// PUT /communities/:id/members/me/notification-preference
-  Future<void> updateNotificationPreference(String communityId, String preference);
+  Future<void> updateNotificationPreference(
+    String communityId,
+    String preference,
+  );
 
   /// Lấy danh sách cài đặt thông báo của các CLB mà user tham gia
   /// GET /communities/my/notification-preferences

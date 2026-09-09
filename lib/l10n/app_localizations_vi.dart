@@ -12566,4 +12566,37 @@ class AppLocalizationsVi extends AppLocalizations {
   String clubMatchSessionRecurringBeforeDays(int count) {
     return 'Trước $count ngày';
   }
+
+  @override
+  String get communitySearchTitle => 'Tìm kiếm trong CLB';
+
+  @override
+  String get communitySearchHint => 'Tìm bài viết, thành viên, trận đấu...';
+
+  @override
+  String get communitySearchAll => 'Tất cả';
+
+  @override
+  String get communitySearchPosts => 'Bài viết';
+
+  @override
+  String get communitySearchMembers => 'Thành viên';
+
+  @override
+  String get communitySearchMatches => 'Trận đấu';
+
+  @override
+  String get communitySearchTournaments => 'Giải đấu';
+
+  @override
+  String get communitySearchIdle => 'Nhập ít nhất 2 ký tự để tìm trong CLB';
+
+  @override
+  String get communitySearchEmpty => 'Không tìm thấy kết quả phù hợp';
+
+  @override
+  String get communitySearchError => 'Không thể tải kết quả tìm kiếm';
+
+  @override
+  String get communitySearchRetry => 'Thử lại';
 }

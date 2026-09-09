@@ -12608,4 +12608,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String clubMatchSessionRecurringBeforeDays(int count) {
     return '$count days before';
   }
+
+  @override
+  String get communitySearchTitle => 'Search in club';
+
+  @override
+  String get communitySearchHint => 'Search posts, members, matches...';
+
+  @override
+  String get communitySearchAll => 'All';
+
+  @override
+  String get communitySearchPosts => 'Posts';
+
+  @override
+  String get communitySearchMembers => 'Members';
+
+  @override
+  String get communitySearchMatches => 'Matches';
+
+  @override
+  String get communitySearchTournaments => 'Tournaments';
+
+  @override
+  String get communitySearchIdle =>
+      'Enter at least 2 characters to search this club';
+
+  @override
+  String get communitySearchEmpty => 'No matching results';
+
+  @override
+  String get communitySearchError => 'Could not load search results';
+
+  @override
+  String get communitySearchRetry => 'Retry';
 }

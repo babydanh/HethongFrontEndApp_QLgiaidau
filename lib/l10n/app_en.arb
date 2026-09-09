@@ -5142,6 +5142,17 @@
   "@clubMatchSessionRecurringBeforeDays": {
     "placeholders": { "count": { "type": "int" } }
   },
+  "communitySearchTitle": "Search in club",
+  "communitySearchHint": "Search posts, members, matches...",
+  "communitySearchAll": "All",
+  "communitySearchPosts": "Posts",
+  "communitySearchMembers": "Members",
+  "communitySearchMatches": "Matches",
+  "communitySearchTournaments": "Tournaments",
+  "communitySearchIdle": "Enter at least 2 characters to search this club",
+  "communitySearchEmpty": "No matching results",
+  "communitySearchError": "Could not load search results",
+  "communitySearchRetry": "Retry",
   "@clubMatchSessionEloDelta": {
     "placeholders": { "value": { "type": "int" } }
   }

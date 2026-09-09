@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/widgets/club_network_image.dart';
@@ -56,7 +57,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   String _tournamentStatusFilter = 'ALL';
   String _tournamentSportFilter = 'ALL';
   bool _isAddingGalleryImage = false;
-  String? _activitySearchQuery;
   bool _isAboutDescExpanded = false;
   bool _isAboutRulesExpanded = false;
   // Cache future cho card Trạng thái nhanh — tránh gọi lại API mỗi lần rebuild.
@@ -554,6 +554,13 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           ),
           centerTitle: false,
           actions: [
+            IconButton(
+              tooltip: l10n.communitySearchTitle,
+              icon: const Icon(Icons.search_rounded, color: AppTheme.primary),
+              onPressed: () => context.push(
+                '/club/${club.id}/search?name=${Uri.encodeComponent(club.name)}',
+              ),
+            ),
             _buildFollowFavoriteButtons(club, colors, l10n),
           ],
         ),
@@ -594,11 +601,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             communityName: club.name,
             showHeader: false,
           ),
-          ClubActivityTab(
-            communityId: club.id,
-            club: club,
-            initialSearchQuery: _activitySearchQuery,
-          ),
+          ClubActivityTab(communityId: club.id, club: club),
           _buildMembersTab(club, colors),
           _buildRankingsTab(colors, club),
         ],
@@ -1657,7 +1660,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       children: [
                         Text(
                           descText,
-                          maxLines: _isAboutDescExpanded || !isLongDesc ? null : 3,
+                          maxLines: _isAboutDescExpanded || !isLongDesc
+                              ? null
+                              : 3,
                           overflow: _isAboutDescExpanded || !isLongDesc
                               ? TextOverflow.visible
                               : TextOverflow.ellipsis,
@@ -1677,7 +1682,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 4),
                               child: Text(
-                                _isAboutDescExpanded ? 'Thu gọn' : '... Xem thêm',
+                                _isAboutDescExpanded
+                                    ? 'Thu gọn'
+                                    : '... Xem thêm',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -1806,8 +1813,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   builder: (context) {
                     final items = parsedRuleList;
                     final isLongList = items.length > 3;
-                    final visibleCount =
-                        _isAboutRulesExpanded || !isLongList ? items.length : 3;
+                    final visibleCount = _isAboutRulesExpanded || !isLongList
+                        ? items.length
+                        : 3;
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1896,7 +1904,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               const SizedBox(height: 14),
               _buildFbActivityItem(
                 icon: Icons.group_outlined,
-                title: 'Tổng số thành viên: ${club.memberCount}${club.maxMembers != null ? " / ${club.maxMembers}" : ""}',
+                title:
+                    'Tổng số thành viên: ${club.memberCount}${club.maxMembers != null ? " / ${club.maxMembers}" : ""}',
                 subtitle: club.joinMode == "OPEN"
                     ? 'Bất kỳ ai cũng có thể tự do tham gia CLB'
                     : club.joinMode == "APPROVAL"
@@ -2166,8 +2175,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       }
     }
   }
-
-
 
   // ════════════════════════════════════
   //  TAB 2: GIẢI ĐẤU
@@ -3761,7 +3768,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       );
     }
     final l10n = AppLocalizations.of(context)!;
-    final membersAsync = ref.watch(communityMembersProvider(widget.clubId));
+    final membersFeed = ref.watch(communityMembersFeedProvider(widget.clubId));
     final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
     final isCreator = club.ownerId != null && club.ownerId == currentUserId;
     final isAdmin =
@@ -3787,35 +3794,69 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       }
     });
 
-    return membersAsync.when(
-      data: (members) {
-        if (members.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.people_outline, size: 48, color: colors.textMuted),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.club_noMembers,
-                  style: TextStyle(color: colors.textSecondary, fontSize: 14),
-                ),
-              ],
+    if (membersFeed.isLoading && membersFeed.members.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (membersFeed.errorMessage != null && membersFeed.members.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+            const SizedBox(height: 12),
+            Text(
+              l10n.club_loadListError,
+              style: TextStyle(color: colors.textSecondary, fontSize: 14),
             ),
-          );
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () => ref
+                  .read(communityMembersFeedProvider(widget.clubId).notifier)
+                  .loadInitial(),
+              child: const Text('Thử lại'),
+            ),
+          ],
+        ),
+      );
+    }
+    if (membersFeed.members.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.people_outline, size: 48, color: colors.textMuted),
+            const SizedBox(height: 12),
+            Text(
+              l10n.club_noMembers,
+              style: TextStyle(color: colors.textSecondary, fontSize: 14),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final approvedMembers = membersFeed.members;
+    final membersNotifier = ref.read(
+      communityMembersFeedProvider(widget.clubId).notifier,
+    );
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification.metrics.extentAfter < 520) {
+          unawaited(membersNotifier.loadMore());
         }
-        final approvedMembers = members
-            .where((m) => m.status.toUpperCase() == 'JOINED')
-            .toList();
-        return ListView(
+        return false;
+      },
+      child: RefreshIndicator(
+        onRefresh: membersNotifier.loadInitial,
+        child: ListView(
           padding: const EdgeInsets.symmetric(vertical: 8),
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
             if (isAdmin)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _buildJoinRequestsSection(joinRequestsAsync, colors),
               ),
-            if (approvedMembers.isEmpty) const SizedBox.shrink(),
             ...approvedMembers.map(
               (m) => _buildMemberItem(
                 m,
@@ -3826,26 +3867,23 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     : null,
               ),
             ),
-          ],
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) {
-        _log.error('Lỗi tải thành viên CLB', e, st);
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
-              const SizedBox(height: 12),
-              Text(
-                l10n.club_loadListError,
-                style: TextStyle(color: colors.textSecondary, fontSize: 14),
+            if (membersFeed.isLoading && approvedMembers.isNotEmpty)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
               ),
-            ],
-          ),
-        );
-      },
+            if (membersFeed.errorMessage != null && approvedMembers.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  membersFeed.errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: colors.textSecondary, fontSize: 12),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -3857,10 +3895,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       initialFullName: fullName,
       initialAvatarUrl: avatarUrl,
       onFilterMatches: (query) {
-        setState(() {
-          _activitySearchQuery = query;
-        });
-        _tabController.animateTo(1); // Tab 1: Hoạt động
+        final clubName =
+            ref.read(communityDetailProvider(widget.clubId)).value?.name ?? '';
+        context.push(
+          '/club/${widget.clubId}/search?name=${Uri.encodeComponent(clubName)}&q=${Uri.encodeComponent(query)}',
+        );
       },
     );
   }
@@ -4308,6 +4347,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           break;
       }
       ref.invalidate(communityMembersProvider(widget.clubId));
+      ref.invalidate(communityMembersFeedProvider(widget.clubId));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -4346,6 +4386,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           tags,
         );
         ref.invalidate(communityMembersProvider(widget.clubId));
+        ref.invalidate(communityMembersFeedProvider(widget.clubId));
       },
     );
   }
@@ -4478,6 +4519,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     );
                 ref.invalidate(joinRequestsProvider(widget.clubId));
                 ref.invalidate(communityMembersProvider(widget.clubId));
+                ref.invalidate(communityMembersFeedProvider(widget.clubId));
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

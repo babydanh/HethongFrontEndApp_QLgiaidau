@@ -225,8 +225,9 @@ List<ClubSessionScoreModel> parseClubSessionScoreDetails(
         .map(parseSet)
         .whereType<ClubSessionScoreModel>()
         .toList(growable: false);
-    if (parsedSets.isNotEmpty)
+    if (parsedSets.isNotEmpty) {
       return parsedSets.take(10).toList(growable: false);
+    }
   }
 
   final football = scoreDetails['football'];

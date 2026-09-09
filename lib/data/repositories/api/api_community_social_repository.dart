@@ -38,10 +38,19 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
           .map(CommunityPostModel.fromJson)
           .where((post) => post.id.isNotEmpty)
           .toList(growable: false);
+      final hasMore = meta['hasMore'] == true;
+      final nextCursor = meta['nextCursor']?.toString().trim();
+      final safeNextCursor =
+          hasMore &&
+              nextCursor != null &&
+              nextCursor.isNotEmpty &&
+              nextCursor != cursor
+          ? nextCursor
+          : null;
       return CommunityFeedPage(
         items: items,
-        nextCursor: meta['nextCursor']?.toString(),
-        hasMore: meta['hasMore'] == true,
+        nextCursor: safeNextCursor,
+        hasMore: safeNextCursor != null,
       );
     } catch (error, stack) {
       _log.error('Không thể tải feed CLB: $communityId', error, stack);
@@ -75,7 +84,9 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
       final post = CommunityPostModel.fromJson(data);
       if (post.id.isEmpty) {
         throw FormatException(
-          lookupAppLocalizations(PlatformDispatcher.instance.locale).communityPostInvalid,
+          lookupAppLocalizations(
+            PlatformDispatcher.instance.locale,
+          ).communityPostInvalid,
         );
       }
       return post;
@@ -143,7 +154,9 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
       );
       if (comment.id.isEmpty) {
         throw FormatException(
-          lookupAppLocalizations(PlatformDispatcher.instance.locale).communityCommentInvalid,
+          lookupAppLocalizations(
+            PlatformDispatcher.instance.locale,
+          ).communityCommentInvalid,
         );
       }
       return comment;
@@ -326,7 +339,9 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
           _asMap(payload['data'])['url']?.toString();
       if (url == null || url.isEmpty) {
         throw FormatException(
-          lookupAppLocalizations(PlatformDispatcher.instance.locale).communityMediaInvalid,
+          lookupAppLocalizations(
+            PlatformDispatcher.instance.locale,
+          ).communityMediaInvalid,
         );
       }
       return url;

@@ -27,8 +27,6 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
   int _totalTournaments = 0;
 
   String _statusFilter = 'ALL'; // ALL, IN_PROGRESS, UPCOMING, COMPLETED
-  String _searchQuery = '';
-  final TextEditingController _searchCtrl = TextEditingController();
 
   final Map<int, List<CommunityTournamentModel>> _pageTournaments = {};
   final Map<int, String?> _pageCursors = {0: null};
@@ -37,12 +35,6 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
   void initState() {
     super.initState();
     _loadPage(0);
-  }
-
-  @override
-  void dispose() {
-    _searchCtrl.dispose();
-    super.dispose();
   }
 
   void _resetAndReload() {
@@ -71,7 +63,6 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
         cursor: _pageCursors[pageIndex],
         limit: _pageSize,
         status: _statusFilter == 'ALL' ? null : _statusFilter,
-        search: _searchQuery.trim().isNotEmpty ? _searchQuery.trim() : null,
       );
 
       if (mounted) {
@@ -119,11 +110,11 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
             icon: const Icon(Icons.add_rounded),
             onPressed: canCreateLite || canCreateAdvanced
                 ? () => _showTypeSheet(
-                      context,
-                      widget.clubId,
-                      canCreateLite: canCreateLite,
-                      canCreateAdvanced: canCreateAdvanced,
-                    )
+                    context,
+                    widget.clubId,
+                    canCreateLite: canCreateLite,
+                    canCreateAdvanced: canCreateAdvanced,
+                  )
                 : null,
           ),
         ],
@@ -179,46 +170,6 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
       ),
       child: Column(
         children: [
-          // Search box
-          Container(
-            height: 40,
-            decoration: BoxDecoration(
-              color: colors.bgSurface,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: colors.border),
-            ),
-            child: TextField(
-              controller: _searchCtrl,
-              onSubmitted: (val) {
-                _searchQuery = val;
-                _resetAndReload();
-              },
-              style: TextStyle(fontSize: 13.5, color: colors.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Tìm giải đấu theo tên...',
-                hintStyle: TextStyle(fontSize: 12.5, color: colors.textMuted),
-                prefixIcon: Icon(
-                  Icons.search_rounded,
-                  size: 18,
-                  color: colors.textMuted,
-                ),
-                suffixIcon: _searchCtrl.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 16),
-                        onPressed: () {
-                          _searchCtrl.clear();
-                          _searchQuery = '';
-                          _resetAndReload();
-                        },
-                      )
-                    : null,
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 9),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-
           // Horizontal Status Filter Chips (Nav Bar)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -470,16 +421,12 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            _searchQuery.isNotEmpty
-                ? 'Không tìm thấy giải đấu phù hợp'
-                : l10n.clubTournamentsEmpty,
+            l10n.clubTournamentsEmpty,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
-            _searchQuery.isNotEmpty
-                ? 'Hãy thử tìm kiếm với từ khóa khác'
-                : 'Tạo giải đấu nội bộ nhanh hoặc giải đấu nâng cao cho CLB.',
+            'Tạo giải đấu nội bộ nhanh hoặc giải đấu nâng cao cho CLB.',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12.5, color: context.colors.textMuted),
           ),
@@ -500,10 +447,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
     ),
   );
 
-  Widget _buildCard(
-    BuildContext context,
-    CommunityTournamentModel t,
-  ) {
+  Widget _buildCard(BuildContext context, CommunityTournamentModel t) {
     final l10n = AppLocalizations.of(context)!;
     final name = t.name;
     final status = t.status;
@@ -524,9 +468,8 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
         ),
       ),
       child: InkWell(
-        onTap: () => context.push(
-          isLite ? '/lite-manage/${t.id}' : '/intro/${t.id}',
-        ),
+        onTap: () =>
+            context.push(isLite ? '/lite-manage/${t.id}' : '/intro/${t.id}'),
         borderRadius: BorderRadius.circular(10),
         child: Row(
           children: [
@@ -623,10 +566,14 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                            color: const Color(
+                              0xFF6366F1,
+                            ).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
-                              color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                              color: const Color(
+                                0xFF6366F1,
+                              ).withValues(alpha: 0.3),
                             ),
                           ),
                           child: Row(

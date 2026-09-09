@@ -5142,6 +5142,17 @@
   "@clubMatchSessionRecurringBeforeDays": {
     "placeholders": { "count": { "type": "int" } }
   },
+  "communitySearchTitle": "Tìm kiếm trong CLB",
+  "communitySearchHint": "Tìm bài viết, thành viên, trận đấu...",
+  "communitySearchAll": "Tất cả",
+  "communitySearchPosts": "Bài viết",
+  "communitySearchMembers": "Thành viên",
+  "communitySearchMatches": "Trận đấu",
+  "communitySearchTournaments": "Giải đấu",
+  "communitySearchIdle": "Nhập ít nhất 2 ký tự để tìm trong CLB",
+  "communitySearchEmpty": "Không tìm thấy kết quả phù hợp",
+  "communitySearchError": "Không thể tải kết quả tìm kiếm",
+  "communitySearchRetry": "Thử lại",
   "@clubMatchSessionEloDelta": {
     "placeholders": { "value": { "type": "int" } }
   }

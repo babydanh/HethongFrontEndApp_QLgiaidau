@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
@@ -24,14 +25,8 @@ import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_ma
 class ClubActivityTab extends ConsumerStatefulWidget {
   final String communityId;
   final Community? club;
-  final String? initialSearchQuery;
 
-  const ClubActivityTab({
-    super.key,
-    required this.communityId,
-    this.club,
-    this.initialSearchQuery,
-  });
+  const ClubActivityTab({super.key, required this.communityId, this.club});
 
   @override
   ConsumerState<ClubActivityTab> createState() => _ClubActivityTabState();
@@ -47,11 +42,9 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   bool _isLoading = true;
   bool _isLoadingMore = false;
   bool _hasMoreActivity = false;
+  int _activityDisplayLimit = _activityMatchPageSize;
   String? _errorMessage;
   _ActivityFilter _filter = _ActivityFilter.all;
-  final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounceTimer;
-  String _searchQuery = '';
   Timer? _refreshTimer;
   Timer? _socketRefreshTimer;
   StreamSubscription<Map<String, dynamic>>? _socketScoreSubscription;
@@ -74,11 +67,6 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialSearchQuery != null &&
-        widget.initialSearchQuery!.isNotEmpty) {
-      _searchController.text = widget.initialSearchQuery!;
-      _searchQuery = widget.initialSearchQuery!;
-    }
     _fetchMatches();
     _listenForActivityMatchUpdates();
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
@@ -139,21 +127,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   }
 
   @override
-  void didUpdateWidget(covariant ClubActivityTab oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.initialSearchQuery != oldWidget.initialSearchQuery &&
-        widget.initialSearchQuery != null) {
-      setState(() {
-        _searchController.text = widget.initialSearchQuery!;
-        _searchQuery = widget.initialSearchQuery!;
-        _filter = _ActivityFilter.all;
-      });
-    }
-  }
-
-  @override
   void dispose() {
-    _searchDebounceTimer?.cancel();
     _socketRefreshTimer?.cancel();
     _socketScoreSubscription?.cancel();
     _socketStatusSubscription?.cancel();
@@ -170,7 +144,6 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     }
     socket.leaveClubCommunity(widget.communityId);
     _refreshTimer?.cancel();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -186,6 +159,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     _standaloneMatchCursor = null;
     _standaloneMatchHasMore = false;
     _hasMoreActivity = false;
+    _activityDisplayLimit = _activityMatchPageSize;
   }
 
   String? _safeNextCursor(String? cursor, String? nextCursor, bool hasMore) {
@@ -201,13 +175,12 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
       _sessionMatchHasMore.values.any((value) => value);
 
   bool _isOngoingMatch(MatchModel match) {
-    final status = match.status.toUpperCase();
-    return status == 'ONGOING' || status == 'LIVE';
+    return match.isLive;
   }
 
   int _activityStatusOrder(MatchModel match) {
     if (_isOngoingMatch(match)) return 0;
-    if (match.status.toUpperCase() == 'COMPLETED') return 1;
+    if (match.isCompleted) return 1;
     return 2;
   }
 
@@ -248,7 +221,13 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     }
     final merged = byId.values.toList();
     _sortActivityMatches(merged);
-    if (mounted) setState(() => _matches = merged);
+    if (mounted) {
+      setState(() {
+        _matches = merged;
+        _hasMoreActivity =
+            merged.length > _activityDisplayLimit || _hasMoreActivitySource;
+      });
+    }
   }
 
   Future<void> _fetchMatches({
@@ -256,6 +235,17 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     bool loadMore = false,
   }) async {
     if (loadMore && (_isLoadingMore || !_hasMoreActivity)) return;
+
+    // The activity feed merges independent cursor streams. Reveal buffered
+    // rows before requesting another remote page when no source has more.
+    if (loadMore && !_hasMoreActivitySource) {
+      if (!mounted) return;
+      setState(() {
+        _activityDisplayLimit += _activityMatchPageSize;
+        _hasMoreActivity = _matches.length > _activityDisplayLimit;
+      });
+      return;
+    }
 
     final isFirstPage = !silent && !loadMore;
     final isHeadRefresh = silent && !loadMore;
@@ -266,6 +256,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
         _errorMessage = null;
       });
     } else if (loadMore) {
+      _activityDisplayLimit += _activityMatchPageSize;
       setState(() => _isLoadingMore = true);
     }
 
@@ -425,9 +416,6 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
         );
       } catch (_) {}
 
-      if (!isHeadRefresh) {
-        _hasMoreActivity = _hasMoreActivitySource;
-      }
       if (mounted) {
         _mergeActivityMatches(pageMatches, replace: isFirstPage);
         _syncActivitySocketRooms();
@@ -444,6 +432,13 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
         });
       }
     }
+  }
+
+  bool _onActivityScroll(ScrollNotification notification) {
+    if (notification.metrics.extentAfter < 520) {
+      unawaited(_fetchMatches(loadMore: true));
+    }
+    return false;
   }
 
   Widget _buildLoadMoreButton(AppColorsExtension colors) {
@@ -625,11 +620,10 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
       initialFullName: fullName,
       initialAvatarUrl: avatarUrl,
       onFilterMatches: (query) {
-        setState(() {
-          _searchController.text = query;
-          _searchQuery = query;
-          _filter = _ActivityFilter.all;
-        });
+        final name = Uri.encodeComponent(widget.club?.name ?? '');
+        context.push(
+          '/club/${widget.communityId}/search?name=$name&q=${Uri.encodeComponent(query)}',
+        );
       },
     );
   }
@@ -677,314 +671,211 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
           }).toList()
         : <MatchModel>[];
 
-    // Lọc danh sách theo filter và search query
-    final query = _searchQuery.trim().toLowerCase();
+    // Lọc danh sách theo bộ lọc hoạt động. Tìm kiếm dùng màn hình search
+    // chung mở từ header CLB.
     final filteredMatches = _matches.where((m) {
-      final statusUpper = m.status.toUpperCase();
-      if (_filter == _ActivityFilter.ongoing && statusUpper != 'ONGOING') {
+      if (_filter == _ActivityFilter.ongoing && !m.isLive) {
         return false;
       }
-      if (_filter == _ActivityFilter.completed && statusUpper != 'COMPLETED') {
+      if (_filter == _ActivityFilter.completed && !m.isCompleted) {
         return false;
       }
       if (_filter == _ActivityFilter.myMatches) {
         if (!userMatches.contains(m)) return false;
       }
 
-      if (query.isNotEmpty) {
-        final t1 = m.team1Name.toLowerCase();
-        final t2 = m.team2Name.toLowerCase();
-        final tName = (m.tournamentName ?? '').toLowerCase();
-        final memMatch =
-            m.team1MemberInfos.any(
-              (mem) => mem.fullName.toLowerCase().contains(query),
-            ) ||
-            m.team2MemberInfos.any(
-              (mem) => mem.fullName.toLowerCase().contains(query),
-            );
-        if (!t1.contains(query) &&
-            !t2.contains(query) &&
-            !tName.contains(query) &&
-            !memMatch) {
-          return false;
-        }
-      }
       return true;
     }).toList();
+    final visibleMatches = filteredMatches.take(_activityDisplayLimit).toList();
 
-    return RefreshIndicator(
-      onRefresh: () => _fetchMatches(),
-      child: ListView(
-        padding: const EdgeInsets.only(top: 12, bottom: 24),
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          // ─── 2. THANH LỌC & TÌM KIẾM & TẠO TRẬN ĐẤU ───────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 36,
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: (val) {
-                            _searchDebounceTimer?.cancel();
-                            _searchDebounceTimer = Timer(
-                              const Duration(milliseconds: 250),
-                              () {
-                                if (mounted) {
-                                  setState(() => _searchQuery = val);
-                                }
-                              },
-                            );
-                          },
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            color: colors.textPrimary,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Tìm theo tên VĐV hoặc giải đấu...',
-                            hintStyle: TextStyle(
-                              fontSize: 12,
-                              color: colors.textMuted,
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onActivityScroll,
+      child: RefreshIndicator(
+        onRefresh: () => _fetchMatches(),
+        child: ListView(
+          padding: const EdgeInsets.only(top: 12, bottom: 24),
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            // ─── 2. THANH LỌC & TÌM KIẾM & TẠO TRẬN ĐẤU ───────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      if (canCreateStandalone) ...[
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          height: 36,
+                          child: FilledButton.icon(
+                            onPressed: () async {
+                              final createdMatch =
+                                  await ClubStandaloneMatchDialog.show(
+                                    context,
+                                    communityId: widget.communityId,
+                                    clubName: widget.club?.name,
+                                    onMatchCreated: () => _fetchMatches(),
+                                  );
+                              if (!context.mounted || createdMatch == null) {
+                                return;
+                              }
+                              final action =
+                                  await ClubStandaloneMatchResultDialog.show(
+                                    context,
+                                    match: createdMatch,
+                                  );
+                              if (!context.mounted) return;
+                              if (action == ClubStandaloneMatchAction.saved) {
+                                unawaited(_fetchMatches(silent: true));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.club_matchScoreSaved,
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.add_rounded, size: 15),
+                            label: Text(
+                              l10n.club_createMatchStandalone,
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.2,
+                              ),
                             ),
-                            prefixIcon: Icon(
-                              Icons.search_rounded,
-                              size: 16,
-                              color: colors.textMuted,
-                            ),
-                            prefixIconConstraints: const BoxConstraints(
-                              minWidth: 32,
-                              minHeight: 36,
-                            ),
-                            suffixIcon:
-                                ValueListenableBuilder<TextEditingValue>(
-                                  valueListenable: _searchController,
-                                  builder: (context, value, _) {
-                                    if (value.text.isEmpty) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    return IconButton(
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(
-                                        minWidth: 32,
-                                        minHeight: 36,
-                                      ),
-                                      icon: const Icon(
-                                        Icons.clear_rounded,
-                                        size: 14,
-                                      ),
-                                      onPressed: () {
-                                        _searchDebounceTimer?.cancel();
-                                        _searchController.clear();
-                                        setState(() => _searchQuery = '');
-                                      },
-                                    );
-                                  },
-                                ),
-                            suffixIconConstraints: const BoxConstraints(
-                              minWidth: 32,
-                              minHeight: 36,
-                            ),
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 0,
-                              horizontal: 8,
-                            ),
-                            fillColor: colors.bgCard,
-                            filled: true,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: colors.border),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: colors.border),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: AppTheme.primary,
-                                width: 1.2,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppTheme.primary,
+                              elevation: 0,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
                               ),
                             ),
                           ),
                         ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  // Filter Dropdown Row
+                  _buildFilterDropdown(
+                    colors: colors,
+                    isClubMember: isClubMember,
+                    currentUser: currentUser,
+                    userMatches: userMatches,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+
+            // ─── 3. DANH SÁCH TRẬN ĐẤU TIMELINE ───────────────────────
+            if (_isLoading) ...[
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ] else if (_errorMessage != null) ...[
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 30),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.error_outline_rounded,
+                        size: 36,
+                        color: colors.textMuted,
                       ),
-                    ),
-                    if (canCreateStandalone) ...[
-                      const SizedBox(width: 8),
-                      SizedBox(
-                        height: 36,
-                        child: FilledButton.icon(
-                          onPressed: () async {
-                            final createdMatch =
-                                await ClubStandaloneMatchDialog.show(
-                                  context,
-                                  communityId: widget.communityId,
-                                  clubName: widget.club?.name,
-                                  onMatchCreated: () => _fetchMatches(),
-                                );
-                            if (!context.mounted || createdMatch == null) {
-                              return;
-                            }
-                            final action =
-                                await ClubStandaloneMatchResultDialog.show(
-                                  context,
-                                  match: createdMatch,
-                                );
-                            if (!context.mounted) return;
-                            if (action == ClubStandaloneMatchAction.saved) {
-                              unawaited(_fetchMatches(silent: true));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    AppLocalizations.of(
-                                      context,
-                                    )!.club_matchScoreSaved,
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.add_rounded, size: 15),
-                          label: Text(
-                            l10n.club_createMatchStandalone,
-                            style: const TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -0.2,
-                            ),
-                          ),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppTheme.primary,
-                            elevation: 0,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Lỗi tải hoạt động CLB: $_errorMessage',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: colors.textSecondary,
                         ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () => _fetchMatches(),
+                        child: const Text('Thử lại'),
                       ),
                     ],
-                  ],
-                ),
-                const SizedBox(height: 4),
-                // Filter Dropdown Row
-                _buildFilterDropdown(
-                  colors: colors,
-                  isClubMember: isClubMember,
-                  currentUser: currentUser,
-                  userMatches: userMatches,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
-
-          // ─── 3. DANH SÁCH TRẬN ĐẤU TIMELINE ───────────────────────
-          if (_isLoading) ...[
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 40),
-                child: CircularProgressIndicator(),
-              ),
-            ),
-          ] else if (_errorMessage != null) ...[
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 30),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.error_outline_rounded,
-                      size: 36,
-                      color: colors.textMuted,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Lỗi tải hoạt động CLB: $_errorMessage',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: colors.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: () => _fetchMatches(),
-                      child: const Text('Thử lại'),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ] else if (filteredMatches.isEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 40,
-                  horizontal: 20,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.bgCard,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: colors.border),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.sports_tennis_rounded,
-                      size: 40,
-                      color: colors.textMuted,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Chưa có hoạt động trận đấu nào',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: colors.textPrimary,
+            ] else if (filteredMatches.isEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 40,
+                    horizontal: 20,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.bgCard,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: colors.border),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.sports_tennis_rounded,
+                        size: 40,
+                        color: colors.textMuted,
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _filter == _ActivityFilter.myMatches
-                          ? 'Bạn chưa tham gia trận đấu nào trong các giải thuộc CLB.'
-                          : 'Khi các giải đấu diễn ra, kết quả và diễn biến sẽ xuất hiện ở đây.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colors.textSecondary,
+                      const SizedBox(height: 10),
+                      Text(
+                        'Chưa có hoạt động trận đấu nào',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        _filter == _ActivityFilter.myMatches
+                            ? 'Bạn chưa tham gia trận đấu nào trong các giải thuộc CLB.'
+                            : 'Khi các giải đấu diễn ra, kết quả và diễn biến sẽ xuất hiện ở đây.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            _buildLoadMoreButton(colors),
-          ] else ...[
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              itemCount: filteredMatches.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final match = filteredMatches[index];
-                return _buildMatchCard(context, match, colors);
-              },
-            ),
-            _buildLoadMoreButton(colors),
+              _buildLoadMoreButton(colors),
+            ] else ...[
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                itemCount: visibleMatches.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final match = visibleMatches[index];
+                  return _buildMatchCard(context, match, colors);
+                },
+              ),
+              _buildLoadMoreButton(colors),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -1077,10 +968,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     AppColorsExtension colors,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final isOngoing =
-        match.status.toUpperCase() == 'ONGOING' ||
-        match.status.toUpperCase() == 'LIVE';
-    final isCompleted = match.status.toUpperCase() == 'COMPLETED';
+    final isOngoing = match.isLive;
+    final isCompleted = match.isCompleted;
 
     final isT1Winner = isCompleted && match.winnerId == match.team1Id;
     final isT2Winner = isCompleted && match.winnerId == match.team2Id;

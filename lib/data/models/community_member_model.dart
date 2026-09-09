@@ -64,6 +64,19 @@ class CommunityMemberModel {
   }
 }
 
+/// One cursor page for the club member directory.
+class CommunityMembersPage {
+  final List<CommunityMemberModel> items;
+  final String? nextCursor;
+  final bool hasMore;
+
+  const CommunityMembersPage({
+    required this.items,
+    this.nextCursor,
+    required this.hasMore,
+  });
+}
+
 /// P2C.3 — Streak tính động: { type: 'WIN'|'LOSS'|'ELO_UP'|null, count, label }.
 class CommunityMemberStreakModel {
   final String? type;
