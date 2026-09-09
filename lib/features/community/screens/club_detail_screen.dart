@@ -64,7 +64,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 8, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _fetchMembership());
   }
 
@@ -525,15 +525,35 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
             onPressed: () => context.pop(),
           ),
-          title: Text(
-            club.name,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: colors.textPrimary,
+          title: InkWell(
+            onTap: () => _showClubAboutFullScreen(club, colors),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      club.name,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: colors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: colors.textMuted,
+                  ),
+                ],
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
           centerTitle: false,
           actions: [
@@ -667,6 +687,15 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           delegate: _TabBarDelegate(
             tabController: _tabController,
             colors: colors,
+            onMoreSelected: (val) {
+              if (val == 'about') {
+                _showClubAboutFullScreen(club, colors);
+              } else if (val == 'gallery') {
+                _showClubGalleryFullScreen(club, colors);
+              } else if (val == 'settings') {
+                _showClubSettingsFullScreen(club, colors);
+              }
+            },
           ),
         ),
       ],
@@ -684,11 +713,8 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             initialSearchQuery: _activitySearchQuery,
           ),
           _buildTournamentsTab(club, colors),
-          _buildRankingsTab(colors, club),
-          _buildAboutTab(club, colors),
           _buildMembersTab(club, colors),
-          _buildGalleryTab(club, colors),
-          _buildSettingsTab(club, colors),
+          _buildRankingsTab(colors, club),
         ],
       ),
     );
@@ -1552,6 +1578,88 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             centerTitle: true,
           ),
           body: _buildAboutTab(club, colors),
+        ),
+      ),
+    );
+  }
+
+  void _showClubGalleryFullScreen(Community club, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (ctx) => Scaffold(
+          backgroundColor: colors.bgDark,
+          appBar: AppBar(
+            backgroundColor: colors.bgDark,
+            elevation: 0,
+            leading: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colors.bgCard.withValues(alpha: 0.8),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.close_rounded,
+                  color: colors.textPrimary,
+                  size: 20,
+                ),
+              ),
+              onPressed: () => Navigator.of(ctx).pop(),
+            ),
+            title: Text(
+              l10n.club_tabGallery,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: colors.textPrimary,
+              ),
+            ),
+            centerTitle: true,
+          ),
+          body: _buildGalleryTab(club, colors),
+        ),
+      ),
+    );
+  }
+
+  void _showClubSettingsFullScreen(Community club, AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (ctx) => Scaffold(
+          backgroundColor: colors.bgDark,
+          appBar: AppBar(
+            backgroundColor: colors.bgDark,
+            elevation: 0,
+            leading: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colors.bgCard.withValues(alpha: 0.8),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.close_rounded,
+                  color: colors.textPrimary,
+                  size: 20,
+                ),
+              ),
+              onPressed: () => Navigator.of(ctx).pop(),
+            ),
+            title: Text(
+              l10n.club_tabSettings,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: colors.textPrimary,
+              ),
+            ),
+            centerTitle: true,
+          ),
+          body: _buildSettingsTab(club, colors),
         ),
       ),
     );
@@ -5685,8 +5793,13 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabController tabController;
   final AppColorsExtension colors;
+  final ValueChanged<String>? onMoreSelected;
 
-  _TabBarDelegate({required this.tabController, required this.colors});
+  _TabBarDelegate({
+    required this.tabController,
+    required this.colors,
+    this.onMoreSelected,
+  });
 
   @override
   Widget build(
@@ -5696,6 +5809,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   ) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
+      height: 36.0,
       decoration: BoxDecoration(
         color: colors.bgCard,
         border: Border(
@@ -5705,42 +5819,133 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
           ),
         ),
       ),
-      child: TabBar(
-        controller: tabController,
-        indicator: UnderlineTabIndicator(
-          borderSide: BorderSide(color: AppTheme.primary, width: 2.5),
-          insets: const EdgeInsets.symmetric(horizontal: 10),
-        ),
-        indicatorSize: TabBarIndicatorSize.label,
-        indicatorPadding: EdgeInsets.zero,
-        dividerColor: colors.border.withValues(alpha: 0.65),
-        labelColor: AppTheme.primary,
-        unselectedLabelColor: const Color(0xFF475569),
-        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
-        labelPadding: const EdgeInsets.symmetric(horizontal: 12),
-        isScrollable: true,
-        tabs: [
-          Tab(text: l10n.clubDetailFeedTab),
-          Tab(text: l10n.club_tabActivity),
-          Tab(text: l10n.club_tabTournaments),
-          Tab(text: l10n.club_tabRankings),
-          Tab(text: l10n.club_tabAbout),
-          Tab(text: l10n.club_tabMembers),
-          Tab(text: l10n.club_tabGallery),
-          Tab(text: l10n.club_tabSettings),
+      child: Row(
+        children: [
+          Expanded(
+            child: TabBar(
+              controller: tabController,
+              indicator: UnderlineTabIndicator(
+                borderSide: BorderSide(color: AppTheme.primary, width: 2),
+                insets: const EdgeInsets.symmetric(horizontal: 6),
+              ),
+              indicatorSize: TabBarIndicatorSize.label,
+              indicatorPadding: EdgeInsets.zero,
+              dividerColor: Colors.transparent,
+              labelColor: AppTheme.primary,
+              unselectedLabelColor: const Color(0xFF64748B),
+              labelStyle: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w500,
+              ),
+              labelPadding: const EdgeInsets.symmetric(horizontal: 10),
+              isScrollable: true,
+              tabs: [
+                Tab(text: l10n.clubDetailFeedTab),
+                Tab(text: l10n.club_tabActivity),
+                Tab(text: l10n.club_tabTournaments),
+                Tab(text: l10n.club_tabMembers),
+                Tab(text: l10n.club_tabRankings),
+              ],
+            ),
+          ),
+          Container(
+            height: 20,
+            width: 1,
+            color: colors.border.withValues(alpha: 0.5),
+            margin: const EdgeInsets.symmetric(horizontal: 2),
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'Thêm',
+            padding: EdgeInsets.zero,
+            icon: Container(
+              padding: const EdgeInsets.all(4),
+              child: Icon(
+                Icons.more_horiz_rounded,
+                size: 20,
+                color: colors.textSecondary,
+              ),
+            ),
+            onSelected: onMoreSelected,
+            itemBuilder: (ctx) => [
+              PopupMenuItem(
+                value: 'about',
+                height: 40,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 17,
+                      color: AppTheme.primary,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      l10n.club_tabAbout,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'gallery',
+                height: 40,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.photo_library_outlined,
+                      size: 17,
+                      color: const Color(0xFF0EA5E9),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      l10n.club_tabGallery,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'settings',
+                height: 40,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.settings_outlined,
+                      size: 17,
+                      color: colors.textPrimary,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      l10n.club_tabSettings,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 4),
         ],
       ),
     );
   }
 
   @override
-  double get maxExtent => 44.0;
+  double get maxExtent => 36.0;
   @override
-  double get minExtent => 44.0;
+  double get minExtent => 36.0;
   @override
   bool shouldRebuild(_TabBarDelegate oldDelegate) => true;
 }
