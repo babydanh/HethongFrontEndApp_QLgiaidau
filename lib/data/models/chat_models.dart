@@ -146,16 +146,38 @@ class ChatPollModel {
   }
 }
 
+class ChatReactionUser {
+  final String id;
+  final String fullName;
+  final String? avatarUrl;
+
+  const ChatReactionUser({
+    required this.id,
+    required this.fullName,
+    this.avatarUrl,
+  });
+
+  factory ChatReactionUser.fromJson(Map<String, dynamic> json) {
+    return ChatReactionUser(
+      id: (json['id'] ?? json['userId'] ?? '').toString(),
+      fullName: (json['fullName'] ?? json['name'] ?? 'Thành viên').toString(),
+      avatarUrl: json['avatarUrl']?.toString(),
+    );
+  }
+}
+
 class ChatReactionModel {
   final String emoji;
   final int count;
   final List<String> userIds;
+  final List<ChatReactionUser> users;
   final bool isReacted;
 
   const ChatReactionModel({
     required this.emoji,
     this.count = 1,
     this.userIds = const [],
+    this.users = const [],
     this.isReacted = false,
   });
 
@@ -163,14 +185,40 @@ class ChatReactionModel {
     Map<String, dynamic> json, {
     String? currentUserId,
   }) {
-    final rawUsers = json['userIds'] ?? json['users'];
     final userIds = <String>[];
+    final users = <ChatReactionUser>[];
+
+    final rawUserIds = json['userIds'];
+    if (rawUserIds is List) {
+      for (final rawUserId in rawUserIds) {
+        final mappedUserId = rawUserId is Map ? _chatMap(rawUserId) : null;
+        final userId = mappedUserId == null
+            ? rawUserId?.toString()
+            : mappedUserId['id']?.toString();
+        if (userId != null && userId.isNotEmpty && !userIds.contains(userId)) {
+          userIds.add(userId);
+        }
+      }
+    }
+
+    final rawUsers = json['users'];
     if (rawUsers is List) {
-      for (final u in rawUsers) {
-        if (u is String) {
-          userIds.add(u);
-        } else if (u is Map && u['id'] != null) {
-          userIds.add(u['id'].toString());
+      for (final rawUser in rawUsers) {
+        if (rawUser is String) {
+          if (rawUser.isNotEmpty && !userIds.contains(rawUser)) {
+            userIds.add(rawUser);
+          }
+          continue;
+        }
+        if (rawUser is Map) {
+          final user = ChatReactionUser.fromJson(_chatMap(rawUser)!);
+          if (user.id.isNotEmpty && !userIds.contains(user.id)) {
+            userIds.add(user.id);
+          }
+          if (user.id.isNotEmpty &&
+              !users.any((existing) => existing.id == user.id)) {
+            users.add(user);
+          }
         }
       }
     }
@@ -185,6 +233,7 @@ class ChatReactionModel {
       emoji: (json['emoji'] ?? '❤️').toString(),
       count: count > 0 ? count : 1,
       userIds: userIds,
+      users: users,
       isReacted: isReacted,
     );
   }
@@ -345,7 +394,7 @@ class ChatMessageModel {
       poll = ChatPollModel.fromJson(pollMap, currentUserId: currentUserId);
     }
 
-    final rawReactions = json['reactions'];
+    final rawReactions = json['reactionDetails'] ?? json['reactions'];
     final reactionsList = <ChatReactionModel>[];
     if (rawReactions is List) {
       for (final r in rawReactions) {

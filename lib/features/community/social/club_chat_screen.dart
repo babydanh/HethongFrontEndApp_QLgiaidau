@@ -4,6 +4,9 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/chat_socket_service.dart';
+import 'package:app_quanly_giaidau/data/models/chat_models.dart';
+import 'package:app_quanly_giaidau/features/chat/read_receipt_state.dart';
+import 'package:app_quanly_giaidau/features/chat/widgets/chat_reaction_detail_sheet.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
@@ -46,6 +49,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
   String? _error;
   bool _socketConnected = false;
   String? _typingUser;
+  final ChatReadReceiptState _readReceipts = ChatReadReceiptState();
   final Set<String> _blockedUserIds = <String>{};
   final List<String> _selectedAttachments = <String>[];
   _ClubChatMessage? _replyingTo;
@@ -63,6 +67,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     };
     _chatSocket.onMessage = _onSocketMessage;
     _chatSocket.onReaction = _onSocketReaction;
+    _chatSocket.onRoomRead = _onSocketRoomRead;
     _chatSocket.onRevoked = _onSocketRevoked;
     _chatSocket.onPinned = _onSocketPinned;
     _chatSocket.onTyping = (data) {
@@ -409,6 +414,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
       if (!mounted) return;
       setState(() => _roomId = id);
       await _chatSocket.connect(id);
+      unawaited(_loadRoomParticipants(id));
       await _refreshMessages(initial: true);
     } catch (error, stack) {
       _log.error('Không thể mở chat CLB', error, stack);
@@ -419,6 +425,37 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
         });
       }
     }
+  }
+
+  Future<void> _loadRoomParticipants(String roomId) async {
+    try {
+      final response = await ref
+          .read(dioClientProvider)
+          .dio
+          .get('/chat/rooms/$roomId');
+      final payload = _asMap(response.data);
+      final rawParticipants = _asMap(
+        payload['data'] ?? payload,
+      )['participants'];
+      if (!mounted || rawParticipants is! List) return;
+      final participants = rawParticipants
+          .map((item) => ChatParticipant.fromJson(_asMap(item)))
+          .toList(growable: false);
+      setState(() {
+        _readReceipts.replaceParticipants(participants);
+      });
+    } catch (_) {
+      // Read receipts are supplementary; keep the club chat usable if details fail.
+    }
+  }
+
+  void _onSocketRoomRead(Map<String, dynamic> data) {
+    if (!mounted ||
+        data['roomId']?.toString() != _roomId ||
+        !_readReceipts.applyRoomReadEvent(data, roomId: _roomId)) {
+      return;
+    }
+    setState(() {});
   }
 
   Future<void> _loadBlockedUsers() async {
@@ -460,8 +497,12 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
           ? raw
           : (_asMap(raw)['items'] ?? const <Object?>[]);
       if (list is! List) return;
+      final currentUserId = ref.read(userProfileProvider).asData?.value.id;
       final incoming = list
-          .map(_ClubChatMessage.fromJson)
+          .map(
+            (item) =>
+                _ClubChatMessage.fromJson(item, currentUserId: currentUserId),
+          )
           .where((message) => message.id.isNotEmpty)
           .toList();
       final ids = <String>{};
@@ -533,8 +574,12 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
           ? raw
           : (_asMap(raw)['items'] ?? const <Object?>[]);
       if (list is! List) return;
+      final currentUserId = ref.read(userProfileProvider).asData?.value.id;
       final older = list
-          .map(_ClubChatMessage.fromJson)
+          .map(
+            (item) =>
+                _ClubChatMessage.fromJson(item, currentUserId: currentUserId),
+          )
           .where((m) => m.id.isNotEmpty)
           .toList();
       final ids = _messages.map((m) => m.id).toSet();
@@ -741,7 +786,10 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
   }
 
   void _onSocketMessage(Map<String, dynamic> data) {
-    final message = _ClubChatMessage.fromJson(data);
+    final message = _ClubChatMessage.fromJson(
+      data,
+      currentUserId: ref.read(userProfileProvider).asData?.value.id,
+    );
 
     if (!mounted ||
         message.id.isEmpty ||
@@ -766,16 +814,22 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
       return;
     }
 
-    final raw = data['reactions'];
+    final raw = data['reactionDetails'] ?? data['reactions'];
     if (raw is! List) return;
-    final reactions = raw
-        .map((item) => item.toString())
-        .toList(growable: false);
+    final currentUserId = ref.read(userProfileProvider).asData?.value.id;
+    final reactionDetails = _parseReactionDetails(
+      raw,
+      currentUserId: currentUserId,
+    );
+    final reactions = _flattenReactionDetails(reactionDetails, raw);
     setState(() {
       _messages = _messages
           .map(
             (message) => message.id == messageId
-                ? message.copyWith(reactions: reactions)
+                ? message.copyWith(
+                    reactions: reactions,
+                    reactionDetails: reactionDetails,
+                  )
                 : message,
           )
           .toList(growable: false);
@@ -811,16 +865,23 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
             data: {'emoji': emoji},
           );
       final payload = _asMap(response.data);
-      final raw = _asMap(payload['data'] ?? payload)['reactions'];
+      final result = _asMap(payload['data'] ?? payload);
+      final raw = result['reactionDetails'] ?? result['reactions'];
       if (!mounted || raw is! List) return;
-      final reactions = raw
-          .map((item) => item.toString())
-          .toList(growable: false);
+      final currentUserId = ref.read(userProfileProvider).asData?.value.id;
+      final reactionDetails = _parseReactionDetails(
+        raw,
+        currentUserId: currentUserId,
+      );
+      final reactions = _flattenReactionDetails(reactionDetails, raw);
       setState(() {
         _messages = _messages
             .map(
               (item) => item.id == message.id
-                  ? item.copyWith(reactions: reactions)
+                  ? item.copyWith(
+                      reactions: reactions,
+                      reactionDetails: reactionDetails,
+                    )
                   : item,
             )
             .toList(growable: false);
@@ -978,80 +1039,99 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
             children: [
               if (!isMine) _SenderAvatar(message: message),
               Flexible(
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: AppTheme.spacingSM),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 9,
-                  ),
-                  constraints: const BoxConstraints(maxWidth: 320),
-                  decoration: BoxDecoration(
-                    color: isMine ? AppTheme.primary : colors.bgCard,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-                    border: Border.all(
-                      color: isMine ? AppTheme.primary : colors.borderLight,
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onLongPress: message.id.isEmpty
-                        ? null
-                        : () => _showMessageActions(message),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (!isMine)
-                          Wrap(
-                            spacing: 5,
-                            runSpacing: 3,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              Text(
-                                message.senderName.trim().isEmpty
-                                    ? l10n.clubChat_memberFallback
-                                    : message.senderName,
+                child: Column(
+                  crossAxisAlignment: isMine
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(bottom: AppTheme.spacingSM),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 9,
+                      ),
+                      constraints: const BoxConstraints(maxWidth: 320),
+                      decoration: BoxDecoration(
+                        color: isMine ? AppTheme.primary : colors.bgCard,
+                        borderRadius: BorderRadius.circular(
+                          AppTheme.radiusLarge,
+                        ),
+                        border: Border.all(
+                          color: isMine ? AppTheme.primary : colors.borderLight,
+                        ),
+                      ),
+                      child: GestureDetector(
+                        onLongPress: message.id.isEmpty
+                            ? null
+                            : () => _showMessageActions(message),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (!isMine)
+                              Wrap(
+                                spacing: 5,
+                                runSpacing: 3,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Text(
+                                    message.senderName.trim().isEmpty
+                                        ? l10n.clubChat_memberFallback
+                                        : message.senderName,
 
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: colors.textMuted,
+                                    ),
+                                  ),
+                                  if (isFirstOfRun)
+                                    ..._senderBadges(
+                                      message.senderId,
+                                      chatDirectory,
+                                      chatPresets,
+                                    ),
+                                ],
+                              ),
+                            const SizedBox(height: 3),
+                            if (message.isRevoked)
+                              Text(
+                                l10n.clubChat_revoked,
                                 style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
                                   color: colors.textMuted,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              )
+                            else
+                              _buildMessageContent(message, isMine, colors),
+                            if (message.reactions.isNotEmpty) ...[
+                              const SizedBox(height: 5),
+                              GestureDetector(
+                                onTap: () => _showClubReactionDetails(message),
+                                child: Wrap(
+                                  spacing: 3,
+                                  children: message.reactions
+                                      .map(
+                                        (emoji) => Text(
+                                          emoji,
+                                          style: const TextStyle(fontSize: 15),
+                                        ),
+                                      )
+                                      .toList(),
                                 ),
                               ),
-                              if (isFirstOfRun)
-                                ..._senderBadges(
-                                  message.senderId,
-                                  chatDirectory,
-                                  chatPresets,
-                                ),
                             ],
-                          ),
-                        const SizedBox(height: 3),
-                        if (message.isRevoked)
-                          Text(
-                            l10n.clubChat_revoked,
-                            style: TextStyle(
-                              color: colors.textMuted,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          )
-                        else
-                          _buildMessageContent(message, isMine, colors),
-                        if (message.reactions.isNotEmpty) ...[
-                          const SizedBox(height: 5),
-                          Wrap(
-                            spacing: 3,
-                            children: message.reactions
-                                .map(
-                                  (emoji) => Text(
-                                    emoji,
-                                    style: const TextStyle(fontSize: 15),
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                        ],
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                    if (isMine)
+                      _buildClubReadReceipt(
+                        message,
+                        currentUserId,
+                        colors,
+                        l10n,
+                      ),
+                  ],
                 ),
               ),
               IconButton(
@@ -1070,6 +1150,70 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
           ),
         );
       },
+    );
+  }
+
+  Future<void> _showClubReactionDetails(_ClubChatMessage message) {
+    final currentUserId = ref.read(userProfileProvider).asData?.value.id ?? '';
+    return ChatReactionDetailSheet.show(
+      context,
+      message.toChatMessage(currentUserId),
+    );
+  }
+
+  Widget _buildClubReadReceipt(
+    _ClubChatMessage message,
+    String currentUserId,
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
+    final readers = _readReceipts.viewersFor(
+      message.toChatMessage(currentUserId),
+      currentUserId: currentUserId,
+    );
+    return Padding(
+      padding: const EdgeInsets.only(right: 8, bottom: 4),
+      child: readers.isEmpty
+          ? Text(
+              l10n.chatDetailSent,
+              style: TextStyle(
+                color: colors.textMuted,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+            )
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: readers.map((participant) {
+                final avatarUrl = participant.avatarUrl?.trim() ?? '';
+                final displayName = participant.fullName.trim().isEmpty
+                    ? l10n.chatParticipantFallback
+                    : participant.fullName.trim();
+                return Padding(
+                  padding: const EdgeInsets.only(left: 3),
+                  child: Tooltip(
+                    message: l10n.chatDetailSeenBy(displayName),
+                    child: CircleAvatar(
+                      radius: 7.5,
+                      backgroundColor: AppTheme.primaryLight,
+                      backgroundImage: avatarUrl.isNotEmpty
+                          ? NetworkImage(avatarUrl)
+                          : null,
+                      child: avatarUrl.isEmpty
+                          ? Text(
+                              displayName.characters.first.toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 7,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryDark,
+                              ),
+                            )
+                          : null,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
     );
   }
 
@@ -1209,6 +1353,7 @@ class _ClubChatMessage {
   final DateTime createdAt;
   final String? senderAvatarUrl;
   final List<String> reactions;
+  final List<ChatReactionModel> reactionDetails;
   final List<String> attachmentsUrls;
   final bool isRevoked;
 
@@ -1220,26 +1365,36 @@ class _ClubChatMessage {
     required this.createdAt,
     this.senderAvatarUrl,
     this.reactions = const [],
+    this.reactionDetails = const [],
     this.attachmentsUrls = const [],
     this.isRevoked = false,
   });
 
-  _ClubChatMessage copyWith({List<String>? reactions, bool? isRevoked}) =>
-      _ClubChatMessage(
-        id: id,
-        senderId: senderId,
-        senderName: senderName,
-        text: text,
-        createdAt: createdAt,
-        senderAvatarUrl: senderAvatarUrl,
-        reactions: reactions ?? this.reactions,
-        attachmentsUrls: attachmentsUrls,
-        isRevoked: isRevoked ?? this.isRevoked,
-      );
+  _ClubChatMessage copyWith({
+    List<String>? reactions,
+    List<ChatReactionModel>? reactionDetails,
+    bool? isRevoked,
+  }) => _ClubChatMessage(
+    id: id,
+    senderId: senderId,
+    senderName: senderName,
+    text: text,
+    createdAt: createdAt,
+    senderAvatarUrl: senderAvatarUrl,
+    reactions: reactions ?? this.reactions,
+    reactionDetails: reactionDetails ?? this.reactionDetails,
+    attachmentsUrls: attachmentsUrls,
+    isRevoked: isRevoked ?? this.isRevoked,
+  );
 
-  factory _ClubChatMessage.fromJson(Object? raw) {
+  factory _ClubChatMessage.fromJson(Object? raw, {String? currentUserId}) {
     final json = _asMap(raw);
     final sender = _asMap(json['sender']);
+    final rawReactions = json['reactionDetails'] ?? json['reactions'];
+    final reactionDetails = _parseReactionDetails(
+      rawReactions,
+      currentUserId: currentUserId,
+    );
     return _ClubChatMessage(
       id: json['id']?.toString() ?? '',
       senderId: json['senderId']?.toString() ?? sender['id']?.toString() ?? '',
@@ -1262,13 +1417,88 @@ class _ClubChatMessage {
                 .toList(growable: false)
           : const [],
       isRevoked: json['isRevoked'] == true,
-      reactions: json['reactions'] is List
-          ? (json['reactions'] as List)
-                .map((item) => item.toString())
-                .toList(growable: false)
-          : const [],
+      reactions: _flattenReactionDetails(reactionDetails, rawReactions),
+      reactionDetails: reactionDetails,
     );
   }
+
+  ChatMessageModel toChatMessage(String currentUserId) {
+    return ChatMessageModel(
+      id: id,
+      roomId: '',
+      senderId: senderId,
+      senderName: senderName,
+      senderAvatarUrl: senderAvatarUrl,
+      content: text,
+      reactions: reactionDetails,
+      createdAt: createdAt,
+      isMine: senderId == currentUserId,
+    );
+  }
+}
+
+List<ChatReactionModel> _parseReactionDetails(
+  Object? raw, {
+  String? currentUserId,
+}) {
+  final details = <ChatReactionModel>[];
+  if (raw is List) {
+    for (final item in raw) {
+      final map = _asMap(item);
+      if (map.isNotEmpty && map['emoji'] != null) {
+        details.add(
+          ChatReactionModel.fromJson(map, currentUserId: currentUserId),
+        );
+      } else if (item is String && item.isNotEmpty) {
+        final index = details.indexWhere((detail) => detail.emoji == item);
+        if (index == -1) {
+          details.add(ChatReactionModel(emoji: item));
+        } else {
+          final existing = details[index];
+          details[index] = ChatReactionModel(
+            emoji: existing.emoji,
+            count: existing.count + 1,
+            userIds: existing.userIds,
+            users: existing.users,
+            isReacted: existing.isReacted,
+          );
+        }
+      }
+    }
+  } else if (raw is Map) {
+    raw.forEach((emoji, users) {
+      final ids = users is List
+          ? users.map((user) => user.toString()).toList(growable: false)
+          : const <String>[];
+      details.add(
+        ChatReactionModel(
+          emoji: emoji.toString(),
+          count: users is List ? users.length : 1,
+          userIds: ids,
+          isReacted: currentUserId != null && ids.contains(currentUserId),
+        ),
+      );
+    });
+  }
+  return details;
+}
+
+List<String> _flattenReactionDetails(
+  List<ChatReactionModel> details,
+  Object? raw,
+) {
+  if (details.isNotEmpty) {
+    return details
+        .expand((detail) => List<String>.filled(detail.count, detail.emoji))
+        .toList(growable: false);
+  }
+  if (raw is List) {
+    return raw
+        .whereType<String>()
+        .where((emoji) => emoji.isNotEmpty)
+        .toList(growable: false);
+  }
+  return const [];
 }
 
 class _SenderAvatar extends StatelessWidget {

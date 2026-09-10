@@ -73,5 +73,21 @@ abstract class ICommunitySocialRepository {
     required String reaction,
   });
 
+  Future<List<CommunityReactionGroup>> getPostReactions(
+    String communityId,
+    String postId,
+  );
+
+  Future<List<CommunityReactionGroup>> getCommentReactions(
+    String communityId,
+    String commentId,
+  );
+
+  Future<CommunityReactionToggleResult> reactToComment(
+    String communityId,
+    String commentId, {
+    required String reaction,
+  });
+
   Future<String> uploadImage(List<int> bytes, String fileName);
 }

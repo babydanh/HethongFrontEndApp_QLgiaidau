@@ -16,6 +16,108 @@ import 'package:app_quanly_giaidau/shared/widgets/report_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+String _communityReactionEmoji(String reactionType) {
+  switch (reactionType.toUpperCase()) {
+    case 'CHEER':
+      return '❤️';
+    case 'RESPECT':
+      return '👏';
+    case 'LAUGH':
+      return '😂';
+    case 'CLUTCH':
+      return '🔥';
+    case 'LIKE':
+    default:
+      return '👍';
+  }
+}
+
+Future<void> _showCommunityReactionDetails(
+  BuildContext context,
+  List<CommunityReactionGroup> groups,
+) async {
+  final l10n = AppLocalizations.of(context)!;
+  await showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (sheetContext) {
+      final colors = sheetContext.colors;
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.chatViewReactions,
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: groups
+                      .expand(
+                        (group) => [
+                          Text(
+                            '${_communityReactionEmoji(group.reactionType)}  ${group.count}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                          ...group.users.map((user) {
+                            final displayName = user.fullName.trim().isEmpty
+                                ? l10n.chatParticipantFallback
+                                : user.fullName.trim();
+                            final avatarUrl = user.avatarUrl?.trim() ?? '';
+                            return ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              leading: CircleAvatar(
+                                radius: 15,
+                                backgroundColor: AppTheme.primaryLight,
+                                backgroundImage: avatarUrl.isEmpty
+                                    ? null
+                                    : NetworkImage(avatarUrl),
+                                child: avatarUrl.isEmpty
+                                    ? Text(
+                                        displayName.characters.first
+                                            .toUpperCase(),
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppTheme.primaryDark,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              title: Text(
+                                displayName,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: 4),
+                        ],
+                      )
+                      .toList(growable: false),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
 class CommunityPostCard extends ConsumerWidget {
   final CommunityPostModel post;
   final String communityId;
@@ -441,12 +543,35 @@ class CommunityPostCard extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: 6),
-                        Text(
-                          '${post.reactionCount}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: colors.textMuted,
-                            fontWeight: FontWeight.w500,
+                        GestureDetector(
+                          onTap: () async {
+                            try {
+                              final groups = await ref
+                                  .read(communitySocialRepositoryProvider)
+                                  .getPostReactions(communityId, post.id);
+                              if (context.mounted) {
+                                await _showCommunityReactionDetails(
+                                  context,
+                                  groups,
+                                );
+                              }
+                            } catch (_) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(l10n.communityFeedReactError),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          child: Text(
+                            '${post.reactionCount}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: colors.textMuted,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       ],

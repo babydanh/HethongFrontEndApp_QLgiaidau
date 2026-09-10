@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:app_quanly_giaidau/core/widgets/custom_error_widget.dart';
 
 class GlobalErrorHandler {
@@ -11,6 +14,9 @@ class GlobalErrorHandler {
       if (kDebugMode) {
         FlutterError.dumpErrorToConsole(details, forceReport: true);
       }
+      unawaited(
+        Sentry.captureException(details.exception, stackTrace: details.stack),
+      );
     };
 
     // 2. Xử lý các lỗi Asynchronous từ Dart (Future, Stream...)
@@ -19,6 +25,7 @@ class GlobalErrorHandler {
         debugPrint('Unhandled async error: $error');
         debugPrintStack(stackTrace: stack);
       }
+      unawaited(Sentry.captureException(error, stackTrace: stack));
       return true; // Trả về true để báo hệ thống rằng lỗi đã được xử lý
     };
 

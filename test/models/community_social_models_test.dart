@@ -86,6 +86,35 @@ void main() {
   });
 
   group('CommunityCommentModel.fromJson', () {
+    test('parses reaction count, viewer state and reaction users', () {
+      final comment = CommunityCommentModel.fromJson({
+        'id': 'comment-reaction',
+        'authorId': 'user-2',
+        'body': 'Đồng ý',
+        'reactionCount': 2,
+        'viewerReaction': 'LIKE',
+      });
+      final group = CommunityReactionGroup.fromJson({
+        'reactionType': 'LIKE',
+        'count': 2,
+        'isReacted': true,
+        'users': [
+          {'id': 'user-1', 'fullName': 'Nguyễn Minh'},
+          {'id': 'user-2', 'fullName': 'Hà Phạm'},
+        ],
+      });
+
+      expect(comment.reactionCount, 2);
+      expect(comment.viewerReaction, 'LIKE');
+      expect(group.reactionType, 'LIKE');
+      expect(group.count, 2);
+      expect(group.isReacted, isTrue);
+      expect(
+        group.users.map((user) => user.fullName),
+        ['Nguyễn Minh', 'Hà Phạm'],
+      );
+    });
+
     test('parses nested author and parentId for replies', () {
       final comment = CommunityCommentModel.fromJson({
         'id': 'comment-2',
