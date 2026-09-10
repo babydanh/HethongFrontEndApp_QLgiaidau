@@ -34,7 +34,13 @@ android {
             keyPassword = keystoreProperties.getProperty("keyPassword")
             val storeFilePath = keystoreProperties.getProperty("storeFile")
             if (storeFilePath != null) {
-                storeFile = file(storeFilePath)
+                val appFile = file(storeFilePath)
+                val rootFile = rootProject.file(storeFilePath)
+                storeFile = when {
+                    appFile.exists() -> appFile
+                    rootFile.exists() -> rootFile
+                    else -> appFile
+                }
             }
             storePassword = keystoreProperties.getProperty("storePassword")
         }
@@ -50,7 +56,12 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            val releaseSigning = signingConfigs.getByName("release")
+            signingConfig = if (releaseSigning.storeFile != null && releaseSigning.storeFile!!.exists()) {
+                releaseSigning
+            } else {
+                signingConfigs.getByName("debug")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
