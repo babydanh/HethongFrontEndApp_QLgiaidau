@@ -760,3 +760,24 @@ abstract class BaseFirestoreRepository<T> {
 4. **Bảo mật Tệp Cấu hình & Khóa Bí mật:**
    - Các file `google-services.json`, `GoogleService-Info.plist`, `firebase-service-account.json`, `*adminsdk*.json`, và thư mục `secrets/` **BẮT BUỘC PHẢI NẰM TRONG `.gitignore`** ở mọi repository, không bao giờ được commit lên GitHub.
 
+---
+
+## 16. Quy định Giới hạn Độ dài File & Kiến trúc Bóc tách Widget (File Length & Component Decomposition)
+
+> [!WARNING]
+> **QUY TẮC PHÒNG CHỐNG "GOD-FILE" (TẬP TIN KHỔNG LỒ > 1.000 DÒNG):**
+> Tuyệt đối không được gom toàn bộ logic màn hình, sub-tabs, dialogs và widgets phụ vào trong một file duy nhất (như tình trạng `club_detail_screen.dart` đạt 6.000+ dòng). Điều này làm suy giảm nghiêm trọng hiệu năng vẽ UI (Rebuild Jank), giật lag màn hình và gây xung đột Git liên tục.
+
+### 16.1 Ngưỡng Giới hạn Số dòng (Line Limits)
+- **Màn hình chính (`*_screen.dart`):** Giới hạn tối đa **≤ 500 – 800 dòng**. Màn hình chỉ đóng vai trò là khung lắp ráp (Orchestrator/Layout Holder), khởi tạo `Scaffold`, `AppBar`, `TabController` và gắn kết các sub-widgets.
+- **Widget thành phần (`*_widget.dart`, `*_tab.dart`, `*_sheet.dart`):** Giới hạn **≤ 300 – 400 dòng**.
+- **Model / Entity:** Giới hạn **≤ 300 dòng** (nếu quá dài phải tách file nested models).
+- **Notifier / State:** Giới hạn **≤ 400 dòng**. Nếu logic quá phức tạp, tách thành nhiều Notifier chuyên biệt (VD: `ClubDetailNotifier`, `ClubMembersNotifier`, `ClubTournamentsNotifier`).
+- **Ngoại lệ duy nhất:** Các file sinh tự động (`app_localizations*.dart`, `*.g.dart`, `*.freezed.dart`).
+
+### 16.2 Nguyên tắc Bóc tách bắt buộc khi phát triển UI
+1. **Mỗi Tab là một Widget độc lập:** Nếu màn hình có `TabBar` / `PageView`, mỗi Tab PHẢI là một file riêng nằm trong thư mục `widgets/` hoặc `tabs/` cùng cấp feature (Ví dụ: `features/community/widgets/club_members_tab.dart`).
+2. **Tách Dialogs & BottomSheets ra file riêng:** Toàn bộ ModalBottomSheet, AlertDialog, FilterSheet, ShareSheet phải được đưa sang file riêng (Ví dụ: `tag_assign_sheet.dart`, `club_join_dialog.dart`).
+3. **Tránh biến State khổng lồ:** Tuyệt đối không dồn 20–30 biến state cục bộ vào một `StatefulWidget`. Sử dụng Riverpod Providers để quản lý state độc lập theo từng vùng widget cần lắng nghe (`ConsumerWidget`), tránh việc gọi `setState()` làm rebuild cả một màn hình hàng nghìn dòng.
+4. **Quy tắc Refactor trước khi thêm tính năng:** Khi chạm vào bất kỳ màn hình nào vượt quá **1.000 dòng**, nhiệm vụ đầu tiên là bóc tách thành phần liên quan ra file widget mới trước khi viết thêm code mới.
+
