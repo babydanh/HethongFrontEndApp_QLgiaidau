@@ -236,25 +236,34 @@ final myCommunityMembershipProvider =
 final communityTournamentsProvider = FutureProvider.autoDispose
     .family<List<CommunityTournamentModel>, String>((ref, communityId) async {
       final repo = ref.watch(communityRepositoryProvider);
-      final tournaments = await repo.getTournaments(communityId);
-      // Keep the card list defensive while backend instances/cache converge:
-      // PENDING_DELETE is hidden by the detail endpoint for non-owners.
-      return tournaments
-          .where((tournament) {
-            final status = tournament.status.trim().toUpperCase();
-            return status != 'PENDING_DELETE';
-          })
-          .toList(growable: false);
+      try {
+        final tournaments = await repo
+            .getTournaments(communityId)
+            .timeout(const Duration(seconds: 10));
+        // Keep the card list defensive while backend instances/cache converge:
+        // PENDING_DELETE is hidden by the detail endpoint for non-owners.
+        return tournaments
+            .where((tournament) {
+              final status = tournament.status.trim().toUpperCase();
+              return status != 'PENDING_DELETE';
+            })
+            .toList(growable: false);
+      } catch (e) {
+        return const <CommunityTournamentModel>[];
+      }
     });
 
 /// Provider gallery ảnh CLB
-final communityGalleryProvider =
-    FutureProvider.family<List<GalleryImageModel>, String>((
-      ref,
-      communityId,
-    ) async {
+final communityGalleryProvider = FutureProvider.autoDispose
+    .family<List<GalleryImageModel>, String>((ref, communityId) async {
       final repo = ref.watch(communityRepositoryProvider);
-      return repo.getGallery(communityId);
+      try {
+        return await repo
+            .getGallery(communityId)
+            .timeout(const Duration(seconds: 10));
+      } catch (e) {
+        return const <GalleryImageModel>[];
+      }
     });
 
 /// Provider danh sách yêu cầu tham gia CLB (OWNER/ADMIN thấy).

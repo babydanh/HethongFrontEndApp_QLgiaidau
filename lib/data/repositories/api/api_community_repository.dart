@@ -409,10 +409,15 @@ class ApiCommunityRepository implements ICommunityRepository {
             .toList();
       }
 
+      final offset = cursor != null ? int.tryParse(cursor) ?? 0 : 0;
+      final pageItems = filtered.skip(offset).take(limit).toList();
+      final nextOffset = offset + limit;
+      final hasMore = nextOffset < filtered.length;
+
       return (
-        tournaments: filtered.take(limit).toList(),
-        nextCursor: null,
-        hasMore: false,
+        tournaments: pageItems,
+        nextCursor: hasMore ? nextOffset.toString() : null,
+        hasMore: hasMore,
         total: filtered.length,
       );
     } catch (e, stack) {

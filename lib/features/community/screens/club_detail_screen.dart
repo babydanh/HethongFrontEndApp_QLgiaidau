@@ -25,7 +25,6 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
-import 'package:app_quanly_giaidau/features/community/widgets/club_ranking_widget.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/tag_assign_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/community_social_settings_sheet.dart';
@@ -62,13 +61,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   bool _isAddingGalleryImage = false;
   bool _isAboutDescExpanded = false;
   bool _isAboutRulesExpanded = false;
+  String _memberSortMode = 'role'; // 'role' (mặc định) | 'elo'
   // Cache future cho card Trạng thái nhanh — tránh gọi lại API mỗi lần rebuild.
   Future<CommunitySocialSettings>? _socialSettingsFuture;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _fetchMembership());
   }
 
@@ -367,7 +367,33 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     );
   }
 
-  Widget _buildFollowFavoriteButtons(
+  Widget _buildCircleOverlayButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.42),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircleChatButton(
     Community club,
     AppColorsExtension colors,
     AppLocalizations l10n,
@@ -375,19 +401,36 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     if (_myMembership?.status != 'JOINED') {
       return const SizedBox.shrink();
     }
-    return IconButton(
-      onPressed: _isOpeningClubChat ? null : () => _openClubChat(club),
-      tooltip: l10n.clubDetailChatTooltip,
-      icon: _isOpeningClubChat
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppTheme.primary,
-              ),
-            )
-          : const Icon(Icons.forum_outlined, color: AppTheme.primary, size: 22),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _isOpeningClubChat ? null : () => _openClubChat(club),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.42),
+            shape: BoxShape.circle,
+          ),
+          child: _isOpeningClubChat
+              ? const Center(
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+              : const Icon(
+                  Icons.forum_outlined,
+                  color: Colors.white,
+                  size: 20,
+                ),
+        ),
+      ),
     );
   }
 
@@ -516,126 +559,75 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         _myMembership?.role == 'ADMIN' ||
         _myMembership?.role == 'MODERATOR';
 
-    return NestedScrollView(
-      headerSliverBuilder: (context, innerBoxIsScrolled) => [
-        SliverAppBar(
-          pinned: true,
-          elevation: 0,
-          backgroundColor: colors.bgDark,
-          leading: IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: colors.bgCard.withValues(alpha: 0.8),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.arrow_back_rounded,
-                color: colors.textPrimary,
-                size: 20,
-              ),
-            ),
-            onPressed: () => context.pop(),
-          ),
-          title: InkWell(
-            onTap: () => _showClubAboutFullScreen(club, colors),
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: Text(
-                      club.name,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: colors.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 20,
-                    color: colors.textMuted,
-                  ),
-                ],
-              ),
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(communityDetailProvider(widget.clubId));
+        ref.invalidate(communityMembersFeedProvider(widget.clubId));
+        ref.invalidate(communityRankingsProvider(widget.clubId));
+        await _fetchMembership();
+      },
+      child: NestedScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        headerSliverBuilder: (context, innerBoxIsScrolled) => [
+          SliverToBoxAdapter(
+            child: _buildClubBanner(
+              club,
+              colors,
+              sColor,
+              emoji,
+              isClubAdmin: isClubAdmin,
             ),
           ),
-          centerTitle: false,
-          actions: [
-            IconButton(
-              tooltip: l10n.communitySearchTitle,
-              icon: const Icon(Icons.search_rounded, color: AppTheme.primary),
-              onPressed: () => context.push(
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _TabBarDelegate(
+              isPinned: innerBoxIsScrolled,
+              tabController: _tabController,
+              colors: colors,
+              topPadding: MediaQuery.of(context).padding.top,
+              clubName: club.name,
+              onBack: () => context.pop(),
+              onSearch: () => context.push(
                 '/club/${club.id}/search?name=${Uri.encodeComponent(club.name)}',
               ),
+              onChat: _isOpeningClubChat ? null : () => _openClubChat(club),
+              showChatIcon: _myMembership?.status == 'JOINED',
+              onMoreSelected: (val) {
+                if (val == 'tourneys') {
+                  _showClubTournamentsFullScreen(club, colors);
+                } else if (val == 'gallery') {
+                  _showClubGalleryFullScreen(club, colors);
+                } else if (val == 'settings') {
+                  _showClubSettingsFullScreen(club, colors);
+                }
+              },
             ),
-            _buildFollowFavoriteButtons(club, colors, l10n),
-          ],
-        ),
-        SliverToBoxAdapter(
-          child: _buildClubBanner(
-            club,
-            colors,
-            sColor,
-            emoji,
-            isClubAdmin: isClubAdmin,
-          ),
-        ),
-        // Tab gọn kiểu mạng xã hội: trượt theo nội dung, chỉ app bar cố định.
-        SliverPersistentHeader(
-          pinned: false,
-          delegate: _TabBarDelegate(
-            tabController: _tabController,
-            colors: colors,
-            onMoreSelected: (val) {
-              if (val == 'tourneys') {
-                _showClubTournamentsFullScreen(club, colors);
-              } else if (val == 'about') {
-                _showClubAboutFullScreen(club, colors);
-              } else if (val == 'gallery') {
-                _showClubGalleryFullScreen(club, colors);
-              } else if (val == 'settings') {
-                _showClubSettingsFullScreen(club, colors);
-              }
-            },
-          ),
-        ),
-      ],
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _LazyClubTab(
-            controller: _tabController,
-            index: 0,
-            builder: (_) => CommunitySocialScreen(
-              communityId: club.id,
-              communityName: club.name,
-              showHeader: false,
-            ),
-          ),
-          _LazyClubTab(
-            controller: _tabController,
-            index: 1,
-            builder: (_) => ClubActivityTab(communityId: club.id, club: club),
-          ),
-          _LazyClubTab(
-            controller: _tabController,
-            index: 2,
-            builder: (_) => _buildMembersTab(club, colors),
-          ),
-          _LazyClubTab(
-            controller: _tabController,
-            index: 3,
-            builder: (_) => _buildRankingsTab(colors, club),
           ),
         ],
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _LazyClubTab(
+              controller: _tabController,
+              index: 0,
+              builder: (_) => CommunitySocialScreen(
+                communityId: club.id,
+                communityName: club.name,
+                showHeader: false,
+              ),
+            ),
+            _LazyClubTab(
+              controller: _tabController,
+              index: 1,
+              builder: (_) => ClubActivityTab(communityId: club.id, club: club),
+            ),
+            _LazyClubTab(
+              controller: _tabController,
+              index: 2,
+              builder: (_) => _buildMembersTab(club, colors),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1039,24 +1031,28 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ? l10n.sportDisplayName(club.sports.first.trim())
         : l10n.club_sportFallback.toUpperCase();
 
+    final topPadding = MediaQuery.of(context).padding.top;
+    final bannerHeight = 140.0;
+    final totalBannerHeight = bannerHeight + topPadding;
+    final stackHeight = totalBannerHeight + 42.0;
+
     return Container(
       color: colors.bgCard,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Banner cover với tỷ lệ hiển thị chuẩn (~16:9 hoặc gọn gàng 165px)
+          // Banner cover với tỷ lệ hiển thị chuẩn Facebook
           SizedBox(
-            height:
-                200, // 165px banner + 35px không gian cho avatar & nút nhô xuống
+            height: stackHeight,
             width: double.infinity,
             child: Stack(
               children: [
-                // 1. Ảnh banner nằm ở trên cùng
+                // 1. Ảnh banner nằm ở trên cùng, phủ lên cả thanh status bar
                 Positioned(
                   top: 0,
                   left: 0,
                   right: 0,
-                  height: 165,
+                  height: totalBannerHeight,
                   child: hasBanner
                       ? ClubNetworkImage(
                           bannerUrl,
@@ -1066,7 +1062,32 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         )
                       : fallbackBanner(),
                 ),
-                // 2. Hàng chứa Avatar và Nút nằm ở dưới cùng của Stack (bên trong hit test bounds 100%)
+                // 2. 3 Icons (back, search, chat) nằm bên trên layer ảnh bìa
+                Positioned(
+                  top: topPadding + 8,
+                  left: 16,
+                  right: 16,
+                  child: Row(
+                    children: [
+                      _buildCircleOverlayButton(
+                        icon: Icons.arrow_back_rounded,
+                        onTap: () => context.pop(),
+                      ),
+                      const Spacer(),
+                      _buildCircleOverlayButton(
+                        icon: Icons.search_rounded,
+                        onTap: () => context.push(
+                          '/club/${club.id}/search?name=${Uri.encodeComponent(club.name)}',
+                        ),
+                      ),
+                      if (_myMembership?.status == 'JOINED') ...[
+                        const SizedBox(width: 8),
+                        _buildCircleChatButton(club, colors, l10n),
+                      ],
+                    ],
+                  ),
+                ),
+                // 3. Hàng chứa Avatar và Nút nằm ở dưới cùng của Stack
                 Positioned(
                   left: 16,
                   right: 16,
@@ -1109,11 +1130,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                           child: Text(
                             club.name,
                             style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
                               color: colors.textPrimary,
-                              height: 1.15,
-                              letterSpacing: -0.35,
+                              height: 1.16,
+                              letterSpacing: -0.3,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -1139,7 +1160,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                         club.visibility.toUpperCase() == 'PRIVATE'
                             ? Icons.lock_outline_rounded
                             : Icons.public_outlined,
-                        size: 15,
+                        size: 16,
                         color: colors.textSecondary,
                       ),
                       const SizedBox(width: 4),
@@ -1148,7 +1169,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                             ? l10n.clubDetailPrivateVisibility
                             : l10n.rank_public,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           color: colors.textSecondary,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1156,14 +1177,14 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       _buildMetaDot(colors),
                       Icon(
                         Icons.group_outlined,
-                        size: 15,
+                        size: 16,
                         color: colors.textSecondary,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         l10n.club_memberCount(club.memberCount),
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           color: colors.textSecondary,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1172,7 +1193,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                       Text(
                         sportLabel,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           color: sColor,
                           fontWeight: FontWeight.w700,
                         ),
@@ -1234,17 +1255,17 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     required String emoji,
   }) {
     return Container(
-      width: 74,
-      height: 74,
+      width: 84,
+      height: 84,
       decoration: BoxDecoration(
         color: colors.bgCard,
         shape: BoxShape.circle,
-        border: Border.all(color: colors.bgCard, width: 2),
+        border: Border.all(color: colors.bgCard, width: 3.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.16),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -2304,14 +2325,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         _myMembership?.role == 'ADMIN' ||
         _myMembership?.role == 'MODERATOR';
 
-    if (tourneysAsync.isLoading && sessionsAsync.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    final isTourneysLoading = tourneysAsync.isLoading && !tourneysAsync.hasValue;
+    final isSessionsLoading = sessionsAsync.isLoading && !sessionsAsync.hasValue;
 
     final tourneys = tourneysAsync.asData?.value ?? const [];
     final sessions = sessionsAsync.asData?.value ?? const [];
-
     final hasData = tourneys.isNotEmpty || sessions.isNotEmpty;
+
+    if ((isTourneysLoading || isSessionsLoading) && !hasData) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
     if (!hasData) {
       if (tourneysAsync.hasError && sessionsAsync.hasError) {
@@ -3835,6 +3858,17 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     }
 
     final approvedMembers = membersFeed.members;
+    final List<CommunityMemberModel> displayMembers = List.of(approvedMembers);
+    if (_memberSortMode == 'elo') {
+      displayMembers.sort((a, b) {
+        final eloA = memberEloMap[a.userId] ?? -999999;
+        final eloB = memberEloMap[b.userId] ?? -999999;
+        final cmp = eloB.compareTo(eloA);
+        if (cmp != 0) return cmp;
+        return (a.userFullName ?? '').compareTo(b.userFullName ?? '');
+      });
+    }
+
     final membersNotifier = ref.read(
       communityMembersFeedProvider(widget.clubId).notifier,
     );
@@ -3860,13 +3894,108 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _buildJoinRequestsSection(joinRequestsAsync, colors),
               ),
-            ...approvedMembers.map(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: Row(
+                children: [
+                  Text(
+                    'Sắp xếp:',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () => setState(() => _memberSortMode = 'role'),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _memberSortMode == 'role'
+                            ? AppTheme.primary
+                            : colors.bgSurface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _memberSortMode == 'role'
+                              ? AppTheme.primary
+                              : colors.border,
+                        ),
+                      ),
+                      child: Text(
+                        'Chức vụ',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: _memberSortMode == 'role'
+                              ? Colors.white
+                              : colors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  InkWell(
+                    onTap: () => setState(() => _memberSortMode = 'elo'),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _memberSortMode == 'elo'
+                            ? AppTheme.primary
+                            : colors.bgSurface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _memberSortMode == 'elo'
+                              ? AppTheme.primary
+                              : colors.border,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.emoji_events_rounded,
+                            size: 13,
+                            color: _memberSortMode == 'elo'
+                                ? Colors.amber
+                                : colors.textSecondary,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            'Elo giảm dần',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: _memberSortMode == 'elo'
+                                  ? Colors.white
+                                  : colors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ...displayMembers.map(
               (m) => _buildMemberItem(
                 m,
                 colors,
                 isAdmin,
                 rankedMemberIds.contains(m.userId)
                     ? memberEloMap[m.userId]
+                    : null,
+                rankIndex: _memberSortMode == 'elo'
+                    ? (displayMembers.indexOf(m) + 1)
                     : null,
               ),
             ),
@@ -3929,8 +4058,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     CommunityMemberModel m,
     AppColorsExtension colors,
     bool isAdmin,
-    int? memberElo,
-  ) {
+    int? memberElo, {
+    int? rankIndex,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final isOwner = m.role == 'OWNER';
     final isCurrentOwner = _myMembership?.role == 'OWNER';
@@ -3945,6 +4075,27 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       ),
       child: Row(
         children: [
+          if (rankIndex != null) ...[
+            Container(
+              width: 28,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '#$rankIndex',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: rankIndex == 1
+                      ? const Color(0xFFEAB308)
+                      : rankIndex == 2
+                          ? const Color(0xFF94A3B8)
+                          : rankIndex == 3
+                              ? const Color(0xFFD97706)
+                              : colors.textSecondary,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
           GestureDetector(
             onTap: canViewProfile
                 ? () => _showMemberProfile(
@@ -4870,7 +5021,36 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           ],
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () {
+        // Nếu đã có data cũ (reload/refresh), không hiển thị loading vô hạn
+        final previousData = galleryAsync.value;
+        if (previousData != null && previousData.isNotEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        // Chưa có data → hiển thị "Chưa có ảnh" thay vì loading vĩnh viễn
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.photo_library_outlined,
+                size: 48,
+                color: colors.textMuted,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.club_noImages,
+                style: TextStyle(color: colors.textSecondary, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.club_gallerySubtitle,
+                style: TextStyle(color: colors.textMuted, fontSize: 12),
+              ),
+            ],
+          ),
+        );
+      },
       error: (e, st) {
         _log.error('Lỗi tải gallery', e, st);
         return Center(
@@ -4998,24 +5178,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     );
   }
 
-  // ════════════════════════════════════
-  //  TAB 5: BẢNG XẾP HẠNG (Rankings)
-  // ════════════════════════════════════
-  Widget _buildRankingsTab(AppColorsExtension colors, Community club) {
-    // The ranking widget owns the podium, paged ranking list, filters,
-    // polling status, and the current user's ELO card.
-    // Truyền môn của CLB để bộ lọc Môn chỉ hiện môn CLB đã đăng ký (giống web).
-    return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      children: [
-        ClubRankingWidget(
-          clubId: widget.clubId,
-          clubSportKeys: club.sports,
-          clubSportCategoryIds: club.sportCategoryIds,
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildUserAvatar({
     required String? name,
@@ -5569,11 +5732,28 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabController tabController;
   final AppColorsExtension colors;
   final ValueChanged<String>? onMoreSelected;
+  final double topPadding;
+  final String clubName;
+  final VoidCallback? onBack;
+  final VoidCallback? onSearch;
+  final VoidCallback? onChat;
+  final bool showChatIcon;
+  final bool isPinned;
+
+  static const double _headerHeight = 44.0;
+  static const double _tabBarHeight = 50.0;
 
   _TabBarDelegate({
     required this.tabController,
     required this.colors,
     this.onMoreSelected,
+    this.topPadding = 0.0,
+    this.clubName = '',
+    this.onBack,
+    this.onSearch,
+    this.onChat,
+    this.showChatIcon = false,
+    this.isPinned = false,
   });
 
   @override
@@ -5584,7 +5764,103 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   ) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
-      height: 36.0,
+      color: colors.bgCard,
+      padding: EdgeInsets.only(top: isPinned ? topPadding : 0.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── Pinned header row: chỉ hiển thị khi scroll xuống (pinned) ──
+          if (isPinned)
+            Container(
+              height: _headerHeight,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                color: colors.bgCard,
+                border: Border(
+                  bottom: BorderSide(
+                    color: colors.border.withValues(alpha: 0.3),
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Back button
+                  IconButton(
+                    onPressed: onBack ?? () => Navigator.of(context).maybePop(),
+                    icon: Icon(
+                      Icons.arrow_back_rounded,
+                      color: colors.textPrimary,
+                      size: 22,
+                    ),
+                    splashRadius: 20,
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(
+                      minWidth: 40,
+                      minHeight: 40,
+                    ),
+                  ),
+                  // Club name
+                  Expanded(
+                    child: Text(
+                      clubName,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  // Search button
+                  IconButton(
+                    onPressed: onSearch,
+                    icon: Icon(
+                      Icons.search_rounded,
+                      color: colors.textPrimary,
+                      size: 22,
+                    ),
+                    splashRadius: 20,
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(
+                      minWidth: 40,
+                      minHeight: 40,
+                    ),
+                  ),
+                  // Chat button (only for joined members)
+                  if (showChatIcon)
+                    IconButton(
+                      onPressed: onChat,
+                      icon: Icon(
+                        Icons.forum_outlined,
+                        color: colors.textPrimary,
+                        size: 22,
+                      ),
+                      splashRadius: 20,
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 40,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          // ── Tab bar row: tăng kích thước 20% & đặt vị trí liền mạch giống ảnh 2 ──
+          _buildTabBarRow(context, colors, l10n),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabBarRow(
+    BuildContext context,
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
+    return Container(
+      height: _tabBarHeight,
       decoration: BoxDecoration(
         color: colors.bgCard,
         border: Border(
@@ -5594,157 +5870,217 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
           ),
         ),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TabBar(
-              controller: tabController,
-              tabAlignment: TabAlignment.start,
-              padding: const EdgeInsets.only(left: 16),
-              indicator: UnderlineTabIndicator(
-                borderSide: BorderSide(color: AppTheme.primary, width: 2),
-                insets: const EdgeInsets.symmetric(horizontal: 6),
-              ),
-              indicatorSize: TabBarIndicatorSize.label,
-              indicatorPadding: EdgeInsets.zero,
-              dividerColor: Colors.transparent,
-              labelColor: AppTheme.primary,
-              unselectedLabelColor: const Color(0xFF64748B),
-              labelStyle: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w500,
-              ),
-              labelPadding: const EdgeInsets.symmetric(horizontal: 10),
-              isScrollable: true,
-              tabs: [
-                Tab(text: l10n.clubDetailFeedTab),
-                const Tab(text: 'Thi đấu'),
-                Tab(text: l10n.club_tabMembers),
-                Tab(text: l10n.club_tabRankings),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: AnimatedBuilder(
+          animation: tabController,
+          builder: (context, _) {
+            final activeIndex = tabController.index;
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildTabItem(
+                  index: 0,
+                  label: l10n.clubDetailFeedTab,
+                  isActive: activeIndex == 0,
+                  colors: colors,
+                ),
+                const SizedBox(width: 20),
+                _buildTabItem(
+                  index: 1,
+                  label: 'Thi đấu',
+                  isActive: activeIndex == 1,
+                  colors: colors,
+                ),
+                const SizedBox(width: 20),
+                _buildTabItem(
+                  index: 2,
+                  label: l10n.club_tabMembers,
+                  isActive: activeIndex == 2,
+                  colors: colors,
+                ),
+                const SizedBox(width: 20),
+                _buildMoreTabButton(context, colors, l10n),
               ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabItem({
+    required int index,
+    required String label,
+    required bool isActive,
+    required AppColorsExtension colors,
+  }) {
+    return InkWell(
+      onTap: () => tabController.animateTo(index),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      child: Container(
+        alignment: Alignment.center,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                    color:
+                        isActive ? AppTheme.primary : const Color(0xFF64748B),
+                  ),
+                ),
+              ),
             ),
-          ),
-          Container(
-            height: 20,
-            width: 1,
-            color: colors.border.withValues(alpha: 0.5),
-            margin: const EdgeInsets.symmetric(horizontal: 2),
-          ),
-          PopupMenuButton<String>(
-            tooltip: 'Thêm',
-            padding: EdgeInsets.zero,
-            icon: Container(
-              padding: const EdgeInsets.all(4),
-              child: Icon(
-                Icons.more_horiz_rounded,
-                size: 20,
-                color: colors.textSecondary,
-              ),
-            ),
-            onSelected: onMoreSelected,
-            itemBuilder: (ctx) => [
-              PopupMenuItem(
-                value: 'tourneys',
-                height: 40,
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.emoji_events_outlined,
-                      size: 17,
-                      color: Color(0xFFF59E0B),
+            if (isActive)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: 3.0,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(2),
                     ),
-                    const SizedBox(width: 10),
-                    Text(
-                      l10n.club_tabTournaments,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-              PopupMenuItem(
-                value: 'about',
-                height: 40,
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline_rounded,
-                      size: 17,
-                      color: AppTheme.primary,
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      l10n.club_tabAbout,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMoreTabButton(
+    BuildContext context,
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
+    return Center(
+      child: PopupMenuButton<String>(
+        tooltip: 'Xem thêm',
+        padding: EdgeInsets.zero,
+        position: PopupMenuPosition.under,
+        onSelected: onMoreSelected,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Xem thêm',
+                style: const TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF64748B),
                 ),
               ),
-              PopupMenuItem(
-                value: 'gallery',
-                height: 40,
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.photo_library_outlined,
-                      size: 17,
-                      color: const Color(0xFF0EA5E9),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      l10n.club_tabGallery,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'settings',
-                height: 40,
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.settings_outlined,
-                      size: 17,
-                      color: colors.textPrimary,
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      l10n.club_tabSettings,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
+              const SizedBox(width: 2),
+              const Icon(
+                Icons.arrow_drop_down_rounded,
+                size: 22,
+                color: Color(0xFF64748B),
               ),
             ],
           ),
-          const SizedBox(width: 4),
+        ),
+        itemBuilder: (ctx) => [
+          PopupMenuItem(
+            value: 'tourneys',
+            height: 40,
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.emoji_events_outlined,
+                  size: 18,
+                  color: Color(0xFFF59E0B),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  l10n.club_tabTournaments,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'gallery',
+            height: 40,
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.photo_library_outlined,
+                  size: 18,
+                  color: Color(0xFF0EA5E9),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  l10n.club_tabGallery,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'settings',
+            height: 40,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.settings_outlined,
+                  size: 18,
+                  color: colors.textPrimary,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  l10n.club_tabSettings,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
   @override
-  double get maxExtent => 36.0;
+  double get maxExtent =>
+      (isPinned ? (topPadding + _headerHeight) : 0.0) + _tabBarHeight;
+
   @override
-  double get minExtent => 36.0;
+  double get minExtent =>
+      (isPinned ? (topPadding + _headerHeight) : 0.0) + _tabBarHeight;
+
   @override
-  bool shouldRebuild(_TabBarDelegate oldDelegate) => true;
+  bool shouldRebuild(_TabBarDelegate oldDelegate) {
+    return oldDelegate.isPinned != isPinned ||
+        oldDelegate.tabController != tabController ||
+        oldDelegate.clubName != clubName ||
+        oldDelegate.showChatIcon != showChatIcon ||
+        oldDelegate.topPadding != topPadding ||
+        oldDelegate.colors != colors;
+  }
 }
 
 /// Chỉ khởi tạo tab nặng khi tab đó thực sự được chọn.

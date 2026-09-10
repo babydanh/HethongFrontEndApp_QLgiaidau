@@ -31,41 +31,51 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
   final Map<int, List<CommunityTournamentModel>> _pageTournaments = {};
   final Map<int, String?> _pageCursors = {0: null};
 
+  String? _errorMessage;
+
   @override
   void initState() {
     super.initState();
     _loadPage(0);
   }
 
-  void _resetAndReload() {
+  Future<void> _resetAndReload() async {
     setState(() {
       _pageTournaments.clear();
       _pageCursors.clear();
       _pageCursors[0] = null;
       _currentPageIndex = 0;
       _hasMore = false;
+      _errorMessage = null;
     });
-    _loadPage(0);
+    await _loadPage(0);
   }
 
   Future<void> _loadPage(int pageIndex) async {
     if (_pageTournaments.containsKey(pageIndex)) {
-      setState(() => _currentPageIndex = pageIndex);
+      setState(() {
+        _currentPageIndex = pageIndex;
+        _errorMessage = null;
+      });
       return;
     }
     if (_isLoading) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    final reqFilter = _statusFilter;
     try {
       final repo = ref.read(communityRepositoryProvider);
       final result = await repo.getTournamentsPaged(
         widget.clubId,
         cursor: _pageCursors[pageIndex],
         limit: _pageSize,
-        status: _statusFilter == 'ALL' ? null : _statusFilter,
+        status: reqFilter == 'ALL' ? null : reqFilter,
       );
 
-      if (mounted) {
+      if (mounted && _statusFilter == reqFilter) {
         setState(() {
           _pageTournaments[pageIndex] = result.tournaments;
           _hasMore = result.hasMore;
@@ -75,11 +85,15 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
           }
           _currentPageIndex = pageIndex;
           _isLoading = false;
+          _errorMessage = null;
         });
       }
     } catch (err) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Không thể tải danh sách giải đấu.';
+        });
       }
     }
   }
@@ -131,8 +145,39 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
                     child: CircularProgressIndicator(color: AppTheme.primary),
                   )
                 : RefreshIndicator(
-                    onRefresh: () async => _resetAndReload(),
-                    child: currentList.isEmpty
+                    onRefresh: _resetAndReload,
+                    child: _errorMessage != null && currentList.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.cloud_off_rounded,
+                                    size: 48,
+                                    color: colors.textMuted,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    _errorMessage!,
+                                    style: TextStyle(
+                                      color: colors.textSecondary,
+                                      fontSize: 14,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  OutlinedButton.icon(
+                                    onPressed: _resetAndReload,
+                                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                                    label: const Text('Thử lại'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : currentList.isEmpty
                         ? _buildEmpty(
                             context,
                             l10n,
