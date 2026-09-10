@@ -5,6 +5,42 @@ import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 
 void main() {
   group('Chat poll parsing', () {
+    test('parses reaction users from additive reactionDetails payload', () {
+      final message = ChatMessageModel.fromJson({
+        'id': 'message-reaction',
+        'roomId': 'room-1',
+        'senderId': 'sender-1',
+        'messageText': 'Kèo tối nay',
+        'createdAt': '2026-09-10T08:00:00.000Z',
+        'reactionDetails': [
+          {
+            'emoji': '❤️',
+            'count': 2,
+            'isReacted': true,
+            'userIds': ['user-1', 'user-2'],
+            'users': [
+              {
+                'id': 'user-1',
+                'fullName': 'Nguyễn Minh',
+                'avatarUrl': 'https://example.com/minh.jpg',
+              },
+              {'id': 'user-2', 'fullName': 'Hà Phạm'},
+            ],
+          },
+        ],
+      }, currentUserId: 'user-1');
+
+      expect(message.reactions.single.emoji, '❤️');
+      expect(message.reactions.single.count, 2);
+      expect(message.reactions.single.isReacted, isTrue);
+      expect(message.reactions.single.users, hasLength(2));
+      expect(message.reactions.single.users.first.fullName, 'Nguyễn Minh');
+      expect(
+        message.reactions.single.users.first.avatarUrl,
+        'https://example.com/minh.jpg',
+      );
+    });
+
     test('parses Web-style POLL metadata from another sender', () {
       final message = ChatMessageModel.fromJson({
         'id': 'message-1',

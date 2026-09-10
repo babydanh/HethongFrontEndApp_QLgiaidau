@@ -37,6 +37,11 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
   final _focusNode = FocusNode();
   late List<CommunityCommentModel> _comments;
   final Set<String> _likedComments = <String>{};
+  final Map<String, String?> _commentReactionOverrides = <String, String?>{};
+  final Map<String, List<CommunityReactionGroup>> _commentReactionGroups =
+      <String, List<CommunityReactionGroup>>{};
+  final Set<String> _reactingComments = <String>{};
+  final Set<String> _loadingReactionDetails = <String>{};
   String? _cursor;
   String? _replyTo;
   String? _replyAuthorName;
@@ -134,14 +139,160 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
     _focusNode.requestFocus();
   }
 
-  void _toggleLike(String commentId) {
-    setState(() {
-      if (_likedComments.contains(commentId)) {
-        _likedComments.remove(commentId);
-      } else {
-        _likedComments.add(commentId);
+  Future<void> _toggleLike(CommunityCommentModel comment) async {
+    if (_reactingComments.contains(comment.id)) return;
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _reactingComments.add(comment.id));
+    try {
+      final result = await ref
+          .read(communitySocialRepositoryProvider)
+          .reactToComment(widget.communityId, comment.id, reaction: 'LIKE');
+      if (!mounted) return;
+      setState(() {
+        _commentReactionOverrides[comment.id] = result.reactionType;
+        _commentReactionGroups[comment.id] = result.reactionDetails;
+        if (result.reactionType == 'LIKE') {
+          _likedComments.add(comment.id);
+        } else {
+          _likedComments.remove(comment.id);
+        }
+      });
+    } catch (_) {
+      if (mounted) _showMessage(l10n.communityComment_submitError);
+    } finally {
+      if (mounted) setState(() => _reactingComments.remove(comment.id));
+    }
+  }
+
+  Future<void> _showReactionDetails(List<CommunityReactionGroup> groups) async {
+    final l10n = AppLocalizations.of(context)!;
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        final colors = sheetContext.colors;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.chatViewReactions,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (groups.isEmpty)
+                  Text(
+                    l10n.communityComment_empty,
+                    style: TextStyle(color: colors.textMuted),
+                  )
+                else
+                  Flexible(
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: groups
+                          .expand(
+                            (group) => [
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: Text(
+                                  '${_reactionEmoji(group.reactionType)}  ${group.count}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    color: colors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                              ...group.users.map((user) {
+                                final displayName = user.fullName.trim().isEmpty
+                                    ? l10n.communityComment_member
+                                    : user.fullName.trim();
+                                final avatarUrl = user.avatarUrl?.trim() ?? '';
+                                return ListTile(
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: CircleAvatar(
+                                    radius: 15,
+                                    backgroundColor: AppTheme.primaryLight,
+                                    backgroundImage: avatarUrl.isEmpty
+                                        ? null
+                                        : NetworkImage(avatarUrl),
+                                    child: avatarUrl.isEmpty
+                                        ? Text(
+                                            displayName.characters.first
+                                                .toUpperCase(),
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppTheme.primaryDark,
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                  title: Text(
+                                    displayName,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                );
+                              }),
+                            ],
+                          )
+                          .toList(growable: false),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _openCommentReactionDetails(
+    CommunityCommentModel comment,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    var groups = _commentReactionGroups[comment.id];
+    if (groups == null) {
+      if (_loadingReactionDetails.contains(comment.id)) return;
+      setState(() => _loadingReactionDetails.add(comment.id));
+      try {
+        groups = await ref
+            .read(communitySocialRepositoryProvider)
+            .getCommentReactions(widget.communityId, comment.id);
+        if (!mounted) return;
+        setState(() => _commentReactionGroups[comment.id] = groups!);
+      } catch (_) {
+        if (mounted) _showMessage(l10n.communityComment_submitError);
+        return;
+      } finally {
+        if (mounted) setState(() => _loadingReactionDetails.remove(comment.id));
       }
-    });
+    }
+    if (mounted) await _showReactionDetails(groups);
+  }
+
+  String _reactionEmoji(String reactionType) {
+    switch (reactionType.toUpperCase()) {
+      case 'CHEER':
+        return '❤️';
+      case 'RESPECT':
+        return '👏';
+      case 'LAUGH':
+        return '😂';
+      case 'CLUTCH':
+        return '🔥';
+      case 'LIKE':
+      default:
+        return '👍';
+    }
   }
 
   Future<void> _delete(CommunityCommentModel comment) async {
@@ -158,7 +309,9 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: Text(l10n.communityComment_delete),
           ),
         ],
@@ -196,15 +349,24 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
     if (value == null) return l10n.communityComment_justNow;
     final difference = DateTime.now().difference(value.toLocal());
     if (difference.inMinutes < 1) return l10n.communityComment_justNow;
-    if (difference.inHours < 1) return l10n.communityComment_minutes(difference.inMinutes);
-    if (difference.inDays < 1) return l10n.communityComment_hours(difference.inHours);
-    if (difference.inDays < 7) return l10n.communityComment_days(difference.inDays);
+    if (difference.inHours < 1)
+      return l10n.communityComment_minutes(difference.inMinutes);
+    if (difference.inDays < 1)
+      return l10n.communityComment_hours(difference.inHours);
+    if (difference.inDays < 7)
+      return l10n.communityComment_days(difference.inDays);
     return '${value.day}/${value.month}';
   }
 
   /// Parse text for @mentions and #hashtags, highlighting them like web
-  Widget _buildRichCommentText(String text, BuildContext context, AppColorsExtension colors) {
-    final regex = RegExp(r'(@[^\s@#]+(?:\s+[^\s@#]+)*|#[a-zA-Z0-9_\u00C0-\u1EF9]+)');
+  Widget _buildRichCommentText(
+    String text,
+    BuildContext context,
+    AppColorsExtension colors,
+  ) {
+    final regex = RegExp(
+      r'(@[^\s@#]+(?:\s+[^\s@#]+)*|#[a-zA-Z0-9_\u00C0-\u1EF9]+)',
+    );
     final matches = regex.allMatches(text).toList();
     if (matches.isEmpty) {
       return Text(
@@ -218,35 +380,47 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
 
     for (final match in matches) {
       if (match.start > lastEnd) {
-        spans.add(TextSpan(
-          text: text.substring(lastEnd, match.start),
-          style: TextStyle(fontSize: 14, height: 1.35, color: colors.textPrimary),
-        ));
+        spans.add(
+          TextSpan(
+            text: text.substring(lastEnd, match.start),
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.35,
+              color: colors.textPrimary,
+            ),
+          ),
+        );
       }
       final token = match.group(0)!;
       final isMention = token.startsWith('@');
-      spans.add(TextSpan(
-        text: token,
-        style: TextStyle(
-          fontSize: 14,
-          height: 1.35,
-          fontWeight: FontWeight.w600,
-          color: isMention ? AppTheme.primary : AppTheme.primaryDark,
+      spans.add(
+        TextSpan(
+          text: token,
+          style: TextStyle(
+            fontSize: 14,
+            height: 1.35,
+            fontWeight: FontWeight.w600,
+            color: isMention ? AppTheme.primary : AppTheme.primaryDark,
+          ),
         ),
-      ));
+      );
       lastEnd = match.end;
     }
 
     if (lastEnd < text.length) {
-      spans.add(TextSpan(
-        text: text.substring(lastEnd),
-        style: TextStyle(fontSize: 14, height: 1.35, color: colors.textPrimary),
-      ));
+      spans.add(
+        TextSpan(
+          text: text.substring(lastEnd),
+          style: TextStyle(
+            fontSize: 14,
+            height: 1.35,
+            color: colors.textPrimary,
+          ),
+        ),
+      );
     }
 
-    return RichText(
-      text: TextSpan(children: spans),
-    );
+    return RichText(text: TextSpan(children: spans));
   }
 
   @override
@@ -254,10 +428,18 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bubbleColor = isDark ? const Color(0xFF3A3B3C) : const Color(0xFFF0F2F5);
+    final bubbleColor = isDark
+        ? const Color(0xFF3A3B3C)
+        : const Color(0xFFF0F2F5);
     final profile = ref.watch(userProfileProvider).asData?.value;
-    final presets = ref.watch(communityTagPresetsProvider(widget.communityId)).asData?.value;
-    final memberDirectory = ref.watch(communityMemberDirectoryProvider(widget.communityId)).asData?.value;
+    final presets = ref
+        .watch(communityTagPresetsProvider(widget.communityId))
+        .asData
+        ?.value;
+    final memberDirectory = ref
+        .watch(communityMemberDirectoryProvider(widget.communityId))
+        .asData
+        ?.value;
 
     // Group comments into root comments and nested replies
     final rootComments = _comments.where((c) => c.parentId == null).toList();
@@ -320,7 +502,10 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                     if (_comments.isNotEmpty) ...[
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: AppTheme.primaryLight,
                           borderRadius: BorderRadius.circular(10),
@@ -340,7 +525,11 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                       tooltip: l10n.communityComment_close,
                       visualDensity: VisualDensity.compact,
                       onPressed: () => Navigator.pop(context),
-                      icon: Icon(Icons.close_rounded, size: 20, color: colors.textMuted),
+                      icon: Icon(
+                        Icons.close_rounded,
+                        size: 20,
+                        color: colors.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -357,7 +546,10 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                 child: _comments.isEmpty
                     ? Center(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 40,
+                            horizontal: 20,
+                          ),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -379,7 +571,9 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                               Text(
                                 l10n.communityComment_emptyHint,
                                 style: TextStyle(
-                                  color: colors.textMuted.withValues(alpha: 0.7),
+                                  color: colors.textMuted.withValues(
+                                    alpha: 0.7,
+                                  ),
                                   fontSize: 12.5,
                                 ),
                               ),
@@ -400,19 +594,30 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                                     ? const SizedBox(
                                         width: 14,
                                         height: 14,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
                                       )
-                                    : const Icon(Icons.expand_more_rounded, size: 16),
+                                    : const Icon(
+                                        Icons.expand_more_rounded,
+                                        size: 16,
+                                      ),
                                 label: Text(
-                                  _busy ? l10n.communityComment_loading : l10n.communityComment_loadMore,
-                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                  _busy
+                                      ? l10n.communityComment_loading
+                                      : l10n.communityComment_loadMore,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             );
                           }
 
                           final comment = rootComments[index];
-                          final childReplies = repliesMap[comment.id] ?? const [];
+                          final childReplies =
+                              repliesMap[comment.id] ?? const [];
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,9 +634,13 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                               // Render child replies indented
                               if (childReplies.isNotEmpty)
                                 Padding(
-                                  padding: const EdgeInsets.only(left: 36, top: 4),
+                                  padding: const EdgeInsets.only(
+                                    left: 36,
+                                    top: 4,
+                                  ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: childReplies
                                         .map(
                                           (reply) => _buildCommentItem(
@@ -457,16 +666,26 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
               if (_replyTo != null)
                 Container(
                   width: double.infinity,
-                  color: isDark ? const Color(0xFF242526) : const Color(0xFFE4E6EB),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                  color: isDark
+                      ? const Color(0xFF242526)
+                      : const Color(0xFFE4E6EB),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 7,
+                  ),
                   child: Row(
                     children: [
-                      const Icon(Icons.reply_rounded, size: 15, color: AppTheme.primary),
+                      const Icon(
+                        Icons.reply_rounded,
+                        size: 15,
+                        color: AppTheme.primary,
+                      ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           l10n.communityComment_replyingTo(
-                            _replyAuthorName ?? l10n.communityComment_title.toLowerCase(),
+                            _replyAuthorName ??
+                                l10n.communityComment_title.toLowerCase(),
                           ),
                           style: const TextStyle(
                             fontSize: 12.5,
@@ -481,7 +700,11 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                           _replyTo = null;
                           _replyAuthorName = null;
                         }),
-                        child: Icon(Icons.close_rounded, size: 16, color: colors.textMuted),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 16,
+                          color: colors.textMuted,
+                        ),
                       ),
                     ],
                   ),
@@ -548,7 +771,8 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                             hintText: _replyTo == null
                                 ? l10n.communityComment_write
                                 : l10n.communityComment_replyHint(
-                                    _replyAuthorName ?? l10n.communityComment_member,
+                                    _replyAuthorName ??
+                                        l10n.communityComment_member,
                                   ),
                             hintStyle: TextStyle(
                               color: colors.textMuted,
@@ -556,7 +780,12 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                             ),
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+                            contentPadding: const EdgeInsets.fromLTRB(
+                              14,
+                              10,
+                              14,
+                              10,
+                            ),
                           ),
                         ),
                       ),
@@ -573,7 +802,9 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                         icon: Icon(
                           Icons.send_rounded,
                           size: 20,
-                          color: _canSend ? AppTheme.primary : colors.textMuted.withValues(alpha: 0.4),
+                          color: _canSend
+                              ? AppTheme.primary
+                              : colors.textMuted.withValues(alpha: 0.4),
                         ),
                       ),
                     ),
@@ -598,8 +829,20 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
   }) {
     final member = memberDirectory?[comment.authorId];
     final memberRole = member?.role?.toString().toUpperCase();
-    final tags = (member?.tags is List ? (member!.tags as List).map((t) => t.toString()).toList() : const <String>[]).take(2).toList();
-    final isLiked = _likedComments.contains(comment.id);
+    final tags =
+        (member?.tags is List
+                ? (member!.tags as List).map((t) => t.toString()).toList()
+                : const <String>[])
+            .take(2)
+            .toList();
+    final reaction = _commentReactionOverrides.containsKey(comment.id)
+        ? _commentReactionOverrides[comment.id]
+        : comment.viewerReaction;
+    final isLiked = reaction == 'LIKE' || _likedComments.contains(comment.id);
+    final reactionGroups = _commentReactionGroups[comment.id];
+    final reactionCount = reactionGroups != null
+        ? reactionGroups.fold<int>(0, (sum, group) => sum + group.count)
+        : comment.reactionCount;
 
     return Padding(
       padding: EdgeInsets.only(top: isReply ? 4 : 8, bottom: 4),
@@ -683,7 +926,10 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                           // Role Badge (Chủ nhiệm / BQT)
                           if (memberRole == 'OWNER')
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 5,
+                                vertical: 1,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppTheme.primary.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(6),
@@ -697,9 +943,13 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                                 ),
                               ),
                             )
-                          else if (memberRole == 'ADMIN' || memberRole == 'MODERATOR')
+                          else if (memberRole == 'ADMIN' ||
+                              memberRole == 'MODERATOR')
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 5,
+                                vertical: 1,
+                              ),
                               decoration: BoxDecoration(
                                 color: colors.info.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(6),
@@ -746,13 +996,15 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                       ),
                       const SizedBox(width: 14),
                       GestureDetector(
-                        onTap: () => _toggleLike(comment.id),
+                        onTap: () => _toggleLike(comment),
                         child: Text(
                           l10n.communityComment_like,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: isLiked ? AppTheme.primary : colors.textSecondary,
+                            color: isLiked
+                                ? AppTheme.primary
+                                : colors.textSecondary,
                           ),
                         ),
                       ),
@@ -783,20 +1035,28 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                           ),
                         ),
                       ],
-                      if (isLiked) ...[
+                      if (reactionCount > 0) ...[
                         const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.all(2.5),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFEF4444),
-                            shape: BoxShape.circle,
+                        GestureDetector(
+                          onTap: () => _openCommentReactionDetails(comment),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.favorite_rounded,
+                                size: 12,
+                                color: Color(0xFFEF4444),
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                '$reactionCount',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
-                          child: const Icon(Icons.favorite_rounded, size: 8.5, color: Colors.white),
-                        ),
-                        const SizedBox(width: 3),
-                        const Text(
-                          '1',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ],

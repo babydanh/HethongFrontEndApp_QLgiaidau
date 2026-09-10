@@ -97,6 +97,85 @@ class CommunityPollModel {
   }
 }
 
+class CommunityReactionUser {
+  final String id;
+  final String fullName;
+  final String? avatarUrl;
+
+  const CommunityReactionUser({
+    required this.id,
+    required this.fullName,
+    this.avatarUrl,
+  });
+
+  factory CommunityReactionUser.fromJson(Map<String, dynamic> json) {
+    return CommunityReactionUser(
+      id: _asString(json['id']) ?? '',
+      fullName: _asString(json['fullName'] ?? json['name']) ?? 'Thành viên',
+      avatarUrl: _asString(json['avatarUrl'] ?? json['avatar']),
+    );
+  }
+}
+
+class CommunityReactionGroup {
+  final String reactionType;
+  final int count;
+  final bool isReacted;
+  final List<CommunityReactionUser> users;
+
+  const CommunityReactionGroup({
+    required this.reactionType,
+    this.count = 0,
+    this.isReacted = false,
+    this.users = const [],
+  });
+
+  factory CommunityReactionGroup.fromJson(Map<String, dynamic> json) {
+    final rawUsers = json['users'];
+    final users = rawUsers is List
+        ? rawUsers
+              .map(_asMap)
+              .map(CommunityReactionUser.fromJson)
+              .where((user) => user.id.isNotEmpty)
+              .toList(growable: false)
+        : const <CommunityReactionUser>[];
+    final count = _asInt(json['count']);
+    return CommunityReactionGroup(
+      reactionType: _asString(json['reactionType'] ?? json['emoji']) ?? '',
+      count: count > 0 ? count : users.length,
+      isReacted: json['isReacted'] == true,
+      users: users,
+    );
+  }
+}
+
+class CommunityReactionToggleResult {
+  final String? reactionType;
+  final int count;
+  final List<CommunityReactionGroup> reactionDetails;
+
+  const CommunityReactionToggleResult({
+    this.reactionType,
+    this.count = 0,
+    this.reactionDetails = const [],
+  });
+
+  factory CommunityReactionToggleResult.fromJson(Map<String, dynamic> json) {
+    final raw = json['reactionDetails'];
+    return CommunityReactionToggleResult(
+      reactionType: _asString(json['reactionType']),
+      count: _asInt(json['count']),
+      reactionDetails: raw is List
+          ? raw
+                .map(_asMap)
+                .map(CommunityReactionGroup.fromJson)
+                .where((group) => group.reactionType.isNotEmpty)
+                .toList(growable: false)
+          : const [],
+    );
+  }
+}
+
 class CommunityPostModel {
   final String id;
   final String authorId;
@@ -289,6 +368,8 @@ class CommunityCommentModel {
   final String body;
   final String? parentId;
   final DateTime? createdAt;
+  final int reactionCount;
+  final String? viewerReaction;
 
   const CommunityCommentModel({
     required this.id,
@@ -298,6 +379,8 @@ class CommunityCommentModel {
     this.authorAvatarUrl,
     this.parentId,
     this.createdAt,
+    this.reactionCount = 0,
+    this.viewerReaction,
   });
 
   factory CommunityCommentModel.fromJson(Map<String, dynamic> json) {
@@ -315,6 +398,8 @@ class CommunityCommentModel {
       body: _asString(json['body'] ?? json['content']) ?? '',
       parentId: _asString(json['parentId'] ?? json['parent_id']),
       createdAt: _asDateTime(json['createdAt'] ?? json['created_at']),
+      reactionCount: _asInt(json['reactionCount'] ?? json['reactionsCount']),
+      viewerReaction: _asString(json['viewerReaction'] ?? json['myReaction']),
     );
   }
 }

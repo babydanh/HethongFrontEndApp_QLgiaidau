@@ -322,6 +322,49 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
     }
   }
 
+  Future<List<CommunityReactionGroup>> _getReactionGroups(String path) async {
+    final response = await _dioClient.dio.get(path);
+    final payload = _asMap(response.data);
+    final raw = payload['data'] is List
+        ? payload['data']
+        : response.data is List
+        ? response.data
+        : const [];
+    return (raw as List)
+        .map(_asMap)
+        .map(CommunityReactionGroup.fromJson)
+        .where((group) => group.reactionType.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<CommunityReactionGroup>> getPostReactions(
+    String communityId,
+    String postId,
+  ) => _getReactionGroups('/communities/$communityId/posts/$postId/reactions');
+
+  @override
+  Future<List<CommunityReactionGroup>> getCommentReactions(
+    String communityId,
+    String commentId,
+  ) => _getReactionGroups('/communities/$communityId/comments/$commentId/reactions');
+
+  @override
+  Future<CommunityReactionToggleResult> reactToComment(
+    String communityId,
+    String commentId, {
+    required String reaction,
+  }) async {
+    final response = await _dioClient.dio.post(
+      '/communities/$communityId/comments/$commentId/reaction',
+      data: {'reactionType': reaction},
+    );
+    final payload = _asMap(response.data);
+    return CommunityReactionToggleResult.fromJson(
+      _asMap(payload['data'] ?? payload),
+    );
+  }
+
   @override
   Future<String> uploadImage(List<int> bytes, String fileName) async {
     try {

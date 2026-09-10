@@ -64,7 +64,10 @@ class ChatReactionDetailSheet extends StatelessWidget {
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
@@ -92,12 +95,19 @@ class ChatReactionDetailSheet extends StatelessWidget {
                 children: allReactions.map((r) {
                   return Container(
                     margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: r.isReacted ? AppTheme.primary.withValues(alpha: 0.12) : colors.bgSurface,
+                      color: r.isReacted
+                          ? AppTheme.primary.withValues(alpha: 0.12)
+                          : colors.bgSurface,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: r.isReacted ? AppTheme.primary : colors.borderLight,
+                        color: r.isReacted
+                            ? AppTheme.primary
+                            : colors.borderLight,
                       ),
                     ),
                     child: Row(
@@ -110,7 +120,9 @@ class ChatReactionDetailSheet extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
-                            color: r.isReacted ? AppTheme.primary : colors.textPrimary,
+                            color: r.isReacted
+                                ? AppTheme.primary
+                                : colors.textPrimary,
                           ),
                         ),
                       ],
@@ -122,6 +134,59 @@ class ChatReactionDetailSheet extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
+          if (allReactions.any((reaction) => reaction.users.isNotEmpty))
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 220),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    for (final reaction in allReactions)
+                      for (final user in reaction.users)
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: CircleAvatar(
+                            radius: 18,
+                            backgroundColor: AppTheme.primary.withValues(
+                              alpha: 0.12,
+                            ),
+                            backgroundImage:
+                                user.avatarUrl != null &&
+                                    user.avatarUrl!.isNotEmpty
+                                ? NetworkImage(user.avatarUrl!)
+                                : null,
+                            child:
+                                user.avatarUrl == null ||
+                                    user.avatarUrl!.isEmpty
+                                ? Text(
+                                    user.fullName.trim().isEmpty
+                                        ? '?'
+                                        : user.fullName.trim()[0].toUpperCase(),
+                                    style: const TextStyle(
+                                      color: AppTheme.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          title: Text(
+                            user.fullName,
+                            style: TextStyle(
+                              color: colors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          trailing: Text(
+                            reaction.emoji,
+                            style: const TextStyle(fontSize: 20),
+                          ),
+                        ),
+                  ],
+                ),
+              ),
+            ),
+
           // Message Preview Strip
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -132,14 +197,21 @@ class ChatReactionDetailSheet extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.format_quote_rounded, size: 16, color: colors.textMuted),
+                Icon(
+                  Icons.format_quote_rounded,
+                  size: 16,
+                  color: colors.textMuted,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     message.content.isNotEmpty
                         ? message.content
                         : l10n.chatReactionMediaPlaceholder,
-                    style: TextStyle(fontSize: 12.5, color: colors.textSecondary),
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: colors.textSecondary,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

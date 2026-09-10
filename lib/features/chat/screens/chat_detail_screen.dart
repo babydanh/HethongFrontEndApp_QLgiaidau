@@ -202,22 +202,29 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     _chatSocket.onReaction = (data) {
       if (mounted) {
         final msgId = data['messageId']?.toString();
-        final reactionsRaw = data['reactions'];
+        final currentUserId = ref.read(userProfileProvider).asData?.value.id;
+        final reactionsRaw = data['reactionDetails'] ?? data['reactions'];
         if (msgId != null && reactionsRaw is List) {
           final parsedReactions = <ChatReactionModel>[];
           final emojiCounts = <String, int>{};
           final userReactedMap = <String, bool>{};
+          final reactionDetailsByEmoji = <String, ChatReactionModel>{};
 
           for (final item in reactionsRaw) {
             if (item is String) {
               emojiCounts[item] = (emojiCounts[item] ?? 0) + 1;
               if (item == data['emoji']) userReactedMap[item] = true;
             } else if (item is Map<String, dynamic>) {
-              final em = (item['emoji'] ?? '').toString();
-              final count = (item['count'] as num?)?.toInt() ?? 1;
+              final detail = ChatReactionModel.fromJson(
+                item,
+                currentUserId: currentUserId,
+              );
+              final em = detail.emoji;
+              final count = detail.count;
               if (em.isNotEmpty) {
                 emojiCounts[em] = count;
-                userReactedMap[em] = item['isReacted'] == true;
+                userReactedMap[em] = detail.isReacted;
+                reactionDetailsByEmoji[em] = detail;
               }
             }
           }
@@ -227,6 +234,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               ChatReactionModel(
                 emoji: em,
                 count: count,
+                userIds: reactionDetailsByEmoji[em]?.userIds ?? const [],
+                users: reactionDetailsByEmoji[em]?.users ?? const [],
                 isReacted: userReactedMap[em] ?? false,
               ),
             );
@@ -790,24 +799,31 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       );
       final raw = res.data is Map ? (res.data['data'] ?? res.data) : null;
       final rawList = raw is Map
-          ? raw['reactions']
+          ? (raw['reactionDetails'] ?? raw['reactions'])
           : (raw is List ? raw : null);
 
       if (rawList is List && mounted) {
         final parsedReactions = <ChatReactionModel>[];
         final emojiCounts = <String, int>{};
         final userReactedMap = <String, bool>{};
+        final reactionDetailsByEmoji = <String, ChatReactionModel>{};
+        final currentUserId = ref.read(userProfileProvider).asData?.value.id;
 
         for (final item in rawList) {
           if (item is String) {
             emojiCounts[item] = (emojiCounts[item] ?? 0) + 1;
             if (item == emoji) userReactedMap[item] = true;
           } else if (item is Map<String, dynamic>) {
-            final em = (item['emoji'] ?? '').toString();
-            final count = (item['count'] as num?)?.toInt() ?? 1;
+            final detail = ChatReactionModel.fromJson(
+              item,
+              currentUserId: currentUserId,
+            );
+            final em = detail.emoji;
+            final count = detail.count;
             if (em.isNotEmpty) {
               emojiCounts[em] = count;
-              userReactedMap[em] = item['isReacted'] == true;
+              userReactedMap[em] = detail.isReacted;
+              reactionDetailsByEmoji[em] = detail;
             }
           }
         }
@@ -817,6 +833,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             ChatReactionModel(
               emoji: em,
               count: count,
+              userIds: reactionDetailsByEmoji[em]?.userIds ?? const [],
+              users: reactionDetailsByEmoji[em]?.users ?? const [],
               isReacted: userReactedMap[em] ?? (em == emoji),
             ),
           );

@@ -86,6 +86,7 @@ app.*.map.json
 # Các file môi trường (chứa key bảo mật)
 .env
 .env.*
+!.env.example
 
 # Cấu hình Firebase bảo mật (Không nên đưa lên Git)
 android/app/google-services.json
