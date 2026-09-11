@@ -146,24 +146,21 @@ class AppTheme {
   static const double spacingXXL = 48.0;
 
   // ─── Extensions ───
+  // Facebook Dark Mode Palette: Off-black charcoal (#18191A), Card (#242526), Elevated/Hover (#3A3B3C)
   static const AppColorsExtension _darkColors = AppColorsExtension(
-    bgDark: Color(0xFF000000),
-    bgCard: Color(0xFF0D0D0D),
-    bgSurface: Color(0xFF161616),
-    bgElevated: Color(0xFF222222),
-    textPrimary: Color(0xFFF5F5F5),
-    textSecondary: Color(
-      0xFFE5E5E5,
-    ), // Brighter grey (neutral-200/300) for dark mode readability
-    textMuted: Color(
-      0xFFA3A3A3,
-    ), // Brighter muted grey (neutral-400) for contrast
-    border: Color(0xFF262626),
-    borderLight: Color(0xFF171717),
+    bgDark: Color(0xFF18191A),      // Facebook App Background (Charcoal)
+    bgCard: Color(0xFF242526),      // Facebook Card / Post Background
+    bgSurface: Color(0xFF242526),   // Surface Elevation
+    bgElevated: Color(0xFF3A3B3C),  // Facebook Secondary Button / Popover Background
+    textPrimary: Color(0xFFE4E6EB), // Facebook Primary Text (Soft White)
+    textSecondary: Color(0xFFB0B3B8), // Facebook Secondary Text (Subtle Grey)
+    textMuted: Color(0xFF8A8D91),   // Facebook Muted Caption / Placeholder
+    border: Color(0xFF393A3B),      // Facebook Divider / Border
+    borderLight: Color(0xFF2F3031),
     success: Color(0xFF22C55E),
     warning: Color(0xFFF59E0B),
     error: Color(0xFFEF4444),
-    info: Color(0xFF3B82F6),
+    info: Color(0xFF1D8EF8),
   );
 
   static const AppColorsExtension _lightColors = AppColorsExtension(
