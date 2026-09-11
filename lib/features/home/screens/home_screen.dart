@@ -519,7 +519,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Container(
                         color: context.colors.bgDark,
                         padding: const EdgeInsets.fromLTRB(16.0, 6.0, 16.0, 8.0),
-                        child: _buildSearchBar(),
+                        child: _currentIndex == 3
+                            ? Row(
+                                children: [
+                                  Expanded(child: _buildSearchBar()),
+                                  const SizedBox(width: 10),
+                                  _buildCreateClubButton(),
+                                ],
+                              )
+                            : _buildSearchBar(),
                       ),
                   ],
                 ),
@@ -981,6 +989,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         }
       },
       onFilterTap: _showActiveFilterSheet,
+    );
+  }
+
+  Widget _buildCreateClubButton() {
+    return GestureDetector(
+      onTap: () {
+        final auth = ref.read(authProvider);
+        if (!auth.isAuthenticated) {
+          context.push('/login');
+        } else {
+          context.push('/club-create');
+        }
+      },
+      child: Tooltip(
+        message: 'Tạo câu lạc bộ',
+        child: Container(
+          width: 38.0,
+          height: 38.0,
+          decoration: BoxDecoration(
+            color: const Color(0xFF60A5FA), // Vòng tròn màu xanh dương nhạt
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: const Color(0xFFBFDBFE), // Border circle bên ngoài
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF3B82F6).withValues(alpha: 0.25),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.add_rounded,
+            color: Colors.white,
+            size: 22,
+          ),
+        ),
+      ),
     );
   }
 

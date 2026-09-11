@@ -47,6 +47,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
       _currentPageIndex = 0;
       _hasMore = false;
       _errorMessage = null;
+      _isLoading = false;
     });
     await _loadPage(0);
   }
@@ -73,7 +74,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
         cursor: _pageCursors[pageIndex],
         limit: _pageSize,
         status: reqFilter == 'ALL' ? null : reqFilter,
-      );
+      ).timeout(const Duration(seconds: 10));
 
       if (mounted && _statusFilter == reqFilter) {
         setState(() {

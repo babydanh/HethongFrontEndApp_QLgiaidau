@@ -192,27 +192,6 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
               ],
             ),
           ),
-          PopupMenuItem(
-            value: 'settings',
-            height: 40,
-            child: Row(
-              children: [
-                Icon(
-                  Icons.settings_outlined,
-                  size: 18,
-                  color: colors.textPrimary,
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  l10n.club_tabSettings,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

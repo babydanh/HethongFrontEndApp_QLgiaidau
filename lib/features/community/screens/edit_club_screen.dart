@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/club_region_select
 import 'package:app_quanly_giaidau/features/community/widgets/club_social_links_editor.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_visibility_selector.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
+import 'package:app_quanly_giaidau/core/widgets/club_network_image.dart';
 import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -92,6 +93,258 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
   }
 
   Future<void> _pickAndUploadImage({required bool isLogo}) async {
+    final colors = context.colors;
+    final title = isLogo ? 'Chỉnh sửa ảnh đại diện' : 'Chỉnh sửa ảnh bìa';
+
+    final choice = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: colors.bgCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: colors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: colors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.photo_library_rounded,
+                  color: AppTheme.primary,
+                ),
+              ),
+              title: const Text(
+                'Chọn ảnh có sẵn trong Thư viện',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              subtitle: Text(
+                'Chọn từ thư viện hình ảnh của câu lạc bộ',
+                style: TextStyle(fontSize: 12, color: colors.textSecondary),
+              ),
+              onTap: () => Navigator.pop(sheetContext, 1),
+            ),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.upload_file_rounded,
+                  color: Color(0xFF10B981),
+                ),
+              ),
+              title: const Text(
+                'Tải ảnh lên',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              subtitle: Text(
+                'Lấy ảnh từ thiết bị điện thoại của bạn',
+                style: TextStyle(fontSize: 12, color: colors.textSecondary),
+              ),
+              onTap: () => Navigator.pop(sheetContext, 2),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+
+    if (choice == null || !mounted) return;
+
+    if (choice == 1) {
+      await _pickFromClubGallery(isLogo: isLogo);
+    } else if (choice == 2) {
+      await _pickFromPhone(isLogo: isLogo);
+    }
+  }
+
+  Future<void> _pickFromClubGallery({required bool isLogo}) async {
+    final colors = context.colors;
+    final galleryAsync =
+        await ref.read(communityGalleryProvider(widget.clubId).future);
+    final club = ref.read(communityDetailProvider(widget.clubId)).asData?.value;
+
+    final List<String> availableUrls = [
+      if (club?.logoUrl != null && club!.logoUrl!.isNotEmpty) club.logoUrl!,
+      if (club?.bannerUrl != null && club!.bannerUrl!.isNotEmpty) club.bannerUrl!,
+      ...galleryAsync.map((img) => img.imageUrl),
+    ].where((u) => u.trim().isNotEmpty).toSet().toList();
+
+    if (!mounted) return;
+
+    if (availableUrls.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Thư viện CLB chưa có ảnh nào. Vui lòng chọn tải ảnh từ điện thoại.',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final selectedUrl = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: colors.bgCard,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.65,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (_, scrollController) {
+            return SafeArea(
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Chọn từ Thư viện CLB',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '${availableUrls.length} ảnh',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: GridView.builder(
+                      controller: scrollController,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                        childAspectRatio: 1.0,
+                      ),
+                      itemCount: availableUrls.length,
+                      itemBuilder: (context, idx) {
+                        final rawUrl = availableUrls[idx];
+                        return GestureDetector(
+                          onTap: () => Navigator.pop(ctx, rawUrl),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: ClubNetworkImage(
+                              rawUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                color: colors.bgSurface,
+                                child: const Icon(
+                                  Icons.broken_image_rounded,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (selectedUrl == null || !mounted) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(communityRepositoryProvider).updateCommunity(
+        widget.clubId,
+        {isLogo ? 'logoUrl' : 'bannerUrl': selectedUrl},
+      );
+      ref.invalidate(communityDetailProvider(widget.clubId));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isLogo
+                  ? 'Đã cập nhật ảnh đại diện CLB thành công'
+                  : 'Đã cập nhật ảnh bìa CLB thành công',
+            ),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e, stack) {
+      _log.error('Lỗi cập nhật ảnh CLB', e, stack);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Không thể cập nhật ảnh: $e'),
+            backgroundColor: colors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _pickFromPhone({required bool isLogo}) async {
     final l10n = AppLocalizations.of(context)!;
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
