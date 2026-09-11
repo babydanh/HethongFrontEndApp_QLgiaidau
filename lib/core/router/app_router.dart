@@ -75,7 +75,7 @@ import 'package:app_quanly_giaidau/features/community/social/community_social_sc
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: '/home',
     redirect: (context, state) {
       final auth = ref.read(authProvider);
       final isAuth = auth.status == AuthStatus.authenticated;

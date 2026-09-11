@@ -412,14 +412,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Stack(
                         children: [
                           Positioned.fill(
-                            child: Hero(
-                              tag: "Sporto_header_bg",
-                              child: CustomPaint(
-                                size: Size(screenSize.width, _headerHeight),
-                                painter: SportoHeaderPainter(
-                                  isLoggedIn: false,
-                                  colors: context.colors,
-                                ),
+                            child: CustomPaint(
+                              size: Size(screenSize.width, _headerHeight),
+                              painter: SportoHeaderPainter(
+                                isLoggedIn: false,
+                                colors: context.colors,
                               ),
                             ),
                           ),

@@ -48,26 +48,39 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _initAuth() async {
-    await ref.read(authProvider.notifier).init();
+    try {
+      await ref.read(authProvider.notifier).init().timeout(
+        const Duration(seconds: 4),
+        onTimeout: () {
+          debugPrint('[SplashScreen] Auth init timed out, proceeding to /home');
+        },
+      );
+    } catch (e, stack) {
+      debugPrint('[SplashScreen] Error during auth init: $e\n$stack');
+    }
 
     if (!mounted) return;
 
-    final auth = ref.read(authProvider);
-    if (auth.isAuthenticated) {
-      final tournamentId = auth.tournamentId;
-      if (tournamentId != null && tournamentId.isNotEmpty) {
-        final route = switch (auth.role) {
-          UserRole.admin => '/admin/tournament/$tournamentId',
-          UserRole.referee => '/referee',
-          UserRole.viewer => '/viewer',
-          _ => '/home',
-        };
-        context.go(route);
-      } else {
-        // Tài khoản đăng nhập chung (email/google), chưa có giải đấu cụ thể -> Trang Khám Phá
-        context.go('/home');
+    try {
+      final auth = ref.read(authProvider);
+      if (auth.isAuthenticated) {
+        final tournamentId = auth.tournamentId;
+        if (tournamentId != null && tournamentId.isNotEmpty) {
+          final route = switch (auth.role) {
+            UserRole.admin => '/admin/tournament/$tournamentId',
+            UserRole.referee => '/referee',
+            UserRole.viewer => '/viewer',
+            _ => '/home',
+          };
+          context.go(route);
+          return;
+        }
       }
-    } else {
+    } catch (e) {
+      debugPrint('[SplashScreen] Navigation error: $e');
+    }
+
+    if (mounted) {
       context.go('/home');
     }
   }
@@ -103,6 +116,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         child: Image.asset(
                           "assets/images/sporto_v1_with_text.png",
                           fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Text(
+                                'SPORTO',
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppTheme.primary,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
