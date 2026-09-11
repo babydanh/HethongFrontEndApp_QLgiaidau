@@ -2164,25 +2164,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             );
           },
         ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(items.length, (index) {
-            final isSelected = _carouselCurrentPage == index;
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              width: isSelected ? 16 : 6,
-              height: 6,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppTheme.primary
-                    : context.colors.textMuted.withValues(alpha: 0.35),
-                borderRadius: BorderRadius.circular(100),
-              ),
-            );
-          }),
-        ),
       ],
     );
   }

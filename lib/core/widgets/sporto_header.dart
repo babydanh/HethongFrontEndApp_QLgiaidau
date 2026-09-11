@@ -352,15 +352,24 @@ class SportoHeaderPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final Rect rect = Offset.zero & size;
     if (_isDark) {
-      // Solid Facebook Dark Header surface (#18191A) with bottom border divider
-      final Paint bgPaint = Paint()..color = colors.bgDark;
+      // Dark mode: Dark charcoal/slate gradient with subtle waves
+      final Paint bgPaint = Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+        ).createShader(rect);
       canvas.drawRect(rect, bgPaint);
 
-      final Paint borderPaint = Paint()
-        ..color = colors.border
-        ..strokeWidth = 0.8
-        ..style = PaintingStyle.stroke;
-      canvas.drawLine(Offset(0, size.height), Offset(size.width, size.height), borderPaint);
+      final Paint circlePaint1 = Paint()
+        ..color = Colors.white.withValues(alpha: 0.03);
+      canvas.drawCircle(Offset(size.width * 0.85, 30.0), 72.0, circlePaint1);
+
+      final Paint circlePaint2 = Paint()
+        ..color = Colors.white.withValues(alpha: 0.02);
+      canvas.drawCircle(Offset(size.width * 0.08, 175.0), 52.0, circlePaint2);
+
+      _drawWaves(canvas, size);
       return;
     }
 
