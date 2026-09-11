@@ -17,7 +17,7 @@ const List<Color> _kSlotAvatarColors = [
   Color(0xFF14B8A6), // Teal
   Color(0xFF06B6D4), // Cyan
 ];
-const int _kRosterSlotsPerPage = 16;
+const int _kRosterSlotsPerPage = 8;
 
 class CommunityClubMatchSessionRosterWidget extends ConsumerStatefulWidget {
   final String sessionId;
@@ -56,9 +56,21 @@ class _CommunityClubMatchSessionRosterWidgetState
         repo.participants(widget.sessionId),
       ]);
       if (mounted) {
+        final session = values[0] as ClubMatchSessionModel;
+        final participants = values[1] as List<ClubMatchParticipantModel>;
+        final activeCount = participants.where((p) => p.status == 'ACTIVE').length;
+        final totalSlots = session.maxParticipants < activeCount ? activeCount : session.maxParticipants;
+        final totalPages = totalSlots <= 0 ? 1 : (totalSlots + _kRosterSlotsPerPage - 1) ~/ _kRosterSlotsPerPage;
+        
+        // Tự động qua trang kế nếu trang hiện tại đã đầy đủ 8 slots
+        int targetPage = (activeCount ~/ _kRosterSlotsPerPage) + 1;
+        if (targetPage > totalPages) targetPage = totalPages;
+        if (targetPage < 1) targetPage = 1;
+
         setState(() {
-          _session = values[0] as ClubMatchSessionModel;
-          _participants = values[1] as List<ClubMatchParticipantModel>;
+          _session = session;
+          _participants = participants;
+          _rosterPage = targetPage;
           _loading = false;
         });
       }
@@ -248,11 +260,16 @@ class _CommunityClubMatchSessionRosterWidgetState
             ),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? colors.bgElevated
+                    : const Color(0xFFF8FAFC),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
                 border: Border(
-                  bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1),
+                  bottom: BorderSide(
+                    color: colors.border.withValues(alpha: 0.5),
+                    width: 1,
+                  ),
                 ),
               ),
               child: Row(
@@ -302,34 +319,10 @@ class _CommunityClubMatchSessionRosterWidgetState
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Xem buổi giao lưu',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(width: 3),
-                        Icon(
-                          Icons.arrow_outward_rounded,
-                          size: 13,
-                          color: Colors.white,
-                        ),
-                      ],
-                    ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: colors.textMuted,
                   ),
                 ],
               ),

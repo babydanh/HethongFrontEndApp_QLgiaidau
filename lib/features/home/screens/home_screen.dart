@@ -2218,16 +2218,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(items.length, (index) {
             final isSelected = _carouselCurrentPage == index;
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              width: isSelected ? 16 : 6,
-              height: 6,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppTheme.primary
-                    : context.colors.textMuted.withValues(alpha: 0.35),
-                borderRadius: BorderRadius.circular(100),
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                _carouselTimer?.cancel();
+                _carouselController?.animateToPage(
+                  index,
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeInOut,
+                );
+                _startCarouselTimer(items.length);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  width: isSelected ? 18 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppTheme.primary
+                        : context.colors.textMuted.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                ),
               ),
             );
           }),
