@@ -108,6 +108,7 @@ class _LiveTournamentWithMatchesCardState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
+    final colors = context.colors;
     final currentMatches =
         (_pageMatches[_currentPageIndex] ?? const <MatchModel>[])
             .where(isRenderablePublicMatch)
@@ -119,7 +120,7 @@ class _LiveTournamentWithMatchesCardState
 
     return Container(
       margin: EdgeInsets.zero,
-      decoration: const BoxDecoration(color: Colors.white),
+      decoration: BoxDecoration(color: colors.bgCard),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -143,10 +144,10 @@ class _LiveTournamentWithMatchesCardState
                       children: [
                         Text(
                           widget.tournament.name.toUpperCase(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
+                            color: colors.textPrimary,
                             letterSpacing: 0.2,
                           ),
                           maxLines: 1,
@@ -157,9 +158,9 @@ class _LiveTournamentWithMatchesCardState
                           widget.tournament.isRanked
                               ? (l10n.exploreRankedTournament)
                               : (l10n.exploreFriendlyTournament),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
-                            color: Color(0xFF64748B),
+                            color: colors.textMuted,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -228,7 +229,7 @@ class _LiveTournamentWithMatchesCardState
           if (currentMatches.isNotEmpty || _totalMatches > 0)
             _buildCursorPaginationBar(context, l10n),
 
-          Container(height: 12, color: context.colors.bgSurface),
+          Container(height: 10, color: context.colors.bgDark),
         ],
       ),
     );
@@ -421,9 +422,9 @@ class _LiveTournamentWithMatchesCardState
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: colors.bgSurface,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
+          border: Border.all(color: colors.border, width: 1.0),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -708,13 +709,15 @@ class _LiveTournamentWithMatchesCardState
                     ),
                     decoration: BoxDecoration(
                       color: isCheered
-                          ? const Color(0xFFFEF2F2)
-                          : const Color(0xFFF1F5F9),
+                          ? (Theme.of(context).brightness == Brightness.dark
+                              ? const Color(0xFF451A1A)
+                              : const Color(0xFFFEF2F2))
+                          : colors.bgCard,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isCheered
-                            ? const Color(0xFFFECACA)
-                            : const Color(0xFFE2E8F0),
+                            ? const Color(0xFFDC2626)
+                            : colors.border,
                         width: 1,
                       ),
                     ),
@@ -774,10 +777,10 @@ class _LiveTournamentWithMatchesCardState
                     width: 36,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
+                      color: colors.bgCard,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: const Color(0xFFE2E8F0),
+                        color: colors.border,
                         width: 1,
                       ),
                     ),
@@ -785,7 +788,7 @@ class _LiveTournamentWithMatchesCardState
                       child: Icon(
                         Icons.share_rounded,
                         size: 15,
-                        color: const Color(0xFF2563EB),
+                        color: AppTheme.primary,
                       ),
                     ),
                   ),
@@ -846,7 +849,7 @@ class _LiveTournamentWithMatchesCardState
         decoration: BoxDecoration(
           color: colors.bgCard,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
+          border: Border.all(color: colors.border, width: 1.0),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -868,12 +871,8 @@ class _LiveTournamentWithMatchesCardState
                     vertical: 2.5,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.08),
+                    color: AppTheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: AppTheme.primary.withValues(alpha: 0.2),
-                      width: 0.8,
-                    ),
                   ),
                   child: Text(
                     roundText.toUpperCase(),
@@ -892,10 +891,10 @@ class _LiveTournamentWithMatchesCardState
                     vertical: 2.5,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFEF2F2),
+                    color: const Color(0xFFFEF2F2).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: const Color(0xFFFECACA),
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.4),
                       width: 0.8,
                     ),
                   ),
@@ -916,7 +915,7 @@ class _LiveTournamentWithMatchesCardState
                         style: TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFFDC2626),
+                          color: Color(0xFFEF4444),
                           letterSpacing: 0.3,
                         ),
                       ),
@@ -939,6 +938,7 @@ class _LiveTournamentWithMatchesCardState
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           _buildLargeAvatar(
+                            context,
                             initials: t1Initials[0],
                             initials2: t1Initials.length > 1
                                 ? t1Initials[1]
@@ -966,10 +966,10 @@ class _LiveTournamentWithMatchesCardState
                       padding: const EdgeInsets.symmetric(horizontal: 6),
                       child: Text(
                         '${match.currentLiveScore.score1} - ${match.currentLiveScore.score2}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w900,
-                          color: Color(0xFF0F172A),
+                          color: colors.textPrimary,
                           letterSpacing: 1.2,
                         ),
                       ),
@@ -981,6 +981,7 @@ class _LiveTournamentWithMatchesCardState
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           _buildLargeAvatar(
+                            context,
                             initials: t2Initials[0],
                             initials2: t2Initials.length > 1
                                 ? t2Initials[1]
@@ -1013,10 +1014,10 @@ class _LiveTournamentWithMatchesCardState
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.location_on_outlined,
                       size: 11,
-                      color: Color(0xFF94A3B8),
+                      color: colors.textMuted,
                     ),
                     const SizedBox(width: 3),
                     Flexible(
@@ -1024,10 +1025,10 @@ class _LiveTournamentWithMatchesCardState
                         courtText,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF64748B),
+                          color: colors.textMuted,
                         ),
                       ),
                     ),
@@ -1040,11 +1041,13 @@ class _LiveTournamentWithMatchesCardState
     );
   }
 
-  Widget _buildLargeAvatar({
+  Widget _buildLargeAvatar(
+    BuildContext context, {
     required String initials,
     String initials2 = '',
     Color avatarColor = AppTheme.primary,
   }) {
+    final colors = context.colors;
     if (initials2.isNotEmpty && initials2 != '?') {
       return SizedBox(
         width: 54,
@@ -1087,7 +1090,7 @@ class _LiveTournamentWithMatchesCardState
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colors.bgCard,
                   shape: BoxShape.circle,
                   border: Border.all(color: avatarColor, width: 1.8),
                   boxShadow: [
@@ -1185,9 +1188,9 @@ class _LiveTournamentWithMatchesCardState
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: colors.bgSurface,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
+          border: Border.all(color: colors.border, width: 1.0),
         ),
         child: Row(
           children: [
@@ -1196,10 +1199,10 @@ class _LiveTournamentWithMatchesCardState
               constraints: const BoxConstraints(minWidth: 54),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
               decoration: BoxDecoration(
-                color: AppTheme.primaryLight,
+                color: AppTheme.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(7),
                 border: Border.all(
-                  color: AppTheme.primary.withValues(alpha: 0.2),
+                  color: AppTheme.primary.withValues(alpha: 0.25),
                   width: 0.8,
                 ),
               ),

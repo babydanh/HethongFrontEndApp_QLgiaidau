@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -7,111 +6,7 @@ import 'package:app_quanly_giaidau/core/utils/rank_tier_colors.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
-class BottomNavClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    final w = size.width;
-    final h = size.height;
-    final centerX = w / 2;
-    const double radius = 34.0;
 
-    path.moveTo(0, 24);
-    path.quadraticBezierTo(0, 0, 24, 0);
-    path.lineTo(centerX - radius - 12, 0);
-    path.cubicTo(
-      centerX - radius + 2, 0,
-      centerX - radius + 2, radius + 2,
-      centerX, radius + 2,
-    );
-    path.cubicTo(
-      centerX + radius - 2, radius + 2,
-      centerX + radius - 2, 0,
-      centerX + radius + 12, 0,
-    );
-    path.lineTo(w - 24, 0);
-    path.quadraticBezierTo(w, 0, w, 24);
-    path.lineTo(w, h);
-    path.lineTo(0, h);
-    path.close();
-
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-}
-
-class BottomNavCurvePainter extends CustomPainter {
-  final Color backgroundColor;
-  final Color borderColor;
-
-  BottomNavCurvePainter({
-    required this.backgroundColor,
-    required this.borderColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = backgroundColor
-      ..style = PaintingStyle.fill;
-
-    final strokePaint = Paint()
-      ..color = borderColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    final path = Path();
-    final w = size.width;
-    final h = size.height;
-    final centerX = w / 2;
-    const double radius = 34.0;
-
-    path.moveTo(0, 24);
-    path.quadraticBezierTo(0, 0, 24, 0);
-    path.lineTo(centerX - radius - 12, 0);
-    path.cubicTo(
-      centerX - radius + 2, 0,
-      centerX - radius + 2, radius + 2,
-      centerX, radius + 2,
-    );
-    path.cubicTo(
-      centerX + radius - 2, radius + 2,
-      centerX + radius - 2, 0,
-      centerX + radius + 12, 0,
-    );
-    path.lineTo(w - 24, 0);
-    path.quadraticBezierTo(w, 0, w, 24);
-    path.lineTo(w, h);
-    path.lineTo(0, h);
-    path.close();
-
-    canvas.drawPath(path, paint);
-
-    final borderPath = Path()
-      ..moveTo(0, 24)
-      ..quadraticBezierTo(0, 0, 24, 0)
-      ..lineTo(centerX - radius - 12, 0)
-      ..cubicTo(
-        centerX - radius + 2, 0,
-        centerX - radius + 2, radius + 2,
-        centerX, radius + 2,
-      )
-      ..cubicTo(
-        centerX + radius - 2, radius + 2,
-        centerX + radius - 2, 0,
-        centerX + radius + 12, 0,
-      )
-      ..lineTo(w - 24, 0)
-      ..quadraticBezierTo(w, 0, w, 24);
-
-    canvas.drawPath(borderPath, strokePaint);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
-}
 
 class FloatingBottomNav extends ConsumerWidget {
   final int currentIndex;
@@ -139,107 +34,90 @@ class FloatingBottomNav extends ConsumerWidget {
     final tierColor = RankTierColors.isRanked(bestRanking?.tierName, matchesPlayed: bestRanking?.matchesPlayed)
         ? RankTierColors.fromTierName(bestRanking?.tierName)
         : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0));
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
-    const double navBarHeight = 70.0;
-    final screenWidth = MediaQuery.of(context).size.width;
-
+    final colors = context.colors;
     const activeColor = AppTheme.primary;
-    final inactiveColor = isDark ? Colors.white.withValues(alpha: 0.4) : const Color(0xFF94A3B8);
-    final bgColor = isDark ? const Color(0xFF0A0A0A).withValues(alpha: 0.92) : Colors.white.withValues(alpha: 0.92);
-    final borderSide = isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.06);
+    final inactiveColor = isDark ? colors.textMuted : const Color(0xFF94A3B8);
+    final borderSide = colors.border;
+    final navBgColor = colors.bgCard;
 
-    return Stack(
-      clipBehavior: Clip.none,
-      alignment: Alignment.bottomCenter,
-      children: [
-        // ─── Main curved bar with blur and border ───
-        ClipPath(
-          clipper: BottomNavClipper(),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-            child: CustomPaint(
-              painter: BottomNavCurvePainter(
-                backgroundColor: bgColor,
-                borderColor: borderSide,
-              ),
+    return Container(
+      decoration: BoxDecoration(
+        color: navBgColor,
+        border: Border(
+          top: BorderSide(color: borderSide, width: 0.8),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 60.0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(0, Icons.explore_outlined, Icons.explore_rounded, l10n.navExplore, activeColor, inactiveColor),
+              _buildNavItem(1, Icons.emoji_events_outlined, Icons.emoji_events_rounded, l10n.navTournaments, activeColor, inactiveColor),
+              _buildCenterAvatarItem(isLoggedIn, avatarUrl, tierColor, isDark),
+              _buildNavItem(3, Icons.people_outline_rounded, Icons.people_rounded, l10n.navClubs, activeColor, inactiveColor),
+              _buildNavItem(4, Icons.leaderboard_outlined, Icons.leaderboard_rounded, l10n.navRankings, activeColor, inactiveColor),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCenterAvatarItem(bool isLoggedIn, String? avatarUrl, Color tierColor, bool isDark) {
+    final isSelected = currentIndex == 2;
+    return GestureDetector(
+      onTap: onProfileTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 60,
+        padding: const EdgeInsets.only(top: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedScale(
+              duration: const Duration(milliseconds: 200),
+              scale: isSelected ? 1.08 : 1.0,
               child: Container(
-                width: screenWidth,
-                height: navBarHeight + bottomPadding,
-                padding: EdgeInsets.only(bottom: bottomPadding + 2),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildNavItem(0, Icons.explore_outlined, Icons.explore_rounded, l10n.navExplore, activeColor, inactiveColor),
-                    _buildNavItem(1, Icons.emoji_events_outlined, Icons.emoji_events_rounded, l10n.navTournaments, activeColor, inactiveColor),
-                    const SizedBox(width: 52),
-                    _buildNavItem(3, Icons.people_outline_rounded, Icons.people_rounded, l10n.navClubs, activeColor, inactiveColor),
-                    _buildNavItem(4, Icons.leaderboard_outlined, Icons.leaderboard_rounded, l10n.navRankings, activeColor, inactiveColor),
-                  ],
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected ? AppTheme.primary : tierColor,
+                    width: 2,
+                  ),
                 ),
+                child: _buildAvatarContent(isLoggedIn, avatarUrl, isSelected),
               ),
             ),
-          ),
-        ),
-
-        // ─── Profile Avatar (center) ───
-        Positioned(
-          top: isIOS ? -14 : -22,
-          left: 0,
-          right: 0,
-          child: GestureDetector(
-            onTap: onProfileTap,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedScale(
-                  duration: const Duration(milliseconds: 300),
-                  scale: currentIndex == 2 ? 1.15 : 1.0,
-                  curve: Curves.easeOutBack,
-                  child: Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: currentIndex == 2
-                          ? const LinearGradient(colors: [AppTheme.primaryDark, AppTheme.primary])
-                          : null,
-                      color: currentIndex == 2 ? null : (isDark ? const Color(0xFF1A1A1A) : Colors.white),
-                      border: Border.all(color: tierColor, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: currentIndex == 2
-                              ? AppTheme.primary.withValues(alpha: 0.35)
-                              : Colors.black.withValues(alpha: 0.06),
-                          blurRadius: currentIndex == 2 ? 12 : 6,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: _buildAvatarContent(isLoggedIn, avatarUrl, currentIndex == 2),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  height: 3,
-                  width: currentIndex == 2 ? 14 : 0,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary,
-                    borderRadius: BorderRadius.circular(2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primary.withValues(alpha: 0.5),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            const SizedBox(height: 2),
+            Text(
+              'Tôi',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: isSelected ? AppTheme.primary : (isDark ? Colors.white.withValues(alpha: 0.4) : const Color(0xFF94A3B8)),
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              ),
             ),
-          ),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              margin: const EdgeInsets.only(top: 2),
+              height: 2.5,
+              width: isSelected ? 16 : 0,
+              decoration: BoxDecoration(
+                color: AppTheme.primary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 

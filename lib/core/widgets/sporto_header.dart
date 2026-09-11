@@ -346,117 +346,42 @@ class SportoHeaderPainter extends CustomPainter {
 
   SportoHeaderPainter({required this.isLoggedIn, required this.colors});
 
-  bool get _isDark => colors.bgDark == const Color(0xFF000000);
+  bool get _isDark => colors.bgDark == const Color(0xFF18191A) || colors.bgDark == const Color(0xFF000000);
 
   @override
   void paint(Canvas canvas, Size size) {
     final Rect rect = Offset.zero & size;
-    final gradientColors = _isDark
-        ? const [Color(0xFF000000), Color(0xFF131313)]
-        : const [AppTheme.primary, AppTheme.primaryDark];
+    if (_isDark) {
+      // Solid Facebook Dark Header surface (#18191A) with bottom border divider
+      final Paint bgPaint = Paint()..color = colors.bgDark;
+      canvas.drawRect(rect, bgPaint);
 
+      final Paint borderPaint = Paint()
+        ..color = colors.border
+        ..strokeWidth = 0.8
+        ..style = PaintingStyle.stroke;
+      canvas.drawLine(Offset(0, size.height), Offset(size.width, size.height), borderPaint);
+      return;
+    }
+
+    // Light mode: Brand primary gradient with subtle tone
     final Paint bgPaint = Paint()
-      ..shader = LinearGradient(
+      ..shader = const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: gradientColors,
+        colors: [AppTheme.primary, AppTheme.primaryDark],
       ).createShader(rect);
     canvas.drawRect(rect, bgPaint);
 
     final Paint circlePaint1 = Paint()
-      ..color = Colors.white.withValues(alpha: _isDark ? 0.02 : 0.05);
+      ..color = Colors.white.withValues(alpha: 0.05);
     canvas.drawCircle(Offset(size.width * 0.85, 30.0), 72.0, circlePaint1);
 
     final Paint circlePaint2 = Paint()
-      ..color = Colors.white.withValues(alpha: _isDark ? 0.015 : 0.04);
+      ..color = Colors.white.withValues(alpha: 0.04);
     canvas.drawCircle(Offset(size.width * 0.08, 175.0), 52.0, circlePaint2);
 
-    _drawRacket(canvas, size);
-    _drawShuttlecock(canvas, size);
     _drawWaves(canvas, size);
-  }
-
-  void _drawRacket(Canvas canvas, Size size) {
-    canvas.save();
-    canvas.translate(size.width - 95, 45.0);
-    canvas.rotate(-28 * 3.1415926535 / 180);
-
-    final Paint paint = Paint()
-      ..color = Colors.white.withValues(alpha: _isDark ? 0.12 : 0.22)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0;
-    canvas.drawOval(const Rect.fromLTWH(0, 0, 56, 76), paint);
-
-    final Paint thinPaint = Paint()
-      ..color = Colors.white.withValues(alpha: _isDark ? 0.07 : 0.14)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    canvas.drawOval(const Rect.fromLTWH(4, 4, 48, 68), thinPaint);
-
-    for (double y = 18.0; y <= 62; y += 7) {
-      canvas.drawLine(Offset(8.0, y), Offset(47.0, y), thinPaint);
-    }
-    for (double x = 12.0; x <= 43; x += 7) {
-      canvas.drawLine(Offset(x, 14.0), Offset(x, 62.0), thinPaint);
-    }
-
-    final Paint shaftPaint = Paint()
-      ..color = Colors.white.withValues(alpha: _isDark ? 0.12 : 0.22)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.2
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(const Offset(28, 76), const Offset(28, 130), shaftPaint);
-
-    final Paint handlePaint = Paint()
-      ..color = Colors.white.withValues(alpha: _isDark ? 0.12 : 0.22)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(24, 130, 8, 30),
-        const Radius.circular(2),
-      ),
-      handlePaint,
-    );
-
-    final Paint capPaint = Paint()
-      ..color = Colors.white.withValues(alpha: _isDark ? 0.12 : 0.22)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(23, 160, 10, 4),
-        const Radius.circular(1),
-      ),
-      capPaint,
-    );
-    canvas.restore();
-  }
-
-  void _drawShuttlecock(Canvas canvas, Size size) {
-    canvas.save();
-    canvas.translate(14.0, 115.0);
-    canvas.rotate(12 * 3.1415926535 / 180);
-
-    final Paint thinPaint = Paint()
-      ..color = Colors.white.withValues(alpha: _isDark ? 0.07 : 0.14)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-
-    final Paint paint = Paint()
-      ..color = Colors.white.withValues(alpha: _isDark ? 0.12 : 0.22)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5;
-
-    canvas.drawOval(const Rect.fromLTWH(0, 0, 24, 14), paint);
-    canvas.drawOval(const Rect.fromLTWH(4, 28, 16, 24), paint);
-    canvas.drawLine(const Offset(4, 10), const Offset(4, 28), thinPaint);
-    canvas.drawLine(const Offset(8, 12), const Offset(8, 28), thinPaint);
-    canvas.drawLine(const Offset(12, 13), const Offset(12, 28), thinPaint);
-    canvas.drawLine(const Offset(16, 12), const Offset(16, 28), thinPaint);
-    canvas.drawLine(const Offset(20, 10), const Offset(20, 28), thinPaint);
-
-    canvas.restore();
   }
 
   void _drawWaves(Canvas canvas, Size size) {

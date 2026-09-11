@@ -4,6 +4,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+
 /// Reusable Tournament Avatar widget with graceful sport emoji & initial letter fallback.
 /// Conforms to taste-skill design standards (anti-slop, clean visual hierarchy, no squished images).
 class TournamentAvatar extends StatelessWidget {
@@ -75,6 +77,7 @@ class TournamentAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final resolvedUrl = _resolveImageUrl(imageUrl);
     final hasImage = resolvedUrl.isNotEmpty;
     final initials = _getInitials(tournamentName);
@@ -84,10 +87,10 @@ class TournamentAvatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: colors.bgSurface,
         shape: BoxShape.circle,
         border: Border.all(
-          color: borderColor ?? const Color(0xFFE2E8F0),
+          color: borderColor ?? colors.border,
           width: borderWidth ?? 1,
         ),
       ),
@@ -97,16 +100,17 @@ class TournamentAvatar extends StatelessWidget {
                 resolvedUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) =>
-                    _buildFallback(initials, emoji),
+                    _buildFallback(context, initials, emoji),
               )
-            : _buildFallback(initials, emoji),
+            : _buildFallback(context, initials, emoji),
       ),
     );
   }
 
-  Widget _buildFallback(String initials, String emoji) {
+  Widget _buildFallback(BuildContext context, String initials, String emoji) {
+    final colors = context.colors;
     return Container(
-      color: const Color(0xFFF8FAFC),
+      color: colors.bgSurface,
       alignment: Alignment.center,
       padding: EdgeInsets.all(size * 0.12),
       child: SvgPicture.asset(
