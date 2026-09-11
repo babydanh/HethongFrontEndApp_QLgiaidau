@@ -33,9 +33,22 @@ Future<void> main() async {
       double.tryParse(sentryTraceSampleRateRaw)?.clamp(0.0, 1.0).toDouble() ??
       0.1;
 
+  void runAppWithErrorHandling() {
+    // Sentry installs its platform hooks first; the project handler then
+    // preserves the existing error UI while forwarding errors safely.
+    GlobalErrorHandler.init();
+    runApp(const ProviderScope(child: TournamentApp()));
+  }
+
+  if (sentryDsn.isEmpty) {
+    // Sentry 9+ requires a DSN to initialize; skip it entirely otherwise.
+    runAppWithErrorHandling();
+    return;
+  }
+
   await SentryFlutter.init(
     (options) {
-      options.dsn = sentryDsn.isEmpty ? null : sentryDsn;
+      options.dsn = sentryDsn;
       options.environment = sentryEnvironment;
       options.release = sentryRelease.isEmpty ? null : sentryRelease;
       options.tracesSampleRate = sentryTraceSampleRate;
@@ -43,11 +56,6 @@ Future<void> main() async {
       options.enablePrintBreadcrumbs = false;
       options.recordHttpBreadcrumbs = false;
     },
-    appRunner: () {
-      // Sentry installs its platform hooks first; the project handler then
-      // preserves the existing error UI while forwarding errors safely.
-      GlobalErrorHandler.init();
-      runApp(const ProviderScope(child: TournamentApp()));
-    },
+    appRunner: runAppWithErrorHandling,
   );
 }

@@ -60,7 +60,7 @@ class SeriesScreen extends ConsumerWidget {
         title: Text(AppLocalizations.of(context)!.seriesTitle),
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: context.colors.textPrimary),
           onPressed: () {
             if (context.canPop()) {
               context.pop();

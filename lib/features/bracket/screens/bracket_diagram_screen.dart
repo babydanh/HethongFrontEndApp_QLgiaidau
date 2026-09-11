@@ -225,7 +225,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         backgroundColor: colors.bgDark,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
           tooltip: l10n.bracketDiagramBack,
         ),

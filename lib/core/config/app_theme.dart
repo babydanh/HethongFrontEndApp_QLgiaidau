@@ -264,6 +264,8 @@ class AppTheme {
       appBarTheme: AppBarTheme(
         backgroundColor: colors.bgDark,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         centerTitle: true,
         titleTextStyle: GoogleFonts.inter(
           fontSize: 18,

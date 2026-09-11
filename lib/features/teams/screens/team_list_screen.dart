@@ -131,7 +131,7 @@ class TeamListScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: context.colors.bgDark,
         leading: isEmbedded ? const SizedBox.shrink() : IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(Icons.arrow_back_ios_rounded),
           onPressed: () => context.go('/admin/tournament/$tournamentId'),
         ),
         title: Text(l10n.teamList_title),

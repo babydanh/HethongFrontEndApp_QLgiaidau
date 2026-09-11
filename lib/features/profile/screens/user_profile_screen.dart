@@ -100,7 +100,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.arrow_back_rounded,
+                Icons.arrow_back_ios_rounded,
                 color: colors.textPrimary,
                 size: 20,
               ),

@@ -57,7 +57,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(
-            Icons.arrow_back_rounded,
+            Icons.arrow_back_ios_rounded,
             color: context.colors.textPrimary,
           ),
           onPressed: () {

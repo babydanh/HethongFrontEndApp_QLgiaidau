@@ -175,7 +175,7 @@ class SeriesDetailScreen extends ConsumerWidget {
                 backgroundColor: colors.bgDark,
                 leading: IconButton(
                   icon: Icon(
-                    Icons.arrow_back_rounded,
+                    Icons.arrow_back_ios_rounded,
                     color: colors.textPrimary,
                   ),
                   onPressed: () => context.pop(),
@@ -279,7 +279,7 @@ class _SeriesDetailContentState extends ConsumerState<_SeriesDetailContent>
           floating: false,
           pinned: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_rounded, color: Colors.white),
+            icon: Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
             onPressed: () => context.pop(),
           ),
           flexibleSpace: FlexibleSpaceBar(

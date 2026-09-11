@@ -77,7 +77,7 @@ class _InviteCodeJoinScreenState extends ConsumerState<InviteCodeJoinScreen> {
                     const SizedBox(height: 24),
                     FilledButton.icon(
                       onPressed: () => context.pop(),
-                      icon: const Icon(Icons.arrow_back_rounded),
+                      icon: const Icon(Icons.arrow_back_ios_rounded),
                       label: Text(l10n.matchBack),
                     ),
                   ],

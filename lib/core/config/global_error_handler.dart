@@ -15,7 +15,10 @@ class GlobalErrorHandler {
         FlutterError.dumpErrorToConsole(details, forceReport: true);
       }
       unawaited(
-        Sentry.captureException(details.exception, stackTrace: details.stack),
+        Sentry.isEnabled
+            ? Sentry.captureException(details.exception,
+                stackTrace: details.stack)
+            : Future.value(),
       );
     };
 
@@ -25,7 +28,11 @@ class GlobalErrorHandler {
         debugPrint('Unhandled async error: $error');
         debugPrintStack(stackTrace: stack);
       }
-      unawaited(Sentry.captureException(error, stackTrace: stack));
+      unawaited(
+        Sentry.isEnabled
+            ? Sentry.captureException(error, stackTrace: stack)
+            : Future.value(),
+      );
       return true; // Trả về true để báo hệ thống rằng lỗi đã được xử lý
     };
 

@@ -36,7 +36,7 @@ class _AdminVerificationScreenState
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(

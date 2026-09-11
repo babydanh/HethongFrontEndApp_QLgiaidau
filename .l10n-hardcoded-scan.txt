@@ -11529,7 +11529,7 @@ lib\features\admin\screens\admin_clubs_screen.dart:48: Widget build(BuildContext
 lib\features\admin\screens\admin_clubs_screen.dart:49: final colors = context.colors;
 lib\features\admin\screens\admin_clubs_screen.dart:55: elevation: 0,
 lib\features\admin\screens\admin_clubs_screen.dart:56: leading: IconButton(
-lib\features\admin\screens\admin_clubs_screen.dart:57: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\admin\screens\admin_clubs_screen.dart:57: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\admin\screens\admin_clubs_screen.dart:60: title: const Text('Quản lý CLB', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
 lib\features\admin\screens\admin_clubs_screen.dart:61: centerTitle: true,
 lib\features\admin\screens\admin_clubs_screen.dart:64: children: [
@@ -11796,7 +11796,7 @@ lib\features\admin\screens\change_requests_screen.dart:25: Widget build(BuildCon
 lib\features\admin\screens\change_requests_screen.dart:26: final colors = context.colors;
 lib\features\admin\screens\change_requests_screen.dart:32: elevation: 0,
 lib\features\admin\screens\change_requests_screen.dart:33: leading: IconButton(
-lib\features\admin\screens\change_requests_screen.dart:34: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\admin\screens\change_requests_screen.dart:34: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\admin\screens\change_requests_screen.dart:37: title: const Text('Yêu cầu thay đổi', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
 lib\features\admin\screens\change_requests_screen.dart:38: centerTitle: true,
 lib\features\admin\screens\change_requests_screen.dart:41: children: [
@@ -11948,7 +11948,7 @@ lib\features\admin\screens\disputes_screen.dart:25: Widget build(BuildContext co
 lib\features\admin\screens\disputes_screen.dart:26: final colors = context.colors;
 lib\features\admin\screens\disputes_screen.dart:32: elevation: 0,
 lib\features\admin\screens\disputes_screen.dart:33: leading: IconButton(
-lib\features\admin\screens\disputes_screen.dart:34: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\admin\screens\disputes_screen.dart:34: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\admin\screens\disputes_screen.dart:37: title: const Text('Khiếu nại', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
 lib\features\admin\screens\disputes_screen.dart:38: centerTitle: true,
 lib\features\admin\screens\disputes_screen.dart:41: children: [
@@ -12097,7 +12097,7 @@ lib\features\admin\screens\pending_clubs_screen.dart:14: final pendingAsync = re
 lib\features\admin\screens\pending_clubs_screen.dart:15: final colors = context.colors;
 lib\features\admin\screens\pending_clubs_screen.dart:21: elevation: 0,
 lib\features\admin\screens\pending_clubs_screen.dart:22: leading: IconButton(
-lib\features\admin\screens\pending_clubs_screen.dart:23: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\admin\screens\pending_clubs_screen.dart:23: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\admin\screens\pending_clubs_screen.dart:26: title: const Text('Duyệt CLB', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
 lib\features\admin\screens\pending_clubs_screen.dart:27: centerTitle: true,
 lib\features\admin\screens\pending_clubs_screen.dart:29: body: pendingAsync.when(
@@ -12238,7 +12238,7 @@ lib\features\admin\screens\transactions_screen.dart:27: Widget build(BuildContex
 lib\features\admin\screens\transactions_screen.dart:28: final colors = context.colors;
 lib\features\admin\screens\transactions_screen.dart:34: elevation: 0,
 lib\features\admin\screens\transactions_screen.dart:35: leading: IconButton(
-lib\features\admin\screens\transactions_screen.dart:36: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\admin\screens\transactions_screen.dart:36: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\admin\screens\transactions_screen.dart:39: title: const Text('Lịch sử giao dịch', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
 lib\features\admin\screens\transactions_screen.dart:40: centerTitle: true,
 lib\features\admin\screens\transactions_screen.dart:43: children: [
@@ -12380,7 +12380,7 @@ lib\features\admin\screens\verification_screen.dart:26: Widget build(BuildContex
 lib\features\admin\screens\verification_screen.dart:27: final colors = context.colors;
 lib\features\admin\screens\verification_screen.dart:33: elevation: 0,
 lib\features\admin\screens\verification_screen.dart:34: leading: IconButton(
-lib\features\admin\screens\verification_screen.dart:35: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\admin\screens\verification_screen.dart:35: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\admin\screens\verification_screen.dart:38: title: const Text('Xác thực', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
 lib\features\admin\screens\verification_screen.dart:39: centerTitle: true,
 lib\features\admin\screens\verification_screen.dart:42: children: [
@@ -12789,7 +12789,7 @@ lib\features\auth\screens\forgot_password_screen.dart:358: borderRadius: BorderR
 lib\features\auth\screens\forgot_password_screen.dart:360: elevation: 0,
 lib\features\auth\screens\forgot_password_screen.dart:364: const SizedBox(height: 20),
 lib\features\auth\screens\forgot_password_screen.dart:368: child: TextButton.icon(
-lib\features\auth\screens\forgot_password_screen.dart:370: icon: const Icon(Icons.arrow_back_rounded, size: 18),
+lib\features\auth\screens\forgot_password_screen.dart:370: icon: const Icon(Icons.arrow_back_ios_rounded, size: 18),
 lib\features\auth\screens\forgot_password_screen.dart:372: l10n.forgotPassword_backToLogin,
 lib\features\auth\screens\forgot_password_screen.dart:373: style: const TextStyle(fontWeight: FontWeight.w600),
 lib\features\auth\screens\forgot_password_screen.dart:385: Widget _buildSentView(AppColorsExtension colors, AppLocalizations l10n) {
@@ -13783,7 +13783,7 @@ lib\features\bracket\screens\auto_draw_screen.dart:141: final teamsAsync = ref.w
 lib\features\bracket\screens\auto_draw_screen.dart:142: final tournamentAsync = ref.watch(tournamentProvider(widget.tournamentId));
 lib\features\bracket\screens\auto_draw_screen.dart:143: final matchesAsync = ref.watch(matchesProvider(widget.tournamentId));
 lib\features\bracket\screens\auto_draw_screen.dart:148: leading: widget.isEmbedded ? const SizedBox.shrink() : IconButton(
-lib\features\bracket\screens\auto_draw_screen.dart:149: icon: const Icon(Icons.arrow_back_rounded),
+lib\features\bracket\screens\auto_draw_screen.dart:149: icon: const Icon(Icons.arrow_back_ios_rounded),
 lib\features\bracket\screens\auto_draw_screen.dart:150: onPressed: () => context.go('/admin/tournament/${widget.tournamentId}'),
 lib\features\bracket\screens\auto_draw_screen.dart:152: title: const Text('Bốc thăm & Phân bảng'),
 lib\features\bracket\screens\auto_draw_screen.dart:159: if (tournament == null) return const Center(child: Text('Lỗi giải đấu'));
@@ -13990,7 +13990,7 @@ lib\features\bracket\screens\bracket_diagram_screen.dart:124: title = 'Sơ đồ
 lib\features\bracket\screens\bracket_diagram_screen.dart:126: title = 'Sơ đồ thi đấu';
 lib\features\bracket\screens\bracket_diagram_screen.dart:133: elevation: 0,
 lib\features\bracket\screens\bracket_diagram_screen.dart:134: leading: IconButton(
-lib\features\bracket\screens\bracket_diagram_screen.dart:135: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\bracket\screens\bracket_diagram_screen.dart:135: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\bracket\screens\bracket_diagram_screen.dart:136: onPressed: () => Navigator.of(context).pop(),
 lib\features\bracket\screens\bracket_diagram_screen.dart:137: tooltip: 'Quay lại',
 lib\features\bracket\screens\bracket_diagram_screen.dart:139: title: Text(
@@ -14232,7 +14232,7 @@ lib\features\bracket\screens\bracket_view_screen.dart:296: mainAxisSize: MainAxi
 lib\features\bracket\screens\bracket_view_screen.dart:297: children: [_buildResultAwards(resultAsync), bodyContent],
 lib\features\bracket\screens\bracket_view_screen.dart:305: elevation: 0,
 lib\features\bracket\screens\bracket_view_screen.dart:306: leading: IconButton(
-lib\features\bracket\screens\bracket_view_screen.dart:307: icon: const Icon(Icons.arrow_back_rounded),
+lib\features\bracket\screens\bracket_view_screen.dart:307: icon: const Icon(Icons.arrow_back_ios_rounded),
 lib\features\bracket\screens\bracket_view_screen.dart:309: if (auth.role == UserRole.admin) {
 lib\features\bracket\screens\bracket_view_screen.dart:310: context.go('/admin/tournament/${widget.tournamentId}');
 lib\features\bracket\screens\bracket_view_screen.dart:316: title: Text(
@@ -19124,7 +19124,7 @@ lib\features\community\screens\club_detail_screen.dart:449: decoration: BoxDecor
 lib\features\community\screens\club_detail_screen.dart:450: color: colors.bgCard.withValues(alpha: 0.8),
 lib\features\community\screens\club_detail_screen.dart:451: shape: BoxShape.circle,
 lib\features\community\screens\club_detail_screen.dart:453: child: Icon(
-lib\features\community\screens\club_detail_screen.dart:454: Icons.arrow_back_rounded,
+lib\features\community\screens\club_detail_screen.dart:454: Icons.arrow_back_ios_rounded,
 lib\features\community\screens\club_detail_screen.dart:455: color: colors.textPrimary,
 lib\features\community\screens\club_detail_screen.dart:456: size: 20,
 lib\features\community\screens\club_detail_screen.dart:461: title: Text(
@@ -21170,7 +21170,7 @@ lib\features\community\screens\club_invites_screen.dart:86: final l10n = AppLoca
 lib\features\community\screens\club_invites_screen.dart:87: final invitesAsync = ref.watch(myCommunityInvitesProvider);
 lib\features\community\screens\club_invites_screen.dart:93: elevation: 0,
 lib\features\community\screens\club_invites_screen.dart:94: leading: IconButton(
-lib\features\community\screens\club_invites_screen.dart:95: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\community\screens\club_invites_screen.dart:95: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\community\screens\club_invites_screen.dart:97: if (context.canPop()) {
 lib\features\community\screens\club_invites_screen.dart:100: context.go('/profile');
 lib\features\community\screens\club_invites_screen.dart:104: title: Text(
@@ -21373,7 +21373,7 @@ lib\features\community\screens\club_management_screen.dart:93: Widget build(Buil
 lib\features\community\screens\club_management_screen.dart:94: final colors = context.colors;
 lib\features\community\screens\club_management_screen.dart:95: final l10n = AppLocalizations.of(context)!;
 lib\features\community\screens\club_management_screen.dart:101: elevation: 0,
-lib\features\community\screens\club_management_screen.dart:102: leading: IconButton(icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary), onPressed: () => context.pop()),
+lib\features\community\screens\club_management_screen.dart:102: leading: IconButton(icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary), onPressed: () => context.pop()),
 lib\features\community\screens\club_management_screen.dart:103: title: Text(l10n.club_managementTitle, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
 lib\features\community\screens\club_management_screen.dart:104: centerTitle: true,
 lib\features\community\screens\club_management_screen.dart:105: actions: _isLoading
@@ -28339,7 +28339,7 @@ lib\features\dashboard\screens\dashboard_screen.dart:32: title: Text(l10n.dashbo
 lib\features\dashboard\screens\dashboard_screen.dart:33: centerTitle: true,
 lib\features\dashboard\screens\dashboard_screen.dart:34: leading: IconButton(
 lib\features\dashboard\screens\dashboard_screen.dart:35: icon: Icon(
-lib\features\dashboard\screens\dashboard_screen.dart:36: Icons.arrow_back_rounded,
+lib\features\dashboard\screens\dashboard_screen.dart:36: Icons.arrow_back_ios_rounded,
 lib\features\dashboard\screens\dashboard_screen.dart:37: color: context.colors.textPrimary,
 lib\features\dashboard\screens\dashboard_screen.dart:40: if (context.canPop()) {
 lib\features\dashboard\screens\dashboard_screen.dart:43: context.go('/profile');
@@ -28371,7 +28371,7 @@ lib\features\dashboard\screens\dashboard_screen.dart:91: title: Text(l10n.dashbo
 lib\features\dashboard\screens\dashboard_screen.dart:92: centerTitle: true,
 lib\features\dashboard\screens\dashboard_screen.dart:93: leading: IconButton(
 lib\features\dashboard\screens\dashboard_screen.dart:94: icon: Icon(
-lib\features\dashboard\screens\dashboard_screen.dart:95: Icons.arrow_back_rounded,
+lib\features\dashboard\screens\dashboard_screen.dart:95: Icons.arrow_back_ios_rounded,
 lib\features\dashboard\screens\dashboard_screen.dart:96: color: context.colors.textPrimary,
 lib\features\dashboard\screens\dashboard_screen.dart:99: if (context.canPop()) {
 lib\features\dashboard\screens\dashboard_screen.dart:102: context.go('/profile');
@@ -34032,7 +34032,7 @@ lib\features\lite\screens\lite_management_screen.dart:68: final l10n = AppLocali
 lib\features\lite\screens\lite_management_screen.dart:69: final state = ref.watch(liteManagementProvider);
 lib\features\lite\screens\lite_management_screen.dart:70: final notifier = ref.read(liteManagementProvider.notifier);
 lib\features\lite\screens\lite_management_screen.dart:75: leading: IconButton(
-lib\features\lite\screens\lite_management_screen.dart:76: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\lite\screens\lite_management_screen.dart:76: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\lite\screens\lite_management_screen.dart:79: title: Text(
 lib\features\lite\screens\lite_management_screen.dart:80: state.tournamentName ?? l10n.lite_managementTitle,
 lib\features\lite\screens\lite_management_screen.dart:82: fontWeight: FontWeight.w600,
@@ -35054,7 +35054,7 @@ lib\features\lite\screens\lite_pairing_screen.dart:311: Widget build(BuildContex
 lib\features\lite\screens\lite_pairing_screen.dart:312: final colors = context.colors;
 lib\features\lite\screens\lite_pairing_screen.dart:313: final l10n = AppLocalizations.of(context)!;
 lib\features\lite\screens\lite_pairing_screen.dart:318: leading: IconButton(
-lib\features\lite\screens\lite_pairing_screen.dart:319: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\lite\screens\lite_pairing_screen.dart:319: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\lite\screens\lite_pairing_screen.dart:322: title: Text(
 lib\features\lite\screens\lite_pairing_screen.dart:323: _tournamentName ?? l10n.lite_pairingTitle,
 lib\features\lite\screens\lite_pairing_screen.dart:325: fontWeight: FontWeight.w600,
@@ -35584,7 +35584,7 @@ lib\features\live\screens\live_match_screen.dart:44: final tournamentAsync = ref
 lib\features\live\screens\live_match_screen.dart:50: elevation: 0,
 lib\features\live\screens\live_match_screen.dart:51: leading: IconButton(
 lib\features\live\screens\live_match_screen.dart:52: icon: Icon(
-lib\features\live\screens\live_match_screen.dart:53: Icons.arrow_back_rounded,
+lib\features\live\screens\live_match_screen.dart:53: Icons.arrow_back_ios_rounded,
 lib\features\live\screens\live_match_screen.dart:54: color: context.colors.textPrimary,
 lib\features\live\screens\live_match_screen.dart:57: if (context.canPop()) {
 lib\features\live\screens\live_match_screen.dart:64: title: Text(
@@ -38583,7 +38583,7 @@ lib\features\match\screens\matches_list_screen.dart:188: final colors = context.
 lib\features\match\screens\matches_list_screen.dart:189: final l10n = AppLocalizations.of(context)!;
 lib\features\match\screens\matches_list_screen.dart:194: elevation: 0,
 lib\features\match\screens\matches_list_screen.dart:195: leading: IconButton(
-lib\features\match\screens\matches_list_screen.dart:196: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\match\screens\matches_list_screen.dart:196: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\match\screens\matches_list_screen.dart:199: title: Text(
 lib\features\match\screens\matches_list_screen.dart:200: l10n.matchesTitle,
 lib\features\match\screens\matches_list_screen.dart:202: color: colors.textPrimary,
@@ -41165,7 +41165,7 @@ lib\features\notification\screens\notification_screen.dart:228: : stateNotif.not
 lib\features\notification\screens\notification_screen.dart:230: final totalUnread = stateNotif.notifications.where((n) => !n.isRead).length;
 lib\features\notification\screens\notification_screen.dart:236: elevation: 0,
 lib\features\notification\screens\notification_screen.dart:237: leading: IconButton(
-lib\features\notification\screens\notification_screen.dart:238: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\notification\screens\notification_screen.dart:238: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\notification\screens\notification_screen.dart:241: title: Text(
 lib\features\notification\screens\notification_screen.dart:242: l10n.notification_title,
 lib\features\notification\screens\notification_screen.dart:244: color: colors.textPrimary,
@@ -41631,7 +41631,7 @@ lib\features\payment\screens\checkout_screen.dart:168: final isFree = effectiveA
 lib\features\payment\screens\checkout_screen.dart:174: elevation: 0,
 lib\features\payment\screens\checkout_screen.dart:175: centerTitle: true,
 lib\features\payment\screens\checkout_screen.dart:176: leading: IconButton(
-lib\features\payment\screens\checkout_screen.dart:177: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\payment\screens\checkout_screen.dart:177: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\payment\screens\checkout_screen.dart:179: if (context.canPop()) {
 lib\features\payment\screens\checkout_screen.dart:182: context.go('/profile');
 lib\features\payment\screens\checkout_screen.dart:186: title: Text(
@@ -41745,7 +41745,7 @@ lib\features\payment\screens\payments_screen.dart:33: final l10n = AppLocalizati
 lib\features\payment\screens\payments_screen.dart:39: elevation: 0,
 lib\features\payment\screens\payments_screen.dart:40: centerTitle: true,
 lib\features\payment\screens\payments_screen.dart:41: leading: IconButton(
-lib\features\payment\screens\payments_screen.dart:42: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\payment\screens\payments_screen.dart:42: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\payment\screens\payments_screen.dart:44: if (context.canPop()) {
 lib\features\payment\screens\payments_screen.dart:47: context.go('/profile');
 lib\features\payment\screens\payments_screen.dart:51: title: Text(
@@ -42772,7 +42772,7 @@ lib\features\profile\screens\change_password_screen.dart:91: final l10n = AppLoc
 lib\features\profile\screens\change_password_screen.dart:92: final newPassword = _newPasswordController.text;
 lib\features\profile\screens\change_password_screen.dart:98: elevation: 0,
 lib\features\profile\screens\change_password_screen.dart:99: leading: IconButton(
-lib\features\profile\screens\change_password_screen.dart:100: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\profile\screens\change_password_screen.dart:100: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\profile\screens\change_password_screen.dart:101: onPressed: () => context.go('/profile'),
 lib\features\profile\screens\change_password_screen.dart:103: title: Text(
 lib\features\profile\screens\change_password_screen.dart:104: l10n.changePassword_title,
@@ -43029,7 +43029,7 @@ lib\features\profile\screens\profile_screen.dart:231: final profileAsync = ref.w
 lib\features\profile\screens\profile_screen.dart:237: elevation: 0,
 lib\features\profile\screens\profile_screen.dart:238: leading: IconButton(
 lib\features\profile\screens\profile_screen.dart:239: icon: Icon(
-lib\features\profile\screens\profile_screen.dart:240: Icons.arrow_back_rounded,
+lib\features\profile\screens\profile_screen.dart:240: Icons.arrow_back_ios_rounded,
 lib\features\profile\screens\profile_screen.dart:241: color: context.colors.textPrimary,
 lib\features\profile\screens\profile_screen.dart:245: title: Text(
 lib\features\profile\screens\profile_screen.dart:246: l10n.profileTitle,
@@ -43064,7 +43064,7 @@ lib\features\profile\screens\profile_screen.dart:293: final colors = context.col
 lib\features\profile\screens\profile_screen.dart:294: final l10n = AppLocalizations.of(context)!;
 lib\features\profile\screens\profile_screen.dart:299: elevation: 0,
 lib\features\profile\screens\profile_screen.dart:300: leading: IconButton(
-lib\features\profile\screens\profile_screen.dart:301: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\profile\screens\profile_screen.dart:301: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\profile\screens\profile_screen.dart:304: title: Text(
 lib\features\profile\screens\profile_screen.dart:305: l10n.profileTitle,
 lib\features\profile\screens\profile_screen.dart:307: color: colors.textPrimary,
@@ -44575,7 +44575,7 @@ lib\features\profile\screens\settings_screen.dart:53: final colors = context.col
 lib\features\profile\screens\settings_screen.dart:54: final l10n = AppLocalizations.of(context);
 lib\features\profile\screens\settings_screen.dart:60: elevation: 0,
 lib\features\profile\screens\settings_screen.dart:61: leading: IconButton(
-lib\features\profile\screens\settings_screen.dart:62: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\profile\screens\settings_screen.dart:62: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\profile\screens\settings_screen.dart:64: if (context.canPop()) {
 lib\features\profile\screens\settings_screen.dart:67: context.go('/profile');
 lib\features\profile\screens\settings_screen.dart:71: title: Text(
@@ -45958,7 +45958,7 @@ lib\features\profile\screens\user_profile_screen.dart:88: decoration: BoxDecorat
 lib\features\profile\screens\user_profile_screen.dart:89: color: colors.bgCard.withValues(alpha: 0.8),
 lib\features\profile\screens\user_profile_screen.dart:90: shape: BoxShape.circle,
 lib\features\profile\screens\user_profile_screen.dart:92: child: Icon(
-lib\features\profile\screens\user_profile_screen.dart:93: Icons.arrow_back_rounded,
+lib\features\profile\screens\user_profile_screen.dart:93: Icons.arrow_back_ios_rounded,
 lib\features\profile\screens\user_profile_screen.dart:94: color: colors.textPrimary,
 lib\features\profile\screens\user_profile_screen.dart:95: size: 20,
 lib\features\profile\screens\user_profile_screen.dart:100: actions: [
@@ -47336,7 +47336,7 @@ lib\features\rankings\screens\elo_history_screen.dart:45: final historyAsync = r
 lib\features\rankings\screens\elo_history_screen.dart:46: final history = historyAsync.asData?.value ?? [];
 lib\features\rankings\screens\elo_history_screen.dart:52: elevation: 0,
 lib\features\rankings\screens\elo_history_screen.dart:53: leading: IconButton(
-lib\features\rankings\screens\elo_history_screen.dart:54: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\rankings\screens\elo_history_screen.dart:54: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\rankings\screens\elo_history_screen.dart:55: onPressed: () => Navigator.pop(context),
 lib\features\rankings\screens\elo_history_screen.dart:57: title: Text(
 lib\features\rankings\screens\elo_history_screen.dart:58: 'Lịch sử ELO',
@@ -48047,7 +48047,7 @@ lib\features\rankings\screens\user_ranking_detail_screen.dart:103: height: 40,
 lib\features\rankings\screens\user_ranking_detail_screen.dart:104: decoration: BoxDecoration(
 lib\features\rankings\screens\user_ranking_detail_screen.dart:106: borderRadius: BorderRadius.circular(12),
 lib\features\rankings\screens\user_ranking_detail_screen.dart:109: child: Icon(
-lib\features\rankings\screens\user_ranking_detail_screen.dart:110: Icons.arrow_back_rounded,
+lib\features\rankings\screens\user_ranking_detail_screen.dart:110: Icons.arrow_back_ios_rounded,
 lib\features\rankings\screens\user_ranking_detail_screen.dart:111: color: colors.textPrimary,
 lib\features\rankings\screens\user_ranking_detail_screen.dart:112: size: 20,
 lib\features\rankings\screens\user_ranking_detail_screen.dart:116: const SizedBox(width: 12),
@@ -49346,7 +49346,7 @@ lib\features\referee\screens\referee_invites_screen.dart:19: final colors = cont
 lib\features\referee\screens\referee_invites_screen.dart:20: final invitesAsync = ref.watch(myRefereeInvitesProvider);
 lib\features\referee\screens\referee_invites_screen.dart:26: elevation: 0,
 lib\features\referee\screens\referee_invites_screen.dart:27: leading: IconButton(
-lib\features\referee\screens\referee_invites_screen.dart:28: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\referee\screens\referee_invites_screen.dart:28: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\referee\screens\referee_invites_screen.dart:31: title: const Text(
 lib\features\referee\screens\referee_invites_screen.dart:32: 'Lời mời trọng tài',
 lib\features\referee\screens\referee_invites_screen.dart:33: style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
@@ -50676,7 +50676,7 @@ lib\features\register\screens\invite_code_join_screen.dart:72: fontSize: 15,
 lib\features\register\screens\invite_code_join_screen.dart:73: fontWeight: FontWeight.w600,
 lib\features\register\screens\invite_code_join_screen.dart:77: const SizedBox(height: 24),
 lib\features\register\screens\invite_code_join_screen.dart:78: FilledButton.icon(
-lib\features\register\screens\invite_code_join_screen.dart:80: icon: const Icon(Icons.arrow_back_rounded),
+lib\features\register\screens\invite_code_join_screen.dart:80: icon: const Icon(Icons.arrow_back_ios_rounded),
 lib\features\register\screens\invite_code_join_screen.dart:86: mainAxisAlignment: MainAxisAlignment.center,
 lib\features\register\screens\invite_code_join_screen.dart:87: children: [
 lib\features\register\screens\invite_code_join_screen.dart:88: const CircularProgressIndicator(),
@@ -52087,7 +52087,7 @@ lib\features\reports\screens\my_reports_screen.dart:17: final reportsAsync = ref
 lib\features\reports\screens\my_reports_screen.dart:23: elevation: 0,
 lib\features\reports\screens\my_reports_screen.dart:24: centerTitle: true,
 lib\features\reports\screens\my_reports_screen.dart:25: leading: IconButton(
-lib\features\reports\screens\my_reports_screen.dart:26: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\reports\screens\my_reports_screen.dart:26: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\reports\screens\my_reports_screen.dart:27: tooltip: l10n.myReportsBack,
 lib\features\reports\screens\my_reports_screen.dart:29: if (context.canPop()) {
 lib\features\reports\screens\my_reports_screen.dart:32: context.go('/profile');
@@ -52390,7 +52390,7 @@ lib\features\series\screens\series_detail_screen.dart:145: body: detailAsync.whe
 lib\features\series\screens\series_detail_screen.dart:146: data: (detail) {
 lib\features\series\screens\series_detail_screen.dart:147: if (detail == null) {
 lib\features\series\screens\series_detail_screen.dart:152: leading: IconButton(
-lib\features\series\screens\series_detail_screen.dart:153: icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+lib\features\series\screens\series_detail_screen.dart:153: icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
 lib\features\series\screens\series_detail_screen.dart:158: child: Column(
 lib\features\series\screens\series_detail_screen.dart:159: mainAxisAlignment: MainAxisAlignment.center,
 lib\features\series\screens\series_detail_screen.dart:160: children: [
@@ -52438,7 +52438,7 @@ lib\features\series\screens\series_detail_screen.dart:232: expandedHeight: 200,
 lib\features\series\screens\series_detail_screen.dart:233: floating: false,
 lib\features\series\screens\series_detail_screen.dart:234: pinned: true,
 lib\features\series\screens\series_detail_screen.dart:235: leading: IconButton(
-lib\features\series\screens\series_detail_screen.dart:236: icon: Icon(Icons.arrow_back_rounded, color: Colors.white),
+lib\features\series\screens\series_detail_screen.dart:236: icon: Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
 lib\features\series\screens\series_detail_screen.dart:239: flexibleSpace: FlexibleSpaceBar(
 lib\features\series\screens\series_detail_screen.dart:240: background: _buildHeader(d, colors, isActive),
 lib\features\series\screens\series_detail_screen.dart:242: bottom: PreferredSize(
@@ -52693,7 +52693,7 @@ lib\features\series\screens\series_screen.dart:55: final seriesAsync = ref.watch
 lib\features\series\screens\series_screen.dart:59: title: const Text('Chuỗi giải đấu'),
 lib\features\series\screens\series_screen.dart:60: centerTitle: true,
 lib\features\series\screens\series_screen.dart:61: leading: IconButton(
-lib\features\series\screens\series_screen.dart:62: icon: Icon(Icons.arrow_back_rounded, color: context.colors.textPrimary),
+lib\features\series\screens\series_screen.dart:62: icon: Icon(Icons.arrow_back_ios_rounded, color: context.colors.textPrimary),
 lib\features\series\screens\series_screen.dart:64: if (context.canPop()) {
 lib\features\series\screens\series_screen.dart:67: context.go('/profile');
 lib\features\series\screens\series_screen.dart:72: body: seriesAsync.when(
@@ -52928,7 +52928,7 @@ lib\features\teams\screens\team_list_screen.dart:119: final tournamentAsync = re
 lib\features\teams\screens\team_list_screen.dart:120: final tournament = tournamentAsync.value;
 lib\features\teams\screens\team_list_screen.dart:122: final isLocked = tournament?.status == AppConstants.statusInProgress ||
 lib\features\teams\screens\team_list_screen.dart:129: leading: isEmbedded ? const SizedBox.shrink() : IconButton(
-lib\features\teams\screens\team_list_screen.dart:130: icon: const Icon(Icons.arrow_back_rounded),
+lib\features\teams\screens\team_list_screen.dart:130: icon: const Icon(Icons.arrow_back_ios_rounded),
 lib\features\teams\screens\team_list_screen.dart:131: onPressed: () => context.go('/admin/tournament/$tournamentId'),
 lib\features\teams\screens\team_list_screen.dart:133: title: const Text('Quản lý đội / VĐV'),
 lib\features\teams\screens\team_list_screen.dart:134: actions: [
@@ -53232,7 +53232,7 @@ lib\features\tournament\screens\token_management_screen.dart:27: final tokensSta
 lib\features\tournament\screens\token_management_screen.dart:32: leading: isEmbedded
 lib\features\tournament\screens\token_management_screen.dart:33: ? const SizedBox.shrink()
 lib\features\tournament\screens\token_management_screen.dart:34: : IconButton(
-lib\features\tournament\screens\token_management_screen.dart:35: icon: const Icon(Icons.arrow_back_rounded),
+lib\features\tournament\screens\token_management_screen.dart:35: icon: const Icon(Icons.arrow_back_ios_rounded),
 lib\features\tournament\screens\token_management_screen.dart:36: onPressed: () => context.go('/admin/tournament/$tournamentId'),
 lib\features\tournament\screens\token_management_screen.dart:38: title: Text(l10n.tokenManagement),
 lib\features\tournament\screens\token_management_screen.dart:43: final activeTokens = tokens.where((t) => t.isActive).toList();
@@ -53363,7 +53363,7 @@ lib\features\tournament\screens\tournament_detail_screen.dart:43: final tourname
 lib\features\tournament\screens\tournament_detail_screen.dart:47: if (tournament == null) {
 lib\features\tournament\screens\tournament_detail_screen.dart:49: body: Center(child: Text(l10n.tournamentNotFound)),
 lib\features\tournament\screens\tournament_detail_screen.dart:57: leading: IconButton(
-lib\features\tournament\screens\tournament_detail_screen.dart:58: icon: const Icon(Icons.arrow_back_rounded),
+lib\features\tournament\screens\tournament_detail_screen.dart:58: icon: const Icon(Icons.arrow_back_ios_rounded),
 lib\features\tournament\screens\tournament_detail_screen.dart:59: onPressed: () => context.go('/admin'),
 lib\features\tournament\screens\tournament_detail_screen.dart:61: title: Text(
 lib\features\tournament\screens\tournament_detail_screen.dart:62: tournament.name.isNotEmpty ? tournament.name : l10n.unnamed),
@@ -53610,7 +53610,7 @@ lib\features\tournament\screens\tournament_intro_screen.dart:182: decoration: Bo
 lib\features\tournament\screens\tournament_intro_screen.dart:183: color: colors.bgCard.withValues(alpha: 0.88),
 lib\features\tournament\screens\tournament_intro_screen.dart:184: shape: BoxShape.circle,
 lib\features\tournament\screens\tournament_intro_screen.dart:186: child: Icon(
-lib\features\tournament\screens\tournament_intro_screen.dart:187: Icons.arrow_back_rounded,
+lib\features\tournament\screens\tournament_intro_screen.dart:187: Icons.arrow_back_ios_rounded,
 lib\features\tournament\screens\tournament_intro_screen.dart:188: color: colors.textPrimary,
 lib\features\tournament\screens\tournament_intro_screen.dart:189: size: 20,
 lib\features\tournament\screens\tournament_intro_screen.dart:196: void _goBack() {
@@ -53697,7 +53697,7 @@ lib\features\tournament\screens\tournament_intro_screen.dart:344: decoration: Bo
 lib\features\tournament\screens\tournament_intro_screen.dart:345: color: colors.bgCard.withValues(alpha: 0.88),
 lib\features\tournament\screens\tournament_intro_screen.dart:346: shape: BoxShape.circle,
 lib\features\tournament\screens\tournament_intro_screen.dart:348: child: Icon(
-lib\features\tournament\screens\tournament_intro_screen.dart:349: Icons.arrow_back_rounded,
+lib\features\tournament\screens\tournament_intro_screen.dart:349: Icons.arrow_back_ios_rounded,
 lib\features\tournament\screens\tournament_intro_screen.dart:350: color: colors.textPrimary,
 lib\features\tournament\screens\tournament_intro_screen.dart:351: size: 19,
 lib\features\tournament\screens\tournament_intro_screen.dart:356: title: Text(

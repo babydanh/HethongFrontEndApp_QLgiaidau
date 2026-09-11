@@ -55,7 +55,7 @@ class _TournamentDetailScreenState
           appBar: AppBar(
             backgroundColor: context.colors.bgDark,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded),
+              icon: const Icon(Icons.arrow_back_ios_rounded),
               onPressed: () => context.go('/admin'),
             ),
             title: Text(

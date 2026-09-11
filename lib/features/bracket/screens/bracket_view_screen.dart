@@ -391,7 +391,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         backgroundColor: context.colors.bgDark,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(Icons.arrow_back_ios_rounded),
           onPressed: () {
             if (auth.role == UserRole.admin) {
               context.go('/admin/tournament/${widget.tournamentId}');

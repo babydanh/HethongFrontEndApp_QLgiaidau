@@ -98,7 +98,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   Future<CommunitySocialSettings>? _socialSettingsFuture;
   late final ScrollController _scrollController;
   bool _isCollapsed = false;
-  final double _bannerHeight = 100.0;
+  final double _bannerHeight = 90.0;
   final double _avatarOverlap = 8.0;
 
   void _updateClubState(VoidCallback update) {
@@ -419,64 +419,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     );
   }
 
-  Widget _buildCircleOverlayButton({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.42),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: Colors.white, size: 20),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCircleChatButton(
-    Community club,
-    AppColorsExtension colors,
-    AppLocalizations l10n,
-  ) {
-    if (_myMembership?.status != 'JOINED') {
-      return const SizedBox.shrink();
-    }
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: _isOpeningClubChat ? null : () => _openClubChat(club),
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.42),
-            shape: BoxShape.circle,
-          ),
-          child: _isOpeningClubChat
-              ? const Center(
-                  child: SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  ),
-                )
-              : const Icon(Icons.forum_outlined, color: Colors.white, size: 20),
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {

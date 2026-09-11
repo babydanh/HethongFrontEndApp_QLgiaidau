@@ -352,7 +352,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
       backgroundColor: colors.bgDark,
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(

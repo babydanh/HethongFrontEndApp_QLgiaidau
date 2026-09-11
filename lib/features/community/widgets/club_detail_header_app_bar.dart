@@ -37,24 +37,18 @@ extension _ClubDetailHeaderAppBar on _ClubDetailScreenState {
       toolbarHeight: 44.0,
       expandedHeight: totalBannerHeight,
       elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
       backgroundColor: _isCollapsed ? colors.bgCard : Colors.transparent,
-      leading: _isCollapsed
-          ? IconButton(
-              icon: Icon(
-                Icons.arrow_back_rounded,
-                color: colors.textPrimary,
-                size: 22,
-              ),
-              onPressed: () => context.pop(),
-              splashRadius: 20,
-            )
-          : Padding(
-              padding: const EdgeInsets.all(4),
-              child: _buildCircleOverlayButton(
-                icon: Icons.arrow_back_rounded,
-                onTap: () => context.pop(),
-              ),
-            ),
+      leading: IconButton(
+        icon: Icon(
+          Icons.arrow_back_ios_rounded,
+          color: colors.textPrimary,
+          size: 22,
+        ),
+        onPressed: () => context.pop(),
+        splashRadius: 20,
+      ),
       title: _isCollapsed
           ? Text(
               club.name,
@@ -67,54 +61,70 @@ extension _ClubDetailHeaderAppBar on _ClubDetailScreenState {
               overflow: TextOverflow.ellipsis,
             )
           : null,
-      actions: _isCollapsed
-          ? [
-              IconButton(
-                icon: Icon(
-                  Icons.search_rounded,
-                  color: colors.textPrimary,
-                  size: 22,
-                ),
-                onPressed: () => context.push(
-                  '/club/${club.id}/search?name=${Uri.encodeComponent(club.name)}',
-                ),
-                splashRadius: 20,
-              ),
-              if (_myMembership?.status == 'JOINED')
-                IconButton(
-                  icon: Icon(
-                    Icons.forum_outlined,
+      actions: [
+        IconButton(
+          icon: Icon(
+            Icons.search_rounded,
+            color: colors.textPrimary,
+            size: 22,
+          ),
+          onPressed: () => context.push(
+            '/club/${club.id}/search?name=${Uri.encodeComponent(club.name)}',
+          ),
+          splashRadius: 20,
+        ),
+        if (_myMembership?.status == 'JOINED')
+          IconButton(
+            icon: _isOpeningClubChat
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: colors.textPrimary,
+                    ),
+                  )
+                : Icon(
+                    Icons.chat_bubble_outline,
                     color: colors.textPrimary,
                     size: 22,
                   ),
-                  onPressed: _isOpeningClubChat
-                      ? null
-                      : () => _openClubChat(club),
-                  splashRadius: 20,
-                ),
-              const SizedBox(width: 4),
-            ]
-          : [
-              _buildCircleOverlayButton(
-                icon: Icons.search_rounded,
-                onTap: () => context.push(
-                  '/club/${club.id}/search?name=${Uri.encodeComponent(club.name)}',
+            onPressed: _isOpeningClubChat
+                ? null
+                : () => _openClubChat(club),
+            splashRadius: 20,
+          ),
+        const SizedBox(width: 4),
+      ],
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            hasBanner
+                ? ClubNetworkImage(
+                    bannerUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        fallbackBanner(),
+                  )
+                : fallbackBanner(),
+            // Bo tròn 2 góc trên của card thông tin đè lên chân banner (Ảnh 3)
+            Positioned(
+              bottom: -1,
+              left: 0,
+              right: 0,
+              height: 15,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colors.bgCard,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
                 ),
               ),
-              if (_myMembership?.status == 'JOINED') ...[
-                const SizedBox(width: 8),
-                _buildCircleChatButton(club, colors, l10n),
-              ],
-              const SizedBox(width: 16),
-            ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: hasBanner
-            ? ClubNetworkImage(
-                bannerUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => fallbackBanner(),
-              )
-            : fallbackBanner(),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1326,7 +1326,7 @@ class _OpsScaffold extends StatelessWidget {
         leading: IconButton(
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: onBack,
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(Icons.arrow_back_ios_rounded),
         ),
         titleSpacing: 0,
         title: Column(

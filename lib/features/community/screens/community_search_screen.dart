@@ -100,7 +100,7 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
           titleSpacing: 0,
           leading: IconButton(
             tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-            icon: const Icon(Icons.arrow_back_rounded),
+            icon: const Icon(Icons.arrow_back_ios_rounded),
             onPressed: () => context.pop(),
           ),
           title: SizedBox(

@@ -245,7 +245,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(
-            Icons.arrow_back_rounded,
+            Icons.arrow_back_ios_rounded,
             color: context.colors.textPrimary,
           ),
           onPressed: () => context.go('/home'),
@@ -306,7 +306,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
           onPressed: () => context.go('/home'),
         ),
         title: Text(

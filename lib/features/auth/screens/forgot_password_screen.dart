@@ -367,7 +367,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           Center(
             child: TextButton.icon(
               onPressed: () => context.pop(),
-              icon: const Icon(Icons.arrow_back_rounded, size: 18),
+              icon: const Icon(Icons.arrow_back_ios_rounded, size: 18),
               label: Text(
                 l10n.forgotPassword_backToLogin,
                 style: const TextStyle(fontWeight: FontWeight.w600),
