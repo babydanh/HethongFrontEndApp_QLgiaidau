@@ -347,8 +347,8 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                       // Logo / App name
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
+                          horizontal: 12,
+                          vertical: 6,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.18),
@@ -359,7 +359,7 @@ class _ExploreTabState extends ConsumerState<ExploreTab>
                         ),
                         child: Image.asset(
                           'assets/images/sporto_v1_with_text.png',
-                          height: 28,
+                          height: 36,
                           fit: BoxFit.contain,
                         ),
                       ),
