@@ -12,7 +12,7 @@ extension _ClubDetailMemberProfile on _ClubDetailScreenState {
         final clubName =
             ref.read(communityDetailProvider(widget.clubId)).value?.name ?? '';
         context.push(
-          '/club/${widget.clubId}/search?name=${Uri.encodeComponent(clubName)}&q=${Uri.encodeComponent(query)}',
+          '/club/${widget.clubId}/search?name=${Uri.encodeComponent(clubName)}&q=${Uri.encodeComponent(query)}&type=MATCHES',
         );
       },
     );

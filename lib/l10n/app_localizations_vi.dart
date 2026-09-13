@@ -4243,6 +4243,71 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_tabActivity => 'Hoạt động';
 
   @override
+  String get clubStats_tabTitle => 'Thống kê';
+
+  @override
+  String get clubStats_filter7D => '7 ngày';
+
+  @override
+  String get clubStats_filter1M => '1 tháng';
+
+  @override
+  String get clubStats_filter3M => '3 tháng';
+
+  @override
+  String get clubStats_filterAll => 'Tất cả';
+
+  @override
+  String get clubStats_totalMatches => 'Tổng trận';
+
+  @override
+  String get clubStats_winRate => 'Tỉ lệ thắng';
+
+  @override
+  String get clubStats_wins => 'Thắng';
+
+  @override
+  String get clubStats_losses => 'Thua';
+
+  @override
+  String get clubStats_streak => 'Chuỗi';
+
+  @override
+  String get clubStats_topWins => 'Thắng nhiều nhất';
+
+  @override
+  String get clubStats_topStreak => 'Chuỗi thắng tốt nhất';
+
+  @override
+  String get clubStats_highestWinRate => 'Tỉ lệ thắng cao nhất';
+
+  @override
+  String get clubStats_emptyData =>
+      'Chưa có dữ liệu thi đấu trong khoảng thời gian này.';
+
+  @override
+  String clubStats_streakWin(Object count) {
+    return '$count trận thắng liên tiếp';
+  }
+
+  @override
+  String clubStats_streakLoss(Object count) {
+    return '$count trận thua liên tiếp';
+  }
+
+  @override
+  String get clubStats_spotlightTitle => 'Gương mặt nổi bật';
+
+  @override
+  String get clubStats_memberListTitle => 'Bảng thành tích thành viên';
+
+  @override
+  String get club_moreOptions => 'Xem thêm';
+
+  @override
+  String get club_retryButton => 'Thử lại';
+
+  @override
   String get club_unban => 'Bỏ cấm';
 
   @override

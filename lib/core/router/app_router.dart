@@ -24,6 +24,7 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_
 import 'package:app_quanly_giaidau/features/notification/screens/notification_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/community_search_screen.dart';
+import 'package:app_quanly_giaidau/data/models/community_search_models.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_tournaments_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_match_sessions_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/create_club_screen.dart';
@@ -618,10 +619,19 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'search',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
+              final typeParam = state.uri.queryParameters['type']?.toUpperCase();
+              final initialType = switch (typeParam) {
+                'MATCHES' => CommunitySearchType.matches,
+                'MEMBERS' => CommunitySearchType.members,
+                'POSTS' => CommunitySearchType.posts,
+                'TOURNAMENTS' => CommunitySearchType.tournaments,
+                _ => null,
+              };
               return CommunitySearchScreen(
                 communityId: id,
                 communityName: state.uri.queryParameters['name'] ?? '',
                 initialQuery: state.uri.queryParameters['q'],
+                initialType: initialType,
               );
             },
           ),

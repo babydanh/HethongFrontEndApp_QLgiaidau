@@ -1684,6 +1684,36 @@
   "club_tabRankings": "Rankings",
   "club_tabTournaments": "Tournaments",
   "club_tabActivity": "Activity",
+  "clubStats_tabTitle": "Statistics",
+  "clubStats_filter7D": "7 Days",
+  "clubStats_filter1M": "1 Month",
+  "clubStats_filter3M": "3 Months",
+  "clubStats_filterAll": "All Time",
+  "clubStats_totalMatches": "Total Matches",
+  "clubStats_winRate": "Win Rate",
+  "clubStats_wins": "Wins",
+  "clubStats_losses": "Losses",
+  "clubStats_streak": "Streak",
+  "clubStats_topWins": "Most Wins",
+  "clubStats_topStreak": "Best Win Streak",
+  "clubStats_highestWinRate": "Best Win Rate",
+  "clubStats_emptyData": "No match data available in this time range.",
+  "clubStats_streakWin": "{count} win streak",
+  "@clubStats_streakWin": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "clubStats_streakLoss": "{count} loss streak",
+  "@clubStats_streakLoss": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "clubStats_spotlightTitle": "Spotlight",
+  "clubStats_memberListTitle": "Member Performance",
+  "club_moreOptions": "More",
+  "club_retryButton": "Retry",
   "club_unban": "Unban",
   "club_unbanned": "Member unbanned",
   "edit_tab_profile": "Profile",

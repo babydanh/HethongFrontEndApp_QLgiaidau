@@ -7958,6 +7958,126 @@ abstract class AppLocalizations {
   /// **'Hoạt động'**
   String get club_tabActivity;
 
+  /// No description provided for @clubStats_tabTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thống kê'**
+  String get clubStats_tabTitle;
+
+  /// No description provided for @clubStats_filter7D.
+  ///
+  /// In vi, this message translates to:
+  /// **'7 ngày'**
+  String get clubStats_filter7D;
+
+  /// No description provided for @clubStats_filter1M.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 tháng'**
+  String get clubStats_filter1M;
+
+  /// No description provided for @clubStats_filter3M.
+  ///
+  /// In vi, this message translates to:
+  /// **'3 tháng'**
+  String get clubStats_filter3M;
+
+  /// No description provided for @clubStats_filterAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get clubStats_filterAll;
+
+  /// No description provided for @clubStats_totalMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổng trận'**
+  String get clubStats_totalMatches;
+
+  /// No description provided for @clubStats_winRate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉ lệ thắng'**
+  String get clubStats_winRate;
+
+  /// No description provided for @clubStats_wins.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng'**
+  String get clubStats_wins;
+
+  /// No description provided for @clubStats_losses.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thua'**
+  String get clubStats_losses;
+
+  /// No description provided for @clubStats_streak.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuỗi'**
+  String get clubStats_streak;
+
+  /// No description provided for @clubStats_topWins.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng nhiều nhất'**
+  String get clubStats_topWins;
+
+  /// No description provided for @clubStats_topStreak.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuỗi thắng tốt nhất'**
+  String get clubStats_topStreak;
+
+  /// No description provided for @clubStats_highestWinRate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉ lệ thắng cao nhất'**
+  String get clubStats_highestWinRate;
+
+  /// No description provided for @clubStats_emptyData.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có dữ liệu thi đấu trong khoảng thời gian này.'**
+  String get clubStats_emptyData;
+
+  /// No description provided for @clubStats_streakWin.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} trận thắng liên tiếp'**
+  String clubStats_streakWin(Object count);
+
+  /// No description provided for @clubStats_streakLoss.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} trận thua liên tiếp'**
+  String clubStats_streakLoss(Object count);
+
+  /// No description provided for @clubStats_spotlightTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gương mặt nổi bật'**
+  String get clubStats_spotlightTitle;
+
+  /// No description provided for @clubStats_memberListTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng thành tích thành viên'**
+  String get clubStats_memberListTitle;
+
+  /// No description provided for @club_moreOptions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem thêm'**
+  String get club_moreOptions;
+
+  /// No description provided for @club_retryButton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get club_retryButton;
+
   /// No description provided for @club_unban.
   ///
   /// In vi, this message translates to:

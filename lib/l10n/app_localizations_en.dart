@@ -4253,6 +4253,71 @@ class AppLocalizationsEn extends AppLocalizations {
   String get club_tabActivity => 'Activity';
 
   @override
+  String get clubStats_tabTitle => 'Statistics';
+
+  @override
+  String get clubStats_filter7D => '7 Days';
+
+  @override
+  String get clubStats_filter1M => '1 Month';
+
+  @override
+  String get clubStats_filter3M => '3 Months';
+
+  @override
+  String get clubStats_filterAll => 'All Time';
+
+  @override
+  String get clubStats_totalMatches => 'Total Matches';
+
+  @override
+  String get clubStats_winRate => 'Win Rate';
+
+  @override
+  String get clubStats_wins => 'Wins';
+
+  @override
+  String get clubStats_losses => 'Losses';
+
+  @override
+  String get clubStats_streak => 'Streak';
+
+  @override
+  String get clubStats_topWins => 'Most Wins';
+
+  @override
+  String get clubStats_topStreak => 'Best Win Streak';
+
+  @override
+  String get clubStats_highestWinRate => 'Best Win Rate';
+
+  @override
+  String get clubStats_emptyData =>
+      'No match data available in this time range.';
+
+  @override
+  String clubStats_streakWin(Object count) {
+    return '$count win streak';
+  }
+
+  @override
+  String clubStats_streakLoss(Object count) {
+    return '$count loss streak';
+  }
+
+  @override
+  String get clubStats_spotlightTitle => 'Spotlight';
+
+  @override
+  String get clubStats_memberListTitle => 'Member Performance';
+
+  @override
+  String get club_moreOptions => 'More';
+
+  @override
+  String get club_retryButton => 'Retry';
+
+  @override
   String get club_unban => 'Unban';
 
   @override

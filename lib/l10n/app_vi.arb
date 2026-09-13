@@ -1684,6 +1684,36 @@
   "club_tabRankings": "Xếp hạng",
   "club_tabTournaments": "Giải đấu",
   "club_tabActivity": "Hoạt động",
+  "clubStats_tabTitle": "Thống kê",
+  "clubStats_filter7D": "7 ngày",
+  "clubStats_filter1M": "1 tháng",
+  "clubStats_filter3M": "3 tháng",
+  "clubStats_filterAll": "Tất cả",
+  "clubStats_totalMatches": "Tổng trận",
+  "clubStats_winRate": "Tỉ lệ thắng",
+  "clubStats_wins": "Thắng",
+  "clubStats_losses": "Thua",
+  "clubStats_streak": "Chuỗi",
+  "clubStats_topWins": "Thắng nhiều nhất",
+  "clubStats_topStreak": "Chuỗi thắng tốt nhất",
+  "clubStats_highestWinRate": "Tỉ lệ thắng cao nhất",
+  "clubStats_emptyData": "Chưa có dữ liệu thi đấu trong khoảng thời gian này.",
+  "clubStats_streakWin": "{count} trận thắng liên tiếp",
+  "@clubStats_streakWin": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "clubStats_streakLoss": "{count} trận thua liên tiếp",
+  "@clubStats_streakLoss": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "clubStats_spotlightTitle": "Gương mặt nổi bật",
+  "clubStats_memberListTitle": "Bảng thành tích thành viên",
+  "club_moreOptions": "Xem thêm",
+  "club_retryButton": "Thử lại",
   "club_unban": "Bỏ cấm",
   "club_unbanned": "Đã bỏ cấm thành viên",
   "edit_tab_profile": "Hồ sơ",

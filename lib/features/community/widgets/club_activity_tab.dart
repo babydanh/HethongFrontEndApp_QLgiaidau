@@ -702,7 +702,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
       onFilterMatches: (query) {
         final name = Uri.encodeComponent(widget.club?.name ?? '');
         context.push(
-          '/club/${widget.communityId}/search?name=$name&q=${Uri.encodeComponent(query)}',
+          '/club/${widget.communityId}/search?name=$name&q=${Uri.encodeComponent(query)}&type=MATCHES',
         );
       },
     );

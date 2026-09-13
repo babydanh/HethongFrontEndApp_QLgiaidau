@@ -13,12 +13,14 @@ class CommunitySearchScreen extends ConsumerStatefulWidget {
   final String communityId;
   final String communityName;
   final String? initialQuery;
+  final CommunitySearchType? initialType;
 
   const CommunitySearchScreen({
     super.key,
     required this.communityId,
     required this.communityName,
     this.initialQuery,
+    this.initialType,
   });
 
   @override
@@ -30,11 +32,12 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
   final _controller = TextEditingController();
   Timer? _debounce;
   String _activeQuery = '';
-  CommunitySearchType _type = CommunitySearchType.all;
+  late CommunitySearchType _type;
 
   @override
   void initState() {
     super.initState();
+    _type = widget.initialType ?? CommunitySearchType.all;
     final query = widget.initialQuery?.trim() ?? '';
     if (query.isNotEmpty) {
       _controller.text = query;
@@ -49,6 +52,9 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
       final query = widget.initialQuery?.trim() ?? '';
       _controller.text = query;
       setState(() => _activeQuery = query.length >= 2 ? query : '');
+    }
+    if (widget.initialType != oldWidget.initialType && widget.initialType != null) {
+      setState(() => _type = widget.initialType!);
     }
   }
 

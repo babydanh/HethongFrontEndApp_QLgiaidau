@@ -1,7 +1,7 @@
 name: app_quanly_giaidau
 description: "Ứng dụng Quản lý Giải đấu Thể thao"
 publish_to: 'none'
-version: 1.0.24+27
+version: 1.0.25+28
 
 flutter_launcher_icons:
   android: true
