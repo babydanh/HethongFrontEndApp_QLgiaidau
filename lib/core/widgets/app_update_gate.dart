@@ -40,9 +40,11 @@ class _AppUpdateGateState extends ConsumerState<AppUpdateGate> {
       final info = await AppUpdateService(ref.read(dioProvider)).check();
       if (!mounted) return;
       if (info == null) {
+        debugPrint('[AppUpdateGate] info is null, scheduling retry...');
         _scheduleRetry();
         return;
       }
+      debugPrint('[AppUpdateGate] current: ${info.currentVersion}, latest: ${info.latestVersion}, min: ${info.minimumVersion}, hasUpdate: ${info.hasUpdate}, isRequired: ${info.isRequired}');
       // Only stop retrying after a valid response. A startup/network failure
       // must not permanently disable the update gate for this app session.
       _checked = true;
@@ -52,7 +54,8 @@ class _AppUpdateGateState extends ConsumerState<AppUpdateGate> {
         barrierDismissible: !info.isRequired,
         builder: (_) => _UpdateDialog(info: info),
       );
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('[AppUpdateGate] check failed: $e\n$stack');
       // Version checking must never block startup when the backend is
       // unavailable. Retry shortly so a transient startup failure does not
       // make an outdated app miss the gate permanently.
