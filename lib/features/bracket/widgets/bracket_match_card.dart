@@ -83,6 +83,7 @@ class BracketMatchCard extends StatelessWidget {
     required bool isGrandFinalWinner,
     required String slot,
     required String participantId,
+    String? eloDelta,
   }) {
     final dragData = BracketSlotDragData(
       matchId: match.id,
@@ -106,6 +107,7 @@ class BracketMatchCard extends StatelessWidget {
       isLive: isLive,
       isBye: isBye,
       isGrandFinalWinner: isGrandFinalWinner,
+      eloDelta: eloDelta,
       trailing: canUnassign
           ? Tooltip(
               message: AppLocalizations.of(context)!.lite_unassignBracket,
@@ -231,6 +233,24 @@ class BracketMatchCard extends StatelessWidget {
       statusLabel = l10n.bracketStatusChampion;
     }
 
+    String? teamEloDelta(List<MatchMemberInfo> members) {
+      if (!match.isCompleted ||
+          match.eloStatus.toUpperCase() != 'APPLIED' ||
+          match.eloDelta.isEmpty) {
+        return null;
+      }
+      for (final member in members) {
+        final userId = member.userId;
+        if (userId == null || userId.isEmpty) continue;
+        final delta = match.eloDelta[userId];
+        if (delta != null) return '${delta > 0 ? '+' : ''}$delta';
+      }
+      return null;
+    }
+
+    final t1EloDelta = teamEloDelta(match.team1MemberInfos);
+    final t2EloDelta = teamEloDelta(match.team2MemberInfos);
+
     return GestureDetector(
       onTap: isSlotEditable ? null : () => _onTap(context),
       onDoubleTap: onDoubleTapMatch == null
@@ -276,6 +296,7 @@ class BracketMatchCard extends StatelessWidget {
                 isGrandFinalWinner: isGrandFinalWinner,
                 slot: 'participant1',
                 participantId: match.team1Id,
+                eloDelta: t1EloDelta,
               ),
             ),
             Divider(height: 1, thickness: 1, color: colors.border),
@@ -299,6 +320,7 @@ class BracketMatchCard extends StatelessWidget {
                 isGrandFinalWinner: isGrandFinalWinner,
                 slot: 'participant2',
                 participantId: match.team2Id,
+                eloDelta: t2EloDelta,
               ),
             ),
             // ── Footer: status + action ──

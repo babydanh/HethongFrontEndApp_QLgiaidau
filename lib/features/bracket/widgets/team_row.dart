@@ -17,6 +17,7 @@ class TeamRow extends StatelessWidget {
   final double rowHeight;
   final int maxSetsCount;
   final Widget? trailing;
+  final String? eloDelta;
 
   const TeamRow({
     super.key,
@@ -33,6 +34,7 @@ class TeamRow extends StatelessWidget {
     this.rowHeight = 24,
     this.maxSetsCount = 0,
     this.trailing,
+    this.eloDelta,
   });
 
   @override
@@ -95,20 +97,57 @@ class TeamRow extends StatelessWidget {
 
             // Team name
             Expanded(
-              child: Text(
-                name,
-                style:
-                    nameStyle ??
-                    TextStyle(
-                      fontSize: 11,
-                      fontWeight: isWinner ? FontWeight.w800 : FontWeight.w500,
-                      color: isWinner
-                          ? textColor
-                          : (isBye ? colors.textMuted : colors.textSecondary),
-                      fontStyle: isBye ? FontStyle.italic : FontStyle.normal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      name,
+                      style:
+                          nameStyle ??
+                          TextStyle(
+                            fontSize: 11,
+                            fontWeight: isWinner ? FontWeight.w800 : FontWeight.w500,
+                            color: isWinner
+                                ? textColor
+                                : (isBye ? colors.textMuted : colors.textSecondary),
+                            fontStyle: isBye ? FontStyle.italic : FontStyle.normal,
+                          ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                  ),
+                  if (eloDelta != null) ...[
+                    const SizedBox(width: 3),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0.5),
+                      decoration: BoxDecoration(
+                        color: eloDelta!.startsWith('-')
+                            ? const Color(0xFFEF4444).withValues(alpha: 0.12)
+                            : const Color(0xFF10B981).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(3),
+                        border: Border.all(
+                          color: eloDelta!.startsWith('-')
+                              ? const Color(0xFFEF4444).withValues(alpha: 0.28)
+                              : const Color(0xFF10B981).withValues(alpha: 0.28),
+                          width: 0.6,
+                        ),
+                      ),
+                      child: Text(
+                        eloDelta!,
+                        style: TextStyle(
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w800,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                          color: eloDelta!.startsWith('-')
+                              ? const Color(0xFFDC2626)
+                              : const Color(0xFF059669),
+                          height: 1.1,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
 

@@ -74,6 +74,9 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
             ),
           ];
 
+    final t1EloDelta = _teamEloDelta(widget.match.team1MemberInfos);
+    final t2EloDelta = _teamEloDelta(widget.match.team2MemberInfos);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
@@ -113,6 +116,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                           members: widget.match.team1MemberInfos,
                           score: cardScore.score1,
                           currentGamePoint: currentTennisGamePoints?.team1,
+                          eloDelta: t1EloDelta,
                           isWinner:
                               widget.isCompleted &&
                               widget.match.winnerId == widget.match.team1Id,
@@ -135,6 +139,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                           members: widget.match.team2MemberInfos,
                           score: cardScore.score2,
                           currentGamePoint: currentTennisGamePoints?.team2,
+                          eloDelta: t2EloDelta,
                           isWinner:
                               widget.isCompleted &&
                               widget.match.winnerId == widget.match.team2Id,
@@ -466,6 +471,21 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
     );
   }
 
+  String? _teamEloDelta(List<MatchMemberInfo> members) {
+    if ((!widget.isCompleted && !widget.match.isCompleted) ||
+        widget.match.eloStatus.toUpperCase() != 'APPLIED' ||
+        widget.match.eloDelta.isEmpty) {
+      return null;
+    }
+    for (final member in members) {
+      final userId = member.userId;
+      if (userId == null || userId.isEmpty) continue;
+      final delta = widget.match.eloDelta[userId];
+      if (delta != null) return '${delta > 0 ? '+' : ''}$delta';
+    }
+    return null;
+  }
+
   Widget _buildTeamSide(
     BuildContext context, {
     required String teamName,
@@ -473,6 +493,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
     required List<MatchMemberInfo> members,
     required int score,
     String? currentGamePoint,
+    String? eloDelta,
     required bool isWinner,
     required bool isLeading,
     required CrossAxisAlignment alignment,
@@ -492,6 +513,42 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
         ? (isLeading ? const Color(0xFFDC2626) : colors.textPrimary)
         : (isWinner ? colors.success : colors.textPrimary);
 
+    final eloIsNegative = eloDelta?.startsWith('-') == true;
+
+    final eloBadge = eloDelta != null
+        ? Container(
+            margin: EdgeInsets.only(
+              left: alignment == CrossAxisAlignment.start ? 3 : 0,
+              right: alignment == CrossAxisAlignment.end ? 3 : 0,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 3.5, vertical: 0.5),
+            decoration: BoxDecoration(
+              color: eloIsNegative
+                  ? const Color(0xFFEF4444).withValues(alpha: 0.12)
+                  : const Color(0xFF10B981).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(3),
+              border: Border.all(
+                color: eloIsNegative
+                    ? const Color(0xFFEF4444).withValues(alpha: 0.28)
+                    : const Color(0xFF10B981).withValues(alpha: 0.28),
+                width: 0.6,
+              ),
+            ),
+            child: Text(
+              eloDelta,
+              style: TextStyle(
+                fontSize: 8.5,
+                fontWeight: FontWeight.w800,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                color: eloIsNegative
+                    ? const Color(0xFFDC2626)
+                    : const Color(0xFF059669),
+                height: 1.1,
+              ),
+            ),
+          )
+        : null;
+
     return Column(
       crossAxisAlignment: alignment,
       children: [
@@ -505,23 +562,35 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
           alignment: alignment,
         ),
         const SizedBox(height: 8),
-        Text(
-          displayLabel,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: isWinner || isLeading
-                ? FontWeight.w800
-                : FontWeight.w600,
-            color: isWinner
-                ? colors.success
-                : (isLeading ? const Color(0xFFDC2626) : colors.textPrimary),
-            height: 1.25,
-          ),
-          textAlign: alignment == CrossAxisAlignment.start
-              ? TextAlign.left
-              : TextAlign.right,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (alignment == CrossAxisAlignment.end && eloBadge != null)
+              eloBadge,
+            Flexible(
+              child: Text(
+                displayLabel,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isWinner || isLeading
+                      ? FontWeight.w800
+                      : FontWeight.w600,
+                  color: isWinner
+                      ? colors.success
+                      : (isLeading ? const Color(0xFFDC2626) : colors.textPrimary),
+                  height: 1.25,
+                ),
+                textAlign: alignment == CrossAxisAlignment.start
+                    ? TextAlign.left
+                    : TextAlign.right,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (alignment == CrossAxisAlignment.start && eloBadge != null)
+              eloBadge,
+          ],
         ),
         const SizedBox(height: 6),
         // Score typography with tabular numbers
