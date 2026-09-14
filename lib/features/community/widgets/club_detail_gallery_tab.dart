@@ -1,7 +1,11 @@
 part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailGalleryTab on _ClubDetailScreenState {
-  Widget _buildGalleryTab(Community club, AppColorsExtension colors) {
+  Widget _buildGalleryTab(
+    Community club,
+    AppColorsExtension colors, {
+    WidgetRef? modalRef,
+  }) {
     if (club.visibility.toUpperCase() == 'PRIVATE' && !_isMember) {
       return _buildPrivateLockView(
         icon: Icons.photo_library_rounded,
@@ -13,7 +17,10 @@ extension _ClubDetailGalleryTab on _ClubDetailScreenState {
       );
     }
     final l10n = AppLocalizations.of(context)!;
-    final galleryAsync = ref.watch(communityGalleryProvider(widget.clubId));
+    final effectiveRef = modalRef ?? ref;
+    final galleryAsync = effectiveRef.watch(
+      communityGalleryProvider(widget.clubId),
+    );
     final isAdmin =
         _myMembership?.role == 'OWNER' ||
         _myMembership?.role == 'ADMIN' ||

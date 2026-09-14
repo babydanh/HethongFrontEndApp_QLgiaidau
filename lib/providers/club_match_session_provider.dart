@@ -14,13 +14,24 @@ class ClubMatchSessionsNotifier
   ClubMatchSessionsNotifier(this.communityId);
 
   @override
-  Future<List<ClubMatchSessionModel>> build() =>
-      ref.read(clubMatchSessionRepositoryProvider).list(communityId);
+  Future<List<ClubMatchSessionModel>> build() async {
+    try {
+      return await ref
+          .read(clubMatchSessionRepositoryProvider)
+          .list(communityId)
+          .timeout(const Duration(seconds: 10));
+    } catch (e) {
+      return const <ClubMatchSessionModel>[];
+    }
+  }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(
-      () => ref.read(clubMatchSessionRepositoryProvider).list(communityId),
+      () => ref
+          .read(clubMatchSessionRepositoryProvider)
+          .list(communityId)
+          .timeout(const Duration(seconds: 10)),
     );
   }
 
