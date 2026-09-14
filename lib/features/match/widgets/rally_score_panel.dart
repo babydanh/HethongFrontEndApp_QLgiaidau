@@ -118,82 +118,85 @@ class RallyScorePanel extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
 
-          // SỐ ĐIỂM TO RÕ Ở GIỮA
+          // HÀNG NGANG: [- SÁT VIỀN TRÁI] | [SỐ ĐIỂM Ở GIỮA] | [+ SÁT VIỀN PHẢI]
           Expanded(
-            child: Center(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    '$score',
-                    style: TextStyle(
-                      fontSize: 80,
-                      fontWeight: FontWeight.w900,
-                      color: color,
-                      height: 1.0,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-
-          // NÚT ĐIỀU KHIỂN: [- (34x34) nhạt] VÀ [+ (52x52) nổi bật màu đội]
-          if (!isReadOnly)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Nút - nhỏ hơn, màu nhạt
-                GestureDetector(
-                  onTap: onDecrement,
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: colors.bgSurface,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: colors.borderLight,
-                        width: 1.2,
+                // NÚT - (SÁT VIỀN TRÁI, KÍCH THƯỚC 52x52)
+                if (!isReadOnly)
+                  GestureDetector(
+                    onTap: onDecrement,
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: colors.bgSurface,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: colors.borderLight,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.remove_rounded,
+                        size: 28,
+                        color: colors.textMuted,
                       ),
                     ),
-                    child: Icon(
-                      Icons.remove_rounded,
-                      size: 18,
-                      color: colors.textMuted,
-                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                // Nút + to nổi bật màu đội
-                GestureDetector(
-                  onTap: onIncrement,
-                  child: Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: color.withValues(alpha: 0.35),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
+
+                // SỐ ĐIỂM Ở CHÍNH GIỮA
+                Expanded(
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          '$score',
+                          style: TextStyle(
+                            fontSize: 84,
+                            fontWeight: FontWeight.w900,
+                            color: color,
+                            height: 1.0,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.add_rounded,
-                      size: 32,
-                      color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
+
+                // NÚT + (SÁT VIỀN PHẢI, KÍCH THƯỚC 56x56, GIỮ STYLE MÀU ĐỘI)
+                if (!isReadOnly)
+                  GestureDetector(
+                    onTap: onIncrement,
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.35),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.add_rounded,
+                        size: 34,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
               ],
             ),
+          ),
         ],
       ),
     );
