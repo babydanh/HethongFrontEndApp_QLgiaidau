@@ -187,7 +187,6 @@ class ApiCommunityRepository implements ICommunityRepository {
         }
         return list
             .map((e) => Community.fromJson(e as Map<String, dynamic>))
-            .where((community) => community.status.toUpperCase() == 'ACTIVE')
             .toList();
       }
       final status = response.statusCode;
@@ -794,6 +793,21 @@ class ApiCommunityRepository implements ICommunityRepository {
       _log.error('Lỗi cập nhật CLB', e, stack);
       rethrow;
     }
+  }
+
+  @override
+  Future<Community> resubmitCommunity(
+    String communityId,
+    Map<String, dynamic> data,
+  ) async {
+    _log.info('Gửi lại CLB chờ duyệt: $communityId');
+    final response = await _dioClient.dio.patch(
+      '/communities/$communityId/resubmit',
+      data: data,
+    );
+    final result =
+        response.data['data'] as Map<String, dynamic>? ?? response.data;
+    return Community.fromJson(result as Map<String, dynamic>);
   }
 
   @override

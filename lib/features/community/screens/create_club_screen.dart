@@ -94,8 +94,15 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
       _log.info('Tạo CLB: ${body['name']}');
       final response = await dio.post('/communities', data: body);
       final clubId = response.data['data']?['id']?.toString() ?? '';
+      final clubStatus =
+          response.data['data']?['status']?.toString().toUpperCase() ??
+          'PENDING';
 
-      if (_enableRecurring && clubId.isNotEmpty && _recurringSlots.isNotEmpty) {
+      // CLB mới phải được duyệt trước khi tạo giải giao lưu tự động.
+      if (_enableRecurring &&
+          clubStatus == 'ACTIVE' &&
+          clubId.isNotEmpty &&
+          _recurringSlots.isNotEmpty) {
         try {
           final slot = _recurringSlots.first;
           final allDays = _recurringSlots
@@ -164,6 +171,10 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
         } catch (templateErr) {
           _log.warning('Không thể tự tạo giải định kỳ mẫu: $templateErr');
         }
+      } else if (_enableRecurring && clubStatus != 'ACTIVE') {
+        _log.info(
+          'Bỏ qua tạo giải định kỳ cho CLB đang chờ xét duyệt: $clubId',
+        );
       }
 
       _log.success('Tạo CLB thành công: $clubId');

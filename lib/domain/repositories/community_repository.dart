@@ -129,6 +129,13 @@ abstract class ICommunityRepository {
     Map<String, dynamic> data,
   );
 
+  /// Sửa hồ sơ bị từ chối và gửi lại vào hàng chờ duyệt.
+  /// PATCH /communities/:id/resubmit
+  Future<Community> resubmitCommunity(
+    String communityId,
+    Map<String, dynamic> data,
+  );
+
   /// Phản hồi lời mời vào CLB.
   /// POST /communities/:id/invite/:action (ACCEPT | DECLINE)
   Future<void> respondToInvite(String communityId, String action);

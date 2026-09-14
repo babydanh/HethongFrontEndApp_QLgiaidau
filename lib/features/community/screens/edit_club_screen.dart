@@ -114,7 +114,13 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     try {
       final composedAddress = _region.composeAddress(_locationCtrl.text);
       final repo = ref.read(communityRepositoryProvider);
-      await repo.updateCommunity(widget.clubId, {
+      final currentClub = ref
+          .read(communityDetailProvider(widget.clubId))
+          .asData
+          ?.value;
+      final isResubmission =
+          currentClub?.status.trim().toUpperCase() == 'REJECTED';
+      final payload = <String, dynamic>{
         'name': _nameCtrl.text.trim(),
         'description': _descCtrl.text.trim(),
         'rules': _rulesCtrl.text.trim(),
@@ -128,16 +134,29 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
         'provinceCode': _region.provinceCode,
         'districtCode': null,
         'wardCode': _region.wardCode.isEmpty ? null : _region.wardCode,
-      });
+      };
+      if (isResubmission) {
+        await repo.resubmitCommunity(widget.clubId, payload);
+      } else {
+        await repo.updateCommunity(widget.clubId, payload);
+      }
 
-      _log.success('Cập nhật CLB thành công');
+      _log.success(
+        isResubmission
+            ? 'Gửi lại CLB để xét duyệt thành công'
+            : 'Cập nhật CLB thành công',
+      );
       ref.invalidate(communityDetailProvider(widget.clubId));
       invalidateCommunityCollections(ref);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.editClub_saved),
+            content: Text(
+              isResubmission
+                  ? l10n.editClub_resubmitSuccess
+                  : l10n.editClub_saved,
+            ),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -239,7 +258,46 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
+            if (club?.status.trim().toUpperCase() == 'PENDING' ||
+                club?.status.trim().toUpperCase() == 'REJECTED') ...[
+              _approvalStatusBanner(colors, club!),
+              const SizedBox(height: 16),
+            ],
+            // ── Card 1: Nhận diện thương hiệu (Logo & Ảnh bìa) ──
+            _sectionCard(
+              colors: colors,
+              title: l10n.editClub_imagesSection,
+              subtitle: l10n.editClub_imagesSubtitle,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: _imagePickerCard(
+                      colors: colors,
+                      title: l10n.editClub_logoTitle,
+                      hint: l10n.editClub_logoHint,
+                      imageUrl: club?.logoUrl,
+                      isCircle: true,
+                      onTap: () => _pickAndUploadImage(isLogo: true),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: _imagePickerCard(
+                      colors: colors,
+                      title: l10n.editClub_bannerTitle,
+                      hint: l10n.editClub_bannerHint,
+                      imageUrl: club?.bannerUrl,
+                      isCircle: false,
+                      onTap: () => _pickAndUploadImage(isLogo: false),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
 
             // ── Card 2: Thông tin cơ bản ──
             _sectionCard(
@@ -510,7 +568,13 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                       )
                     : const Icon(Icons.check_circle_outline_rounded, size: 20),
                 label: Text(
-                  _isLoading ? l10n.editClub_saving : l10n.editClub_saveAll,
+                  _isLoading
+                      ? (club?.status.trim().toUpperCase() == 'REJECTED'
+                            ? l10n.editClub_resubmitting
+                            : l10n.editClub_saving)
+                      : (club?.status.trim().toUpperCase() == 'REJECTED'
+                            ? l10n.editClub_resubmit
+                            : l10n.editClub_saveAll),
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 15,
@@ -531,6 +595,49 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
             const SizedBox(height: 32),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _approvalStatusBanner(AppColorsExtension colors, Community club) {
+    final l10n = AppLocalizations.of(context)!;
+    final isRejected = club.status.trim().toUpperCase() == 'REJECTED';
+    final color = isRejected ? colors.error : const Color(0xFFD97706);
+    final message = isRejected
+        ? (club.rejectedReason?.trim().isNotEmpty == true
+              ? club.rejectedReason!.trim()
+              : l10n.profileClubRejected)
+        : l10n.editClub_pendingNotice;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            isRejected
+                ? Icons.error_outline_rounded
+                : Icons.hourglass_empty_rounded,
+            color: color,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: color,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

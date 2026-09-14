@@ -56,6 +56,8 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
               avatarUrl: m.userAvatarUrl,
               radius: 20,
               fallbackColor: AppTheme.primary,
+              elo: memberElo,
+              matchesPlayed: memberElo != null ? 1 : 0,
             ),
           ),
           const SizedBox(width: 12),

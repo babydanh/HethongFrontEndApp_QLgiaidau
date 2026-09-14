@@ -20,6 +20,7 @@ class Community {
   final List<String> joinQuestions; // Câu hỏi khi tham gia
   final Map<String, String> socialLinks; // facebook / zalo / website
   final String status; // ACTIVE, PENDING
+  final String? rejectedReason;
   final String joinMode; // OPEN, APPROVAL, INVITE_ONLY
   final String visibility; // PUBLIC, PRIVATE, HIDDEN
   final String createdAt;
@@ -45,6 +46,7 @@ class Community {
     this.joinQuestions = const [],
     this.socialLinks = const {},
     this.status = 'ACTIVE',
+    this.rejectedReason,
     this.joinMode = 'OPEN',
     this.visibility = 'PUBLIC',
     this.createdAt = '',
@@ -221,6 +223,10 @@ class Community {
           json['status']?.toString() ??
           rawJson['status']?.toString() ??
           'ACTIVE',
+      rejectedReason:
+          json['rejectedReason']?.toString() ??
+          json['rejected_reason']?.toString() ??
+          rawJson['rejectedReason']?.toString(),
       joinMode:
           json['joinMode']?.toString() ??
           rawJson['joinMode']?.toString() ??

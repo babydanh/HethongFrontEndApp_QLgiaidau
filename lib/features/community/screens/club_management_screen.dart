@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_elo_adjust_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/data/models/community_ranking_model.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
@@ -1905,22 +1906,13 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   initialAvatarUrl: m.userAvatarUrl,
                                 )
                               : null,
-                          child: CircleAvatar(
-                            radius: 18,
-                            backgroundColor: AppTheme.primary.withValues(
-                              alpha: 0.12,
-                            ),
-                            child: Text(
-                              (m.userFullName?.isNotEmpty == true
-                                      ? m.userFullName![0]
-                                      : '?')
-                                  .toUpperCase(),
-                              style: const TextStyle(
-                                color: AppTheme.primary,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 13,
-                              ),
-                            ),
+                          child: RankAvatar(
+                            imageUrl: m.userAvatarUrl,
+                            name: m.userFullName ?? 'Thành viên',
+                            elo: hasRank ? elo : 0,
+                            matchesPlayed: hasRank ? 1 : 0,
+                            size: 36,
+                            ringWidth: 2,
                           ),
                         ),
                         const SizedBox(width: 10),

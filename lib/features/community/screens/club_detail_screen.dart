@@ -38,6 +38,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/club_statistics_ta
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_elo_adjust_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_match_sessions_screen.dart';
@@ -552,6 +553,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
 
     final topPadding = MediaQuery.of(context).padding.top;
     final logoUrl = _resolveImageUrl(club.logoUrl);
+    final hasLogo = logoUrl.isNotEmpty;
 
     return Stack(
       children: [
@@ -582,6 +584,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   sColor,
                   emoji,
                   isClubAdmin: isClubAdmin,
+                  showLogo: hasLogo,
                 ),
               ),
               SliverPersistentHeader(
@@ -634,35 +637,36 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
           ),
         ),
-        // Avatar CLB — luôn nổi trên banner, không còn bị pinned SliverAppBar đè
-        AnimatedBuilder(
-          animation: _scrollController,
-          builder: (context, _) {
-            final offset = _scrollController.hasClients
-                ? _scrollController.offset
-                : 0.0;
-            final top = topPadding + _bannerHeight - _avatarOverlap - offset;
-            return Positioned(
-              top: top,
-              left: 16,
-              child: IgnorePointer(
-                ignoring: _isCollapsed,
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 150),
-                  opacity: _isCollapsed ? 0 : 1,
-                  child: _buildClubAvatar(
-                    logoUrl: logoUrl,
-                    colors: colors,
-                    sColor: sColor,
-                    emoji: emoji,
-                    isClubAdmin: isClubAdmin,
-                    club: club,
+        // Avatar CLB — chỉ nổi trên banner khi CLB có logo.
+        if (hasLogo)
+          AnimatedBuilder(
+            animation: _scrollController,
+            builder: (context, _) {
+              final offset = _scrollController.hasClients
+                  ? _scrollController.offset
+                  : 0.0;
+              final top = topPadding + _bannerHeight - _avatarOverlap - offset;
+              return Positioned(
+                top: top,
+                left: 16,
+                child: IgnorePointer(
+                  ignoring: _isCollapsed,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 150),
+                    opacity: _isCollapsed ? 0 : 1,
+                    child: _buildClubAvatar(
+                      logoUrl: logoUrl,
+                      colors: colors,
+                      sColor: sColor,
+                      emoji: emoji,
+                      isClubAdmin: isClubAdmin,
+                      club: club,
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
-        ),
+              );
+            },
+          ),
       ],
     );
   }

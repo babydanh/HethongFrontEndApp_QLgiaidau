@@ -6,10 +6,32 @@ extension _ClubDetailGalleryAvatar on _ClubDetailScreenState {
     required String? avatarUrl,
     required double radius,
     required Color fallbackColor,
+    int? elo,
+    String? tierName,
+    int matchesPlayed = 0,
   }) {
     final initial = (name?.trim().isNotEmpty == true ? name!.trim()[0] : '?')
         .toUpperCase();
     final url = avatarUrl?.trim();
+
+    // A missing ranking entry stays neutral; a display fallback such as 1000
+    // must never be treated as proof that this member is ranked.
+    final hasRank =
+        (elo != null && elo > 0) ||
+        (tierName != null && tierName.trim().isNotEmpty) ||
+        matchesPlayed > 0;
+    if (hasRank) {
+      return RankAvatar(
+        imageUrl: url,
+        name: name ?? initial,
+        elo: elo ?? 0,
+        tierName: tierName,
+        matchesPlayed: matchesPlayed,
+        size: radius * 2,
+        ringWidth: radius >= 18 ? 2.5 : 2,
+      );
+    }
+
     return CircleAvatar(
       radius: radius,
       backgroundColor: fallbackColor.withValues(alpha: 0.1),

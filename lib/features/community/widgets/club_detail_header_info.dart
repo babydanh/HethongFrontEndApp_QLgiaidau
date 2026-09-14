@@ -7,6 +7,7 @@ extension _ClubDetailHeaderInfo on _ClubDetailScreenState {
     Color sColor,
     String emoji, {
     required bool isClubAdmin,
+    required bool showLogo,
   }) {
     final l10n = AppLocalizations.of(context)!;
     final sportLabel = club.sports.isNotEmpty
@@ -19,12 +20,11 @@ extension _ClubDetailHeaderInfo on _ClubDetailScreenState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Hàng chứa Avatar (chừa khoảng trống) và Thông tin CLB bên phải
+          // Chỉ chừa chỗ cho avatar nổi khi CLB thật sự có logo.
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Chừa chỗ cho avatar nổi (width: 84 + margin 12)
-              const SizedBox(width: 84 + 12),
+              if (showLogo) const SizedBox(width: 84 + 12),
               // Thông tin CLB bên phải
               Expanded(
                 child: Column(

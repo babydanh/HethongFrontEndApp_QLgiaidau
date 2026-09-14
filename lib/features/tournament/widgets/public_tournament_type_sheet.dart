@@ -3,15 +3,14 @@ import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/organizer_verification_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
-import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Bottom sheet displaying tournament creation options for public/world (outside club).
-/// Offers:
-/// 1. Câu Lạc Bộ Siêu Lite (Giao lưu nội bộ siêu tốc, tự động check CLB)
-/// 2. Giải Nâng Cao (Full - Đầy đủ phân hạng, thể thức & lệ phí)
+/// Bottom sheet displaying the two tournament creation paths.
+///
+/// The actions and routes stay unchanged; this sheet only presents the choices
+/// with the same short labels used elsewhere in the app.
 void showPublicTournamentTypeSheet(BuildContext context, [WidgetRef? ref]) {
   final colors = context.colors;
   final l10n = AppLocalizations.of(context)!;
@@ -23,7 +22,7 @@ void showPublicTournamentTypeSheet(BuildContext context, [WidgetRef? ref]) {
     builder: (ctx) => SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
         decoration: BoxDecoration(
           color: colors.bgCard,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -42,7 +41,7 @@ void showPublicTournamentTypeSheet(BuildContext context, [WidgetRef? ref]) {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Text(
               l10n.club_selectTournamentType,
               style: TextStyle(
@@ -51,14 +50,14 @@ void showPublicTournamentTypeSheet(BuildContext context, [WidgetRef? ref]) {
                 color: colors.textPrimary,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
-              'Chọn hình thức tạo giải phù hợp với quy mô giải đấu của bạn',
+              l10n.club_selectTournamentDesc,
               style: TextStyle(fontSize: 12, color: colors.textMuted),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 14),
 
-            // Option 1: Giải Câu Lạc Bộ Siêu Lite (Quick / Lite Club)
+            // Option 1: Tạo giải CLB Lite. Keep the existing club flow.
             Consumer(
               builder: (consumerCtx, consumerRef, _) {
                 final activeRef = ref ?? consumerRef;
@@ -66,7 +65,10 @@ void showPublicTournamentTypeSheet(BuildContext context, [WidgetRef? ref]) {
                   onTap: () => handleClubLiteSelection(context, ctx, activeRef),
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(16),
@@ -77,57 +79,36 @@ void showPublicTournamentTypeSheet(BuildContext context, [WidgetRef? ref]) {
                     child: Row(
                       children: [
                         Container(
-                          width: 44,
-                          height: 44,
+                          width: 40,
+                          height: 40,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF59E0B).withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(12),
+                            color: const Color(
+                              0xFFF59E0B,
+                            ).withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(11),
                           ),
                           child: const Icon(
                             Icons.bolt_rounded,
                             color: Color(0xFFF59E0B),
-                            size: 26,
+                            size: 22,
                           ),
                         ),
-                        const SizedBox(width: 14),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    'Giải CLB Siêu Lite',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: colors.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF59E0B),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: const Text(
-                                      'SIÊU LITE',
-                                      style: TextStyle(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w900,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
                               Text(
-                                'Tạo giải giao lưu nội bộ câu lạc bộ chỉ trong 30s. Tự động sinh nhánh đấu và mã QR check-in.',
+                                l10n.publicClubLiteCreateTitle,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                l10n.club_liteDesc,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: colors.textSecondary,
@@ -137,138 +118,87 @@ void showPublicTournamentTypeSheet(BuildContext context, [WidgetRef? ref]) {
                             ],
                           ),
                         ),
-                        Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: colors.textMuted,
+                        ),
                       ],
                     ),
                   ),
                 );
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
 
-            // Option 2: Giải Nâng Cao (Full / Advanced)
-            Consumer(
-              builder: (consumerCtx, consumerRef, _) {
-                final activeRef = ref ?? consumerRef;
-                return InkWell(
-                  onTap: () => _handleAdvancedPressed(context, ctx, activeRef),
+            // Option 2: Tạo giải nhanh. This is the public quick flow.
+            InkWell(
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/tournaments/create');
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                  border: Border.all(
+                    color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      child: const Icon(
+                        Icons.workspace_premium_rounded,
+                        color: Color(0xFF3B82F6),
+                        size: 24,
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.quickCreateTitle,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: colors.textPrimary,
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.workspace_premium_rounded,
-                            color: Color(0xFF3B82F6),
-                            size: 24,
+                          const SizedBox(height: 3),
+                          Text(
+                            l10n.quickCreateDescription,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colors.textSecondary,
+                              height: 1.3,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    'Giải Nâng Cao (Full)',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: colors.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF2563EB),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: const Text(
-                                      'CHUYÊN NGHIỆP',
-                                      style: TextStyle(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w900,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Cấu hình chi tiết nhiều phân hạng, thể thức vòng bảng, vòng loại, tài trợ và lệ phí.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colors.textSecondary,
-                                  height: 1.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(Icons.chevron_right_rounded, color: colors.textMuted),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                    Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
       ),
     ),
   );
-}
-
-/// Xử lý bấm vào nút Giải Nâng Cao (Full):
-/// 1. Kiểm tra quyền của người dùng: ADMIN hoặc ORGANIZER mới được tạo giải nâng cao.
-/// 2. Nếu là PLAYER (Vận động viên): Chặn và hiển thị Dialog hướng dẫn đăng ký Ban Tổ Chức hoặc dùng Giải Siêu Lite.
-Future<void> _handleAdvancedPressed(
-  BuildContext context,
-  BuildContext sheetContext,
-  WidgetRef ref,
-) async {
-  Navigator.pop(sheetContext);
-
-  String role = '';
-  final cached = ref.read(userProfileProvider).asData?.value;
-  if (cached != null) {
-    role = (cached.role ?? '').toUpperCase();
-  } else {
-    try {
-      final userProfile = await ref.read(userProfileProvider.future);
-      role = (userProfile.role ?? '').toUpperCase();
-    } catch (_) {}
-  }
-
-  final isOrganizerOrAdmin = role == 'ORGANIZER' || role == 'ADMIN';
-
-  if (!context.mounted) return;
-
-  if (isOrganizerOrAdmin) {
-    context.push('/tournaments/create-advanced');
-  } else {
-    showOrganizerRequiredDialog(context, ref);
-  }
 }
 
 /// Dialog thông báo yêu cầu quyền Ban Tổ Chức khi tài khoản chỉ là PLAYER
@@ -327,7 +257,7 @@ void showOrganizerRequiredDialog(
             if (onCancel != null) {
               onCancel();
             } else {
-              // Kích hoạt luồng tạo giải CLB Siêu Lite
+              // Kích hoạt luồng tạo giải nhanh trong CLB.
               handleClubLiteSelection(context, dialogCtx, ref);
             }
           },
@@ -360,7 +290,7 @@ void showOrganizerRequiredDialog(
   );
 }
 
-/// Xử lý bấm vào nút Giải Siêu Lite:
+/// Xử lý bấm vào nút Tạo giải nhanh:
 /// 1. Đóng sheet chọn loại giải
 /// 2. Lấy danh sách CLB của người dùng
 /// 3. Nếu chưa có CLB nào -> Hiện Dialog/Sheet dẫn đi tạo CLB trước
@@ -377,9 +307,8 @@ Future<void> handleClubLiteSelection(
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (_) => const Center(
-      child: CircularProgressIndicator(color: AppTheme.primary),
-    ),
+    builder: (_) =>
+        const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
   );
 
   List<Community> clubs = [];
@@ -461,7 +390,7 @@ void _showNoClubDialog(BuildContext context) {
         ],
       ),
       content: Text(
-        'Giải đấu Siêu Lite được thiết kế tổ chức dành riêng cho nội bộ Câu lạc bộ để giao lưu nhanh. Bạn cần tạo Câu lạc bộ trước khi bắt đầu tạo giải đấu.',
+        'Tạo giải nhanh dành cho các hoạt động nội bộ câu lạc bộ. Bạn cần tạo câu lạc bộ trước khi bắt đầu.',
         style: TextStyle(
           fontSize: 13,
           color: colors.textSecondary,
@@ -500,7 +429,7 @@ void _showNoClubDialog(BuildContext context) {
   );
 }
 
-/// Sheet chọn 1 CLB trong danh sách CLB của user để tạo giải Siêu Lite
+/// Sheet chọn 1 CLB trong danh sách CLB của user để tạo giải nhanh.
 void _showSelectClubSheet(BuildContext context, List<Community> clubs) {
   final colors = context.colors;
   showModalBottomSheet(
@@ -543,7 +472,7 @@ void _showSelectClubSheet(BuildContext context, List<Community> clubs) {
             ),
             const SizedBox(height: 4),
             Text(
-              'Chọn câu lạc bộ bạn muốn tổ chức giải Siêu Lite nội bộ:',
+              'Chọn câu lạc bộ bạn muốn tổ chức giải nhanh:',
               style: TextStyle(fontSize: 12, color: colors.textMuted),
             ),
             const SizedBox(height: 16),
@@ -626,4 +555,3 @@ void _showSelectClubSheet(BuildContext context, List<Community> clubs) {
     ),
   );
 }
-
