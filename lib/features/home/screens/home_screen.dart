@@ -2080,16 +2080,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildExploreSegmentTabBar(AppLocalizations l10n) {
     final colors = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      color: colors.bgDark,
+      color: isDark ? colors.bgDark : Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Container(
         height: 40,
         padding: const EdgeInsets.all(3),
         decoration: BoxDecoration(
-          color: colors.bgSurface,
+          color: isDark ? colors.bgSurface : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: colors.border, width: 1),
+          border: Border.all(color: colors.border.withValues(alpha: isDark ? 1.0 : 0.6), width: 1),
         ),
         child: Row(
           children: [
@@ -2212,39 +2213,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             );
           },
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(items.length, (index) {
-            final isSelected = _carouselCurrentPage == index;
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                _carouselTimer?.cancel();
-                _carouselController?.animateToPage(
-                  index,
-                  duration: const Duration(milliseconds: 350),
-                  curve: Curves.easeInOut,
-                );
-                _startCarouselTimer(items.length);
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  width: isSelected ? 18 : 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppTheme.primary
-                        : context.colors.textMuted.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                ),
-              ),
-            );
-          }),
         ),
       ],
     );

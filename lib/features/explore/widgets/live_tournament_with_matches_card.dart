@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
@@ -145,6 +144,7 @@ class _LiveTournamentWithMatchesCardState
     final l10n = AppLocalizations.of(context)!;
 
     final colors = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentMatches =
         (_pageMatches[_currentPageIndex] ?? const <MatchModel>[])
             .where(isRenderablePublicMatch)
@@ -269,7 +269,10 @@ class _LiveTournamentWithMatchesCardState
                       true))
             _buildCursorPaginationBar(context, l10n),
 
-          Container(height: 10, color: context.colors.bgDark),
+          Container(
+            height: 8,
+            color: isDark ? colors.bgDark : Colors.white,
+          ),
         ],
       ),
     );
@@ -412,16 +415,14 @@ class _LiveTournamentWithMatchesCardState
         ? match.currentLiveScore
         : SetScore(score1: match.score1, score2: match.score2);
 
-    final bracketText = MatchRoundLabel.formatRound(
+    final roundText = MatchRoundLabel.formatRound(
       match: match,
       allMatches: allMatches,
       tournament: widget.tournament,
-      short: false,
+      short: true,
       l10n: l10n,
     );
-    final sportText = l10n.sportDisplayName(
-      match.sportKey ?? widget.tournament.sport,
-    );
+
     final courtText =
         TournamentLocationFormatter.matchShortCourt(
           match.court,
@@ -432,6 +433,7 @@ class _LiveTournamentWithMatchesCardState
             venueName: widget.tournament.venueName,
           )
         : (l10n.exploreCourtNotAssigned);
+
 
     List<String> getInitials(String name) {
       final parts = name
@@ -458,222 +460,191 @@ class _LiveTournamentWithMatchesCardState
     final isWinner2 = cardScore.score2 > cardScore.score1;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final hasScore = match.isLive || match.isCompleted;
+
     return GestureDetector(
       onTap: () => context.push(
         NavigationHelper.getLiveMatchRoute(widget.tournament.id, match.id),
       ),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: isDark ? colors.bgSurface : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: colors.border.withValues(alpha: isDark ? 0.7 : 0.8),
             width: 1.0,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 1.5),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Top Header Row: Sport Name & Stage Tag (No sport icon) ──
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  sportText,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textMuted,
-                  ),
+            // ── Top Header Row: Round Badge (Left) ──
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF0284C7).withValues(alpha: 0.18)
+                    : const Color(0xFFE0F2FE),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                roundText.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0284C7),
+                  letterSpacing: 0.2,
                 ),
-                if (bracketText.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 3.5,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            // ── Team 1 Row ──
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  _DoubleAvatarWidget(
+                    initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'T1',
+                    initial2: t1Initials.length > 1 ? t1Initials[1] : '',
+                    isTeamOne: true,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            match.team1Name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        if (isByeMatch && isT2Tbd && !isT1Tbd) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFDCFCE7),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              l10n.exploreByeAdvance,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF15803D),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? colors.bgElevated
-                          : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      bracketText.toUpperCase(),
+                  ),
+                  if (hasScore) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      '${cardScore.score1}',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: colors.textPrimary,
-                        letterSpacing: 0.3,
+                        color: isWinner1 ? AppTheme.primary : colors.textPrimary,
                       ),
                     ),
-                  ),
-              ],
+                  ],
+                ],
+              ),
             ),
+
+            const SizedBox(height: 2),
+
+            // ── Team 2 Row ──
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  _DoubleAvatarWidget(
+                    initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'T2',
+                    initial2: t2Initials.length > 1 ? t2Initials[1] : '',
+                    isTeamOne: false,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            match.team2Name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        if (isByeMatch && isT1Tbd && !isT2Tbd) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFDCFCE7),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              l10n.exploreByeAdvance,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF15803D),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (hasScore) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      '${cardScore.score2}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: isWinner2 ? AppTheme.primary : colors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
 
             const SizedBox(height: 10),
-
-            // ── Teams & Score Section ──
-            Column(
-              children: [
-                // Team 1 Row
-                Row(
-                  children: [
-                    _DoubleAvatarWidget(
-                      initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'NM',
-                      initial2: t1Initials.length > 1 ? t1Initials[1] : '',
-                      isTeamOne: true,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              match.team1Name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.bold,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                          ),
-                          if (isByeMatch && isT2Tbd && !isT1Tbd) ...[
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFDCFCE7),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                l10n.exploreByeAdvance,
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF15803D),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      constraints: const BoxConstraints(minWidth: 36),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isWinner1
-                            ? AppTheme.primary
-                            : (isDark
-                                  ? colors.bgElevated
-                                  : const Color(0xFFF1F5F9)),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        '${cardScore.score1}',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w800,
-                          color: isWinner1 ? Colors.white : colors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 8),
-
-                // Team 2 Row
-                Row(
-                  children: [
-                    _DoubleAvatarWidget(
-                      initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'VQ',
-                      initial2: t2Initials.length > 1 ? t2Initials[1] : '',
-                      isTeamOne: false,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              match.team2Name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.bold,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                          ),
-                          if (isByeMatch && isT1Tbd && !isT2Tbd) ...[
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFDCFCE7),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                l10n.exploreByeAdvance,
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF15803D),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      constraints: const BoxConstraints(minWidth: 36),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isWinner2
-                            ? AppTheme.primary
-                            : (isDark
-                                  ? colors.bgElevated
-                                  : const Color(0xFFF1F5F9)),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        '${cardScore.score2}',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w800,
-                          color: isWinner2 ? Colors.white : colors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
 
             // ── Single Merged Footer Row: Location & Clean Action Icons ──
             Row(
@@ -698,7 +669,7 @@ class _LiveTournamentWithMatchesCardState
                 ),
                 const SizedBox(width: 8),
 
-                // Cheer Button (Clean icon without heavy border box)
+                // Cheer Button
                 InkWell(
                   onTap: () async {
                     if (_cheerInFlight.contains(match.id)) return;
@@ -762,7 +733,7 @@ class _LiveTournamentWithMatchesCardState
                 ),
                 const SizedBox(width: 8),
 
-                // Share Button (Clean borderless icon)
+                // Share Button
                 InkWell(
                   onTap: () {
                     AppShareModal.show(
@@ -799,6 +770,7 @@ class _LiveTournamentWithMatchesCardState
       ),
     );
   }
+
 
   Widget _buildHorizontalLiveCard(BuildContext context, MatchModel match) {
     final colors = context.colors;
@@ -1171,96 +1143,110 @@ class _LiveTournamentWithMatchesCardState
       l10n: l10n,
     );
 
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final teamRowBg = isDark ? colors.bgElevated : const Color(0xFFF8FAFC);
 
     return GestureDetector(
       onTap: () => context.push(
         NavigationHelper.getLiveMatchRoute(widget.tournament.id, match.id),
       ),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: isDark ? colors.bgSurface : Colors.white,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: colors.border.withValues(alpha: isDark ? 0.7 : 0.85),
+            color: colors.border.withValues(alpha: isDark ? 0.7 : 0.8),
             width: 1.0,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 1.5),
+            ),
+          ],
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Left Pill Badge: Round name (e.g., Chung kết / Bán kết) - compact, less curved
+            // ── Top Header Row: Round Badge (Left) ──
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 2,
+              ),
               decoration: BoxDecoration(
                 color: isDark
                     ? const Color(0xFF0284C7).withValues(alpha: 0.18)
                     : const Color(0xFFE0F2FE),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                roundText,
-                textAlign: TextAlign.center,
+                roundText.toUpperCase(),
                 style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
                   color: Color(0xFF0284C7),
-                  letterSpacing: 0.1,
+                  letterSpacing: 0.2,
                 ),
               ),
             ),
-            const SizedBox(width: 10),
 
-            // Teams (Team 1 vs Team 2)
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+            const SizedBox(height: 6),
+
+            // ── Team 1 Row ──
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      _DoubleAvatarWidget(
-                        initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'T1',
-                        initial2: t1Initials.length > 1 ? t1Initials[1] : '',
-                        isTeamOne: true,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          match.team1Name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
+                  _DoubleAvatarWidget(
+                    initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'T1',
+                    initial2: t1Initials.length > 1 ? t1Initials[1] : '',
+                    isTeamOne: true,
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _DoubleAvatarWidget(
-                        initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'T2',
-                        initial2: t2Initials.length > 1 ? t2Initials[1] : '',
-                        isTeamOne: false,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      match.team1Name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: colors.textPrimary,
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          match.team2Name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                            color: colors.textPrimary,
-                          ),
-                        ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 2),
+
+            // ── Team 2 Row ──
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  _DoubleAvatarWidget(
+                    initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'T2',
+                    initial2: t2Initials.length > 1 ? t2Initials[1] : '',
+                    isTeamOne: false,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      match.team2Name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: colors.textPrimary,
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
