@@ -34,13 +34,13 @@ import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_social_screen.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_activity_tab.dart';
-import 'package:app_quanly_giaidau/features/community/widgets/club_statistics_tab.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_elo_adjust_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
+import 'package:app_quanly_giaidau/providers/club_member_stats_provider.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_match_sessions_screen.dart';
 
 part '../widgets/club_detail_tab_delegate.dart';
@@ -113,7 +113,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _scrollController = ScrollController()..addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) => _fetchMembership());
   }
@@ -626,12 +626,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   controller: _tabController,
                   index: 2,
                   builder: (_) => _buildMembersTab(club, colors),
-                ),
-                _LazyClubTab(
-                  controller: _tabController,
-                  index: 3,
-                  builder: (_) =>
-                      ClubStatisticsTab(communityId: club.id, club: club),
                 ),
               ],
             ),

@@ -11,7 +11,6 @@ import 'package:app_quanly_giaidau/features/match/widgets/rally_score_panel.dart
 import 'package:app_quanly_giaidau/features/match/widgets/badminton_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/table_tennis_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/football_score_panel.dart';
-import 'package:app_quanly_giaidau/features/match/widgets/set_history_bar.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/utils/score_validation_localizer.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
@@ -218,6 +217,76 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                 ),
                 const Divider(height: 1, thickness: 1),
 
+                // Dải hiển thị điểm các set đã chốt ở đầu màn hình
+                Consumer(
+                  builder: (context, ref, _) {
+                    final state = ref.watch(scorePanelNotifierProvider(params));
+                    final historySets = state.finishedSets;
+                    if (historySets.isEmpty) {
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 7,
+                        ),
+                        color: colors.bgSurface,
+                        child: Text(
+                          'Chưa chốt set nào',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      );
+                    }
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      color: colors.bgSurface,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            for (int i = 0; i < historySets.length; i++) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 9,
+                                  vertical: 3.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.bgCard,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: colors.border.withValues(alpha: 0.6),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Set ${i + 1}: ${historySets[i].score1}-${historySets[i].score2}',
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: historySets[i].score1 >
+                                            historySets[i].score2
+                                        ? const Color(0xFF2563EB)
+                                        : const Color(0xFFEA580C),
+                                  ),
+                                ),
+                              ),
+                              if (i < historySets.length - 1)
+                                const SizedBox(width: 6),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1, thickness: 1),
+
                 // 2. CENTER SCORE ARENA (BẢNG TÍNH ĐIỂM CHÍNH - GIÃN FULL CHIỀU CAO NGHỆ THUẬT)
                 Expanded(
                   child: DefaultTabController(
@@ -287,8 +356,6 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                     // The scorer needs the current open Tennis set as well as
                     // completed sets. The public live viewer filters the open
                     // set separately; removing it here hides the set score
-                    // from the scoring panel.
-                    final historySets = state.finishedSets;
                     final openSets =
                         state.config.scoringModel == SportScoringModel.tennisSet
                         ? state.finishedSets
@@ -407,21 +474,6 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  if (historySets.isNotEmpty)
-                                    SizedBox(
-                                      width: double.infinity,
-                                      height: 36,
-                                      child: SingleChildScrollView(
-                                        scrollDirection: Axis.horizontal,
-                                        child: SetHistoryBar(
-                                          finishedSets: historySets,
-                                          team1SetWins: state.team1SetWins,
-                                          team2SetWins: state.team2SetWins,
-                                        ),
-                                      ),
-                                    ),
-                                  if (historySets.isNotEmpty)
-                                    const SizedBox(height: 6),
                                   // Action Buttons
                                   Wrap(
                                     spacing: 8,
@@ -537,7 +589,14 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                                                   }
                                                 },
                                           style: OutlinedButton.styleFrom(
-                                            minimumSize: const Size(0, 36),
+                                            foregroundColor: colors.textPrimary,
+                                            backgroundColor: colors.bgSurface,
+                                            side: BorderSide(
+                                              color: colors.border.withValues(
+                                                alpha: 0.8,
+                                              ),
+                                            ),
+                                            minimumSize: const Size(0, 38),
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 14,
                                               vertical: 0,

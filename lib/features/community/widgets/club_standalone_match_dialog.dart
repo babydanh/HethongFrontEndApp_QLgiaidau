@@ -122,7 +122,7 @@ class _ClubStandaloneMatchDialogState
     if (_isCreating) return false;
     final aCount = _sideAUserIds.length;
     final bCount = _sideBUserIds.length;
-    return aCount > 0 && aCount == bCount && aCount <= 2;
+    return aCount == 2 && bCount == 2;
   }
 
   Future<void> _handleCreateMatch() async {
@@ -451,86 +451,86 @@ class _ClubStandaloneMatchDialogState
 
             // ─── Bottom Actions ───
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: FilterChip(
-                      selected: _isRanked,
-                      onSelected: (value) => setState(() => _isRanked = value),
-                      label: const Text(
-                        'ELO',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ),
+                  // Checkbox ELO có label giải thích
+                  InkWell(
+                    onTap: () => setState(() => _isRanked = !_isRanked),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: Checkbox(
+                              value: _isRanked,
+                              onChanged: (val) =>
+                                  setState(() => _isRanked = val ?? true),
+                              activeColor: AppTheme.primary,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Tính điểm ELO cho trận này',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ],
                       ),
-                      avatar: Icon(
-                        Icons.trending_up_rounded,
-                        size: 15,
-                        color: _isRanked ? AppTheme.primary : Colors.grey,
-                      ),
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      labelPadding: const EdgeInsets.only(right: 6),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _sideAUserIds.length == _sideBUserIds.length &&
-                                  _sideAUserIds.isNotEmpty
-                              ? (_sideAUserIds.length == 1
-                                    ? 'Trận đơn: 1 vs 1'
-                                    : 'Trận đôi: 2 vs 2')
-                              : l10n.club_errorNeedEqualSides,
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: _canSubmit
-                                ? const Color(0xFF16A34A)
-                                : colors.textMuted,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                  const SizedBox(height: 8),
+                  // Nút Tạo trận đấu với trạng thái disabled rõ ràng
+                  SizedBox(
+                    height: 44,
+                    child: FilledButton(
+                      onPressed: _canSubmit ? _handleCreateMatch : null,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        disabledBackgroundColor:
+                            AppTheme.primary.withValues(alpha: 0.25),
+                        disabledForegroundColor:
+                            Colors.white.withValues(alpha: 0.7),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      FilledButton.icon(
-                        onPressed: _canSubmit ? _handleCreateMatch : null,
-                        icon: _isCreating
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.play_arrow_rounded, size: 18),
-                        label: Text(
-                          l10n.club_createMatchStandalone,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.primary,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                    ],
+                      child: _isCreating
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              l10n.club_createMatchStandalone,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Chạm vào avatar để chuyển Đội A → Đội B → Bỏ chọn',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: colors.textMuted,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -557,7 +557,7 @@ class _ClubStandaloneMatchDialogState
         .toList();
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: badgeColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
@@ -573,12 +573,12 @@ class _ClubStandaloneMatchDialogState
                 title,
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w800,
                   color: badgeColor,
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                 decoration: BoxDecoration(
                   color: badgeColor,
                   borderRadius: BorderRadius.circular(6),
@@ -586,7 +586,7 @@ class _ClubStandaloneMatchDialogState
                 child: Text(
                   '${userIds.length}/2',
                   style: const TextStyle(
-                    fontSize: 9.5,
+                    fontSize: 10,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
                   ),
@@ -594,12 +594,12 @@ class _ClubStandaloneMatchDialogState
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           Text(
             names.isEmpty ? 'Chưa chọn VĐV' : names.join(' · '),
             style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
               color: names.isEmpty ? colors.textMuted : colors.textPrimary,
             ),
             maxLines: 1,
@@ -616,150 +616,159 @@ class _ClubStandaloneMatchDialogState
     final fullName = member.userFullName?.trim().isNotEmpty == true
         ? member.userFullName!.trim()
         : 'Thành viên';
+    final accentColor = isSideA
+        ? const Color(0xFF2563EB)
+        : isSideB
+            ? const Color(0xFFEA580C)
+            : null;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          // Avatar
-          CircleAvatar(
-            radius: 17,
-            backgroundImage: member.userAvatarUrl?.trim().isNotEmpty == true
-                ? NetworkImage(member.userAvatarUrl!.trim())
-                : null,
-            backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
-            child: member.userAvatarUrl?.trim().isNotEmpty == true
-                ? null
-                : Text(
-                    fullName.isNotEmpty ? fullName[0].toUpperCase() : '?',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primary,
+    return InkWell(
+      onTap: () => _cycleMemberTeam(member.userId),
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        child: Row(
+          children: [
+            // Avatar với viền và badge A/B khi chọn
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: accentColor ?? colors.border,
+                      width: accentColor != null ? 2.5 : 1.2,
                     ),
                   ),
-          ),
-          const SizedBox(width: 10),
-
-          // Tên thành viên - Cố định 1 dòng không bao giờ rớt chữ
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  fullName,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textPrimary,
+                  child: ClipOval(
+                    child: member.userAvatarUrl?.trim().isNotEmpty == true
+                        ? Image.network(
+                            member.userAvatarUrl!.trim(),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) =>
+                                _avatarFallback(fullName, accentColor ?? AppTheme.primary),
+                          )
+                        : _avatarFallback(fullName, accentColor ?? AppTheme.primary),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                if (member.role != 'MEMBER')
+                if (accentColor != null)
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Container(
+                      width: 17,
+                      height: 17,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: accentColor,
+                        border: Border.all(color: colors.bgCard, width: 1.5),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        isSideA ? 'A' : 'B',
+                        style: const TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: 12),
+
+            // Tên thành viên & chức vụ
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   Text(
-                    member.role == 'OWNER' ? 'Chủ nhiệm' : 'Quản trị viên',
+                    fullName,
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w600,
-                      color: member.role == 'OWNER'
-                          ? Colors.amber.shade800
-                          : Colors.blue.shade700,
+                      color: colors.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-              ],
+                  if (member.role != 'MEMBER')
+                    Text(
+                      member.role == 'OWNER' ? 'Chủ nhiệm' : 'Quản trị viên',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: member.role == 'OWNER'
+                            ? Colors.amber.shade800
+                            : Colors.blue.shade700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
+            const SizedBox(width: 8),
 
-          // Bộ chọn A | B nhỏ gọn
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildSideChip(
-                label: 'A',
-                isSelected: isSideA,
-                isDisabled: !isSideA && _sideAUserIds.length >= 2,
-                activeColor: const Color(0xFF2563EB),
-                onTap: () => _toggleSide(member.userId, 'A'),
+            // Badge trạng thái đội
+            if (accentColor != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  isSideA ? 'Đội A' : 'Đội B',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: accentColor,
+                  ),
+                ),
               ),
-              const SizedBox(width: 4),
-              _buildSideChip(
-                label: 'B',
-                isSelected: isSideB,
-                isDisabled: !isSideB && _sideBUserIds.length >= 2,
-                activeColor: const Color(0xFFEA580C),
-                onTap: () => _toggleSide(member.userId, 'B'),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  void _toggleSide(String userId, String side) {
+  Widget _avatarFallback(String name, Color color) {
+    return Container(
+      color: color.withValues(alpha: 0.12),
+      alignment: Alignment.center,
+      child: Text(
+        name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?',
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w800,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  void _cycleMemberTeam(String userId) {
     setState(() {
-      if (side == 'A') {
-        if (_sideAUserIds.contains(userId)) {
-          _sideAUserIds.remove(userId);
-        } else {
-          if (_sideAUserIds.length >= 2) return;
-          _sideBUserIds.remove(userId);
-          _sideAUserIds.add(userId);
+      if (_sideAUserIds.contains(userId)) {
+        _sideAUserIds.remove(userId);
+        if (_sideBUserIds.length < 2) {
+          _sideBUserIds.add(userId);
         }
-      } else if (side == 'B') {
-        if (_sideBUserIds.contains(userId)) {
-          _sideBUserIds.remove(userId);
-        } else {
-          if (_sideBUserIds.length >= 2) return;
-          _sideAUserIds.remove(userId);
+      } else if (_sideBUserIds.contains(userId)) {
+        _sideBUserIds.remove(userId);
+      } else {
+        if (_sideAUserIds.length < 2) {
+          _sideAUserIds.add(userId);
+        } else if (_sideBUserIds.length < 2) {
           _sideBUserIds.add(userId);
         }
       }
     });
-  }
-
-  Widget _buildSideChip({
-    required String label,
-    required bool isSelected,
-    required bool isDisabled,
-    required Color activeColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: isDisabled ? null : onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Opacity(
-        opacity: isDisabled ? 0.35 : 1.0,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: 32,
-          height: 28,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? activeColor : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: isSelected
-                  ? activeColor
-                  : Colors.grey.withValues(alpha: 0.35),
-              width: 1.2,
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: isSelected ? Colors.white : Colors.grey.shade700,
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

@@ -63,13 +63,6 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
                   isActive: activeIndex == 2,
                   colors: colors,
                 ),
-                const SizedBox(width: 14),
-                _buildTabItem(
-                  index: 3,
-                  label: l10n.clubStats_tabTitle,
-                  isActive: activeIndex == 3,
-                  colors: colors,
-                ),
                 const SizedBox(width: 10),
                 _buildMoreTabButton(context, colors, l10n),
               ],
@@ -138,16 +131,25 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
         position: PopupMenuPosition.under,
         onSelected: onMoreSelected,
         child: Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: colors.bgCard,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: const Icon(
-            Icons.more_horiz_rounded,
-            size: 20,
-            color: Color(0xFF64748B),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Xem thêm',
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+              const Icon(
+                Icons.arrow_drop_down_rounded,
+                size: 20,
+                color: Color(0xFF64748B),
+              ),
+            ],
           ),
         ),
         itemBuilder: (ctx) => [

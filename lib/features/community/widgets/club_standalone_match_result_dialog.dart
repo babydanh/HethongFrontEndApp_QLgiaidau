@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
@@ -40,8 +39,8 @@ class _ClubStandaloneMatchResultDialogState
     extends ConsumerState<ClubStandaloneMatchResultDialog> {
   static const _maxSets = 10;
 
-  late final List<TextEditingController> _sideAControllers;
-  late final List<TextEditingController> _sideBControllers;
+  late final List<int> _sideAScores;
+  late final List<int> _sideBScores;
   late int _setCount;
   bool _isSaving = false;
   String? _errorMessage;
@@ -51,64 +50,56 @@ class _ClubStandaloneMatchResultDialogState
   @override
   void initState() {
     super.initState();
-    _sideAControllers = List.generate(_maxSets, (_) => TextEditingController());
-    _sideBControllers = List.generate(_maxSets, (_) => TextEditingController());
+    _sideAScores = List.filled(_maxSets, 0);
+    _sideBScores = List.filled(_maxSets, 0);
 
     final history = widget.match.scoreHistory;
     _setCount = history.isEmpty ? 1 : history.length.clamp(1, _maxSets);
     for (var index = 0; index < history.length && index < _maxSets; index++) {
       final set = history[index];
-      final hasScore = set.score1 != 0 || set.score2 != 0 || _isReadOnly;
-      if (!hasScore) continue;
-      _sideAControllers[index].text = '${set.score1}';
-      _sideBControllers[index].text = '${set.score2}';
+      _sideAScores[index] = set.score1;
+      _sideBScores[index] = set.score2;
     }
   }
 
-  @override
-  void dispose() {
-    for (final controller in _sideAControllers) {
-      controller.dispose();
-    }
-    for (final controller in _sideBControllers) {
-      controller.dispose();
-    }
-    super.dispose();
+  void _updateScore(int index, {required bool isSideA, required int delta}) {
+    if (_isReadOnly || _isSaving) return;
+    setState(() {
+      _errorMessage = null;
+      if (isSideA) {
+        _sideAScores[index] = (_sideAScores[index] + delta).clamp(0, 99);
+      } else {
+        _sideBScores[index] = (_sideBScores[index] + delta).clamp(0, 99);
+      }
+
+      // Tự động mở set tiếp theo khi set hiện tại có điểm ghi nhận
+      if ((_sideAScores[index] > 0 || _sideBScores[index] > 0) &&
+          index == _setCount - 1 &&
+          _setCount < _maxSets) {
+        _setCount++;
+      }
+    });
   }
 
   List<SetScoreData>? _readSets() {
-    String? validation;
     final sets = <SetScoreData>[];
-    var foundEmptyRow = false;
 
     for (var index = 0; index < _setCount; index++) {
-      final rawA = _sideAControllers[index].text.trim();
-      final rawB = _sideBControllers[index].text.trim();
-      final isEmpty = rawA.isEmpty && rawB.isEmpty;
-      if (isEmpty) {
-        foundEmptyRow = true;
+      final scoreA = _sideAScores[index];
+      final scoreB = _sideBScores[index];
+      if (scoreA == 0 && scoreB == 0) {
         continue;
       }
-      if (foundEmptyRow) {
-        validation = AppLocalizations.of(context)!.club_matchScoreIncomplete;
-        break;
-      }
-      // A missing side in an otherwise entered set is an intentional zero.
-      // Keep a completely blank row unused so adding extra set rows does not
-      // submit unplayed 0-0 sets.
-      final scoreA = rawA.isEmpty ? 0 : int.tryParse(rawA);
-      final scoreB = rawB.isEmpty ? 0 : int.tryParse(rawB);
-      if (scoreA == null || scoreB == null) {
-        validation = AppLocalizations.of(context)!.club_matchScoreRequired;
-        break;
+      if (scoreA == scoreB) {
+        setState(
+          () => _errorMessage =
+              'Set ${index + 1} chưa phân định thắng thua ($scoreA - $scoreB)',
+        );
+        return null;
       }
       sets.add(SetScoreData(score1: scoreA, score2: scoreB, isFinished: true));
     }
 
-    if (validation != null) {
-      setState(() => _errorMessage = validation);
-      return null;
-    }
     if (sets.isEmpty) {
       setState(
         () => _errorMessage = AppLocalizations.of(
@@ -204,11 +195,9 @@ class _ClubStandaloneMatchResultDialogState
                   children: [
                     _buildTeams(colors),
                     const SizedBox(height: 12),
-                    _buildSetCount(colors, l10n),
-                    const SizedBox(height: 8),
                     for (var index = 0; index < _setCount; index++)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 7),
+                        padding: const EdgeInsets.only(bottom: 8),
                         child: _buildSetRow(index, colors, l10n),
                       ),
                     if (_errorMessage != null)
@@ -449,52 +438,6 @@ class _ClubStandaloneMatchResultDialogState
     );
   }
 
-  Widget _buildSetCount(AppColorsExtension colors, AppLocalizations l10n) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Text(
-            '${l10n.club_setCount}: $_setCount/$_maxSets',
-            style: TextStyle(
-              color: colors.textPrimary,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-        SizedBox(
-          width: 34,
-          height: 34,
-          child: IconButton(
-            tooltip: 'Thêm set',
-            onPressed: _isSaving || _isReadOnly || _setCount >= _maxSets
-                ? null
-                : () {
-                    setState(() {
-                      _setCount += 1;
-                      _errorMessage = null;
-                    });
-                  },
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-            style: IconButton.styleFrom(
-              foregroundColor: AppTheme.primary,
-              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-              disabledForegroundColor: colors.textMuted,
-              disabledBackgroundColor: colors.bgSurface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: BorderSide(color: colors.borderLight),
-              ),
-            ),
-            icon: const Icon(Icons.add_rounded, size: 20),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildSetRow(
     int index,
     AppColorsExtension colors,
@@ -503,49 +446,54 @@ class _ClubStandaloneMatchResultDialogState
     final sideAColor = const Color(0xFF2563EB);
     final sideBColor = const Color(0xFFEA580C);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(9),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: colors.borderLight),
       ),
       child: Row(
         children: [
           SizedBox(
-            width: 42,
+            width: 44,
             child: Text(
-              l10n.club_setNumber(index + 1),
+              'Set ${index + 1}',
               style: TextStyle(
                 color: colors.textSecondary,
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
+          // Stepper Đội A
           Expanded(
-            child: _buildScoreField(
-              _sideAControllers[index],
-              'A',
-              sideAColor,
-              colors,
+            child: _buildStepper(
+              score: _sideAScores[index],
+              color: sideAColor,
+              colors: colors,
+              onDecrement: () => _updateScore(index, isSideA: true, delta: -1),
+              onIncrement: () => _updateScore(index, isSideA: true, delta: 1),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Text(
               '–',
               style: TextStyle(
                 color: colors.textMuted,
                 fontWeight: FontWeight.w900,
+                fontSize: 15,
               ),
             ),
           ),
+          // Stepper Đội B
           Expanded(
-            child: _buildScoreField(
-              _sideBControllers[index],
-              'B',
-              sideBColor,
-              colors,
+            child: _buildStepper(
+              score: _sideBScores[index],
+              color: sideBColor,
+              colors: colors,
+              onDecrement: () => _updateScore(index, isSideA: false, delta: -1),
+              onIncrement: () => _updateScore(index, isSideA: false, delta: 1),
             ),
           ),
         ],
@@ -553,109 +501,136 @@ class _ClubStandaloneMatchResultDialogState
     );
   }
 
-  Widget _buildScoreField(
-    TextEditingController controller,
-    String label,
-    Color accent,
-    AppColorsExtension colors,
-  ) {
-    return SizedBox(
-      height: 36,
-      child: TextField(
-        controller: controller,
-        enabled: !_isReadOnly && !_isSaving,
-        keyboardType: TextInputType.number,
-        inputFormatters: [
-          FilteringTextInputFormatter.digitsOnly,
-          LengthLimitingTextInputFormatter(2),
+  Widget _buildStepper({
+    required int score,
+    required Color color,
+    required AppColorsExtension colors,
+    required VoidCallback onDecrement,
+    required VoidCallback onIncrement,
+  }) {
+    return Container(
+      height: 38,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Nút trừ
+          InkWell(
+            onTap: !_isReadOnly && !_isSaving && score > 0 ? onDecrement : null,
+            borderRadius: BorderRadius.circular(6),
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: colors.borderLight),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.remove_rounded,
+                size: 16,
+                color: score > 0 && !_isReadOnly
+                    ? colors.textPrimary
+                    : colors.textMuted,
+              ),
+            ),
+          ),
+          // Điểm số ở giữa
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              '$score',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                color: color,
+              ),
+            ),
+          ),
+          // Nút cộng
+          InkWell(
+            onTap: !_isReadOnly && !_isSaving ? onIncrement : null,
+            borderRadius: BorderRadius.circular(6),
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.add_rounded,
+                size: 16,
+                color: color,
+              ),
+            ),
+          ),
         ],
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: colors.textPrimary,
-          fontSize: 14,
-          fontWeight: FontWeight.w900,
-        ),
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: '0',
-          hintStyle: TextStyle(
-            color: colors.textMuted,
-            fontSize: 14,
-            fontWeight: FontWeight.w900,
-          ),
-          labelStyle: TextStyle(
-            color: accent,
-            fontSize: 10,
-            fontWeight: FontWeight.w800,
-          ),
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 6),
-          filled: true,
-          fillColor: colors.bgCard,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(7),
-            borderSide: BorderSide(color: accent.withValues(alpha: 0.3)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(7),
-            borderSide: BorderSide(color: accent.withValues(alpha: 0.3)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(7),
-            borderSide: BorderSide(color: accent, width: 1.3),
-          ),
-        ),
       ),
     );
   }
 
   Widget _buildActions(AppColorsExtension colors, AppLocalizations l10n) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-      child: Wrap(
-        alignment: WrapAlignment.end,
-        spacing: 8,
-        runSpacing: 8,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          OutlinedButton.icon(
-            onPressed: _isSaving
-                ? null
-                : () => Navigator.of(
-                    context,
-                  ).pop(ClubStandaloneMatchAction.openScoreboard),
-            icon: const Icon(Icons.scoreboard_rounded, size: 16),
-            label: Text(l10n.club_openScoreboard),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppTheme.primary,
-              minimumSize: const Size(0, 36),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          // CTA chính: Mở bảng điểm sống
+          SizedBox(
+            height: 42,
+            child: FilledButton.icon(
+              onPressed: _isSaving
+                  ? null
+                  : () => Navigator.of(
+                      context,
+                    ).pop(ClubStandaloneMatchAction.openScoreboard),
+              icon: const Icon(Icons.scoreboard_rounded, size: 18),
+              label: Text(
+                l10n.club_openScoreboard,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
           ),
-          FilledButton.icon(
-            onPressed: _isReadOnly || _isSaving ? null : _saveResult,
-            icon: _isSaving
-                ? const SizedBox(
-                    width: 15,
-                    height: 15,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Icon(Icons.check_rounded, size: 17),
-            label: Text(l10n.club_saveMatchResult),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.primary,
-              minimumSize: const Size(0, 36),
-              padding: const EdgeInsets.symmetric(horizontal: 13),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          const SizedBox(height: 6),
+          // Link phụ: Lưu kết quả thủ công
+          if (!_isReadOnly)
+            Center(
+              child: TextButton.icon(
+                onPressed: _isSaving ? null : _saveResult,
+                icon: _isSaving
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.save_outlined, size: 16),
+                label: Text(
+                  _isSaving ? 'Đang lưu...' : 'Lưu kết quả thủ công',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textSecondary,
+                  ),
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

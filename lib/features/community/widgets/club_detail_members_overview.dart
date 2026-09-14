@@ -28,6 +28,9 @@ extension _ClubDetailMembersOverview on _ClubDetailScreenState {
         ? ref.watch(joinRequestsProvider(widget.clubId))
         : const AsyncValue.data(<CommunityMemberModel>[]);
     final rankingsAsync = ref.watch(communityRankingsProvider(widget.clubId));
+    final memberStatsAsync = ref.watch(clubMemberStatsProvider(widget.clubId));
+    final memberStatsMap =
+        memberStatsAsync.value ?? const <String, ClubMemberStat>{};
     final memberEloMap = <String, int>{};
     final rankedMemberIds = <String>{};
     rankingsAsync.whenData((rankings) {
@@ -222,6 +225,7 @@ extension _ClubDetailMembersOverview on _ClubDetailScreenState {
                 rankIndex: _memberSortMode == 'elo'
                     ? (displayMembers.indexOf(m) + 1)
                     : null,
+                stat: memberStatsMap[m.userId],
               ),
             ),
             if (membersFeed.isLoading && approvedMembers.isNotEmpty)

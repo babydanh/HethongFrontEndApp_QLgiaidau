@@ -7,6 +7,7 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
     bool isAdmin,
     int? memberElo, {
     int? rankIndex,
+    ClubMemberStat? stat,
   }) {
     final l10n = AppLocalizations.of(context)!;
     final isOwner = m.role == 'OWNER';
@@ -167,6 +168,41 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
                   ],
                 ],
               ),
+            ),
+          ),
+          // Thống kê thành viên: Tỉ lệ thắng (trên) và W-L (dưới), căn lề phải
+          Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  stat != null && stat.totalMatches > 0
+                      ? '${stat.winRate.round()}%'
+                      : '--%',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: stat != null &&
+                            stat.totalMatches > 0 &&
+                            stat.winRate >= 50
+                        ? const Color(0xFF16A34A)
+                        : colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  stat != null
+                      ? '${stat.wins}W - ${stat.losses}L'
+                      : '0W - 0L',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textMuted,
+                  ),
+                ),
+              ],
             ),
           ),
           // Menu quản lý (OWNER/ADMIN thấy, nhưng không thể tự kick chính mình)
