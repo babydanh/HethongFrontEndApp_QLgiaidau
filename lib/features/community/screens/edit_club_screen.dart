@@ -263,41 +263,6 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
               _approvalStatusBanner(colors, club!),
               const SizedBox(height: 16),
             ],
-            // ── Card 1: Nhận diện thương hiệu (Logo & Ảnh bìa) ──
-            _sectionCard(
-              colors: colors,
-              title: l10n.editClub_imagesSection,
-              subtitle: l10n.editClub_imagesSubtitle,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: _imagePickerCard(
-                      colors: colors,
-                      title: l10n.editClub_logoTitle,
-                      hint: l10n.editClub_logoHint,
-                      imageUrl: club?.logoUrl,
-                      isCircle: true,
-                      onTap: () => _pickAndUploadImage(isLogo: true),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: _imagePickerCard(
-                      colors: colors,
-                      title: l10n.editClub_bannerTitle,
-                      hint: l10n.editClub_bannerHint,
-                      imageUrl: club?.bannerUrl,
-                      isCircle: false,
-                      onTap: () => _pickAndUploadImage(isLogo: false),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
 
             // ── Card 2: Thông tin cơ bản ──
             _sectionCard(
