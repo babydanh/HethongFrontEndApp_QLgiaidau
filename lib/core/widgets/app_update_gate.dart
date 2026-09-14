@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -14,6 +15,7 @@ class AppUpdateGate extends ConsumerStatefulWidget {
   const AppUpdateGate({super.key, required this.child});
 
   static Future<void> showUpdateDialog(BuildContext context, AppUpdateInfo info) async {
+    if (kDebugMode) return;
     final navContext = rootNavigatorKey.currentContext ?? context;
     await showDialog<void>(
       context: navContext,
@@ -34,7 +36,9 @@ class _AppUpdateGateState extends ConsumerState<AppUpdateGate> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+    if (!kDebugMode) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+    }
   }
 
   @override
@@ -44,6 +48,7 @@ class _AppUpdateGateState extends ConsumerState<AppUpdateGate> {
   }
 
   Future<void> _checkForUpdate() async {
+    if (kDebugMode) return;
     if (_checked || _checking || !mounted) return;
     _checking = true;
     try {
