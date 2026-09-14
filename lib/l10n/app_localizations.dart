@@ -7220,6 +7220,12 @@ abstract class AppLocalizations {
   /// **'Chọn loại giải đấu'**
   String get club_selectTournamentType;
 
+  /// No description provided for @publicClubLiteCreateTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo giải CLB Lite'**
+  String get publicClubLiteCreateTitle;
+
   /// No description provided for @club_selectTournamentDesc.
   ///
   /// In vi, this message translates to:
@@ -11660,6 +11666,24 @@ abstract class AppLocalizations {
   /// **'Cập nhật ngay'**
   String get coreUpdateNow;
 
+  /// No description provided for @coreCheckForUpdate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kiểm tra bản cập nhật'**
+  String get coreCheckForUpdate;
+
+  /// No description provided for @coreAppUpToDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ứng dụng đang ở phiên bản mới nhất ({version})'**
+  String coreAppUpToDate(Object version);
+
+  /// No description provided for @coreCheckingForUpdate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang kiểm tra cập nhật...'**
+  String get coreCheckingForUpdate;
+
   /// No description provided for @coreRegistrationOpening.
   ///
   /// In vi, this message translates to:
@@ -12445,6 +12469,24 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đã tham gia'**
   String get profileMemberRole;
+
+  /// No description provided for @profileClubPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chờ duyệt'**
+  String get profileClubPending;
+
+  /// No description provided for @profileClubRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bị từ chối'**
+  String get profileClubRejected;
+
+  /// No description provided for @profileClubResubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa và gửi lại'**
+  String get profileClubResubmit;
 
   /// No description provided for @profileDefaultSport.
   ///
@@ -14768,6 +14810,30 @@ abstract class AppLocalizations {
   /// **'Đang lưu...'**
   String get editClub_saving;
 
+  /// No description provided for @editClub_resubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa và gửi lại xét duyệt'**
+  String get editClub_resubmit;
+
+  /// No description provided for @editClub_resubmitting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang gửi lại...'**
+  String get editClub_resubmitting;
+
+  /// No description provided for @editClub_resubmitSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi lại CLB để xét duyệt.'**
+  String get editClub_resubmitSuccess;
+
+  /// No description provided for @editClub_pendingNotice.
+  ///
+  /// In vi, this message translates to:
+  /// **'CLB đang chờ duyệt. Bạn chưa thể gửi thêm yêu cầu.'**
+  String get editClub_pendingNotice;
+
   /// No description provided for @editClub_imagesSection.
   ///
   /// In vi, this message translates to:
@@ -15773,7 +15839,7 @@ abstract class AppLocalizations {
   /// No description provided for @createClub_success.
   ///
   /// In vi, this message translates to:
-  /// **'Tạo câu lạc bộ thành công!'**
+  /// **'Đã gửi CLB, đang chờ xét duyệt!'**
   String get createClub_success;
 
   /// No description provided for @createClub_error.

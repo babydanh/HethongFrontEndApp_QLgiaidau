@@ -33,6 +33,9 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/organizer_verification_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_type_sheet.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/services/app_update_service.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_update_gate.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -1414,6 +1417,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     final isAdmin =
         !isOwner && (club.myRole == 'ADMIN' || club.myRole == 'MODERATOR');
+    final clubStatus = club.status.trim().toUpperCase();
+    final isPending = clubStatus == 'PENDING';
+    final isRejected = clubStatus == 'REJECTED';
 
     final roleLabel = isOwner
         ? l10n.profileOwnerRole
@@ -1421,6 +1427,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final roleColor = isOwner
         ? const Color(0xFFF59E0B)
         : (isAdmin ? AppTheme.primary : const Color(0xFF059669));
+    final statusLabel = isRejected
+        ? l10n.profileClubRejected
+        : (isPending ? l10n.profileClubPending : roleLabel);
+    final statusColor = isRejected
+        ? context.colors.error
+        : (isPending ? const Color(0xFFD97706) : roleColor);
 
     final List<Widget> sportWidgets = [];
     if (club.sports.isNotEmpty) {
@@ -1470,9 +1482,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
 
     final displayMemberCount = club.memberCount > 0 ? club.memberCount : 2;
+    final destination = isRejected && isOwner
+        ? '/club/${club.id}/edit'
+        : '/club/${club.id}';
 
     return InkWell(
-      onTap: () => context.push('/club/${club.id}'),
+      onTap: () => context.push(destination),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
@@ -1513,6 +1528,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ],
                     ),
                   ),
+                  if (isRejected &&
+                      club.rejectedReason != null &&
+                      club.rejectedReason!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      club.rejectedReason!.trim(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: context.colors.error,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -1520,16 +1549,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: roleColor.withValues(alpha: 0.12),
+                color: statusColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                border: Border.all(color: roleColor.withValues(alpha: 0.3)),
+                border: Border.all(color: statusColor.withValues(alpha: 0.3)),
               ),
               child: Text(
-                roleLabel,
+                statusLabel,
                 style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w700,
-                  color: roleColor,
+                  color: statusColor,
                 ),
               ),
             ),
@@ -2295,6 +2324,78 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ref.read(tp.themeProvider.notifier).toggleTheme(),
                 ),
               ],
+            ),
+          ),
+           Divider(height: 1, color: colors.borderLight, indent: 56),
+          InkWell(
+            onTap: () async {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l.coreCheckingForUpdate),
+                  duration: const Duration(seconds: 1),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              try {
+                final info = await AppUpdateService(ref.read(dioProvider)).check();
+                if (!context.mounted) return;
+                if (info != null && info.hasUpdate) {
+                  await AppUpdateGate.showUpdateDialog(context, info);
+                } else {
+                  final current = info?.currentVersion ?? '';
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l.coreAppUpToDate(current)),
+                      backgroundColor: const Color(0xFF16A34A),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(e.toString()),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.system_update_rounded,
+                      size: 16,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      l.coreCheckForUpdate,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: colors.textMuted,
+                  ),
+                ],
+              ),
             ),
           ),
           Divider(height: 1, color: colors.borderLight, indent: 56),

@@ -3831,6 +3831,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_selectTournamentType => 'Chọn loại giải đấu';
 
   @override
+  String get publicClubLiteCreateTitle => 'Tạo giải CLB Lite';
+
+  @override
   String get club_selectTournamentDesc =>
       'Vui lòng chọn hình thức giải đấu muốn tạo';
 
@@ -6242,6 +6245,17 @@ class AppLocalizationsVi extends AppLocalizations {
   String get coreUpdateNow => 'Cập nhật ngay';
 
   @override
+  String get coreCheckForUpdate => 'Kiểm tra bản cập nhật';
+
+  @override
+  String coreAppUpToDate(Object version) {
+    return 'Ứng dụng đang ở phiên bản mới nhất ($version)';
+  }
+
+  @override
+  String get coreCheckingForUpdate => 'Đang kiểm tra cập nhật...';
+
+  @override
   String get coreRegistrationOpening => 'Đang mở đăng ký';
 
   @override
@@ -6679,6 +6693,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get profileMemberRole => 'Đã tham gia';
+
+  @override
+  String get profileClubPending => 'Đang chờ duyệt';
+
+  @override
+  String get profileClubRejected => 'Bị từ chối';
+
+  @override
+  String get profileClubResubmit => 'Sửa và gửi lại';
 
   @override
   String get profileDefaultSport => 'THỂ THAO';
@@ -7950,6 +7973,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get editClub_saving => 'Đang lưu...';
 
   @override
+  String get editClub_resubmit => 'Sửa và gửi lại xét duyệt';
+
+  @override
+  String get editClub_resubmitting => 'Đang gửi lại...';
+
+  @override
+  String get editClub_resubmitSuccess => 'Đã gửi lại CLB để xét duyệt.';
+
+  @override
+  String get editClub_pendingNotice =>
+      'CLB đang chờ duyệt. Bạn chưa thể gửi thêm yêu cầu.';
+
+  @override
   String get editClub_imagesSection => 'HÌNH ẢNH & NHẬN DIỆN';
 
   @override
@@ -8503,7 +8539,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get createClub_submit => 'Tạo câu lạc bộ';
 
   @override
-  String get createClub_success => 'Tạo câu lạc bộ thành công!';
+  String get createClub_success => 'Đã gửi CLB, đang chờ xét duyệt!';
 
   @override
   String createClub_error(Object error) {
