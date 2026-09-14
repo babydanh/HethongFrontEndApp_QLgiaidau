@@ -241,7 +241,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
 
   int _activityStatusOrder(MatchModel match) {
     if (_isOngoingMatch(match)) return 0;
-    if (match.isCompleted) return 1;
+    if (!match.isCompleted) return 1;
     return 2;
   }
 

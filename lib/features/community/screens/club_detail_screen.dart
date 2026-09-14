@@ -667,262 +667,15 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     );
   }
 
-  // ─── Change Avatar / Cover Photo (Yêu cầu 1) ───
+  // ─── Change Avatar / Cover Photo ───
   Future<void> _showChangePhotoOptions({
     required Community club,
     required bool isLogo,
   }) async {
-    final colors = context.colors;
-    final title = isLogo ? 'Chỉnh sửa ảnh đại diện CLB' : 'Chỉnh sửa ảnh bìa CLB';
-
-    final choice = await showModalBottomSheet<int>(
-      context: context,
-      backgroundColor: colors.bgCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colors.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: colors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.photo_library_rounded,
-                    color: AppTheme.primary,
-                  ),
-                ),
-                title: const Text(
-                  'Chọn ảnh có sẵn trong Thư viện',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                ),
-                subtitle: Text(
-                  'Chọn từ thư viện hình ảnh của câu lạc bộ',
-                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
-                ),
-                onTap: () => Navigator.pop(ctx, 1),
-              ),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.upload_file_rounded,
-                    color: Color(0xFF10B981),
-                  ),
-                ),
-                title: const Text(
-                  'Tải ảnh lên',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                ),
-                subtitle: Text(
-                  'Lấy ảnh từ thiết bị điện thoại của bạn',
-                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
-                ),
-                onTap: () => Navigator.pop(ctx, 2),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        );
-      },
-    );
-
-    if (choice == null || !mounted) return;
-
-    if (choice == 1) {
-      await _pickFromClubGallery(club: club, isLogo: isLogo);
-    } else if (choice == 2) {
-      await _pickFromPhone(club: club, isLogo: isLogo);
-    }
+    await _pickFromPhone(club: club, isLogo: isLogo);
   }
 
-  Future<void> _pickFromClubGallery({
-    required Community club,
-    required bool isLogo,
-  }) async {
-    final colors = context.colors;
-    final galleryAsync =
-        await ref.read(communityGalleryProvider(club.id).future);
 
-    final List<String> availableUrls = [
-      if (club.logoUrl != null && club.logoUrl!.isNotEmpty) club.logoUrl!,
-      if (club.bannerUrl != null && club.bannerUrl!.isNotEmpty) club.bannerUrl!,
-      ...galleryAsync.map((img) => img.imageUrl),
-    ].where((u) => u.trim().isNotEmpty).toSet().toList();
-
-    if (!mounted) return;
-
-    if (availableUrls.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Thư viện CLB chưa có ảnh nào. Vui lòng chọn tải ảnh từ điện thoại.',
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    final selectedUrl = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: colors.bgCard,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.65,
-          minChildSize: 0.4,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (_, scrollController) {
-            return SafeArea(
-              child: Column(
-                children: [
-                  const SizedBox(height: 12),
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: colors.border,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Chọn từ Thư viện CLB',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          '${availableUrls.length} ảnh',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: colors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: GridView.builder(
-                      controller: scrollController,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        childAspectRatio: 1.0,
-                      ),
-                      itemCount: availableUrls.length,
-                      itemBuilder: (context, idx) {
-                        final rawUrl = availableUrls[idx];
-                        final resolved = _resolveImageUrl(rawUrl);
-                        return GestureDetector(
-                          onTap: () => Navigator.pop(ctx, rawUrl),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: ClubNetworkImage(
-                              resolved,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Container(
-                                color: colors.bgSurface,
-                                child: const Icon(
-                                  Icons.broken_image_rounded,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    if (selectedUrl == null || !mounted) return;
-
-    try {
-      await ref.read(communityRepositoryProvider).updateCommunity(
-        club.id,
-        {isLogo ? 'logoUrl' : 'bannerUrl': selectedUrl},
-      );
-      ref.invalidate(communityDetailProvider(club.id));
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isLogo
-                  ? 'Đã cập nhật ảnh đại diện CLB thành công'
-                  : 'Đã cập nhật ảnh bìa CLB thành công',
-            ),
-            backgroundColor: const Color(0xFF10B981),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Không thể cập nhật ảnh: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
-  }
 
   Future<void> _pickFromPhone({
     required Community club,
@@ -946,6 +699,15 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               decoration: BoxDecoration(
                 color: colors.border,
                 borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              isLogo ? 'Chỉnh sửa ảnh đại diện CLB' : 'Chỉnh sửa ảnh bìa CLB',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: colors.textPrimary,
               ),
             ),
             const SizedBox(height: 16),

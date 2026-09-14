@@ -32,15 +32,6 @@ extension _ClubDetailSettingsTab on _ClubDetailScreenState {
         if (isAdmin) ...[
           const SizedBox(height: 8),
           _settingsTile(
-            icon: Icons.tune_rounded,
-            title: l10n.club_manageClub,
-            subtitle: l10n.club_manageClubSubtitle,
-            color: AppTheme.primary,
-            onTap: () =>
-                context.push('/club/${widget.clubId}/manage', extra: isOwner),
-          ),
-          const SizedBox(height: 8),
-          _settingsTile(
             icon: Icons.forum_outlined,
             title: l10n.clubDetailSocialSettings,
             subtitle: l10n.clubDetailSocialSettingsSubtitle,
