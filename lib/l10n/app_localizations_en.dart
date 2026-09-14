@@ -3843,6 +3843,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get club_selectTournamentType => 'Select Tournament Type';
 
   @override
+  String get publicClubLiteCreateTitle => 'Create Club Lite tournament';
+
+  @override
   String get club_selectTournamentDesc =>
       'Please select the type of tournament to create';
 
@@ -6251,6 +6254,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coreUpdateNow => 'Update now';
 
   @override
+  String get coreCheckForUpdate => 'Check for updates';
+
+  @override
+  String coreAppUpToDate(Object version) {
+    return 'You are on the latest version ($version)';
+  }
+
+  @override
+  String get coreCheckingForUpdate => 'Checking for updates...';
+
+  @override
   String get coreRegistrationOpening => 'Registration is open';
 
   @override
@@ -6687,6 +6701,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileMemberRole => 'Joined';
+
+  @override
+  String get profileClubPending => 'Pending approval';
+
+  @override
+  String get profileClubRejected => 'Rejected';
+
+  @override
+  String get profileClubResubmit => 'Edit and resubmit';
 
   @override
   String get profileDefaultSport => 'SPORT';
@@ -7971,6 +7994,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editClub_saving => 'Saving...';
 
   @override
+  String get editClub_resubmit => 'Edit and resubmit';
+
+  @override
+  String get editClub_resubmitting => 'Resubmitting...';
+
+  @override
+  String get editClub_resubmitSuccess =>
+      'The club was resubmitted for approval.';
+
+  @override
+  String get editClub_pendingNotice =>
+      'This club is pending approval. You cannot submit another request.';
+
+  @override
   String get editClub_imagesSection => 'IMAGES & IDENTITY';
 
   @override
@@ -8526,7 +8563,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createClub_submit => 'Create club';
 
   @override
-  String get createClub_success => 'Club created successfully!';
+  String get createClub_success => 'Club submitted and is pending approval!';
 
   @override
   String createClub_error(Object error) {

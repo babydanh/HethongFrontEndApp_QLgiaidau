@@ -12,7 +12,6 @@ import 'package:app_quanly_giaidau/features/auth/screens/login_register_screen.d
 import 'package:app_quanly_giaidau/features/auth/screens/forgot_password_screen.dart';
 import 'package:app_quanly_giaidau/features/auth/screens/reset_password_screen.dart';
 import 'package:app_quanly_giaidau/features/auth/screens/login_loading_screen.dart';
-import 'package:app_quanly_giaidau/features/tournament/screens/tournament_detail_screen.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/add_team_screen.dart';
@@ -73,9 +72,13 @@ import 'package:app_quanly_giaidau/features/match/screens/matches_list_screen.da
 import 'package:app_quanly_giaidau/features/chat/screens/chat_screen.dart';
 import 'package:app_quanly_giaidau/features/chat/screens/chat_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_social_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_dispatcher.dart';
+
+final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/home',
     redirect: (context, state) {
       final auth = ref.read(authProvider);
@@ -260,7 +263,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'tournament/:id',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
-              return TournamentDetailScreen(tournamentId: id);
+              return TournamentManagementDispatcher(tournamentId: id);
             },
             routes: [
               GoRoute(

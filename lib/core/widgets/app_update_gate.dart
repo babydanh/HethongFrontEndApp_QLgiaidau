@@ -6,11 +6,21 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_update_service.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/router/app_router.dart';
 
 class AppUpdateGate extends ConsumerStatefulWidget {
   final Widget child;
 
   const AppUpdateGate({super.key, required this.child});
+
+  static Future<void> showUpdateDialog(BuildContext context, AppUpdateInfo info) async {
+    final navContext = rootNavigatorKey.currentContext ?? context;
+    await showDialog<void>(
+      context: navContext,
+      barrierDismissible: !info.isRequired,
+      builder: (_) => _UpdateDialog(info: info),
+    );
+  }
 
   @override
   ConsumerState<AppUpdateGate> createState() => _AppUpdateGateState();
@@ -45,12 +55,16 @@ class _AppUpdateGateState extends ConsumerState<AppUpdateGate> {
         return;
       }
       debugPrint('[AppUpdateGate] current: ${info.currentVersion}, latest: ${info.latestVersion}, min: ${info.minimumVersion}, hasUpdate: ${info.hasUpdate}, isRequired: ${info.isRequired}');
-      // Only stop retrying after a valid response. A startup/network failure
-      // must not permanently disable the update gate for this app session.
+      if (!info.hasUpdate) {
+        _checked = true;
+        return;
+      }
+
       _checked = true;
-      if (!info.hasUpdate) return;
+      final navContext = rootNavigatorKey.currentContext;
+      if (navContext == null || !navContext.mounted) return;
       await showDialog<void>(
-        context: context,
+        context: navContext,
         barrierDismissible: !info.isRequired,
         builder: (_) => _UpdateDialog(info: info),
       );
