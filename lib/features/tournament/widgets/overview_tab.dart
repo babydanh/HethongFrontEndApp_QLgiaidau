@@ -139,8 +139,6 @@ class _OverviewTabState extends State<OverviewTab> {
     return DateFormat('dd/MM/yyyy').format(date);
   }
 
-  final GlobalKey _divisionsKey = GlobalKey();
-
   String _getBracketFormatLabel(
     String? bracketType, [
     String? fallbackBracketType,
@@ -150,17 +148,6 @@ class _OverviewTabState extends State<OverviewTab> {
       bracketType,
       fallbackBracketType,
     );
-  }
-
-  void _scrollToDivisions() {
-    final targetContext = _divisionsKey.currentContext;
-    if (targetContext != null) {
-      Scrollable.ensureVisible(
-        targetContext,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOutCubic,
-      );
-    }
   }
 
   String _formatCurrency(double? amount) {
@@ -386,47 +373,35 @@ class _OverviewTabState extends State<OverviewTab> {
                 ),
                 const SizedBox(height: 12),
 
-                // Đếm ngược (nếu có)
+                // Đếm ngược (nếu có - chữ đỏ nhỏ, bỏ khung)
                 if (_countdownLabel.isNotEmpty &&
                     _remainingTime > Duration.zero) ...[
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colors.error.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: colors.error.withValues(alpha: 0.25),
-                      ),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2, bottom: 6),
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          width: 7,
-                          height: 7,
+                          width: 5.5,
+                          height: 5.5,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: colors.error,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '$_countdownLabel ${_formatDuration(_remainingTime)}',
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w800,
-                              color: colors.error,
-                            ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '$_countdownLabel ${_formatDuration(_remainingTime)}',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: colors.error,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                 ],
 
                 // ─── Banner Quản lý giải đấu dành riêng cho Ban Tổ Chức (Chuẩn Web) ───
@@ -531,103 +506,42 @@ class _OverviewTabState extends State<OverviewTab> {
                   },
                 ),
 
-                // Action Buttons (Hiển thị cho giải truyền thống / nâng cao / công khai)
+                // Action Buttons (Chỉ giữ Lịch thi đấu trong suốt)
                 if (!isClubLite) ...[
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton.icon(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppTheme.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 11),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: () {
-                            if (widget.onNavigateToMatches != null) {
-                              widget.onNavigateToMatches!();
-                            }
-                          },
-                          icon: const Icon(
-                            Icons.calendar_month_rounded,
-                            size: 16,
-                          ),
-                          label: const Text(
-                            'Lịch thi đấu',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.primary,
+                        backgroundColor: Colors.transparent,
+                        side: BorderSide(
+                          color: AppTheme.primary.withValues(alpha: 0.45),
+                          width: 1.2,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      if (t.divisions.isNotEmpty) ...[
-                        const SizedBox(width: 8),
-                        OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppTheme.primary,
-                            side: BorderSide(
-                              color: AppTheme.primary.withValues(alpha: 0.4),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 11,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: _scrollToDivisions,
-                          icon: const Icon(Icons.layers_outlined, size: 16),
-                          label: const Text(
-                            'Nội dung',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                      const SizedBox(width: 8),
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: colors.textPrimary,
-                          side: BorderSide(color: colors.border),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 11,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        onPressed: () {
-                          if (widget.onToggleFollow != null) {
-                            widget.onToggleFollow!();
-                          }
-                        },
-                        icon: Icon(
-                          widget.isFollowing
-                              ? Icons.bookmark_rounded
-                              : Icons.bookmark_border_rounded,
-                          size: 16,
-                          color: widget.isFollowing
-                              ? AppTheme.primary
-                              : colors.textMuted,
-                        ),
-                        label: Text(
-                          widget.isFollowing ? 'Đã lưu' : 'Lưu',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      onPressed: () {
+                        if (widget.onNavigateToMatches != null) {
+                          widget.onNavigateToMatches!();
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.calendar_month_rounded,
+                        size: 16,
+                      ),
+                      label: const Text(
+                        'Lịch thi đấu',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   Divider(
                     color: colors.border.withValues(alpha: 0.6),
                     height: 1,
@@ -657,11 +571,8 @@ class _OverviewTabState extends State<OverviewTab> {
 
                 // ─── 3. DANH SÁCH NỘI DUNG / PHÂN HẠNG THI ĐẤU (CHUẨN WEB & TASTE SKILL) ───
                 if (!isClubLite && t.divisions.isNotEmpty) ...[
-                  KeyedSubtree(
-                    key: _divisionsKey,
-                    child: _buildSectionHeader(
-                      'NỘI DUNG THI ĐẤU (${t.divisions.length})',
-                    ),
+                  _buildSectionHeader(
+                    'NỘI DUNG THI ĐẤU (${t.divisions.length})',
                   ),
                   const SizedBox(height: 10),
                   ...t.divisions.map((div) => _buildDivisionItem(div, colors)),
