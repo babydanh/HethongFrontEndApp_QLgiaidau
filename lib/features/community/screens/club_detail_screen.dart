@@ -102,7 +102,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   Future<CommunitySocialSettings>? _socialSettingsFuture;
   late final ScrollController _scrollController;
   bool _isCollapsed = false;
-  final double _bannerHeight = 90.0;
+  final double _bannerHeight = 100.0;
   final double _avatarOverlap = 8.0;
 
   void _updateClubState(VoidCallback update) {
