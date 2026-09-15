@@ -1968,7 +1968,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             if (t.isClubLite) {
               context.push('/lite-manage/${t.id}');
             } else {
-              _showAdvancedManagementUnsupported(context);
+              // The dispatcher resolves configured Lite/Quick and Advanced
+              // from the server instead of assuming every non-Super-Lite
+              // tournament is unsupported in the app.
+              context.push('/organizer/tournaments/${t.id}/ops');
             }
           } else {
             context.push('/intro/${t.id}');
@@ -2074,23 +2077,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  void _showAdvancedManagementUnsupported(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.profileAdvancedManagementTitle),
-        content: Text(l10n.profileAdvancedManagementContent),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.profileUnderstood),
-          ),
-        ],
       ),
     );
   }
@@ -2348,7 +2334,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ],
             ),
           ),
-           Divider(height: 1, color: colors.borderLight, indent: 56),
+          Divider(height: 1, color: colors.borderLight, indent: 56),
           InkWell(
             onTap: () async {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -2359,7 +2345,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
               );
               try {
-                final info = await AppUpdateService(ref.read(dioProvider)).check();
+                final info = await AppUpdateService(
+                  ref.read(dioProvider),
+                ).check();
                 if (!context.mounted) return;
                 if (info != null && info.hasUpdate) {
                   await AppUpdateGate.showUpdateDialog(context, info);

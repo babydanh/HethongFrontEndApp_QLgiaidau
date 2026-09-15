@@ -50,11 +50,12 @@ class Tournament {
   final String? communityName;
   final String? communityLogoUrl;
 
-  /// Scoring rules are separate from the product flag `isLite`.
+  /// Scoring rules are separate from the Lite/Quick product-family flag.
   /// A public Quick tournament may use `mode: LITE` for open scoring without
   /// becoming a Super Lite tournament.
   final Map<String, dynamic>? sportRules;
   final bool isLite;
+  final bool isSuperLite;
   final bool isRegistrationLocked;
   // Team sport (bóng đá): sân 5/7/11 → đội nhiều người
   final int? teamSize;
@@ -109,6 +110,7 @@ class Tournament {
     this.communityLogoUrl,
     this.sportRules,
     this.isLite = false,
+    this.isSuperLite = false,
     this.isRegistrationLocked = false,
     this.teamSize,
     this.minTeamSize,
@@ -118,11 +120,10 @@ class Tournament {
     this.sponsors = const [],
   });
 
-  /// Club Lite is the intentionally minimal club flow. Public Quick still
-  /// uses the same backend flag for compatibility, but is managed as a full
-  /// tournament on the web and must not be routed to the Lite workspace.
+  /// Club Super Lite is the intentionally minimal club flow. Configured
+  /// Lite/Quick keeps the full tournament workspace.
   bool get isClubLite =>
-      isLite && communityId != null && communityId!.isNotEmpty;
+      isSuperLite && communityId != null && communityId!.isNotEmpty;
 
   /// Internal club tournament indicator (explicit community attachment or club lite)
   bool get isClubTournament =>
@@ -205,6 +206,15 @@ class Tournament {
     final mappedStatus = StatusHelper.normalizeTournamentStatus(
       json['status']?.toString(),
     );
+
+    final hasCanonicalLiteFlag =
+        json.containsKey('isLite') || config.containsKey('isLite');
+    final isLiteProduct =
+        json['isLite'] == true ||
+        config['isLite'] == true ||
+        (!hasCanonicalLiteFlag &&
+            config['mode']?.toString().toUpperCase() == 'LITE' &&
+            config['hideAdvancedSettings'] == true);
 
     final parsedVisibility = (json['visibility'] ?? 'PUBLIC')
         .toString()
@@ -401,13 +411,10 @@ class Tournament {
           : config['sportRules'] is Map
           ? Map<String, dynamic>.from(config['sportRules'] as Map)
           : null,
-      // isLite = LOẠI SẢN PHẨM Super Lite. Không dùng mode=LITE đơn độc vì
+      // isLite = họ sản phẩm Lite/Quick. Không dùng mode=LITE đơn độc vì
       // preset Quick cũng dùng mode này cho bảng điểm mở.
-      isLite:
-          json['isLite'] == true ||
-          config['isLite'] == true ||
-          (config['mode']?.toString().toUpperCase() == 'LITE' &&
-              config['hideAdvancedSettings'] == true),
+      isLite: isLiteProduct,
+      isSuperLite: config['hideAdvancedSettings'] == true && isLiteProduct,
       isRegistrationLocked: json['isRegistrationLocked'] == true,
       // Team sport (bóng đá): giữ tương thích bản ghi cũ chưa có selector sân.
       teamSize:
@@ -551,6 +558,7 @@ class Tournament {
     String? communityLogoUrl,
     Map<String, dynamic>? sportRules,
     bool? isLite,
+    bool? isSuperLite,
     bool? isRegistrationLocked,
     int? teamSize,
     int? minTeamSize,
@@ -606,6 +614,7 @@ class Tournament {
       communityLogoUrl: communityLogoUrl ?? this.communityLogoUrl,
       sportRules: sportRules ?? this.sportRules,
       isLite: isLite ?? this.isLite,
+      isSuperLite: isSuperLite ?? this.isSuperLite,
       isRegistrationLocked: isRegistrationLocked ?? this.isRegistrationLocked,
       sponsors: sponsors ?? this.sponsors,
     );

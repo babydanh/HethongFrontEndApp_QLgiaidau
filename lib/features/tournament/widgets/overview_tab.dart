@@ -481,7 +481,7 @@ class _OverviewTabState extends State<OverviewTab> {
                                   ),
                                 ),
                                 Text(
-                                  t.isLite
+                                  t.isSuperLite
                                       ? 'Quản lý danh sách VĐV, tạo nhánh đấu'
                                       : 'Bốc thăm, điều hành trận & cập nhật tỉ số',
                                   style: TextStyle(
@@ -505,7 +505,7 @@ class _OverviewTabState extends State<OverviewTab> {
                               ),
                             ),
                             onPressed: () {
-                              if (t.isLite) {
+                              if (t.isSuperLite) {
                                 context.push('/lite-manage/${t.id}');
                               } else {
                                 context.push(
