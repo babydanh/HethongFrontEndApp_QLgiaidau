@@ -60,7 +60,9 @@ class _ClubStandaloneMatchDialogState
   final Set<String> _sideAUserIds = {};
   final Set<String> _sideBUserIds = {};
   bool _isCreating = false;
-  bool _isRanked = true;
+  // Mặc định không tính điểm ELO cho trận riêng
+  // bool _isRanked = true;
+  final bool _isRanked = false;
 
   @override
   void initState() {
@@ -455,6 +457,8 @@ class _ClubStandaloneMatchDialogState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Ẩn option tính điểm ELO khỏi modal (comment lại theo yêu cầu)
+                  /*
                   // Checkbox ELO có label giải thích
                   InkWell(
                     onTap: () => setState(() => _isRanked = !_isRanked),
@@ -489,6 +493,7 @@ class _ClubStandaloneMatchDialogState
                     ),
                   ),
                   const SizedBox(height: 8),
+                  */
                   // Nút Tạo trận đấu với trạng thái disabled rõ ràng
                   SizedBox(
                     height: 44,

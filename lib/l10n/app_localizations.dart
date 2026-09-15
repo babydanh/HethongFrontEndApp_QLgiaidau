@@ -161,7 +161,7 @@ abstract class AppLocalizations {
   /// No description provided for @club_enterStandaloneScore.
   ///
   /// In vi, this message translates to:
-  /// **'Nhập điểm trận riêng'**
+  /// **'Nhập kết quả'**
   String get club_enterStandaloneScore;
 
   /// No description provided for @club_setCount.

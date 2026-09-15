@@ -10,7 +10,7 @@
   "club_errorNeedEqualSides": "Each side needs 1 player (singles) or 2 players (doubles)",
   "club_noMembersFound": "No matching members found",
   "club_loadMoreMatches": "Load more matches",
-  "club_enterStandaloneScore": "Enter standalone match score",
+  "club_enterStandaloneScore": "Enter match result",
   "club_setCount": "Sets (max 10)",
   "club_setNumber": "Set {index}",
   "club_saveMatchResult": "Save result",

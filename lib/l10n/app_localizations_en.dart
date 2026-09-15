@@ -41,7 +41,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get club_loadMoreMatches => 'Load more matches';
 
   @override
-  String get club_enterStandaloneScore => 'Enter standalone match score';
+  String get club_enterStandaloneScore => 'Enter match result';
 
   @override
   String get club_setCount => 'Sets (max 10)';

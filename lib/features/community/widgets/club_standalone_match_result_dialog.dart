@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
@@ -41,6 +42,8 @@ class _ClubStandaloneMatchResultDialogState
 
   late final List<int> _sideAScores;
   late final List<int> _sideBScores;
+  late final List<TextEditingController> _sideAControllers;
+  late final List<TextEditingController> _sideBControllers;
   late int _setCount;
   bool _isSaving = false;
   String? _errorMessage;
@@ -60,6 +63,26 @@ class _ClubStandaloneMatchResultDialogState
       _sideAScores[index] = set.score1;
       _sideBScores[index] = set.score2;
     }
+
+    _sideAControllers = List.generate(
+      _maxSets,
+      (i) => TextEditingController(text: '${_sideAScores[i]}'),
+    );
+    _sideBControllers = List.generate(
+      _maxSets,
+      (i) => TextEditingController(text: '${_sideBScores[i]}'),
+    );
+  }
+
+  @override
+  void dispose() {
+    for (final c in _sideAControllers) {
+      c.dispose();
+    }
+    for (final c in _sideBControllers) {
+      c.dispose();
+    }
+    super.dispose();
   }
 
   void _updateScore(int index, {required bool isSideA, required int delta}) {
@@ -67,17 +90,56 @@ class _ClubStandaloneMatchResultDialogState
     setState(() {
       _errorMessage = null;
       if (isSideA) {
-        _sideAScores[index] = (_sideAScores[index] + delta).clamp(0, 99);
+        final newScore = (_sideAScores[index] + delta).clamp(0, 99);
+        _sideAScores[index] = newScore;
+        _sideAControllers[index].text = '$newScore';
       } else {
-        _sideBScores[index] = (_sideBScores[index] + delta).clamp(0, 99);
+        final newScore = (_sideBScores[index] + delta).clamp(0, 99);
+        _sideBScores[index] = newScore;
+        _sideBControllers[index].text = '$newScore';
       }
+    });
+  }
 
-      // Tự động mở set tiếp theo khi set hiện tại có điểm ghi nhận
-      if ((_sideAScores[index] > 0 || _sideBScores[index] > 0) &&
-          index == _setCount - 1 &&
-          _setCount < _maxSets) {
-        _setCount++;
+  void _onScoreChanged(
+    int index, {
+    required bool isSideA,
+    required String value,
+  }) {
+    if (_isReadOnly || _isSaving) return;
+    final parsed = int.tryParse(value) ?? 0;
+    final clamped = parsed.clamp(0, 99);
+    setState(() {
+      _errorMessage = null;
+      if (isSideA) {
+        _sideAScores[index] = clamped;
+      } else {
+        _sideBScores[index] = clamped;
       }
+    });
+  }
+
+  void _addSet() {
+    if (_isReadOnly || _isSaving || _setCount >= _maxSets) return;
+    setState(() {
+      _errorMessage = null;
+      _sideAScores[_setCount] = 0;
+      _sideBScores[_setCount] = 0;
+      _sideAControllers[_setCount].text = '0';
+      _sideBControllers[_setCount].text = '0';
+      _setCount++;
+    });
+  }
+
+  void _removeLastSet() {
+    if (_isReadOnly || _isSaving || _setCount <= 1) return;
+    setState(() {
+      _errorMessage = null;
+      _setCount--;
+      _sideAScores[_setCount] = 0;
+      _sideBScores[_setCount] = 0;
+      _sideAControllers[_setCount].text = '0';
+      _sideBControllers[_setCount].text = '0';
     });
   }
 
@@ -199,6 +261,105 @@ class _ClubStandaloneMatchResultDialogState
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: _buildSetRow(index, colors, l10n),
+                      ),
+                    if (!_isReadOnly)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (_setCount < _maxSets)
+                              Tooltip(
+                                message: 'Thêm set mới',
+                                child: InkWell(
+                                  onTap: _addSet,
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primary.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: AppTheme.primary.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                      ),
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.add_rounded,
+                                          size: 18,
+                                          color: AppTheme.primary,
+                                        ),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Thêm set',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppTheme.primary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            if (_setCount > 1) ...[
+                              const SizedBox(width: 10),
+                              Tooltip(
+                                message: 'Xóa set gần nhất',
+                                child: InkWell(
+                                  onTap: _removeLastSet,
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: colors.error.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: colors.error.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.delete_outline_rounded,
+                                          size: 17,
+                                          color: colors.error,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Xóa set',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: colors.error,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     if (_errorMessage != null)
                       Padding(
@@ -468,11 +629,13 @@ class _ClubStandaloneMatchResultDialogState
           // Stepper Đội A
           Expanded(
             child: _buildStepper(
+              controller: _sideAControllers[index],
               score: _sideAScores[index],
               color: sideAColor,
               colors: colors,
               onDecrement: () => _updateScore(index, isSideA: true, delta: -1),
               onIncrement: () => _updateScore(index, isSideA: true, delta: 1),
+              onChanged: (val) => _onScoreChanged(index, isSideA: true, value: val),
             ),
           ),
           Padding(
@@ -489,11 +652,13 @@ class _ClubStandaloneMatchResultDialogState
           // Stepper Đội B
           Expanded(
             child: _buildStepper(
+              controller: _sideBControllers[index],
               score: _sideBScores[index],
               color: sideBColor,
               colors: colors,
               onDecrement: () => _updateScore(index, isSideA: false, delta: -1),
               onIncrement: () => _updateScore(index, isSideA: false, delta: 1),
+              onChanged: (val) => _onScoreChanged(index, isSideA: false, value: val),
             ),
           ),
         ],
@@ -502,11 +667,13 @@ class _ClubStandaloneMatchResultDialogState
   }
 
   Widget _buildStepper({
+    required TextEditingController controller,
     required int score,
     required Color color,
     required AppColorsExtension colors,
     required VoidCallback onDecrement,
     required VoidCallback onIncrement,
+    required ValueChanged<String> onChanged,
   }) {
     return Container(
       height: 38,
@@ -541,21 +708,52 @@ class _ClubStandaloneMatchResultDialogState
               ),
             ),
           ),
-          // Điểm số ở giữa
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              '$score',
+          // Điểm số ở giữa - hỗ trợ nhập bằng bàn phím
+          Expanded(
+            child: TextField(
+              controller: controller,
+              enabled: !_isReadOnly && !_isSaving,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(2),
+              ],
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w900,
                 color: color,
               ),
+              decoration: const InputDecoration(
+                isDense: true,
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+              onTap: () {
+                // Tự động bôi đen toàn bộ số cũ khi chạm vào để gõ số mới nhanh
+                controller.selection = TextSelection(
+                  baseOffset: 0,
+                  extentOffset: controller.text.length,
+                );
+              },
+              onChanged: onChanged,
+              onEditingComplete: () {
+                if (controller.text.isEmpty) {
+                  controller.text = '0';
+                }
+                FocusScope.of(context).unfocus();
+              },
+              onTapOutside: (_) {
+                if (controller.text.isEmpty) {
+                  controller.text = '0';
+                }
+                FocusScope.of(context).unfocus();
+              },
             ),
           ),
           // Nút cộng
           InkWell(
-            onTap: !_isReadOnly && !_isSaving ? onIncrement : null,
+            onTap: !_isReadOnly && !_isSaving && score < 99 ? onIncrement : null,
             borderRadius: BorderRadius.circular(6),
             child: Container(
               width: 28,

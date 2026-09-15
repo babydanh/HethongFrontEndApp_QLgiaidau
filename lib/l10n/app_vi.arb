@@ -10,7 +10,7 @@
   "club_errorNeedEqualSides": "Mỗi đội cần 1 VĐV (đơn) hoặc 2 VĐV (đôi)",
   "club_noMembersFound": "Không tìm thấy thành viên phù hợp",
   "club_loadMoreMatches": "Xem thêm trận",
-  "club_enterStandaloneScore": "Nhập điểm trận riêng",
+  "club_enterStandaloneScore": "Nhập kết quả",
   "club_setCount": "Số set (tối đa 10)",
   "club_setNumber": "Set {index}",
   "club_saveMatchResult": "Lưu kết quả",

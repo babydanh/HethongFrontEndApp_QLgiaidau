@@ -41,7 +41,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_loadMoreMatches => 'Xem thêm trận';
 
   @override
-  String get club_enterStandaloneScore => 'Nhập điểm trận riêng';
+  String get club_enterStandaloneScore => 'Nhập kết quả';
 
   @override
   String get club_setCount => 'Số set (tối đa 10)';

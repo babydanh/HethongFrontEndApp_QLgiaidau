@@ -1198,14 +1198,6 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                               ],
                             ),
                           )
-                        else if (isCompleted)
-                          Text(
-                            'Đã kết thúc',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: colors.textMuted,
-                            ),
-                          ),
                       ],
                     ),
                   ],
@@ -1228,6 +1220,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       isWinner: isT1Winner,
                       eloDelta: t1EloDelta,
                       sets: match.sets.map((s) => s.score1).toList(),
+                      opponentSets: match.sets.map((s) => s.score2).toList(),
+                      isCompleted: isCompleted,
                       currentGamePoint: currentTennisGamePoints?.team1,
                       memberInfos: match.team1MemberInfos,
                       colors: colors,
@@ -1241,6 +1235,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       isWinner: isT2Winner,
                       eloDelta: t2EloDelta,
                       sets: match.sets.map((s) => s.score2).toList(),
+                      opponentSets: match.sets.map((s) => s.score1).toList(),
+                      isCompleted: isCompleted,
                       currentGamePoint: currentTennisGamePoints?.team2,
                       memberInfos: match.team2MemberInfos,
                       colors: colors,
@@ -1370,6 +1366,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     required bool isWinner,
     required String? eloDelta,
     required List<int> sets,
+    required List<int> opponentSets,
+    required bool isCompleted,
     String? currentGamePoint,
     required List<MatchMemberInfo> memberInfos,
     required AppColorsExtension colors,
@@ -1381,6 +1379,17 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     final firstMember = memberInfos.isNotEmpty ? memberInfos.first : null;
     final targetUserId = firstMember?.userId;
     final eloIsNegative = eloDelta?.startsWith('-') == true;
+    final isLoser = isCompleted && !isWinner;
+    final teamNameColor = isWinner
+        ? colors.textPrimary
+        : isLoser
+        ? colors.textMuted
+        : colors.textSecondary;
+    final teamNameWeight = isWinner
+        ? FontWeight.w800
+        : isLoser
+        ? FontWeight.w400
+        : FontWeight.w600;
 
     return Row(
       children: [
@@ -1455,12 +1464,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                             style: TextStyle(
                               fontSize: 13.5,
                               height: 1.15,
-                              fontWeight: isWinner
-                                  ? FontWeight.w900
-                                  : FontWeight.w600,
-                              color: isWinner
-                                  ? colors.textPrimary
-                                  : colors.textSecondary,
+                               fontWeight: teamNameWeight,
+                               color: teamNameColor,
                             ),
                           )
                       else
@@ -1470,12 +1475,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 13.5,
-                            fontWeight: isWinner
-                                ? FontWeight.w900
-                                : FontWeight.w600,
-                            color: isWinner
-                                ? colors.textPrimary
-                                : colors.textSecondary,
+                             fontWeight: teamNameWeight,
+                             color: teamNameColor,
                           ),
                         ),
                       if (eloDelta != null) ...[
@@ -1524,11 +1525,12 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
               const SizedBox(width: 8),
               // Neo cụm điểm vào mép phải; set mới xuất hiện bên phải và
               // tự đẩy các set trước đó sang trái.
-              () {
-                final displaySets = sets.length > 5
-                    ? sets.sublist(sets.length - 5)
-                    : sets;
-                return Column(
+               () {
+                 final displaySets = sets.length > 5
+                     ? sets.sublist(sets.length - 5)
+                     : sets;
+                 final startIndex = sets.length - displaySets.length;
+                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     SingleChildScrollView(
@@ -1536,34 +1538,51 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       reverse: true,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: displaySets.map((s) {
-                          return Container(
-                            width: 26,
-                            height: 26,
-                            margin: const EdgeInsets.only(left: 4),
-                            decoration: BoxDecoration(
-                              color: isWinner
-                                  ? const Color(0xFF2563EB)
-                                  : colors.bgSurface,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              '$s',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: isWinner
-                                    ? FontWeight.w900
-                                    : FontWeight.w700,
-                                fontFamily: 'monospace',
-                                color: isWinner
-                                    ? Colors.white
-                                    : colors.textSecondary,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
+                         children: [
+                           if (isWinner)
+                             const Padding(
+                               padding: EdgeInsets.only(right: 8),
+                               child: Icon(
+                                 Icons.check_outlined,
+                                 size: 24,
+                                 color: Color(0xFF34A853),
+                               ),
+                             ),
+                           ...displaySets.asMap().entries.map((entry) {
+                             final setIndex = startIndex + entry.key;
+                             final score = entry.value;
+                             final opponentScore = setIndex < opponentSets.length
+                                 ? opponentSets[setIndex]
+                                 : null;
+                             final wonSet =
+                                 isCompleted && opponentScore != null && score > opponentScore;
+                             final lostSet =
+                                 isCompleted && opponentScore != null && score < opponentScore;
+                             return Container(
+                               width: 22,
+                               margin: const EdgeInsets.only(left: 5),
+                               alignment: Alignment.center,
+                               child: Text(
+                                 '$score',
+                                 style: TextStyle(
+                                   fontSize: 14,
+                                   fontWeight: wonSet
+                                       ? FontWeight.w800
+                                       : FontWeight.w400,
+                                   fontFeatures: const [
+                                     FontFeature.tabularFigures(),
+                                   ],
+                                   color: wonSet
+                                       ? colors.textPrimary
+                                       : lostSet
+                                       ? colors.textMuted
+                                       : colors.textSecondary,
+                                 ),
+                               ),
+                             );
+                           }),
+                         ],
+                       ),
                     ),
                     if (currentGamePoint != null)
                       Padding(
