@@ -168,12 +168,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
           joinedAt: membership['joinedAt']?.toString() ?? '',
         );
       });
+      ref.invalidate(myCommunityMembershipProvider(widget.clubId));
       if (_myMembership?.status == 'JOINED') {
         _loadNotificationPref();
       }
     } catch (e, stack) {
       _log.error('Failed to fetch membership', e, stack);
-      if (mounted) setState(() => _myMembership = null);
+      if (mounted) {
+        setState(() => _myMembership = null);
+        ref.invalidate(myCommunityMembershipProvider(widget.clubId));
+      }
     }
   }
 
