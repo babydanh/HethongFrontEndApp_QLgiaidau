@@ -7749,7 +7749,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get quickCreateVisibilityPublic => 'Công khai';
 
   @override
-  String get quickCreateVisibilityPrivate => 'Không niêm yết';
+  String get quickCreateVisibilityPrivate => 'Riêng tư';
 
   @override
   String get quickCreateRegistrationNote =>
