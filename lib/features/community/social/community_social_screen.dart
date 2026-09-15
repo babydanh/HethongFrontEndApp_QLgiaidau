@@ -41,6 +41,8 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
   void initState() {
     super.initState();
     Future<void>.microtask(() async {
+      ref.invalidate(myCommunityMembershipProvider(widget.communityId));
+      ref.invalidate(communitySocialSettingsProvider(widget.communityId));
       await ref
           .read(communityFeedProvider(widget.communityId).notifier)
           .loadInitial();
@@ -263,9 +265,13 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
       child: NotificationListener<ScrollNotification>(
         onNotification: _onFeedScroll,
         child: RefreshIndicator(
-          onRefresh: () => ref
-              .read(communityFeedProvider(widget.communityId).notifier)
-              .loadInitial(),
+          onRefresh: () async {
+            ref.invalidate(myCommunityMembershipProvider(widget.communityId));
+            ref.invalidate(communitySocialSettingsProvider(widget.communityId));
+            await ref
+                .read(communityFeedProvider(widget.communityId).notifier)
+                .loadInitial();
+          },
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.only(bottom: AppTheme.spacingXL),

@@ -5,8 +5,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 class DeviceFingerprintStorage {
+  // ignore: deprecated_member_use
+  static const _androidOptions = AndroidOptions(
+    // ignore: deprecated_member_use
+    encryptedSharedPreferences: true,
+    resetOnError: true,
+  );
+  static const _iosOptions = IOSOptions(
+    accessibility: KeychainAccessibility.first_unlock,
+  );
+
   DeviceFingerprintStorage({FlutterSecureStorage? secureStorage})
-    : _secureStorage = secureStorage ?? const FlutterSecureStorage();
+    : _secureStorage =
+          secureStorage ??
+          const FlutterSecureStorage(
+            aOptions: _androidOptions,
+            iOptions: _iosOptions,
+          );
 
   static const _secureKey = 'livestream_device_fingerprint';
   static const _legacyPreferencesKey = 'livestream_device_fingerprint';
