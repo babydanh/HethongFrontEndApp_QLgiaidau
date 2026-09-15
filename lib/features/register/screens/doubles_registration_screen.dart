@@ -250,6 +250,7 @@ class _DoublesRegistrationFlowState
   bool _isPaid = false;
   bool _paymentEligible = false;
   String _teamStatus = '';
+  String? _registeredDivisionId;
 
   String? _partnerContact;
 
@@ -288,6 +289,7 @@ class _DoublesRegistrationFlowState
               widget.division.entryFee ??
               0;
 
+          final pDivId = participant['tournamentDivisionId']?.toString();
           if (name != null && name.isNotEmpty) {
             _teamNameCtrl.text = name;
           }
@@ -295,6 +297,7 @@ class _DoublesRegistrationFlowState
           if (status == 'PENDING_PARTNER') {
             setState(() {
               _participantId = pId;
+              _registeredDivisionId = pDivId;
               _teamInviteToken = token;
               _teamInviteLink = link;
               _entryFee = fee;
@@ -309,6 +312,7 @@ class _DoublesRegistrationFlowState
               status == 'WAITLISTED') {
             setState(() {
               _participantId = pId;
+              _registeredDivisionId = pDivId;
               _teamInviteToken = token;
               _teamInviteLink = link;
               _entryFee = fee;
@@ -1263,7 +1267,7 @@ class _DoublesRegistrationFlowState
               final withdrew = await WithdrawSheet.show(
                 context,
                 tournamentId: widget.tournamentId,
-                divisionId: widget.division.id,
+                divisionId: _registeredDivisionId ?? widget.division.id,
                 hasPaid: false,
               );
               if (!mounted || !withdrew) return;
@@ -1564,7 +1568,7 @@ class _DoublesRegistrationFlowState
               final withdrew = await WithdrawSheet.show(
                 context,
                 tournamentId: widget.tournamentId,
-                divisionId: widget.division.id,
+                divisionId: _registeredDivisionId ?? widget.division.id,
                 // `_isPaid` cũng true với giải miễn phí (entryFee<=0) → phải kèm
                 // đk có phí THỰC SỰ >0 thì mới cần nhập/hoàn bank. (fix #35)
                 hasPaid: _isPaid && _entryFee != null && _entryFee! > 0,
@@ -1626,7 +1630,7 @@ class _DoublesRegistrationFlowState
                   final withdrew = await WithdrawSheet.show(
                     context,
                     tournamentId: widget.tournamentId,
-                    divisionId: widget.division.id,
+                    divisionId: _registeredDivisionId ?? widget.division.id,
                     hasPaid: _entryFee != null && _entryFee! > 0,
                   );
                   if (!mounted || !withdrew) return;

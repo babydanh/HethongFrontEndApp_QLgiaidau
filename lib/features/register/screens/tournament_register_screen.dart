@@ -378,6 +378,23 @@ class _TournamentRegisterScreenState
     String id,
     List<TournamentDivisionOption> divisions,
   ) {
+    if (_alreadyRegistered &&
+        _existingDivisionId != null &&
+        _existingDivisionId != id) {
+      final existingDiv =
+          divisions.where((d) => d.id == _existingDivisionId).firstOrNull;
+      final name = existingDiv?.name ?? 'nội dung khác';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Bạn đang có đơn/đội đã tạo ở nội dung "$name". Vui lòng hủy đăng ký hiện tại trước khi chuyển sang nội dung khác.',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _selectedDiv = id;
       _divisionError = null;
@@ -1284,10 +1301,13 @@ class _TournamentRegisterScreenState
             const SizedBox(height: 12),
             TextButton.icon(
               onPressed: () async {
+                final targetDivisionId = _registeredDivision?.id ??
+                    _existingDivisionId ??
+                    _selectedDiv;
                 final withdrew = await WithdrawSheet.show(
                   context,
                   tournamentId: widget.tournamentId,
-                  divisionId: _selectedDiv,
+                  divisionId: targetDivisionId,
                   hasPaid: false,
                 );
                 if (!withdrew || !mounted) return;
