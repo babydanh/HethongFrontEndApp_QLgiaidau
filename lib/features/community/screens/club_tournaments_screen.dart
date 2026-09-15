@@ -69,12 +69,14 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
     final reqFilter = _statusFilter;
     try {
       final repo = ref.read(communityRepositoryProvider);
-      final result = await repo.getTournamentsPaged(
-        widget.clubId,
-        cursor: _pageCursors[pageIndex],
-        limit: _pageSize,
-        status: reqFilter == 'ALL' ? null : reqFilter,
-      ).timeout(const Duration(seconds: 10));
+      final result = await repo
+          .getTournamentsPaged(
+            widget.clubId,
+            cursor: _pageCursors[pageIndex],
+            limit: _pageSize,
+            status: reqFilter == 'ALL' ? null : reqFilter,
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (mounted && _statusFilter == reqFilter) {
         setState(() {
@@ -171,7 +173,10 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
                                   const SizedBox(height: 12),
                                   OutlinedButton.icon(
                                     onPressed: _resetAndReload,
-                                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                                    icon: const Icon(
+                                      Icons.refresh_rounded,
+                                      size: 18,
+                                    ),
                                     label: const Text('Thử lại'),
                                   ),
                                 ],
@@ -500,6 +505,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
     final dateStr = DateFormatterUtils.formatTournamentDate(t.startDate);
     final isLive = StatusHelper.isTournamentInProgress(status);
     final isLite = t.isLite;
+    final isSuperLite = t.isSuperLite;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -514,8 +520,9 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
         ),
       ),
       child: InkWell(
-        onTap: () =>
-            context.push(isLite ? '/lite-manage/${t.id}' : '/intro/${t.id}'),
+        onTap: () => context.push(
+          isSuperLite ? '/lite-manage/${t.id}' : '/intro/${t.id}',
+        ),
         borderRadius: BorderRadius.circular(10),
         child: Row(
           children: [

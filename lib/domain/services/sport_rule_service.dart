@@ -143,18 +143,23 @@ bool isLiteScoringMode({
 
 /// Xác định loại sản phẩm Super Lite của giải.
 ///
-/// Chỉ cờ `isLite` (top-level hoặc tournamentConfig) mới mở quyền Live cho
-/// tài khoản đã đăng nhập. `sportRules.mode=LITE` có thể chỉ là preset nhanh
-/// nên tuyệt đối không được dùng làm quyền truy cập.
+/// `isLite` chỉ xác định họ Lite/Quick. Muốn mở workspace/quyền compact thì
+/// phải có thêm `hideAdvancedSettings=true`; `mode=LITE` một mình chỉ là
+/// preset tính điểm.
 bool isSuperLiteTournament({
   Map<String, dynamic>? tournamentConfig,
   bool tournamentIsLite = false,
 }) {
-  if (tournamentIsLite || tournamentConfig?['isLite'] == true) return true;
+  final config = tournamentConfig;
+  if (config?['hideAdvancedSettings'] != true) return false;
+  if (config?.containsKey('isLite') == true) {
+    return tournamentIsLite || config?['isLite'] == true;
+  }
+  if (tournamentIsLite) return true;
 
   // Tương thích dữ liệu Super Lite cũ trước khi có cờ canonical.
-  final mode = tournamentConfig?['mode']?.toString().trim().toUpperCase();
-  return mode == 'LITE' && tournamentConfig?['hideAdvancedSettings'] == true;
+  final mode = config?['mode']?.toString().trim().toUpperCase();
+  return mode == 'LITE';
 }
 
 // ─── Defaults map ───

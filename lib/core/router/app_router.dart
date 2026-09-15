@@ -62,7 +62,6 @@ import 'package:app_quanly_giaidau/features/register/screens/join_team_screen.da
 import 'package:app_quanly_giaidau/features/register/screens/invite_code_join_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_join_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_pairing_screen.dart';
-import 'package:app_quanly_giaidau/features/lite/screens/lite_management_screen.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/features/dashboard/screens/dashboard_screen.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
@@ -926,14 +925,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/lite-manage/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return LiteManagementScreen(tournamentId: id);
+          return TournamentManagementDispatcher(tournamentId: id);
         },
       ),
       GoRoute(
         path: '/lite/tournaments/:id/manage',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return LiteManagementScreen(tournamentId: id);
+          return TournamentManagementDispatcher(tournamentId: id);
         },
       ),
 

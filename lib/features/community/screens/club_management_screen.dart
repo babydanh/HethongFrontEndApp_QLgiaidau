@@ -1006,30 +1006,11 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: FilledButton.icon(
-                                onPressed: () {
-                                  if (isQuick) {
-                                    context.push('/lite-manage/${t.id}');
-                                  } else {
-                                    showDialog<void>(
-                                      context: context,
-                                      builder: (dialogContext) => AlertDialog(
-                                        title: Text(
-                                          _l10n.dashboard_manageAdvancedTitle,
-                                        ),
-                                        content: Text(
-                                          _l10n.dashboard_manageAdvancedContent,
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(dialogContext),
-                                            child: Text(_l10n.dashboard_gotIt),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }
-                                },
+                                // The legacy path resolves the product from
+                                // the server, so Lite/Quick and Advanced do
+                                // not get misrouted into the compact screen.
+                                onPressed: () =>
+                                    context.push('/lite-manage/${t.id}'),
                                 icon: Icon(
                                   isQuick
                                       ? Icons.bolt_rounded

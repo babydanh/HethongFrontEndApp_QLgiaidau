@@ -11,7 +11,12 @@ class CommunityTournamentModel {
   final String? locationAddress;
   final String? bannerUrl;
   final String? logoUrl;
+
+  /// Lite/Quick product family flag. This is not the compact Super Lite flag.
   final bool isLite;
+
+  /// True only when the backend marks the tournament for the compact flow.
+  final bool isSuperLite;
   final String tournamentType;
   final bool isRanked;
   final String? parentId;
@@ -34,6 +39,7 @@ class CommunityTournamentModel {
     this.bannerUrl,
     this.logoUrl,
     this.isLite = false,
+    this.isSuperLite = false,
     this.tournamentType = 'PUBLIC',
     this.isRanked = false,
     this.parentId,
@@ -85,6 +91,7 @@ class CommunityTournamentModel {
       // Fallback cho record Lite cũ trước khi có cờ canonical.
       isLite = mode == 'LITE' && config['hideAdvancedSettings'] == true;
     }
+    final isSuperLite = config?['hideAdvancedSettings'] == true && isLite;
 
     final entryFee =
         int.tryParse(
@@ -116,6 +123,7 @@ class CommunityTournamentModel {
       bannerUrl: json['bannerUrl']?.toString(),
       logoUrl: json['logoUrl']?.toString() ?? json['logo_url']?.toString(),
       isLite: isLite,
+      isSuperLite: isSuperLite,
       tournamentType: (json['tournamentType'] ?? json['type'] ?? 'PUBLIC')
           .toString()
           .toUpperCase(),

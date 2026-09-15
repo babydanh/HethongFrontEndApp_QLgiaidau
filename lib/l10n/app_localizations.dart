@@ -14411,7 +14411,7 @@ abstract class AppLocalizations {
   /// No description provided for @quickCreateVisibilityPrivate.
   ///
   /// In vi, this message translates to:
-  /// **'Không niêm yết'**
+  /// **'Riêng tư'**
   String get quickCreateVisibilityPrivate;
 
   /// No description provided for @quickCreateRegistrationNote.

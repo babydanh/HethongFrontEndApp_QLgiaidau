@@ -2830,7 +2830,7 @@
   "quickCreateMaxTeamsHint": "16",
   "quickCreateVisibilityLabel": "Hiển thị giải đấu",
   "quickCreateVisibilityPublic": "Công khai",
-  "quickCreateVisibilityPrivate": "Không niêm yết",
+  "quickCreateVisibilityPrivate": "Riêng tư",
   "quickCreateRegistrationNote": "Đăng ký mặc định ở chế độ Xét duyệt. Bạn có thể thay đổi cách nhận đăng ký trong trang quản lý web sau khi tạo.",
   "quickCreateClubNote": "Không có lựa chọn câu lạc bộ trong luồng Public. Muốn tạo trong CLB, hãy vào trang CLB và chọn Lite CLB hoặc Tạo nhanh trên web.",
   "quickCreateSubmit": "Tạo giải nhanh",

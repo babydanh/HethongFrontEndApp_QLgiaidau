@@ -43,7 +43,7 @@ class TournamentManagementDispatcher extends ConsumerWidget {
           );
         }
 
-        if (tournament.isLite) {
+        if (tournament.isSuperLite) {
           return LiteManagementScreen(tournamentId: tournamentId);
         }
 
