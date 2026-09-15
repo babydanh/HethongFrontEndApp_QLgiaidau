@@ -546,14 +546,13 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         isCreator || club.myRole == 'OWNER' || _myMembership?.role == 'OWNER';
     final isClubAdmin =
         isOwner ||
-        club.myRole == 'ADMIN' ||
-        club.myRole == 'MODERATOR' ||
-        _myMembership?.role == 'ADMIN' ||
-        _myMembership?.role == 'MODERATOR';
+            club.myRole == 'ADMIN' ||
+            club.myRole == 'MODERATOR' ||
+            _myMembership?.role == 'ADMIN' ||
+            _myMembership?.role == 'MODERATOR';
 
     final topPadding = MediaQuery.of(context).padding.top;
     final logoUrl = _resolveImageUrl(club.logoUrl);
-    final hasLogo = logoUrl.isNotEmpty;
 
     return Stack(
       children: [
@@ -584,7 +583,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   sColor,
                   emoji,
                   isClubAdmin: isClubAdmin,
-                  showLogo: hasLogo,
                 ),
               ),
               SliverPersistentHeader(
@@ -631,36 +629,35 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
           ),
         ),
-        // Avatar CLB — chỉ nổi trên banner khi CLB có logo.
-        if (hasLogo)
-          AnimatedBuilder(
-            animation: _scrollController,
-            builder: (context, _) {
-              final offset = _scrollController.hasClients
-                  ? _scrollController.offset
-                  : 0.0;
-              final top = topPadding + _bannerHeight - _avatarOverlap - offset;
-              return Positioned(
-                top: top,
-                left: 16,
-                child: IgnorePointer(
-                  ignoring: _isCollapsed,
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 150),
-                    opacity: _isCollapsed ? 0 : 1,
-                    child: _buildClubAvatar(
-                      logoUrl: logoUrl,
-                      colors: colors,
-                      sColor: sColor,
-                      emoji: emoji,
-                      isClubAdmin: isClubAdmin,
-                      club: club,
-                    ),
+        // Avatar CLB — luôn hiển thị (fallback SportO logo khi chưa có logo CLB).
+        AnimatedBuilder(
+          animation: _scrollController,
+          builder: (context, _) {
+            final offset = _scrollController.hasClients
+                ? _scrollController.offset
+                : 0.0;
+            final top = topPadding + _bannerHeight - _avatarOverlap - offset;
+            return Positioned(
+              top: top,
+              left: 16,
+              child: IgnorePointer(
+                ignoring: _isCollapsed,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 150),
+                  opacity: _isCollapsed ? 0 : 1,
+                  child: _buildClubAvatar(
+                    logoUrl: logoUrl,
+                    colors: colors,
+                    sColor: sColor,
+                    emoji: emoji,
+                    isClubAdmin: isClubAdmin,
+                    club: club,
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
+        ),
       ],
     );
   }

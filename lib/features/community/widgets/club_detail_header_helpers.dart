@@ -48,11 +48,11 @@ extension _ClubDetailHeaderHelpers on _ClubDetailScreenState {
             child: ClipOval(
               child: logoUrl.isNotEmpty
                   ? ClubNetworkImage(
-                      logoUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _logoSportBg(sColor, emoji),
-                    )
+                logoUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    _logoSportBg(sColor, emoji),
+              )
                   : _logoSportBg(sColor, emoji),
             ),
           ),
@@ -93,10 +93,10 @@ extension _ClubDetailHeaderHelpers on _ClubDetailScreenState {
   }
 
   Widget _buildHeaderActions(
-    Community club,
-    AppColorsExtension colors,
-    bool isClubAdmin,
-  ) {
+      Community club,
+      AppColorsExtension colors,
+      bool isClubAdmin,
+      ) {
     final l10n = AppLocalizations.of(context)!;
     final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
     final isCreator = club.ownerId != null && club.ownerId == currentUserId;
@@ -113,76 +113,76 @@ extension _ClubDetailHeaderHelpers on _ClubDetailScreenState {
               height: 36,
               child: isClubAdmin
                   ? FilledButton.icon(
-                      onPressed: () => context.push(
-                        '/club/${club.id}/manage',
-                        extra: isOwner,
-                      ),
-                      icon: const Icon(
-                        Icons.shield_outlined,
-                        size: 16,
-                      ),
-                      label: Text(
-                        l10n.club_manageClub,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
-                      ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppTheme.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        elevation: 0,
-                      ),
-                    )
+                onPressed: () => context.push(
+                  '/club/${club.id}/manage',
+                  extra: isOwner,
+                ),
+                icon: const Icon(
+                  Icons.shield_outlined,
+                  size: 16,
+                ),
+                label: Text(
+                  l10n.club_manageClub,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                ),
+              )
                   : OutlinedButton(
-                      onPressed: _isJoinLoading
-                          ? null
-                          : () => _showMemberOptionsSheet(context, club),
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: colors.bgSurface,
-                        foregroundColor: colors.textPrimary,
-                        side: BorderSide(color: colors.border),
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: _isJoinLoading
-                          ? const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.check_rounded,
-                                  size: 15,
-                                  color: Color(0xFF059669),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  l10n.club_joined,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                const SizedBox(width: 2),
-                                const Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                  size: 16,
-                                ),
-                              ],
-                            ),
+                onPressed: _isJoinLoading
+                    ? null
+                    : () => _showMemberOptionsSheet(context, club),
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: colors.bgSurface,
+                  foregroundColor: colors.textPrimary,
+                  side: BorderSide(color: colors.border),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                ),
+                child: _isJoinLoading
+                    ? const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+                    : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_rounded,
+                      size: 15,
+                      color: Color(0xFF059669),
                     ),
+                    const SizedBox(width: 4),
+                    Text(
+                      l10n.club_joined,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
           if (hasInvite) ...[
@@ -197,7 +197,7 @@ extension _ClubDetailHeaderHelpers on _ClubDetailScreenState {
                       context: context,
                       title: club.name,
                       subtitle:
-                          '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
+                      '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
                       webUrl: 'https://sporto.asia/communities/${club.id}',
                       imageUrl: club.logoUrl ?? club.bannerUrl,
                       badgeText: l10n.club_badge,
@@ -233,13 +233,13 @@ extension _ClubDetailHeaderHelpers on _ClubDetailScreenState {
           onPressed: _isJoinLoading ? null : () => _handleJoinAction(club),
           icon: _isJoinLoading
               ? const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white,
+            ),
+          )
               : Icon(_getJoinIcon(), size: 15),
           label: Text(
             _getJoinLabel(),

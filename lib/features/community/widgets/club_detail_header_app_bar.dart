@@ -2,14 +2,14 @@ part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailHeaderAppBar on _ClubDetailScreenState {
   Widget _buildSliverAppBar(
-    Community club,
-    AppColorsExtension colors,
-    Color sColor,
-    String emoji,
-    double topPadding,
-    AppLocalizations l10n, {
-    required bool isClubAdmin,
-  }) {
+      Community club,
+      AppColorsExtension colors,
+      Color sColor,
+      String emoji,
+      double topPadding,
+      AppLocalizations l10n, {
+        required bool isClubAdmin,
+      }) {
     final bannerUrl = _resolveImageUrl(club.bannerUrl);
     final logoUrl = _resolveImageUrl(club.logoUrl);
     final bool hasBanner = bannerUrl.isNotEmpty;
@@ -32,6 +32,21 @@ extension _ClubDetailHeaderAppBar on _ClubDetailScreenState {
 
     final totalBannerHeight = _bannerHeight + topPadding;
 
+    // ĐỊNH NGHĨA STYLE ICON CHỐNG MỜ & CHỐNG CHÓI (GIỐNG FACEBOOK)
+    // Khi chưa cuộn: Màu trắng đục 100% kèm đổ bóng đen mờ để luôn nổi bật trên nền ảnh bìa sáng/tối.
+    // Khi đã cuộn thu nhỏ: Trở về màu mặc định của theme hệ thống (hoặc màu tương phản với colors.bgDark).
+    final List<Shadow>? iconShadows = _isCollapsed
+        ? null
+        : [
+      Shadow(
+        offset: const Offset(0, 1),
+        blurRadius: 4.0,
+        color: Colors.black.withValues(alpha: 0.5),
+      ),
+    ];
+
+    final Color currentIconColor = _isCollapsed ? colors.textPrimary : Colors.white;
+
     return SliverAppBar(
       pinned: true,
       primary: true,
@@ -40,47 +55,43 @@ extension _ClubDetailHeaderAppBar on _ClubDetailScreenState {
       elevation: 0,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
-      backgroundColor: _isCollapsed ? colors.bgCard : Colors.transparent,
+      backgroundColor: _isCollapsed ? colors.bgDark : Colors.transparent,
+
+      // GIẢI PHÁP 1: Ép cấu hình IconTheme để triệt tiêu hoàn toàn độ mờ (opacity) mặc định từ SliverAppBar
+      iconTheme: IconThemeData(
+        color: currentIconColor,
+        opacity: 1.0,
+      ),
+
       leading: IconButton(
         icon: Icon(
           Icons.arrow_back_ios_rounded,
-          color: colors.textPrimary,
+          color: currentIconColor, // Ép màu đục 100%
           size: 22,
+          shadows: iconShadows,    // Đổ bóng chống lóa khi đè lên ảnh bìa sáng màu
         ),
         onPressed: () => context.pop(),
         splashRadius: 20,
       ),
       title: _isCollapsed
           ? Text(
-              club.name,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: colors.textPrimary,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            )
+        club.name,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: colors.textPrimary,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      )
           : null,
       actions: [
-        if (isClubAdmin)
-          IconButton(
-            icon: Icon(
-              Icons.settings_outlined,
-              color: colors.textPrimary,
-              size: 22,
-            ),
-            tooltip: l10n.club_tabSettings,
-            onPressed: () => _showClubSettingsFullScreen(club, colors),
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            splashRadius: 18,
-          ),
         IconButton(
           icon: Icon(
-            Icons.search_rounded,
-            color: colors.textPrimary,
+            Icons.search_outlined,
+            color: currentIconColor,
             size: 22,
+            shadows: iconShadows,
           ),
           onPressed: () => context.push(
             '/club/${club.id}/search?name=${Uri.encodeComponent(club.name)}',
@@ -89,22 +100,37 @@ extension _ClubDetailHeaderAppBar on _ClubDetailScreenState {
           constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           splashRadius: 18,
         ),
+        if (isClubAdmin)
+          IconButton(
+            icon: Icon(
+              Icons.settings_outlined,
+              color: currentIconColor,
+              size: 22,
+              shadows: iconShadows,
+            ),
+            tooltip: l10n.club_tabSettings,
+            onPressed: () => _showClubSettingsFullScreen(club, colors),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            splashRadius: 18,
+          ),
         if (_myMembership?.status == 'JOINED')
           IconButton(
             icon: _isOpeningClubChat
                 ? SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: colors.textPrimary,
-                    ),
-                  )
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: colors.textPrimary,
+              ),
+            )
                 : Icon(
-                    Icons.chat_bubble_outline,
-                    color: colors.textPrimary,
-                    size: 22,
-                  ),
+              Icons.chat_bubble_outline,
+              color: currentIconColor, // Sử dụng biến màu đồng bộ thay vì ép cứng colors.textPrimary lúc mở rộng
+              size: 22,
+              shadows: iconShadows,
+            ),
             onPressed: _isOpeningClubChat
                 ? null
                 : () => _openClubChat(club),
@@ -120,11 +146,11 @@ extension _ClubDetailHeaderAppBar on _ClubDetailScreenState {
           children: [
             hasBanner
                 ? ClubNetworkImage(
-                    bannerUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        fallbackBanner(),
-                  )
+              bannerUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  fallbackBanner(),
+            )
                 : fallbackBanner(),
             // Camera icon trên ảnh bìa khi là Admin (không dùng circle)
             if (isClubAdmin)
@@ -134,19 +160,19 @@ extension _ClubDetailHeaderAppBar on _ClubDetailScreenState {
                 child: IconButton(
                   icon: Icon(
                     Icons.camera_alt_rounded,
-                    size: 22,
-                    color: colors.textPrimary,
+                    size: 24,
+                    color: Colors.white,
                   ),
                   tooltip: 'Đổi ảnh bìa',
                   padding: EdgeInsets.zero,
                   constraints:
-                      const BoxConstraints(minWidth: 32, minHeight: 32),
+                  const BoxConstraints(minWidth: 32, minHeight: 32),
                   splashRadius: 18,
                   onPressed: () =>
                       _showChangePhotoOptions(club: club, isLogo: false),
                 ),
               ),
-            // Bo tròn 2 góc trên của card thông tin đè lên chân banner (Ảnh 3)
+            // Bo tròn 2 góc trên của card thông tin đè lên chân banner
             Positioned(
               bottom: -1,
               left: 0,
