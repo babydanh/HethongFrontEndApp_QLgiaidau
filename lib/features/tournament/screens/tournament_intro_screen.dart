@@ -518,13 +518,13 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     if (hasLive) {
       tabHeaders.add(
         Tab(
-          height: 34,
+          height: 28,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 7,
-                height: 7,
+                width: 6,
+                height: 6,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Color(0xFFEF4444),
@@ -535,12 +535,12 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 'Đang diễn ra',
                 style: TextStyle(
                   color: colors.error,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(width: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                padding: const EdgeInsets.symmetric(horizontal: 4.5, vertical: 0.5),
                 decoration: BoxDecoration(
                   color: colors.error,
                   borderRadius: BorderRadius.circular(10),
@@ -548,7 +548,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 child: Text(
                   '${liveMatches.length}',
                   style: const TextStyle(
-                    fontSize: 10,
+                    fontSize: 9.5,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -579,12 +579,12 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     if (hasResults) {
       tabHeaders.add(
         const Tab(
-          height: 34,
+          height: 28,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.emoji_events_rounded, size: 14),
-              SizedBox(width: 5),
+              SizedBox(width: 4),
               Text('Kết quả'),
             ],
           ),
@@ -616,18 +616,18 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
     // 3. Tab [Tổng quan] (Mặc định khi vào màn hình)
     final int overviewIndex = tabHeaders.length;
-    tabHeaders.add(const Tab(height: 34, text: 'Tổng quan'));
+    tabHeaders.add(const Tab(height: 28, text: 'Tổng quan'));
 
     // 4. Tab [Đội tham gia]
-    tabHeaders.add(Tab(height: 34, text: l10n.tabTeams));
+    tabHeaders.add(Tab(height: 28, text: l10n.tabTeams));
 
     // 5. Tab [Bảng đấu]
     final int bracketIndex = tabHeaders.length;
-    tabHeaders.add(const Tab(height: 34, text: 'Bảng đấu'));
+    tabHeaders.add(const Tab(height: 28, text: 'Bảng đấu'));
 
     // 6. Tab [Tài trợ] (nếu có)
     if (hasSponsors) {
-      tabHeaders.add(Tab(height: 34, text: l10n.tabSponsors));
+      tabHeaders.add(Tab(height: 28, text: l10n.tabSponsors));
     }
 
     _updateTabController(tabHeaders.length, defaultIndex: overviewIndex);
@@ -1021,20 +1021,22 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         controller: controller,
         isScrollable: true,
         tabAlignment: TabAlignment.start,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        labelPadding: const EdgeInsets.symmetric(horizontal: 14),
-        indicatorSize: TabBarIndicatorSize.tab,
-        indicator: BoxDecoration(
-          color: AppTheme.primary.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 12),
+        indicatorSize: TabBarIndicatorSize.label,
+        indicator: const UnderlineTabIndicator(
+          borderSide: BorderSide(
+            color: AppTheme.primary,
+            width: 2.5,
+          ),
+          insets: EdgeInsets.only(bottom: 0),
         ),
         dividerColor: Colors.transparent,
         labelColor: AppTheme.primary,
         unselectedLabelColor: colors.textSecondary,
-        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
         unselectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.normal,
+          fontWeight: FontWeight.w500,
           fontSize: 13,
         ),
         tabs: tabHeaders,
