@@ -123,6 +123,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get navExplore => 'Khám phá';
 
   @override
+  String get navHome => 'Trang chủ';
+
+  @override
   String get navTournaments => 'Giải đấu';
 
   @override
@@ -133,6 +136,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get navClubs => 'CLB';
+
+  @override
+  String get navProfile => 'Tôi';
 
   @override
   String get loginTitle => 'Đăng nhập tài khoản';
@@ -1363,7 +1369,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get memberRole => 'Thành viên';
 
   @override
-  String get leaderboardTitle => 'Bảng xếp hạng';
+  String get leaderboardTitle => 'Xếp hạng';
 
   @override
   String get noStandings => 'Chưa có dữ liệu thi đấu';
@@ -4796,6 +4802,15 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chưa có môn thể thao nào được định nghĩa.';
 
   @override
+  String get leaderboardTableRank => '#';
+
+  @override
+  String get leaderboardTablePlayer => 'Người chơi';
+
+  @override
+  String get leaderboardTablePoints => 'Điểm';
+
+  @override
   String get leaderboardProvinceLabel => 'Tỉnh/Thành:';
 
   @override
@@ -7261,7 +7276,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeClubTab => 'Câu lạc bộ';
 
   @override
-  String get homeRankingsTab => 'Bảng xếp hạng';
+  String get homeRankingsTab => 'Xếp hạng';
 
   @override
   String get homeWelcomeTitle =>
@@ -9126,7 +9141,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bracketView_crossTable => 'Bảng chéo';
 
   @override
-  String get bracketView_standings => 'Bảng xếp hạng';
+  String get bracketView_standings => 'Xếp hạng';
 
   @override
   String get bracketView_schedule => 'Lịch thi đấu';
@@ -10441,7 +10456,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get seriesScheduleTab => 'Lịch thi đấu';
 
   @override
-  String get seriesRankingsTab => 'Bảng xếp hạng';
+  String get seriesRankingsTab => 'Xếp hạng';
 
   @override
   String get matchTableBye => 'VÀO THẲNG';

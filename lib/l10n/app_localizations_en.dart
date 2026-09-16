@@ -123,6 +123,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navExplore => 'Explore';
 
   @override
+  String get navHome => 'Home';
+
+  @override
   String get navTournaments => 'Tourneys';
 
   @override
@@ -133,6 +136,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navClubs => 'Clubs';
+
+  @override
+  String get navProfile => 'Profile';
 
   @override
   String get loginTitle => 'Account Login';
@@ -4802,6 +4808,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get leaderboardNoSportsSubtitle => 'No sports have been defined yet.';
+
+  @override
+  String get leaderboardTableRank => '#';
+
+  @override
+  String get leaderboardTablePlayer => 'Player';
+
+  @override
+  String get leaderboardTablePoints => 'Points';
 
   @override
   String get leaderboardProvinceLabel => 'Province/City:';

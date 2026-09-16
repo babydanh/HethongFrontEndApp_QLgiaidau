@@ -96,6 +96,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   String _clubSport = 'all';
   String? _clubProvinceCode;
   String _rankingsSport = 'all';
+  String? _rankingsProvince;
   String _tournamentContent = 'all';
   String _tournamentBracket = 'all';
   String _tournamentRanked = 'all';
@@ -571,6 +572,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: LeaderboardScreen(
             selectedSport: _rankingsSport,
             searchQuery: _searchQueries[4] ?? '',
+            provinceCode: _rankingsProvince,
           ),
         );
     }
@@ -952,7 +954,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return (_clubSport != 'all' ? 1 : 0) +
             (_clubProvinceCode != null ? 1 : 0);
       case 4:
-        return _rankingsSport != 'all' ? 1 : 0;
+        return (_rankingsSport != 'all' ? 1 : 0) +
+            (_rankingsProvince != null ? 1 : 0);
       default:
         return 0;
     }
@@ -1875,7 +1878,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        String localSport = _rankingsSport;
+        String? localProvinceCode = _rankingsProvince;
         return StatefulBuilder(
           builder: (ctx, setSheetState) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
@@ -1893,7 +1896,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  l10n.filterSport,
+                  l10n.homeLocationProvince,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -1901,10 +1904,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildFilterChips(
-                  items: _activeSportFilterItems(l10n),
-                  selected: localSport,
-                  onSelected: (v) => setSheetState(() => localSport = v),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: context.colors.bgCard,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: context.colors.border),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String?>(
+                      value: localProvinceCode,
+                      isExpanded: true,
+                      hint: Text(
+                        l10n.filterAll,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.colors.textSecondary,
+                        ),
+                      ),
+                      icon: Icon(
+                        Icons.arrow_drop_down_rounded,
+                        color: context.colors.textMuted,
+                      ),
+                      dropdownColor: context.colors.bgCard,
+                      items: [
+                        DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text(
+                            l10n.filterAll,
+                            style: TextStyle(
+                              color: context.colors.textSecondary,
+                            ),
+                          ),
+                        ),
+                        ...ProvinceData.all.map(
+                          (p) => DropdownMenuItem<String?>(
+                            value: p.code,
+                            child: Text(
+                              p.name,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        ),
+                      ],
+                      onChanged: (v) =>
+                          setSheetState(() => localProvinceCode = v),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -1912,7 +1958,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () =>
-                            setSheetState(() => localSport = 'all'),
+                            setSheetState(() => localProvinceCode = null),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: context.colors.textSecondary,
                           side: BorderSide(color: context.colors.border),
@@ -1931,7 +1977,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Expanded(
                       child: FilledButton(
                         onPressed: () {
-                          setState(() => _rankingsSport = localSport);
+                          setState(() => _rankingsProvince = localProvinceCode);
                           Navigator.pop(ctx);
                         },
                         style: FilledButton.styleFrom(

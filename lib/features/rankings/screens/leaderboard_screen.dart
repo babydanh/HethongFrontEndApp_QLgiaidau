@@ -7,23 +7,19 @@ import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/podium_view.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/ranking_row.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/tier_legend_view.dart';
-import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/user_stats_card.dart';
-import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
   final String selectedSport;
   final String searchQuery;
+  final String? provinceCode;
   final bool standalone;
   const LeaderboardScreen({
     super.key,
     this.selectedSport = 'all',
     this.searchQuery = '',
+    this.provinceCode,
     this.standalone = false,
   });
 
@@ -33,11 +29,7 @@ class LeaderboardScreen extends ConsumerStatefulWidget {
 
 class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   String _selectedCategory = 'all';
-  String _selectedMatchType = 'SINGLES';
   String? _selectedGender = 'MALE';
-  String? _selectedProvince;
-  final ScrollController _scrollCtrl = ScrollController();
-  bool _isTop11_100Expanded = true;
 
   @override
   void initState() {
@@ -57,16 +49,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
   RankingQuery get _rankingQuery => (
     categoryId: _selectedCategory,
-    matchType: _selectedMatchType,
+    matchType: '',
     genderRestriction: _selectedGender,
-    provinceCode: _selectedProvince,
+    provinceCode: widget.provinceCode,
   );
-
-  @override
-  void dispose() {
-    _scrollCtrl.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,16 +103,15 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 effectiveCategory.name.toLowerCase().contains('football');
             final query = (
               categoryId: effectiveCategoryId,
-              matchType: _selectedMatchType,
+              matchType: '',
               genderRestriction: _selectedGender,
-              provinceCode: _selectedProvince,
+              provinceCode: widget.provinceCode,
             );
 
             final rankingsAsync = ref.watch(rankingsProvider(query));
             final footballRankingsAsync = ref.watch(
               footballTeamRankingsProvider(effectiveCategoryId),
             );
-            final tiersAsync = ref.watch(eloTiersProvider(effectiveCategoryId));
 
             final content = SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -134,26 +119,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: widget.standalone ? 20 : 160),
-                  if (!isFootball) _buildRankingFilters(colors),
-                  if (!isFootball) const SizedBox(height: 10),
-                  if (!isFootball) _buildProvinceFilter(colors),
+                  if (!isFootball) _buildGenderFilter(colors),
                   const SizedBox(height: 12),
-                  if (!isFootball)
-                    tiersAsync.when(
-                      data: (tiers) {
-                        final myElo = rankingsAsync.asData?.value
-                            .where((r) => r.userId == currentUserId)
-                            .firstOrNull
-                            ?.eloPoints;
-                        return TierLegendView(
-                          tiers: tiers,
-                          highlightElo: myElo,
-                        );
-                      },
-                      loading: () => const SizedBox(height: 52),
-                      error: (context, error) => const SizedBox(height: 52),
-                    ),
-                  const SizedBox(height: 8),
                   isFootball
                       ? footballRankingsAsync.when(
                           data: (teams) =>
@@ -178,7 +145,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       : rankingsAsync.when(
                           data: (rankings) => _buildRankingsList(
                             rankings,
-                            tiersAsync.asData?.value ?? <EloTier>[],
                             colors,
                             isAuth,
                             currentUserId,
@@ -217,27 +183,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     );
   }
 
-  String _formatLabel(AppLocalizations l10n, String matchType, String? gender) {
-    if (matchType == 'SINGLES' && gender == 'MALE') return l10n.singlesMale;
-    if (matchType == 'SINGLES' && gender == 'FEMALE') {
-      return l10n.singlesFemale;
-    }
-    if (matchType == 'DOUBLES' && gender == 'MALE') return l10n.doublesMale;
-    if (matchType == 'DOUBLES' && gender == 'FEMALE') {
-      return l10n.doublesFemale;
-    }
-    if (matchType == 'MIXED_DOUBLES') return l10n.doublesMixed;
-    return l10n.rankingTitle;
-  }
-
-  Widget _buildRankingFilters(AppColorsExtension colors) {
+  // ─── Gender filter ────────────────────────────────────────────────────
+  Widget _buildGenderFilter(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
-    final formats = [
-      ('SINGLES', 'MALE', l10n.singlesMale),
-      ('SINGLES', 'FEMALE', l10n.singlesFemale),
-      ('DOUBLES', 'MALE', l10n.doublesMale),
-      ('DOUBLES', 'FEMALE', l10n.doublesFemale),
-      ('MIXED_DOUBLES', 'MIXED', l10n.doublesMixed),
+    final options = [
+      ('MALE', '♂ ${l10n.clubRankingMale}'),
+      ('FEMALE', '♀ ${l10n.clubRankingFemale}'),
     ];
 
     return SizedBox(
@@ -245,19 +196,15 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: formats.length,
+        itemCount: options.length,
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          final format = formats[index];
-          final selected =
-              _selectedMatchType == format.$1 && _selectedGender == format.$2;
+          final option = options[index];
+          final selected = _selectedGender == option.$1;
           return ChoiceChip(
-            label: Text(format.$3),
+            label: Text(option.$2),
             selected: selected,
-            onSelected: (_) => setState(() {
-              _selectedMatchType = format.$1;
-              _selectedGender = format.$2;
-            }),
+            onSelected: (_) => setState(() => _selectedGender = option.$1),
             showCheckmark: false,
             selectedColor: AppTheme.primary,
             backgroundColor: colors.bgCard,
@@ -276,87 +223,14 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     );
   }
 
-  // ─── Province filter ───────────────────────────────────────────────────
-  Widget _buildProvinceFilter(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          Icon(Icons.location_on_outlined, size: 16, color: colors.textMuted),
-          const SizedBox(width: 8),
-          Text(
-            l10n.leaderboardProvinceLabel,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: colors.textSecondary,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Container(
-              height: 40,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: colors.border),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: _selectedProvince,
-                  isExpanded: true,
-                  hint: Text(
-                    l10n.infoAll,
-                    style: TextStyle(fontSize: 13, color: colors.textSecondary),
-                  ),
-                  icon: Icon(
-                    Icons.arrow_drop_down_rounded,
-                    size: 20,
-                    color: colors.textMuted,
-                  ),
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: colors.textPrimary,
-                  ),
-                  dropdownColor: colors.bgCard,
-                  onChanged: (val) => setState(() => _selectedProvince = val),
-                  items: [
-                    DropdownMenuItem<String>(
-                      value: null,
-                      child: Text(
-                        l10n.infoAll,
-                        style: TextStyle(color: colors.textSecondary),
-                      ),
-                    ),
-                    ...ProvinceData.all.map(
-                      (p) => DropdownMenuItem<String>(
-                        value: p.code,
-                        child: Text(p.name),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ─── Rankings list ─────────────────────────────────────────────────────
   Widget _buildRankingsList(
     List<PlayerRanking> rankings,
-    List<EloTier> tiers,
     AppColorsExtension colors,
     bool isAuth,
     String? currentUserId,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final tierList = tiers;
     final query = widget.searchQuery.toLowerCase().trim().replaceAll(
       RegExp(r'\s+'),
       ' ',
@@ -374,9 +248,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             return haystack.contains(query);
           }).toList();
 
-    // Trường hợp đang tìm kiếm: hiện danh sách kết quả + nhãn "hạng X / top 100".
-    if (query.isNotEmpty) {
-      if (filtered.isEmpty) {
+    if (filtered.isEmpty) {
+      if (query.isNotEmpty) {
         return Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
@@ -408,272 +281,247 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           ),
         );
       }
-      return ListView.builder(
-        controller: _scrollCtrl,
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.only(top: 4, bottom: 100),
-        itemCount: filtered.length,
-        itemBuilder: (_, i) {
-          final r = filtered[i];
-          return RankingRow(
-            ranking: r,
-            tiers: tierList,
-            isMe: isAuth && r.userId == currentUserId,
-            highlight: true,
-            onTap: () => context.push('/user/${r.userId}'),
-          );
-        },
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.emoji_events_outlined,
+                size: 48,
+                color: colors.textMuted,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.clubRankingEmpty,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n.clubRankingEmptyHint,
+                style: TextStyle(fontSize: 12, color: colors.textMuted),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       );
     }
-
-    final formatStr = _formatLabel(l10n, _selectedMatchType, _selectedGender);
-    final top4_10 = rankings.where((r) => r.rank >= 4 && r.rank <= 10).toList();
-    final top11_100 = rankings.where((r) => r.rank >= 11).toList();
-
-    final rank4 =
-        top4_10.where((r) => r.rank == 4).firstOrNull ??
-        (top4_10.isNotEmpty ? top4_10.first : null);
-    final ranks5_10 = rank4 != null
-        ? top4_10.where((r) => r != rank4).toList()
-        : top4_10;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Bục vinh danh Top 1 - 3 (luôn hiện bục vinh danh)
-        PodiumView(
-          rankings: rankings,
-          tiers: tierList,
-          formatLabel: formatStr,
-          onTapUser: (userId) => context.push('/user/$userId'),
+        _buildTableHeader(colors, l10n),
+        ...filtered.map(
+          (r) => _buildEloRow(r, colors, isAuth, currentUserId),
         ),
+        if (isAuth && currentUserId != null &&
+            !filtered.any((r) => r.userId == currentUserId))
+          _buildMyRankBanner(filtered, colors, currentUserId),
+        const SizedBox(height: 100),
+      ],
+    );
+  }
 
-        // Section 2: Hạng 4 - 10
-        if (top4_10.isNotEmpty) ...[
-          if (rank4 != null)
-            RankingRow(
-              ranking: rank4,
-              tiers: tierList,
-              isMe: isAuth && rank4.userId == currentUserId,
-              formatLabel: formatStr,
-              onTap: () => context.push('/user/${rank4.userId}'),
+  Widget _buildTableHeader(AppColorsExtension colors, AppLocalizations l10n) {
+    final labelStyle = TextStyle(
+      fontSize: 10,
+      fontWeight: FontWeight.w900,
+      letterSpacing: 0.8,
+      color: colors.textMuted,
+    );
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 7),
+      decoration: BoxDecoration(
+        color: colors.bgCard.withValues(alpha: 0.4),
+        border: Border(
+          bottom: BorderSide(color: colors.border.withValues(alpha: 0.6)),
+        ),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40,
+            child: Text(l10n.leaderboardTableRank, style: labelStyle),
+          ),
+          Expanded(
+            child: Text(
+              l10n.leaderboardTablePlayer.toUpperCase(),
+              style: labelStyle,
             ),
-          if (ranks5_10.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+          ),
+          Text(
+            l10n.leaderboardTablePoints.toUpperCase(),
+            style: labelStyle,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEloRow(
+    PlayerRanking ranking,
+    AppColorsExtension colors,
+    bool isAuth,
+    String? currentUserId,
+  ) {
+    final isMe = isAuth && ranking.userId == currentUserId;
+    final subtitle = ranking.tierName.isNotEmpty ? ranking.tierName : null;
+
+    return GestureDetector(
+      onTap: () => context.push('/user/${ranking.userId}'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: isMe ? colors.info.withValues(alpha: 0.08) : Colors.transparent,
+          border: Border(
+            bottom: BorderSide(color: colors.border.withValues(alpha: 0.5)),
+          ),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 40,
+              child: Text(
+                '${ranking.rank}',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                ),
+              ),
+            ),
+            Expanded(
               child: Row(
                 children: [
+                  _buildAvatar(ranking, colors),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: Divider(
-                      color: colors.border.withValues(alpha: 0.6),
-                      thickness: 1,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      l10n.leaderboardRank5To10,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        color: colors.textMuted,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Divider(
-                      color: colors.border.withValues(alpha: 0.6),
-                      thickness: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          ranking.fullName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: isMe ? colors.info : colors.textPrimary,
+                          ),
+                        ),
+                        if (subtitle != null)
+                          Text(
+                            subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colors.textMuted,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-            ...ranks5_10.map(
-              (r) => RankingRow(
-                ranking: r,
-                tiers: tierList,
-                isMe: isAuth && r.userId == currentUserId,
-                formatLabel: formatStr,
-                onTap: () => context.push('/user/${r.userId}'),
+            const SizedBox(width: 8),
+            Text(
+              '${ranking.eloPoints}',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: colors.textPrimary,
               ),
             ),
           ],
-        ] else ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Divider(
-                    color: colors.border.withValues(alpha: 0.6),
-                    thickness: 1,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    l10n.leaderboardRank4To10,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      color: colors.textMuted,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Divider(
-                    color: colors.border.withValues(alpha: 0.6),
-                    thickness: 1,
-                  ),
-                ),
-              ],
-            ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatar(PlayerRanking ranking, AppColorsExtension colors) {
+    const size = 38.0;
+    final hasImage = ranking.avatarUrl != null && ranking.avatarUrl!.isNotEmpty;
+    return ClipOval(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: hasImage
+            ? Image.network(
+                ranking.avatarUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stack) =>
+                    _avatarFallback(ranking.fullName, colors),
+              )
+            : _avatarFallback(ranking.fullName, colors),
+      ),
+    );
+  }
+
+  Widget _avatarFallback(String name, AppColorsExtension colors) {
+    return Container(
+      color: colors.border.withValues(alpha: 0.35),
+      alignment: Alignment.center,
+      child: Text(
+        _initial(name),
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w800,
+          color: colors.textSecondary,
+        ),
+      ),
+    );
+  }
+
+  String _initial(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return '?';
+    final parts = trimmed.split(' ');
+    if (parts.length >= 2) {
+      return '${parts[parts.length - 2][0]}${parts[parts.length - 1][0]}'
+          .toUpperCase();
+    }
+    return trimmed[0].toUpperCase();
+  }
+
+  Widget _buildMyRankBanner(
+    List<PlayerRanking> rankings,
+    AppColorsExtension colors,
+    String currentUserId,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.emoji_events_outlined,
+            color: colors.textMuted,
+            size: 22,
           ),
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: colors.border.withValues(alpha: 0.7)),
-            ),
+          const SizedBox(width: 10),
+          Expanded(
             child: Text(
-              l10n.leaderboardNoRank4To10,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: colors.textMuted,
-              ),
+              l10n.leaderboardNoTop100,
+              style: TextStyle(fontSize: 12, color: colors.textSecondary),
             ),
           ),
         ],
-
-        // Section 3: Xem Hạng 11 - 100 Card Button
-        GestureDetector(
-          onTap: () {
-            setState(() {
-              _isTop11_100Expanded = !_isTop11_100Expanded;
-            });
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: colors.border.withValues(alpha: 0.8)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: colors.info.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    _isTop11_100Expanded
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_right_rounded,
-                    color: colors.info,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.leaderboardTop11To100Title,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        l10n.leaderboardTop11To100Subtitle,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: colors.textMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.info.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: colors.info.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Text(
-                    l10n.leaderboardNationwide,
-                    style: TextStyle(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w900,
-                      color: colors.info,
-                      letterSpacing: 0.4,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Expanded Hạng 11 - 100 list
-        if (_isTop11_100Expanded)
-          if (top11_100.isNotEmpty)
-            ...top11_100.map(
-              (r) => RankingRow(
-                ranking: r,
-                tiers: tierList,
-                isMe: isAuth && r.userId == currentUserId,
-                formatLabel: formatStr,
-                onTap: () => context.push('/user/${r.userId}'),
-              ),
-            )
-          else
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: colors.border.withValues(alpha: 0.7)),
-              ),
-              child: Text(
-                l10n.leaderboardNoRank11To100,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: colors.textMuted,
-                ),
-              ),
-            ),
-        if (isAuth && currentUserId != null)
-          _buildStickyMeCard(rankings, tierList, colors, currentUserId),
-        const SizedBox(height: 100),
-      ],
+      ),
     );
   }
 
@@ -795,82 +643,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         }),
         const SizedBox(height: 100),
       ],
-    );
-  }
-
-  Widget _buildStickyMeCard(
-    List<PlayerRanking> rankings,
-    List<EloTier> tiers,
-    AppColorsExtension colors,
-    String currentUserId,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    final myRank = rankings
-        .where((r) => r.userId == currentUserId && r.rank > 0)
-        .firstOrNull;
-    if (myRank != null) {
-      return UserStatsCard(ranking: myRank, tiers: tiers);
-    }
-
-    final userRankingsAsync = ref.watch(userRankingsProvider);
-    return userRankingsAsync.when(
-      data: (myRankings) {
-        final validRank = myRankings.where((r) => r.rank > 0).firstOrNull;
-        if (validRank != null) {
-          return UserStatsCard(ranking: validRank, tiers: tiers);
-        }
-        return Container(
-          margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: colors.bgCard,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.border),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.emoji_events_outlined,
-                color: colors.textMuted,
-                size: 22,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  l10n.leaderboardNoTop100,
-                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (e, st) => Container(
-        margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colors.border),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.emoji_events_outlined,
-              color: colors.textMuted,
-              size: 22,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                l10n.leaderboardNoTop100,
-                style: TextStyle(fontSize: 12, color: colors.textSecondary),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

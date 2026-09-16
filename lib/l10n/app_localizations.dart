@@ -314,6 +314,12 @@ abstract class AppLocalizations {
   /// **'Khám phá'**
   String get navExplore;
 
+  /// No description provided for @navHome.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang chủ'**
+  String get navHome;
+
   /// No description provided for @navTournaments.
   ///
   /// In vi, this message translates to:
@@ -337,6 +343,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'CLB'**
   String get navClubs;
+
+  /// No description provided for @navProfile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tôi'**
+  String get navProfile;
 
   /// No description provided for @loginTitle.
   ///
@@ -2693,7 +2705,7 @@ abstract class AppLocalizations {
   /// No description provided for @leaderboardTitle.
   ///
   /// In vi, this message translates to:
-  /// **'Bảng xếp hạng'**
+  /// **'Xếp hạng'**
   String get leaderboardTitle;
 
   /// No description provided for @noStandings.
@@ -8996,6 +9008,24 @@ abstract class AppLocalizations {
   /// **'Chưa có môn thể thao nào được định nghĩa.'**
   String get leaderboardNoSportsSubtitle;
 
+  /// No description provided for @leaderboardTableRank.
+  ///
+  /// In vi, this message translates to:
+  /// **'#'**
+  String get leaderboardTableRank;
+
+  /// No description provided for @leaderboardTablePlayer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người chơi'**
+  String get leaderboardTablePlayer;
+
+  /// No description provided for @leaderboardTablePoints.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm'**
+  String get leaderboardTablePoints;
+
   /// No description provided for @leaderboardProvinceLabel.
   ///
   /// In vi, this message translates to:
@@ -13499,7 +13529,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeRankingsTab.
   ///
   /// In vi, this message translates to:
-  /// **'Bảng xếp hạng'**
+  /// **'Xếp hạng'**
   String get homeRankingsTab;
 
   /// No description provided for @homeWelcomeTitle.
@@ -16829,7 +16859,7 @@ abstract class AppLocalizations {
   /// No description provided for @bracketView_standings.
   ///
   /// In vi, this message translates to:
-  /// **'Bảng xếp hạng'**
+  /// **'Xếp hạng'**
   String get bracketView_standings;
 
   /// No description provided for @bracketView_schedule.
@@ -19143,7 +19173,7 @@ abstract class AppLocalizations {
   /// No description provided for @seriesRankingsTab.
   ///
   /// In vi, this message translates to:
-  /// **'Bảng xếp hạng'**
+  /// **'Xếp hạng'**
   String get seriesRankingsTab;
 
   /// No description provided for @matchTableBye.
