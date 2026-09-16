@@ -22,6 +22,7 @@ import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
+import 'package:app_quanly_giaidau/features/rankings/screens/province_selection_screen.dart';
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 
@@ -97,6 +98,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   String? _clubProvinceCode;
   String _rankingsSport = 'all';
   String? _rankingsProvince;
+  bool _isRankingsFilterExpanded = false;
   String _tournamentContent = 'all';
   String _tournamentBracket = 'all';
   String _tournamentRanked = 'all';
@@ -520,15 +522,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Container(
                         color: context.colors.bgDark,
                         padding: const EdgeInsets.fromLTRB(16.0, 6.0, 16.0, 8.0),
-                        child: _currentIndex == 3
-                            ? Row(
-                                children: [
-                                  Expanded(child: _buildSearchBar()),
-                                  const SizedBox(width: 10),
-                                  _buildCreateClubButton(),
-                                ],
-                              )
-                            : _buildSearchBar(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _currentIndex == 3
+                                ? Row(
+                                    children: [
+                                      Expanded(child: _buildSearchBar()),
+                                      const SizedBox(width: 10),
+                                      _buildCreateClubButton(),
+                                    ],
+                                  )
+                                : _buildSearchBar(),
+                            if (_currentIndex == 4 && _isRankingsFilterExpanded) ...[
+                              const SizedBox(height: 8),
+                              _buildRankingsProvinceFilterChip(context),
+                            ],
+                          ],
+                        ),
                       ),
                   ],
                 ),
@@ -573,6 +585,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             selectedSport: _rankingsSport,
             searchQuery: _searchQueries[4] ?? '',
             provinceCode: _rankingsProvince,
+            isFilterExpanded: _isRankingsFilterExpanded,
           ),
         );
     }
@@ -1048,7 +1061,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _showClubFilterSheet();
         break;
       case 4:
-        _showRankingFilterSheet();
+        setState(() {
+          _isRankingsFilterExpanded = !_isRankingsFilterExpanded;
+        });
         break;
     }
   }
@@ -1869,142 +1884,95 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _showRankingFilterSheet() {
-    final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: context.colors.bgSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        String? localProvinceCode = _rankingsProvince;
-        return StatefulBuilder(
-          builder: (ctx, setSheetState) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.homeRankingFilterTitle,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    color: context.colors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  l10n.homeLocationProvince,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: context.colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: context.colors.bgCard,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: context.colors.border),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String?>(
-                      value: localProvinceCode,
-                      isExpanded: true,
-                      hint: Text(
-                        l10n.filterAll,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: context.colors.textSecondary,
-                        ),
-                      ),
-                      icon: Icon(
-                        Icons.arrow_drop_down_rounded,
-                        color: context.colors.textMuted,
-                      ),
-                      dropdownColor: context.colors.bgCard,
-                      items: [
-                        DropdownMenuItem<String?>(
-                          value: null,
-                          child: Text(
-                            l10n.filterAll,
-                            style: TextStyle(
-                              color: context.colors.textSecondary,
-                            ),
-                          ),
-                        ),
-                        ...ProvinceData.all.map(
-                          (p) => DropdownMenuItem<String?>(
-                            value: p.code,
-                            child: Text(
-                              p.name,
-                              style: const TextStyle(fontSize: 13),
-                            ),
-                          ),
-                        ),
-                      ],
-                      onChanged: (v) =>
-                          setSheetState(() => localProvinceCode = v),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () =>
-                            setSheetState(() => localProvinceCode = null),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: context.colors.textSecondary,
-                          side: BorderSide(color: context.colors.border),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        child: Text(
-                          l10n.filterReset,
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () {
-                          setState(() => _rankingsProvince = localProvinceCode);
-                          Navigator.pop(ctx);
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        child: Text(
-                          l10n.filterApply,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
+  Widget _buildRankingsProvinceFilterChip(BuildContext context) {
+    final colors = context.colors;
+    final provinceName = ProvinceData.fromCode(_rankingsProvince ?? '')?.name ??
+        'Tỉnh / T.Phố';
+    final hasFilter = _rankingsProvince != null;
+
+    return GestureDetector(
+      onTap: _showProvinceFullScreenModal,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: hasFilter ? AppTheme.primary : colors.border,
+            width: 1.0,
           ),
-        );
-      },
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.location_on_outlined,
+              size: 18,
+              color: hasFilter ? AppTheme.primary : colors.textSecondary,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              provinceName,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: hasFilter ? FontWeight.w600 : FontWeight.w500,
+                color: hasFilter ? AppTheme.primary : colors.textPrimary,
+              ),
+            ),
+            if (hasFilter) ...[
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _rankingsProvince = null;
+                  });
+                },
+                child: Icon(
+                  Icons.close_rounded,
+                  size: 16,
+                  color: colors.textMuted,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
+  }
+
+  Future<void> _showProvinceFullScreenModal() async {
+    final result = await Navigator.of(context).push<Map<String, dynamic>>(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            ProvinceSelectionScreen(
+          selectedProvinceCode: _rankingsProvince,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(0.0, 1.0);
+          const end = Offset.zero;
+          const curve = Curves.easeOutCubic;
+          final tween = Tween(begin: begin, end: end)
+              .chain(CurveTween(curve: curve));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+        fullscreenDialog: true,
+      ),
+    );
+
+    if (result != null && mounted) {
+      if (result['action'] == 'clear') {
+        setState(() {
+          _rankingsProvince = null;
+        });
+      } else if (result['action'] == 'select') {
+        setState(() {
+          _rankingsProvince = result['code'] as String?;
+        });
+      }
+    }
   }
 
   Widget _buildFilterChips({

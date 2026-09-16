@@ -15,12 +15,14 @@ class LeaderboardScreen extends ConsumerStatefulWidget {
   final String searchQuery;
   final String? provinceCode;
   final bool standalone;
+  final bool isFilterExpanded;
   const LeaderboardScreen({
     super.key,
     this.selectedSport = 'all',
     this.searchQuery = '',
     this.provinceCode,
     this.standalone = false,
+    this.isFilterExpanded = false,
   });
 
   @override
@@ -118,7 +120,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(height: widget.standalone ? 20 : 160),
+                  SizedBox(
+                    height: widget.standalone
+                        ? 20
+                        : (145 + (widget.isFilterExpanded ? 46 : 0)),
+                  ),
                   if (!isFootball) _buildGenderFilter(colors),
                   const SizedBox(height: 12),
                   isFootball
@@ -187,36 +193,49 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   Widget _buildGenderFilter(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     final options = [
-      ('MALE', '♂ ${l10n.clubRankingMale}'),
-      ('FEMALE', '♀ ${l10n.clubRankingFemale}'),
+      ('MALE', l10n.clubRankingMale, Icons.male_rounded),
+      ('FEMALE', l10n.clubRankingFemale, Icons.female_rounded),
     ];
 
     return SizedBox(
-      height: 36,
+      height: 38,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: options.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        separatorBuilder: (context, index) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final option = options[index];
           final selected = _selectedGender == option.$1;
-          return ChoiceChip(
-            label: Text(option.$2),
-            selected: selected,
-            onSelected: (_) => setState(() => _selectedGender = option.$1),
-            showCheckmark: false,
-            selectedColor: AppTheme.primary,
-            backgroundColor: colors.bgCard,
-            side: BorderSide(
-              color: selected ? AppTheme.primary : colors.border,
+          final textColor = selected ? AppTheme.primary : colors.textMuted;
+          final iconColor = selected ? AppTheme.primary : colors.textMuted;
+          final borderColor = selected ? AppTheme.primary : colors.border;
+
+          return GestureDetector(
+            onTap: () => setState(() => _selectedGender = option.$1),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: selected ? AppTheme.secondaryLight : colors.bgCard,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: borderColor, width: 1.2),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(option.$3, size: 18, color: iconColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    option.$2,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 13,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            labelStyle: TextStyle(
-              color: selected ? Colors.white : colors.textSecondary,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8),
           );
         },
       ),
@@ -330,16 +349,18 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   }
 
   Widget _buildTableHeader(AppColorsExtension colors, AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final headerBg = isDark ? colors.bgElevated : const Color(0xFFF1F5F9);
     final labelStyle = TextStyle(
-      fontSize: 10,
-      fontWeight: FontWeight.w900,
-      letterSpacing: 0.8,
+      fontSize: 11,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.5,
       color: colors.textMuted,
     );
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
-        color: colors.bgCard.withValues(alpha: 0.4),
+        color: headerBg,
         border: Border(
           bottom: BorderSide(color: colors.border.withValues(alpha: 0.6)),
         ),
@@ -392,7 +413,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 '${ranking.rank}',
                 style: TextStyle(
                   fontSize: 13,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w400,
                   color: colors.textPrimary,
                 ),
               ),
@@ -412,7 +433,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 13.5,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w500,
                             color: isMe ? colors.info : colors.textPrimary,
                           ),
                         ),
@@ -437,7 +458,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               '${ranking.eloPoints}',
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w500,
                 color: colors.textPrimary,
               ),
             ),
