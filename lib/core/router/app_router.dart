@@ -72,6 +72,7 @@ import 'package:app_quanly_giaidau/features/chat/screens/chat_screen.dart';
 import 'package:app_quanly_giaidau/features/chat/screens/chat_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_social_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_dispatcher.dart';
+import 'package:app_quanly_giaidau/features/social/screens/social_detail_screen.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
 
@@ -200,6 +201,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           final tabStr = state.uri.queryParameters['tab'];
           final initialTab = int.tryParse(tabStr ?? '') ?? 0;
           return HomeScreen(initialTab: initialTab);
+        },
+      ),
+
+      // ─── Social Sessions (Xé vé Social) ───
+      GoRoute(
+        path: '/social/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          return SocialDetailScreen(sessionId: id);
         },
       ),
 

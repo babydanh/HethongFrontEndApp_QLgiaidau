@@ -25,6 +25,8 @@ import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.
 import 'package:app_quanly_giaidau/features/rankings/screens/province_selection_screen.dart';
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/features/social/screens/social_list_view.dart';
+import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
 
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
@@ -52,6 +54,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
+  int _exploreSubTabIndex = 0; // 0: CLB (default), 1: Social
   // ─── Per-tab search state ───
   final Map<int, String> _searchQueries = {0: '', 1: '', 3: '', 4: ''};
   final Map<int, TextEditingController> _searchControllers = {
@@ -290,8 +293,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   double get _safeAreaTop => MediaQuery.of(context).padding.top;
   double get _headerHeight => 84.0 + _safeAreaTop;
-  double get _pinnedHeaderHeight =>
-      _headerHeight + (_shouldShowSearchBar ? 52.0 : 0.0);
+  double get _pinnedHeaderHeight {
+    double h = _headerHeight;
+    if (_currentIndex == 3) {
+      h += 44.0; // Explore sub-tabs (CLB / Social)
+      if (_shouldShowSearchBar) {
+        h += 52.0; // Search bar
+      }
+    } else if (_shouldShowSearchBar) {
+      h += 52.0;
+    }
+    return h;
+  }
 
   @override
   void initState() {
@@ -494,7 +507,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       _currentIndex == 1
                                           ? l10n.navTournaments
                                           : _currentIndex == 3
-                                          ? l10n.homeClubTab
+                                          ? 'Khám phá'
                                           : _currentIndex == 4
                                           ? l10n.homeRankingsTab
                                           : l10n.sporto,
@@ -518,6 +531,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ],
                       ),
                     ),
+                    if (_currentIndex == 3)
+                      Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: context.colors.bgDark,
+                          border: Border(
+                            bottom: BorderSide(
+                              color: context.colors.border.withValues(alpha: 0.5),
+                              width: 1,
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _buildExploreSubTabItem(
+                                title: 'CLB',
+                                isSelected: _exploreSubTabIndex == 0,
+                                onTap: () {
+                                  if (_exploreSubTabIndex != 0) {
+                                    setState(() {
+                                      _exploreSubTabIndex = 0;
+                                    });
+                                    if (_serverClubsList.isEmpty) {
+                                      _fetchServerClubPage(isLoadMore: false);
+                                    }
+                                  }
+                                },
+                              ),
+                            ),
+                            Expanded(
+                              child: _buildExploreSubTabItem(
+                                title: 'Social',
+                                isSelected: _exploreSubTabIndex == 1,
+                                onTap: () {
+                                  if (_exploreSubTabIndex != 1) {
+                                    setState(() {
+                                      _exploreSubTabIndex = 1;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     if (_shouldShowSearchBar)
                       Container(
                         color: context.colors.bgDark,
@@ -526,7 +585,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _currentIndex == 3
+                            _currentIndex == 3 && _exploreSubTabIndex == 0
                                 ? Row(
                                     children: [
                                       Expanded(child: _buildSearchBar()),
@@ -574,8 +633,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
       case 3:
         return KeyedSubtree(
-          key: const ValueKey('clubs'),
-          child: _buildCommunityTab(),
+          key: ValueKey('explore_$_exploreSubTabIndex'),
+          child: _exploreSubTabIndex == 0
+              ? _buildCommunityTab()
+              : SocialListView(topPadding: _pinnedHeaderHeight),
         );
       case 4:
       default:
@@ -589,6 +650,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         );
     }
+  }
+
+  Widget _buildExploreSubTabItem({
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const activeColor = AppTheme.primary;
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Center(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                  color: isSelected
+                      ? (isDark ? const Color(0xFF4ADE80) : activeColor)
+                      : (isDark ? Colors.white60 : const Color(0xFF64748B)),
+                ),
+              ),
+            ),
+          ),
+          Container(
+            height: 3,
+            width: 70,
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? (isDark ? const Color(0xFF4ADE80) : activeColor)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(1.5),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // ═══════════════════════════════════════════════════════

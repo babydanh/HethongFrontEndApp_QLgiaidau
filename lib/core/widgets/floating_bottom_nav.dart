@@ -41,9 +41,9 @@ class FloatingBottomNav extends StatelessWidget {
       ),
       _NavTabData(
         internalIndex: 3,
-        icon: Icons.people_outline_rounded,
-        activeIcon: Icons.people_rounded,
-        label: l10n.navClubs,
+        icon: Icons.explore_outlined,
+        activeIcon: Icons.explore_rounded,
+        label: 'Khám phá',
       ),
       _NavTabData(
         internalIndex: 1,
