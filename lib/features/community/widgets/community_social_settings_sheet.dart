@@ -407,7 +407,7 @@ class _CommunitySocialSettingsSheetState
             ),
           ),
           _toggle(
-            'Thành viên được chấm điểm',
+            'Thành viên được nhập điểm trận riêng',
             _settings.memberMatchScoringEnabled,
             (value) => setState(
               () => _settings = _settings.copyWith(
