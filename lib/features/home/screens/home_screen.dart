@@ -256,6 +256,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _serverClubsList.clear();
             _serverClubsList.addAll(result.communities);
           }
+          _serverClubsList.sort((a, b) {
+            final aRole = a.myRole?.toUpperCase();
+            final bRole = b.myRole?.toUpperCase();
+            final aIsAdmin = aRole == 'OWNER' || aRole == 'ADMIN' || aRole == 'MODERATOR';
+            final bIsAdmin = bRole == 'OWNER' || bRole == 'ADMIN' || bRole == 'MODERATOR';
+            if (aIsAdmin && !bIsAdmin) return -1;
+            if (!aIsAdmin && bIsAdmin) return 1;
+            return 0;
+          });
           _serverClubNextCursor = result.nextCursor;
           _serverClubHasMore =
               result.hasMore && (result.nextCursor?.isNotEmpty ?? false);
@@ -2741,16 +2750,67 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               const SizedBox(width: 14.0),
               Expanded(
-                child: Text(
-                  club.name,
-                  style: TextStyle(
-                    fontSize: 15.0,
-                    fontWeight: FontWeight.w700,
-                    color: context.colors.textPrimary,
-                    height: 1.25,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      club.name,
+                      style: TextStyle(
+                        fontSize: 15.0,
+                        fontWeight: FontWeight.w700,
+                        color: context.colors.textPrimary,
+                        height: 1.25,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (club.myRole != null &&
+                        (club.myRole!.toUpperCase() == 'OWNER' ||
+                            club.myRole!.toUpperCase() == 'ADMIN' ||
+                            club.myRole!.toUpperCase() == 'MODERATOR')) ...[
+                      const SizedBox(height: 4.0),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryLight.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                              border: Border.all(
+                                color: AppTheme.primary.withValues(alpha: 0.4),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.shield_rounded,
+                                  size: 11,
+                                  color: AppTheme.primary,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  club.myRole!.toUpperCase() == 'OWNER'
+                                      ? 'Quản lý CLB'
+                                      : 'Quản trị viên',
+                                  style: const TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ],

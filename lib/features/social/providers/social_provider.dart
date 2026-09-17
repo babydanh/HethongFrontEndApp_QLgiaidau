@@ -139,6 +139,78 @@ class SocialSessionsNotifier extends Notifier<List<SocialSessionModel>> {
     updatedList[index] = updatedSession;
     state = updatedList;
   }
+
+  void togglePaymentStatus(String sessionId, String paymentId) {
+    final index = state.indexWhere((s) => s.id == sessionId);
+    if (index == -1) return;
+
+    final session = state[index];
+    final updatedPayments = session.payments.map((p) {
+      if (p.id == paymentId) {
+        final newStatus = p.status == 'PAID' ? 'PENDING' : 'PAID';
+        return p.copyWith(
+          status: newStatus,
+          paidAt: newStatus == 'PAID' ? DateTime.now() : null,
+        );
+      }
+      return p;
+    }).toList();
+
+    final updatedSession = session.copyWith(payments: updatedPayments);
+    final updatedList = List<SocialSessionModel>.from(state);
+    updatedList[index] = updatedSession;
+    state = updatedList;
+  }
+
+  bool addParticipantToSlot({
+    required String sessionId,
+    required String participantName,
+  }) {
+    final index = state.indexWhere((s) => s.id == sessionId);
+    if (index == -1) return false;
+
+    final session = state[index];
+    if (session.currentParticipants >= session.maxParticipants) return false;
+
+    final partId = 'part_${DateTime.now().millisecondsSinceEpoch}';
+    final newParticipant = SocialParticipantModel(
+      id: partId,
+      name: participantName.isEmpty ? 'Thành viên mới' : participantName,
+      initials: participantName.isNotEmpty
+          ? participantName.trim().split(' ').last.substring(0, 1).toUpperCase()
+          : 'TV',
+      skillLevel: session.skillLevel,
+      status: 'Xác nhận tham gia',
+      joinedAt: DateTime.now(),
+    );
+
+    final newPayment = SocialPaymentModel(
+      id: 'pay_${DateTime.now().millisecondsSinceEpoch}',
+      participantId: partId,
+      participantName: newParticipant.name,
+      ticketCount: 1,
+      totalAmount: session.pricePerSlot,
+      status: 'PAID',
+      paymentMethod: 'CASH',
+      paidAt: DateTime.now(),
+    );
+
+    final updatedParticipants = List<SocialParticipantModel>.from(session.participants)
+      ..add(newParticipant);
+    final updatedPayments = List<SocialPaymentModel>.from(session.payments)
+      ..add(newPayment);
+
+    final updatedSession = session.copyWith(
+      currentParticipants: session.currentParticipants + 1,
+      participants: updatedParticipants,
+      payments: updatedPayments,
+    );
+
+    final updatedList = List<SocialSessionModel>.from(state);
+    updatedList[index] = updatedSession;
+    state = updatedList;
+    return true;
+  }
 }
 
 final socialSessionsProvider =
@@ -154,6 +226,18 @@ final socialSessionDetailProvider =
   } catch (_) {
     return null;
   }
+});
+
+final clubSocialSessionsProvider =
+    Provider.family<List<SocialSessionModel>, String>((ref, clubId) {
+  final allSessions = ref.watch(socialSessionsProvider);
+  final matched = allSessions.where((s) => s.clubId == clubId).toList();
+  if (matched.isNotEmpty) return matched;
+
+  // Fallback: match by session id 'sb_pickleball_sonbao_17' or return top sessions
+  final sbSession = allSessions.where((s) => s.id == 'sb_pickleball_sonbao_17').toList();
+  if (sbSession.isNotEmpty) return sbSession;
+  return allSessions.take(2).toList();
 });
 
 final filteredSocialSessionsProvider = Provider<List<SocialSessionModel>>((ref) {

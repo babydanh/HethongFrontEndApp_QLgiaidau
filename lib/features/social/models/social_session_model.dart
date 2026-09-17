@@ -86,9 +86,59 @@ class SocialChatMessageModel {
   });
 }
 
+class SocialPaymentModel {
+  final String id;
+  final String participantId;
+  final String participantName;
+  final String? participantAvatar;
+  final int ticketCount;
+  final int totalAmount;
+  final String status; // 'PAID', 'PENDING'
+  final String paymentMethod; // 'CASH', 'TRANSFER'
+  final DateTime? paidAt;
+
+  const SocialPaymentModel({
+    required this.id,
+    required this.participantId,
+    required this.participantName,
+    this.participantAvatar,
+    this.ticketCount = 1,
+    required this.totalAmount,
+    this.status = 'PAID',
+    this.paymentMethod = 'TRANSFER',
+    this.paidAt,
+  });
+
+  SocialPaymentModel copyWith({
+    String? id,
+    String? participantId,
+    String? participantName,
+    String? participantAvatar,
+    int? ticketCount,
+    int? totalAmount,
+    String? status,
+    String? paymentMethod,
+    DateTime? paidAt,
+  }) {
+    return SocialPaymentModel(
+      id: id ?? this.id,
+      participantId: participantId ?? this.participantId,
+      participantName: participantName ?? this.participantName,
+      participantAvatar: participantAvatar ?? this.participantAvatar,
+      ticketCount: ticketCount ?? this.ticketCount,
+      totalAmount: totalAmount ?? this.totalAmount,
+      status: status ?? this.status,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      paidAt: paidAt ?? this.paidAt,
+    );
+  }
+}
+
 class SocialSessionModel {
   final String id;
+  final String? clubId;
   final String title;
+  final String status; // 'OPEN', 'COMPLETED', 'CANCELLED'
   final String sport; // 'tennis', 'pickleball', 'badminton'
   final String sportName;
   final String hostClubName;
@@ -116,10 +166,13 @@ class SocialSessionModel {
   final List<SocialParticipantModel> participants;
   final List<SocialMatchModel> matches;
   final List<SocialChatMessageModel> chatMessages;
+  final List<SocialPaymentModel> payments;
 
   const SocialSessionModel({
     required this.id,
+    this.clubId,
     required this.title,
+    this.status = 'OPEN',
     required this.sport,
     required this.sportName,
     required this.hostClubName,
@@ -147,11 +200,14 @@ class SocialSessionModel {
     this.participants = const [],
     this.matches = const [],
     this.chatMessages = const [],
+    this.payments = const [],
   });
 
   SocialSessionModel copyWith({
     String? id,
+    String? clubId,
     String? title,
+    String? status,
     String? sport,
     String? sportName,
     String? hostClubName,
@@ -179,10 +235,13 @@ class SocialSessionModel {
     List<SocialParticipantModel>? participants,
     List<SocialMatchModel>? matches,
     List<SocialChatMessageModel>? chatMessages,
+    List<SocialPaymentModel>? payments,
   }) {
     return SocialSessionModel(
       id: id ?? this.id,
+      clubId: clubId ?? this.clubId,
       title: title ?? this.title,
+      status: status ?? this.status,
       sport: sport ?? this.sport,
       sportName: sportName ?? this.sportName,
       hostClubName: hostClubName ?? this.hostClubName,
@@ -210,6 +269,7 @@ class SocialSessionModel {
       participants: participants ?? this.participants,
       matches: matches ?? this.matches,
       chatMessages: chatMessages ?? this.chatMessages,
+      payments: payments ?? this.payments,
     );
   }
 }

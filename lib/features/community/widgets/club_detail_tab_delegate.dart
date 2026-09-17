@@ -52,7 +52,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
                 const SizedBox(width: 14),
                 _buildTabItem(
                   index: 1,
-                  label: 'Thi đấu',
+                  label: 'Hoạt động',
                   isActive: activeIndex == 1,
                   colors: colors,
                 ),

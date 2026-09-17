@@ -23,6 +23,8 @@ import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.da
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_dialog.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_result_dialog.dart';
+import 'package:app_quanly_giaidau/features/social/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
 
 class ClubActivityTab extends ConsumerStatefulWidget {
   final String communityId;
@@ -47,6 +49,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   int _activityDisplayLimit = _activityMatchPageSize;
   String? _errorMessage;
   _ActivityFilter _filter = _ActivityFilter.all;
+  String _socialStatusFilter = 'OPEN';
   Timer? _refreshTimer;
   Timer? _socketRefreshTimer;
   StreamSubscription<Map<String, dynamic>>? _socketScoreSubscription;
@@ -768,7 +771,13 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     }).toList();
     final visibleMatches = filteredMatches.take(_activityDisplayLimit).toList();
 
-    return NotificationListener<ScrollNotification>(
+    // Dữ liệu Social của CLB (Ảnh 2 Reclub)
+    final clubSocials = ref.watch(clubSocialSessionsProvider(widget.communityId));
+    final openSocials = clubSocials.where((s) => s.status == 'OPEN').toList();
+    final completedSocials = clubSocials.where((s) => s.status == 'COMPLETED').toList();
+    final displayedSocials = _socialStatusFilter == 'OPEN' ? openSocials : completedSocials;
+
+    final content = NotificationListener<ScrollNotification>(
       onNotification: _onActivityScroll,
       child: RefreshIndicator(
         onRefresh: () => _fetchMatches(),
@@ -777,7 +786,82 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
           padding: const EdgeInsets.only(top: 12, bottom: 132),
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
-            // ─── 2. THANH LỌC & TÌM KIẾM & TẠO TRẬN ĐẤU ───────────────────
+            // ─── 1. LỊCH CHƠI & HOẠT ĐỘNG SOCIAL CLB (Ảnh 2 Reclub) ───
+            _buildWeeklyScheduleCard(colors),
+            _buildSocialFilterBar(colors, openSocials.length, completedSocials.length),
+            const SizedBox(height: 12),
+            if (displayedSocials.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  displayedSocials.first.dateDisplay.contains('Thứ')
+                      ? 'Thứ Năm, Ngày 17 Tháng 9'
+                      : 'Hôm nay',
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...displayedSocials.map(
+                (s) => _buildClubSocialSessionCard(s, colors, isClubManager),
+              ),
+              const SizedBox(height: 12),
+            ] else ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Center(
+                  child: Text(
+                    _socialStatusFilter == 'OPEN'
+                        ? 'Chưa có hoạt động nào đang mở'
+                        : 'Chưa có hoạt động nào đã kết thúc',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+
+            // ─── 2. PHÂN MỤC TRẬN ĐẤU CLB ───
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
+              child: Row(
+                children: [
+                  Text(
+                    'TRẬN ĐẤU CLB',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: colors.textSecondary,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: colors.bgSurface,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: colors.border),
+                    ),
+                    child: Text(
+                      '${_matches.length}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ─── 3. THANH LỌC & TÌM KIẾM & TẠO TRẬN ĐẤU ───────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -941,6 +1025,350 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
               _buildLoadMoreIndicator(colors),
             ],
           ],
+        ),
+      ),
+    );
+
+    return Stack(
+      children: [
+        content,
+        if (isClubManager)
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: FloatingActionButton(
+              heroTag: 'fab_club_activity_social_${widget.communityId}',
+              backgroundColor: AppTheme.primary,
+              elevation: 4,
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Tạo buổi Social mới cho ${widget.club?.name ?? 'CLB'}',
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              child: const Icon(Icons.add, color: Colors.white, size: 28),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildWeeklyScheduleCard(AppColorsExtension colors) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        border: Border.all(color: colors.border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'LỊCH CHƠI HÀNG TUẦN',
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'CLB này chưa có hoạt động được tạo tự động hàng tuần.',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: colors.textSecondary,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: colors.bgSurface,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              border: Border.all(color: colors.border, width: 1.5),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  height: 14,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.refereeColor,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(AppTheme.radiusSmall),
+                    ),
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Container(
+                          width: 3,
+                          height: 3,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        Container(
+                          width: 3,
+                          height: 3,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const Expanded(
+                  child: Center(
+                    child: Text(
+                      '1',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSocialFilterBar(
+    AppColorsExtension colors,
+    int openCount,
+    int completedCount,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: () => setState(() => _socialStatusFilter = 'OPEN'),
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: _socialStatusFilter == 'OPEN'
+                    ? colors.success.withValues(alpha: 0.15)
+                    : colors.bgSurface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: _socialStatusFilter == 'OPEN'
+                      ? colors.success.withValues(alpha: 0.5)
+                      : colors.border,
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                'Mở • $openCount',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: _socialStatusFilter == 'OPEN'
+                      ? FontWeight.w800
+                      : FontWeight.w600,
+                  color: _socialStatusFilter == 'OPEN'
+                      ? colors.success
+                      : colors.textSecondary,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: () => setState(() => _socialStatusFilter = 'COMPLETED'),
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: _socialStatusFilter == 'COMPLETED'
+                    ? colors.success.withValues(alpha: 0.15)
+                    : colors.bgSurface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: _socialStatusFilter == 'COMPLETED'
+                      ? colors.success.withValues(alpha: 0.5)
+                      : colors.border,
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                'Đã xong • $completedCount',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: _socialStatusFilter == 'COMPLETED'
+                      ? FontWeight.w800
+                      : FontWeight.w600,
+                  color: _socialStatusFilter == 'COMPLETED'
+                      ? colors.success
+                      : colors.textSecondary,
+                ),
+              ),
+            ),
+          ),
+          const Spacer(),
+          Icon(
+            Icons.filter_list_rounded,
+            color: colors.textSecondary,
+            size: 22,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClubSocialSessionCard(
+    SocialSessionModel session,
+    AppColorsExtension colors,
+    bool isClubManager,
+  ) {
+    return InkWell(
+      onTap: () {
+        context.push('/social/${session.id}?isAdmin=$isClubManager');
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+          border: Border.all(color: colors.border),
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: 92,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                decoration: BoxDecoration(
+                  color: colors.bgSurface,
+                  borderRadius: const BorderRadius.horizontal(
+                    left: Radius.circular(AppTheme.radiusXL),
+                  ),
+                  border: Border(
+                    right: BorderSide(color: colors.border),
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      session.timeSlot,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      session.playFormat.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.success.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                      ),
+                      child: Text(
+                        'TỔ CHỨC',
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
+                          color: colors.success,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        session.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: 14,
+                            color: colors.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              session.venueName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${session.currentParticipants} Tham gia',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

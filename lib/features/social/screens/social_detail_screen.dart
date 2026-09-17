@@ -10,8 +10,13 @@ import 'package:app_quanly_giaidau/features/social/widgets/social_join_bottom_sh
 
 class SocialDetailScreen extends ConsumerStatefulWidget {
   final String sessionId;
+  final bool? isAdmin;
 
-  const SocialDetailScreen({super.key, required this.sessionId});
+  const SocialDetailScreen({
+    super.key,
+    required this.sessionId,
+    this.isAdmin,
+  });
 
   @override
   ConsumerState<SocialDetailScreen> createState() => _SocialDetailScreenState();
@@ -22,10 +27,12 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
   late TabController _tabController;
   final TextEditingController _chatInputController = TextEditingController();
 
+  bool get _isAdmin => widget.isAdmin ?? true;
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: _isAdmin ? 5 : 4, vsync: this);
   }
 
   @override
@@ -37,25 +44,32 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final session = ref.watch(socialSessionDetailProvider(widget.sessionId));
 
     if (session == null) {
       return Scaffold(
+        backgroundColor: colors.bgDark,
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: Icon(Icons.arrow_back, color: colors.textPrimary),
             onPressed: () => context.pop(),
           ),
-          title: const Text('Chi tiết Social'),
+          title: Text('Chi tiết Social', style: TextStyle(color: colors.textPrimary)),
         ),
-        body: const Center(child: Text('Không tìm thấy thông tin buổi Social')),
+        body: Center(
+          child: Text(
+            'Không tìm thấy thông tin buổi Social',
+            style: TextStyle(color: colors.textSecondary),
+          ),
+        ),
       );
     }
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
-      appBar: _buildAppBar(context, isDark, session),
+      backgroundColor: colors.bgDark,
+      appBar: _buildAppBar(context, colors, session),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -65,49 +79,47 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             child: Text(
               session.title.toUpperCase(),
               style: TextStyle(
-                fontSize: 19,
+                fontSize: 18,
                 fontWeight: FontWeight.w900,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                color: colors.textPrimary,
                 letterSpacing: 0.2,
                 height: 1.25,
               ),
             ),
           ),
 
-          // 4 Horizontal Tabs (IMG2 & IMG3)
+          // Horizontal Tabs (5 tabs for Admin, 4 for Member)
           Container(
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : const Color(0xFFE2E8F0),
+                  color: colors.border,
                   width: 1,
                 ),
               ),
             ),
             child: TabBar(
               controller: _tabController,
-              isScrollable: false,
-              labelColor: const Color(0xFF2563EB), // Vibrant blue active tab
-              unselectedLabelColor:
-                  isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              isScrollable: _isAdmin,
+              labelColor: AppTheme.primary,
+              unselectedLabelColor: colors.textSecondary,
               labelStyle: const TextStyle(
-                fontSize: 14.5,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),
               unselectedLabelStyle: const TextStyle(
-                fontSize: 14.5,
+                fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
-              indicatorColor: const Color(0xFF2563EB),
+              indicatorColor: AppTheme.primary,
               indicatorWeight: 3,
               indicatorSize: TabBarIndicatorSize.tab,
-              tabs: const [
-                Tab(text: 'Chi tiết'),
-                Tab(text: 'Người tham gia'),
-                Tab(text: 'Trận đấu'),
-                Tab(text: 'Trò chuyện'),
+              tabs: [
+                const Tab(text: 'Chi tiết'),
+                const Tab(text: 'Người tham gia'),
+                if (_isAdmin) const Tab(text: 'Thanh toán'),
+                const Tab(text: 'Trận đấu'),
+                const Tab(text: 'Trò chuyện'),
               ],
             ),
           ),
@@ -118,7 +130,8 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
               controller: _tabController,
               children: [
                 _buildDetailsTab(isDark, session),
-                _buildParticipantsTab(isDark, session),
+                _buildParticipantsTab(colors, session),
+                if (_isAdmin) _buildPaymentTab(colors, session),
                 _buildMatchesTab(isDark, session),
                 _buildChatTab(isDark, session),
               ],
@@ -134,17 +147,17 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
 
   PreferredSizeWidget _buildAppBar(
     BuildContext context,
-    bool isDark,
+    AppColorsExtension colors,
     SocialSessionModel session,
   ) {
     return AppBar(
-      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+      backgroundColor: colors.bgDark,
       elevation: 0,
       scrolledUnderElevation: 0,
       leading: IconButton(
         icon: Icon(
           Icons.arrow_back,
-          color: isDark ? Colors.white : const Color(0xFF0F172A),
+          color: colors.textPrimary,
           size: 24,
         ),
         onPressed: () => context.pop(),
@@ -155,14 +168,14 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
         style: const TextStyle(
           fontSize: 16.5,
           fontWeight: FontWeight.w700,
-          color: Color(0xFF2563EB), // Blue time header matching IMG2 & IMG3
+          color: AppTheme.primary,
         ),
       ),
       actions: [
         IconButton(
           icon: Icon(
             Icons.ios_share_rounded,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: colors.textPrimary,
             size: 22,
           ),
           onPressed: () => _handleShare(session),
@@ -170,7 +183,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
         IconButton(
           icon: Icon(
             Icons.more_vert_rounded,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: colors.textPrimary,
             size: 22,
           ),
           onPressed: () => _showMoreOptions(context, session),
@@ -591,112 +604,612 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
   }
 
   // ═══════════════════════════════════════════════════════
-  //  TAB 2: NGƯỜI THAM GIA
+  //  TAB 2: NGƯỜI THAM GIA (Ảnh 3 Reclub)
   // ═══════════════════════════════════════════════════════
-  Widget _buildParticipantsTab(bool isDark, SocialSessionModel session) {
+  Widget _buildParticipantsTab(AppColorsExtension colors, SocialSessionModel session) {
+    final host = session.participants.where((p) => p.isHost).firstOrNull ??
+        SocialParticipantModel(
+          id: 'host_default',
+          name: 'Sơn Bảo',
+          initials: 'SB',
+          skillLevel: session.skillLevel,
+          isHost: true,
+          status: 'Người tổ chức',
+          joinedAt: DateTime.now(),
+        );
+
+    final totalSlots = session.maxParticipants;
+    final confirmedCount = session.participants.length;
+
     return ListView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       children: [
-        // Capacity Header
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(12),
+        // ─── 1. NGƯỜI TỔ CHỨC ───
+        Text(
+          'NGƯỜI TỔ CHỨC • 1',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: colors.textSecondary,
+            letterSpacing: 0.5,
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        ),
+        const SizedBox(height: 14),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Danh sách người tham gia',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
-                ),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 62,
+                    height: 62,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: colors.success.withValues(alpha: 0.25),
+                      border: Border.all(
+                        color: colors.success.withValues(alpha: 0.6),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        host.initials,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Container(
+                      width: 22,
+                      height: 22,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.shield_rounded,
+                        size: 13,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 8),
               Text(
-                '${session.currentParticipants}/${session.maxParticipants}',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF2563EB),
+                host.name,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textPrimary,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 12),
 
-        // List of Participants
-        if (session.participants.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 32),
-            child: Center(
-              child: Text('Chưa có thành viên nào tham gia'),
+        const SizedBox(height: 16),
+        Divider(color: colors.border, height: 1),
+        const SizedBox(height: 14),
+
+        // ─── 2. XÁC NHẬN THAM GIA Header & More icon ───
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'XÁC NHẬN THAM GIA • $confirmedCount/$totalSlots',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: colors.textSecondary,
+                letterSpacing: 0.5,
+              ),
             ),
-          )
-        else
-          ...session.participants.map((p) {
-            return ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-              leading: CircleAvatar(
-                radius: 22,
-                backgroundColor: p.isHost
-                    ? const Color(0xFF6EE7B7)
-                    : const Color(0xFF93C5FD),
-                child: Text(
-                  p.initials,
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              icon: Icon(
+                Icons.more_horiz_rounded,
+                color: colors.textSecondary,
+                size: 22,
+              ),
+              onPressed: () {},
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+
+        // Dropdowns row (Sort & Display options)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Sắp xếp: Xác nhận gần đây',
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: p.isHost
-                        ? const Color(0xFF064E3B)
-                        : const Color(0xFF1E3A8A),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    color: colors.textSecondary,
                   ),
                 ),
-              ),
-              title: Row(
-                children: [
-                  Text(
-                    p.name,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+                Icon(
+                  Icons.arrow_drop_down_rounded,
+                  size: 18,
+                  color: colors.textSecondary,
+                ),
+              ],
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Hiển thị: Thẻ, Sân, Bạn bè,...',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    color: colors.textSecondary,
                   ),
-                  if (p.isHost) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+                ),
+                Icon(
+                  Icons.arrow_drop_down_rounded,
+                  size: 18,
+                  color: colors.textSecondary,
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // ─── 3. GRID 4 COLUMNS (Ảnh 3 Reclub) ───
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 12,
+            childAspectRatio: 0.8,
+          ),
+          itemCount: totalSlots,
+          itemBuilder: (context, index) {
+            if (index < session.participants.length) {
+              final p = session.participants[index];
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: p.isHost
+                          ? colors.success.withValues(alpha: 0.25)
+                          : AppTheme.primaryLight.withValues(alpha: 0.35),
+                      border: Border.all(
+                        color: p.isHost
+                            ? colors.success.withValues(alpha: 0.6)
+                            : AppTheme.primary.withValues(alpha: 0.4),
+                        width: 1.2,
                       ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF16A34A),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        'HOST',
+                    ),
+                    child: Center(
+                      child: Text(
+                        p.initials,
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                          color: colors.textPrimary,
                         ),
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    p.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                ],
+              );
+            } else {
+              // Empty slot with '+' icon
+              return InkWell(
+                onTap: _isAdmin
+                    ? () => _showAddParticipantDialog(context, session, index + 1)
+                    : null,
+                borderRadius: BorderRadius.circular(28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 54,
+                      height: 54,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: colors.bgSurface,
+                        border: Border.all(
+                          color: colors.border,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.add_rounded,
+                        size: 26,
+                        color: colors.textMuted,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Slot ${index + 1}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colors.textMuted,
+                      ),
+                    ),
                   ],
+                ),
+              );
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  TAB THANH TOÁN (Dành cho Quản lý CLB)
+  // ═══════════════════════════════════════════════════════
+  Widget _buildPaymentTab(AppColorsExtension colors, SocialSessionModel session) {
+    final currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+    final totalExpected = session.maxParticipants * session.pricePerSlot;
+    final payments = session.payments;
+    final paidPayments = payments.where((p) => p.status == 'PAID').toList();
+    final totalPaidAmount = paidPayments.fold<int>(0, (sum, p) => sum + p.totalAmount);
+    final pendingCount = session.participants.length - paidPayments.length;
+
+    return ListView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Tổng quan tài chính
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+            border: Border.all(color: colors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'TỔNG QUAN TÀI CHÍNH',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textSecondary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Đã thu',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          currencyFormatter.format(totalPaidAmount),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: colors.success,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 36,
+                    color: colors.border,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Dự thu tối đa',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          currencyFormatter.format(totalExpected),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-              subtitle: Text(
-                '${p.status} · ${p.skillLevel}',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  color: isDark ? Colors.white60 : Colors.black54,
+              const SizedBox(height: 12),
+              Divider(color: colors.border, height: 1),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Đơn giá: ${currencyFormatter.format(session.pricePerSlot)} / vé',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w500,
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                  Text(
+                    'Đã thanh toán: ${paidPayments.length}/${session.participants.length}',
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Danh sách thanh toán
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'DANH SÁCH THANH TOÁN',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: colors.textSecondary,
+                letterSpacing: 0.5,
+              ),
+            ),
+            if (pendingCount > 0)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: colors.warning.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
                 ),
+                child: Text(
+                  'Còn $pendingCount chưa thu',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: colors.warning,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        if (payments.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24),
+            alignment: Alignment.center,
+            child: Text(
+              'Chưa có dữ liệu thanh toán',
+              style: TextStyle(color: colors.textMuted),
+            ),
+          )
+        else
+          ...payments.map((payment) {
+            final isPaid = payment.status == 'PAID';
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colors.bgCard,
+                borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+                border: Border.all(color: colors.border),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: isPaid
+                        ? colors.success.withValues(alpha: 0.2)
+                        : colors.warning.withValues(alpha: 0.2),
+                    child: Text(
+                      payment.participantName.isNotEmpty
+                          ? payment.participantName.trim().split(' ').last.substring(0, 1).toUpperCase()
+                          : 'P',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: isPaid ? colors.success : colors.warning,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          payment.participantName,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${payment.ticketCount} vé • ${payment.paymentMethod == 'TRANSFER' ? 'Chuyển khoản' : 'Tiền mặt'}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        currencyFormatter.format(payment.totalAmount),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      InkWell(
+                        onTap: () {
+                          ref.read(socialSessionsProvider.notifier).togglePaymentStatus(
+                                session.id,
+                                payment.id,
+                              );
+                        },
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: isPaid
+                                ? colors.success.withValues(alpha: 0.15)
+                                : colors.warning.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isPaid ? Icons.check_circle_rounded : Icons.pending_rounded,
+                                size: 12,
+                                color: isPaid ? colors.success : colors.warning,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                isPaid ? 'ĐÃ THU' : 'CHƯA THU',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: isPaid ? colors.success : colors.warning,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             );
           }),
       ],
+    );
+  }
+
+  void _showAddParticipantDialog(
+    BuildContext context,
+    SocialSessionModel session,
+    int slotNumber,
+  ) {
+    final colors = context.colors;
+    final textController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.bgCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        ),
+        title: Text(
+          'Thêm người tham gia (Slot $slotNumber)',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: colors.textPrimary,
+          ),
+        ),
+        content: TextField(
+          controller: textController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Nhập họ tên thành viên...',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Hủy', style: TextStyle(color: colors.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              final name = textController.text.trim();
+              if (name.isNotEmpty) {
+                ref.read(socialSessionsProvider.notifier).addParticipantToSlot(
+                      sessionId: session.id,
+                      participantName: name,
+                    );
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Đã thêm $name vào slot $slotNumber thành công!'),
+                    backgroundColor: colors.success,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+            child: const Text('Thêm slot'),
+          ),
+        ],
+      ),
     );
   }
 

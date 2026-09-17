@@ -2,6 +2,87 @@ import 'package:app_quanly_giaidau/features/social/models/social_session_model.d
 
 class SocialMockData {
   static final List<SocialSessionModel> sessions = [
+    // ─────────────── SB Club (Mục 7 Flow B - Ảnh 2 & Ảnh 3) ───────────────
+    SocialSessionModel(
+      id: 'sb_pickleball_sonbao_17',
+      clubId: 'sb_club',
+      title: 'Pickleball Giao hữu với Bảo',
+      status: 'OPEN',
+      sport: 'pickleball',
+      sportName: 'Pickleball',
+      hostClubName: 'SB Club',
+      hostClubAvatar: null,
+      hostFrequency: 'Mỗi Thứ năm',
+      hostPhone: '0988112233',
+      hostZalo: '0988112233',
+      zaloGroupUrl: 'https://zalo.me/g/sb-pickleball',
+      playFormat: 'Giao hữu',
+      venueName: '22 Cộng Hòa',
+      venueAddress: '22 Cộng Hòa, Phường 4, Tân Bình, TP. Hồ Chí Minh',
+      distanceKm: 2.5,
+      dateTime: DateTime(2026, 9, 17, 14, 45),
+      durationHours: 2,
+      timeSlot: '14:45',
+      dateDisplay: '14:45 Thứ năm, 17/9',
+      fullDateTimeDisplay: 'Thứ năm 17/09/2026 vào lúc 14:45',
+      dayOfWeek: 'T5',
+      dayOfMonth: 17,
+      currentParticipants: 1,
+      maxParticipants: 8,
+      pricePerSlot: 50000,
+      skillLevel: 'Tất cả trình độ',
+      descriptionNotes: '''🏓 PICKLEBALL GIAO HỮU CLB SB CLUB 🏓
+
+- Buổi chơi giao hữu hàng tuần dành cho các thành viên CLB và khách mời.
+- Địa điểm: Cụm sân Pickleball 22 Cộng Hòa, Tân Bình.
+- Hỗ trợ bóng thi đấu Franklin X-40 và nước giải khát.
+- Host: Sơn Bảo phụ trách đón tiếp và xếp cặp giao hữu.''',
+      participants: [
+        SocialParticipantModel(
+          id: 'part_sb_1',
+          name: 'Sơn Bảo',
+          initials: 'SB',
+          skillLevel: 'Tất cả trình độ',
+          isHost: true,
+          status: 'Host · Đã thanh toán',
+          joinedAt: DateTime(2026, 9, 17, 8, 0),
+        ),
+      ],
+      matches: const [
+        SocialMatchModel(
+          id: 'match_sb_1',
+          courtName: 'Sân 1',
+          matchType: 'Đánh đôi',
+          team1Name: 'Sơn Bảo & (Chờ ghép)',
+          team2Name: '(Chờ ghép 2) & (Chờ ghép 3)',
+          status: 'Chưa diễn ra',
+          timeDisplay: '15:00',
+        ),
+      ],
+      chatMessages: [
+        SocialChatMessageModel(
+          id: 'msg_sb_1',
+          senderName: 'Sơn Bảo',
+          senderInitials: 'SB',
+          isHost: true,
+          message: 'Chào mừng các bạn đến với buổi giao hữu chiều Thứ 5!',
+          time: DateTime(2026, 9, 17, 9, 0),
+        ),
+      ],
+      payments: [
+        SocialPaymentModel(
+          id: 'pay_sb_1',
+          participantId: 'part_sb_1',
+          participantName: 'Sơn Bảo',
+          ticketCount: 1,
+          totalAmount: 50000,
+          status: 'PAID',
+          paymentMethod: 'TRANSFER',
+          paidAt: DateTime(2026, 9, 17, 8, 0),
+        ),
+      ],
+    ),
+
     // ─────────────── 16/09 (Thứ 4) ───────────────
     SocialSessionModel(
       id: 'tennis_khanh_hoi_q4',
