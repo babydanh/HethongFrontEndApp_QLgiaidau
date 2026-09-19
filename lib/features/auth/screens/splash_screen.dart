@@ -20,6 +20,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   bool _isNavigating = false;
   Timer? _navTimer;
 
+  // Màu nền đồng bộ chính xác 100% với nền video pickleball 3D
+  static const Color _videoBgTop = Color(0xFFD7D5D6);
+  static const Color _videoBgBottom = Color(0xFFE0DEDF);
+
   @override
   void initState() {
     super.initState();
@@ -105,13 +109,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final videoCardSize = (size.width * 0.58).clamp(180.0, 260.0);
+    final videoCardSize = (size.width * 0.72).clamp(240.0, 320.0);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: _videoBgTop,
       body: Stack(
         children: [
-          // 1. Nền chuyển sắc chuẩn Vibe SportO (Trắng sáng & Xanh thể thao dịu mát)
+          // 1. Nền chuyển sắc đồng nhất màu với video (xám studio cao cấp)
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
@@ -119,30 +123,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Color(0xFFE8F3FF),
-                    Color(0xFFF7FAFD),
-                    Colors.white,
+                    _videoBgTop,
+                    _videoBgBottom,
+                    _videoBgTop,
                   ],
-                  stops: [0.0, 0.45, 1.0],
-                ),
-              ),
-            ),
-          ),
-
-          // Vầng hào quang trung tâm mềm mại
-          Center(
-            child: Container(
-              width: 320,
-              height: 320,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppTheme.primary.withValues(alpha: 0.12),
-                    AppTheme.secondary.withValues(alpha: 0.04),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.55, 1.0],
+                  stops: [0.0, 0.5, 1.0],
                 ),
               ),
             ),
@@ -153,24 +138,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Khung video Pickleball bo góc chuẩn nét
+                // Khung video Pickleball hòa tan viền với màu nền
                 Container(
                   width: videoCardSize,
                   height: videoCardSize,
                   decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(24),
+                    color: _videoBgTop,
+                    borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primary.withValues(alpha: 0.22),
-                        blurRadius: 30,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 10),
-                      ),
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.10),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
@@ -198,7 +177,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                         ),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 28),
 
                 // 3. LOGO CHÍNH THỨC SPORTO "CHƠI CÙNG NHAU" SVG
                 Column(
@@ -226,7 +205,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
                           minHeight: 3,
-                          backgroundColor: AppTheme.primary.withValues(alpha: 0.15),
+                          backgroundColor: AppTheme.primary.withValues(alpha: 0.20),
                           valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
                         ),
                       ),
