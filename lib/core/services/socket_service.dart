@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
@@ -41,7 +43,15 @@ class SocketService {
         return;
       }
 
-      final rawBaseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
+      var rawBaseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
+      // Trên Android emulator, localhost trỏ vào chính emulator, không tới host
+      if (!kIsWeb && Platform.isAndroid) {
+        if (rawBaseUrl.contains('localhost')) {
+          rawBaseUrl = rawBaseUrl.replaceAll('localhost', '10.0.2.2');
+        } else if (rawBaseUrl.contains('127.0.0.1')) {
+          rawBaseUrl = rawBaseUrl.replaceAll('127.0.0.1', '10.0.2.2');
+        }
+      }
       // Lấy base server URL (bỏ /api/v1, thêm namespace /notifications)
       final serverUrl = rawBaseUrl.replaceAll(RegExp(r'/api/v1/?$'), '');
 
@@ -50,8 +60,12 @@ class SocketService {
       _socket = io.io(
         '$serverUrl/notifications',
         io.OptionBuilder()
-            .setTransports(['websocket'])
+            .setTransports(['websocket', 'polling'])
             .setExtraHeaders({'Authorization': 'Bearer $token'})
+            .enableReconnection()
+            .setReconnectionAttempts(10)
+            .setReconnectionDelay(2000)
+            .setTimeout(8000)
             .disableAutoConnect()
             .build(),
       );
@@ -59,7 +73,6 @@ class SocketService {
       _socket!.onConnect((_) {
         _reconnectAttempt = 0;
         _log.success('Socket connected');
-        // Đăng ký nhận thông báo
         _socket!.emit('subscribe');
       });
 
@@ -97,14 +110,19 @@ class SocketService {
   }
 
   void _disconnect() {
-    _socket?.off('notification:new');
-    _socket?.off('connect');
-    _socket?.off('disconnect');
-    _socket?.off('error');
-    _socket?.off('connect_error');
-    _socket?.disconnect();
-    _socket?.close();
-    _socket = null;
+    try {
+      _socket?.off('notification:new');
+      _socket?.off('connect');
+      _socket?.off('disconnect');
+      _socket?.off('error');
+      _socket?.off('connect_error');
+      _socket?.disconnect();
+      _socket?.close();
+    } catch (e) {
+      _log.warning('Lỗi khi disconnect socket (bỏ qua): $e');
+    } finally {
+      _socket = null;
+    }
   }
 
   /// Làm mới kết nối (khi token thay đổi).
@@ -117,8 +135,12 @@ class SocketService {
 
   void _scheduleReconnect() {
     if (_manualDisconnect || _reconnectTimer?.isActive == true) return;
+    if (_reconnectAttempt >= 5) {
+      _log.warning('Đã đạt giới hạn số lần reconnect socket (5 lần). Tạm dừng reconnect.');
+      return;
+    }
     final attempt = _reconnectAttempt.clamp(0, 4).toInt();
-    final seconds = (1 << attempt).clamp(1, 30).toInt();
+    final seconds = (2 << attempt).clamp(2, 30).toInt();
     _reconnectAttempt++;
     _reconnectTimer = Timer(Duration(seconds: seconds), () async {
       _reconnectTimer = null;

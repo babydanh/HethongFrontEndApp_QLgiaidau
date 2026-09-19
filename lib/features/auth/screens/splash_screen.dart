@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:video_player/video_player.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/pickleball_court_animation.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -15,8 +15,6 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
-  late VideoPlayerController _videoController;
-  bool _isVideoInitialized = false;
   bool _isNavigating = false;
   Timer? _navTimer;
 
@@ -24,40 +22,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void initState() {
     super.initState();
 
-    _initVideo();
-
     // Nạp dữ liệu Auth song song
     _preWarmAuth();
 
-    // Tự động chuyển màn hình sau 3.2 giây (khớp đúng chu kỳ video 3s)
-    _navTimer = Timer(const Duration(milliseconds: 3200), () {
+    // Tự động chuyển màn hình mượt mà sau 2.2 giây
+    _navTimer = Timer(const Duration(milliseconds: 2200), () {
       if (mounted) {
         _navigateToNextScreen();
       }
     });
   }
 
-  void _initVideo() {
-    _videoController = VideoPlayerController.asset(
-      'assets/videos/pickleball_loading.mp4',
-    )..initialize().then((_) {
-        if (mounted) {
-          _videoController.setLooping(true);
-          _videoController.setVolume(0.0);
-          _videoController.play();
-          setState(() {
-            _isVideoInitialized = true;
-          });
-        }
-      }).catchError((e) {
-        debugPrint('[SplashScreen] Video initialization error: $e');
-      });
-  }
-
   Future<void> _preWarmAuth() async {
     try {
       await ref.read(authProvider.notifier).init().timeout(
-        const Duration(seconds: 4),
+        const Duration(seconds: 3),
         onTimeout: () {
           debugPrint('[SplashScreen] Auth init timed out, proceeding to /home');
         },
@@ -98,59 +77,36 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void dispose() {
     _navTimer?.cancel();
-    _videoController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final videoCardSize = (size.width * 0.65).clamp(220.0, 300.0);
+    final courtSize = (size.width * 0.55).clamp(180.0, 240.0);
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Nền trắng tinh khiết (#FFFFFF) đồng bộ 100% với Web & Video Blender
+          // Nền trắng tinh khiết (#FFFFFF) chuẩn Vibe Web
           Positioned.fill(
             child: Container(
               color: Colors.white,
             ),
           ),
 
-          // KHỐI TRUNG TÂM: VIDEO BLENDER 3D + LOGO SPORTO
+          // KHỐI TRUNG TÂM: HOẠT HỌA SÂN PICKLEBALL 3D + LOGO SPORTO
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Khung video hòa tan hoàn toàn vào nền trắng (không viền)
-                SizedBox(
-                  width: videoCardSize,
-                  height: videoCardSize,
-                  child: _isVideoInitialized
-                      ? FittedBox(
-                          fit: BoxFit.contain,
-                          child: SizedBox(
-                            width: _videoController.value.size.width,
-                            height: _videoController.value.size.height,
-                            child: VideoPlayer(_videoController),
-                          ),
-                        )
-                      : Center(
-                          child: SizedBox(
-                            width: 32,
-                            height: 32,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                AppTheme.primary,
-                              ),
-                            ),
-                          ),
-                        ),
+                // Hoạt họa Sân 3D vẽ hoàn toàn bằng code Flutter (nền trong suốt, bóng nảy to/nhỏ đập smash)
+                PickleballCourtAnimation(
+                  size: courtSize,
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
                 // LOGO CHÍNH THỨC SPORTO "CHƠI CÙNG NHAU" SVG
                 Column(

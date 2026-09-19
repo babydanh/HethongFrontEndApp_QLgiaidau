@@ -24,6 +24,12 @@ class GlobalErrorHandler {
 
     // 2. Xử lý các lỗi Asynchronous từ Dart (Future, Stream...)
     PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+      final errorStr = error.toString();
+      // Bỏ qua ngoại lệ đóng kết nối websocket bình thường của package:web_socket khi reconnect/destroy
+      if (errorStr.contains('WebSocketConnectionClosed') ||
+          errorStr.contains('Connection Closed')) {
+        return true;
+      }
       if (kDebugMode) {
         debugPrint('Unhandled async error: $error');
         debugPrintStack(stackTrace: stack);

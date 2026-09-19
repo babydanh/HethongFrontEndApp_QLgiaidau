@@ -51,8 +51,11 @@ class ChatSocketService {
       'Connecting to chat socket at $serverUrl/chat for roomId: $roomId',
     );
 
-    _socket?.disconnect();
-    _socket?.close();
+    try {
+      _socket?.disconnect();
+      _socket?.close();
+    } catch (_) {}
+    _socket = null;
 
     _socket = io.io(
       '$serverUrl/chat',
@@ -185,13 +188,17 @@ class ChatSocketService {
   }
 
   void disconnect([String roomId = '']) {
-    if (_socket?.connected == true && roomId.isNotEmpty) {
-      _socket!.emit('leaveChatRoom', roomId);
+    try {
+      if (_socket?.connected == true && roomId.isNotEmpty) {
+        _socket!.emit('leaveChatRoom', roomId);
+      }
+      _currentRoomId = null;
+      _socket?.disconnect();
+      _socket?.close();
+    } catch (_) {
+    } finally {
+      _socket = null;
     }
-    _currentRoomId = null;
-    _socket?.disconnect();
-    _socket?.close();
-    _socket = null;
   }
 
   void dispose() => disconnect();

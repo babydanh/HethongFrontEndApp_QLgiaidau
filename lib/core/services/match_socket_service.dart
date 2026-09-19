@@ -276,9 +276,14 @@ class MatchSocketService {
   void disconnect() {
     if (_socket != null) {
       _log.info('Disconnecting match socket');
-      _socket!.disconnect();
-      _socket!.close();
-      _socket = null;
+      try {
+        _socket!.disconnect();
+        _socket!.close();
+      } catch (e) {
+        _log.warning('Match socket disconnect ignored: $e');
+      } finally {
+        _socket = null;
+      }
     }
     _joinedMatchIds.clear();
     _joinedTournamentIds.clear();
