@@ -460,38 +460,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             // Left: 3 Tab bên trái (Khám phá | Bản tin | Của tôi) khi ở Trang chủ
                             if (isHomeTab)
                               Expanded(
-                                child: Row(
-                                  children: [
-                                    _buildHeaderTabItem(
-                                      title: 'Khám phá',
-                                      isSelected: _homeHeaderTab == 0,
-                                      onTap: () {
-                                        if (_homeHeaderTab != 0) {
-                                          setState(() => _homeHeaderTab = 0);
-                                        }
-                                      },
-                                    ),
-                                    const SizedBox(width: 20),
-                                    _buildHeaderTabItem(
-                                      title: 'Bản tin',
-                                      isSelected: _homeHeaderTab == 1,
-                                      onTap: () {
-                                        if (_homeHeaderTab != 1) {
-                                          setState(() => _homeHeaderTab = 1);
-                                        }
-                                      },
-                                    ),
-                                    const SizedBox(width: 20),
-                                    _buildHeaderTabItem(
-                                      title: 'Của tôi',
-                                      isSelected: _homeHeaderTab == 2,
-                                      onTap: () {
-                                        if (_homeHeaderTab != 2) {
-                                          setState(() => _homeHeaderTab = 2);
-                                        }
-                                      },
-                                    ),
-                                  ],
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  physics: const BouncingScrollPhysics(),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _buildHeaderTabItem(
+                                        title: 'Khám phá',
+                                        isSelected: _homeHeaderTab == 0,
+                                        onTap: () {
+                                          if (_homeHeaderTab != 0) {
+                                            setState(() => _homeHeaderTab = 0);
+                                          }
+                                        },
+                                      ),
+                                      const SizedBox(width: 16),
+                                      _buildHeaderTabItem(
+                                        title: 'Bản tin',
+                                        isSelected: _homeHeaderTab == 1,
+                                        onTap: () {
+                                          if (_homeHeaderTab != 1) {
+                                            setState(() => _homeHeaderTab = 1);
+                                          }
+                                        },
+                                      ),
+                                      const SizedBox(width: 16),
+                                      _buildHeaderTabItem(
+                                        title: 'Của tôi',
+                                        isSelected: _homeHeaderTab == 2,
+                                        onTap: () {
+                                          if (_homeHeaderTab != 2) {
+                                            setState(() => _homeHeaderTab = 2);
+                                          }
+                                        },
+                                      ),
+                                      const SizedBox(width: 8),
+                                    ],
+                                  ),
                                 ),
                               )
                             else
@@ -692,31 +698,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: isSelected ? 18 : 16,
-              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-              color: isSelected ? activeTextColor : inactiveTextColor,
-              letterSpacing: -0.2,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16.5, // Cùng cỡ font đồng đều chuẩn TikTok
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected ? activeTextColor : inactiveTextColor,
+                letterSpacing: -0.2,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOutCubic,
-            height: 3.2,
-            width: isSelected ? 24.0 : 0.0,
-            decoration: BoxDecoration(
-              color: isSelected ? AppTheme.primary : Colors.transparent,
-              borderRadius: BorderRadius.circular(1.6),
+            const SizedBox(height: 4),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              height: 3.2,
+              width: isSelected ? 22.0 : 0.0,
+              decoration: BoxDecoration(
+                color: isSelected ? AppTheme.primary : Colors.transparent,
+                borderRadius: BorderRadius.circular(1.6),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1378,54 +1387,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         : const Color(0xFFE2E8F0);
     final iconColor = isDark ? Colors.white : const Color(0xFF0F172A);
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GestureDetector(
-          onTap: () {
-            final auth = ref.read(authProvider);
-            if (!auth.isAuthenticated) {
-              context.push('/login');
-            } else {
-              context.push('/chat');
-            }
-          },
-          child: Container(
-            width: 38.0,
-            height: 38.0,
-            decoration: BoxDecoration(
-              color: buttonBg,
-              shape: BoxShape.circle,
-              border: Border.all(color: buttonBorder, width: 1.0),
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.forum_outlined,
-              color: iconColor,
-              size: 19,
-            ),
-          ),
+    return GestureDetector(
+      onTap: () => context.push("/notifications"),
+      child: Container(
+        width: 38.0,
+        height: 38.0,
+        decoration: BoxDecoration(
+          color: buttonBg,
+          shape: BoxShape.circle,
+          border: Border.all(color: buttonBorder, width: 1.0),
         ),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: () => context.push("/notifications"),
-          child: Container(
-            width: 38.0,
-            height: 38.0,
-            decoration: BoxDecoration(
-              color: buttonBg,
-              shape: BoxShape.circle,
-              border: Border.all(color: buttonBorder, width: 1.0),
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            Icon(
+              Icons.notifications_none_rounded,
+              color: iconColor,
+              size: 20,
             ),
-            child: Stack(
-              alignment: Alignment.center,
-              clipBehavior: Clip.none,
-              children: [
-                Icon(
-                  Icons.notifications_none_rounded,
-                  color: iconColor,
-                  size: 20,
-                ),
                 if (unread > 0)
                   Positioned(
                     top: -2.0,
@@ -1454,11 +1434,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                   ),
-              ],
-            ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
