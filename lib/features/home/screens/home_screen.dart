@@ -20,13 +20,13 @@ import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_ban
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/core/widgets/pickleball_loading_widget.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/province_selection_screen.dart';
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/social/screens/social_list_view.dart';
-import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
 
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
@@ -2433,7 +2433,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (_isTournamentInitialLoading && currentList.isEmpty)
             const SliverFillRemaining(
               child: Center(
-                child: CircularProgressIndicator(color: AppTheme.primary),
+                child: PickleballLoadingWidget(
+                  size: 64,
+                  message: 'Đang tải giải đấu...',
+                ),
               ),
             )
           else if (currentList.isEmpty)
@@ -2608,7 +2611,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             if (_isClubInitialLoading && currentList.isEmpty)
               const SliverFillRemaining(
                 child: Center(
-                  child: CircularProgressIndicator(color: AppTheme.primary),
+                  child: PickleballLoadingWidget(
+                    size: 64,
+                    message: 'Đang tải câu lạc bộ...',
+                  ),
                 ),
               )
             else if (currentList.isEmpty)

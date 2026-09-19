@@ -77,6 +77,7 @@ dependencies:
   firebase_messaging: ^15.2.4
   flutter_local_notifications: ^18.0.1
   sentry_flutter: ^9.30.0
+  video_player: ^2.14.0
 
 dev_dependencies:
   flutter_test:
@@ -96,3 +97,4 @@ flutter:
     - assets/icons/
     - assets/images/
     - assets/logos/
+    - assets/videos/
