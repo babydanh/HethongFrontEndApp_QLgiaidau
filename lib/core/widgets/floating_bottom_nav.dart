@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
-/// Thanh Navigation Bar lơ lửng (Floating Pill) chuẩn phong cách hiện đại:
-/// - Nổi bồng bềnh cách đáy màn hình với bóng đổ đa tầng sang trọng
+/// Thanh Navigation Bar lơ lửng (Floating Pill) chuẩn phong cách hiện đại theo đúng logic 5 Tab sẵn có của App:
+/// 1. Trang chủ (Index 0)
+/// 2. Khám phá (Index 3)
+/// 3. GIẢI ĐẤU (Index 1) - Nút tròn Cúp vàng nhô cao ở chính giữa ("nhô nhô" nổi bật)
+/// 4. Bảng xếp hạng (Index 4)
+/// 5. Cá nhân (Index 2 - onProfileTap)
+///
+/// Thiết kế:
+/// - Thanh bar lơ lửng cách đáy màn hình với bóng đổ đa tầng sang trọng
 /// - Vạch gạch chân năng động (Sliding Indicator) màu vàng thể thao trượt theo tab active
-/// - Nút (+) trung tâm nhô cao màu vàng rực rỡ với viền trắng tương phản sắc nét
-/// - Popup Action Sheet nhô lên (bouncy spring animation) với các phím tắt: Quét QR, Tạo giải, Tạo CLB
-class FloatingBottomNav extends StatefulWidget {
+/// - Nút Giải đấu trung tâm nhô cao với viền trắng cắt góc sắc nét
+/// - Hiệu ứng nảy "nhô nhô" micro-bounce mượt mà khi chạm
+class FloatingBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTabSelected;
   final VoidCallback onProfileTap;
@@ -22,68 +28,23 @@ class FloatingBottomNav extends StatefulWidget {
 
   static const int profileIndex = 2;
 
-  @override
-  State<FloatingBottomNav> createState() => _FloatingBottomNavState();
-}
-
-class _FloatingBottomNavState extends State<FloatingBottomNav>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _plusController;
-  late Animation<double> _plusRotation;
-
-  @override
-  void initState() {
-    super.initState();
-    _plusController = AnimationController(
-      duration: const Duration(milliseconds: 250),
-      vsync: this,
-    );
-    _plusRotation = Tween<double>(begin: 0.0, end: 0.125).animate(
-      CurvedAnimation(parent: _plusController, curve: Curves.easeOutBack),
-    );
-  }
-
-  @override
-  void dispose() {
-    _plusController.dispose();
-    super.dispose();
-  }
-
-  /// Ánh xạ từ currentIndex của App sang vị trí cột (0, 1, 3, 4)
+  /// Ánh xạ từ currentIndex của App sang vị trí cột (0, 1, 2, 3, 4)
   int _getSlotIndex(int index) {
     return switch (index) {
-      0 => 0, // Home
-      1 || 4 => 1, // Giải đấu (và BXH)
-      3 => 3, // Cộng đồng / CLB / Chat
-      FloatingBottomNav.profileIndex => 4, // Profile
+      0 => 0, // Trang chủ
+      3 => 1, // Khám phá / CLB
+      1 => 2, // Giải đấu (Nút giữa nhô cao)
+      4 => 3, // Bảng xếp hạng
+      profileIndex => 4, // Cá nhân
       _ => 0,
     };
-  }
-
-  /// Hiển thị Popup Action Menu nhô nhô lên với animation nảy nhẹ nhàng
-  void _showQuickActionSheet() {
-    HapticFeedback.mediumImpact();
-    _plusController.forward();
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.45),
-      isScrollControlled: true,
-      builder: (ctx) => _QuickActionPopup(
-        onDismiss: () => Navigator.of(ctx).pop(),
-      ),
-    ).whenComplete(() {
-      if (mounted) {
-        _plusController.reverse();
-      }
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final slotIndex = _getSlotIndex(widget.currentIndex);
+    final slotIndex = _getSlotIndex(currentIndex);
+    final isTournamentSelected = currentIndex == 1;
 
     final bgColor = isDark
         ? const Color(0xFF131B2A).withValues(alpha: 0.96)
@@ -137,35 +98,40 @@ class _FloatingBottomNavState extends State<FloatingBottomNav>
                 ),
 
                 // 2. Vạch gạch chân năng động trượt ngang (Sliding Indicator)
+                // (Chỉ hiện khi chọn các tab ngoài, khi chọn tab Giải đấu thì nút giữa tự tỏa sáng nhô cao)
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 260),
                   curve: Curves.easeOutCubic,
                   left: indicatorLeft,
                   bottom: 8.0,
-                  child: Container(
-                    width: 22.0,
-                    height: 3.5,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFC700), // Vàng thể thao chuẩn mẫu ảnh
-                      borderRadius: BorderRadius.circular(2.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFFC700).withValues(alpha: 0.55),
-                          blurRadius: 6,
-                          spreadRadius: 0.5,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: isTournamentSelected ? 0.0 : 1.0,
+                    child: Container(
+                      width: 22.0,
+                      height: 3.5,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFC700), // Vàng thể thao chuẩn mẫu ảnh
+                        borderRadius: BorderRadius.circular(2.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFFC700).withValues(alpha: 0.55),
+                            blurRadius: 6,
+                            spreadRadius: 0.5,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
 
-                // 3. Hàng các Icon điều hướng (Row 5 mục)
+                // 3. Hàng 5 Tab điều hướng theo đúng logic sẵn có
                 SizedBox(
                   height: 66,
                   child: Row(
                     children: [
-                      // Vị trí 0: Trang chủ (Home)
+                      // Vị trí 0: Trang chủ (Index 0)
                       Expanded(
                         child: _buildNavItem(
                           icon: Icons.home_outlined,
@@ -173,33 +139,38 @@ class _FloatingBottomNavState extends State<FloatingBottomNav>
                           isSelected: slotIndex == 0,
                           activeColor: activeColor,
                           inactiveColor: inactiveColor,
-                          onTap: () => widget.onTabSelected(0),
+                          onTap: () => onTabSelected(0),
                         ),
                       ),
 
-                      // Vị trí 1: Giải đấu (Tournaments)
+                      // Vị trí 1: Khám phá / CLB (Index 3)
                       Expanded(
                         child: _buildNavItem(
-                          icon: Icons.sports_tennis_outlined,
-                          activeIcon: Icons.sports_tennis_rounded,
+                          icon: Icons.explore_outlined,
+                          activeIcon: Icons.explore_rounded,
                           isSelected: slotIndex == 1,
                           activeColor: activeColor,
                           inactiveColor: inactiveColor,
-                          onTap: () => widget.onTabSelected(1),
+                          onTap: () => onTabSelected(3),
                         ),
                       ),
 
-                      // Vị trí 2: NÚT TRUNG TÂM (+) NHÔ CAO MÀU VÀNG
+                      // Vị trí 2: GIẢI ĐẤU (Index 1) - NÚT TRÒN CÚP VÀNG NHÔ CAO Ở CHÍNH GIỮA
                       SizedBox(
                         width: slotWidth,
                         child: Center(
                           child: Transform.translate(
                             offset: const Offset(0, -14), // Nhô cao lên trên thanh bar
                             child: GestureDetector(
-                              onTap: _showQuickActionSheet,
+                              onTap: () {
+                                HapticFeedback.mediumImpact();
+                                onTabSelected(1);
+                              },
                               behavior: HitTestBehavior.opaque,
-                              child: RotationTransition(
-                                turns: _plusRotation,
+                              child: AnimatedScale(
+                                scale: isTournamentSelected ? 1.14 : 1.0,
+                                duration: const Duration(milliseconds: 220),
+                                curve: Curves.easeOutBack,
                                 child: Container(
                                   width: 52,
                                   height: 52,
@@ -209,8 +180,8 @@ class _FloatingBottomNavState extends State<FloatingBottomNav>
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                       colors: [
-                                        Color(0xFFFFD600), // Vàng sáng
-                                        Color(0xFFFFB300), // Vàng cam ấm
+                                        Color(0xFFFFD600), // Vàng sáng rực rỡ
+                                        Color(0xFFFFB300), // Vàng cam thể thao
                                       ],
                                     ),
                                     border: Border.all(
@@ -219,18 +190,20 @@ class _FloatingBottomNavState extends State<FloatingBottomNav>
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFFFFC700).withValues(alpha: 0.50),
-                                        blurRadius: 14,
-                                        spreadRadius: 1,
+                                        color: const Color(0xFFFFC700).withValues(
+                                          alpha: isTournamentSelected ? 0.65 : 0.40,
+                                        ),
+                                        blurRadius: isTournamentSelected ? 18 : 12,
+                                        spreadRadius: isTournamentSelected ? 2 : 1,
                                         offset: const Offset(0, 5),
                                       ),
                                     ],
                                   ),
                                   child: const Center(
                                     child: Icon(
-                                      Icons.add_rounded,
+                                      Icons.emoji_events_rounded, // Biểu tượng Cúp giải đấu vàng
                                       color: Color(0xFF1E293B),
-                                      size: 32,
+                                      size: 28,
                                     ),
                                   ),
                                 ),
@@ -240,19 +213,19 @@ class _FloatingBottomNavState extends State<FloatingBottomNav>
                         ),
                       ),
 
-                      // Vị trí 3: Cộng đồng / Tin nhắn (Social & Clubs)
+                      // Vị trí 3: Bảng xếp hạng (Index 4)
                       Expanded(
                         child: _buildNavItem(
-                          icon: Icons.chat_bubble_outline_rounded,
-                          activeIcon: Icons.chat_bubble_rounded,
+                          icon: Icons.leaderboard_outlined,
+                          activeIcon: Icons.leaderboard_rounded,
                           isSelected: slotIndex == 3,
                           activeColor: activeColor,
                           inactiveColor: inactiveColor,
-                          onTap: () => widget.onTabSelected(3),
+                          onTap: () => onTabSelected(4),
                         ),
                       ),
 
-                      // Vị trí 4: Cá nhân (Profile)
+                      // Vị trí 4: Cá nhân (Index 2)
                       Expanded(
                         child: _buildNavItem(
                           icon: Icons.person_outline_rounded,
@@ -260,7 +233,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav>
                           isSelected: slotIndex == 4,
                           activeColor: activeColor,
                           inactiveColor: inactiveColor,
-                          onTap: widget.onProfileTap,
+                          onTap: onProfileTap,
                         ),
                       ),
                     ],
@@ -290,7 +263,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav>
       behavior: HitTestBehavior.opaque,
       child: Center(
         child: AnimatedScale(
-          scale: isSelected ? 1.12 : 1.0,
+          scale: isSelected ? 1.15 : 1.0, // Hiệu ứng nảy nhô nhô nhẹ khi chọn
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutBack,
           child: Padding(
@@ -300,232 +273,6 @@ class _FloatingBottomNavState extends State<FloatingBottomNav>
               color: isSelected ? activeColor : inactiveColor,
               size: 26,
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Popup Action Menu nhô nhô lên khi nhấn nút (+) trung tâm
-class _QuickActionPopup extends StatelessWidget {
-  final VoidCallback onDismiss;
-
-  const _QuickActionPopup({required this.onDismiss});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? const Color(0xFF1A2234) : Colors.white;
-    final textPrimary = isDark ? Colors.white : const Color(0xFF0F172A);
-    final textSecondary = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.10) : const Color(0xFFE2E8F0),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.55 : 0.15),
-            blurRadius: 32,
-            spreadRadius: 2,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Thanh kéo nhẹ ở đỉnh
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white24 : const Color(0xFFCBD5E1),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Tiêu đề popup với badge vàng
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFC700).withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'TẠO MỚI & THAO TÁC',
-                      style: TextStyle(
-                        color: Color(0xFFD97706),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.6,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: onDismiss,
-                    icon: Icon(Icons.close_rounded, size: 20, color: textSecondary),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // 1. Tạo giải đấu mới
-              _buildActionTile(
-                context,
-                icon: Icons.emoji_events_rounded,
-                iconBgGradient: const LinearGradient(
-                  colors: [Color(0xFF1D8EF8), Color(0xFF3AB5F6)],
-                ),
-                title: 'Tạo giải đấu mới',
-                subtitle: 'Thiết lập bảng đấu, thể thức và điều lệ giải',
-                onTap: () {
-                  onDismiss();
-                  context.push('/tournament/create');
-                },
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-                isDark: isDark,
-              ),
-              const SizedBox(height: 10),
-
-              // 2. Quét mã QR check-in
-              _buildActionTile(
-                context,
-                icon: Icons.qr_code_scanner_rounded,
-                iconBgGradient: const LinearGradient(
-                  colors: [Color(0xFFFFC700), Color(0xFFFF9800)],
-                ),
-                title: 'Quét mã QR',
-                subtitle: 'Check-in nhanh vận động viên & trọng tài',
-                onTap: () {
-                  onDismiss();
-                  context.push('/scan-qr');
-                },
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-                isDark: isDark,
-              ),
-              const SizedBox(height: 10),
-
-              // 3. Tạo câu lạc bộ mới
-              _buildActionTile(
-                context,
-                icon: Icons.groups_rounded,
-                iconBgGradient: const LinearGradient(
-                  colors: [Color(0xFF16A34A), Color(0xFF22C55E)],
-                ),
-                title: 'Tạo câu lạc bộ',
-                subtitle: 'Xây dựng và gắn kết cộng đồng người chơi',
-                onTap: () {
-                  onDismiss();
-                  context.push('/club/create');
-                },
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-                isDark: isDark,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionTile(
-    BuildContext context, {
-    required IconData icon,
-    required LinearGradient iconBgGradient,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    required Color textPrimary,
-    required Color textSecondary,
-    required bool isDark,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF131B2A) : const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFE2E8F0),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: iconBgGradient,
-                  borderRadius: BorderRadius.circular(13),
-                  boxShadow: [
-                    BoxShadow(
-                      color: iconBgGradient.colors.first.withValues(alpha: 0.35),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Icon(icon, color: Colors.white, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: textPrimary,
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        color: textSecondary,
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: textSecondary.withValues(alpha: 0.6),
-              ),
-            ],
           ),
         ),
       ),
