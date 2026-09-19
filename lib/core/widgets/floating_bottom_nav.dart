@@ -2,18 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
-/// Thanh Navigation Bar lơ lửng (Floating Pill) chuẩn phong cách hiện đại theo đúng logic 5 Tab sẵn có của App:
-/// 1. Trang chủ (Index 0)
-/// 2. Khám phá (Index 3)
-/// 3. GIẢI ĐẤU (Index 1) - Nút tròn Cúp vàng nhô cao ở chính giữa ("nhô nhô" nổi bật)
-/// 4. Bảng xếp hạng (Index 4)
-/// 5. Cá nhân (Index 2 - onProfileTap)
-///
-/// Thiết kế:
-/// - Thanh bar lơ lửng cách đáy màn hình với bóng đổ đa tầng sang trọng
-/// - Vạch gạch chân năng động (Sliding Indicator) màu vàng thể thao trượt theo tab active
-/// - Nút Giải đấu trung tâm nhô cao với viền trắng cắt góc sắc nét
-/// - Hiệu ứng nảy "nhô nhô" micro-bounce mượt mà khi chạm
+/// Thanh Navigation Bar lơ lửng căn sát trái, mỏng gọn, chuẩn Vibe Web SportO:
+/// - 4 tab điều hướng: Trang chủ (0), Giải đấu (1), Khám phá (3), Cá nhân (2)
+/// - Căn sang bên trái (Alignment.bottomLeft), kích thước thu gọn thanh lịch
+/// - Chiều cao hạ thấp (50px), phẳng phiu, loại bỏ hoàn toàn nút cong lồi ở giữa
+/// - Màu sắc chuẩn Vibe Web SportO: Xanh Sport Blue (#1D8EF8) làm chủ đạo cho active & indicator
+/// - Vạch gạch chân xanh Sport Blue trượt ngang mượt mà dưới chân icon active
+/// - Hiệu ứng nảy micro-bounce êm ái khi chạm
 class FloatingBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTabSelected;
@@ -28,14 +23,13 @@ class FloatingBottomNav extends StatelessWidget {
 
   static const int profileIndex = 2;
 
-  /// Ánh xạ từ currentIndex của App sang vị trí cột (0, 1, 2, 3, 4)
+  /// Ánh xạ từ currentIndex của App sang 4 vị trí slot (0, 1, 2, 3)
   int _getSlotIndex(int index) {
     return switch (index) {
       0 => 0, // Trang chủ
-      3 => 1, // Khám phá / CLB
-      1 => 2, // Giải đấu (Nút giữa nhô cao)
-      4 => 3, // Bảng xếp hạng
-      profileIndex => 4, // Cá nhân
+      1 || 4 => 1, // Giải đấu (và BXH)
+      3 => 2, // Khám phá / CLB
+      profileIndex => 3, // Cá nhân
       _ => 0,
     };
   }
@@ -44,205 +38,144 @@ class FloatingBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final slotIndex = _getSlotIndex(currentIndex);
-    final isTournamentSelected = currentIndex == 1;
+
+    // Màu sắc chuẩn Design Tokens Vibe Web SportO
+    const activeColor = AppTheme.primary; // Xanh Sport Blue #1D8EF8
+    final inactiveColor = isDark
+        ? const Color(0xFF64748B)
+        : const Color(0xFF94A3B8);
 
     final bgColor = isDark
         ? const Color(0xFF131B2A).withValues(alpha: 0.96)
         : Colors.white;
     final borderColor = isDark
         ? Colors.white.withValues(alpha: 0.08)
-        : const Color(0xFFE2E8F0).withValues(alpha: 0.85);
+        : const Color(0xFFE2E8F0).withValues(alpha: 0.90);
 
-    final inactiveColor = isDark
-        ? const Color(0xFF64748B)
-        : const Color(0xFF94A3B8);
-    final activeColor = isDark
-        ? Colors.white
-        : const Color(0xFF1E293B);
+    // Kích thước thanh nav gọn gàng căn sát trái
+    const double barWidth = 252.0;
+    const double barHeight = 50.0;
+    const double slotWidth = barWidth / 4.0;
+    final double indicatorLeft = (slotIndex * slotWidth) + (slotWidth - 22.0) / 2.0;
 
     return SafeArea(
       top: false,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final barWidth = constraints.maxWidth - 32.0; // Margin 16px mỗi bên
-          final slotWidth = barWidth / 5.0;
-          final indicatorLeft = (slotIndex * slotWidth) + (slotWidth - 22.0) / 2.0;
+      child: Align(
+        alignment: Alignment.bottomLeft,
+        child: Container(
+          margin: const EdgeInsets.only(left: 16, bottom: 14),
+          width: barWidth,
+          height: barHeight,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // 1. Khối thanh nav lơ lửng phẳng phiu, bo tròn đều
+              Container(
+                width: barWidth,
+                height: barHeight,
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(color: borderColor, width: 1.2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                      blurRadius: 16,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 4),
+                    ),
+                    BoxShadow(
+                      color: AppTheme.primary.withValues(alpha: isDark ? 0.08 : 0.05),
+                      blurRadius: 12,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ),
 
-          return Container(
-            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
-            height: 66,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // 1. Khối thanh nav lơ lửng (Floating Pill Background)
-                Container(
-                  height: 66,
+              // 2. Vạch gạch chân năng động màu Xanh Sport Blue (#1D8EF8) chuẩn Vibe Web
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
+                left: indicatorLeft,
+                bottom: 6.0,
+                child: Container(
+                  width: 22.0,
+                  height: 3.2,
                   decoration: BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(33),
-                    border: Border.all(color: borderColor, width: 1.2),
+                    color: activeColor, // Xanh Sport Blue
+                    borderRadius: BorderRadius.circular(2.0),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.40 : 0.07),
-                        blurRadius: 20,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 6),
-                      ),
-                      BoxShadow(
-                        color: AppTheme.primary.withValues(alpha: isDark ? 0.08 : 0.04),
-                        blurRadius: 12,
-                        offset: const Offset(0, 2),
+                        color: activeColor.withValues(alpha: 0.60),
+                        blurRadius: 6,
+                        spreadRadius: 0.5,
+                        offset: const Offset(0, 1),
                       ),
                     ],
                   ),
                 ),
+              ),
 
-                // 2. Vạch gạch chân năng động trượt ngang (Sliding Indicator)
-                // (Chỉ hiện khi chọn các tab ngoài, khi chọn tab Giải đấu thì nút giữa tự tỏa sáng nhô cao)
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 260),
-                  curve: Curves.easeOutCubic,
-                  left: indicatorLeft,
-                  bottom: 8.0,
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: isTournamentSelected ? 0.0 : 1.0,
-                    child: Container(
-                      width: 22.0,
-                      height: 3.5,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFC700), // Vàng thể thao chuẩn mẫu ảnh
-                        borderRadius: BorderRadius.circular(2.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFFC700).withValues(alpha: 0.55),
-                            blurRadius: 6,
-                            spreadRadius: 0.5,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
+              // 3. Hàng 4 Icon điều hướng phẳng phiu, đều đặn theo tone Web
+              SizedBox(
+                width: barWidth,
+                height: barHeight,
+                child: Row(
+                  children: [
+                    // Tab 1: Trang chủ (Index 0)
+                    Expanded(
+                      child: _buildNavItem(
+                        icon: Icons.home_outlined,
+                        activeIcon: Icons.home_rounded,
+                        isSelected: slotIndex == 0,
+                        activeColor: activeColor,
+                        inactiveColor: inactiveColor,
+                        onTap: () => onTabSelected(0),
                       ),
                     ),
-                  ),
+
+                    // Tab 2: Giải đấu (Index 1)
+                    Expanded(
+                      child: _buildNavItem(
+                        icon: Icons.emoji_events_outlined,
+                        activeIcon: Icons.emoji_events_rounded,
+                        isSelected: slotIndex == 1,
+                        activeColor: activeColor,
+                        inactiveColor: inactiveColor,
+                        onTap: () => onTabSelected(1),
+                      ),
+                    ),
+
+                    // Tab 3: Khám phá / CLB (Index 3)
+                    Expanded(
+                      child: _buildNavItem(
+                        icon: Icons.explore_outlined,
+                        activeIcon: Icons.explore_rounded,
+                        isSelected: slotIndex == 2,
+                        activeColor: activeColor,
+                        inactiveColor: inactiveColor,
+                        onTap: () => onTabSelected(3),
+                      ),
+                    ),
+
+                    // Tab 4: Cá nhân (Index 2)
+                    Expanded(
+                      child: _buildNavItem(
+                        icon: Icons.person_outline_rounded,
+                        activeIcon: Icons.person_rounded,
+                        isSelected: slotIndex == 3,
+                        activeColor: activeColor,
+                        inactiveColor: inactiveColor,
+                        onTap: onProfileTap,
+                      ),
+                    ),
+                  ],
                 ),
-
-                // 3. Hàng 5 Tab điều hướng theo đúng logic sẵn có
-                SizedBox(
-                  height: 66,
-                  child: Row(
-                    children: [
-                      // Vị trí 0: Trang chủ (Index 0)
-                      Expanded(
-                        child: _buildNavItem(
-                          icon: Icons.home_outlined,
-                          activeIcon: Icons.home_rounded,
-                          isSelected: slotIndex == 0,
-                          activeColor: activeColor,
-                          inactiveColor: inactiveColor,
-                          onTap: () => onTabSelected(0),
-                        ),
-                      ),
-
-                      // Vị trí 1: Khám phá / CLB (Index 3)
-                      Expanded(
-                        child: _buildNavItem(
-                          icon: Icons.explore_outlined,
-                          activeIcon: Icons.explore_rounded,
-                          isSelected: slotIndex == 1,
-                          activeColor: activeColor,
-                          inactiveColor: inactiveColor,
-                          onTap: () => onTabSelected(3),
-                        ),
-                      ),
-
-                      // Vị trí 2: GIẢI ĐẤU (Index 1) - NÚT TRÒN CÚP VÀNG NHÔ CAO Ở CHÍNH GIỮA
-                      SizedBox(
-                        width: slotWidth,
-                        child: Center(
-                          child: Transform.translate(
-                            offset: const Offset(0, -14), // Nhô cao lên trên thanh bar
-                            child: GestureDetector(
-                              onTap: () {
-                                HapticFeedback.mediumImpact();
-                                onTabSelected(1);
-                              },
-                              behavior: HitTestBehavior.opaque,
-                              child: AnimatedScale(
-                                scale: isTournamentSelected ? 1.14 : 1.0,
-                                duration: const Duration(milliseconds: 220),
-                                curve: Curves.easeOutBack,
-                                child: Container(
-                                  width: 52,
-                                  height: 52,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: const LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        Color(0xFFFFD600), // Vàng sáng rực rỡ
-                                        Color(0xFFFFB300), // Vàng cam thể thao
-                                      ],
-                                    ),
-                                    border: Border.all(
-                                      color: isDark ? const Color(0xFF131B2A) : Colors.white,
-                                      width: 3.5,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFFFFC700).withValues(
-                                          alpha: isTournamentSelected ? 0.65 : 0.40,
-                                        ),
-                                        blurRadius: isTournamentSelected ? 18 : 12,
-                                        spreadRadius: isTournamentSelected ? 2 : 1,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.emoji_events_rounded, // Biểu tượng Cúp giải đấu vàng
-                                      color: Color(0xFF1E293B),
-                                      size: 28,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Vị trí 3: Bảng xếp hạng (Index 4)
-                      Expanded(
-                        child: _buildNavItem(
-                          icon: Icons.leaderboard_outlined,
-                          activeIcon: Icons.leaderboard_rounded,
-                          isSelected: slotIndex == 3,
-                          activeColor: activeColor,
-                          inactiveColor: inactiveColor,
-                          onTap: () => onTabSelected(4),
-                        ),
-                      ),
-
-                      // Vị trí 4: Cá nhân (Index 2)
-                      Expanded(
-                        child: _buildNavItem(
-                          icon: Icons.person_outline_rounded,
-                          activeIcon: Icons.person_rounded,
-                          isSelected: slotIndex == 4,
-                          activeColor: activeColor,
-                          inactiveColor: inactiveColor,
-                          onTap: onProfileTap,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -263,15 +196,15 @@ class FloatingBottomNav extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: Center(
         child: AnimatedScale(
-          scale: isSelected ? 1.15 : 1.0, // Hiệu ứng nảy nhô nhô nhẹ khi chọn
+          scale: isSelected ? 1.15 : 1.0,
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutBack,
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.only(bottom: 4),
             child: Icon(
               isSelected ? activeIcon : icon,
               color: isSelected ? activeColor : inactiveColor,
-              size: 26,
+              size: 24,
             ),
           ),
         ),
