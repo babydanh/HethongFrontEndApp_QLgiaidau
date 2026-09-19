@@ -65,7 +65,7 @@ class _PickleballCourtAnimationState extends State<PickleballCourtAnimation>
           builder: (context, child) {
             return CustomPaint(
               size: Size(widget.size, widget.size),
-              painter: _PickleballCourtPainter(progress: _controller.value),
+              painter: PickleballCourtPainter(progress: _controller.value),
             );
           },
         ),
@@ -74,230 +74,419 @@ class _PickleballCourtAnimationState extends State<PickleballCourtAnimation>
   }
 }
 
-class _PickleballCourtPainter extends CustomPainter {
+class PickleballCourtPainter extends CustomPainter {
   final double progress; // 0.0 -> 1.0
 
-  _PickleballCourtPainter({required this.progress});
+  PickleballCourtPainter({required this.progress});
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final center = Offset(w * 0.5, h * 0.54);
+    final center = Offset(w * 0.5, h * 0.52);
 
-    // Bán kính trục isometric
-    final rx = w * 0.44;
-    final ry = h * 0.27;
-    const depth = 22.0;
+    // Kích thước chuẩn tỉ lệ sân Pickleball trong không gian 2D trước khi chiếu 3D
+    final courtW = w * 0.62;
+    final courtH = w * 0.58;
+    const cornerRadius = 14.0;
+    const podiumDepth = 18.0;
 
-    // 4 đỉnh mặt sân (Isometric diamond)
-    final top = Offset(center.dx, center.dy - ry);
-    final right = Offset(center.dx + rx, center.dy);
-    final bottom = Offset(center.dx, center.dy + ry);
-    final left = Offset(center.dx - rx, center.dy);
+    // Góc nghiêng Isometric chuẩn
+    const isoScaleY = 0.56;
+    const isoAngle = -math.pi / 4; // 45 độ
 
-    // 1. Vẽ khối đế 3D dưới (Sườn sân bên trái & bên phải)
-    final leftSidePath = Path()
-      ..moveTo(left.dx, left.dy)
-      ..lineTo(bottom.dx, bottom.dy)
-      ..lineTo(bottom.dx, bottom.dy + depth)
-      ..lineTo(left.dx, left.dy + depth)
-      ..close();
+    // ─── 0. Đổ bóng tổng thể của toàn bộ khối sân lên nền trắng (Floating Shadow) ───
+    final groundShadowPaint = Paint()
+      ..color = const Color(0xFF0F172A).withValues(alpha: 0.10)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12.0);
 
-    final leftSidePaint = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFF1E2E48), Color(0xFF0F1A2A)],
-      ).createShader(Rect.fromLTWH(left.dx, left.dy, rx, ry + depth));
-    canvas.drawPath(leftSidePath, leftSidePaint);
+    canvas.save();
+    canvas.translate(center.dx, center.dy + podiumDepth + 6);
+    canvas.scale(1.0, isoScaleY);
+    canvas.rotate(isoAngle);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset.zero, width: courtW + 6, height: courtH + 6),
+        const Radius.circular(cornerRadius + 4),
+      ),
+      groundShadowPaint,
+    );
+    canvas.restore();
 
-    final rightSidePath = Path()
-      ..moveTo(bottom.dx, bottom.dy)
-      ..lineTo(right.dx, right.dy)
-      ..lineTo(right.dx, right.dy + depth)
-      ..lineTo(bottom.dx, bottom.dy + depth)
-      ..close();
+    // ─── 1. Vẽ Khối Đế 3D (Podium Base) với sườn bo cong mượt mà ───
+    // Dựng độ dày khối 3D bằng nhiều lớp lát mỏng liên tục để bo tròn các cạnh 3D hoàn hảo
+    const sliceCount = 18;
+    for (int i = sliceCount; i >= 0; i--) {
+      final tSlice = i / sliceCount;
+      final sliceY = center.dy + (podiumDepth * tSlice);
+      // Đổ bóng gradient tối dần về phía đáy
+      final sliceColor = Color.lerp(
+        const Color(0xFF1E2D44), // Mặt trên xám xanh navy sang trọng
+        const Color(0xFF0D1624), // Đáy sâu đậm nét
+        tSlice,
+      )!;
 
-    final rightSidePaint = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFF142033), Color(0xFF0B121E)],
-      ).createShader(Rect.fromLTWH(bottom.dx, bottom.dy, rx, ry + depth));
-    canvas.drawPath(rightSidePath, rightSidePaint);
+      final slicePaint = Paint()..color = sliceColor;
 
-    // 2. Viền ngoài trắng của mặt sân
-    final courtOuterPath = Path()
-      ..moveTo(top.dx, top.dy)
-      ..lineTo(right.dx, right.dy)
-      ..lineTo(bottom.dx, bottom.dy)
-      ..lineTo(left.dx, left.dy)
-      ..close();
+      canvas.save();
+      canvas.translate(center.dx, sliceY);
+      canvas.scale(1.0, isoScaleY);
+      canvas.rotate(isoAngle);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: Offset.zero, width: courtW, height: courtH),
+          const Radius.circular(cornerRadius),
+        ),
+        slicePaint,
+      );
+      canvas.restore();
+    }
 
-    final outerBorderPaint = Paint()
-      ..color = Colors.white
+    // Viền sáng tinh tế ở mép gờ trên cùng của đế (Bevel Highlight)
+    final bevelPaint = Paint()
+      ..color = const Color(0xFF3B506D).withValues(alpha: 0.65)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 5.0
-      ..strokeJoin = StrokeJoin.round;
-    canvas.drawPath(courtOuterPath, outerBorderPaint);
+      ..strokeWidth = 1.5;
 
-    // 3. Mặt sân màu xanh Sport Blue (như hình mẫu Blender)
-    final courtSurfacePaint = Paint()
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(1.0, isoScaleY);
+    canvas.rotate(isoAngle);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset.zero, width: courtW, height: courtH),
+        const Radius.circular(cornerRadius),
+      ),
+      bevelPaint,
+    );
+    canvas.restore();
+
+    // ─── 2. Mặt Sân Pickleball Màu Xanh Cobalt Rực Rỡ (Court Surface) ───
+    final surfaceW = courtW - 6.0;
+    final surfaceH = courtH - 6.0;
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(1.0, isoScaleY);
+    canvas.rotate(isoAngle);
+
+    // Nền sân xanh gradient rực rỡ như ảnh mẫu Blender
+    final surfacePaint = Paint()
       ..shader = const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Color(0xFF2584EE),
-          Color(0xFF196FD6),
+          Color(0xFF2688F5), // Xanh dương sáng rực phía bắt sáng
+          Color(0xFF1562CA), // Xanh cobalt đậm đà phía dưới
         ],
-      ).createShader(Rect.fromLTWH(left.dx, top.dy, rx * 2, ry * 2));
-    canvas.drawPath(courtOuterPath, courtSurfacePaint);
+      ).createShader(Rect.fromCenter(center: Offset.zero, width: surfaceW, height: surfaceH));
 
-    // 4. Các đường kẻ sân Pickleball (Lines)
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset.zero, width: surfaceW, height: surfaceH),
+        const Radius.circular(cornerRadius - 2),
+      ),
+      surfacePaint,
+    );
+
+    // ─── 3. Đường Kẻ Sân Trắng Chuẩn Thể Thao (White Court Markings) ───
     final linePaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.95)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+      ..strokeWidth = 2.4
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
-    // Đường giữa dọc sân (Centerline)
-    canvas.drawLine(top, bottom, linePaint);
+    // Đường biên trắng ngoài bo cong (Perimeter line)
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset.zero, width: surfaceW - 8.0, height: surfaceH - 8.0),
+        const Radius.circular(cornerRadius - 4),
+      ),
+      linePaint,
+    );
 
-    // Đường Kitchen (Non-Volley Zone) song song lưới
-    final kitchen1Start = Offset.lerp(left, top, 0.42)!;
-    final kitchen1End = Offset.lerp(right, top, 0.42)!;
-    canvas.drawLine(kitchen1Start, kitchen1End, linePaint);
+    // Đường giữa sân dọc (Centerline) - Đúng luật Pickleball: CHỈ chạy từ đường Kitchen tới Baseline
+    const kitchenOffset = 18.0;
+    // Nửa sân xa (Opponent side)
+    canvas.drawLine(
+      Offset(0, -kitchenOffset),
+      Offset(0, -(surfaceH - 8.0) / 2),
+      linePaint,
+    );
+    // Nửa sân gần (Player side)
+    canvas.drawLine(
+      Offset(0, kitchenOffset),
+      Offset(0, (surfaceH - 8.0) / 2),
+      linePaint,
+    );
 
-    final kitchen2Start = Offset.lerp(left, bottom, 0.42)!;
-    final kitchen2End = Offset.lerp(right, bottom, 0.42)!;
-    canvas.drawLine(kitchen2Start, kitchen2End, linePaint);
+    // Đường Kitchen ngang song song lưới (Non-Volley Zone lines)
+    canvas.drawLine(
+      Offset(-(surfaceW - 8.0) / 2, -kitchenOffset),
+      Offset((surfaceW - 8.0) / 2, -kitchenOffset),
+      linePaint..strokeWidth = 1.8,
+    );
+    canvas.drawLine(
+      Offset(-(surfaceW - 8.0) / 2, kitchenOffset),
+      Offset((surfaceW - 8.0) / 2, kitchenOffset),
+      linePaint..strokeWidth = 1.8,
+    );
 
-    // 5. Dựng Lưới Pickleball 3D nổi (Vertical Net)
-    const netHeight = 12.0;
-    final netPath = Path()
-      ..moveTo(left.dx, left.dy)
-      ..lineTo(left.dx, left.dy - netHeight)
-      ..lineTo(right.dx, right.dy - netHeight)
-      ..lineTo(right.dx, right.dy)
+    canvas.restore();
+
+    // ─── 4. Dựng Lưới Thể Thao 3D Đứng Dọc Theo Đường Ngang (Standing 3D Net) ───
+    final netLeft2D = _toScreenIso(Offset(-(surfaceW - 8.0) / 2, 0), center, isoScaleY, isoAngle);
+    final netRight2D = _toScreenIso(Offset((surfaceW - 8.0) / 2, 0), center, isoScaleY, isoAngle);
+    const netH = 13.0;
+
+    final netMeshPath = Path()
+      ..moveTo(netLeft2D.dx, netLeft2D.dy)
+      ..lineTo(netLeft2D.dx, netLeft2D.dy - netH)
+      ..lineTo(netRight2D.dx, netRight2D.dy - netH)
+      ..lineTo(netRight2D.dx, netRight2D.dy)
       ..close();
 
+    // Lưới thể thao xám đậm mờ
     final netMeshPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.35)
+      ..color = const Color(0xFF1E293B).withValues(alpha: 0.55)
       ..style = PaintingStyle.fill;
-    canvas.drawPath(netPath, netMeshPaint);
+    canvas.drawPath(netMeshPath, netMeshPaint);
 
-    // Viền trên đỉnh lưới (White tape band)
-    final netBandPaint = Paint()
+    // Dải băng viền trắng trên đỉnh lưới (Net Top Tape)
+    final netTapePaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
+      ..strokeWidth = 2.2
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(
-      Offset(left.dx, left.dy - netHeight),
-      Offset(right.dx, right.dy - netHeight),
-      netBandPaint,
+      Offset(netLeft2D.dx, netLeft2D.dy - netH),
+      Offset(netRight2D.dx, netRight2D.dy - netH),
+      netTapePaint,
     );
 
-    // ══════════════════════════════════════════════════════════
-    //  HOẠT ẢNH BÓNG PICKLEBALL: NẢY & TO RA NHỎ LẠI THEO QUỸ ĐẠO
-    // ══════════════════════════════════════════════════════════
-    final t = progress; // 0..1
-    final cycle = (t * 2 * math.pi);
+    // Cọc lưới hai bên (Net Posts)
+    final postPaint = Paint()
+      ..color = const Color(0xFF0F172A)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(netLeft2D, Offset(netLeft2D.dx, netLeft2D.dy - netH - 2), postPaint);
+    canvas.drawLine(netRight2D, Offset(netRight2D.dx, netRight2D.dy - netH - 2), postPaint);
 
-    // Điểm bóng xuất phát ở nửa sân bên kia (xa camera) và nảy sang nửa sân bên này (gần camera)
-    final startCourtPos = Offset(center.dx - rx * 0.40, center.dy - ry * 0.22);
-    final bounceCourtPos = Offset(center.dx + rx * 0.08, center.dy + ry * 0.40);
+    // ─── 5. Quỹ Đạo Đánh Smash & Nảy Bóng Chân Thực ───
+    final t = progress; // 0.0 -> 1.0
 
-    // Quỹ đạo ngang (X, Y trên mặt sân)
-    final horizontalPhase = (math.sin(cycle - math.pi / 2) + 1) / 2; // 0..1
-    final currentGroundPos = Offset.lerp(startCourtPos, bounceCourtPos, horizontalPhase)!;
+    // Điểm bóng xuất phát ở nửa sân xa (bên trái phía sau lưới)
+    final startCourt2D = Offset(-surfaceW * 0.28, -surfaceH * 0.28);
+    // Điểm bóng smash đập xuống sân gần (bên phải phía trước lưới)
+    final hitCourt2D = Offset(surfaceW * 0.10, surfaceH * 0.16);
 
-    // Độ nảy Parabol: chạm đất khi horizontalPhase = 1, cao nhất khi ở giữa quỹ đạo (vượt qua lưới)
-    final bounceHeight = math.sin(horizontalPhase * math.pi).abs() * (h * 0.30);
+    // Giai đoạn:
+    // 0.0 -> 0.65: Smash từ xa bay qua lưới cắm thẳng xuống đất
+    // 0.65 -> 1.0: Bóng nảy lên bật cao sau cú chạm đất
+    final bool isSmashing = t <= 0.65;
+    final double currentFlyHeight;
+    final Offset currentCourt2D;
+    final double trailOpacity;
+    final double squashX;
+    final double squashY;
 
-    // Vị trí thực của quả bóng (bay lên cao = Y giảm)
-    final ballCenter = Offset(currentGroundPos.dx, currentGroundPos.dy - bounceHeight);
+    final maxFlyHeight = h * 0.26;
 
-    // Scale của quả bóng: khi bay lên cao và gần camera thì TO RA (scale 1.55),
-    // khi chạm đất thì NHỎ LẠI (scale 0.85)
-    final scale = 0.85 + (horizontalPhase * 0.35) + ((bounceHeight / (h * 0.30)) * 0.35);
-    final ballRadius = 13.5 * scale;
+    if (isSmashing) {
+      final smashT = t / 0.65; // 0..1
+      // Quỹ đạo ngang di chuyển từ điểm phát đến điểm đập
+      currentCourt2D = Offset.lerp(startCourt2D, hitCourt2D, smashT)!;
+      // Đường cong Parabol bay qua lưới rồi cắm xuống sân (cao nhất ở giữa quỹ đạo)
+      currentFlyHeight = math.sin(smashT * math.pi).abs() * maxFlyHeight;
+      trailOpacity = (1.0 - (smashT * 0.3)).clamp(0.0, 1.0);
 
-    // 6. Bóng đổ (Shadow) trên mặt sân:
-    final shadowScale = 0.65 + (1.0 - (bounceHeight / (h * 0.30))) * 0.35;
-    final shadowOpacity = (0.50 - (bounceHeight / (h * 0.30)) * 0.30).clamp(0.12, 0.55);
+      // Hiệu ứng Squash & Stretch: lúc sắp chạm đất thì dãn dài theo hướng rơi
+      if (smashT > 0.85) {
+        final touchT = (smashT - 0.85) / 0.15;
+        squashX = 1.0 + touchT * 0.22; // Bẹt ngang khi chạm đất
+        squashY = 1.0 - touchT * 0.22; // Nén dọc khi chạm đất
+      } else {
+        squashX = 0.95;
+        squashY = 1.05;
+      }
+    } else {
+      final reboundT = (t - 0.65) / 0.35; // 0..1
+      // Bóng nảy lên tại chỗ (hoặc trôi nhẹ về trước)
+      currentCourt2D = Offset.lerp(hitCourt2D, Offset(hitCourt2D.dx + 6, hitCourt2D.dy + 4), reboundT)!;
+      // Độ cao nảy hồi phục (nảy lên khoảng 60% chiều cao ban đầu)
+      currentFlyHeight = math.sin(reboundT * math.pi).abs() * (maxFlyHeight * 0.55);
+      // Vệt trail mờ dần khi bóng nảy
+      trailOpacity = (1.0 - reboundT * 1.5).clamp(0.0, 1.0);
+
+      if (reboundT < 0.15) {
+        // Đang phục hồi từ cú nén đất
+        final unSquash = reboundT / 0.15;
+        squashX = 1.22 - unSquash * 0.22;
+        squashY = 0.78 + unSquash * 0.22;
+      } else {
+        squashX = 1.0;
+        squashY = 1.0;
+      }
+    }
+
+    final currentScreenGround = _toScreenIso(currentCourt2D, center, isoScaleY, isoAngle);
+    final ballCenter = Offset(
+      currentScreenGround.dx,
+      currentScreenGround.dy - currentFlyHeight,
+    );
+
+    // ─── 6. Kích Thước Quả Bóng (Cân đối tinh tế, đúng tỉ lệ) ───
+    final baseBallRadius = (w * 0.060).clamp(7.0, 14.0);
+    final heightRatio = (currentFlyHeight / maxFlyHeight).clamp(0.0, 1.0);
+    // Khi bay lên cao và gần camera thì to ra nhẹ (scale 1.25x), chạm đất thì scale 1.0x
+    final scaleFactor = 1.0 + (heightRatio * 0.25);
+    final ballR = baseBallRadius * scaleFactor;
+
+    // ─── 7. Bóng Đổ Dưới Mặt Sân (Realistic Ground Shadow) ───
+    final shadowScale = (1.15 - heightRatio * 0.45).clamp(0.70, 1.2);
+    final shadowAlpha = ((1.0 - heightRatio * 0.55) * 0.45).clamp(0.16, 0.55);
     final shadowRect = Rect.fromCenter(
-      center: currentGroundPos,
-      width: ballRadius * 2.2 * shadowScale,
-      height: ballRadius * 0.85 * shadowScale,
+      center: currentScreenGround,
+      width: ballR * 2.2 * shadowScale * squashX,
+      height: ballR * 0.85 * shadowScale * squashY,
     );
     final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: shadowOpacity)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
+      ..color = const Color(0xFF0A1220).withValues(alpha: shadowAlpha)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.0);
     canvas.drawOval(shadowRect, shadowPaint);
 
-    // 7. Vệt bóng đánh (Smash Motion Tube / Trail) uốn cong như ảnh mẫu Blender
-    final arcStart = Offset(startCourtPos.dx - 4, startCourtPos.dy - 6);
-    final arcPeak = Offset(
-      (startCourtPos.dx + bounceCourtPos.dx) / 2 - 12,
-      (startCourtPos.dy + bounceCourtPos.dy) / 2 - (h * 0.28),
-    );
-    final arcEnd = ballCenter;
+    // Vòng sóng chấn động khi bóng smash đập sân (Impact Ripple)
+    if (t >= 0.62 && t <= 0.78) {
+      final impactPhase = (t - 0.62) / 0.16; // 0..1
+      final hitScreen = _toScreenIso(hitCourt2D, center, isoScaleY, isoAngle);
+      final ripplePaint = Paint()
+        ..color = Colors.white.withValues(alpha: (1.0 - impactPhase) * 0.65)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = (1.0 - impactPhase) * 2.5;
+      final rippleRect = Rect.fromCenter(
+        center: hitScreen,
+        width: (ballR * 2.0 + impactPhase * 30.0),
+        height: (ballR * 0.85 + impactPhase * 13.0),
+      );
+      canvas.drawOval(rippleRect, ripplePaint);
+    }
 
-    final trailPath = Path()
-      ..moveTo(arcStart.dx, arcStart.dy)
-      ..quadraticBezierTo(arcPeak.dx, arcPeak.dy, arcEnd.dx, arcEnd.dy);
+    // ─── 8. Vệt Đánh Smash Dạng Ống Cong 3D Uốn Lượn (3D Tubular Motion Trail) ───
+    if (trailOpacity > 0.02) {
+      final startScreen = _toScreenIso(startCourt2D, center, isoScaleY, isoAngle);
+      final startAir = Offset(startScreen.dx - 6, startScreen.dy - 10);
+      final apexAir = Offset(
+        (startScreen.dx + hitCourt2D.dx) / 2 + 10,
+        center.dy - maxFlyHeight - 8,
+      );
 
-    // Vẽ vệt tube cong dày 3D
-    final trailTubePaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.white.withValues(alpha: 0.15),
-          Colors.white.withValues(alpha: 0.85),
-        ],
-      ).createShader(Rect.fromPoints(arcStart, arcEnd))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = (ballRadius * 0.70).clamp(6.0, 14.0)
-      ..strokeCap = StrokeCap.round;
-    canvas.drawPath(trailPath, trailTubePaint);
+      final tubePath = Path()
+        ..moveTo(startAir.dx, startAir.dy)
+        ..quadraticBezierTo(apexAir.dx, apexAir.dy, ballCenter.dx, ballCenter.dy);
 
-    // 8. Vẽ Quả bóng Pickleball màu Vàng
-    final ballPaint = Paint()
-      ..shader = RadialGradient(
-        center: const Alignment(-0.35, -0.35),
+      // Lớp 1: Vệt mờ ánh sáng bao quanh ống
+      final tubeGlowPaint = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.05 * trailOpacity),
+            Colors.white.withValues(alpha: 0.35 * trailOpacity),
+          ],
+        ).createShader(Rect.fromPoints(startAir, ballCenter))
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = ballR * 1.05
+        ..strokeCap = StrokeCap.round;
+      canvas.drawPath(tubePath, tubeGlowPaint);
+
+      // Lớp 2: Thân ống 3D chính màu trắng bạc bóng loáng
+      final tubeBodyPaint = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFFE2E8F0).withValues(alpha: 0.20 * trailOpacity),
+            Colors.white.withValues(alpha: 0.95 * trailOpacity),
+          ],
+        ).createShader(Rect.fromPoints(startAir, ballCenter))
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = ballR * 0.65
+        ..strokeCap = StrokeCap.round;
+      canvas.drawPath(tubePath, tubeBodyPaint);
+
+      // Lớp 3: Đường sống phản quang sắc nét ở giữa ống (Specular Spine)
+      final tubeHighlightPaint = Paint()
+        ..color = Colors.white.withValues(alpha: 0.90 * trailOpacity)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = ballR * 0.20
+        ..strokeCap = StrokeCap.round;
+      canvas.drawPath(tubePath, tubeHighlightPaint);
+    }
+
+    // ─── 9. Quả Bóng Pickleball 3D Vàng Óng Ánh (Glossy 3D Sphere) ───
+    canvas.save();
+    canvas.translate(ballCenter.dx, ballCenter.dy);
+    canvas.scale(squashX, squashY);
+
+    final ballGradientPaint = Paint()
+      ..shader = const RadialGradient(
+        center: Alignment(-0.38, -0.38),
         radius: 0.85,
-        colors: const [
-          Color(0xFFFFF59D), // Highlight vàng sáng
-          Color(0xFFFFD600), // Vàng tươi pickleball
-          Color(0xFFF57F17), // Shadow cạnh bóng
+        colors: [
+          Color(0xFFFFFDE7), // Điểm sáng bóng trắng vàng
+          Color(0xFFFFEA00), // Vàng chanh tươi pickleball
+          Color(0xFFFFB300), // Vàng cam ấm
+          Color(0xFFE65100), // Bóng tối viền quả cầu
         ],
-      ).createShader(Rect.fromCircle(center: ballCenter, radius: ballRadius));
-    canvas.drawCircle(ballCenter, ballRadius, ballPaint);
+        stops: [0.0, 0.45, 0.80, 1.0],
+      ).createShader(Rect.fromCircle(center: Offset.zero, radius: ballR));
 
-    // 9. Các lỗ tròn đặc trưng trên bóng Pickleball
-    final holePaint = Paint()
-      ..color = const Color(0xFF212121).withValues(alpha: 0.80);
+    canvas.drawCircle(Offset.zero, ballR, ballGradientPaint);
 
-    final holes = [
-      Offset(ballCenter.dx - ballRadius * 0.35, ballCenter.dy - ballRadius * 0.25),
-      Offset(ballCenter.dx + ballRadius * 0.15, ballCenter.dy - ballRadius * 0.45),
-      Offset(ballCenter.dx + ballRadius * 0.40, ballCenter.dy - ballRadius * 0.1),
-      Offset(ballCenter.dx - ballRadius * 0.1, ballCenter.dy + ballRadius * 0.15),
-      Offset(ballCenter.dx - ballRadius * 0.45, ballCenter.dy + ballRadius * 0.25),
-      Offset(ballCenter.dx + ballRadius * 0.3, ballCenter.dy + ballRadius * 0.35),
-      Offset(ballCenter.dx - ballRadius * 0.05, ballCenter.dy + ballRadius * 0.55),
+    // Vết phản chiếu ánh sáng trắng sắc nét (Specular Glint)
+    final glintPaint = Paint()..color = Colors.white.withValues(alpha: 0.90);
+    canvas.drawCircle(
+      Offset(-ballR * 0.32, -ballR * 0.32),
+      ballR * 0.18,
+      glintPaint,
+    );
+
+    // ─── 10. Lỗ Tròn Đặc Trưng Pickleball (Hổ phách mờ, tự nhiên) ───
+    final dimplePaint = Paint()
+      ..color = const Color(0xFFB45309).withValues(alpha: 0.50);
+
+    final dimpleOffsets = [
+      Offset(ballR * 0.22, -ballR * 0.28),
+      Offset(ballR * 0.44, ballR * 0.05),
+      Offset(-ballR * 0.05, ballR * 0.32),
+      Offset(ballR * 0.28, ballR * 0.35),
+      Offset(-ballR * 0.35, ballR * 0.15),
+      Offset(-ballR * 0.20, -ballR * 0.35),
     ];
 
-    final holeRadius = ballRadius * 0.14;
-    for (final hole in holes) {
-      canvas.drawCircle(hole, holeRadius, holePaint);
+    final dimpleR = ballR * 0.11;
+    for (final offset in dimpleOffsets) {
+      canvas.drawCircle(offset, dimpleR, dimplePaint);
     }
+
+    canvas.restore();
+  }
+
+  /// Chuyển đổi tọa độ 2D trên mặt phẳng sân thành tọa độ màn hình theo phép chiếu Isometric
+  Offset _toScreenIso(Offset p, Offset center, double scaleY, double angle) {
+    final cosA = math.cos(angle);
+    final sinA = math.sin(angle);
+    // Xoay 45 độ
+    final rotX = p.dx * cosA - p.dy * sinA;
+    final rotY = p.dx * sinA + p.dy * cosA;
+    // Thu hẹp Y theo tỉ lệ phối cảnh Isometric
+    return Offset(center.dx + rotX, center.dy + rotY * scaleY);
   }
 
   @override
-  bool shouldRepaint(covariant _PickleballCourtPainter oldDelegate) {
+  bool shouldRepaint(covariant PickleballCourtPainter oldDelegate) {
     return oldDelegate.progress != progress;
   }
 }
