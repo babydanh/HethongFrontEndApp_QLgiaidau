@@ -112,8 +112,6 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
         member?.status.toUpperCase() == 'JOINED' &&
         ['OWNER', 'MODERATOR'].contains(member?.role.toUpperCase());
     final canCreateLite = auth.isAdmin || isJoinedClubManager;
-    final canCreateAdvanced =
-        auth.isAdmin || (auth.isOrganizer && isJoinedClubManager);
 
     final currentList = _pageTournaments[_currentPageIndex] ?? const [];
 
@@ -125,13 +123,8 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add_rounded),
-            onPressed: canCreateLite || canCreateAdvanced
-                ? () => _showTypeSheet(
-                    context,
-                    widget.clubId,
-                    canCreateLite: canCreateLite,
-                    canCreateAdvanced: canCreateAdvanced,
-                  )
+            onPressed: canCreateLite
+                ? () => context.push('/club/${widget.clubId}/create-tournament')
                 : null,
           ),
         ],
@@ -188,7 +181,6 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
                             context,
                             l10n,
                             canCreateLite: canCreateLite,
-                            canCreateAdvanced: canCreateAdvanced,
                           )
                         : ListView.builder(
                             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -450,7 +442,6 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
     BuildContext context,
     AppLocalizations l10n, {
     required bool canCreateLite,
-    required bool canCreateAdvanced,
   }) => Center(
     child: SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -482,14 +473,10 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
             style: TextStyle(fontSize: 12.5, color: context.colors.textMuted),
           ),
           const SizedBox(height: 20),
-          if (canCreateLite || canCreateAdvanced)
+          if (canCreateLite)
             ElevatedButton.icon(
-              onPressed: () => _showTypeSheet(
-                context,
-                widget.clubId,
-                canCreateLite: canCreateLite,
-                canCreateAdvanced: canCreateAdvanced,
-              ),
+              onPressed: () =>
+                  context.push('/club/${widget.clubId}/create-tournament'),
               icon: const Icon(Icons.add),
               label: Text(l10n.clubTournamentsCreate),
             ),
@@ -673,243 +660,5 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
       ),
     );
   }
-
-  void _showTypeSheet(
-    BuildContext context,
-    String clubId, {
-    required bool canCreateLite,
-    required bool canCreateAdvanced,
-  }) {
-    final colors = context.colors;
-    final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colors.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.clubTournamentsChooseType,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.clubTournamentsChooseTypeHint,
-              style: TextStyle(fontSize: 12, color: colors.textMuted),
-            ),
-            const SizedBox(height: 20),
-
-            // Option 1: Super Quick nội bộ CLB (Lite)
-            if (canCreateLite)
-              InkWell(
-                onTap: () {
-                  Navigator.pop(ctx);
-                  context.push('/club/$clubId/create-tournament');
-                },
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFFF59E0B,
-                          ).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.bolt_rounded,
-                          color: Color(0xFFF59E0B),
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  l10n.clubTournamentsLiteTitle,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: colors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF59E0B),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: const Text(
-                                    '30s',
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              l10n.clubTournamentsLiteDescription,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colors.textSecondary,
-                                height: 1.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        color: colors.textMuted,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            const SizedBox(height: 12),
-
-            // Option 3: Giải Nâng Cao (Full) - Native Mobile Wizard
-            if (canCreateAdvanced)
-              InkWell(
-                onTap: () {
-                  Navigator.pop(ctx);
-                  context.push(
-                    '/tournaments/create-advanced?communityId=$clubId',
-                  );
-                },
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF3B82F6,
-                          ).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.workspace_premium_rounded,
-                          color: Color(0xFF3B82F6),
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  l10n.clubTournamentsAdvancedTitle,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: colors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF2563EB),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    l10n.clubTournamentsAdvancedBadge,
-                                    style: const TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              l10n.clubTournamentsAdvancedCardDescription,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colors.textSecondary,
-                                height: 1.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        color: colors.textMuted,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 }
+

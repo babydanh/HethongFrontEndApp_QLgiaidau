@@ -29,7 +29,6 @@ import 'package:app_quanly_giaidau/features/community/screens/club_match_session
 import 'package:app_quanly_giaidau/features/community/screens/create_club_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/create_club_tournament_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/create_public_quick_tournament_screen.dart';
-import 'package:app_quanly_giaidau/features/tournament/screens/create_advanced_tournament_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_management_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_invites_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/edit_club_screen.dart';
@@ -79,7 +78,7 @@ final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
-    initialLocation: '/home',
+    initialLocation: '/',
     redirect: (context, state) {
       final auth = ref.read(authProvider);
       final isAuth = auth.status == AuthStatus.authenticated;
@@ -368,7 +367,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/tournaments/create-advanced',
-        builder: (context, state) => CreateAdvancedTournamentScreen(
+        builder: (context, state) => CreatePublicQuickTournamentScreen(
           communityId: state.uri.queryParameters['communityId'],
         ),
       ),
