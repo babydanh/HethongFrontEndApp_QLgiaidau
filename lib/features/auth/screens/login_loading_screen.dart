@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_header.dart';
+import 'package:app_quanly_giaidau/core/widgets/pickleball_loading_widget.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -123,15 +124,10 @@ class _LoginLoadingScreenState extends ConsumerState<LoginLoadingScreen> {
                     ).animate().fadeIn(),
                   ),
 
-                  const SizedBox(height: 48),
-                  const SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white54),
-                    ),
-                  ).animate().fadeIn(delay: 500.ms),
+                  const SizedBox(height: 36),
+                  const PickleballLoadingWidget(
+                    size: 64,
+                  ).animate().fadeIn(delay: 300.ms).scale(begin: const Offset(0.8, 0.8)),
                 ],
               ),
             ),
