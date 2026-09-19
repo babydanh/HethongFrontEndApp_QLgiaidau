@@ -14,120 +14,41 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
-    with TickerProviderStateMixin {
-  // 1. Sân 3D Hình 1 (có vợt và bóng đánh qua lưới) xuất hiện nảy nhẹ
-  late AnimationController _introController;
-  late Animation<double> _introScaleAnimation;
-  late Animation<double> _introFadeAnimation;
-
-  // 2. Xoay 3D tại chỗ và chuyển hóa từ Hình 1 (sân dài) sang Hình 2 (sân vuông compact)
-  late AnimationController _turnController;
-
-  // 3. Nhịp thở lơ lửng bồng bềnh (Floating / Breathing)
-  late AnimationController _floatController;
-
-  // 4. Logo chính thức SportO SVG mini xuất hiện
-  late AnimationController _logoController;
-  late Animation<double> _logoFadeAnimation;
-  late Animation<Offset> _logoSlideAnimation;
-
-  // 5. Chuyển tiếp êm ái sang Trang chủ
-  late AnimationController _exitController;
-  late Animation<double> _exitFadeAnimation;
-  late Animation<double> _exitScaleAnimation;
-
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
   bool _isNavigating = false;
 
   @override
   void initState() {
     super.initState();
 
-    // 1. Hình 1 xuất hiện (750ms)
-    _introController = AnimationController(
-      duration: const Duration(milliseconds: 750),
+    // Timeline chính tổng thời gian 2700ms với các giai đoạn chuẩn xác:
+    // 0.00 - 0.28 (~0 - 750ms)   : Hình 1 (sân có vợt đánh bóng qua lưới) bung mở, nảy nhẹ
+    // 0.28 - 0.58 (~750 - 1550ms): Xoay góc chuyển hóa (morph transition) từ Hình 1 sang Hình 2
+    // 0.58 - 0.88 (~1550 - 2350ms): Hình 2 xoay lắc nhẹ tại chỗ & thu gọn kích thước thành icon vuông
+    // 0.88 - 1.00 (~2350 - 2700ms): Chuyển cảnh êm ái sang Trang chủ (/home)
+    _animController = AnimationController(
+      duration: const Duration(milliseconds: 2700),
       vsync: this,
     );
 
-    _introScaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _introController, curve: Curves.easeOutBack),
-    );
+    _animController.forward();
 
-    _introFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _introController, curve: Curves.easeIn),
-    );
-
-    // 2. Xoay 3D tại chỗ chuyển hóa sang Hình 2 (1100ms)
-    _turnController = AnimationController(
-      duration: const Duration(milliseconds: 1100),
-      vsync: this,
-    );
-
-    // 3. Nhịp thở lơ lửng
-    _floatController = AnimationController(
-      duration: const Duration(milliseconds: 1800),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    // 4. Logo SportO mini trượt lên
-    _logoController = AnimationController(
-      duration: const Duration(milliseconds: 650),
-      vsync: this,
-    );
-
-    _logoFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.easeOut),
-    );
-
-    _logoSlideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.35),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.easeOutCubic),
-    );
-
-    // 5. Thoát màn hình
-    _exitController = AnimationController(
-      duration: const Duration(milliseconds: 450),
-      vsync: this,
-    );
-
-    _exitFadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _exitController, curve: Curves.easeOut),
-    );
-
-    _exitScaleAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
-      CurvedAnimation(parent: _exitController, curve: Curves.easeInOutCubic),
-    );
-
-    // === KỊCH BẢN CHUYỂN ĐỘNG (TIMELINE) ===
-    // 0ms: Sân 3D có vợt và bóng (Hình 1) bung mở ra
-    _introController.forward();
-
-    // 700ms: Sân bắt đầu xoay 3D tại chỗ và thu gọn chuyển hóa sang Hình 2
-    Future.delayed(const Duration(milliseconds: 700), () {
-      if (mounted) {
-        _turnController.forward();
-      }
-    });
-
-    // 1200ms: Logo SportO mini trượt lên tinh tế bên dưới
+    // Kích hoạt nạp auth song song từ 1200ms
     Future.delayed(const Duration(milliseconds: 1200), () {
       if (mounted) {
-        _logoController.forward();
+        _preWarmAuth();
       }
     });
 
-    // 2400ms: Nạp Auth xong chuyển tiếp êm ái sang Trang chủ
-    Future.delayed(const Duration(milliseconds: 2400), () {
-      if (mounted) {
-        _initAuth();
+    _animController.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted) {
+        _navigateToNextScreen();
       }
     });
   }
 
-  Future<void> _initAuth() async {
-    if (_isNavigating) return;
-
+  Future<void> _preWarmAuth() async {
     try {
       await ref.read(authProvider.notifier).init().timeout(
         const Duration(seconds: 4),
@@ -138,14 +59,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     } catch (e, stack) {
       debugPrint('[SplashScreen] Error during auth init: $e\n$stack');
     }
+  }
 
-    if (!mounted) return;
-
+  void _navigateToNextScreen() {
+    if (_isNavigating || !mounted) return;
     _isNavigating = true;
-
-    await _exitController.forward();
-
-    if (!mounted) return;
 
     try {
       final auth = ref.read(authProvider);
@@ -173,11 +91,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   void dispose() {
-    _introController.dispose();
-    _turnController.dispose();
-    _floatController.dispose();
-    _logoController.dispose();
-    _exitController.dispose();
+    _animController.dispose();
     super.dispose();
   }
 
@@ -186,32 +100,109 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       body: AnimatedBuilder(
-        animation: Listenable.merge([
-          _introController,
-          _turnController,
-          _floatController,
-          _logoController,
-          _exitController,
-        ]),
+        animation: _animController,
         builder: (context, child) {
-          final floatOffset = math.sin(_floatController.value * math.pi) * 5.0;
-          final turn = _turnController.value; // 0.0 -> 1.0
+          // --- GIAI ĐOẠN 1 (0.0 -> 0.28): SÂN HÌNH 1 BUNG MỞ ---
+          // Độ mờ Hình 1
+          final fig1Opacity = Tween<double>(begin: 0.0, end: 1.0).transform(
+            CurvedAnimation(
+              parent: _animController,
+              curve: const Interval(0.0, 0.20, curve: Curves.easeOut),
+            ).value,
+          );
+          // Scale xuất hiện ban đầu
+          final introScale = Tween<double>(begin: 0.75, end: 1.0).transform(
+            CurvedAnimation(
+              parent: _animController,
+              curve: const Interval(0.0, 0.28, curve: Curves.easeOutBack),
+            ).value,
+          );
 
-          // Góc xoay 3D (xoay quanh trục Y và nghiêng nhẹ Z)
-          final rotationY = turn * math.pi * 2;
-          final isSecondHalf = turn >= 0.5; // Nửa đầu hiển thị Hình 1, nửa sau hiển thị Hình 2
+          // --- GIAI ĐOẠN 2 (0.28 -> 0.58): XOAY CHUYỂN GÓC SANG HÌNH 2 & CROSS-FADE ---
+          // Morph chuyển từ Hình 1 sang Hình 2 (0.0: thuần hình 1, 1.0: thuần hình 2)
+          final morph = Tween<double>(begin: 0.0, end: 1.0).transform(
+            CurvedAnimation(
+              parent: _animController,
+              curve: const Interval(0.30, 0.54, curve: Curves.easeInOut),
+            ).value,
+          );
 
-          // Thu gọn kích thước từ Hình 1 (175px) sang Hình 2 (125px)
-          final courtSize = Tween<double>(begin: 175.0, end: 125.0)
-              .transform(CurvedAnimation(parent: _turnController, curve: Curves.easeInOutCubic).value);
+          // Góc xoay phối cảnh khi chuyển (chỉ xoay góc nghiêng nhẹ, tuyệt đối KHÔNG xoay 360 độ vòng tròn)
+          final transitionAngle = Tween<double>(begin: 0.0, end: 1.0).transform(
+            CurvedAnimation(
+              parent: _animController,
+              curve: const Interval(0.28, 0.56, curve: Curves.easeInOutCubic),
+            ).value,
+          );
+          // Nghiêng nhẹ trục Y từ 0° lên ~16° rồi hạ về 0°
+          final morphRotY = math.sin(transitionAngle * math.pi) * 0.28;
+          // Nghiêng nhẹ trục Z
+          final morphRotZ = math.sin(transitionAngle * math.pi) * 0.06;
 
-          return FadeTransition(
-            opacity: _exitFadeAnimation,
+          // --- GIAI ĐOẠN 3 (0.58 -> 0.88): HÌNH 2 XOAY TẠI CHỖ & THU GỌN THÀNH ICON VUÔNG ---
+          // Thu gọn kích thước từ 190px xuống 125px
+          final shrinkProgress = Tween<double>(begin: 0.0, end: 1.0).transform(
+            CurvedAnimation(
+              parent: _animController,
+              curve: const Interval(0.50, 0.82, curve: Curves.easeInOutCubic),
+            ).value,
+          );
+          final courtSize = 190.0 - (shrinkProgress * 65.0); // 190px -> 125px
+
+          // Xoay nhẹ nhàng tại chỗ (in-place 3D floating tilt) của Hình 2
+          final inPlaceProgress = Tween<double>(begin: 0.0, end: 1.0).transform(
+            CurvedAnimation(
+              parent: _animController,
+              curve: const Interval(0.56, 0.88, curve: Curves.easeInOut),
+            ).value,
+          );
+          // Xoay lắc nhẹ tại chỗ quanh trục Y từ -8° tới +8°
+          final inPlaceRotY = math.sin(inPlaceProgress * math.pi * 2) * 0.14;
+          // Bồng bềnh nhẹ 4px
+          final inPlaceFloat = math.sin(inPlaceProgress * math.pi * 2) * 4.0;
+
+          // Tổng hợp góc xoay 3D (êm ái, chân thực, giữ trọn vẹn phối cảnh 3D của ảnh)
+          final totalRotY = morphRotY + inPlaceRotY;
+          final totalRotZ = morphRotZ + (math.sin(inPlaceProgress * math.pi * 2) * 0.03);
+
+          // --- LOGO SPORTO MINI ---
+          final logoOpacity = Tween<double>(begin: 0.0, end: 1.0).transform(
+            CurvedAnimation(
+              parent: _animController,
+              curve: const Interval(0.35, 0.60, curve: Curves.easeOut),
+            ).value,
+          );
+          final logoSlide = Tween<Offset>(
+            begin: const Offset(0.0, 0.35),
+            end: Offset.zero,
+          ).transform(
+            CurvedAnimation(
+              parent: _animController,
+              curve: const Interval(0.35, 0.60, curve: Curves.easeOutCubic),
+            ).value,
+          );
+
+          // --- THOÁT MÀN HÌNH (0.88 -> 1.0) ---
+          final exitOpacity = Tween<double>(begin: 1.0, end: 0.0).transform(
+            CurvedAnimation(
+              parent: _animController,
+              curve: const Interval(0.88, 1.0, curve: Curves.easeIn),
+            ).value,
+          );
+          final exitScale = Tween<double>(begin: 1.0, end: 1.08).transform(
+            CurvedAnimation(
+              parent: _animController,
+              curve: const Interval(0.88, 1.0, curve: Curves.easeInOutCubic),
+            ).value,
+          );
+
+          return Opacity(
+            opacity: exitOpacity.clamp(0.0, 1.0),
             child: Transform.scale(
-              scale: _exitScaleAnimation.value,
+              scale: exitScale,
               child: Stack(
                 children: [
-                  // 1. Nền chuyển sắc chuẩn Vibe Web SportO (Trắng & Xanh thể thao dịu mắt)
+                  // 1. Nền chuyển sắc chuẩn Vibe Web SportO (Trắng sáng & Xanh thể thao trang nhã)
                   Positioned.fill(
                     child: Container(
                       decoration: const BoxDecoration(
@@ -232,8 +223,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   // Vầng sáng hào quang trung tâm (Radial Glow)
                   Center(
                     child: Container(
-                      width: 280,
-                      height: 280,
+                      width: 290,
+                      height: 290,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
@@ -253,61 +244,69 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Cụm Sân 3D xoay tại chỗ và biến hình
+                        // Cụm Sân 3D: Xoay tại chỗ & Thu gọn chuyển hóa
                         Transform.translate(
-                          offset: Offset(0, floatOffset - 10),
-                          child: FadeTransition(
-                            opacity: _introFadeAnimation,
-                            child: Transform.scale(
-                              scale: _introScaleAnimation.value,
-                              child: Transform(
-                                alignment: Alignment.center,
-                                transform: Matrix4.identity()
-                                  ..setEntry(3, 2, 0.0012) // Phối cảnh chiều sâu 3D
-                                  ..rotateY(rotationY)
-                                  ..rotateZ(math.sin(rotationY) * 0.08),
-                                child: Container(
-                                  width: courtSize,
-                                  height: courtSize,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppTheme.primary.withValues(alpha: 0.20),
-                                        blurRadius: 28,
-                                        spreadRadius: 2,
-                                        offset: const Offset(0, 10),
+                          offset: Offset(0, inPlaceFloat - 8),
+                          child: Transform.scale(
+                            scale: introScale,
+                            child: Transform(
+                              alignment: Alignment.center,
+                              transform: Matrix4.identity()
+                                ..setEntry(3, 2, 0.001) // Phối cảnh chiều sâu 3D tinh tế
+                                ..rotateY(totalRotY)
+                                ..rotateZ(totalRotZ),
+                              child: Container(
+                                width: courtSize,
+                                height: courtSize,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(18),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppTheme.primary.withValues(
+                                        alpha: 0.18 + (shrinkProgress * 0.08),
                                       ),
-                                    ],
-                                  ),
-                                  child: isSecondHalf
-                                      // Giai đoạn 2: Thu gọn thành Hình 2 (Sân vuông 3D compact)
-                                      ? Transform(
-                                          alignment: Alignment.center,
-                                          transform: Matrix4.identity()..rotateY(math.pi), // Giữ mặt chính khi xoay tiếp
-                                          child: Image.asset(
-                                            'assets/images/pickleball_court_3d_icon.png',
-                                            fit: BoxFit.contain,
-                                          ),
-                                        )
-                                      // Giai đoạn 1: Sân 3D đầy đủ có vợt đánh bóng qua lưới
-                                      : Image.asset(
+                                      blurRadius: 26 - (shrinkProgress * 6),
+                                      spreadRadius: 2,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    // HÌNH 1: Sân thi đấu có vợt đánh bóng qua lưới
+                                    if (morph < 1.0)
+                                      Opacity(
+                                        opacity: ((1.0 - morph) * fig1Opacity).clamp(0.0, 1.0),
+                                        child: Image.asset(
                                           'assets/images/pickleball_court_3d_match.png',
                                           fit: BoxFit.contain,
                                         ),
+                                      ),
+
+                                    // HÌNH 2: Sân 3D vuông icon (thu gọn)
+                                    if (morph > 0.0)
+                                      Opacity(
+                                        opacity: morph.clamp(0.0, 1.0),
+                                        child: Image.asset(
+                                          'assets/images/pickleball_court_3d_icon.png',
+                                          fit: BoxFit.contain,
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
                         ),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 26),
 
                         // Logo chính thức SportO "Chơi cùng nhau" SVG mini sắc nét
                         SlideTransition(
-                          position: _logoSlideAnimation,
-                          child: FadeTransition(
-                            opacity: _logoFadeAnimation,
+                          position: AlwaysStoppedAnimation(logoSlide),
+                          child: Opacity(
+                            opacity: logoOpacity.clamp(0.0, 1.0),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -330,8 +329,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: List.generate(3, (index) {
-                                    final delay = index * 0.25;
-                                    final t = (_floatController.value * 2 + delay) % 1.0;
+                                    final delay = index * 0.22;
+                                    final t = (_animController.value * 3.5 + delay) % 1.0;
                                     final dotOpacity = 0.25 + 0.75 * math.sin(t * math.pi);
                                     final dotScale = 0.8 + 0.35 * math.sin(t * math.pi);
 
