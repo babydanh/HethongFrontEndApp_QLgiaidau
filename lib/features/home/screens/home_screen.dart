@@ -21,6 +21,7 @@ import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_ban
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/core/widgets/pickleball_court_animation.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/province_selection_screen.dart';
@@ -406,12 +407,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final activeHeaderHeight = _headerHeight;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
+      value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: context.colors.bgDark,
+        backgroundColor: const Color(0xFFF8FAFC),
         extendBody: true,
         body: Stack(
           children: [
@@ -427,19 +428,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-            // Shared Modern Flat Top Header (Vibe Web: Phẳng, không bo sóng, 3 Tab bên trái, Nút tròn Search bên phải)
+            // Shared Modern Flat Top Header (Vibe Web: Nền trắng sạch, phẳng, 3 Tab bên trái, Nút tròn Search bên phải)
             Positioned(
               top: 0,
               left: 0,
               right: 0,
               child: Container(
-                decoration: BoxDecoration(
-                  color: isDark ? context.colors.bgDark : Colors.white,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
                   border: Border(
                     bottom: BorderSide(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : const Color(0xFFE2E8F0),
+                      color: Color(0xFFE2E8F0),
                       width: 1.0,
                     ),
                   ),
@@ -548,13 +547,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     if (_currentIndex == 3)
                       Container(
                         height: 44,
-                        decoration: BoxDecoration(
-                          color: isDark ? context.colors.bgDark : Colors.white,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
                           border: Border(
                             bottom: BorderSide(
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.08)
-                                  : const Color(0xFFE2E8F0),
+                              color: Color(0xFFE2E8F0),
                               width: 1,
                             ),
                           ),
@@ -597,7 +594,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     // Thanh Search Bar trượt ra khi được kích hoạt
                     if (_shouldShowSearchBar)
                       Container(
-                        color: isDark ? context.colors.bgDark : Colors.white,
+                        color: Colors.white,
                         padding: const EdgeInsets.fromLTRB(16.0, 6.0, 16.0, 8.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1296,6 +1293,87 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       SliverToBoxAdapter(
                         child: _buildGuestLoginNoticeBanner(l10n),
                       ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: const Color(0xFFE2E8F0),
+                              width: 1.0,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.03),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              const PickleballCourtAnimation(size: 80),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 7,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFEF4444)
+                                                .withValues(alpha: 0.12),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: const Text(
+                                            'PICKLEBALL',
+                                            style: TextStyle(
+                                              color: Color(0xFFEF4444),
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 10,
+                                              letterSpacing: 0.4,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        const Text(
+                                          'Sân Đấu 3D',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w800,
+                                            color: Color(0xFF0F172A),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    const Text(
+                                      'Chạm vào sân để nảy bóng và khám phá các trận cầu sôi động',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF64748B),
+                                        height: 1.35,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                     if (featuredTournaments.isNotEmpty) ...[
                       SliverToBoxAdapter(
                         child: _buildSectionTitle(
@@ -1354,7 +1432,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: SizedBox(height: _pinnedHeaderHeight),
                   ),
                   const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator()),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          PickleballCourtAnimation(size: 140),
+                          SizedBox(height: 16),
+                          Text(
+                            'Đang tải dữ liệu giải đấu...',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
