@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/features/auth/widgets/pickleball_3d_widget.dart';
-import 'package:app_quanly_giaidau/features/auth/widgets/court_laser_3d_painter.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -17,33 +16,27 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
-  // 1. Tia laser vẽ các đường line sân 3D
-  late AnimationController _laserController;
+  // 1. Quả bóng Pickleball mini bay chéo xuống và nảy nhẹ đàn hồi
+  late AnimationController _swoopController;
+  late Animation<Offset> _swoopOffsetAnimation;
+  late Animation<double> _swoopScaleAnimation;
+  late Animation<double> _swoopOpacityAnimation;
 
-  // 2. Trái bóng Pickleball nảy 1 nhịp chuẩn xác vào vạch giao bóng
-  late AnimationController _bounceController;
-  late Animation<double> _ballYAnimation;
-  late Animation<double> _ballScaleAnimation;
-  late Animation<double> _ballOpacityAnimation;
+  // 2. Vòng sóng ánh sáng lan tỏa nhẹ khi bóng chạm tâm (Shockwave Ripple)
+  late AnimationController _rippleController;
 
-  // 3. Sóng chấn động khi bóng tiếp xúc mặt sân
-  late AnimationController _impactController;
-
-  // 4. Các đường line sân co tròn (morph) thành vòng hào quang
-  late AnimationController _morphController;
-
-  // 5. Quả bóng xoay 3D liên tục
+  // 3. Quả bóng xoay 3D loading liên tục
   late AnimationController _spinController;
 
-  // 6. Nhịp thở lơ lửng bồng bềnh
+  // 4. Nhịp thở lơ lửng bồng bềnh
   late AnimationController _floatController;
 
-  // 7. Logo SportO SVG mini hiện ra
+  // 5. Logo chính thức SportO SVG mini trượt lên
   late AnimationController _logoController;
   late Animation<double> _logoFadeAnimation;
   late Animation<Offset> _logoSlideAnimation;
 
-  // 8. Thoát màn hình chuyển vào Trang chủ
+  // 6. Thoát màn hình chuyển vào Home mượt mà
   late AnimationController _exitController;
   late Animation<double> _exitFadeAnimation;
 
@@ -53,86 +46,55 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void initState() {
     super.initState();
 
-    // 1. Tia Laser vẽ sân 3D (850ms)
-    _laserController = AnimationController(
+    // 1. Bay chéo xuống tâm màn hình (850ms)
+    _swoopController = AnimationController(
       duration: const Duration(milliseconds: 850),
       vsync: this,
     );
 
-    // 2. Bóng Pickleball rơi và nảy 1 nhịp (700ms)
-    _bounceController = AnimationController(
-      duration: const Duration(milliseconds: 700),
+    _swoopOffsetAnimation = Tween<Offset>(
+      begin: const Offset(1.3, -1.2),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _swoopController,
+      curve: Curves.easeOutBack, // Hiệu ứng nảy nhẹ tự nhiên khi đáp
+    ));
+
+    _swoopScaleAnimation = Tween<double>(
+      begin: 0.4,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _swoopController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _swoopOpacityAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _swoopController,
+      curve: const Interval(0.0, 0.4, curve: Curves.easeIn),
+    ));
+
+    // 2. Vòng sóng ánh sáng lan tỏa nhẹ khi bóng chạm đất (600ms)
+    _rippleController = AnimationController(
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
 
-    // Mô phỏng quỹ đạo rơi từ trên cao xuống và nảy 1 nhịp
-    _ballYAnimation = TweenSequence<double>([
-      // Rơi từ trên cao (-130) xuống chạm sàn (0)
-      TweenSequenceItem(
-        tween: Tween<double>(begin: -130.0, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeInQuad)),
-        weight: 48,
-      ),
-      // Nảy lên đỉnh nhịp 1 (-32)
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.0, end: -32.0)
-            .chain(CurveTween(curve: Curves.easeOutQuad)),
-        weight: 26,
-      ),
-      // Rơi xuống lại sàn (0)
-      TweenSequenceItem(
-        tween: Tween<double>(begin: -32.0, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeInQuad)),
-        weight: 26,
-      ),
-    ]).animate(_bounceController);
-
-    _ballScaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.5, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeOut)),
-        weight: 48,
-      ),
-      // Biến dạng nảy nhẹ khi đập sàn (squash & stretch)
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 0.95),
-        weight: 12,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.95, end: 1.0),
-        weight: 40,
-      ),
-    ]).animate(_bounceController);
-
-    _ballOpacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _bounceController, curve: const Interval(0.0, 0.3)),
-    );
-
-    // 3. Sóng chấn động khi bóng đập sàn (450ms)
-    _impactController = AnimationController(
-      duration: const Duration(milliseconds: 450),
-      vsync: this,
-    );
-
-    // 4. Các đường line sân co lại thành vòng hào quang (750ms)
-    _morphController = AnimationController(
-      duration: const Duration(milliseconds: 750),
-      vsync: this,
-    );
-
-    // 5. Xoay 3D liên tục (Looping Spin)
+    // 3. Xoay 3D liên tục (Looping Spin)
     _spinController = AnimationController(
-      duration: const Duration(milliseconds: 2400),
+      duration: const Duration(milliseconds: 2600),
       vsync: this,
     )..repeat();
 
-    // 6. Nhịp thở lơ lửng
+    // 4. Nhịp thở lơ lửng (Floating)
     _floatController = AnimationController(
       duration: const Duration(milliseconds: 1600),
       vsync: this,
     )..repeat(reverse: true);
 
-    // 7. Logo SportO mini hiện ra
+    // 5. Logo SportO mini hiện ra
     _logoController = AnimationController(
       duration: const Duration(milliseconds: 650),
       vsync: this,
@@ -143,13 +105,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
 
     _logoSlideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.3),
+      begin: const Offset(0.0, 0.35),
       end: Offset.zero,
     ).animate(
       CurvedAnimation(parent: _logoController, curve: Curves.easeOutCubic),
     );
 
-    // 8. Thoát màn hình chuyển vào Home
+    // 6. Thoát màn hình
     _exitController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
@@ -159,40 +121,25 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       CurvedAnimation(parent: _exitController, curve: Curves.easeOut),
     );
 
-    // === CHẠY KỊCH BẢN CHUYỂN ĐỘNG THEO DÒNG THỜI GIAN (CINEMATIC TIMELINE) ===
-    // 0ms: Tia laser bắt đầu vẽ sân 3D
-    _laserController.forward();
+    // Bắt đầu chuỗi animation
+    _swoopController.forward();
 
-    // 550ms: Trái bóng bắt đầu rơi xuống từ trên cao
-    Future.delayed(const Duration(milliseconds: 550), () {
+    // Khi bóng chạm tâm (khoảng 600ms) -> tỏa vòng sóng ánh sáng nhẹ
+    Future.delayed(const Duration(milliseconds: 600), () {
       if (mounted) {
-        _bounceController.forward();
+        _rippleController.forward();
       }
     });
 
-    // 880ms: Bóng tiếp sàn nhịp đầu tiên -> kích hoạt sóng chấn động mặt sân
-    Future.delayed(const Duration(milliseconds: 880), () {
-      if (mounted) {
-        _impactController.forward();
-      }
-    });
-
-    // 1250ms: Các đường line sân co tròn (morph) thành vòng hào quang năng lượng
-    Future.delayed(const Duration(milliseconds: 1250), () {
-      if (mounted) {
-        _morphController.forward();
-      }
-    });
-
-    // 1450ms: Logo chính thức SportO SVG mini trượt lên trong vòng hào quang
-    Future.delayed(const Duration(milliseconds: 1450), () {
+    // Hiện logo SportO mini
+    Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
         _logoController.forward();
       }
     });
 
-    // 2400ms: Bắt đầu nạp Auth và chuyển tiếp vào Trang chủ
-    Future.delayed(const Duration(milliseconds: 2400), () {
+    // Chuyển màn hình sau khi nạp auth
+    Future.delayed(const Duration(milliseconds: 2200), () {
       if (mounted) {
         _initAuth();
       }
@@ -247,10 +194,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   void dispose() {
-    _laserController.dispose();
-    _bounceController.dispose();
-    _impactController.dispose();
-    _morphController.dispose();
+    _swoopController.dispose();
+    _rippleController.dispose();
     _spinController.dispose();
     _floatController.dispose();
     _logoController.dispose();
@@ -264,10 +209,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       backgroundColor: Colors.white,
       body: AnimatedBuilder(
         animation: Listenable.merge([
-          _laserController,
-          _bounceController,
-          _impactController,
-          _morphController,
+          _swoopController,
+          _rippleController,
           _spinController,
           _floatController,
           _logoController,
@@ -276,13 +219,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         builder: (context, child) {
           final floatOffset = math.sin(_floatController.value * math.pi) * 4.5;
           final yawRotation = _spinController.value * math.pi * 2;
-          final ballY = _ballYAnimation.value + (_bounceController.isCompleted ? floatOffset : 0.0);
+          final rippleValue = _rippleController.value;
 
           return FadeTransition(
             opacity: _exitFadeAnimation,
             child: Stack(
               children: [
-                // 1. Nền chuyển sắc chuẩn Vibe Web SportO
+                // 1. Nền chuyển sắc chuẩn Vibe Web SportO (Trắng sáng & Gradient xanh đại dương nhẹ)
                 Positioned.fill(
                   child: Container(
                     decoration: const BoxDecoration(
@@ -290,9 +233,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Color(0xFFE8F3FF), // Sóng xanh thể thao nhẹ ở đỉnh
+                          Color(0xFFE8F3FF), // Sóng xanh nhẹ ở đỉnh
                           Color(0xFFF7FAFD),
-                          Colors.white,
+                          Colors.white,      // Trắng sáng sang trọng
                         ],
                         stops: [0.0, 0.45, 1.0],
                       ),
@@ -300,17 +243,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   ),
                 ),
 
-                // Vầng hào quang trung tâm (Radial Atmosphere)
+                // Vầng sáng dịu nhẹ nhàng ở tâm
                 Center(
                   child: Container(
-                    width: 280,
-                    height: 280,
+                    width: 260,
+                    height: 260,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          AppTheme.primary.withValues(alpha: 0.12),
-                          AppTheme.secondary.withValues(alpha: 0.04),
+                          AppTheme.primary.withValues(alpha: 0.10),
+                          AppTheme.secondary.withValues(alpha: 0.03),
                           Colors.transparent,
                         ],
                         stops: const [0.0, 0.55, 1.0],
@@ -319,47 +262,60 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   ),
                 ),
 
-                // 2. Lớp tia Laser vẽ sân 3D Isometric & Morphing thành vòng hào quang
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: CourtLaser3DPainter(
-                      laserProgress: _laserController.value,
-                      morphProgress: _morphController.value,
-                      impactProgress: _impactController.value,
+                // Vòng sóng ánh sáng lan tỏa nhẹ khi bóng chạm tâm (Shockwave Ripple dịu mắt)
+                if (rippleValue > 0.0 && rippleValue < 1.0)
+                  Center(
+                    child: Transform.translate(
+                      offset: const Offset(0, -32),
+                      child: Container(
+                        width: 140 * rippleValue,
+                        height: 50 * rippleValue,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppTheme.primary.withValues(
+                              alpha: (1.0 - rippleValue) * 0.45,
+                            ),
+                            width: 1.5 * (1.0 - rippleValue),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
 
-                // 3. Khối trung tâm: Trái bóng Pickleball 3D nảy & Logo SportO mini
+                // 2. Khối trung tâm: Quả bóng Pickleball 3D Mini + Logo SVG SportO
                 Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Trái bóng Pickleball 3D nảy xuống ngay tâm vạch giao bóng
+                      // Trái bóng Pickleball 3D Mini (Tròn trịa hoàn hảo, không còn gai nhọn)
                       Transform.translate(
-                        offset: Offset(0, ballY - 10),
-                        child: FadeTransition(
-                          opacity: _ballOpacityAnimation,
-                          child: Transform.scale(
-                            scale: _ballScaleAnimation.value,
-                            child: Pickleball3DWidget(
-                              size: 52, // Kích thước mini chuẩn mực, sắc sảo
-                              rotationY: yawRotation,
-                              rotationX: -0.30,
-                              rotationZ: 0.18,
-                              primaryColor: const Color(0xFFD8F800),
-                              highlightColor: const Color(0xFFF9FFB8),
-                              shadowColor: const Color(0xFF6B8F00),
-                              showGlow: true,
-                              showGroundShadow: _bounceController.value > 0.4,
+                        offset: Offset(0, floatOffset),
+                        child: SlideTransition(
+                          position: _swoopOffsetAnimation,
+                          child: FadeTransition(
+                            opacity: _swoopOpacityAnimation,
+                            child: Transform.scale(
+                              scale: _swoopScaleAnimation.value,
+                              child: Pickleball3DWidget(
+                                size: 52, // Kích thước mini chuẩn mực, thanh lịch
+                                rotationY: yawRotation,
+                                rotationX: -0.30,
+                                rotationZ: 0.18,
+                                primaryColor: const Color(0xFFD8F800),
+                                highlightColor: const Color(0xFFF9FFB8),
+                                shadowColor: const Color(0xFF7FA800),
+                                showGlow: true,
+                                showGroundShadow: true,
+                              ),
                             ),
                           ),
                         ),
                       ),
 
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 18),
 
-                      // Logo chính thức SportO "Chơi cùng nhau" SVG mini
+                      // Logo chính thức SportO "Chơi cùng nhau" SVG mini sắc nét
                       SlideTransition(
                         position: _logoSlideAnimation,
                         child: FadeTransition(
@@ -380,9 +336,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 ),
                               ),
 
-                              const SizedBox(height: 18),
+                              const SizedBox(height: 16),
 
-                              // 3 chấm năng lượng mini SportO Blue
+                              // 3 chấm năng lượng mini màu xanh SportO (Vibe Web)
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: List.generate(3, (index) {
@@ -393,8 +349,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                                   return Container(
                                     margin: const EdgeInsets.symmetric(horizontal: 3.5),
-                                    width: 5.5 * dotScale,
-                                    height: 5.5 * dotScale,
+                                    width: 5.0 * dotScale,
+                                    height: 5.0 * dotScale,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       color: AppTheme.primary.withValues(
@@ -402,7 +358,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: AppTheme.primary.withValues(alpha: 0.35),
+                                          color: AppTheme.primary.withValues(alpha: 0.30),
                                           blurRadius: 4,
                                           spreadRadius: 0.5,
                                         ),
