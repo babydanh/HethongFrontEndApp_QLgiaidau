@@ -5,7 +5,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
-import 'package:app_quanly_giaidau/features/auth/widgets/pickleball_rally_court.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -23,20 +22,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void initState() {
     super.initState();
 
-    // Timeline tổng thể 3000ms:
-    // 0.00 - 0.50 (0 - 1500ms)  : Vợt vung đánh bóng qua lưới, bóng nảy nảy lửa ("đánh tùm lum")
-    // 0.50 - 0.72 (1500 - 2160ms): Xoay góc chuyển hóa sang Hình 2 & thu gọn kích thước
-    // 0.72 - 0.88 (2160 - 2640ms): Hình 2 (sân vuông 3D compact) xoay nhẹ tại chỗ lơ lửng
-    // 0.88 - 1.00 (2640 - 3000ms): Chuyển cảnh êm ái sang Trang chủ (/home)
+    // Timeline chuẩn xác (2800ms):
+    // 0.00 - 0.18 (0 - 500ms)  : Sân rộng (Hình 1) xuất hiện êm ái
+    // 0.15 - 0.55 (420 - 1540ms): Quả bóng pickleball vàng bay chậm từ vợt ra chính giữa sân (KHÔNG XOAY)
+    // 0.55 - 0.80 (1540 - 2240ms): Sân rộng thu hẹp lại thành model Hình 2 (sân vuông compact)
+    // 0.80 - 0.90 (2240 - 2520ms): Giữ Model Hình 2 bồng bềnh nhẹ tại chỗ
+    // 0.90 - 1.00 (2520 - 2800ms): Chuyển cảnh êm ái sang Trang chủ (/home)
     _animController = AnimationController(
-      duration: const Duration(milliseconds: 3000),
+      duration: const Duration(milliseconds: 2800),
       vsync: this,
     );
 
     _animController.forward();
 
-    // Khởi tạo Auth song song từ sớm
-    Future.delayed(const Duration(milliseconds: 1400), () {
+    // Nạp dữ liệu Auth song song
+    Future.delayed(const Duration(milliseconds: 1200), () {
       if (mounted) {
         _preWarmAuth();
       }
@@ -103,65 +103,55 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       body: AnimatedBuilder(
         animation: _animController,
         builder: (context, child) {
-          final val = _animController.value;
-
-          // ----------------------------------------------------
-          // 1. PHA ĐÁNH BÓNG TRÊN SÂN 3D (0.0 -> 0.50)
-          // ----------------------------------------------------
-          // Tiến trình rally: hoàn thành 2 pha đánh bóng (uốn quanh 0..1 hai lần)
-          final rallyProgress = (val / 0.50).clamp(0.0, 1.0);
-
-          // Sân 3D xuất hiện ban đầu nảy nhẹ
-          final courtIntroScale = Tween<double>(begin: 0.70, end: 1.0).transform(
+          // --- 1. SÂN RỘNG HÌNH 1 XUẤT HIỆN ---
+          final introFade = Tween<double>(begin: 0.0, end: 1.0).transform(
             CurvedAnimation(
               parent: _animController,
-              curve: const Interval(0.0, 0.22, curve: Curves.easeOutBack),
+              curve: const Interval(0.0, 0.18, curve: Curves.easeOut),
             ).value,
           );
-          final courtIntroFade = Tween<double>(begin: 0.0, end: 1.0).transform(
+          final introScale = Tween<double>(begin: 0.88, end: 1.0).transform(
             CurvedAnimation(
               parent: _animController,
-              curve: const Interval(0.0, 0.15, curve: Curves.easeOut),
+              curve: const Interval(0.0, 0.20, curve: Curves.easeOutCubic),
             ).value,
           );
 
-          // ----------------------------------------------------
-          // 2. PHA XOAY CHUYỂN SANG HÌNH 2 & THU GỌN (0.50 -> 0.72)
-          // ----------------------------------------------------
-          final morphProgress = Tween<double>(begin: 0.0, end: 1.0).transform(
+          // --- 2. BÓNG PICKLEBALL BAY CHẬM RA GIỮA (0.15 -> 0.55) ---
+          final ballT = Tween<double>(begin: 0.0, end: 1.0).transform(
             CurvedAnimation(
               parent: _animController,
-              curve: const Interval(0.50, 0.70, curve: Curves.easeInOutCubic),
+              curve: const Interval(0.15, 0.55, curve: Curves.easeInOutCubic),
             ).value,
           );
 
-          // Thu gọn kích thước từ 230px xuống 125px
-          final courtSize = 230.0 - (morphProgress * 105.0);
-
-          // Xoay nhẹ góc phối cảnh 3D khi chuyển (không quay 360 vòng tròn)
-          final turnAngle = math.sin(morphProgress * math.pi) * 0.25;
-
-          // ----------------------------------------------------
-          // 3. PHA HÌNH 2 XOAY LƠ LỬNG TẠI CHỖ (0.72 -> 0.88)
-          // ----------------------------------------------------
-          final inPlaceT = Tween<double>(begin: 0.0, end: 1.0).transform(
+          // --- 3. SÂN THU HẸP LẠI THÀNH MODEL HÌNH 2 (0.55 -> 0.80) ---
+          final shrinkProgress = Tween<double>(begin: 0.0, end: 1.0).transform(
             CurvedAnimation(
               parent: _animController,
-              curve: const Interval(0.70, 0.90, curve: Curves.easeInOut),
+              curve: const Interval(0.55, 0.80, curve: Curves.easeInOutCubic),
             ).value,
           );
-          final inPlaceRotY = math.sin(inPlaceT * math.pi * 2) * 0.12;
-          final inPlaceFloat = math.sin(inPlaceT * math.pi * 2) * 4.0;
 
-          final totalRotY = turnAngle + inPlaceRotY;
+          // Kích thước thu hẹp từ sân rộng 225px xuống 140px (sân vuông compact)
+          final courtSize = 225.0 - (shrinkProgress * 85.0);
 
-          // ----------------------------------------------------
-          // 4. LOGO SPORTO MINI TRƯỢT LÊN
-          // ----------------------------------------------------
+          // Morph mờ dần từ Hình 1 sang Hình 2
+          final morph = Tween<double>(begin: 0.0, end: 1.0).transform(
+            CurvedAnimation(
+              parent: _animController,
+              curve: const Interval(0.55, 0.78, curve: Curves.easeInOut),
+            ).value,
+          );
+
+          // Bồng bềnh nhẹ nhàng tại chỗ khi đã thành hình 2 (không xoay!)
+          final floatOffset = math.sin(_animController.value * math.pi * 3) * 3.5;
+
+          // --- 4. LOGO SPORTO SVG MINI (0.30 -> 0.60) ---
           final logoFade = Tween<double>(begin: 0.0, end: 1.0).transform(
             CurvedAnimation(
               parent: _animController,
-              curve: const Interval(0.25, 0.50, curve: Curves.easeOut),
+              curve: const Interval(0.30, 0.58, curve: Curves.easeOut),
             ).value,
           );
           final logoSlide = Tween<Offset>(
@@ -170,25 +160,42 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           ).transform(
             CurvedAnimation(
               parent: _animController,
-              curve: const Interval(0.25, 0.50, curve: Curves.easeOutCubic),
+              curve: const Interval(0.30, 0.58, curve: Curves.easeOutCubic),
             ).value,
           );
 
-          // ----------------------------------------------------
-          // 5. CHUYỂN TIẾP VÀO MÀN HÌNH CHÍNH (0.88 -> 1.0)
-          // ----------------------------------------------------
+          // --- 5. CHUYỂN TIẾP VÀO MÀN HÌNH CHÍNH (0.90 -> 1.0) ---
           final exitFade = Tween<double>(begin: 1.0, end: 0.0).transform(
             CurvedAnimation(
               parent: _animController,
-              curve: const Interval(0.88, 1.0, curve: Curves.easeIn),
+              curve: const Interval(0.90, 1.0, curve: Curves.easeIn),
             ).value,
           );
-          final exitScale = Tween<double>(begin: 1.0, end: 1.08).transform(
+          final exitScale = Tween<double>(begin: 1.0, end: 1.06).transform(
             CurvedAnimation(
               parent: _animController,
-              curve: const Interval(0.88, 1.0, curve: Curves.easeInOutCubic),
+              curve: const Interval(0.90, 1.0, curve: Curves.easeInOutCubic),
             ).value,
           );
+
+          // ==========================================================
+          // TÍNH TOÁN VỊ TRÍ QUẢ BÓNG BAY CHẬM RA GIỮA (TRÊN KHUNG SÂN)
+          // ==========================================================
+          // Tọa độ tương đối từ vị trí Vợt (Hình 1) ra đến vị trí Tâm (Hình 2)
+          // Điểm xuất phát (vợt góc trên-trái): x = 0.30, y = 0.30
+          // Điểm đích (giữa sân): x = 0.52, y = 0.43
+          final ballRelX = 0.30 + (0.22 * ballT);
+          // Quỹ đạo cong hình vòng cung parabol vồng lên rồi rơi chậm xuống
+          final ballArc = math.sin(ballT * math.pi) * 0.14;
+          final ballRelY = (0.30 + (0.13 * ballT)) - ballArc;
+
+          final ballPixelX = courtSize * ballRelX;
+          final ballPixelY = courtSize * ballRelY;
+
+          // Độ mờ của quả bóng đang bay (mờ dần khi đã vào vị trí và Hình 2 hiện rõ)
+          final flyingBallOpacity = (ballT > 0.0 && morph < 0.95)
+              ? (1.0 - (morph * 1.1)).clamp(0.0, 1.0)
+              : 0.0;
 
           return Opacity(
             opacity: exitFade.clamp(0.0, 1.0),
@@ -196,7 +203,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               scale: exitScale,
               child: Stack(
                 children: [
-                  // Nền chuyển sắc chuẩn Vibe Web SportO
+                  // 1. Nền chuyển sắc chuẩn Vibe Web SportO (Trắng sáng & Xanh thể thao dịu mát)
                   Positioned.fill(
                     child: Container(
                       decoration: const BoxDecoration(
@@ -214,7 +221,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     ),
                   ),
 
-                  // Vầng sáng hào quang trung tâm
+                  // Vầng hào quang trung tâm mềm mại
                   Center(
                     child: Container(
                       width: 290,
@@ -233,64 +240,117 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     ),
                   ),
 
-                  // Khối trung tâm
+                  // 2. KHỐI TRUNG TÂM: SÂN THU HẸP + BÓNG BAY RA GIỮA (KHÔNG XOAY)
                   Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Cụm Sân 3D: Đánh bóng -> Xoay góc chuyển hóa -> Thu gọn thành Hình 2
                         Transform.translate(
-                          offset: Offset(0, inPlaceFloat - 8),
+                          offset: Offset(0, floatOffset - 8),
                           child: Transform.scale(
-                            scale: courtIntroScale,
-                            child: Transform(
-                              alignment: Alignment.center,
-                              transform: Matrix4.identity()
-                                ..setEntry(3, 2, 0.001)
-                                ..rotateY(totalRotY),
-                              child: Container(
-                                width: courtSize,
-                                height: courtSize,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppTheme.primary.withValues(
-                                        alpha: 0.16 + (morphProgress * 0.10),
-                                      ),
-                                      blurRadius: 28 - (morphProgress * 6),
-                                      spreadRadius: 2,
-                                      offset: const Offset(0, 10),
+                            scale: introScale,
+                            child: Container(
+                              width: courtSize,
+                              height: courtSize,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(18),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.primary.withValues(
+                                      alpha: 0.16 + (shrinkProgress * 0.08),
                                     ),
-                                  ],
-                                ),
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    // 1. GIAI ĐOẠN 1: SÂN 3D VỚI VỢT ĐÁNH BÓNG QUA LƯỚI ("ĐÁNH TÙM LUM")
-                                    if (morphProgress < 1.0)
-                                      Opacity(
-                                        opacity: ((1.0 - morphProgress) * courtIntroFade).clamp(0.0, 1.0),
-                                        child: CustomPaint(
-                                          size: Size(courtSize, courtSize),
-                                          painter: PickleballRallyCourtPainter(
-                                            rallyProgress: rallyProgress,
-                                            courtOpacity: 1.0,
-                                          ),
-                                        ),
+                                    blurRadius: 26 - (shrinkProgress * 6),
+                                    spreadRadius: 2,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // --- HÌNH 1: SÂN RỘNG ĐÁNH BÓNG (THU HẸP DẦN) ---
+                                  if (morph < 1.0)
+                                    Opacity(
+                                      opacity: ((1.0 - morph) * introFade).clamp(0.0, 1.0),
+                                      child: Image.asset(
+                                        'assets/images/pickleball_court_3d_match.png',
+                                        fit: BoxFit.contain,
+                                        width: courtSize,
+                                        height: courtSize,
                                       ),
+                                    ),
 
-                                    // 2. GIAI ĐOẠN 2 & 3: ICON SÂN 3D VUÔNG (HÌNH 2) THU GỌN VÀ XOAY TẠI CHỖ
-                                    if (morphProgress > 0.0)
-                                      Opacity(
-                                        opacity: morphProgress.clamp(0.0, 1.0),
-                                        child: Image.asset(
-                                          'assets/images/pickleball_court_3d_icon.png',
-                                          fit: BoxFit.contain,
+                                  // --- HÌNH 2: MODEL SÂN THU HẸP VUÔNG COMPACT ---
+                                  if (morph > 0.0)
+                                    Opacity(
+                                      opacity: morph.clamp(0.0, 1.0),
+                                      child: Image.asset(
+                                        'assets/images/pickleball_court_3d_icon.png',
+                                        fit: BoxFit.contain,
+                                        width: courtSize,
+                                        height: courtSize,
+                                      ),
+                                    ),
+
+                                  // --- QUẢ BÓNG PICKLEBALL BAY CHẬM RA GIỮA SÂN ---
+                                  if (flyingBallOpacity > 0.01)
+                                    Positioned(
+                                      left: ballPixelX - 9,
+                                      top: ballPixelY - 9,
+                                      child: Opacity(
+                                        opacity: flyingBallOpacity,
+                                        child: Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            // Vệt sáng vàng neon lướt theo bóng
+                                            Container(
+                                              width: 24,
+                                              height: 24,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                gradient: RadialGradient(
+                                                  colors: [
+                                                    const Color(0xFFFFEB3B).withValues(alpha: 0.65),
+                                                    const Color(0xFFFFC107).withValues(alpha: 0.20),
+                                                    Colors.transparent,
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+
+                                            // Quả bóng pickleball vàng 3D
+                                            Container(
+                                              width: 14,
+                                              height: 14,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                gradient: const RadialGradient(
+                                                  center: Alignment(-0.35, -0.35),
+                                                  radius: 0.85,
+                                                  colors: [
+                                                    Color(0xFFFFFF9D), // Điểm phản quang
+                                                    Color(0xFFFFEA00), // Vàng neon pickleball
+                                                    Color(0xFFFF9800), // Đổ bóng quả bóng
+                                                  ],
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black.withValues(alpha: 0.25),
+                                                    blurRadius: 4,
+                                                    offset: const Offset(1, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              // Các chấm tròn đặc trưng bóng pickleball
+                                              child: CustomPaint(
+                                                painter: _PickleballHolesPainter(),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                  ],
-                                ),
+                                    ),
+                                ],
                               ),
                             ),
                           ),
@@ -298,7 +358,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                         const SizedBox(height: 28),
 
-                        // Logo chính thức SportO "Chơi cùng nhau" SVG mini
+                        // 3. LOGO CHÍNH THỨC SPORTO "CHƠI CÙNG NHAU" SVG MINI
                         SlideTransition(
                           position: AlwaysStoppedAnimation(logoSlide),
                           child: Opacity(
@@ -321,7 +381,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                                 const SizedBox(height: 16),
 
-                                // 3 chấm năng lượng xanh Sport Blue
+                                // 3 chấm năng lượng mini màu xanh SportO (Vibe Web)
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: List.generate(3, (index) {
@@ -365,4 +425,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       ),
     );
   }
+}
+
+/// Vẽ các chấm tròn nhỏ của quả bóng Pickleball
+class _PickleballHolesPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF37474F).withValues(alpha: 0.70)
+      ..style = PaintingStyle.fill;
+
+    final c = Offset(size.width / 2, size.height / 2);
+    canvas.drawCircle(c + const Offset(-2.0, -1.5), 0.9, paint);
+    canvas.drawCircle(c + const Offset(2.0, -1.8), 0.9, paint);
+    canvas.drawCircle(c + const Offset(-0.3, 2.2), 0.9, paint);
+    canvas.drawCircle(c + const Offset(2.5, 1.4), 0.8, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
