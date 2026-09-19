@@ -8,7 +8,6 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
-import 'package:app_quanly_giaidau/core/widgets/pickleball_loading_widget.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
@@ -178,10 +177,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             return content;
           },
           loading: () => const Center(
-            child: PickleballLoadingWidget(
-              size: 64,
-              message: 'Đang tải bảng xếp hạng...',
-            ),
+            child: CircularProgressIndicator(strokeWidth: 2.5),
           ),
           error: (e, _) => _emptyState(
             context,
