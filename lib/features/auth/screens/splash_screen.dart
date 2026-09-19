@@ -20,10 +20,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   bool _isNavigating = false;
   Timer? _navTimer;
 
-  // Màu nền đồng bộ chính xác 100% với nền video pickleball 3D
-  static const Color _videoBgTop = Color(0xFFD7D5D6);
-  static const Color _videoBgBottom = Color(0xFFE0DEDF);
-
   @override
   void initState() {
     super.initState();
@@ -33,8 +29,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     // Nạp dữ liệu Auth song song
     _preWarmAuth();
 
-    // Tự động chuyển màn hình sau 3.5 giây
-    _navTimer = Timer(const Duration(milliseconds: 3500), () {
+    // Tự động chuyển màn hình sau 3.2 giây (khớp đúng chu kỳ video 3s)
+    _navTimer = Timer(const Duration(milliseconds: 3200), () {
       if (mounted) {
         _navigateToNextScreen();
       }
@@ -109,54 +105,31 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final videoCardSize = (size.width * 0.72).clamp(240.0, 320.0);
+    final videoCardSize = (size.width * 0.65).clamp(220.0, 300.0);
 
     return Scaffold(
-      backgroundColor: _videoBgTop,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // 1. Nền chuyển sắc đồng nhất màu với video (xám studio cao cấp)
+          // Nền trắng tinh khiết (#FFFFFF) đồng bộ 100% với Web & Video Blender
           Positioned.fill(
             child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    _videoBgTop,
-                    _videoBgBottom,
-                    _videoBgTop,
-                  ],
-                  stops: [0.0, 0.5, 1.0],
-                ),
-              ),
+              color: Colors.white,
             ),
           ),
 
-          // 2. KHỐI TRUNG TÂM: VIDEO PICKLEBALL + LOGO SPORTO
+          // KHỐI TRUNG TÂM: VIDEO BLENDER 3D + LOGO SPORTO
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Khung video Pickleball hòa tan viền với màu nền
-                Container(
+                // Khung video hòa tan hoàn toàn vào nền trắng (không viền)
+                SizedBox(
                   width: videoCardSize,
                   height: videoCardSize,
-                  decoration: BoxDecoration(
-                    color: _videoBgTop,
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  clipBehavior: Clip.antiAlias,
                   child: _isVideoInitialized
                       ? FittedBox(
-                          fit: BoxFit.cover,
+                          fit: BoxFit.contain,
                           child: SizedBox(
                             width: _videoController.value.size.width,
                             height: _videoController.value.size.height,
@@ -165,8 +138,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                         )
                       : Center(
                           child: SizedBox(
-                            width: 36,
-                            height: 36,
+                            width: 32,
+                            height: 32,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.5,
                               valueColor: AlwaysStoppedAnimation<Color>(
@@ -177,20 +150,20 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                         ),
                 ),
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 20),
 
-                // 3. LOGO CHÍNH THỨC SPORTO "CHƠI CÙNG NHAU" SVG
+                // LOGO CHÍNH THỨC SPORTO "CHƠI CÙNG NHAU" SVG
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
-                      height: 42,
+                      height: 40,
                       child: SvgPicture.asset(
                         'assets/images/sporto_v1_with_text.svg',
                         fit: BoxFit.contain,
                         placeholderBuilder: (context) => Image.asset(
                           'assets/images/sporto_v1_with_text.png',
-                          height: 42,
+                          height: 40,
                           fit: BoxFit.contain,
                         ),
                       ),
@@ -198,14 +171,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
                     const SizedBox(height: 16),
 
-                    // Thanh loading mảnh phong cách thể thao
+                    // Thanh loading thể thao mảnh đồng màu #1D8EF8
                     SizedBox(
                       width: 120,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
                           minHeight: 3,
-                          backgroundColor: AppTheme.primary.withValues(alpha: 0.20),
+                          backgroundColor: AppTheme.primary.withValues(alpha: 0.15),
                           valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
                         ),
                       ),
