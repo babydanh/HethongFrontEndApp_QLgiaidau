@@ -12270,6 +12270,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get organizer_uploading => 'Uploading image...';
 
   @override
+  String get organizer_addMoreEvidence => 'Add evidence image';
+
+  @override
+  String get organizer_uploadFailed =>
+      'An image upload failed. Retry it or remove the failed image.';
+
+  @override
+  String get organizer_evidenceLimit => 'Up to 5 evidence images.';
+
+  @override
+  String get organizer_retry => 'Retry';
+
+  @override
   String get organizer_submitBtn => 'Submit Application';
 
   @override
@@ -12282,6 +12295,32 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get organizer_pendingDesc =>
       'Your Organizer verification application is currently being reviewed by administrators.';
+
+  @override
+  String get organizer_cancelPending => 'Cancel request';
+
+  @override
+  String get organizer_cancelPendingConfirm =>
+      'Are you sure you want to cancel this pending request?';
+
+  @override
+  String get organizer_cancelNo => 'Close';
+
+  @override
+  String get organizer_cancelYes => 'Cancel request';
+
+  @override
+  String get organizer_cancelSuccess => 'Verification request cancelled.';
+
+  @override
+  String get organizer_cancelError => 'Unable to cancel verification request.';
+
+  @override
+  String get organizer_approvedTitle => 'Application approved';
+
+  @override
+  String get organizer_approvedDesc =>
+      'You now have Organizer access and can create advanced tournaments.';
 
   @override
   String get organizer_rejectedTitle => 'Application Rejected';

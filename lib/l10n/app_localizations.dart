@@ -22288,6 +22288,14 @@ abstract class AppLocalizations {
   /// **'Đang tải ảnh lên...'**
   String get organizer_uploading;
 
+  String get organizer_addMoreEvidence;
+
+  String get organizer_uploadFailed;
+
+  String get organizer_evidenceLimit;
+
+  String get organizer_retry;
+
   /// No description provided for @organizer_submitBtn.
   ///
   /// In vi, this message translates to:
@@ -22311,6 +22319,22 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Hồ sơ đăng ký Ban Tổ Chức của bạn đang được ban quản trị xem xét.'**
   String get organizer_pendingDesc;
+
+  String get organizer_cancelPending;
+
+  String get organizer_cancelPendingConfirm;
+
+  String get organizer_cancelNo;
+
+  String get organizer_cancelYes;
+
+  String get organizer_cancelSuccess;
+
+  String get organizer_cancelError;
+
+  String get organizer_approvedTitle;
+
+  String get organizer_approvedDesc;
 
   /// No description provided for @organizer_rejectedTitle.
   ///

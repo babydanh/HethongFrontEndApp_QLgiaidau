@@ -12230,6 +12230,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get organizer_uploading => 'Đang tải ảnh lên...';
 
   @override
+  String get organizer_addMoreEvidence => 'Thêm ảnh minh chứng';
+
+  @override
+  String get organizer_uploadFailed =>
+      'Có ảnh tải lên thất bại. Vui lòng thử lại hoặc xóa ảnh lỗi.';
+
+  @override
+  String get organizer_evidenceLimit => 'Tối đa 5 ảnh minh chứng.';
+
+  @override
+  String get organizer_retry => 'Thử lại';
+
+  @override
   String get organizer_submitBtn => 'Gửi hồ sơ xét duyệt';
 
   @override
@@ -12242,6 +12255,32 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get organizer_pendingDesc =>
       'Hồ sơ đăng ký Ban Tổ Chức của bạn đang được ban quản trị xem xét.';
+
+  @override
+  String get organizer_cancelPending => 'Hủy yêu cầu';
+
+  @override
+  String get organizer_cancelPendingConfirm =>
+      'Bạn có chắc muốn hủy hồ sơ đang chờ duyệt không?';
+
+  @override
+  String get organizer_cancelNo => 'Đóng';
+
+  @override
+  String get organizer_cancelYes => 'Hủy yêu cầu';
+
+  @override
+  String get organizer_cancelSuccess => 'Đã hủy yêu cầu xét duyệt.';
+
+  @override
+  String get organizer_cancelError => 'Không thể hủy yêu cầu xét duyệt.';
+
+  @override
+  String get organizer_approvedTitle => 'Hồ sơ đã được duyệt';
+
+  @override
+  String get organizer_approvedDesc =>
+      'Bạn đã được cấp quyền Ban Tổ Chức và có thể tạo giải nâng cao.';
 
   @override
   String get organizer_rejectedTitle => 'Hồ sơ chưa được duyệt';

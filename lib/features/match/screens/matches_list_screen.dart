@@ -124,7 +124,10 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
     final query = _searchController.text.trim().toLowerCase();
     setState(() {
       _filteredMatches = _allMatches.where((m) {
-        if (!isRenderablePublicMatch(m)) return false;
+        final renderable = m.isLive
+            ? isRenderablePublicLiveMatch(m)
+            : isRenderablePublicMatch(m);
+        if (!renderable) return false;
 
         // Search filter
         if (query.isNotEmpty) {

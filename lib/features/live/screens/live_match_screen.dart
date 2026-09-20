@@ -100,7 +100,13 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
     List<Map<String, dynamic>> divisions,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final validMatches = matches.where(isRenderablePublicMatch).toList();
+    final validMatches = matches
+        .where(
+          (match) => match.isLive
+              ? isRenderablePublicLiveMatch(match)
+              : isRenderablePublicMatch(match),
+        )
+        .toList();
 
     if (validMatches.isEmpty) {
       return _buildEmptyState(context, tournamentAsync, divisions);

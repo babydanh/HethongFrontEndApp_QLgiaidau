@@ -77,13 +77,17 @@ class UnifiedPublicMatchFeed extends ConsumerWidget {
       'completed': <String, _UnifiedMatchGroup>{},
     };
 
-    for (final match in matches.where(isRenderablePublicMatch)) {
+    for (final match in matches) {
+      final status = _statusFor(match);
+      final isRenderable = status == 'live'
+          ? isRenderablePublicLiveMatch(match)
+          : isRenderablePublicMatch(match);
+      if (!isRenderable) continue;
       final tournamentId = match.tournamentId?.trim() ?? '';
       final tournament =
           tournamentsById[tournamentId] ??
           _fallbackTournament(match, tournamentId);
       if (!_matchesFilter(tournament, match)) continue;
-      final status = _statusFor(match);
       final groupKey = tournament.id.isNotEmpty
           ? tournament.id
           : 'match:${match.id}';

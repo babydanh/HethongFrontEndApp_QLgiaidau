@@ -39,9 +39,17 @@ void main() {
     expect(isRenderablePublicMatch(_match()), isTrue);
   });
 
-  test('hides BYE and mock sides even when status is live', () {
+  test('hides BYE and mock sides by default', () {
     expect(isRenderablePublicMatch(_match(isBye: true)), isFalse);
     expect(isRenderablePublicMatch(_match(team2IsMock: true)), isFalse);
+  });
+
+  test('keeps concrete mock sides in the live public feed', () {
+    expect(isRenderablePublicLiveMatch(_match(team2IsMock: true)), isTrue);
+  });
+
+  test('still hides unresolved labels in the live public feed', () {
+    expect(isRenderablePublicLiveMatch(_match(team2Name: 'TBD')), isFalse);
   });
 
   test('hides mock members even when team flags are absent', () {

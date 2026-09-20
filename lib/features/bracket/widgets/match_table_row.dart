@@ -170,10 +170,10 @@ class MatchTableRow extends StatelessWidget {
           );
         },
         child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
                 // ── TOP SECTION: TEAMS & SCORES (ALIGNED VERTICALLY WITH TEAM NAMES) ──
                 Row(
                   children: [
@@ -621,8 +621,7 @@ class MatchTableRow extends StatelessWidget {
                   ],
                 ),
                 const Divider(height: 1, thickness: 1),
-              ],
-            ),
+            ],
           ),
         ),
       ),

@@ -49,7 +49,7 @@ class _LiveTournamentWithMatchesCardState
     super.initState();
     if (widget.matchesOverride != null) {
       _pageMatches[0] = widget.matchesOverride!
-          .where(isRenderablePublicMatch)
+          .where(_isRenderableMatch)
           .toList(growable: false);
     } else {
       _loadPage(0);
@@ -63,7 +63,7 @@ class _LiveTournamentWithMatchesCardState
       _pageMatches
         ..clear()
         ..[0] = widget.matchesOverride!
-            .where(isRenderablePublicMatch)
+            .where(_isRenderableMatch)
             .toList(growable: false);
       _pageCursors
         ..clear()
@@ -113,7 +113,7 @@ class _LiveTournamentWithMatchesCardState
         );
         latestTotal = result.total;
         final renderableMatches = result.matches
-            .where(isRenderablePublicMatch)
+            .where(_isRenderableMatch)
             .toList(growable: false);
         final nextCursor = result.nextCursor?.trim();
 
@@ -162,6 +162,12 @@ class _LiveTournamentWithMatchesCardState
     }
   }
 
+  bool _isRenderableMatch(MatchModel match) {
+    return widget.filterStatus == 'live'
+        ? isRenderablePublicLiveMatch(match)
+        : isRenderablePublicMatch(match);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -171,7 +177,7 @@ class _LiveTournamentWithMatchesCardState
     final currentMatches =
         (widget.matchesOverride ??
                 (_pageMatches[_currentPageIndex] ?? const <MatchModel>[]))
-            .where(isRenderablePublicMatch)
+            .where(_isRenderableMatch)
             .toList(growable: false);
 
     if (currentMatches.isEmpty && !_isLoading) {

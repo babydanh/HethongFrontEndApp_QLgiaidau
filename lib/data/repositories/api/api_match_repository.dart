@@ -724,6 +724,16 @@ class ApiMatchRepository implements IMatchRepository {
       team2Members: team2Members,
       team1MemberInfos: team1MemberInfos,
       team2MemberInfos: team2MemberInfos,
+      team1IsMock:
+          json['team1IsMock'] == true ||
+          json['team1_is_mock'] == true ||
+          (json['participant1'] is Map &&
+              (json['participant1'] as Map)['isMock'] == true),
+      team2IsMock:
+          json['team2IsMock'] == true ||
+          json['team2_is_mock'] == true ||
+          (json['participant2'] is Map &&
+              (json['participant2'] as Map)['isMock'] == true),
       groupName: groupName,
       stageName: stageName,
       stageType: stageType,
