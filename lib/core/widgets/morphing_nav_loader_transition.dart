@@ -126,7 +126,7 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
     const double barHeight = 44.0;
     const double slotWidth = barWidth / 4.0;
     const double navBarLeft = 16.0;
-    final double navBarBottom = 12.0 + safeAreaBottom;
+    final double navBarBottom = 22.0 + safeAreaBottom;
     final double navBarCenterY = screenH - navBarBottom - (barHeight / 2.0);
 
     // Tọa độ đích (Target Slot) của 5 icon: 4 slot thanh trái + 1 tâm nút tiện ích bên phải

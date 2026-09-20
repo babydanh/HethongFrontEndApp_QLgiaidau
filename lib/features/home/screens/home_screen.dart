@@ -113,10 +113,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _clubRequestVersion = 0;
   static const int _clubsPageSize = 6;
 
-  // Tab 1, 3, 4 hiển thị search bar trên Header. Khi mở global search,
-  // thanh search được animation đè lên cụm tab trong header.
-  bool get _shouldShowSearchBar =>
-      _currentIndex == 1 || _currentIndex == 3 || _currentIndex == 4;
+  // Tab 3, 4 vẫn hiển thị search bar inline. Tab Giải đấu mở search theo
+  // nhu cầu bằng bottom sheet từ icon trên header để giữ màn hình gọn hơn.
+  bool get _shouldShowSearchBar => _currentIndex == 3 || _currentIndex == 4;
 
   static const double _searchCategoryPanelHeight = 60.0;
 
@@ -431,6 +430,96 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } else if (_currentIndex == 3) {
       _resetClubCursorPagination();
     }
+  }
+
+  Future<void> _showTournamentSearchSheet() async {
+    if (!mounted) return;
+
+    _searchFocusNode.unfocus();
+    final l10n = AppLocalizations.of(context)!;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final colors = sheetContext.colors;
+        final sheetHeight = (MediaQuery.sizeOf(sheetContext).height * 0.42)
+            .clamp(280.0, 360.0)
+            .toDouble();
+        final bottomInset = MediaQuery.viewInsetsOf(sheetContext).bottom;
+
+        return Padding(
+          padding: EdgeInsets.only(bottom: bottomInset),
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              height: sheetHeight,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colors.bgCard,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 20,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: colors.border,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.navTournaments,
+                            style: TextStyle(
+                              color: colors.textPrimary,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: MaterialLocalizations.of(
+                            sheetContext,
+                          ).closeButtonTooltip,
+                          onPressed: () => Navigator.of(sheetContext).pop(),
+                          icon: Icon(
+                            AppIcons.close,
+                            color: colors.textSecondary,
+                            size: 20,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    _buildSearchBar(),
+                    const Expanded(child: SizedBox()),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -840,6 +929,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildRoundSearchButton(bool isDark) {
     return GestureDetector(
       onTap: () {
+        if (_currentIndex == 1) {
+          _showTournamentSearchSheet();
+          return;
+        }
+
         setState(() {
           if (!_isSearchExpanded) {
             _searchCategory = _searchCategoryForCurrentSurface();
