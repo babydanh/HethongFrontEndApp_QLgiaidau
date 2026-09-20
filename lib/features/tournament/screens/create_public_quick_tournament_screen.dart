@@ -1045,8 +1045,9 @@ class _CreatePublicQuickTournamentScreenState
                 : null,
             isExpanded: true,
             decoration: InputDecoration(
-              labelText: 'Tỉnh / thành phố',
-              prefixIcon: const Icon(Icons.map_outlined, size: 19),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              labelText: 'Tỉnh / thành',
+              prefixIcon: const Icon(Icons.map_outlined, size: 18),
               filled: true,
               fillColor: colors.bgSurface,
               border: OutlineInputBorder(
@@ -1055,14 +1056,19 @@ class _CreatePublicQuickTournamentScreenState
               ),
             ),
             hint: Text(
-              provincesAsync.isLoading ? 'Đang tải...' : 'Chọn tỉnh/thành',
+              provincesAsync.isLoading ? 'Đang tải...' : 'Chọn tỉnh',
               overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
             items: provinces
                 .map(
                   (province) => DropdownMenuItem<String>(
                     value: province.code,
-                    child: Text(province.name, overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      province.name,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                   ),
                 )
                 .toList(),
@@ -1074,7 +1080,7 @@ class _CreatePublicQuickTournamentScreenState
                   }),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         Expanded(
           child: DropdownButtonFormField<String>(
             initialValue: wards.any((item) => item.code == _wardCode)
@@ -1082,8 +1088,9 @@ class _CreatePublicQuickTournamentScreenState
                 : null,
             isExpanded: true,
             decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               labelText: 'Phường / xã',
-              prefixIcon: const Icon(Icons.location_city_outlined, size: 19),
+              prefixIcon: const Icon(Icons.location_city_outlined, size: 18),
               filled: true,
               fillColor: colors.bgSurface,
               border: OutlineInputBorder(
@@ -1096,14 +1103,19 @@ class _CreatePublicQuickTournamentScreenState
                   ? 'Chọn tỉnh trước'
                   : wardsAsync?.isLoading == true
                   ? 'Đang tải...'
-                  : 'Chọn phường/xã',
+                  : 'Chọn phường',
               overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
             items: wards
                 .map(
                   (ward) => DropdownMenuItem<String>(
                     value: ward.code,
-                    child: Text(ward.name, overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      ward.name,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                   ),
                 )
                 .toList(),
