@@ -160,18 +160,18 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final slotIndex = _getSlotIndex(widget.currentIndex);
 
-    // Tone màu chuẩn phong cách web hiện đại
-    final activeColor = AppTheme.primary;
+    // Tone màu chuẩn phong cách web hiện đại:
+    // Nền hover/active 1 cục màu nhạt nguyên khối (không viền đậm)
     final activeFillColor = isDark
-        ? AppTheme.primary.withValues(alpha: 0.22)
-        : AppTheme.primary.withValues(alpha: 0.12);
-    final activeBorderColor = isDark
-        ? AppTheme.primary.withValues(alpha: 0.35)
-        : AppTheme.primary.withValues(alpha: 0.25);
+        ? const Color(0xFF334155).withValues(alpha: 0.85) // Slate nhạt dịu trong dark
+        : const Color(0xFFE2E8F0); // Màu xám nhạt/pastel sạch đẹp 1 cục nguyên khối kiểu web hiện đại
+
+    // Icon khi active: màu đen (hoặc trắng trong dark mode) sắc nét
+    final activeIconColor = isDark ? Colors.white : const Color(0xFF0F172A);
 
     final inactiveColor = isDark
-        ? const Color(0xFF64748B)
-        : const Color(0xFF94A3B8); // Xám đồng bộ chuẩn
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B); // Xám đồng bộ chuẩn
 
     final bgColor = isDark
         ? const Color(0xFF131B2A).withValues(alpha: 0.96)
@@ -185,7 +185,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
     const double barHeight = 44.0;
     const double slotWidth = barWidth / 4.0;
 
-    // Kích thước vạch indicator dẹt kiểu web hover full lọt lòng slot
+    // Kích thước vạch indicator dẹt kiểu web hover full lọt lòng slot (1 khối nhạt, không viền)
     const double indicatorHorizontalPadding = 4.0;
     const double indicatorVerticalPadding = 4.0;
     const double indicatorWidth = slotWidth - (indicatorHorizontalPadding * 2);
@@ -233,8 +233,8 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
                           offset: const Offset(0, 3),
                         ),
                         BoxShadow(
-                          color: AppTheme.primary.withValues(
-                            alpha: isDark ? 0.08 : 0.04,
+                          color: Colors.black.withValues(
+                            alpha: isDark ? 0.08 : 0.03,
                           ),
                           blurRadius: 10,
                           offset: const Offset(0, 2),
@@ -243,7 +243,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
                     ),
                   ),
 
-                  // Thanh Indicator hover full màu nhạt nhẹ nhàng theo vibe web trượt mượt mà (nằm dưới icon)
+                  // Thanh Indicator hover full 1 cục màu nhạt (không viền đậm) trượt mượt mà
                   AnimatedPositioned(
                     duration: const Duration(milliseconds: 240),
                     curve: Curves.easeOutCubic,
@@ -257,11 +257,8 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
                         height: indicatorHeight,
                         decoration: BoxDecoration(
                           color: activeFillColor,
-                          borderRadius: BorderRadius.circular((indicatorHeight) / 2),
-                          border: Border.all(
-                            color: activeBorderColor,
-                            width: 1.0,
-                          ),
+                          borderRadius: BorderRadius.circular(indicatorHeight / 2),
+                          // Không viền đậm, 1 khối màu nhạt mềm mại
                         ),
                       ),
                     ),
@@ -279,7 +276,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
                             icon: Icons.home_outlined,
                             activeIcon: Icons.home_rounded,
                             isSelected: hasSelectedSlot && slotIndex == 0,
-                            activeColor: activeColor,
+                            activeColor: activeIconColor,
                             inactiveColor: inactiveColor,
                             onTap: () => widget.onTabSelected(0),
                           ),
@@ -291,7 +288,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
                             icon: Icons.emoji_events_outlined,
                             activeIcon: Icons.emoji_events_rounded,
                             isSelected: hasSelectedSlot && slotIndex == 1,
-                            activeColor: activeColor,
+                            activeColor: activeIconColor,
                             inactiveColor: inactiveColor,
                             onTap: () => widget.onTabSelected(1),
                           ),
@@ -303,7 +300,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
                             icon: Icons.explore_outlined,
                             activeIcon: Icons.explore_rounded,
                             isSelected: hasSelectedSlot && slotIndex == 2,
-                            activeColor: activeColor,
+                            activeColor: activeIconColor,
                             inactiveColor: inactiveColor,
                             onTap: () => widget.onTabSelected(3),
                           ),
@@ -315,7 +312,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
                             icon: Icons.chat_bubble_outline_rounded,
                             activeIcon: Icons.chat_bubble_rounded,
                             isSelected: hasSelectedSlot && slotIndex == 3,
-                            activeColor: activeColor,
+                            activeColor: activeIconColor,
                             inactiveColor: inactiveColor,
                             onTap: () {
                               if (widget.onChatTap != null) {
@@ -338,8 +335,8 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
               context,
               isDark: isDark,
               bgColor: isUtilityActive ? activeFillColor : bgColor,
-              borderColor: isUtilityActive ? activeBorderColor : borderColor,
-              activeColor: activeColor,
+              borderColor: borderColor,
+              activeColor: activeIconColor,
               inactiveColor: inactiveColor,
               isActive: isUtilityActive,
             ),
@@ -358,7 +355,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
     required Color inactiveColor,
     required bool isActive,
   }) {
-    // Icon xám cùng tông với các icon khác (khi mở popover hoặc active mục thì có màu Sport Blue)
+    // Icon khi active là màu đen (dark: trắng), bình thường là xám
     final iconColor = isActive ? activeColor : inactiveColor;
 
     return GestureDetector(
@@ -387,12 +384,6 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
                 spreadRadius: 0.5,
                 offset: const Offset(0, 3),
               ),
-              if (isActive)
-                BoxShadow(
-                  color: activeColor.withValues(alpha: 0.22),
-                  blurRadius: 12,
-                  offset: const Offset(0, 2),
-                ),
             ],
           ),
           child: Center(
