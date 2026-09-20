@@ -396,7 +396,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
           ),
           child: Center(
             child: Icon(
-                AppIcons.code,
+                AppIcons.chevronsUpDown,
                 color: iconColor,
                 size: 20,
               ),

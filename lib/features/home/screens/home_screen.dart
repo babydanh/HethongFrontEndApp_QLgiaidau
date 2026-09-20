@@ -762,9 +762,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildSportFilterBadge(AppLocalizations l10n, bool isDark) {
     final activeSport = _activeSportFilter;
-    final currentVisual = activeSport == 'all'
-        ? AppIcons.trophy
-        : AppIcons.forSport(activeSport);
+    final iconColor = isDark ? Colors.white : context.colors.textPrimary;
 
     return PopupMenuButton<String>(
       onSelected: _setActiveSportFilter,
@@ -783,11 +781,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         height: 34.0,
         color: Colors.transparent,
         alignment: Alignment.center,
-        child: Icon(
-          currentVisual,
-          size: 21,
-          color: isDark ? Colors.white : context.colors.textPrimary,
-        ),
+        child: activeSport == 'all'
+            ? Icon(AppIcons.trophy, size: 21, color: iconColor)
+            : AppSportIcon(sportKey: activeSport, size: 21, color: iconColor),
       ),
     );
   }
@@ -1772,17 +1768,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final activeSport = _activeSportFilter;
     final isSelected =
         activeSport == key || (key == '' && activeSport == 'all');
-    final iconVisual = key == 'all' ? AppIcons.trophy : AppIcons.forSport(key);
+    final iconColor = isSelected
+        ? AppTheme.primary
+        : context.colors.textSecondary;
 
     return PopupMenuItem<String>(
       value: key,
       child: Row(
         children: [
-          Icon(
-            iconVisual,
-            size: 17,
-            color: isSelected ? AppTheme.primary : context.colors.textSecondary,
-          ),
+          key == 'all'
+              ? Icon(AppIcons.trophy, size: 17, color: iconColor)
+              : AppSportIcon(sportKey: key, size: 17, color: iconColor),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

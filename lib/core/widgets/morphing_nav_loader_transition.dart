@@ -40,7 +40,7 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
     (label: 'Giải đấu', color: Color(0xFFF59E0B), icon: AppIcons.trophy),
     (label: 'Khám phá', color: Color(0xFF06B6D4), icon: AppIcons.explore),
     (label: 'Hộp thư', color: Color(0xFF10B981), icon: AppIcons.chat),
-    (label: 'Tiện ích', color: Color(0xFF8B5CF6), icon: AppIcons.chevronDown),
+    (label: 'Tiện ích', color: Color(0xFF8B5CF6), icon: AppIcons.chevronsUpDown),
   ];
 
   @override

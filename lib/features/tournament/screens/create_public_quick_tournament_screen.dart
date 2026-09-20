@@ -62,6 +62,7 @@ class _CreatePublicQuickTournamentScreenState
   bool _footballAllowDraw = true;
   int _durationHours = 1;
   int _durationMinutes = 30;
+  bool _endDateManuallySet = false;
   bool _isSubmitting = false;
 
   AppLocalizations get l10n => AppLocalizations.of(context)!;
@@ -78,10 +79,8 @@ class _CreatePublicQuickTournamentScreenState
       defaultStart.month,
       defaultStart.day,
     );
-    final defaultEnd = defaultStart.add(const Duration(hours: 2));
-    _endDate = DateTime(defaultEnd.year, defaultEnd.month, defaultEnd.day);
     _startTime = TimeOfDay.fromDateTime(defaultStart);
-    _endTime = TimeOfDay.fromDateTime(defaultEnd);
+    _syncEndWithDuration(defaultStart);
     _regStartDate = DateTime(now.year, now.month, now.day);
     _regEndDate = _startDate!.subtract(const Duration(days: 1));
     WidgetsBinding.instance.addPostFrameCallback(
@@ -155,6 +154,20 @@ class _CreatePublicQuickTournamentScreenState
 
   DateTime _withTime(DateTime date, TimeOfDay time) =>
       DateTime(date.year, date.month, date.day, time.hour, time.minute);
+
+  int get _selectedDurationMinutes => (_durationHours * 60) + _durationMinutes;
+
+  /// Keeps the visible end datetime aligned with the duration selector until
+  /// the organizer explicitly chooses an end datetime.
+  void _syncEndWithDuration(DateTime start) {
+    final estimatedEnd = start.add(Duration(minutes: _selectedDurationMinutes));
+    _endDate = DateTime(
+      estimatedEnd.year,
+      estimatedEnd.month,
+      estimatedEnd.day,
+    );
+    _endTime = TimeOfDay.fromDateTime(estimatedEnd);
+  }
 
   String _formatLabel(String key) {
     switch (key) {
@@ -678,7 +691,16 @@ class _CreatePublicQuickTournamentScreenState
                         : _withTime(_endDate!, _endTime),
                     icon: AppIcons.calendarCheck,
                     onTap: _pickEndDateTime,
-                    onClear: () => setState(() => _endDate = null),
+                    onClear: () => setState(() {
+                      _endDateManuallySet = false;
+                      if (_startDate == null) {
+                        _endDate = null;
+                      } else {
+                        _syncEndWithDuration(
+                          _withTime(_startDate!, _startTime),
+                        );
+                      }
+                    }),
                     colors: colors,
                   ),
                 ),
@@ -732,6 +754,11 @@ class _CreatePublicQuickTournamentScreenState
                         if (_durationHours == 0 && _durationMinutes < 15) {
                           _durationMinutes = 15;
                         }
+                        if (!_endDateManuallySet && _startDate != null) {
+                          _syncEndWithDuration(
+                            _withTime(_startDate!, _startTime),
+                          );
+                        }
                       });
                     },
                   ),
@@ -760,6 +787,11 @@ class _CreatePublicQuickTournamentScreenState
                         _durationMinutes = val;
                         if (_durationHours == 0 && _durationMinutes < 15) {
                           _durationMinutes = 15;
+                        }
+                        if (!_endDateManuallySet && _startDate != null) {
+                          _syncEndWithDuration(
+                            _withTime(_startDate!, _startTime),
+                          );
                         }
                       });
                     },
@@ -1548,16 +1580,8 @@ class _CreatePublicQuickTournamentScreenState
     setState(() {
       _startDate = pickedDate;
       _startTime = pickedTime;
-      if (_endDate == null) {
-        final estimatedEnd = start.add(
-          Duration(minutes: (_durationHours * 60) + _durationMinutes),
-        );
-        _endDate = DateTime(
-          estimatedEnd.year,
-          estimatedEnd.month,
-          estimatedEnd.day,
-        );
-        _endTime = TimeOfDay.fromDateTime(estimatedEnd);
+      if (!_endDateManuallySet) {
+        _syncEndWithDuration(start);
       }
       _regStartDate ??= DateTime(now.year, now.month, now.day);
       _regEndDate ??= pickedDate.subtract(const Duration(days: 1));
@@ -1582,6 +1606,7 @@ class _CreatePublicQuickTournamentScreenState
     setState(() {
       _endDate = pickedDate;
       _endTime = pickedTime;
+      _endDateManuallySet = true;
     });
   }
 

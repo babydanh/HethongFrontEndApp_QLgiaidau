@@ -265,31 +265,20 @@ class _LiveTournamentWithMatchesCardState
               ),
             )
           else
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: currentMatches.map((match) {
-                  final Widget matchWidget;
-                  if (widget.filterStatus == 'scheduled') {
-                    matchWidget = _buildHorizontalScheduleRow(
-                      context,
-                      match,
-                      currentMatches,
-                    );
-                  } else {
-                    matchWidget = _buildMatchCard(
-                      context,
-                      match,
-                      currentMatches,
-                    );
-                  }
-                  return Padding(
-                    key: ValueKey<String>(match.id),
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: matchWidget,
+            Column(
+              children: currentMatches.map((match) {
+                final Widget matchWidget;
+                if (widget.filterStatus == 'scheduled') {
+                  matchWidget = _buildHorizontalScheduleRow(
+                    context,
+                    match,
+                    currentMatches,
                   );
-                }).toList(),
-              ),
+                } else {
+                  matchWidget = _buildMatchCard(context, match, currentMatches);
+                }
+                return matchWidget;
+              }).toList(),
             ),
 
           // ── Cursor Pagination Navigation Bar ──
@@ -486,265 +475,107 @@ class _LiveTournamentWithMatchesCardState
 
     final isWinner1 = cardScore.score1 > cardScore.score2;
     final isWinner2 = cardScore.score2 > cardScore.score1;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final hasScore = match.isLive || match.isCompleted;
 
-    return GestureDetector(
-      onTap: () => context.push(
-        NavigationHelper.getLiveMatchRoute(widget.tournament.id, match.id),
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: isDark ? colors.bgSurface : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: colors.border.withValues(alpha: isDark ? 0.7 : 0.8),
-            width: 1.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-              blurRadius: 6,
-              offset: const Offset(0, 1.5),
-            ),
-          ],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.push(
+          NavigationHelper.getLiveMatchRoute(widget.tournament.id, match.id),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Top Header Row: Round Badge (Left) ──
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? const Color(0xFF0284C7).withValues(alpha: 0.18)
-                    : const Color(0xFFE0F2FE),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                roundText.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0284C7),
-                  letterSpacing: 0.2,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 6),
-
-            // ── Team 1 Row ──
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _DoubleAvatarWidget(
-                    initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'T1',
-                    initial2: t1Initials.length > 1 ? t1Initials[1] : '',
-                    isTeamOne: true,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            match.team1Name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: colors.textPrimary,
-                            ),
-                          ),
-                        ),
-                        if (isByeMatch && isT2Tbd && !isT1Tbd) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFDCFCE7),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              l10n.exploreByeAdvance,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF15803D),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  if (hasScore) ...[
-                    const SizedBox(width: 8),
-                    Text(
-                      '${cardScore.score1}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: isWinner1
-                            ? AppTheme.primary
-                            : colors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 2),
-
-            // ── Team 2 Row ──
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  _DoubleAvatarWidget(
-                    initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'T2',
-                    initial2: t2Initials.length > 1 ? t2Initials[1] : '',
-                    isTeamOne: false,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            match.team2Name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: colors.textPrimary,
-                            ),
-                          ),
-                        ),
-                        if (isByeMatch && isT1Tbd && !isT2Tbd) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFDCFCE7),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              l10n.exploreByeAdvance,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF15803D),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  if (hasScore) ...[
-                    const SizedBox(width: 8),
-                    Text(
-                      '${cardScore.score2}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: isWinner2
-                            ? AppTheme.primary
-                            : colors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            // ── Single Merged Footer Row: Location & Clean Action Icons ──
-            Row(
-              children: [
-                Icon(AppIcons.mapPin, size: 14, color: colors.textMuted),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    courtText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w500,
-                      color: colors.textMuted,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                // Cheer Button
-                InkWell(
-                  onTap: () async {
-                    if (_cheerInFlight.contains(match.id)) return;
-                    _cheerInFlight.add(match.id);
-                    final previousCount = _cheerCounts[match.id] ?? 0;
-                    setState(() {
-                      _cheerCounts[match.id] = previousCount + 1;
-                    });
-                    try {
-                      await ref
-                          .read(matchRepositoryProvider)
-                          .cheerMatch(match.id);
-                      final count = await ref
-                          .read(matchRepositoryProvider)
-                          .getCheerCount(match.id);
-                      if (mounted) {
-                        setState(() => _cheerCounts[match.id] = count);
-                      }
-                    } catch (_) {
-                      if (mounted) {
-                        setState(() => _cheerCounts[match.id] = previousCount);
-                      }
-                    } finally {
-                      _cheerInFlight.remove(match.id);
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(16),
-                  child: Padding(
+                  // ── Top Header Row: Round Badge (Left) ──
+                  Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 6,
-                      vertical: 4,
+                      vertical: 2,
                     ),
+                    decoration: BoxDecoration(
+                      color: colors.bgSurface,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      roundText.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        color: colors.textPrimary,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // ── Team 1 Row ──
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          isCheered ? AppIcons.heart : AppIcons.heart,
-                          size: 18,
-                          color: isCheered
-                              ? const Color(0xFFDC2626)
-                              : colors.textMuted,
+                        _DoubleAvatarWidget(
+                          initial1: t1Initials.isNotEmpty
+                              ? t1Initials[0]
+                              : 'T1',
+                          initial2: t1Initials.length > 1 ? t1Initials[1] : '',
+                          isTeamOne: true,
                         ),
-                        if (cheerCount > 0) ...[
-                          const SizedBox(width: 4),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  match.team1Name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: colors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              if (isByeMatch && isT2Tbd && !isT1Tbd) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFDCFCE7),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    l10n.exploreByeAdvance,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF15803D),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        if (hasScore) ...[
+                          const SizedBox(width: 8),
                           Text(
-                            '$cheerCount',
+                            '${cardScore.score1}',
                             style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: isCheered
-                                  ? const Color(0xFFDC2626)
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: isWinner1
+                                  ? AppTheme.primary
                                   : colors.textPrimary,
                             ),
                           ),
@@ -752,40 +583,198 @@ class _LiveTournamentWithMatchesCardState
                       ],
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
 
-                // Share Button
-                InkWell(
-                  onTap: () {
-                    AppShareModal.show(
-                      context: context,
-                      title:
-                          '${match.team1Name} ${l10n.matchVsLabel} ${match.team2Name}',
-                      subtitle: l10n.exploreShareSubtitle(
-                        widget.tournament.name,
-                        match.court.isNotEmpty
-                            ? match.court
-                            : l10n.matchLiveTitle,
-                      ),
-                      webUrl: 'https://sporto.asia/live/${match.id}',
-                      imageUrl: widget.tournament.logoUrl,
-                      badgeText: match.isLive
-                          ? (l10n.exploreLiveBadge)
-                          : (l10n.exploreMatchBadge),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      AppIcons.share,
-                      size: 18,
-                      color: colors.textMuted,
+                  const SizedBox(height: 2),
+
+                  // ── Team 2 Row ──
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        _DoubleAvatarWidget(
+                          initial1: t2Initials.isNotEmpty
+                              ? t2Initials[0]
+                              : 'T2',
+                          initial2: t2Initials.length > 1 ? t2Initials[1] : '',
+                          isTeamOne: false,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  match.team2Name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: colors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              if (isByeMatch && isT1Tbd && !isT2Tbd) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFDCFCE7),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    l10n.exploreByeAdvance,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF15803D),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        if (hasScore) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            '${cardScore.score2}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: isWinner2
+                                  ? AppTheme.primary
+                                  : colors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                ),
-              ],
+
+                  const SizedBox(height: 10),
+
+                  // ── Single Merged Footer Row: Location & Clean Action Icons ──
+                  Row(
+                    children: [
+                      Icon(AppIcons.mapPin, size: 14, color: colors.textMuted),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          courtText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Cheer Button
+                      InkWell(
+                        onTap: () async {
+                          if (_cheerInFlight.contains(match.id)) return;
+                          _cheerInFlight.add(match.id);
+                          final previousCount = _cheerCounts[match.id] ?? 0;
+                          setState(() {
+                            _cheerCounts[match.id] = previousCount + 1;
+                          });
+                          try {
+                            await ref
+                                .read(matchRepositoryProvider)
+                                .cheerMatch(match.id);
+                            final count = await ref
+                                .read(matchRepositoryProvider)
+                                .getCheerCount(match.id);
+                            if (mounted) {
+                              setState(() => _cheerCounts[match.id] = count);
+                            }
+                          } catch (_) {
+                            if (mounted) {
+                              setState(
+                                () => _cheerCounts[match.id] = previousCount,
+                              );
+                            }
+                          } finally {
+                            _cheerInFlight.remove(match.id);
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 4,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isCheered ? AppIcons.heart : AppIcons.heart,
+                                size: 18,
+                                color: isCheered
+                                    ? const Color(0xFFDC2626)
+                                    : colors.textMuted,
+                              ),
+                              if (cheerCount > 0) ...[
+                                const SizedBox(width: 4),
+                                Text(
+                                  '$cheerCount',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: isCheered
+                                        ? const Color(0xFFDC2626)
+                                        : colors.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Share Button
+                      InkWell(
+                        onTap: () {
+                          AppShareModal.show(
+                            context: context,
+                            title:
+                                '${match.team1Name} ${l10n.matchVsLabel} ${match.team2Name}',
+                            subtitle: l10n.exploreShareSubtitle(
+                              widget.tournament.name,
+                              match.court.isNotEmpty
+                                  ? match.court
+                                  : l10n.matchLiveTitle,
+                            ),
+                            webUrl: 'https://sporto.asia/live/${match.id}',
+                            imageUrl: widget.tournament.logoUrl,
+                            badgeText: match.isLive
+                                ? (l10n.exploreLiveBadge)
+                                : (l10n.exploreMatchBadge),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Icon(
+                            AppIcons.share,
+                            size: 18,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 1, thickness: 1),
+                ],
+              ),
             ),
           ],
         ),
@@ -1160,108 +1149,102 @@ class _LiveTournamentWithMatchesCardState
       l10n: l10n,
     );
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: () => context.push(
-        NavigationHelper.getLiveMatchRoute(widget.tournament.id, match.id),
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: isDark ? colors.bgSurface : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: colors.border.withValues(alpha: isDark ? 0.7 : 0.8),
-            width: 1.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-              blurRadius: 6,
-              offset: const Offset(0, 1.5),
-            ),
-          ],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.push(
+          NavigationHelper.getLiveMatchRoute(widget.tournament.id, match.id),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Top Header Row: Round Badge (Left) ──
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? const Color(0xFF0284C7).withValues(alpha: 0.18)
-                    : const Color(0xFFE0F2FE),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                roundText.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0284C7),
-                  letterSpacing: 0.2,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 6),
-
-            // ── Team 1 Row ──
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _DoubleAvatarWidget(
-                    initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'T1',
-                    initial2: t1Initials.length > 1 ? t1Initials[1] : '',
-                    isTeamOne: true,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
+                  // ── Top Header Row: Round Badge (Left) ──
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.bgSurface,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                     child: Text(
-                      match.team1Name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      roundText.toUpperCase(),
                       style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
                         color: colors.textPrimary,
+                        letterSpacing: 0.2,
                       ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // ── Team 1 Row ──
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        _DoubleAvatarWidget(
+                          initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'T1',
+                          initial2: t1Initials.length > 1 ? t1Initials[1] : '',
+                          isTeamOne: true,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            match.team1Name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 2),
+
+                  // ── Team 2 Row ──
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        _DoubleAvatarWidget(
+                          initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'T2',
+                          initial2: t2Initials.length > 1 ? t2Initials[1] : '',
+                          isTeamOne: false,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            match.team2Name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-
-            const SizedBox(height: 2),
-
-            // ── Team 2 Row ──
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  _DoubleAvatarWidget(
-                    initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'T2',
-                    initial2: t2Initials.length > 1 ? t2Initials[1] : '',
-                    isTeamOne: false,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      match.team2Name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            const Divider(height: 1, thickness: 1),
           ],
         ),
       ),

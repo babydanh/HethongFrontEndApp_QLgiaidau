@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../config/app_theme.dart';
 
@@ -22,6 +23,7 @@ class AppIcons {
   static const IconData chevronRight = LucideIcons.chevronRight;
   static const IconData chevronUp = LucideIcons.chevronUp;
   static const IconData chevronDown = LucideIcons.chevronDown;
+  static const IconData chevronsUpDown = LucideIcons.chevronsUpDown;
   static const IconData add = LucideIcons.plus;
   static const IconData remove = LucideIcons.minus;
   static const IconData close = LucideIcons.x;
@@ -69,11 +71,11 @@ class AppIcons {
   static const IconData swords = LucideIcons.swords;
   static const IconData target = LucideIcons.target;
   // Sport-specific icons dùng Material Icons vì Lucide không có đủ sport glyphs.
-  static const IconData sportPickleball = Icons.sports_tennis;     // vợt nhỏ
-  static const IconData sportBadminton = Icons.sports_handball;    // cầm vợt
+  static const IconData sportPickleball = Icons.sports_tennis; // vợt nhỏ
+  static const IconData sportBadminton = Icons.sports_handball; // cầm vợt
   static const IconData sportTennis = Icons.sports_tennis;
-  static const IconData sportTableTennis = Icons.sports_mma;       // 1-on-1 đối kháng
-  static const IconData sportFootball = Icons.sports_soccer;       // quả bóng đá
+  static const IconData sportTableTennis = Icons.sports_mma; // 1-on-1 đối kháng
+  static const IconData sportFootball = Icons.sports_soccer; // quả bóng đá
   static const IconData chart = LucideIcons.chartBar;
   static const IconData trendingUp = LucideIcons.trendingUp;
   static const IconData trendingDown = LucideIcons.trendingDown;
@@ -185,6 +187,31 @@ class AppIcons {
     };
   }
 
+  /// Resolves the canonical visual asset for a sport. Unlike the legacy
+  /// [IconData] fallbacks above, these assets distinguish badminton,
+  /// pickleball and tennis instead of reusing the same racket glyph.
+  static String? sportAsset(String? sportKey) {
+    final key = (sportKey ?? '').trim().toLowerCase();
+    if (key.contains('badminton') || key.contains('cầu lông')) {
+      return 'assets/icons/badminton.svg';
+    }
+    if (key.contains('football') ||
+        key.contains('soccer') ||
+        key.contains('bóng đá')) {
+      return 'assets/icons/football.svg';
+    }
+    if (key.contains('pickleball')) return 'assets/icons/pickleball.png';
+    if (key == 'tennis' || key.contains('quần vợt')) {
+      return 'assets/icons/tennis.svg';
+    }
+    if (key.contains('table_tennis') ||
+        key.contains('table tennis') ||
+        key.contains('bóng bàn')) {
+      return 'assets/icons/ping-pong.svg';
+    }
+    return null;
+  }
+
   /// Resolves a semantic icon tone from the active app theme.
   static Color color(
     BuildContext context, {
@@ -245,6 +272,31 @@ class AppSportIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Icon(AppIcons.forSport(sportKey), size: size, color: color);
+    final iconColor = color ?? AppIcons.color(context);
+    final asset = AppIcons.sportAsset(sportKey);
+    if (asset == null) {
+      return Icon(AppIcons.forSport(sportKey), size: size, color: iconColor);
+    }
+
+    final dimension = size ?? 24;
+    if (asset.endsWith('.svg')) {
+      return SvgPicture.asset(
+        asset,
+        width: dimension,
+        height: dimension,
+        fit: BoxFit.contain,
+        colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+      );
+    }
+
+    return ColorFiltered(
+      colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+      child: Image.asset(
+        asset,
+        width: dimension,
+        height: dimension,
+        fit: BoxFit.contain,
+      ),
+    );
   }
 }
