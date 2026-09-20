@@ -191,50 +191,64 @@ class _LiveTournamentWithMatchesCardState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Outer Header: Tournament Logo + Name + ELO Tag ──
-          GestureDetector(
-            onTap: () => context.push('/intro/${widget.tournament.id}'),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-              child: Row(
-                children: [
-                  TournamentAvatar(
-                    imageUrl: widget.tournament.logoUrl,
-                    bannerUrl: widget.tournament.bannerUrl,
-                    tournamentName: widget.tournament.name,
-                    sport: widget.tournament.sport,
-                    size: 38,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.tournament.name.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w800,
-                            color: colors.textPrimary,
-                            letterSpacing: 0.2,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 1.5),
-                        Text(
-                          widget.tournament.isRanked
-                              ? (l10n.exploreRankedTournament)
-                              : (l10n.exploreFriendlyTournament),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colors.textMuted,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: isDark ? colors.bgSurface : const Color(0xFFF1F5F9), // Nền xám nhạt cho giải đấu
+              border: Border(
+                bottom: BorderSide(
+                  color: isDark
+                      ? colors.border.withValues(alpha: 0.5)
+                      : const Color(0xFFE2E8F0), // Đường xám ngăn cách
+                  width: 1.0,
+                ),
+              ),
+            ),
+            child: GestureDetector(
+              onTap: () => context.push('/intro/${widget.tournament.id}'),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+                child: Row(
+                  children: [
+                    TournamentAvatar(
+                      imageUrl: widget.tournament.logoUrl,
+                      bannerUrl: widget.tournament.bannerUrl,
+                      tournamentName: widget.tournament.name,
+                      sport: widget.tournament.sport,
+                      size: 38,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.tournament.name.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                              color: colors.textPrimary,
+                              letterSpacing: 0.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 1.5),
+                          Text(
+                            widget.tournament.isRanked
+                                ? (l10n.exploreRankedTournament)
+                                : (l10n.exploreFriendlyTournament),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colors.textMuted,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -772,7 +786,14 @@ class _LiveTournamentWithMatchesCardState
                       ),
                     ],
                   ),
-                  const Divider(height: 1, thickness: 1),
+                  const SizedBox(height: 6),
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? colors.border.withValues(alpha: 0.4)
+                        : const Color(0xFFE2E8F0),
+                  ),
                 ],
               ),
             ),
@@ -1244,7 +1265,13 @@ class _LiveTournamentWithMatchesCardState
                 ],
               ),
             ),
-            const Divider(height: 1, thickness: 1),
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? colors.border.withValues(alpha: 0.4)
+                  : const Color(0xFFE2E8F0),
+            ),
           ],
         ),
       ),

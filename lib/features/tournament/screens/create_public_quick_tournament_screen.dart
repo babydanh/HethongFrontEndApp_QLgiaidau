@@ -60,8 +60,6 @@ class _CreatePublicQuickTournamentScreenState
   int _footballHalvesCount = 2;
   int _footballHalfDuration = 45;
   bool _footballAllowDraw = true;
-  int _durationHours = 1;
-  int _durationMinutes = 30;
   bool _endDateManuallySet = false;
   bool _isSubmitting = false;
 
@@ -79,8 +77,10 @@ class _CreatePublicQuickTournamentScreenState
       defaultStart.month,
       defaultStart.day,
     );
+    final defaultEnd = defaultStart.add(const Duration(hours: 2));
     _startTime = TimeOfDay.fromDateTime(defaultStart);
-    _syncEndWithDuration(defaultStart);
+    _endDate = DateTime(defaultEnd.year, defaultEnd.month, defaultEnd.day);
+    _endTime = TimeOfDay.fromDateTime(defaultEnd);
     _regStartDate = DateTime(now.year, now.month, now.day);
     _regEndDate = _startDate!.subtract(const Duration(days: 1));
     WidgetsBinding.instance.addPostFrameCallback(
@@ -155,12 +155,10 @@ class _CreatePublicQuickTournamentScreenState
   DateTime _withTime(DateTime date, TimeOfDay time) =>
       DateTime(date.year, date.month, date.day, time.hour, time.minute);
 
-  int get _selectedDurationMinutes => (_durationHours * 60) + _durationMinutes;
-
-  /// Keeps the visible end datetime aligned with the duration selector until
-  /// the organizer explicitly chooses an end datetime.
-  void _syncEndWithDuration(DateTime start) {
-    final estimatedEnd = start.add(Duration(minutes: _selectedDurationMinutes));
+  /// Keeps the default end datetime aligned when the organizer changes the
+  /// start before explicitly choosing an end datetime.
+  void _syncDefaultEnd(DateTime start) {
+    final estimatedEnd = start.add(const Duration(hours: 2));
     _endDate = DateTime(
       estimatedEnd.year,
       estimatedEnd.month,
@@ -288,9 +286,7 @@ class _CreatePublicQuickTournamentScreenState
     final startDateTime = _withTime(_startDate!, _startTime);
     final endDateTime = _endDate != null
         ? _withTime(_endDate!, _endTime)
-        : startDateTime.add(
-            Duration(minutes: (_durationHours * 60) + _durationMinutes),
-          );
+        : startDateTime.add(const Duration(minutes: 90));
     final registrationStartDateTime = _regStartDate == null
         ? null
         : _withTime(_regStartDate!, _regStartTime);
@@ -692,112 +688,13 @@ class _CreatePublicQuickTournamentScreenState
                     icon: AppIcons.calendarCheck,
                     onTap: _pickEndDateTime,
                     onClear: () => setState(() {
+                      _endDate = null;
                       _endDateManuallySet = false;
-                      if (_startDate == null) {
-                        _endDate = null;
-                      } else {
-                        _syncEndWithDuration(
-                          _withTime(_startDate!, _startTime),
-                        );
-                      }
                     }),
                     colors: colors,
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 12),
-
-            // ─── Thời lượng thi đấu ───
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: colors.bgSurface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colors.border),
-              ),
-              child: Row(
-                children: [
-                  Icon(AppIcons.timer, size: 16, color: colors.textSecondary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.lite_duration,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colors.textSecondary,
-                      ),
-                    ),
-                  ),
-                  DropdownButton<int>(
-                    value: _durationHours,
-                    underline: const SizedBox.shrink(),
-                    dropdownColor: colors.bgCard,
-                    items: List.generate(24, (i) => i)
-                        .map(
-                          (h) => DropdownMenuItem(
-                            value: h,
-                            child: Text(
-                              '$h ${l10n.lite_hours}',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (val) {
-                      if (val == null) return;
-                      setState(() {
-                        _durationHours = val;
-                        if (_durationHours == 0 && _durationMinutes < 15) {
-                          _durationMinutes = 15;
-                        }
-                        if (!_endDateManuallySet && _startDate != null) {
-                          _syncEndWithDuration(
-                            _withTime(_startDate!, _startTime),
-                          );
-                        }
-                      });
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  DropdownButton<int>(
-                    value: _durationMinutes,
-                    underline: const SizedBox.shrink(),
-                    dropdownColor: colors.bgCard,
-                    items: [0, 15, 30, 45]
-                        .map(
-                          (m) => DropdownMenuItem(
-                            value: m,
-                            child: Text(
-                              '$m ${l10n.lite_minutes}',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (val) {
-                      if (val == null) return;
-                      setState(() {
-                        _durationMinutes = val;
-                        if (_durationHours == 0 && _durationMinutes < 15) {
-                          _durationMinutes = 15;
-                        }
-                        if (!_endDateManuallySet && _startDate != null) {
-                          _syncEndWithDuration(
-                            _withTime(_startDate!, _startTime),
-                          );
-                        }
-                      });
-                    },
-                  ),
-                ],
-              ),
             ),
             const SizedBox(height: 18),
 
@@ -1581,7 +1478,7 @@ class _CreatePublicQuickTournamentScreenState
       _startDate = pickedDate;
       _startTime = pickedTime;
       if (!_endDateManuallySet) {
-        _syncEndWithDuration(start);
+        _syncDefaultEnd(start);
       }
       _regStartDate ??= DateTime(now.year, now.month, now.day);
       _regEndDate ??= pickedDate.subtract(const Duration(days: 1));
