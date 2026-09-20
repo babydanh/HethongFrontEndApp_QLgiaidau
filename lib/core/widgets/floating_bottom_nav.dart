@@ -69,7 +69,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final safeAreaBottom = media.padding.bottom;
     final double popupBottom =
-        22.0 + safeAreaBottom + 48.0; // Ngay trên đỉnh nút tiện ích
+        34.0 + safeAreaBottom + 48.0; // Ngay trên đỉnh nút tiện ích
     const double popupRight = 16.0;
 
     setState(() => _isPopoverOpen = true);
@@ -211,7 +211,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 22),
+        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 34),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.end,
