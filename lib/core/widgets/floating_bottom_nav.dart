@@ -160,14 +160,14 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final slotIndex = _getSlotIndex(widget.currentIndex);
 
-    // Tone màu chuẩn phong cách web hiện đại:
-    // Nền hover/active 1 cục màu nhạt nguyên khối (không viền đậm)
+    // Tone màu chuẩn vibe Web SportO:
+    // Nền hover/active 1 cục màu xanh nhạt nguyên khối tinh tế (không viền đậm)
     final activeFillColor = isDark
-        ? const Color(0xFF334155).withValues(alpha: 0.85) // Slate nhạt dịu trong dark
-        : const Color(0xFFE2E8F0); // Màu xám nhạt/pastel sạch đẹp 1 cục nguyên khối kiểu web hiện đại
+        ? AppTheme.primary.withValues(alpha: 0.22)
+        : const Color(0xFFEFF6FF); // Xanh nhạt tinh tế kiểu web (blue-50/blue-100)
 
-    // Icon khi active: màu đen (hoặc trắng trong dark mode) sắc nét
-    final activeIconColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    // Icon khi active: màu xanh Sport Blue đặc trưng của web
+    final activeIconColor = AppTheme.primary;
 
     final inactiveColor = isDark
         ? const Color(0xFF94A3B8)
