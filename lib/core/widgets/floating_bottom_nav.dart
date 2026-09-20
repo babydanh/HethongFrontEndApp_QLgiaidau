@@ -60,7 +60,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
     final media = MediaQuery.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final safeAreaBottom = media.padding.bottom;
-    final double popupBottom = 14.0 + safeAreaBottom + 58.0; // Ngay trên đỉnh nút tiện ích
+    final double popupBottom = 12.0 + safeAreaBottom + 48.0; // Ngay trên đỉnh nút tiện ích
     const double popupRight = 16.0;
 
     setState(() => _isPopoverOpen = true);
@@ -155,17 +155,14 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
         ? Colors.white.withValues(alpha: 0.08)
         : const Color(0xFFE2E8F0).withValues(alpha: 0.90);
 
-    // Kích thước thanh nav chính căn sát trái
+    // Kích thước thanh nav chính dẹt và gọn hơn
     const double barWidth = 252.0;
-    const double barHeight = 50.0;
-    const double slotWidth = barWidth / 4.0;
-    final double indicatorLeft =
-        (slotIndex * slotWidth) + (slotWidth - 22.0) / 2.0;
+    const double barHeight = 42.0;
 
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 14),
+        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -183,53 +180,29 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
                     height: barHeight,
                     decoration: BoxDecoration(
                       color: bgColor,
-                      borderRadius: BorderRadius.circular(25),
+                      borderRadius: BorderRadius.circular(barHeight / 2),
                       border: Border.all(color: borderColor, width: 1.2),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(
                             alpha: isDark ? 0.35 : 0.08,
                           ),
-                          blurRadius: 16,
-                          spreadRadius: 1,
-                          offset: const Offset(0, 4),
+                          blurRadius: 14,
+                          spreadRadius: 0.5,
+                          offset: const Offset(0, 3),
                         ),
                         BoxShadow(
                           color: AppTheme.primary.withValues(
-                            alpha: isDark ? 0.08 : 0.05,
+                            alpha: isDark ? 0.08 : 0.04,
                           ),
-                          blurRadius: 12,
+                          blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
                   ),
 
-                  // Vạch gạch chân năng động màu Xanh Sport Blue (#1D8EF8)
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeOutCubic,
-                    left: indicatorLeft,
-                    bottom: 6.0,
-                    child: Container(
-                      width: 22.0,
-                      height: 3.2,
-                      decoration: BoxDecoration(
-                        color: activeColor,
-                        borderRadius: BorderRadius.circular(2.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: activeColor.withValues(alpha: 0.60),
-                            blurRadius: 6,
-                            spreadRadius: 0.5,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Hàng 4 Icon điều hướng phẳng phiu
+                  // Hàng 4 Icon điều hướng phẳng phiu (bỏ vạch gạch chân)
                   SizedBox(
                     width: barWidth,
                     height: barHeight,
@@ -325,11 +298,11 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOutCubic,
         child: Container(
-          width: 50.0,
-          height: 50.0,
+          width: 42.0,
+          height: 42.0,
           decoration: BoxDecoration(
             color: bgColor,
-            borderRadius: BorderRadius.circular(25),
+            borderRadius: BorderRadius.circular(21),
             border: Border.all(
               color: _isPopoverOpen ? activeColor.withValues(alpha: 0.5) : borderColor,
               width: 1.2,
@@ -337,14 +310,14 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
-                blurRadius: 16,
-                spreadRadius: 1,
-                offset: const Offset(0, 4),
+                blurRadius: 14,
+                spreadRadius: 0.5,
+                offset: const Offset(0, 3),
               ),
               if (_isPopoverOpen)
                 BoxShadow(
                   color: activeColor.withValues(alpha: 0.22),
-                  blurRadius: 14,
+                  blurRadius: 12,
                   offset: const Offset(0, 2),
                 ),
             ],
@@ -357,7 +330,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
               child: Icon(
                 Icons.unfold_more_rounded,
                 color: iconColor, // Màu xám đồng nhất
-                size: 24,
+                size: 21,
               ),
             ),
           ),
@@ -382,16 +355,13 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
       behavior: HitTestBehavior.opaque,
       child: Center(
         child: AnimatedScale(
-          scale: isSelected ? 1.15 : 1.0,
+          scale: isSelected ? 1.12 : 1.0,
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutBack,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Icon(
-              isSelected ? activeIcon : icon,
-              color: isSelected ? activeColor : inactiveColor,
-              size: 24,
-            ),
+          child: Icon(
+            isSelected ? activeIcon : icon,
+            color: isSelected ? activeColor : inactiveColor,
+            size: 22,
           ),
         ),
       ),

@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/notification_provider.dart';
 import 'package:app_quanly_giaidau/providers/regions_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
@@ -926,8 +927,377 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           parent: BouncingScrollPhysics(),
         ),
         slivers: [
-          SliverToBoxAdapter(child: SizedBox(height: topPadding + 16)),
-          // Header tóm tắt
+          SliverToBoxAdapter(child: SizedBox(height: topPadding + 14)),
+          // 1. Lời chào tên account + Avatar cá nhân
+          SliverToBoxAdapter(
+            child: Builder(
+              builder: (context) {
+                final user = ref.watch(userProfileProvider).value;
+                final fullName = user?.fullName?.trim() ?? '';
+                final displayName = fullName.isNotEmpty ? fullName : 'bạn';
+                final avatarUrl = user?.avatarUrl?.trim() ?? '';
+
+                final hour = DateTime.now().hour;
+                final greetingTime = hour < 12
+                    ? 'Chào buổi sáng'
+                    : (hour < 18 ? 'Chào buổi chiều' : 'Chào buổi tối');
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppTheme.primary.withValues(alpha: 0.35),
+                            width: 1.5,
+                          ),
+                          color: AppTheme.primary.withValues(alpha: 0.08),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: avatarUrl.isNotEmpty
+                            ? Image.network(
+                                avatarUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => const Icon(
+                                  Icons.person_rounded,
+                                  color: AppTheme.primary,
+                                  size: 22,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.person_rounded,
+                                color: AppTheme.primary,
+                                size: 22,
+                              ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$greetingTime 👋',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: isDark
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF64748B),
+                              ),
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              displayName,
+                              style: TextStyle(
+                                fontSize: 16.5,
+                                fontWeight: FontWeight.w800,
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                letterSpacing: -0.3,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 14)),
+
+          // 2. Câu lạc bộ của bạn (tham gia hoặc làm chủ)
+          SliverToBoxAdapter(
+            child: Consumer(
+              builder: (context, ref, _) {
+                final myClubsAsync = ref.watch(myCommunitiesProvider);
+                final currentUserId = ref.watch(userProfileProvider).value?.id;
+
+                return myClubsAsync.when(
+                  data: (clubs) {
+                    if (clubs.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: InkWell(
+                          onTap: () => context.push('/club/create'),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? context.colors.bgCard
+                                  : AppTheme.primary.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isDark
+                                    ? Colors.white10
+                                    : AppTheme.primary.withValues(alpha: 0.2),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primary.withValues(alpha: 0.12),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.group_add_rounded,
+                                    color: AppTheme.primary,
+                                    size: 18,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Bạn chưa tham gia CLB nào',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Tạo hoặc tham gia câu lạc bộ thể thao ngay',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Color(0xFF64748B),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  size: 13,
+                                  color: AppTheme.primary,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Câu lạc bộ của bạn',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  letterSpacing: -0.2,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => _switchTab(3),
+                                child: const Text(
+                                  'Xem tất cả',
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          height: 96,
+                          child: ListView.separated(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: clubs.length + 1,
+                            separatorBuilder: (_, _) => const SizedBox(width: 12),
+                            itemBuilder: (context, index) {
+                              if (index == clubs.length) {
+                                return GestureDetector(
+                                  onTap: () => context.push('/club/create'),
+                                  child: SizedBox(
+                                    width: 68,
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          width: 56,
+                                          height: 56,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: AppTheme.primary.withValues(alpha: 0.35),
+                                              width: 1.2,
+                                            ),
+                                            color: isDark ? Colors.white10 : Colors.grey.shade100,
+                                          ),
+                                          child: const Icon(
+                                            Icons.add_rounded,
+                                            color: AppTheme.primary,
+                                            size: 24,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          'Tạo mới',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: isDark ? Colors.white70 : const Color(0xFF475569),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              final club = clubs[index];
+                              final isOwner = club.myRole == 'OWNER' ||
+                                  club.myRole == 'LEADER' ||
+                                  club.myRole == 'CREATOR' ||
+                                  club.myRole == 'HOST' ||
+                                  (currentUserId != null && club.ownerId == currentUserId);
+                              final isAdmin = !isOwner &&
+                                  (club.myRole == 'ADMIN' || club.myRole == 'MODERATOR');
+                              final roleBadgeText = isOwner
+                                  ? 'Chủ'
+                                  : (isAdmin ? 'Quản trị' : null);
+
+                              final logo = club.logoUrl ?? club.bannerUrl ?? '';
+
+                              return GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  context.push('/communities/${club.id}');
+                                },
+                                child: SizedBox(
+                                  width: 68,
+                                  child: Column(
+                                    children: [
+                                      Stack(
+                                        clipBehavior: Clip.none,
+                                        children: [
+                                          Container(
+                                            width: 56,
+                                            height: 56,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              gradient: isOwner
+                                                  ? const LinearGradient(
+                                                      colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+                                                      begin: Alignment.topLeft,
+                                                      end: Alignment.bottomRight,
+                                                    )
+                                                  : LinearGradient(
+                                                      colors: [
+                                                        AppTheme.primary,
+                                                        const Color(0xFF0EA5E9),
+                                                      ],
+                                                      begin: Alignment.topLeft,
+                                                      end: Alignment.bottomRight,
+                                                    ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+                                                  blurRadius: 6,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            padding: const EdgeInsets.all(2),
+                                            child: Container(
+                                              decoration: const BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: Colors.white,
+                                              ),
+                                              clipBehavior: Clip.antiAlias,
+                                              child: logo.isNotEmpty
+                                                  ? ClubNetworkImage(
+                                                      logo,
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder: (_, _, _) =>
+                                                          _buildClubFallbackAvatar(club.name),
+                                                    )
+                                                  : _buildClubFallbackAvatar(club.name),
+                                            ),
+                                          ),
+                                          if (roleBadgeText != null)
+                                            Positioned(
+                                              bottom: -2,
+                                              right: -2,
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                                decoration: BoxDecoration(
+                                                  color: isOwner ? const Color(0xFFF59E0B) : AppTheme.primary,
+                                                  borderRadius: BorderRadius.circular(6),
+                                                  border: Border.all(
+                                                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                                                    width: 1.2,
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  roleBadgeText,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 8.5,
+                                                    fontWeight: FontWeight.w900,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        club.name,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                          height: 1.15,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
+                );
+              },
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 14)),
+
+          // 3. Header Hoạt động của bạn
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -937,26 +1307,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Text(
                     'Hoạt động của bạn',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 16.5,
                       fontWeight: FontWeight.w800,
                       color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      letterSpacing: -0.2,
                     ),
                   ),
                   TextButton.icon(
                     onPressed: () => context.push('/tournaments/create'),
                     icon: const Icon(
                       Icons.add_circle_outline_rounded,
-                      size: 18,
+                      size: 16,
                     ),
                     label: const Text(
                       'Tạo giải',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
                     ),
                     style: TextButton.styleFrom(
                       foregroundColor: AppTheme.primary,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
+                        horizontal: 8,
+                        vertical: 2,
                       ),
                     ),
                   ),
@@ -964,7 +1335,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
           // Nội dung giải đấu của tôi
           workspaceAsync.when(
             data: (workspace) {
@@ -1048,8 +1419,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     final status = item.status;
 
                     return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(14),
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
                         color: isDark ? context.colors.bgCard : Colors.white,
                         border: Border.all(
@@ -1057,7 +1428,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ? Colors.white10
                               : const Color(0xFFE2E8F0),
                         ),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: InkWell(
                         onTap: () {
@@ -1068,20 +1439,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: Row(
                           children: [
                             Container(
-                              width: 44,
-                              height: 44,
+                              width: 38,
+                              height: 38,
                               decoration: BoxDecoration(
                                 color: AppTheme.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(8),
                               ),
                               alignment: Alignment.center,
                               child: const Icon(
                                 Icons.emoji_events_rounded,
                                 color: AppTheme.primary,
-                                size: 24,
+                                size: 20,
                               ),
                             ),
-                            const SizedBox(width: 14),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1089,7 +1460,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   Text(
                                     name,
                                     style: TextStyle(
-                                      fontSize: 15,
+                                      fontSize: 14,
                                       fontWeight: FontWeight.w700,
                                       color: isDark
                                           ? Colors.white
@@ -1098,13 +1469,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 2),
                                   Text(
                                     AppConstants.sportNames[sport
                                             .toLowerCase()] ??
                                         sport,
                                     style: TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 11.5,
                                       fontWeight: FontWeight.w500,
                                       color: isDark
                                           ? const Color(0xFF94A3B8)
@@ -1116,8 +1487,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
+                                horizontal: 7,
+                                vertical: 3,
                               ),
                               decoration: BoxDecoration(
                                 color: status.toUpperCase() == 'LIVE'
@@ -1132,7 +1503,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ? 'Đang diễn ra'
                                     : 'Đang mở',
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 10.5,
                                   fontWeight: FontWeight.w700,
                                   color: status.toUpperCase() == 'LIVE'
                                       ? const Color(0xFFEF4444)

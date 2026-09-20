@@ -18,11 +18,13 @@ import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 class LiveTournamentWithMatchesCard extends ConsumerStatefulWidget {
   final Tournament tournament;
   final String? filterStatus; // 'live', 'completed', 'scheduled'
+  final List<MatchModel>? matchesOverride;
 
   const LiveTournamentWithMatchesCard({
     super.key,
     required this.tournament,
     this.filterStatus,
+    this.matchesOverride,
   });
 
   @override
@@ -44,14 +46,34 @@ class _LiveTournamentWithMatchesCardState
   @override
   void initState() {
     super.initState();
-    _loadPage(0);
+    if (widget.matchesOverride != null) {
+      _pageMatches[0] = widget.matchesOverride!
+          .where(isRenderablePublicMatch)
+          .toList(growable: false);
+    } else {
+      _loadPage(0);
+    }
   }
 
   @override
   void didUpdateWidget(covariant LiveTournamentWithMatchesCard oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.matchesOverride != null) {
+      _pageMatches
+        ..clear()
+        ..[0] = widget.matchesOverride!
+            .where(isRenderablePublicMatch)
+            .toList(growable: false);
+      _pageCursors
+        ..clear()
+        ..[0] = null;
+      _currentPageIndex = 0;
+      _isLoading = false;
+      return;
+    }
     if (oldWidget.tournament.id != widget.tournament.id ||
-        oldWidget.filterStatus != widget.filterStatus) {
+        oldWidget.filterStatus != widget.filterStatus ||
+        oldWidget.matchesOverride != widget.matchesOverride) {
       _pageMatches.clear();
       _pageCursors.clear();
       _pageCursors[0] = null;
@@ -146,7 +168,8 @@ class _LiveTournamentWithMatchesCardState
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentMatches =
-        (_pageMatches[_currentPageIndex] ?? const <MatchModel>[])
+        (widget.matchesOverride ??
+                (_pageMatches[_currentPageIndex] ?? const <MatchModel>[]))
             .where(isRenderablePublicMatch)
             .toList(growable: false);
 
@@ -262,17 +285,15 @@ class _LiveTournamentWithMatchesCardState
             ),
 
           // ── Cursor Pagination Navigation Bar ──
-          if (currentMatches.isNotEmpty &&
+          if (widget.matchesOverride == null &&
+              currentMatches.isNotEmpty &&
               (_currentPageIndex > 0 ||
                   _pageMatches.containsKey(_currentPageIndex + 1) ||
                   _pageCursors[_currentPageIndex + 1]?.trim().isNotEmpty ==
                       true))
             _buildCursorPaginationBar(context, l10n),
 
-          Container(
-            height: 8,
-            color: isDark ? colors.bgDark : Colors.white,
-          ),
+          Container(height: 8, color: isDark ? colors.bgDark : Colors.white),
         ],
       ),
     );
@@ -434,7 +455,6 @@ class _LiveTournamentWithMatchesCardState
           )
         : (l10n.exploreCourtNotAssigned);
 
-
     List<String> getInitials(String name) {
       final parts = name
           .split('-')
@@ -488,10 +508,7 @@ class _LiveTournamentWithMatchesCardState
           children: [
             // ── Top Header Row: Round Badge (Left) ──
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 2,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: isDark
                     ? const Color(0xFF0284C7).withValues(alpha: 0.18)
@@ -568,7 +585,9 @@ class _LiveTournamentWithMatchesCardState
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: isWinner1 ? AppTheme.primary : colors.textPrimary,
+                        color: isWinner1
+                            ? AppTheme.primary
+                            : colors.textPrimary,
                       ),
                     ),
                   ],
@@ -635,14 +654,15 @@ class _LiveTournamentWithMatchesCardState
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: isWinner2 ? AppTheme.primary : colors.textPrimary,
+                        color: isWinner2
+                            ? AppTheme.primary
+                            : colors.textPrimary,
                       ),
                     ),
                   ],
                 ],
               ),
             ),
-
 
             const SizedBox(height: 10),
 
@@ -770,7 +790,6 @@ class _LiveTournamentWithMatchesCardState
       ),
     );
   }
-
 
   Widget _buildHorizontalLiveCard(BuildContext context, MatchModel match) {
     final colors = context.colors;
@@ -1143,7 +1162,6 @@ class _LiveTournamentWithMatchesCardState
       l10n: l10n,
     );
 
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final teamRowBg = isDark ? colors.bgElevated : const Color(0xFFF8FAFC);
 
@@ -1173,10 +1191,7 @@ class _LiveTournamentWithMatchesCardState
           children: [
             // ── Top Header Row: Round Badge (Left) ──
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 2,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: isDark
                     ? const Color(0xFF0284C7).withValues(alpha: 0.18)

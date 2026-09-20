@@ -133,6 +133,19 @@ final matchesProvider = StreamProvider.family<List<MatchModel>, String>((
   return ref.watch(matchRepositoryProvider).watchByTournament(tournamentId);
 });
 
+/// Public home feed parity with web: one global snapshot is split into live,
+/// upcoming and completed sections by the screen. Polling keeps live scores
+/// fresh without issuing one request per tournament card.
+final publicMatchesFeedProvider = StreamProvider<List<MatchModel>>((
+  ref,
+) async* {
+  final repo = ref.watch(matchRepositoryProvider);
+  while (true) {
+    yield await repo.getMatches(publicOnly: true);
+    await Future<void>.delayed(const Duration(seconds: 15));
+  }
+});
+
 final tournamentDivisionsProvider =
     FutureProvider.family<List<Map<String, dynamic>>, String>((
       ref,
