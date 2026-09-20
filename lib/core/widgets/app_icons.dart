@@ -68,13 +68,12 @@ class AppIcons {
   static const IconData award = LucideIcons.award;
   static const IconData swords = LucideIcons.swords;
   static const IconData target = LucideIcons.target;
-  // Lucide does not provide exact racket/paddle glyphs for every sport, so
-  // keep the fallback geometry distinct and recognisable without emojis.
-  static const IconData sportPickleball = LucideIcons.disc3;
-  static const IconData sportBadminton = LucideIcons.volleyball;
-  static const IconData sportTennis = LucideIcons.crosshair;
-  static const IconData sportTableTennis = LucideIcons.disc;
-  static const IconData sportFootball = LucideIcons.goal;
+  // Sport-specific icons dùng Material Icons vì Lucide không có đủ sport glyphs.
+  static const IconData sportPickleball = Icons.sports_tennis;     // vợt nhỏ
+  static const IconData sportBadminton = Icons.sports_handball;    // cầm vợt
+  static const IconData sportTennis = Icons.sports_tennis;
+  static const IconData sportTableTennis = Icons.sports_mma;       // 1-on-1 đối kháng
+  static const IconData sportFootball = Icons.sports_soccer;       // quả bóng đá
   static const IconData chart = LucideIcons.chartBar;
   static const IconData trendingUp = LucideIcons.trendingUp;
   static const IconData trendingDown = LucideIcons.trendingDown;
