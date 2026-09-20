@@ -126,6 +126,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           !currentPath.startsWith('/profile') &&
           !currentPath.startsWith('/intro') &&
           !currentPath.startsWith('/club') &&
+          !currentPath.startsWith('/community') &&
           !currentPath.startsWith('/communities') &&
           !currentPath.startsWith('/tournament') &&
           !currentPath.startsWith('/tournaments') &&
@@ -715,6 +716,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/clubs/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return ClubDetailScreen(clubId: id);
+        },
+      ),
+      GoRoute(
+        path: '/community/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return ClubDetailScreen(clubId: id);

@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/regions_provider.dart';
@@ -51,6 +52,8 @@ class _CreatePublicQuickTournamentScreenState
   TimeOfDay _regEndTime = const TimeOfDay(hour: 23, minute: 59);
   String? _provinceCode;
   String? _wardCode;
+  Province? _suggestedProvince;
+  Ward? _suggestedWard;
   int _teamSize = 7;
   int _maxReserve = 5;
   int _footballHalvesCount = 2;
@@ -182,10 +185,61 @@ class _CreatePublicQuickTournamentScreenState
   }
 
   String? _divisionGender(String key) {
-    if (key.contains('MALE')) return 'MALE';
     if (key.contains('FEMALE')) return 'FEMALE';
+    if (key.contains('MALE')) return 'MALE';
     if (key.contains('MIXED')) return 'MIXED';
     return null;
+  }
+
+  Future<void> _detectAddressSuggestion() async {
+    final address = _locationAddressController.text.trim();
+    final provinces = ref.read(provincesProvider).asData?.value ?? const [];
+    if (address.isEmpty || provinces.isEmpty) {
+      if (_suggestedProvince != null || _suggestedWard != null) {
+        setState(() {
+          _suggestedProvince = null;
+          _suggestedWard = null;
+        });
+      }
+      return;
+    }
+
+    final province = VietnamAddressParser.detectProvince<Province>(
+      rawAddress: address,
+      provinces: provinces,
+      getCode: (item) => item.code,
+      getName: (item) => item.name,
+    );
+    Ward? ward;
+    if (province != null) {
+      final wards = await ref.read(wardsProvider(province.code).future);
+      if (!mounted || _locationAddressController.text.trim() != address) {
+        return;
+      }
+      ward = VietnamAddressParser.detectWard<Ward>(
+        rawAddress: address,
+        wards: wards,
+        getCode: (item) => item.code,
+        getName: (item) => item.name,
+      );
+    }
+
+    if (!mounted || _locationAddressController.text.trim() != address) return;
+    if (province != _suggestedProvince || ward != _suggestedWard) {
+      setState(() {
+        _suggestedProvince = province;
+        _suggestedWard = ward;
+      });
+    }
+  }
+
+  void _applyAddressSuggestion() {
+    final province = _suggestedProvince;
+    if (province == null) return;
+    setState(() {
+      _provinceCode = province.code;
+      _wardCode = _suggestedWard?.code;
+    });
   }
 
   Future<void> _submit() async {
@@ -554,6 +608,10 @@ class _CreatePublicQuickTournamentScreenState
                           if (n == null || n < 2 || n > 128) {
                             return 'Số đội từ 2 đến 128';
                           }
+                          if (_bracket == AppConstants.bracketRoundRobin &&
+                              n > 15) {
+                            return 'Vòng tròn tối đa 15 đội / VĐV';
+                          }
                           return null;
                         },
                       ),
@@ -728,7 +786,10 @@ class _CreatePublicQuickTournamentScreenState
               initialValue: _registrationMode,
               isExpanded: true,
               decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
                 filled: true,
                 fillColor: colors.bgSurface,
                 border: OutlineInputBorder(
@@ -806,6 +867,7 @@ class _CreatePublicQuickTournamentScreenState
             const SizedBox(height: 8),
             TextFormField(
               controller: _locationAddressController,
+              onChanged: (_) => _detectAddressSuggestion(),
               decoration: InputDecoration(
                 hintText: 'VD: 238 Kỳ Đồng, Quận 3, TP.HCM',
                 prefixIcon: const Icon(Icons.location_on_outlined, size: 20),
@@ -817,6 +879,60 @@ class _CreatePublicQuickTournamentScreenState
                 ),
               ),
             ),
+            if (_suggestedProvince != null || _suggestedWard != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppTheme.primary.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.auto_awesome,
+                      size: 16,
+                      color: AppTheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${l10n.lite_aiDetectedAddress} ${_suggestedProvince?.name ?? ''}${_suggestedWard == null ? '' : ' > ${_suggestedWard!.name}'}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: _applyAddressSuggestion,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        child: Text(
+                          l10n.filterApply,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.primary,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 8),
             _buildRegionFields(colors),
             const SizedBox(height: 18),
@@ -1045,7 +1161,10 @@ class _CreatePublicQuickTournamentScreenState
                 : null,
             isExpanded: true,
             decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 10,
+              ),
               labelText: 'Tỉnh / thành',
               prefixIcon: const Icon(Icons.map_outlined, size: 18),
               filled: true,
@@ -1088,7 +1207,10 @@ class _CreatePublicQuickTournamentScreenState
                 : null,
             isExpanded: true,
             decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 10,
+              ),
               labelText: 'Phường / xã',
               prefixIcon: const Icon(Icons.location_city_outlined, size: 18),
               filled: true,
@@ -1515,6 +1637,20 @@ class _CreatePublicQuickTournamentScreenState
       _regEndTime = pickedTime;
     });
   }
+
+  // Compatibility aliases for incremental compile & hot reload
+  // ignore: unused_element
+  Future<void> _pickStartDate() => _pickStartDateTime();
+  // ignore: unused_element
+  Future<void> _pickStartTime() => _pickStartDateTime();
+  // ignore: unused_element
+  Future<void> _pickEndDate() => _pickEndDateTime();
+  // ignore: unused_element
+  Future<void> _pickEndTime() => _pickEndDateTime();
+  // ignore: unused_element
+  Future<void> _pickRegStartDate() => _pickRegStartDateTime();
+  // ignore: unused_element
+  Future<void> _pickRegEndDate() => _pickRegEndDateTime();
 
   Widget _buildDateTimeField({
     required String label,

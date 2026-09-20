@@ -1288,29 +1288,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: _buildGuestLoginNoticeBanner(l10n),
                       ),
 
-                    SliverToBoxAdapter(
-                      child: _buildSuggestedCommunitiesSection(),
-                    ),
-                    if (featuredTournaments.isNotEmpty) ...[
+                    if (featuredTournaments.isNotEmpty)
                       SliverToBoxAdapter(
-                        child: _buildSectionTitle(
-                          title: l10n.featuredTournaments,
-                          actionLabel: l10n.viewAll,
-                          onAction: () => _switchTab(1),
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          child: KeyedSubtree(
-                            key: ValueKey("featured_$_exploreSport"),
-                            child: _buildTournamentCarousel(
-                              featuredTournaments,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 200),
+                            child: KeyedSubtree(
+                              key: ValueKey("featured_$_exploreSport"),
+                              child: _buildTournamentCarousel(
+                                featuredTournaments,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ],
+                    SliverToBoxAdapter(
+                      child: _buildSuggestedCommunitiesSection(),
+                    ),
                     SliverPersistentHeader(
                       pinned: true,
                       delegate: _StatusFilterDelegate(
@@ -2633,6 +2628,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildSectionTitle({
     required String title,
 
@@ -2846,7 +2842,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     alignment: Alignment.topCenter,
                     child: FeaturedTournamentBannerCard(
                       tournament: items[i],
-                      onTap: () => context.push("/intro/${items[i].id}"),
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        context.push("/intro/${items[i].id}");
+                      },
                     ),
                   ),
                 ),
@@ -2868,36 +2867,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Câu lạc bộ gợi ý',
-                style: TextStyle(
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.w800,
-                  color: colors.textPrimary,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  _switchTab(3); // Chuyển sang tab Cộng đồng
-                },
-                child: Text(
-                  'Xem tất cả',
-                  style: TextStyle(
-                    fontSize: 13.0,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        const SizedBox(height: 8),
         SizedBox(
           height: 104,
           child: communitiesAsync.when(
@@ -2919,7 +2889,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   return GestureDetector(
                     onTap: () {
                       HapticFeedback.selectionClick();
-                      context.push('/community/${club.id}');
+                      context.push('/communities/${club.id}');
                     },
                     child: SizedBox(
                       width: 68,
