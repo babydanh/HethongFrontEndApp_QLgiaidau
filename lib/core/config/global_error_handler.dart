@@ -9,6 +9,13 @@ class GlobalErrorHandler {
   static void init() {
     // 1. Xử lý các lỗi sinh ra từ Flutter framework (UI / Rendering)
     FlutterError.onError = (FlutterErrorDetails details) {
+      // Bỏ qua lỗi tải ảnh mạng thất bại (404/timeout...) vì widget (như ClubNetworkImage)
+      // đã có sẵn errorBuilder / fallback UI xử lý êm đẹp tại giao diện.
+      final exception = details.exception;
+      if (exception is NetworkImageLoadException) {
+        return;
+      }
+
       // Không được nuốt stack trace: nếu chỉ thay ErrorWidget thì logcat mất
       // widget gây lỗi và mọi assertion đều bị quy về một dialog chung.
       if (kDebugMode) {
