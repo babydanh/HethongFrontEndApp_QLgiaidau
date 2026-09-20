@@ -22,7 +22,6 @@ import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_ba
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:app_quanly_giaidau/core/widgets/sporto_loading_widget.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/province_selection_screen.dart';

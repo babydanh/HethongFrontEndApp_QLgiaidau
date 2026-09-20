@@ -171,6 +171,7 @@ class AppIcons {
   static const IconData box = LucideIcons.box;
   static const IconData infinity = LucideIcons.infinity;
   static const IconData cake = LucideIcons.cake;
+  static const IconData code = LucideIcons.code2;
 
   /// Returns the shared monochrome sport glyph used across cards, filters and
   /// forms. Sport data stays a key; the visual is resolved only at the UI edge.

@@ -395,16 +395,11 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
             ],
           ),
           child: Center(
-            child: AnimatedRotation(
-              turns: _isPopoverOpen ? 0.5 : 0.0,
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutBack,
-              child: Icon(
-                isActive ? AppIcons.box : AppIcons.chevronDown,
+            child: Icon(
+                AppIcons.code,
                 color: iconColor,
                 size: 20,
               ),
-            ),
           ),
         ),
       ),
