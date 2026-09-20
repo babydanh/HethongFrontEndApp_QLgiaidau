@@ -12270,19 +12270,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get organizer_uploading => 'Uploading image...';
 
   @override
-  String get organizer_addMoreEvidence => 'Add evidence image';
-
-  @override
-  String get organizer_uploadFailed =>
-      'An image upload failed. Retry it or remove the failed image.';
-
-  @override
-  String get organizer_evidenceLimit => 'Up to 5 evidence images.';
-
-  @override
-  String get organizer_retry => 'Retry';
-
-  @override
   String get organizer_submitBtn => 'Submit Application';
 
   @override
@@ -12297,32 +12284,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your Organizer verification application is currently being reviewed by administrators.';
 
   @override
-  String get organizer_cancelPending => 'Cancel request';
-
-  @override
-  String get organizer_cancelPendingConfirm =>
-      'Are you sure you want to cancel this pending request?';
-
-  @override
-  String get organizer_cancelNo => 'Close';
-
-  @override
-  String get organizer_cancelYes => 'Cancel request';
-
-  @override
-  String get organizer_cancelSuccess => 'Verification request cancelled.';
-
-  @override
-  String get organizer_cancelError => 'Unable to cancel verification request.';
-
-  @override
-  String get organizer_approvedTitle => 'Application approved';
-
-  @override
-  String get organizer_approvedDesc =>
-      'You now have Organizer access and can create advanced tournaments.';
-
-  @override
   String get organizer_rejectedTitle => 'Application Rejected';
 
   @override
@@ -12333,6 +12294,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get organizer_becomeOrganizer => 'Become a Tournament Organizer';
+
+  @override
+  String get organizer_evidenceLimit => 'Maximum 5 images';
+
+  @override
+  String get organizer_uploadFailed => 'Image upload failed. Please try again.';
+
+  @override
+  String get organizer_cancelPending => 'Cancel Application';
+
+  @override
+  String get organizer_cancelPendingConfirm =>
+      'Are you sure you want to cancel your organizer application? This action cannot be undone.';
+
+  @override
+  String get organizer_cancelNo => 'No';
+
+  @override
+  String get organizer_cancelYes => 'Yes, Cancel';
+
+  @override
+  String get organizer_cancelSuccess => 'Application cancelled successfully.';
+
+  @override
+  String get organizer_cancelError =>
+      'Failed to cancel application. Please try again.';
+
+  @override
+  String get organizer_retry => 'Retry';
+
+  @override
+  String get organizer_approvedTitle => 'Organizer Approved';
+
+  @override
+  String get organizer_approvedDesc =>
+      'Your organizer application has been approved. You can now create advanced tournaments.';
+
+  @override
+  String get organizer_addMoreEvidence => 'Add More Evidence';
 
   @override
   String get lite_province => 'Province / City';

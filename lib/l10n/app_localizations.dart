@@ -22288,14 +22288,6 @@ abstract class AppLocalizations {
   /// **'Đang tải ảnh lên...'**
   String get organizer_uploading;
 
-  String get organizer_addMoreEvidence;
-
-  String get organizer_uploadFailed;
-
-  String get organizer_evidenceLimit;
-
-  String get organizer_retry;
-
   /// No description provided for @organizer_submitBtn.
   ///
   /// In vi, this message translates to:
@@ -22320,22 +22312,6 @@ abstract class AppLocalizations {
   /// **'Hồ sơ đăng ký Ban Tổ Chức của bạn đang được ban quản trị xem xét.'**
   String get organizer_pendingDesc;
 
-  String get organizer_cancelPending;
-
-  String get organizer_cancelPendingConfirm;
-
-  String get organizer_cancelNo;
-
-  String get organizer_cancelYes;
-
-  String get organizer_cancelSuccess;
-
-  String get organizer_cancelError;
-
-  String get organizer_approvedTitle;
-
-  String get organizer_approvedDesc;
-
   /// No description provided for @organizer_rejectedTitle.
   ///
   /// In vi, this message translates to:
@@ -22359,6 +22335,78 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đăng ký làm Ban Tổ Chức (Organizer)'**
   String get organizer_becomeOrganizer;
+
+  /// No description provided for @organizer_evidenceLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tối đa 5 ảnh'**
+  String get organizer_evidenceLimit;
+
+  /// No description provided for @organizer_uploadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải ảnh thất bại. Vui lòng thử lại.'**
+  String get organizer_uploadFailed;
+
+  /// No description provided for @organizer_cancelPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Huỷ hồ sơ'**
+  String get organizer_cancelPending;
+
+  /// No description provided for @organizer_cancelPendingConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn huỷ hồ sơ đăng ký Ban Tổ Chức không? Hành động này không thể hoàn tác.'**
+  String get organizer_cancelPendingConfirm;
+
+  /// No description provided for @organizer_cancelNo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không'**
+  String get organizer_cancelNo;
+
+  /// No description provided for @organizer_cancelYes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có, Huỷ'**
+  String get organizer_cancelYes;
+
+  /// No description provided for @organizer_cancelSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã huỷ hồ sơ thành công.'**
+  String get organizer_cancelSuccess;
+
+  /// No description provided for @organizer_cancelError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Huỷ hồ sơ thất bại. Vui lòng thử lại.'**
+  String get organizer_cancelError;
+
+  /// No description provided for @organizer_retry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get organizer_retry;
+
+  /// No description provided for @organizer_approvedTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã được duyệt'**
+  String get organizer_approvedTitle;
+
+  /// No description provided for @organizer_approvedDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hồ sơ Ban Tổ Chức của bạn đã được phê duyệt. Bạn có thể tạo giải đấu nâng cao.'**
+  String get organizer_approvedDesc;
+
+  /// No description provided for @organizer_addMoreEvidence.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm bằng chứng'**
+  String get organizer_addMoreEvidence;
 
   /// No description provided for @lite_province.
   ///
