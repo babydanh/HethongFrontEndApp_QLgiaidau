@@ -22,18 +22,16 @@ import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_ban
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
-import 'package:app_quanly_giaidau/core/widgets/sporto_loading_widget.dart';
-import 'package:app_quanly_giaidau/core/widgets/morphing_nav_loader_transition.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/province_selection_screen.dart';
-import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
-import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/features/home/widgets/unified_public_match_feed.dart';
 import 'package:app_quanly_giaidau/features/social/screens/social_list_view.dart';
 import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/features/chat/screens/chat_screen.dart';
 
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
-import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -71,34 +69,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   };
   final FocusNode _searchFocusNode = FocusNode();
   Timer? _searchDebounceTimer;
-  final GlobalKey<MorphingNavLoaderOverlayState> _morphLoaderKey = GlobalKey();
 
   TextEditingController get _activeSearchController =>
       _searchControllers[_currentIndex] ?? _searchControllers[0]!;
 
   // ─── Per-tab filter state ───
   String _exploreSport = 'all';
-  String _exploreStatus = 'live';
-  bool _hasAutoSwitchedLiveTab = false;
-  bool _userManuallySelectedLiveTab = false;
-
-  void _handleNoLiveMatches() {
-    if (!_hasAutoSwitchedLiveTab &&
-        _exploreStatus == 'live' &&
-        !_userManuallySelectedLiveTab) {
-      _hasAutoSwitchedLiveTab = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted &&
-            _exploreStatus == 'live' &&
-            !_userManuallySelectedLiveTab) {
-          setState(() {
-            _exploreStatus = 'scheduled';
-          });
-        }
-      });
-    }
-  }
-
+  // status sections are rendered together by UnifiedPublicMatchFeed
   String _exploreContent = 'all';
   String _exploreBracket = 'all';
   String _exploreRanked = 'all';
@@ -153,9 +130,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _setActiveSportFilter(String key) {
     setState(() {
-      _hasAutoSwitchedLiveTab = false;
-      _userManuallySelectedLiveTab = false;
-      _exploreStatus = 'live';
       _exploreSport = key;
       _tournamentSport = key;
       _clubSport = key;
@@ -526,6 +500,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                               ? 'Cộng đồng'
                                               : _currentIndex == 4
                                               ? l10n.homeRankingsTab
+                                              : _currentIndex == 2
+                                              ? 'Hộp thư'
                                               : l10n.sporto,
                                           style: TextStyle(
                                             color: isDark
@@ -540,7 +516,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ),
                                   ),
 
-                                // Right: Nút Tìm kiếm 🔍 & Nút Thông báo 🔔
+                                // Right: Nút Tìm kiếm 🔍, Nút Thông báo 🔔
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -638,14 +614,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             bottomNavigationBar: FloatingBottomNav(
               currentIndex: _currentIndex,
               onTabSelected: _switchTab,
-              onProfileTap: () => context.go('/profile'),
-            ),
-          ),
-          // Morphing Nav Loader Overlay (4 chấm tròn nảy sóng bay vào 4 vị trí Bottom Nav)
-          Positioned.fill(
-            child: MorphingNavLoaderOverlay(
-              key: _morphLoaderKey,
-              autoStart: true,
             ),
           ),
         ],
@@ -681,6 +649,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return KeyedSubtree(
           key: const ValueKey('tournaments'),
           child: _buildTournamentsTab(),
+        );
+      case 2:
+        return KeyedSubtree(
+          key: const ValueKey('chat_inbox_tab'),
+          child: Padding(
+            padding: EdgeInsets.only(top: _pinnedHeaderHeight),
+            child: const ChatScreen(isEmbedded: true),
+          ),
         );
       case 3:
         return KeyedSubtree(
@@ -943,7 +919,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     : (hour < 18 ? 'Chào buổi chiều' : 'Chào buổi tối');
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 4.0,
+                  ),
                   child: Row(
                     children: [
                       Container(
@@ -995,7 +974,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               style: TextStyle(
                                 fontSize: 16.5,
                                 fontWeight: FontWeight.w800,
-                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF0F172A),
                                 letterSpacing: -0.3,
                               ),
                               maxLines: 1,
@@ -1028,7 +1009,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           onTap: () => context.push('/club/create'),
                           borderRadius: BorderRadius.circular(12),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: isDark
                                   ? context.colors.bgCard
@@ -1046,7 +1030,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   width: 36,
                                   height: 36,
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primary.withValues(alpha: 0.12),
+                                    color: AppTheme.primary.withValues(
+                                      alpha: 0.12,
+                                    ),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
@@ -1058,7 +1044,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 const SizedBox(width: 12),
                                 const Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Bạn chưa tham gia CLB nào',
@@ -1103,7 +1090,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
-                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
                                   letterSpacing: -0.2,
                                 ),
                               ),
@@ -1129,7 +1118,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             scrollDirection: Axis.horizontal,
                             physics: const BouncingScrollPhysics(),
                             itemCount: clubs.length + 1,
-                            separatorBuilder: (_, _) => const SizedBox(width: 12),
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(width: 12),
                             itemBuilder: (context, index) {
                               if (index == clubs.length) {
                                 return GestureDetector(
@@ -1144,10 +1134,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
                                             border: Border.all(
-                                              color: AppTheme.primary.withValues(alpha: 0.35),
+                                              color: AppTheme.primary
+                                                  .withValues(alpha: 0.35),
                                               width: 1.2,
                                             ),
-                                            color: isDark ? Colors.white10 : Colors.grey.shade100,
+                                            color: isDark
+                                                ? Colors.white10
+                                                : Colors.grey.shade100,
                                           ),
                                           child: const Icon(
                                             Icons.add_rounded,
@@ -1161,7 +1154,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w600,
-                                            color: isDark ? Colors.white70 : const Color(0xFF475569),
+                                            color: isDark
+                                                ? Colors.white70
+                                                : const Color(0xFF475569),
                                           ),
                                         ),
                                       ],
@@ -1171,18 +1166,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               }
 
                               final club = clubs[index];
-                              final isOwner = club.myRole == 'OWNER' ||
+                              final isOwner =
+                                  club.myRole == 'OWNER' ||
                                   club.myRole == 'LEADER' ||
                                   club.myRole == 'CREATOR' ||
                                   club.myRole == 'HOST' ||
-                                  (currentUserId != null && club.ownerId == currentUserId);
-                              final isAdmin = !isOwner &&
-                                  (club.myRole == 'ADMIN' || club.myRole == 'MODERATOR');
+                                  (currentUserId != null &&
+                                      club.ownerId == currentUserId);
+                              final isAdmin =
+                                  !isOwner &&
+                                  (club.myRole == 'ADMIN' ||
+                                      club.myRole == 'MODERATOR');
                               final roleBadgeText = isOwner
                                   ? 'Chủ'
                                   : (isAdmin ? 'Quản trị' : null);
 
-                              final logo = club.logoUrl ?? club.bannerUrl ?? '';
+                              final logo = _resolveClubLogoUrl(club.logoUrl);
+                              final banner = _resolveClubBannerUrl(club.bannerUrl);
+                              final visualUrl = logo.isNotEmpty ? logo : banner;
+                              final visualFit = logo.isNotEmpty
+                                  ? BoxFit.cover
+                                  : BoxFit.contain;
 
                               return GestureDetector(
                                 onTap: () {
@@ -1193,78 +1197,97 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   width: 68,
                                   child: Column(
                                     children: [
-                                      Stack(
-                                        clipBehavior: Clip.none,
-                                        children: [
-                                          Container(
-                                            width: 56,
-                                            height: 56,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              gradient: isOwner
-                                                  ? const LinearGradient(
-                                                      colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
-                                                      begin: Alignment.topLeft,
-                                                      end: Alignment.bottomRight,
-                                                    )
-                                                  : LinearGradient(
-                                                      colors: [
-                                                        AppTheme.primary,
-                                                        const Color(0xFF0EA5E9),
+                                      SizedBox(
+                                        width: 56,
+                                        height: 56,
+                                        child: visualUrl.isNotEmpty
+                                            ? Stack(
+                                                clipBehavior: Clip.none,
+                                                children: [
+                                                  Container(
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      color: isDark
+                                                          ? const Color(
+                                                              0xFF1E293B,
+                                                            )
+                                                          : Colors.white,
+                                                      border: Border.all(
+                                                        color: isOwner
+                                                            ? const Color(
+                                                                0xFFF59E0B,
+                                                              )
+                                                            : AppTheme.primary,
+                                                        width: 2,
+                                                      ),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.black
+                                                              .withValues(
+                                                                alpha: isDark
+                                                                    ? 0.3
+                                                                    : 0.08,
+                                                              ),
+                                                          blurRadius: 6,
+                                                          offset: const Offset(
+                                                            0,
+                                                            2,
+                                                          ),
+                                                        ),
                                                       ],
-                                                      begin: Alignment.topLeft,
-                                                      end: Alignment.bottomRight,
                                                     ),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
-                                                  blurRadius: 6,
-                                                  offset: const Offset(0, 2),
-                                                ),
-                                              ],
-                                            ),
-                                            padding: const EdgeInsets.all(2),
-                                            child: Container(
-                                              decoration: const BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: Colors.white,
-                                              ),
-                                              clipBehavior: Clip.antiAlias,
-                                              child: logo.isNotEmpty
-                                                  ? ClubNetworkImage(
-                                                      logo,
-                                                      fit: BoxFit.cover,
+                                                    clipBehavior:
+                                                        Clip.antiAlias,
+                                                    child: ClubNetworkImage(
+                                                      visualUrl,
+                                                      fit: visualFit,
                                                       errorBuilder: (_, _, _) =>
-                                                          _buildClubFallbackAvatar(club.name),
-                                                    )
-                                                  : _buildClubFallbackAvatar(club.name),
-                                            ),
-                                          ),
-                                          if (roleBadgeText != null)
-                                            Positioned(
-                                              bottom: -2,
-                                              right: -2,
-                                              child: Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                                                decoration: BoxDecoration(
-                                                  color: isOwner ? const Color(0xFFF59E0B) : AppTheme.primary,
-                                                  borderRadius: BorderRadius.circular(6),
-                                                  border: Border.all(
-                                                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
-                                                    width: 1.2,
+                                                          _buildClubFallbackAvatar(),
+                                                    ),
                                                   ),
-                                                ),
-                                                child: Text(
-                                                  roleBadgeText,
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 8.5,
-                                                    fontWeight: FontWeight.w900,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                        ],
+                                                  if (roleBadgeText != null)
+                                                    Positioned(
+                                                      bottom: -2,
+                                                      right: -2,
+                                                      child: Container(
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              horizontal: 5,
+                                                              vertical: 1.5,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color: isOwner
+                                                              ? const Color(
+                                                                  0xFFF59E0B,
+                                                                )
+                                                              : AppTheme.primary,
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                6,
+                                                              ),
+                                                          border: Border.all(
+                                                            color: isDark
+                                                                ? const Color(
+                                                                    0xFF0F172A,
+                                                                  )
+                                                                : Colors.white,
+                                                            width: 1.2,
+                                                          ),
+                                                        ),
+                                                        child: Text(
+                                                          roleBadgeText,
+                                                          style: const TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 8.5,
+                                                            fontWeight:
+                                                                FontWeight.w900,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              )
+                                            : _buildClubFallbackAvatar(),
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
@@ -1272,7 +1295,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         style: TextStyle(
                                           fontSize: 11,
                                           fontWeight: FontWeight.w600,
-                                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                          color: isDark
+                                              ? Colors.white
+                                              : const Color(0xFF0F172A),
                                           height: 1.15,
                                         ),
                                         maxLines: 1,
@@ -1321,7 +1346,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     label: const Text(
                       'Tạo giải',
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.5,
+                      ),
                     ),
                     style: TextButton.styleFrom(
                       foregroundColor: AppTheme.primary,
@@ -1420,7 +1448,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: isDark ? context.colors.bgCard : Colors.white,
                         border: Border.all(
@@ -1598,9 +1629,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Positioned.fill(
           child: RefreshIndicator(
             onRefresh: () async {
-              _hasAutoSwitchedLiveTab = false;
-              _userManuallySelectedLiveTab = false;
-              return ref.refresh(tournamentsProvider);
+              final refreshedTournaments = ref.refresh(
+                tournamentsProvider.future,
+              );
+              await refreshedTournaments;
+              ref.invalidate(publicMatchesFeedProvider);
             },
             color: AppTheme.primary,
             child: tournamentsAsync.when(
@@ -1677,28 +1710,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     SliverToBoxAdapter(
                       child: _buildSuggestedCommunitiesSection(),
                     ),
-                    SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _StatusFilterDelegate(
-                        child: _buildExploreSegmentTabBar(l10n),
-                      ),
-                    ),
-                    _TournamentSectionList(
+                    UnifiedPublicMatchFeed(
                       tournaments: allTournaments,
-                      sectionTitle: null,
-                      isLive: _exploreStatus == 'live',
-                      filterStatus: _exploreStatus,
+                      sportFilter: _exploreSport,
                       searchQuery: _searchQueries[0] ?? '',
                       contentFilter: _exploreContent,
                       bracketFilter: _exploreBracket,
                       rankedFilter: _exploreRanked,
-                      enabled: true,
-                      emptyMessage: _exploreStatus == 'live'
-                          ? l10n.noLiveMatches
-                          : _exploreStatus == 'scheduled'
-                          ? l10n.noUpcomingMatches
-                          : l10n.homeNoCompletedMatches,
-                      onNoLiveMatches: _handleNoLiveMatches,
                     ),
 
                     if (allTournaments.isEmpty)
@@ -1714,14 +1732,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   SliverToBoxAdapter(
                     child: SizedBox(height: _pinnedHeaderHeight),
                   ),
-                  const SliverFillRemaining(
-                    child: Center(
-                      child: SportoLoadingWidget(
-                        size: 130,
-                        message: 'Đang tải dữ liệu giải đấu...',
-                        variant: SportoLoadingVariant.court3d,
-                      ),
-                    ),
+                  SliverFillRemaining(
+                    child: _buildHomeShimmerLoading(),
                   ),
                 ],
               ),
@@ -1739,6 +1751,62 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildHomeShimmerLoading() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+    final highlightColor =
+        isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Shimmer.fromColors(
+        baseColor: baseColor,
+        highlightColor: highlightColor,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 160,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              height: 20,
+              width: 140,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              height: 110,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              height: 110,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1943,7 +2011,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     switch (_currentIndex) {
       case 0:
         return (_exploreSport != 'all' ? 1 : 0) +
-            (_exploreStatus != 'all' ? 1 : 0) +
             (_exploreContent != 'all' ? 1 : 0) +
             (_exploreBracket != 'all' ? 1 : 0) +
             (_exploreRanked != 'all' ? 1 : 0);
@@ -2067,7 +2134,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       builder: (ctx) {
         String localSport = _exploreSport;
-        String localStatus = _exploreStatus;
         String localContent = _exploreContent;
         String localBracket = _exploreBracket;
         String localRanked = _exploreRanked;
@@ -2109,26 +2175,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     items: _activeSportFilterItems(l10n),
                     selected: localSport,
                     onSelected: (v) => setSheetState(() => localSport = v),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.filterStatus,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildFilterChips(
-                    items: [
-                      ('all', l10n.filterAll),
-                      ('live', l10n.homeLiveStatus),
-                      ('scheduled', l10n.matchesFilterScheduled),
-                      ('completed', l10n.homeCompletedStatus),
-                    ],
-                    selected: localStatus,
-                    onSelected: (v) => setSheetState(() => localStatus = v),
                   ),
                   const SizedBox(height: 16),
                   _buildExploreFilterGroup(
@@ -2179,7 +2225,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           onPressed: () {
                             setSheetState(() {
                               localSport = 'all';
-                              localStatus = 'all';
                               localContent = 'all';
                               localBracket = 'all';
                               localRanked = 'all';
@@ -2205,7 +2250,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           onPressed: () {
                             setState(() {
                               _exploreSport = localSport;
-                              _exploreStatus = localStatus;
                               _exploreContent = localContent;
                               _exploreBracket = localBracket;
                               _exploreRanked = localRanked;
@@ -3082,103 +3126,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildExploreSegmentTabBar(AppLocalizations l10n) {
-    final colors = context.colors;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      color: isDark ? colors.bgDark : Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Container(
-        height: 40,
-        padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(
-          color: isDark ? colors.bgSurface : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: colors.border.withValues(alpha: isDark ? 1.0 : 0.6),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            _buildExploreTabButton(
-              label: l10n.homeLiveStatus,
-              statusKey: 'live',
-              isLive: true,
-            ),
-            _buildExploreTabButton(
-              label: l10n.matchesFilterScheduled,
-              statusKey: 'scheduled',
-            ),
-            _buildExploreTabButton(
-              label: l10n.homeCompletedStatus,
-              statusKey: 'completed',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExploreTabButton({
-    required String label,
-    required String statusKey,
-    bool isLive = false,
-  }) {
-    final isSelected = _exploreStatus == statusKey;
-    final colors = context.colors;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.selectionClick();
-          _userManuallySelectedLiveTab = true;
-          setState(() => _exploreStatus = statusKey);
-        },
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            color: isSelected ? AppTheme.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: AppTheme.primary.withValues(alpha: 0.25),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (isLive) ...[
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.white : const Color(0xFFEF4444),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 5),
-              ],
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected ? Colors.white : colors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildTournamentCarousel(List<Tournament> items) {
     if (items.isEmpty) return const SizedBox.shrink();
 
@@ -3255,7 +3202,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 separatorBuilder: (_, _) => const SizedBox(width: 14),
                 itemBuilder: (context, index) {
                   final club = displayList[index];
-                  final logoUrl = club.logoUrl ?? club.bannerUrl ?? '';
+                  final logoUrl = _resolveClubLogoUrl(club.logoUrl);
+                  final bannerUrl = _resolveClubBannerUrl(club.bannerUrl);
+                  final visualUrl = logoUrl.isNotEmpty ? logoUrl : bannerUrl;
+                  final visualFit = logoUrl.isNotEmpty
+                      ? BoxFit.cover
+                      : BoxFit.contain;
 
                   return GestureDetector(
                     onTap: () {
@@ -3267,45 +3219,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(
+                          SizedBox(
                             width: 62,
                             height: 62,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppTheme.primary.withValues(alpha: 0.8),
-                                  const Color(0xFF0EA5E9),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: isDark
-                                      ? Colors.black26
-                                      : Colors.black.withValues(alpha: 0.08),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            padding: const EdgeInsets.all(2.0),
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              child: logoUrl.isNotEmpty
-                                  ? ClubNetworkImage(
-                                      logoUrl,
-                                      fit: BoxFit.cover,
+                            child: visualUrl.isNotEmpty
+                                ? Container(
+                                    clipBehavior: Clip.antiAlias,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isDark
+                                          ? const Color(0xFF1E293B)
+                                          : Colors.white,
+                                      border: Border.all(
+                                        color: context.colors.border.withValues(
+                                          alpha: 0.7,
+                                        ),
+                                        width: 1,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: isDark
+                                              ? Colors.black26
+                                              : Colors.black.withValues(
+                                                  alpha: 0.08,
+                                                ),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClubNetworkImage(
+                                      visualUrl,
+                                      fit: visualFit,
                                       errorBuilder: (_, _, _) =>
-                                          _buildClubFallbackAvatar(club.name),
-                                    )
-                                  : _buildClubFallbackAvatar(club.name),
-                            ),
+                                          _buildClubFallbackAvatar(),
+                                    ),
+                                  )
+                                : _buildClubFallbackAvatar(),
                           ),
                           const SizedBox(height: 6),
                           Text(
@@ -3366,30 +3316,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildClubFallbackAvatar(String name) {
-    final initials = name.trim().isNotEmpty
-        ? name
-              .trim()
-              .split(' ')
-              .map((e) => e.isNotEmpty ? e[0] : '')
-              .take(2)
-              .join()
-              .toUpperCase()
-        : 'CLB';
-    return Container(
-      color: const Color(0xFFF1F5F9),
-      alignment: Alignment.center,
-      child: Text(
-        initials,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w800,
-          color: AppTheme.primary,
-        ),
-      ),
     );
   }
 
@@ -3759,11 +3685,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         separatorBuilder: (_, _) => const SizedBox(width: 14.0),
         itemBuilder: (context, index) {
           final club = displayClubs[index];
-          final logoUrl = _resolveClubImageUrl(
-            (club.logoUrl?.trim().isNotEmpty ?? false)
-                ? club.logoUrl!.split(',').first
-                : club.bannerUrl,
-          );
+          final logoUrl = _resolveClubLogoUrl(club.logoUrl);
+          final bannerUrl = _resolveClubBannerUrl(club.bannerUrl);
+          final visualUrl = logoUrl.isNotEmpty ? logoUrl : bannerUrl;
+          final visualFit = logoUrl.isNotEmpty ? BoxFit.cover : BoxFit.contain;
 
           return GestureDetector(
             onTap: () => context.push("/club/${club.id}"),
@@ -3773,39 +3698,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
+                  SizedBox(
                     width: 62.0,
                     height: 62.0,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: context.colors.bgSurface,
-                      border: Border.all(
-                        color: context.colors.border.withValues(alpha: 0.7),
-                        width: 1.0,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child: logoUrl.isNotEmpty
-                          ? ClubNetworkImage(
-                              logoUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) => Image.asset(
-                                AppConstants.appIconPng,
-                                fit: BoxFit.cover,
+                    child: visualUrl.isNotEmpty
+                        ? Container(
+                            clipBehavior: Clip.antiAlias,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: context.colors.bgSurface,
+                              border: Border.all(
+                                color: context.colors.border.withValues(
+                                  alpha: 0.7,
+                                ),
+                                width: 1.0,
                               ),
-                            )
-                          : Image.asset(
-                              AppConstants.appIconPng,
-                              fit: BoxFit.cover,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                    ),
+                            child: ClubNetworkImage(
+                              visualUrl,
+                              fit: visualFit,
+                              errorBuilder: (_, _, _) =>
+                                  _buildClubFallbackAvatar(),
+                            ),
+                          )
+                        : _buildClubFallbackAvatar(),
                   ),
                   const SizedBox(height: 6.0),
                   Text(
@@ -3826,6 +3749,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           );
         },
       ),
+    );
+  }
+
+  String _resolveClubLogoUrl(String? url) {
+    final value = url?.trim().split(',').first.trim() ?? '';
+    final normalized = value.toLowerCase();
+    if (value.isEmpty ||
+        normalized.contains('sporto_v1') ||
+        normalized.contains('defaultfallback')) {
+      return '';
+    }
+    return _resolveClubImageUrl(value);
+  }
+
+  String _resolveClubBannerUrl(String? url) {
+    final value = url?.trim().split(',').first.trim() ?? '';
+    if (value.isEmpty) return '';
+    return _resolveClubImageUrl(value);
+  }
+
+  Widget _buildClubFallbackAvatar() {
+    return Image.asset(
+      AppConstants.appIconPng,
+      fit: BoxFit.contain,
     );
   }
 
@@ -3853,11 +3800,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildClubItem(Community club) {
-    final logoUrl = _resolveClubImageUrl(
-      (club.logoUrl?.trim().isNotEmpty ?? false)
-          ? club.logoUrl!.split(',').first
-          : club.bannerUrl,
-    );
+    final logoUrl = _resolveClubLogoUrl(club.logoUrl);
+    final bannerUrl = _resolveClubBannerUrl(club.bannerUrl);
+    final visualUrl = logoUrl.isNotEmpty ? logoUrl : bannerUrl;
+    final visualFit = logoUrl.isNotEmpty ? BoxFit.cover : BoxFit.contain;
 
     return Material(
       color: Colors.transparent,
@@ -3870,6 +3816,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Container(
                 width: 44.0,
                 height: 44.0,
+                clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: context.colors.bgSurface,
@@ -3878,18 +3825,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     width: 0.8,
                   ),
                 ),
-                child: ClipOval(
-                  child: logoUrl.isNotEmpty
-                      ? ClubNetworkImage(
-                          logoUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => Image.asset(
-                            AppConstants.appIconPng,
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      : Image.asset(AppConstants.appIconPng, fit: BoxFit.cover),
-                ),
+                child: visualUrl.isNotEmpty
+                    ? ClubNetworkImage(
+                        visualUrl,
+                        fit: visualFit,
+                        errorBuilder: (_, _, _) => _buildClubFallbackAvatar(),
+                      )
+                    : _buildClubFallbackAvatar(),
               ),
               const SizedBox(width: 14.0),
               Expanded(
@@ -4096,193 +4038,5 @@ class _StatusFilterDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant _StatusFilterDelegate oldDelegate) {
     return child != oldDelegate.child;
-  }
-}
-
-class _TournamentSectionList extends ConsumerWidget {
-  final List<Tournament> tournaments;
-  final String filterStatus;
-  final String searchQuery;
-  final String contentFilter;
-  final String bracketFilter;
-  final String rankedFilter;
-  final bool enabled;
-  final String emptyMessage;
-  final String? sectionTitle;
-  final bool isLive;
-  final VoidCallback? onNoLiveMatches;
-
-  const _TournamentSectionList({
-    required this.tournaments,
-    required this.filterStatus,
-    this.searchQuery = '',
-    this.contentFilter = 'all',
-    this.bracketFilter = 'all',
-    this.rankedFilter = 'all',
-    this.enabled = true,
-    required this.emptyMessage,
-    this.sectionTitle,
-    this.isLive = false,
-    this.onNoLiveMatches,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    if (!enabled) return const SliverToBoxAdapter(child: SizedBox.shrink());
-    if (tournaments.isEmpty) {
-      if (filterStatus == 'live' && searchQuery.isEmpty) {
-        onNoLiveMatches?.call();
-      }
-      if (searchQuery.isNotEmpty) {
-        return SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Center(
-              child: Text(
-                emptyMessage,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF94A3B8),
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        );
-      }
-      return const SliverToBoxAdapter(child: SizedBox.shrink());
-    }
-
-    final activeTournaments = <Tournament>[];
-    var hasLoadingMatches = false;
-    var hasMatchError = false;
-
-    for (final t in tournaments) {
-      final matchesAsync = ref.watch(matchesProvider(t.id));
-      if (matchesAsync.isLoading) {
-        hasLoadingMatches = true;
-        continue;
-      }
-      if (matchesAsync.hasError) {
-        hasMatchError = true;
-        continue;
-      }
-      final matches = matchesAsync.value ?? const <MatchModel>[];
-      final valid = matches.where((m) {
-        final t1 = m.team1Name.trim().toUpperCase();
-        final t2 = m.team2Name.trim().toUpperCase();
-        final isT1Bye = t1 == 'BYE';
-        final isT2Bye = t2 == 'BYE';
-        final isT1Tbd =
-            !isT1Bye && (t1.isEmpty || t1 == 'TBD') && m.team1Id.trim().isEmpty;
-        final isT2Tbd =
-            !isT2Bye && (t2.isEmpty || t2 == 'TBD') && m.team2Id.trim().isEmpty;
-        if (isT1Bye || isT2Bye || (isT1Tbd && isT2Tbd)) return false;
-
-        final q = searchQuery.trim().toLowerCase();
-        final matchText = '${m.team1Name} ${m.team2Name} ${m.tournamentName}'
-            .toLowerCase();
-        if (q.isNotEmpty && !matchText.contains(q)) return false;
-
-        if (filterStatus == 'live') return m.isLive;
-        if (filterStatus == 'completed') {
-          final status = m.status.toUpperCase();
-          return m.isCompleted ||
-              status == 'COMPLETED' ||
-              status == 'FINISHED' ||
-              status == 'DONE' ||
-              status == 'ENDED' ||
-              m.completedAt != null;
-        }
-        if (filterStatus == 'scheduled') {
-          return m.isScheduled ||
-              (m.scheduledTime != null && !m.isLive && !m.isCompleted);
-        }
-        return true;
-      });
-
-      if (valid.isNotEmpty) {
-        activeTournaments.add(t);
-      }
-    }
-
-    if (activeTournaments.isEmpty) {
-      if (filterStatus == 'live' && !hasLoadingMatches && searchQuery.isEmpty) {
-        onNoLiveMatches?.call();
-      }
-      if (searchQuery.isNotEmpty) {
-        return SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Center(
-              child: Text(
-                hasLoadingMatches
-                    ? l10n.homeMatchesLoading
-                    : hasMatchError
-                    ? l10n.homeMatchesLoadError
-                    : emptyMessage,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF94A3B8),
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        );
-      }
-      return const SliverToBoxAdapter(child: SizedBox.shrink());
-    }
-
-    return SliverMainAxisGroup(
-      slivers: [
-        if (sectionTitle != null && sectionTitle!.isNotEmpty)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    sectionTitle!,
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold,
-                      color: context.colors.textPrimary,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                  if (isLive) ...[
-                    const SizedBox(width: 6),
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEF4444),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        SliverPadding(
-          padding: EdgeInsets.zero,
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => LiveTournamentWithMatchesCard(
-                tournament: activeTournaments[index],
-                filterStatus: filterStatus,
-              ),
-              childCount: activeTournaments.length,
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }
