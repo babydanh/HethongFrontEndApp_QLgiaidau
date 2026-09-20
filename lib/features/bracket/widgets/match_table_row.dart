@@ -161,41 +161,16 @@ class MatchTableRow extends StatelessWidget {
       setsWon2 = match.score2;
     }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isLive
-              ? const Color(0xFFFCA5A5)
-              : colors.border.withValues(alpha: 0.6),
-          width: isLive ? 1.5 : 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isLive
-                ? const Color(0xFFEF4444).withValues(alpha: 0.08)
-                : colors.border.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: () {
-            // Match cards always open the live page. Scoring/referee access is
-            // an explicit action, not the default card navigation.
-            context.push(
-              NavigationHelper.getLiveMatchRoute(tournamentId, match.id),
-            );
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          context.push(
+            NavigationHelper.getLiveMatchRoute(tournamentId, match.id),
+          );
+        },
+        child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -639,12 +614,13 @@ class MatchTableRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textMuted,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
                       ),
                     ),
                   ],
                 ),
+                const Divider(height: 1, thickness: 1),
               ],
             ),
           ),
