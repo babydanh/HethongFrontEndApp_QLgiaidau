@@ -346,6 +346,12 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
     final imageUrl = item.isPersonal
         ? (item.host?.avatarUrl ?? item.bannerUrl)
         : (item.club?.avatarUrl ?? item.host?.avatarUrl ?? item.bannerUrl);
+    final usesBannerFallback = imageUrl != null &&
+        imageUrl.isNotEmpty &&
+        ((item.isPersonal && item.host?.avatarUrl == null) ||
+            (!item.isPersonal &&
+                item.club?.avatarUrl == null &&
+                item.host?.avatarUrl == null));
 
     final displayName = item.isPersonal
         ? (item.host?.name ?? 'Host')
@@ -375,7 +381,7 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
       child: (imageUrl != null && imageUrl.isNotEmpty)
           ? Image.network(
               imageUrl,
-              fit: BoxFit.cover,
+              fit: usesBannerFallback ? BoxFit.contain : BoxFit.cover,
               errorBuilder: (_, _, _) => _buildFallbackAvatar(item, displayName, sportColor),
             )
           : _buildFallbackAvatar(item, displayName, sportColor),

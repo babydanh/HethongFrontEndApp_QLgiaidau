@@ -251,7 +251,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Icons.arrow_back_ios_rounded,
             color: context.colors.textPrimary,
           ),
-          onPressed: () => context.go('/home'),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
         ),
         title: Text(
           l10n.profileTitle,
@@ -300,11 +306,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
       ),
       bottomNavigationBar: FloatingBottomNav(
-        currentIndex: 2,
+        currentIndex: -1,
         onTabSelected: (index) {
-          if (index != 2) context.go('/home?tab=$index');
+          context.go('/home?tab=$index');
         },
-        onProfileTap: () {},
+        onChatTap: () => context.go('/home?tab=2'),
       ),
     );
   }
@@ -319,7 +325,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
-          onPressed: () => context.go('/home'),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
         ),
         title: Text(
           l10n.profileTitle,
@@ -400,11 +412,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
       ),
       bottomNavigationBar: FloatingBottomNav(
-        currentIndex: 2,
+        currentIndex: -1,
         onTabSelected: (index) {
-          if (index != 2) context.go('/home?tab=$index');
+          context.go('/home?tab=$index');
         },
-        onProfileTap: () {},
+        onChatTap: () => context.go('/home?tab=2'),
       ),
     );
   }
@@ -1618,9 +1630,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Widget _buildTournamentLogo(String? logoUrl, String? bannerUrl) {
     final colors = context.colors;
-    final url = (logoUrl != null && logoUrl.isNotEmpty)
-        ? logoUrl
-        : ((bannerUrl != null && bannerUrl.isNotEmpty) ? bannerUrl : null);
+    final normalizedLogo = logoUrl?.split(',').first.trim() ?? '';
+    final normalizedBanner = bannerUrl?.split(',').first.trim() ?? '';
+    final hasLogo = normalizedLogo.isNotEmpty;
+    final url = hasLogo
+        ? normalizedLogo
+        : (normalizedBanner.isNotEmpty ? normalizedBanner : null);
 
     return Container(
       width: 44,
@@ -1634,8 +1649,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       child: url != null
           ? Image.network(
               url,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => _defaultSportoLogo(),
+              fit: hasLogo ? BoxFit.cover : BoxFit.contain,
+              errorBuilder: (_, _, _) {
+                if (hasLogo && normalizedBanner.isNotEmpty) {
+                  return Image.network(
+                    normalizedBanner,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) => _defaultSportoLogo(),
+                  );
+                }
+                return _defaultSportoLogo();
+              },
             )
           : _defaultSportoLogo(),
     );

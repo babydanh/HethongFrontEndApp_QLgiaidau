@@ -1489,6 +1489,23 @@ class _TournamentTile extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final isClubLite = tournament.isClubLite;
+    String? normalizeIdentityAsset(String? value) {
+      final normalized = value?.split(',').first.trim();
+      if (normalized == null ||
+          normalized.isEmpty ||
+          normalized.toLowerCase().startsWith('data:') ||
+          normalized.toLowerCase().contains('sporto_v1') ||
+          normalized.toLowerCase().contains('defaultfallback') ||
+          normalized.toLowerCase().contains('default_fallback')) {
+        return null;
+      }
+      return normalized;
+    }
+
+    final logoUrl = normalizeIdentityAsset(tournament.logoUrl);
+    final bannerUrl = normalizeIdentityAsset(tournament.bannerUrl);
+    final identityUrl = logoUrl ?? bannerUrl;
+    final identityUsesLogo = logoUrl != null;
 
     String badgeText = l10n.dashboard_registered;
     Color badgeBg = const Color(0xFFECFDF5);
@@ -1538,18 +1555,33 @@ class _TournamentTile extends StatelessWidget {
                 border: Border.all(color: colors.border),
               ),
               clipBehavior: Clip.antiAlias,
-              child:
-                  (tournament.logoUrl != null && tournament.logoUrl!.isNotEmpty)
+              child: identityUrl != null
                   ? Image.network(
-                      tournament.logoUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Image.asset(
-                          'assets/images/sporto_v1_with_text.png',
-                          fit: BoxFit.contain,
-                        ),
-                      ),
+                      identityUrl,
+                      fit: identityUsesLogo ? BoxFit.cover : BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        if (identityUsesLogo && bannerUrl != null) {
+                          return Image.network(
+                            bannerUrl,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Image.asset(
+                                    'assets/images/sporto_v1_with_text.png',
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                          );
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Image.asset(
+                            'assets/images/sporto_v1_with_text.png',
+                            fit: BoxFit.contain,
+                          ),
+                        );
+                      },
                     )
                   : Padding(
                       padding: const EdgeInsets.all(8),

@@ -4,11 +4,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
 import 'package:app_quanly_giaidau/core/widgets/pickleball_rally_animation.dart';
-import 'package:app_quanly_giaidau/core/widgets/pickleball_court_3d_animated.dart';
 
 enum SportoLoadingVariant {
-  /// Mẫu 1: Sân Pickleball 3D sống động (Bóng nảy to ra nhỏ lại trên mặt sân isometric)
-  court3d,
+  /// Mẫu 1: 5 quả bóng Pickleball vàng Neon nảy sóng nhịp điệu (Wave Bounce 5 Balls)
+  pickleballWave5,
 
   /// Mẫu 2: Vòng xoay quỹ đạo Sport Blue + Logo SportO nhịp thở (Đồng bộ 100% Web)
   orbit,
@@ -16,8 +15,11 @@ enum SportoLoadingVariant {
   /// Mẫu 3: Trận đấu Pickleball 2D sống động (2 vợt xanh & cam đánh qua lưới, bóng nảy)
   rally,
 
-  /// Mẫu 4: Quả bóng Pickleball vàng nảy sóng năng lượng (Flat Motion)
+  /// Mẫu 4: Quả bóng Pickleball vàng nảy sóng năng lượng (Flat Motion đơn)
   bounce,
+
+  /// Backward compatible
+  court3d,
 }
 
 class SportoLoadingWidget extends StatefulWidget {
@@ -31,7 +33,7 @@ class SportoLoadingWidget extends StatefulWidget {
     this.size = 110.0,
     this.message,
     this.textColor,
-    this.variant = SportoLoadingVariant.court3d,
+    this.variant = SportoLoadingVariant.pickleballWave5,
   });
 
   @override
@@ -60,11 +62,7 @@ class _SportoLoadingWidgetState extends State<SportoLoadingWidget>
   @override
   Widget build(BuildContext context) {
     if (widget.variant == SportoLoadingVariant.court3d) {
-      return Pickleball3DCourtAnimation(
-        size: widget.size,
-        message: widget.message,
-        textColor: widget.textColor ?? context.colors.textSecondary,
-      );
+      return _buildOrbitLoader();
     }
 
     if (widget.variant == SportoLoadingVariant.rally) {
@@ -75,6 +73,44 @@ class _SportoLoadingWidgetState extends State<SportoLoadingWidget>
         height: rallyH.clamp(90.0, 160.0),
         message: widget.message,
         textColor: widget.textColor ?? context.colors.textSecondary,
+      );
+    }
+
+    if (widget.variant == SportoLoadingVariant.pickleballWave5) {
+      final waveW = (widget.size * 1.8).clamp(160.0, 240.0);
+      final waveH = (widget.size * 0.55).clamp(50.0, 80.0);
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: waveW,
+            height: waveH,
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return CustomPaint(
+                  size: Size(waveW, waveH),
+                  painter: _Pickleball5WavePainter(progress: _controller.value),
+                );
+              },
+            ),
+          ),
+          if (widget.message != null && widget.message!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              widget.message!,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: widget.textColor ?? context.colors.textSecondary,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ],
       );
     }
 
@@ -300,6 +336,104 @@ class _NeonBouncePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _NeonBouncePainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+/// Mẫu 1: Vẽ 5 quả bóng Pickleball vàng Neon nảy sóng nhịp điệu liên hoàn (Wave Motion)
+class _Pickleball5WavePainter extends CustomPainter {
+  final double progress; // 0.0 -> 1.0
+
+  _Pickleball5WavePainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const int count = 5;
+    final w = size.width;
+    final h = size.height;
+    final floorY = h * 0.82;
+    final maxJump = h * 0.48;
+
+    final ballR = (w / (count * 2.8)).clamp(8.0, 14.0);
+    final spacing = w / (count + 1);
+
+    for (int i = 0; i < count; i++) {
+      final centerX = spacing * (i + 1);
+
+      // Lệch pha theo sóng sine (Wave Delay) giữa 5 bóng
+      final phase = (progress * 2 * math.pi) - (i * 0.65);
+      // Chu kỳ nảy mượt mà từ 0.0 -> 1.0 -> 0.0
+      final bounceFactor = (math.sin(phase) + 1.0) / 2.0; // 0..1
+      final curvedBounce = math.pow(bounceFactor, 1.4).toDouble();
+
+      final ballY = floorY - (curvedBounce * maxJump);
+
+      // Squash & Stretch: bẹt khi chạm đất, dãn dọc khi lên đỉnh
+      final double squashX;
+      final double squashY;
+      if (curvedBounce < 0.12) {
+        final touch = 1.0 - (curvedBounce / 0.12);
+        squashX = 1.0 + touch * 0.22;
+        squashY = 1.0 - touch * 0.20;
+      } else {
+        squashX = 0.94;
+        squashY = 1.05;
+      }
+
+      // 1. Bóng đổ bóng đen mờ dưới sàn
+      final shadowScale = (1.1 - curvedBounce * 0.5).clamp(0.55, 1.1);
+      final shadowAlpha = ((1.0 - curvedBounce * 0.65) * 0.30).clamp(0.08, 0.35);
+      final shadowRect = Rect.fromCenter(
+        center: Offset(centerX, floorY),
+        width: ballR * 2.0 * shadowScale * squashX,
+        height: ballR * 0.55 * shadowScale,
+      );
+      final shadowPaint = Paint()
+        ..color = const Color(0xFF0F172A).withValues(alpha: shadowAlpha)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
+      canvas.drawOval(shadowRect, shadowPaint);
+
+      // 2. Vẽ quả bóng Pickleball vàng Neon
+      canvas.save();
+      canvas.translate(centerX, ballY - ballR);
+      canvas.scale(squashX, squashY);
+
+      final ballPaint = Paint()
+        ..shader = const RadialGradient(
+          center: Alignment(-0.35, -0.35),
+          radius: 0.85,
+          colors: [
+            Color(0xFFFFFDE7),
+            Color(0xFFFFEA00),
+            Color(0xFFFFB300),
+            Color(0xFFE65100),
+          ],
+        ).createShader(Rect.fromCircle(center: Offset.zero, radius: ballR));
+      canvas.drawCircle(Offset.zero, ballR, ballPaint);
+
+      // Điểm sáng phản quang (Specular Glint)
+      final glintPaint = Paint()..color = Colors.white.withValues(alpha: 0.85);
+      canvas.drawCircle(
+        Offset(-ballR * 0.32, -ballR * 0.32),
+        ballR * 0.20,
+        glintPaint,
+      );
+
+      // Lỗ tròn đặc trưng của bóng Pickleball
+      final dimplePaint = Paint()
+        ..color = const Color(0xFFB45309).withValues(alpha: 0.45);
+      final dimpleR = ballR * 0.12;
+      canvas.drawCircle(Offset(ballR * 0.22, -ballR * 0.25), dimpleR, dimplePaint);
+      canvas.drawCircle(Offset(ballR * 0.36, ballR * 0.10), dimpleR, dimplePaint);
+      canvas.drawCircle(Offset(-ballR * 0.08, ballR * 0.30), dimpleR, dimplePaint);
+      canvas.drawCircle(Offset(-ballR * 0.32, ballR * 0.08), dimpleR, dimplePaint);
+
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _Pickleball5WavePainter oldDelegate) {
     return oldDelegate.progress != progress;
   }
 }

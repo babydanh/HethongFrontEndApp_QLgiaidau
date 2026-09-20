@@ -12,6 +12,10 @@ class MorphingNavLoaderOverlay extends StatefulWidget {
   final VoidCallback? onCompleted;
   final bool autoStart;
 
+  /// Đảm bảo màn hình hiệu ứng loading chuyển cảnh chỉ chạy DUY NHẤT 1 LẦN khi mở app (cold boot).
+  /// Khi người dùng chuyển tab, vào hồ sơ rồi quay ra hoặc chuyển sang nav khác, tuyệt đối không hiện lại màn loading.
+  static bool hasCompletedInitialLoad = false;
+
   const MorphingNavLoaderOverlay({
     super.key,
     this.onCompleted,
@@ -26,26 +30,34 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   bool _isFinished = false;
+  bool _controllerInitialized = false;
 
   // Cấu hình 5 chấm tròn thể thao: 4 tab bên trái + 1 nút tiện ích bên phải
   static const List<({String label, Color color, IconData icon})> _tabs = [
     (label: 'Trang chủ', color: Color(0xFF1D8EF8), icon: Icons.home_rounded),
     (label: 'Giải đấu', color: Color(0xFFF59E0B), icon: Icons.emoji_events_rounded),
     (label: 'Khám phá', color: Color(0xFF06B6D4), icon: Icons.explore_rounded),
-    (label: 'Cá nhân', color: Color(0xFF10B981), icon: Icons.person_rounded),
+    (label: 'Hộp thư', color: Color(0xFF10B981), icon: Icons.chat_bubble_rounded),
     (label: 'Tiện ích', color: Color(0xFF8B5CF6), icon: Icons.unfold_more_rounded),
   ];
 
   @override
   void initState() {
     super.initState();
+    if (MorphingNavLoaderOverlay.hasCompletedInitialLoad) {
+      _isFinished = true;
+      return;
+    }
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 3200),
     );
+    _controllerInitialized = true;
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
+        MorphingNavLoaderOverlay.hasCompletedInitialLoad = true;
         if (mounted) {
           setState(() => _isFinished = true);
           widget.onCompleted?.call();
@@ -59,24 +71,44 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
   }
 
   void _startAnimation() {
+    if (!_controllerInitialized) return;
     setState(() => _isFinished = false);
     _controller.forward(from: 0.0);
   }
 
   /// Kích hoạt chạy lại animation bất cứ lúc nào
   void replay() {
+    if (!_controllerInitialized) {
+      _controller = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 3200),
+      );
+      _controllerInitialized = true;
+      _controller.addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          MorphingNavLoaderOverlay.hasCompletedInitialLoad = true;
+          if (mounted) {
+            setState(() => _isFinished = true);
+            widget.onCompleted?.call();
+          }
+        }
+      });
+    }
+    MorphingNavLoaderOverlay.hasCompletedInitialLoad = false;
     _startAnimation();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    if (_controllerInitialized) {
+      _controller.dispose();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isFinished) {
+    if (MorphingNavLoaderOverlay.hasCompletedInitialLoad || _isFinished) {
       return const SizedBox.shrink();
     }
 

@@ -235,6 +235,7 @@ class _TournamentCardWithBannerState
 
     final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl);
     final hasLogo = resolvedLogoUrl.isNotEmpty;
+    final hasIdentity = hasLogo || _resolveImageUrl(widget.tournament.bannerUrl).isNotEmpty;
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -329,7 +330,7 @@ class _TournamentCardWithBannerState
 
                   // Bottom Details Body (chỉ cộng padding-top khi có floating logo)
                   Padding(
-                    padding: EdgeInsets.fromLTRB(12, hasLogo ? 18 : 12, 12, 12),
+                    padding: EdgeInsets.fromLTRB(12, hasIdentity ? 18 : 12, 12, 12),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -548,8 +549,8 @@ class _TournamentCardWithBannerState
                 ],
               ),
 
-              // Floating Logo Avatar (Chỉ hiển thị khi giải có logo tải lên, không có logo thì ẩn)
-              if (hasLogo)
+              // Required tournament identity slot: logo -> contained banner -> SportO.
+              if (hasIdentity)
                 Positioned(
                   top: 163,
                   left: 14,
@@ -566,6 +567,7 @@ class _TournamentCardWithBannerState
                     ),
                     child: TournamentAvatar(
                       imageUrl: widget.tournament.logoUrl,
+                      bannerUrl: widget.tournament.bannerUrl,
                       tournamentName: widget.tournament.name,
                       sport: widget.tournament.sport,
                       size: 42,

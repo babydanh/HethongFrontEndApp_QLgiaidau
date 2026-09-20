@@ -15,7 +15,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
-  const ChatScreen({super.key});
+  final bool isEmbedded;
+  const ChatScreen({super.key, this.isEmbedded = false});
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -262,62 +263,94 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       backgroundColor: isDark
           ? const Color(0xFF18191A)
           : const Color(0xFFF0F2F5),
-      appBar: AppBar(
-        backgroundColor: colors.bgCard,
-        elevation: 0.5,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.pop(),
-        ),
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 17,
-              backgroundColor: AppTheme.primaryLight,
-              backgroundImage: profile?.avatarUrl != null
-                  ? NetworkImage(profile!.avatarUrl!)
-                  : null,
-              child: profile?.avatarUrl == null
-                  ? const Icon(
-                      Icons.person,
-                      color: AppTheme.primaryDark,
-                      size: 18,
-                    )
-                  : null,
+      appBar: widget.isEmbedded
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(44),
+              child: Container(
+                color: colors.bgCard,
+                child: TabBar(
+                  controller: _tabController,
+                  indicatorColor: AppTheme.primary,
+                  indicatorWeight: 2.5,
+                  labelColor: AppTheme.primary,
+                  unselectedLabelColor: colors.textMuted,
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13.0,
+                  ),
+                  tabs: [
+                    Tab(
+                      icon: const Icon(Icons.chat_bubble_outline_rounded, size: 17),
+                      text: l10n.chatScreenConversations,
+                    ),
+                    Tab(
+                      icon: const Icon(Icons.auto_awesome_rounded, size: 17),
+                      text: l10n.chatScreenAiAssistant,
+                    ),
+                    Tab(
+                      icon: const Icon(Icons.headset_mic_outlined, size: 17),
+                      text: l10n.chatScreenSupport,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : AppBar(
+              backgroundColor: colors.bgCard,
+              elevation: 0.5,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                onPressed: () => context.pop(),
+              ),
+              title: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 17,
+                    backgroundColor: AppTheme.primaryLight,
+                    backgroundImage: profile?.avatarUrl != null
+                        ? NetworkImage(profile!.avatarUrl!)
+                        : null,
+                    child: profile?.avatarUrl == null
+                        ? const Icon(
+                            Icons.person,
+                            color: AppTheme.primaryDark,
+                            size: 18,
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    l10n.chatScreenTitle,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
+                  ),
+                ],
+              ),
+              bottom: TabBar(
+                controller: _tabController,
+                indicatorColor: AppTheme.primary,
+                indicatorWeight: 3,
+                labelColor: AppTheme.primary,
+                unselectedLabelColor: colors.textMuted,
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.5,
+                ),
+                tabs: [
+                  Tab(
+                    icon: const Icon(Icons.chat_bubble_outline_rounded, size: 20),
+                    text: l10n.chatScreenConversations,
+                  ),
+                  Tab(
+                    icon: const Icon(Icons.auto_awesome_rounded, size: 20),
+                    text: l10n.chatScreenAiAssistant,
+                  ),
+                  Tab(
+                    icon: const Icon(Icons.headset_mic_outlined, size: 20),
+                    text: l10n.chatScreenSupport,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(width: 10),
-            Text(
-              l10n.chatScreenTitle,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
-            ),
-          ],
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppTheme.primary,
-          indicatorWeight: 3,
-          labelColor: AppTheme.primary,
-          unselectedLabelColor: colors.textMuted,
-          labelStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 13.5,
-          ),
-          tabs: [
-            Tab(
-              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 20),
-              text: l10n.chatScreenConversations,
-            ),
-            Tab(
-              icon: const Icon(Icons.auto_awesome_rounded, size: 20),
-              text: l10n.chatScreenAiAssistant,
-            ),
-            Tab(
-              icon: const Icon(Icons.headset_mic_outlined, size: 20),
-              text: l10n.chatScreenSupport,
-            ),
-          ],
-        ),
-      ),
       body: TabBarView(
         controller: _tabController,
         children: [

@@ -23,6 +23,7 @@ import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_ba
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:app_quanly_giaidau/core/widgets/sporto_loading_widget.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/province_selection_screen.dart';
@@ -1184,9 +1185,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               final logo = _resolveClubLogoUrl(club.logoUrl);
                               final banner = _resolveClubBannerUrl(club.bannerUrl);
                               final visualUrl = logo.isNotEmpty ? logo : banner;
-                              final visualFit = logo.isNotEmpty
-                                  ? BoxFit.cover
-                                  : BoxFit.contain;
+                              // Carousel vẫn giữ item khi thiếu logo; banner được phóng đầy khung
+                              // để logo trong banner không bị thu nhỏ thành một chấm nhỏ.
+                              final visualFit = BoxFit.cover;
 
                               return GestureDetector(
                                 onTap: () {
@@ -1763,49 +1764,62 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return SingleChildScrollView(
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Shimmer.fromColors(
-        baseColor: baseColor,
-        highlightColor: highlightColor,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 160,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
+      child: Column(
+        children: [
+          const SizedBox(height: 8),
+          const Center(
+            child: SportoLoadingWidget(
+              size: 100,
+              variant: SportoLoadingVariant.pickleballWave5,
+              message: 'Đang tải dữ liệu giải đấu...',
             ),
-            const SizedBox(height: 20),
-            Container(
-              height: 20,
-              width: 140,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(6),
-              ),
+          ),
+          const SizedBox(height: 16),
+          Shimmer.fromColors(
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 140,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  height: 18,
+                  width: 140,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  height: 95,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  height: 95,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Container(
-              height: 110,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              height: 110,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -3205,9 +3219,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   final logoUrl = _resolveClubLogoUrl(club.logoUrl);
                   final bannerUrl = _resolveClubBannerUrl(club.bannerUrl);
                   final visualUrl = logoUrl.isNotEmpty ? logoUrl : bannerUrl;
-                  final visualFit = logoUrl.isNotEmpty
-                      ? BoxFit.cover
-                      : BoxFit.contain;
+                  // Banner fallback phải lấp đầy avatar carousel để logo dễ nhận diện.
+                  final visualFit = BoxFit.cover;
 
                   return GestureDetector(
                     onTap: () {
@@ -3688,7 +3701,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           final logoUrl = _resolveClubLogoUrl(club.logoUrl);
           final bannerUrl = _resolveClubBannerUrl(club.bannerUrl);
           final visualUrl = logoUrl.isNotEmpty ? logoUrl : bannerUrl;
-          final visualFit = logoUrl.isNotEmpty ? BoxFit.cover : BoxFit.contain;
+          // Banner fallback phải lấp đầy avatar carousel để logo dễ nhận diện.
+          final visualFit = BoxFit.cover;
 
           return GestureDetector(
             onTap: () => context.push("/club/${club.id}"),

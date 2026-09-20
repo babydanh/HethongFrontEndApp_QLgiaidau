@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 /// Conforms to taste-skill design standards (anti-slop, clean visual hierarchy, no squished images).
 class TournamentAvatar extends StatelessWidget {
   final String? imageUrl;
+  final String? bannerUrl;
   final String tournamentName;
   final String? sport;
   final double size;
@@ -19,6 +20,7 @@ class TournamentAvatar extends StatelessWidget {
   const TournamentAvatar({
     super.key,
     this.imageUrl,
+    this.bannerUrl,
     required this.tournamentName,
     this.sport,
     this.size = 38,
@@ -27,8 +29,15 @@ class TournamentAvatar extends StatelessWidget {
   });
 
   String _resolveImageUrl(String? url) {
-    if (url == null || url.trim().isEmpty) return '';
-    if (url.startsWith('http')) return url;
+    final normalized = url?.split(',').first.trim() ?? '';
+    if (normalized.isEmpty ||
+        normalized.toLowerCase().startsWith('data:') ||
+        normalized.toLowerCase().contains('sporto_v1') ||
+        normalized.toLowerCase().contains('defaultfallback') ||
+        normalized.toLowerCase().contains('default_fallback')) {
+      return '';
+    }
+    if (normalized.startsWith('http')) return normalized;
 
     String apiBase = 'http://localhost:3000/api/v1';
     try {
@@ -39,7 +48,7 @@ class TournamentAvatar extends StatelessWidget {
     } catch (_) {}
 
     final host = apiBase.replaceAll('/api/v1', '');
-    return '$host$url';
+    return '$host$normalized';
   }
 
   String _getInitials(String name) {
@@ -78,8 +87,12 @@ class TournamentAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final resolvedUrl = _resolveImageUrl(imageUrl);
-    final hasImage = resolvedUrl.isNotEmpty;
+    final resolvedLogoUrl = _resolveImageUrl(imageUrl);
+    final resolvedBannerUrl = _resolveImageUrl(bannerUrl);
+    final resolvedUrl = resolvedLogoUrl.isNotEmpty
+        ? resolvedLogoUrl
+        : resolvedBannerUrl;
+    final isBannerFallback = resolvedLogoUrl.isEmpty && resolvedBannerUrl.isNotEmpty;
     final initials = _getInitials(tournamentName);
     final emoji = _getSportEmoji(sport);
 
@@ -95,12 +108,21 @@ class TournamentAvatar extends StatelessWidget {
         ),
       ),
       child: ClipOval(
-        child: hasImage
+        child: resolvedUrl.isNotEmpty
             ? Image.network(
                 resolvedUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    _buildFallback(context, initials, emoji),
+                fit: isBannerFallback ? BoxFit.contain : BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  if (!isBannerFallback && resolvedBannerUrl.isNotEmpty) {
+                    return Image.network(
+                      resolvedBannerUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) =>
+                          _buildFallback(context, initials, emoji),
+                    );
+                  }
+                  return _buildFallback(context, initials, emoji);
+                },
               )
             : _buildFallback(context, initials, emoji),
       ),

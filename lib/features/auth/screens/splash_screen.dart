@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/widgets/pickleball_court_3d_animated.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {

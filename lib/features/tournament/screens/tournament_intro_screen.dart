@@ -228,13 +228,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       bottomNavigationBar: FloatingBottomNav(
         currentIndex: 1,
         onTabSelected: (index) {
-          if (index == 2) {
-            context.go('/profile');
-          } else {
-            context.go('/home');
-          }
+          context.go('/home?tab=$index');
         },
-        onProfileTap: () => context.go('/profile'),
+        onChatTap: () => context.go('/home?tab=2'),
       ),
     );
   }

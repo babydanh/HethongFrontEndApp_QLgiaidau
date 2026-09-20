@@ -141,7 +141,10 @@ final publicMatchesFeedProvider = StreamProvider<List<MatchModel>>((
 ) async* {
   final repo = ref.watch(matchRepositoryProvider);
   while (true) {
-    yield await repo.getMatches(publicOnly: true);
+    yield await repo.getMatches(
+      status: 'ONGOING,SCHEDULED,COMPLETED,FINISHED,DONE,ENDED',
+      publicOnly: true,
+    );
     await Future<void>.delayed(const Duration(seconds: 15));
   }
 });

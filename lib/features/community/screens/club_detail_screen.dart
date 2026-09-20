@@ -500,7 +500,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         onTabSelected: (index) {
           if (index != 3) context.go('/home?tab=$index');
         },
-        onProfileTap: () => context.go('/profile'),
+        onChatTap: () => context.go('/home?tab=2'),
       ),
     );
   }
@@ -633,35 +633,36 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
           ),
         ),
-        // Avatar CLB — luôn hiển thị (fallback SportO logo khi chưa có logo CLB).
-        AnimatedBuilder(
-          animation: _scrollController,
-          builder: (context, _) {
-            final offset = _scrollController.hasClients
-                ? _scrollController.offset
-                : 0.0;
-            final top = topPadding + _bannerHeight - _avatarOverlap - offset;
-            return Positioned(
-              top: top,
-              left: 16,
-              child: IgnorePointer(
-                ignoring: _isCollapsed,
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 150),
-                  opacity: _isCollapsed ? 0 : 1,
-                  child: _buildClubAvatar(
-                    logoUrl: logoUrl,
-                    colors: colors,
-                    sColor: sColor,
-                    emoji: emoji,
-                    isClubAdmin: isClubAdmin,
-                    club: club,
+        // Trang chi tiết chỉ hiển thị ô avatar khi CLB có logo riêng.
+        if (logoUrl.isNotEmpty)
+          AnimatedBuilder(
+            animation: _scrollController,
+            builder: (context, _) {
+              final offset = _scrollController.hasClients
+                  ? _scrollController.offset
+                  : 0.0;
+              final top = topPadding + _bannerHeight - _avatarOverlap - offset;
+              return Positioned(
+                top: top,
+                left: 16,
+                child: IgnorePointer(
+                  ignoring: _isCollapsed,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 150),
+                    opacity: _isCollapsed ? 0 : 1,
+                    child: _buildClubAvatar(
+                      logoUrl: logoUrl,
+                      colors: colors,
+                      sColor: sColor,
+                      emoji: emoji,
+                      isClubAdmin: isClubAdmin,
+                      club: club,
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
-        ),
+              );
+            },
+          ),
       ],
     );
   }

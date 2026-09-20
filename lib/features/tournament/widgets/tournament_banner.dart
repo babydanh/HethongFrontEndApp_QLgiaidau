@@ -726,8 +726,8 @@ class _TournamentBannerState extends State<TournamentBanner> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 56,
-                    height: 56,
+                  width: 56,
+                  height: 56,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
@@ -735,27 +735,40 @@ class _TournamentBannerState extends State<TournamentBanner> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(11),
-                      child:
-                          widget.tournament.logoUrl != null &&
-                              widget.tournament.logoUrl!.isNotEmpty
-                          ? Image.network(
-                              widget.tournament.logoUrl!.startsWith("http")
-                                  ? widget.tournament.logoUrl!
-                                  : "https://sporto.asia${widget.tournament.logoUrl!}",
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const SportoBrandFallback(
-                                    withTagline: true,
-                                    semanticsLabel:
-                                        'SportO fallback tournament logo',
-                                    padding: EdgeInsets.all(8),
-                                  ),
-                            )
-                          : const SportoBrandFallback(
-                              withTagline: true,
-                              semanticsLabel: 'SportO fallback tournament logo',
-                              padding: EdgeInsets.all(8),
-                            ),
+                      child: Builder(
+                        builder: (context) {
+                          final logoUrl = widget.tournament.logoUrl?.trim() ?? '';
+                          final bannerUrl = widget.tournament.bannerUrl?.trim() ?? '';
+                          final identityUrl = logoUrl.isNotEmpty ? logoUrl : bannerUrl;
+                          final isLogo = logoUrl.isNotEmpty;
+                          final fallback = const SportoBrandFallback(
+                            withTagline: true,
+                            semanticsLabel: 'SportO fallback tournament logo',
+                            padding: EdgeInsets.all(8),
+                          );
+                          if (identityUrl.isEmpty) return fallback;
+                          final resolvedIdentityUrl = identityUrl.startsWith('http')
+                              ? identityUrl
+                              : 'https://sporto.asia$identityUrl';
+                          return Image.network(
+                            resolvedIdentityUrl,
+                            fit: isLogo ? BoxFit.cover : BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              if (isLogo && bannerUrl.isNotEmpty) {
+                                final resolvedBannerUrl = bannerUrl.startsWith('http')
+                                    ? bannerUrl
+                                    : 'https://sporto.asia$bannerUrl';
+                                return Image.network(
+                                  resolvedBannerUrl,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) => fallback,
+                                );
+                              }
+                              return fallback;
+                            },
+                          );
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),

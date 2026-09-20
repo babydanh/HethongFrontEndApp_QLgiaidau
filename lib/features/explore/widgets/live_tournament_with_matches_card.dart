@@ -192,6 +192,7 @@ class _LiveTournamentWithMatchesCardState
                 children: [
                   TournamentAvatar(
                     imageUrl: widget.tournament.logoUrl,
+                    bannerUrl: widget.tournament.bannerUrl,
                     tournamentName: widget.tournament.name,
                     sport: widget.tournament.sport,
                     size: 38,
@@ -1163,8 +1164,6 @@ class _LiveTournamentWithMatchesCardState
     );
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final teamRowBg = isDark ? colors.bgElevated : const Color(0xFFF8FAFC);
-
     return GestureDetector(
       onTap: () => context.push(
         NavigationHelper.getLiveMatchRoute(widget.tournament.id, match.id),
