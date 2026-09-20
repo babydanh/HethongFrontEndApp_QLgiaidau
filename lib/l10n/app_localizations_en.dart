@@ -7326,6 +7326,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSearchGenericHint => 'Search...';
 
   @override
+  String get homeSearchCategoryFeed => 'Feed';
+
+  @override
+  String get homeSearchCategoryTournaments => 'Tournaments';
+
+  @override
+  String get homeSearchCategoryMatches => 'Matches';
+
+  @override
+  String get homeSearchCategoryClubs => 'Clubs';
+
+  @override
+  String get homeSearchCategoryAthletes => 'Athletes';
+
+  @override
   String get homeCompletedMatches => 'Recently completed matches';
 
   @override

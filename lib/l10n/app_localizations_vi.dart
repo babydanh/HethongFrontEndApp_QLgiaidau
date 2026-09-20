@@ -7315,6 +7315,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeSearchGenericHint => 'Tìm kiếm...';
 
   @override
+  String get homeSearchCategoryFeed => 'Bảng tin';
+
+  @override
+  String get homeSearchCategoryTournaments => 'Giải đấu';
+
+  @override
+  String get homeSearchCategoryMatches => 'Trận đấu';
+
+  @override
+  String get homeSearchCategoryClubs => 'Câu lạc bộ';
+
+  @override
+  String get homeSearchCategoryAthletes => 'Vận động viên';
+
+  @override
   String get homeCompletedMatches => 'Trận đấu vừa kết thúc';
 
   @override

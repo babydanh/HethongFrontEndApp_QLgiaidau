@@ -36,6 +36,8 @@ import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
+enum _HomeSearchCategory { feed, tournaments, matches, clubs, athletes }
+
 // ═══════════════════════════════════════════════════════
 //  WAVE HEADER PAINTER
 //  Sóng lượn: trái 75% thấp hơn phải 85%, đỉnh giữa 100%
@@ -57,6 +59,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
   int _homeHeaderTab = 0; // 0: Khám phá, 1: Bản tin, 2: Của tôi
   bool _isSearchExpanded = false;
+  _HomeSearchCategory _searchCategory = _HomeSearchCategory.matches;
   int _exploreSubTabIndex = 0; // 0: CLB (default), 1: Social
   // ─── Per-tab search state ───
   final Map<int, String> _searchQueries = {0: '', 1: '', 3: '', 4: ''};
@@ -110,9 +113,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _clubRequestVersion = 0;
   static const int _clubsPageSize = 6;
 
-  // Tab 1, 3, 4 hiển thị search bar trên Header
+  // Tab 1, 3, 4 hiển thị search bar trên Header. Khi mở global search,
+  // thanh search được animation đè lên cụm tab trong header.
   bool get _shouldShowSearchBar =>
       _currentIndex == 1 || _currentIndex == 3 || _currentIndex == 4;
+
+  static const double _searchCategoryPanelHeight = 60.0;
 
   String get _activeSportFilter {
     return switch (_currentIndex) {
@@ -283,15 +289,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   double get _headerHeight => 54.0 + _safeAreaTop;
   double get _pinnedHeaderHeight {
     double h = _headerHeight;
-    if (_currentIndex == 0) {
-      // Tab 0 chỉ có top bar cố định
-    } else if (_currentIndex == 3) {
+    if (_currentIndex == 3) {
       h += 44.0; // Explore sub-tabs (CLB / Social)
-      if (_shouldShowSearchBar) {
-        h += 52.0; // Search bar
-      }
+    }
+    if (_isSearchExpanded) {
+      h += _searchCategoryPanelHeight;
     } else if (_shouldShowSearchBar) {
-      h += 52.0;
+      h += 52.0; // Existing per-tab search bar
     }
     return h;
   }
@@ -300,6 +304,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialTab;
+    _searchCategory = _searchCategoryForCurrentSurface();
     _carouselController = PageController(viewportFraction: 1.0);
     _fetchServerTournamentPage(isLoadMore: false);
     _fetchServerClubPage(isLoadMore: false);
@@ -355,12 +360,68 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         }
       }
       _currentIndex = index;
+      _searchCategory = _searchCategoryForTab(index);
     });
     if (index == 1 && _serverTournamentsList.isEmpty) {
       _fetchServerTournamentPage(isLoadMore: false);
     } else if (index == 3 && _serverClubsList.isEmpty) {
       _fetchServerClubPage(isLoadMore: false);
     }
+  }
+
+  _HomeSearchCategory _searchCategoryForTab(int index) {
+    return switch (index) {
+      1 => _HomeSearchCategory.tournaments,
+      3 => _HomeSearchCategory.clubs,
+      4 => _HomeSearchCategory.athletes,
+      _ =>
+        _homeHeaderTab == 1
+            ? _HomeSearchCategory.feed
+            : _HomeSearchCategory.matches,
+    };
+  }
+
+  _HomeSearchCategory _searchCategoryForCurrentSurface() {
+    if (_currentIndex == 0) {
+      return _homeHeaderTab == 1
+          ? _HomeSearchCategory.feed
+          : _HomeSearchCategory.matches;
+    }
+    return _searchCategoryForTab(_currentIndex);
+  }
+
+  void _activateSearchCategory(_HomeSearchCategory category) {
+    final targetIndex = switch (category) {
+      _HomeSearchCategory.feed || _HomeSearchCategory.matches => 0,
+      _HomeSearchCategory.tournaments => 1,
+      _HomeSearchCategory.clubs => 3,
+      _HomeSearchCategory.athletes => 4,
+    };
+
+    if (targetIndex != _currentIndex) {
+      _switchTab(targetIndex);
+    }
+
+    setState(() {
+      _searchCategory = category;
+      _isSearchExpanded = true;
+      if (category == _HomeSearchCategory.feed) {
+        _homeHeaderTab = 1;
+      } else if (category == _HomeSearchCategory.matches) {
+        _homeHeaderTab = 0;
+      } else if (category == _HomeSearchCategory.clubs) {
+        _exploreSubTabIndex = 0;
+      }
+    });
+
+    if (category == _HomeSearchCategory.feed) {
+      ref
+          .read(socialFilterProvider.notifier)
+          .setSearchQuery(_searchQueries[0] ?? '');
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _searchFocusNode.requestFocus();
+    });
   }
 
   void _submitSearch() {
@@ -427,97 +488,65 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                // Left: Môn thể thao (Icon lọc) + 3 Tab bên trái (Khám phá | Bản tin | Của tôi) khi ở Trang chủ
-                                if (isHomeTab)
-                                  Expanded(
-                                    child: SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      physics: const BouncingScrollPhysics(),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
+                                Expanded(
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      return Stack(
+                                        alignment: Alignment.centerRight,
+                                        clipBehavior: Clip.none,
                                         children: [
-                                          _buildSportFilterBadge(l10n, isDark),
-                                          const SizedBox(width: 8),
-                                          _buildHeaderTabItem(
-                                            title: 'Khám phá',
-                                            isSelected: _homeHeaderTab == 0,
-                                            onTap: () {
-                                              if (_homeHeaderTab != 0) {
-                                                setState(
-                                                  () => _homeHeaderTab = 0,
-                                                );
-                                              }
-                                            },
+                                          Positioned.fill(
+                                            child: IgnorePointer(
+                                              ignoring: _isSearchExpanded,
+                                              child: AnimatedOpacity(
+                                                duration: const Duration(
+                                                  milliseconds: 180,
+                                                ),
+                                                curve: Curves.easeOut,
+                                                opacity: _isSearchExpanded
+                                                    ? 0
+                                                    : 1,
+                                                child: _buildHeaderLeftContent(
+                                                  l10n,
+                                                  isDark,
+                                                  isHomeTab,
+                                                ),
+                                              ),
+                                            ),
                                           ),
-                                          const SizedBox(width: 12),
-                                          _buildHeaderTabItem(
-                                            title: 'Bảng tin',
-                                            isSelected: _homeHeaderTab == 1,
-                                            onTap: () {
-                                              if (_homeHeaderTab != 1) {
-                                                setState(
-                                                  () => _homeHeaderTab = 1,
-                                                );
-                                              }
-                                            },
+                                          AnimatedContainer(
+                                            duration: const Duration(
+                                              milliseconds: 260,
+                                            ),
+                                            curve: Curves.easeOutCubic,
+                                            width: _isSearchExpanded
+                                                ? constraints.maxWidth
+                                                : 0,
+                                            height: 40,
+                                            alignment: Alignment.centerRight,
+                                            child: ClipRect(
+                                              child: IgnorePointer(
+                                                ignoring: !_isSearchExpanded,
+                                                child: _isSearchExpanded
+                                                    ? _buildSearchBar(
+                                                        showFilter: false,
+                                                      )
+                                                    : const SizedBox.shrink(),
+                                              ),
+                                            ),
                                           ),
-                                          const SizedBox(width: 12),
-                                          _buildHeaderTabItem(
-                                            title: 'Của tôi',
-                                            isSelected: _homeHeaderTab == 2,
-                                            onTap: () {
-                                              if (_homeHeaderTab != 2) {
-                                                setState(
-                                                  () => _homeHeaderTab = 2,
-                                                );
-                                              }
-                                            },
-                                          ),
-                                          const SizedBox(width: 4),
                                         ],
-                                      ),
-                                    ),
-                                  )
-                                else
-                                  Expanded(
-                                    child: Row(
-                                      children: [
-                                        if (_currentIndex == 1 ||
-                                            _currentIndex == 4) ...[
-                                          _buildSportFilterBadge(l10n, isDark),
-                                          const SizedBox(width: 8),
-                                        ],
-                                        Text(
-                                          _currentIndex == 1
-                                              ? l10n.navTournaments
-                                              : _currentIndex == 3
-                                              ? 'Cộng đồng'
-                                              : _currentIndex == 4
-                                              ? l10n.homeRankingsTab
-                                              : _currentIndex == 2
-                                              ? 'Hộp thư'
-                                              : l10n.sporto,
-                                          style: TextStyle(
-                                            color: isDark
-                                                ? Colors.white
-                                                : const Color(0xFF0F172A),
-                                            fontWeight: FontWeight.w900,
-                                            fontSize: 19,
-                                            letterSpacing: -0.3,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                      );
+                                    },
                                   ),
+                                ),
 
                                 // Right: Nút Tìm kiếm 🔍, Nút Thông báo 🔔
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    if (_currentIndex != 0) ...[
-                                      _buildRoundSearchButton(isDark),
-                                      const SizedBox(width: 4),
-                                    ],
+                                    _buildRoundSearchButton(isDark),
+                                    const SizedBox(width: 4),
                                     _buildNotificationBellHeader(),
                                   ],
                                 ),
@@ -570,8 +599,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ),
 
-                        // Thanh Search Bar trượt ra khi được kích hoạt
-                        if (_shouldShowSearchBar)
+                        // Search theo từng tab vẫn giữ nguyên khi overlay chưa mở.
+                        if (_shouldShowSearchBar && !_isSearchExpanded)
                           Container(
                             color: Colors.white,
                             padding: const EdgeInsets.fromLTRB(
@@ -601,6 +630,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ],
                             ),
                           ),
+                        if (_isSearchExpanded)
+                          _buildSearchCategoryPanel(isDark),
                       ],
                     ),
                   ),
@@ -675,6 +706,91 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  Widget _buildHeaderLeftContent(
+    AppLocalizations l10n,
+    bool isDark,
+    bool isHomeTab,
+  ) {
+    if (isHomeTab) {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildSportFilterBadge(l10n, isDark),
+            const SizedBox(width: 8),
+            _buildHeaderTabItem(
+              title: 'Khám phá',
+              isSelected: _homeHeaderTab == 0,
+              onTap: () {
+                if (_homeHeaderTab != 0) {
+                  setState(() {
+                    _homeHeaderTab = 0;
+                    _searchCategory = _HomeSearchCategory.matches;
+                  });
+                }
+              },
+            ),
+            const SizedBox(width: 12),
+            _buildHeaderTabItem(
+              title: 'Bảng tin',
+              isSelected: _homeHeaderTab == 1,
+              onTap: () {
+                if (_homeHeaderTab != 1) {
+                  setState(() {
+                    _homeHeaderTab = 1;
+                    _searchCategory = _HomeSearchCategory.feed;
+                  });
+                }
+              },
+            ),
+            const SizedBox(width: 12),
+            _buildHeaderTabItem(
+              title: 'Của tôi',
+              isSelected: _homeHeaderTab == 2,
+              onTap: () {
+                if (_homeHeaderTab != 2) {
+                  setState(() {
+                    _homeHeaderTab = 2;
+                    _searchCategory = _HomeSearchCategory.matches;
+                  });
+                }
+              },
+            ),
+            const SizedBox(width: 4),
+          ],
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        if (_currentIndex == 1 || _currentIndex == 4) ...[
+          _buildSportFilterBadge(l10n, isDark),
+          const SizedBox(width: 8),
+        ],
+        Text(
+          _currentIndex == 1
+              ? l10n.navTournaments
+              : _currentIndex == 3
+              ? 'Cộng đồng'
+              : _currentIndex == 4
+              ? l10n.homeRankingsTab
+              : _currentIndex == 2
+              ? 'Hộp thư'
+              : l10n.sporto,
+          style: TextStyle(
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            fontWeight: FontWeight.w900,
+            fontSize: 19,
+            letterSpacing: -0.3,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildHeaderTabItem({
     required String title,
     required bool isSelected,
@@ -725,6 +841,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return GestureDetector(
       onTap: () {
         setState(() {
+          if (!_isSearchExpanded) {
+            _searchCategory = _searchCategoryForCurrentSurface();
+          }
           _isSearchExpanded = !_isSearchExpanded;
         });
         if (_isSearchExpanded) {
@@ -752,6 +871,139 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           color: _isSearchExpanded
               ? AppTheme.primary
               : (isDark ? Colors.white : const Color(0xFF0F172A)),
+        ),
+      ),
+    );
+  }
+
+  String _searchCategoryLabel(
+    _HomeSearchCategory category,
+    AppLocalizations l10n,
+  ) {
+    return switch (category) {
+      _HomeSearchCategory.feed => l10n.homeSearchCategoryFeed,
+      _HomeSearchCategory.tournaments => l10n.homeSearchCategoryTournaments,
+      _HomeSearchCategory.matches => l10n.homeSearchCategoryMatches,
+      _HomeSearchCategory.clubs => l10n.homeSearchCategoryClubs,
+      _HomeSearchCategory.athletes => l10n.homeSearchCategoryAthletes,
+    };
+  }
+
+  IconData _searchCategoryIcon(_HomeSearchCategory category) {
+    return switch (category) {
+      _HomeSearchCategory.feed => AppIcons.fileText,
+      _HomeSearchCategory.tournaments => AppIcons.trophy,
+      _HomeSearchCategory.matches => AppIcons.activity,
+      _HomeSearchCategory.clubs => AppIcons.users,
+      _HomeSearchCategory.athletes => AppIcons.userRound,
+    };
+  }
+
+  Widget _buildSearchCategoryPanel(bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
+    const categories = _HomeSearchCategory.values;
+    final surface = isDark ? const Color(0xFF172033) : Colors.white;
+    final border = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : const Color(0xFFE2E8F0);
+
+    return SizedBox(
+      height: _searchCategoryPanelHeight,
+      child: TweenAnimationBuilder<double>(
+        key: const ValueKey('home-search-category-panel'),
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, child) {
+          return Opacity(
+            opacity: value,
+            child: Transform.translate(
+              offset: Offset(0, 14 * (1 - value)),
+              child: child,
+            ),
+          );
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: surface,
+            border: Border(
+              top: BorderSide(color: border),
+              bottom: BorderSide(color: border),
+            ),
+          ),
+          padding: const EdgeInsets.fromLTRB(14, 6, 14, 8),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: [
+                for (final category in categories) ...[
+                  _buildSearchCategoryChip(
+                    category: category,
+                    label: _searchCategoryLabel(category, l10n),
+                    icon: _searchCategoryIcon(category),
+                    isDark: isDark,
+                  ),
+                  if (category != categories.last) const SizedBox(width: 8),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchCategoryChip({
+    required _HomeSearchCategory category,
+    required String label,
+    required IconData icon,
+    required bool isDark,
+  }) {
+    final selected = _searchCategory == category;
+    final foreground = selected
+        ? AppTheme.primary
+        : (isDark ? Colors.white70 : const Color(0xFF475569));
+    final background = selected
+        ? AppTheme.primary.withValues(alpha: 0.12)
+        : (isDark
+              ? Colors.white.withValues(alpha: 0.06)
+              : const Color(0xFFF8FAFC));
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: InkWell(
+        onTap: () => _activateSearchCategory(category),
+        borderRadius: BorderRadius.circular(18),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          height: 38,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: background,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: selected ? AppTheme.primary : Colors.transparent,
+              width: selected ? 1.2 : 0,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 17, color: foreground),
+              const SizedBox(width: 7),
+              Text(
+                label,
+                style: TextStyle(
+                  color: foreground,
+                  fontSize: 12.5,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1601,6 +1853,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                       ),
+                    SliverToBoxAdapter(
+                      child: _buildSuggestedCommunitiesSection(),
+                    ),
                     UnifiedPublicMatchFeed(
                       tournaments: allTournaments,
                       sportFilter: _exploreSport,
@@ -1882,6 +2137,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   String _searchHintForTab() {
     final l10n = AppLocalizations.of(context)!;
+    if (_isSearchExpanded) {
+      return switch (_searchCategory) {
+        _HomeSearchCategory.feed => l10n.homeSearchGenericHint,
+        _HomeSearchCategory.tournaments => l10n.homeSearchTournamentsHint,
+        _HomeSearchCategory.matches => l10n.homeSearchMatchesHint,
+        _HomeSearchCategory.clubs => l10n.homeSearchClubsHint,
+        _HomeSearchCategory.athletes => l10n.homeSearchAthletesHint,
+      };
+    }
     return switch (_currentIndex) {
       0 => l10n.homeSearchMatchesHint,
       1 => l10n.homeSearchTournamentsHint,
@@ -1918,21 +2182,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar({bool showFilter = true}) {
     final filterCount = _activeFilterCountForTab();
+    final targetIndex = _currentIndex;
+    final targetIsFeed = targetIndex == 0 && _homeHeaderTab == 1;
     return SportoSearchBar(
       controller: _activeSearchController,
       focusNode: _searchFocusNode,
       hintText: _searchHintForTab(),
       filterCount: filterCount,
+      showFilter: showFilter,
       onChanged: (v) {
         _searchDebounceTimer?.cancel();
         _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
           if (mounted) {
-            setState(() => _searchQueries[_currentIndex] = v);
-            if (_currentIndex == 1) {
+            setState(() => _searchQueries[targetIndex] = v);
+            if (targetIsFeed) {
+              ref.read(socialFilterProvider.notifier).setSearchQuery(v);
+            } else if (targetIndex == 1) {
               _resetTournamentCursorPagination();
-            } else if (_currentIndex == 3) {
+            } else if (targetIndex == 3) {
               _resetClubCursorPagination();
             }
           }
@@ -1941,14 +2210,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       onSubmitted: (_) => _submitSearch(),
       onClear: () {
         _searchDebounceTimer?.cancel();
-        setState(() => _searchQueries[_currentIndex] = '');
-        if (_currentIndex == 1) {
+        setState(() => _searchQueries[targetIndex] = '');
+        if (targetIsFeed) {
+          ref.read(socialFilterProvider.notifier).setSearchQuery('');
+        } else if (targetIndex == 1) {
           _resetTournamentCursorPagination();
-        } else if (_currentIndex == 3) {
+        } else if (targetIndex == 3) {
           _resetClubCursorPagination();
         }
       },
-      onFilterTap: _showActiveFilterSheet,
+      onFilterTap: showFilter ? _showActiveFilterSheet : null,
     );
   }
 
@@ -3049,7 +3320,126 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _buildSuggestedCommunitiesSection() {
+    final colors = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final communitiesAsync = ref.watch(
+      communitiesProvider(const (search: null, provinceCode: null)),
+    );
 
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 104,
+          child: communitiesAsync.when(
+            data: (communities) {
+              if (communities.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              final displayList = communities.take(12).toList();
+              return ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: displayList.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 14),
+                itemBuilder: (context, index) {
+                  final club = displayList[index];
+                  return GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      context.push('/communities/${club.id}');
+                    },
+                    child: SizedBox(
+                      width: 68,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ClubBrandAvatar(
+                            logoUrl: club.logoUrl,
+                            bannerUrl: club.bannerUrl,
+                            size: 62,
+                            bannerFit: BoxFit.cover,
+                            backgroundColor: isDark
+                                ? const Color(0xFF1E293B)
+                                : Colors.white,
+                            borderColor: context.colors.border.withValues(
+                              alpha: 0.7,
+                            ),
+                            borderWidth: 1,
+                            boxShadow: [
+                              BoxShadow(
+                                color: isDark
+                                    ? Colors.black26
+                                    : Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            club.name,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: colors.textPrimary,
+                              height: 1.15,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+            loading: () => ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              scrollDirection: Axis.horizontal,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 5,
+              separatorBuilder: (_, _) => const SizedBox(width: 14),
+              itemBuilder: (_, _) => SizedBox(
+                width: 68,
+                child: Column(
+                  children: [
+                    Container(
+                      width: 62,
+                      height: 62,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isDark
+                            ? Colors.white10
+                            : const Color(0xFFF1F5F9),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      width: 48,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white10
+                            : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            error: (_, _) => const SizedBox.shrink(),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildEmpty() {
     final l10n = AppLocalizations.of(context)!;
@@ -3308,7 +3698,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           slivers: [
             SliverToBoxAdapter(child: SizedBox(height: _pinnedHeaderHeight)),
-            SliverToBoxAdapter(child: const SizedBox(height: 8)),
+            if (currentList.isNotEmpty) ...[
+              SliverToBoxAdapter(child: const SizedBox(height: 12)),
+              SliverToBoxAdapter(
+                child: _buildSuggestedClubsCarousel(currentList),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 14.0, bottom: 6.0),
+                  child: Divider(
+                    height: 1,
+                    thickness: 0.8,
+                    color: context.colors.border.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+            ] else
+              SliverToBoxAdapter(child: const SizedBox(height: 8)),
             if (_isClubInitialLoading && currentList.isEmpty)
               const SliverFillRemaining(
                 child: Center(
@@ -3386,7 +3792,67 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  // ─── TAB 3: CÂU LẠC BỘ (Clubs) — Compact List Style ───
+  Widget _buildSuggestedClubsCarousel(List<Community> clubs) {
+    // Show up to 10 suggested clubs at the top in circular avatar format
+    final displayClubs = clubs.take(10).toList();
 
+    return SizedBox(
+      height: 98.0,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: displayClubs.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 14.0),
+        itemBuilder: (context, index) {
+          final club = displayClubs[index];
+
+          return GestureDetector(
+            onTap: () => context.push("/club/${club.id}"),
+            child: SizedBox(
+              width: 66.0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ClubBrandAvatar(
+                    logoUrl: club.logoUrl,
+                    bannerUrl: club.bannerUrl,
+                    size: 62,
+                    bannerFit: BoxFit.cover,
+                    backgroundColor: context.colors.bgSurface,
+                    borderColor: context.colors.border.withValues(alpha: 0.7),
+                    borderWidth: 1,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6.0),
+                  Text(
+                    club.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.textPrimary,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   Widget _buildClubItem(Community club) {
     return Material(

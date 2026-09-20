@@ -626,17 +626,22 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
           ),
           const SizedBox(height: 8),
           ..._joinQuestions.asMap().entries.map(
-            (entry) => ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                entry.value,
-                style: TextStyle(fontSize: 12, color: colors.textPrimary),
-              ),
-              trailing: IconButton(
-                icon: Icon(AppIcons.close, size: 16, color: colors.textMuted),
-                onPressed: () =>
-                    setState(() => _joinQuestions.removeAt(entry.key)),
+            (entry) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      entry.value,
+                      style: TextStyle(fontSize: 12, color: colors.textPrimary),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(AppIcons.close, size: 16, color: colors.textMuted),
+                    onPressed: () =>
+                        setState(() => _joinQuestions.removeAt(entry.key)),
+                  ),
+                ],
               ),
             ),
           ),

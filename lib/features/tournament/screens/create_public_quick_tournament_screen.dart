@@ -41,6 +41,7 @@ class _CreatePublicQuickTournamentScreenState
   String _formatKey =
       'MALE_DOUBLES'; // MALE_SINGLES, FEMALE_SINGLES, MALE_DOUBLES, FEMALE_DOUBLES, MIXED_DOUBLES, FOOTBALL_MALE, FOOTBALL_FEMALE, FOOTBALL_MIXED
   final Set<String> _selectedFormatKeys = {'MALE_DOUBLES'};
+  bool _isPublic = true;
   String _bracket = AppConstants.bracketSingleElimination;
   String _registrationMode = 'APPROVAL';
   DateTime? _startDate;
@@ -61,6 +62,7 @@ class _CreatePublicQuickTournamentScreenState
   int _footballHalfDuration = 45;
   bool _footballAllowDraw = true;
   bool _endDateManuallySet = false;
+  bool _registrationEndManuallySet = false;
   bool _isSubmitting = false;
 
   AppLocalizations get l10n => AppLocalizations.of(context)!;
@@ -77,12 +79,30 @@ class _CreatePublicQuickTournamentScreenState
       defaultStart.month,
       defaultStart.day,
     );
-    final defaultEnd = defaultStart.add(const Duration(hours: 2));
+    final defaultEnd = DateTime(
+      defaultStart.year,
+      defaultStart.month,
+      defaultStart.day,
+      23,
+      59,
+    );
     _startTime = TimeOfDay.fromDateTime(defaultStart);
     _endDate = DateTime(defaultEnd.year, defaultEnd.month, defaultEnd.day);
     _endTime = TimeOfDay.fromDateTime(defaultEnd);
-    _regStartDate = DateTime(now.year, now.month, now.day);
-    _regEndDate = _startDate!.subtract(const Duration(days: 1));
+    final nextRoundedMinute = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      now.minute,
+    ).add(const Duration(minutes: 1));
+    _regStartDate = DateTime(
+      nextRoundedMinute.year,
+      nextRoundedMinute.month,
+      nextRoundedMinute.day,
+    );
+    _regStartTime = TimeOfDay.fromDateTime(nextRoundedMinute);
+    _syncDefaultRegistrationEnd(defaultStart);
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _verifyOrganizerPermission(),
     );
@@ -158,13 +178,23 @@ class _CreatePublicQuickTournamentScreenState
   /// Keeps the default end datetime aligned when the organizer changes the
   /// start before explicitly choosing an end datetime.
   void _syncDefaultEnd(DateTime start) {
-    final estimatedEnd = start.add(const Duration(hours: 2));
+    final estimatedEnd = DateTime(start.year, start.month, start.day, 23, 59);
     _endDate = DateTime(
       estimatedEnd.year,
       estimatedEnd.month,
       estimatedEnd.day,
     );
     _endTime = TimeOfDay.fromDateTime(estimatedEnd);
+  }
+
+  void _syncDefaultRegistrationEnd(DateTime start) {
+    final previousDay = start.subtract(const Duration(days: 1));
+    _regEndDate = DateTime(
+      previousDay.year,
+      previousDay.month,
+      previousDay.day,
+    );
+    _regEndTime = const TimeOfDay(hour: 23, minute: 59);
   }
 
   String _formatLabel(String key) {
@@ -388,7 +418,7 @@ class _CreatePublicQuickTournamentScreenState
         'maxTeams': maxTeams,
         'divisions': divisions,
         'tournamentType': 'PUBLIC',
-        'visibility': 'PUBLIC',
+        'visibility': _isPublic ? 'PUBLIC' : 'PRIVATE',
         'registrationMode': _registrationMode,
         'isRanked': false,
         if (_mapSportSlug() == 'football') ...{
@@ -484,61 +514,38 @@ class _CreatePublicQuickTournamentScreenState
         key: _formKey,
         child: ListView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
-            // ─── Banner Thông tin ───
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: const Color(0xFF3B82F6).withValues(alpha: 0.25),
-                ),
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: colors.border),
               ),
               child: Row(
                 children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      AppIcons.zap,
-                      color: Color(0xFF2563EB),
-                      size: 22,
+                  Icon(AppIcons.globe, size: 18, color: colors.textSecondary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Công khai',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Khởi tạo giải đấu công khai trong 30 giây',
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w700,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Sơ đồ nhánh đấu và danh sách thi đấu sẽ được tự động thiết lập.',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: colors.textSecondary,
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
-                    ),
+                  Switch.adaptive(
+                    value: _isPublic,
+                    onChanged: (value) => setState(() => _isPublic = value),
+                    activeThumbColor: AppTheme.primary,
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 12),
             // ─── Tên giải đấu ───
             _sectionLabel('Tên giải đấu *', colors),
             const SizedBox(height: 6),
@@ -589,87 +596,47 @@ class _CreatePublicQuickTournamentScreenState
             const SizedBox(height: 18),
 
             // ─── Quy mô & Giới hạn số đội ───
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _sectionLabel('Số đội / VĐV tối đa', colors),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _maxTeamsController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          hintText: '16',
-                          prefixIcon: const Icon(AppIcons.users, size: 20),
-                          filled: true,
-                          fillColor: colors.bgSurface,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: colors.border),
-                          ),
-                        ),
-                        validator: (val) {
-                          final n = int.tryParse(val?.trim() ?? '');
-                          if (n == null || n < 2 || n > 128) {
-                            return 'Số đội từ 2 đến 128';
-                          }
-                          if (_bracket == AppConstants.bracketRoundRobin &&
-                              n > 15) {
-                            return 'Vòng tròn tối đa 15 đội / VĐV';
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 22),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 14,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.08),
+                _sectionLabel('Số đội / VĐV tối đa', colors),
+                const SizedBox(height: 6),
+                TextFormField(
+                  controller: _maxTeamsController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: '16',
+                    prefixIcon: const Icon(AppIcons.users, size: 20),
+                    filled: true,
+                    fillColor: colors.bgSurface,
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppTheme.primary.withValues(alpha: 0.22),
-                      ),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(AppIcons.globe, size: 18, color: AppTheme.primary),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Giải công khai thế giới',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.primary,
-                            ),
-                          ),
-                        ),
-                      ],
+                      borderSide: BorderSide(color: colors.border),
                     ),
                   ),
+                  validator: (val) {
+                    final n = int.tryParse(val?.trim() ?? '');
+                    if (n == null || n < 2 || n > 128) {
+                      return 'Số đội từ 2 đến 128';
+                    }
+                    if (_bracket == AppConstants.bracketRoundRobin && n > 15) {
+                      return 'Vòng tròn tối đa 15 đội / VĐV';
+                    }
+                    return null;
+                  },
                 ),
               ],
             ),
             const SizedBox(height: 18),
 
             // ─── Lịch trình giống form Quick trên web ───
-            _sectionLabel('Lịch trình & thời gian thi đấu', colors),
+            _sectionLabel('Thời gian thi đấu & đăng ký', colors),
             const SizedBox(height: 6),
             Row(
               children: [
                 Expanded(
                   child: _buildDateTimeField(
-                    label: 'Bắt đầu giải *',
+                    label: 'Thời gian bắt đầu *',
                     value: _startDate == null
                         ? null
                         : _withTime(_startDate!, _startTime),
@@ -681,16 +648,40 @@ class _CreatePublicQuickTournamentScreenState
                 const SizedBox(width: 10),
                 Expanded(
                   child: _buildDateTimeField(
-                    label: 'Kết thúc giải',
+                    label: 'Thời gian kết thúc',
                     value: _endDate == null
                         ? null
                         : _withTime(_endDate!, _endTime),
                     icon: AppIcons.calendarCheck,
                     onTap: _pickEndDateTime,
-                    onClear: () => setState(() {
-                      _endDate = null;
-                      _endDateManuallySet = false;
-                    }),
+                    colors: colors,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDateTimeField(
+                    label: 'Mở đăng ký',
+                    value: _regStartDate == null
+                        ? null
+                        : _withTime(_regStartDate!, _regStartTime),
+                    icon: AppIcons.login,
+                    onTap: _pickRegStartDateTime,
+                    colors: colors,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _buildDateTimeField(
+                    label: 'Đóng đăng ký',
+                    value: _regEndDate == null
+                        ? null
+                        : _withTime(_regEndDate!, _regEndTime),
+                    icon: AppIcons.logout,
+                    onTap: _pickRegEndDateTime,
                     colors: colors,
                   ),
                 ),
@@ -856,40 +847,6 @@ class _CreatePublicQuickTournamentScreenState
             _buildRegionFields(colors),
             const SizedBox(height: 18),
 
-            // ─── Lịch mở / đóng đăng ký ───
-            _sectionLabel('Thời gian đăng ký', colors),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDateTimeField(
-                    label: 'Mở đăng ký',
-                    value: _regStartDate == null
-                        ? null
-                        : _withTime(_regStartDate!, _regStartTime),
-                    icon: AppIcons.login,
-                    onTap: _pickRegStartDateTime,
-                    onClear: () => setState(() => _regStartDate = null),
-                    colors: colors,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _buildDateTimeField(
-                    label: 'Đóng đăng ký',
-                    value: _regEndDate == null
-                        ? null
-                        : _withTime(_regEndDate!, _regEndTime),
-                    icon: AppIcons.logout,
-                    onTap: _pickRegEndDateTime,
-                    onClear: () => setState(() => _regEndDate = null),
-                    colors: colors,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-
             // ─── Mô tả giải đấu ───
             _sectionLabel('Mô tả giải đấu (Tùy chọn)', colors),
             const SizedBox(height: 6),
@@ -906,41 +863,46 @@ class _CreatePublicQuickTournamentScreenState
                 ),
               ),
             ),
-            const SizedBox(height: 28),
-
-            // ─── Nút Tạo giải đấu ───
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: FilledButton.icon(
-                onPressed: _isSubmitting ? null : _submit,
-                icon: _isSubmitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(AppIcons.zap, size: 20),
-                label: Text(
-                  _isSubmitting
-                      ? 'Đang tạo giải đấu...'
-                      : 'Hoàn Tất & Tạo Giải Đấu',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                style: FilledButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          decoration: BoxDecoration(
+            color: colors.bgDark,
+            border: Border(top: BorderSide(color: colors.border)),
+          ),
+          child: SizedBox(
+            height: 42,
+            child: FilledButton(
+              onPressed: _isSubmitting ? null : _submit,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Tạo giải đấu',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -1271,11 +1233,32 @@ class _CreatePublicQuickTournamentScreenState
               ),
             ],
           ),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Cho phép kết quả hòa'),
-            value: _footballAllowDraw,
-            onChanged: (value) => setState(() => _footballAllowDraw = value),
+          InkWell(
+            onTap: () => setState(() => _footballAllowDraw = !_footballAllowDraw),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Cho phép kết quả hòa',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w500,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: _footballAllowDraw,
+                    onChanged: (value) =>
+                        setState(() => _footballAllowDraw = value),
+                    activeTrackColor: AppTheme.primary,
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -1285,7 +1268,7 @@ class _CreatePublicQuickTournamentScreenState
   Widget _buildFormatPills(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     final isFootball = _sport == AppConstants.sportFootball;
-    final formats = isFootball
+    final allFormats = isFootball
         ? [
             ('FOOTBALL_MALE', l10n.tournamentCategoryFootballMen),
             ('FOOTBALL_FEMALE', l10n.tournamentCategoryFootballWomen),
@@ -1298,79 +1281,164 @@ class _CreatePublicQuickTournamentScreenState
             ('MALE_SINGLES', l10n.tournamentCategoryMenSingles),
             ('FEMALE_SINGLES', l10n.tournamentCategoryWomenSingles),
           ];
+    final baseFormats = isFootball
+        ? allFormats
+        : allFormats
+              .where(
+                (format) =>
+                    format.$1 == 'MALE_DOUBLES' ||
+                    format.$1 == 'FEMALE_DOUBLES' ||
+                    format.$1 == 'MIXED_DOUBLES',
+              )
+              .toList();
+    final addedFormats = allFormats
+        .where(
+          (format) =>
+              _selectedFormatKeys.contains(format.$1) &&
+              !baseFormats.any((base) => base.$1 == format.$1),
+        )
+        .toList();
+    final formats = [...baseFormats, ...addedFormats];
+    final canAddMore = allFormats.any(
+      (format) => !formats.any((shown) => shown.$1 == format.$1),
+    );
 
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: formats.map((f) {
-        final selected = _selectedFormatKeys.contains(f.$1);
-        return GestureDetector(
-          onTap: () => setState(() {
-            if (selected) {
-              if (_selectedFormatKeys.length > 1) {
-                _selectedFormatKeys.remove(f.$1);
-                if (_formatKey == f.$1) {
-                  _formatKey = _selectedFormatKeys.first;
-                }
-              }
-            } else {
-              _selectedFormatKeys.add(f.$1);
-              _formatKey = _selectedFormatKeys.first;
-            }
-          }),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: selected
-                  ? AppTheme.primary.withValues(alpha: 0.12)
-                  : colors.bgSurface,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: selected ? AppTheme.primary : colors.border,
-                width: selected ? 1.6 : 1,
+      children: [
+        ...formats.map((f) {
+          final selected = _selectedFormatKeys.contains(f.$1);
+          return GestureDetector(
+            onTap: () => _toggleFormat(f.$1),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: selected
+                    ? AppTheme.primary.withValues(alpha: 0.12)
+                    : colors.bgSurface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: selected ? AppTheme.primary : colors.border,
+                  width: selected ? 1.6 : 1,
+                ),
+              ),
+              child: Text(
+                f.$2,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                  color: selected ? AppTheme.primary : colors.textPrimary,
+                ),
               ),
             ),
-            child: Text(
-              f.$2,
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                color: selected ? AppTheme.primary : colors.textPrimary,
+          );
+        }),
+        if (canAddMore)
+          GestureDetector(
+            onTap: _showAdditionalFormats,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppTheme.primary.withValues(alpha: 0.45),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(AppIcons.add, size: 16, color: AppTheme.primary),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Thêm nội dung',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        );
-      }).toList(),
+      ],
+    );
+  }
+
+  void _toggleFormat(String key) {
+    setState(() {
+      if (_selectedFormatKeys.contains(key)) {
+        if (_selectedFormatKeys.length > 1) {
+          _selectedFormatKeys.remove(key);
+          if (_formatKey == key) _formatKey = _selectedFormatKeys.first;
+        }
+      } else {
+        _selectedFormatKeys.add(key);
+        _formatKey = key;
+      }
+    });
+  }
+
+  Future<void> _showAdditionalFormats() async {
+    final l10n = AppLocalizations.of(context)!;
+    final isFootball = _sport == AppConstants.sportFootball;
+    final formats = isFootball
+        ? <(String, String)>[
+            ('FOOTBALL_MALE', l10n.tournamentCategoryFootballMen),
+            ('FOOTBALL_FEMALE', l10n.tournamentCategoryFootballWomen),
+            ('FOOTBALL_MIXED', l10n.tournamentCategoryFootballMixed),
+          ]
+        : <(String, String)>[
+            ('MALE_SINGLES', l10n.tournamentCategoryMenSingles),
+            ('FEMALE_SINGLES', l10n.tournamentCategoryWomenSingles),
+          ];
+    final available = formats
+        .where((format) => !_selectedFormatKeys.contains(format.$1))
+        .toList();
+    if (available.isEmpty || !mounted) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Thêm nội dung thi đấu',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 8),
+              ...available.map(
+                (format) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(AppIcons.add, color: AppTheme.primary),
+                  title: Text(format.$2),
+                  onTap: () {
+                    _toggleFormat(format.$1);
+                    Navigator.pop(sheetContext);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildBracketSelector(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     final brackets = [
-      (
-        AppConstants.bracketSingleElimination,
-        l10n.quickCreateBracketSingle,
-        l10n.quickCreateBracketSingleDesc,
-        AppIcons.layers,
-      ),
-      (
-        AppConstants.bracketDoubleElimination,
-        l10n.quickCreateBracketDouble,
-        l10n.quickCreateBracketDoubleDesc,
-        AppIcons.sort,
-      ),
-      (
-        AppConstants.bracketRoundRobin,
-        l10n.quickCreateBracketRoundRobin,
-        l10n.quickCreateBracketRoundRobinDesc,
-        AppIcons.refresh,
-      ),
-      (
-        AppConstants.bracketGroupStageKnockout,
-        l10n.quickCreateBracketGroup,
-        l10n.quickCreateBracketGroupDesc,
-        AppIcons.grid,
-      ),
+      (AppConstants.bracketSingleElimination, l10n.quickCreateBracketSingle),
+      (AppConstants.bracketDoubleElimination, l10n.quickCreateBracketDouble),
+      (AppConstants.bracketRoundRobin, l10n.quickCreateBracketRoundRobin),
+      (AppConstants.bracketGroupStageKnockout, l10n.quickCreateBracketGroup),
     ];
 
     return Column(
@@ -1378,78 +1446,73 @@ class _CreatePublicQuickTournamentScreenState
         final selected = _bracket == b.$1;
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: InkWell(
-            onTap: () => setState(() => _bracket = b.$1),
+          child: Material(
+            color: selected
+                ? AppTheme.primary.withValues(alpha: 0.08)
+                : colors.bgSurface,
             borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: selected
-                    ? AppTheme.primary.withValues(alpha: 0.08)
-                    : colors.bgSurface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: selected ? AppTheme.primary : colors.border,
-                  width: selected ? 1.6 : 1,
-                ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: selected ? AppTheme.primary : colors.border,
+                width: selected ? 1.6 : 1,
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? AppTheme.primary
-                          : AppTheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
+            ),
+            child: InkWell(
+              onTap: () => setState(() => _bracket = b.$1),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
                         color: selected
                             ? AppTheme.primary
-                            : AppTheme.primary.withValues(alpha: 0.2),
+                            : AppTheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(7),
+                        border: Border.all(
+                          color: selected
+                              ? AppTheme.primary
+                              : AppTheme.primary.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Center(
+                        child: BracketFormatIcons.getIcon(
+                          b.$1,
+                          size: 16,
+                          color: selected ? Colors.white : AppTheme.primary,
+                        ),
                       ),
                     ),
-                    child: Center(
-                      child: BracketFormatIcons.getIcon(
-                        b.$1,
-                        size: 18,
-                        color: selected ? Colors.white : AppTheme.primary,
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Text(
+                        b.$2,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: selected
+                              ? AppTheme.primary
+                              : colors.textPrimary,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          b.$2,
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w700,
-                            color: selected
-                                ? AppTheme.primary
-                                : colors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          b.$3,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colors.textMuted,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(width: 8),
+                    Icon(
+                      selected ? AppIcons.circleDot : AppIcons.circle,
+                      color: selected ? AppTheme.primary : colors.textMuted,
+                      size: 18,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    selected ? AppIcons.circleDot : AppIcons.circle,
-                    color: selected ? AppTheme.primary : colors.textMuted,
-                    size: 20,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -1481,7 +1544,9 @@ class _CreatePublicQuickTournamentScreenState
         _syncDefaultEnd(start);
       }
       _regStartDate ??= DateTime(now.year, now.month, now.day);
-      _regEndDate ??= pickedDate.subtract(const Duration(days: 1));
+      if (!_registrationEndManuallySet) {
+        _syncDefaultRegistrationEnd(start);
+      }
     });
   }
 
@@ -1545,6 +1610,7 @@ class _CreatePublicQuickTournamentScreenState
     setState(() {
       _regEndDate = pickedDate;
       _regEndTime = pickedTime;
+      _registrationEndManuallySet = true;
     });
   }
 
@@ -1568,66 +1634,58 @@ class _CreatePublicQuickTournamentScreenState
     required IconData icon,
     required VoidCallback onTap,
     required AppColorsExtension colors,
-    VoidCallback? onClear,
   }) {
     final display = value == null
-        ? 'Chọn ngày và giờ'
+        ? ''
         : DateFormat('dd/MM/yyyy HH:mm').format(value);
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: value == null
-              ? colors.bgSurface
-              : AppTheme.primary.withValues(alpha: 0.07),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: value == null ? colors.border : AppTheme.primary,
-            width: value == null ? 1 : 1.4,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 17,
-              color: value == null ? colors.textMuted : AppTheme.primary,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(fontSize: 10, color: colors.textMuted),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    display,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: value == null
-                          ? FontWeight.normal
-                          : FontWeight.w700,
-                      color: value == null
-                          ? colors.textMuted
-                          : colors.textPrimary,
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(fontSize: 12, color: colors.textSecondary),
+          prefixIcon: Icon(icon, size: 18, color: colors.textSecondary),
+          suffixIcon: value == null
+              ? Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Center(
+                    widthFactor: 1,
+                    child: Text(
+                      'Thêm',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.primary,
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ),
-            if (value != null && onClear != null)
-              GestureDetector(
-                onTap: onClear,
-                child: Icon(AppIcons.close, size: 15, color: colors.textMuted),
-              ),
-          ],
+                )
+              : null,
+          isDense: true,
+          filled: true,
+          fillColor: colors.bgSurface,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: colors.border),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: colors.border),
+          ),
+        ),
+        child: Text(
+          display,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: value == null ? FontWeight.normal : FontWeight.w700,
+            color: colors.textPrimary,
+          ),
         ),
       ),
     );

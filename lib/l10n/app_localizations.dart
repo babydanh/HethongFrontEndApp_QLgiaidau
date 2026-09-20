@@ -13598,6 +13598,36 @@ abstract class AppLocalizations {
   /// **'Tìm kiếm...'**
   String get homeSearchGenericHint;
 
+  /// No description provided for @homeSearchCategoryFeed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng tin'**
+  String get homeSearchCategoryFeed;
+
+  /// No description provided for @homeSearchCategoryTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu'**
+  String get homeSearchCategoryTournaments;
+
+  /// No description provided for @homeSearchCategoryMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đấu'**
+  String get homeSearchCategoryMatches;
+
+  /// No description provided for @homeSearchCategoryClubs.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu lạc bộ'**
+  String get homeSearchCategoryClubs;
+
+  /// No description provided for @homeSearchCategoryAthletes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vận động viên'**
+  String get homeSearchCategoryAthletes;
+
   /// No description provided for @homeCompletedMatches.
   ///
   /// In vi, this message translates to:
