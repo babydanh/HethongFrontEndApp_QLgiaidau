@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/court_schedule_board.dart';
 
 class MatchesTab extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -28,6 +30,7 @@ class MatchesTab extends ConsumerStatefulWidget {
 class _MatchesTabState extends ConsumerState<MatchesTab> {
   String _statusFilter = 'all'; // all, live, scheduled, completed
   String _searchQuery = '';
+  bool _scheduleView = true;
   final TextEditingController _searchCtrl = TextEditingController();
 
   @override
@@ -106,50 +109,92 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: Column(
                   children: [
-                    // Search bar
-                    Container(
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: colors.bgCard,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: colors.border),
-                      ),
-                      child: TextField(
-                        controller: _searchCtrl,
-                        onChanged: (val) => setState(() => _searchQuery = val),
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          color: colors.textPrimary,
+                    // Search bar and web-parity schedule/list switch.
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: colors.bgCard,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: colors.border),
+                            ),
+                            child: TextField(
+                              controller: _searchCtrl,
+                              onChanged: (val) =>
+                                  setState(() => _searchQuery = val),
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                color: colors.textPrimary,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Tìm trận đấu, tên đội hoặc VĐV...',
+                                hintStyle: TextStyle(
+                                  fontSize: 13,
+                                  color: colors.textMuted,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.search_rounded,
+                                  size: 19,
+                                  color: colors.textMuted,
+                                ),
+                                suffixIcon: _searchQuery.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(
+                                          Icons.close_rounded,
+                                          size: 16,
+                                        ),
+                                        onPressed: () {
+                                          _searchCtrl.clear();
+                                          setState(() => _searchQuery = '');
+                                        },
+                                      )
+                                    : null,
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                        decoration: InputDecoration(
-                          hintText: 'Tìm trận đấu, tên đội hoặc VĐV...',
-                          hintStyle: TextStyle(
-                            fontSize: 13,
-                            color: colors.textMuted,
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search_rounded,
-                            size: 19,
-                            color: colors.textMuted,
-                          ),
-                          suffixIcon: _searchQuery.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(
-                                    Icons.close_rounded,
-                                    size: 16,
-                                  ),
-                                  onPressed: () {
-                                    _searchCtrl.clear();
-                                    setState(() => _searchQuery = '');
-                                  },
-                                )
-                              : null,
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 10,
+                        const SizedBox(width: 8),
+                        Tooltip(
+                          message: _scheduleView
+                              ? 'Xem dạng danh sách'
+                              : 'Xem theo lịch sân',
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(10),
+                            onTap: () =>
+                                setState(() => _scheduleView = !_scheduleView),
+                            child: Container(
+                              height: 42,
+                              width: 42,
+                              decoration: BoxDecoration(
+                                color: _scheduleView
+                                    ? AppTheme.primary
+                                    : colors.bgCard,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: _scheduleView
+                                      ? AppTheme.primary
+                                      : colors.border,
+                                ),
+                              ),
+                              child: Icon(
+                                _scheduleView
+                                    ? Icons.view_list_rounded
+                                    : Icons.calendar_view_week_rounded,
+                                size: 19,
+                                color: _scheduleView
+                                    ? Colors.white
+                                    : colors.textSecondary,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                     const SizedBox(height: 10),
 
@@ -224,6 +269,16 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                   ),
                 ),
               )
+            else if (_scheduleView)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 100),
+                sliver: SliverToBoxAdapter(
+                  child: CourtScheduleBoard(
+                    matches: matches,
+                    onMatchTap: _openMatch,
+                  ),
+                ),
+              )
             else
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 6, 16, 100),
@@ -238,16 +293,7 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                         isCompleted:
                             match.isCompleted ||
                             match.status == AppConstants.matchCompleted,
-                        onTap: () {
-                          if (match.hasTeams) {
-                            context.push(
-                              NavigationHelper.getLiveMatchRoute(
-                                widget.tournamentId,
-                                match.id,
-                              ),
-                            );
-                          }
-                        },
+                        onTap: () => _openMatch(match),
                       ),
                     );
                   }, childCount: matches.length),
@@ -265,6 +311,13 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
           style: TextStyle(color: colors.textSecondary),
         ),
       ),
+    );
+  }
+
+  void _openMatch(MatchModel match) {
+    if (!match.hasTeams) return;
+    context.push(
+      NavigationHelper.getLiveMatchRoute(widget.tournamentId, match.id),
     );
   }
 

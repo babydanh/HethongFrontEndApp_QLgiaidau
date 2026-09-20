@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/di/socket_providers.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_auth_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_activity_feed_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_ranking_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
@@ -14,6 +15,7 @@ import 'package:app_quanly_giaidau/data/repositories/api/api_user_repository.dar
 import 'package:app_quanly_giaidau/data/repositories/local/app_session_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/local/shared_prefs_local_session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/auth_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/activity_feed_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/local_session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/ranking_repository.dart';
@@ -82,4 +84,8 @@ final sessionRepositoryProvider = Provider<ISessionRepository>((ref) {
 
 final paymentRepositoryProvider = Provider<PaymentRepository>((ref) {
   return PaymentRepository(ref.watch(dioClientProvider));
+});
+
+final activityFeedRepositoryProvider = Provider<IActivityFeedRepository>((ref) {
+  return ApiActivityFeedRepository(ref.watch(dioClientProvider));
 });

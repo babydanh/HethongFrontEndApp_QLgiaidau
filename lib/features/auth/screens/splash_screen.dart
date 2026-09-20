@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/widgets/pickleball_court_animation.dart';
+import 'package:app_quanly_giaidau/core/widgets/pickleball_court_3d_animated.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -25,8 +25,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     // Nạp dữ liệu Auth song song
     _preWarmAuth();
 
-    // Tự động chuyển màn hình mượt mà sau 2.2 giây
-    _navTimer = Timer(const Duration(milliseconds: 2200), () {
+    // Chuyển màn hình ngay lập tức sang /home để màn loading MorphingNavLoader thực hiện
+    _navTimer = Timer(const Duration(milliseconds: 200), () {
       if (mounted) {
         _navigateToNextScreen();
       }
@@ -36,7 +36,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Future<void> _preWarmAuth() async {
     try {
       await ref.read(authProvider.notifier).init().timeout(
-        const Duration(seconds: 3),
+        const Duration(seconds: 4),
         onTimeout: () {
           debugPrint('[SplashScreen] Auth init timed out, proceeding to /home');
         },
@@ -82,9 +82,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final courtSize = (size.width * 0.55).clamp(180.0, 240.0);
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -96,52 +93,35 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             ),
           ),
 
-          // KHỐI TRUNG TÂM: HOẠT HỌA SÂN PICKLEBALL 3D + LOGO SPORTO
+          // Vầng hào quang xanh Sport Blue rất nhẹ ở trung tâm
           Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Hoạt họa Sân 3D vẽ hoàn toàn bằng code Flutter (nền trong suốt, bóng nảy to/nhỏ đập smash)
-                PickleballCourtAnimation(
-                  size: courtSize,
-                ),
-
-                const SizedBox(height: 24),
-
-                // LOGO CHÍNH THỨC SPORTO "CHƠI CÙNG NHAU" SVG
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      height: 40,
-                      child: SvgPicture.asset(
-                        'assets/images/sporto_v1_with_text.svg',
-                        fit: BoxFit.contain,
-                        placeholderBuilder: (context) => Image.asset(
-                          'assets/images/sporto_v1_with_text.png',
-                          height: 40,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Thanh loading thể thao mảnh đồng màu #1D8EF8
-                    SizedBox(
-                      width: 120,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          minHeight: 3,
-                          backgroundColor: AppTheme.primary.withValues(alpha: 0.15),
-                          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
-                        ),
-                      ),
-                    ),
+            child: Container(
+              width: 320,
+              height: 320,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppTheme.primary.withValues(alpha: 0.08),
+                    Colors.transparent,
                   ],
+                  stops: const [0.0, 1.0],
                 ),
-              ],
+              ),
+            ),
+          ),
+
+          // LOGO CHÍNH THỨC SPORTO NGUYÊN BẢN (KHÔNG SÂN CŨ, KHÔNG CHỮ THỪA)
+          Center(
+            child: SvgPicture.asset(
+              'assets/images/sporto_v1.svg',
+              width: 230,
+              fit: BoxFit.contain,
+              placeholderBuilder: (context) => Image.asset(
+                'assets/images/sporto_v1.png',
+                width: 230,
+                fit: BoxFit.contain,
+              ),
             ),
           ),
         ],

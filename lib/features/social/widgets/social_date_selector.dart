@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/features/social/data/social_mock_data.dart';
 import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
 
 class SocialDateSelector extends ConsumerWidget {
@@ -11,6 +11,11 @@ class SocialDateSelector extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filterState = ref.watch(socialFilterProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final today = DateTime.now();
+    final dates = List.generate(
+      30,
+      (index) => DateTime(today.year, today.month, today.day + index),
+    );
 
     return Container(
       height: 68,
@@ -18,17 +23,17 @@ class SocialDateSelector extends ConsumerWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
-        itemCount: SocialMockData.dateOptions.length,
+        itemCount: dates.length,
         separatorBuilder: (context, index) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
-          final item = SocialMockData.dateOptions[index];
-          final isSelected = filterState.selectedDayOfMonth == item.dayOfMonth;
+          final item = dates[index];
+          final dateKey = DateFormat('yyyy-MM-dd').format(item);
+          final isSelected = filterState.selectedDateKey == dateKey;
+          final weekLabels = const ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
           return GestureDetector(
             onTap: () {
-              ref
-                  .read(socialFilterProvider.notifier)
-                  .setDayOfMonth(item.dayOfMonth);
+              ref.read(socialFilterProvider.notifier).setDateKey(dateKey);
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -47,7 +52,7 @@ class SocialDateSelector extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    item.dayOfWeek,
+                    index == 0 ? 'HN' : weekLabels[item.weekday % 7],
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: isSelected
@@ -60,7 +65,7 @@ class SocialDateSelector extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${item.dayOfMonth}',
+                    '${item.day}',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: isSelected

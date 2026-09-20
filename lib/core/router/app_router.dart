@@ -58,6 +58,7 @@ import 'package:app_quanly_giaidau/features/register/screens/tournament_register
 import 'package:app_quanly_giaidau/features/register/screens/football_team_register_screen.dart';
 import 'package:app_quanly_giaidau/features/register/screens/doubles_registration_screen.dart';
 import 'package:app_quanly_giaidau/features/register/screens/join_team_screen.dart';
+import 'package:app_quanly_giaidau/features/explore/screens/loading_showcase_screen.dart';
 import 'package:app_quanly_giaidau/features/register/screens/invite_code_join_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_join_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_pairing_screen.dart';
@@ -78,7 +79,7 @@ final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
-    initialLocation: '/',
+    initialLocation: '/home',
     redirect: (context, state) {
       final auth = ref.read(authProvider);
       final isAuth = auth.status == AuthStatus.authenticated;
@@ -89,9 +90,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           currentPath == '/join-team' ||
           currentPath.startsWith('/lite-join/');
 
-      // Splash screen & Login screen — luôn cho phép
-      if (currentPath == '/' ||
-          currentPath == '/login' ||
+      // Redirect root / to /home
+      if (currentPath == '/') {
+        return '/home';
+      }
+
+      // Login screen & auth flows — luôn cho phép
+      if (currentPath == '/login' ||
           currentPath == '/login-loading' ||
           currentPath == '/forgot-password' ||
           currentPath == '/reset-password') {
@@ -131,6 +136,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           !currentPath.startsWith('/user') &&
           !currentPath.startsWith('/series') &&
           !currentPath.startsWith('/rankings') &&
+          !currentPath.startsWith('/loading-showcase') &&
           !isPublicRegistrationRoute) {
         return '/home';
       }
@@ -228,6 +234,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/scan-qr',
         builder: (context, state) => const QrScannerScreen(),
+      ),
+
+      // ─── Màn Trình Diễn Hoạt Họa Loading Thể Thao ───
+      GoRoute(
+        path: '/loading-showcase',
+        builder: (context, state) => const LoadingShowcaseScreen(),
       ),
 
       // ─── Admin Routes ───

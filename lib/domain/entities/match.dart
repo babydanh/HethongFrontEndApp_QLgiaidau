@@ -158,6 +158,12 @@ class MatchModel {
   final String nextMatchId;
   final String loserNextMatchId;
   final String court;
+
+  /// Explicit schedule court identity. Public payloads may fall back to the
+  /// tournament venue in [court] when no court has been assigned, so keep the
+  /// distinction for the court timeline.
+  final String? courtId;
+  final bool? courtIsAssigned;
   final String courtAddress;
   final int? maxScore;
   final bool winByTwo;
@@ -229,6 +235,8 @@ class MatchModel {
     this.nextMatchId = '',
     this.loserNextMatchId = '',
     this.court = '',
+    this.courtId,
+    this.courtIsAssigned,
     this.courtAddress = '',
     this.maxScore,
     this.winByTwo = true,
@@ -367,6 +375,8 @@ class MatchModel {
 
     final matchCourtName = json['courtName']?.toString().trim() ?? '';
     final matchCourt = json['court']?.toString().trim() ?? '';
+    final rawCourtId =
+        json['courtId']?.toString() ?? json['court_id']?.toString();
     final tournamentPayload = json['tournament'];
     final tournamentVenue = tournamentPayload is Map
         ? (tournamentPayload['venueName'] ??
@@ -521,6 +531,11 @@ class MatchModel {
       // A match-level courtName override wins over any generic court value;
       // otherwise show the tournament venue when no specific court is assigned.
       court: courtDisplay,
+      courtId: rawCourtId,
+      courtIsAssigned:
+          rawCourtId != null ||
+          matchCourtName.isNotEmpty ||
+          matchCourt.isNotEmpty,
       courtAddress:
           json['courtAddress']?.toString() ??
           json['court_address']?.toString() ??
@@ -633,6 +648,7 @@ class MatchModel {
       'nextMatchId': nextMatchId,
       'loserNextMatchId': loserNextMatchId,
       'court': court,
+      if (courtId != null) 'courtId': courtId,
       if (courtAddress.isNotEmpty) 'courtAddress': courtAddress,
       'maxScore': maxScore,
       'winByTwo': winByTwo,
@@ -690,6 +706,8 @@ class MatchModel {
     String? nextMatchId,
     String? loserNextMatchId,
     String? court,
+    String? courtId,
+    bool? courtIsAssigned,
     String? courtAddress,
     int? maxScore,
     bool? winByTwo,
@@ -747,6 +765,8 @@ class MatchModel {
       nextMatchId: nextMatchId ?? this.nextMatchId,
       loserNextMatchId: loserNextMatchId ?? this.loserNextMatchId,
       court: court ?? this.court,
+      courtId: courtId ?? this.courtId,
+      courtIsAssigned: courtIsAssigned ?? this.courtIsAssigned,
       courtAddress: courtAddress ?? this.courtAddress,
       maxScore: maxScore ?? this.maxScore,
       winByTwo: winByTwo ?? this.winByTwo,
@@ -809,6 +829,7 @@ class MatchModel {
   }.contains(normalizedStatus);
   bool get isWalkover => status == 'walkover';
   bool get hasTeams => team1Id.isNotEmpty && team2Id.isNotEmpty;
+  bool get hasAssignedCourt => courtIsAssigned ?? court.trim().isNotEmpty;
   bool get isByeMatch =>
       (isBye == true) ||
       team1Name == 'BYE' ||

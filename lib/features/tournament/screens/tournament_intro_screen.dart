@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/live_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_tab.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/matches_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sponsors_tab.dart';
@@ -51,13 +52,16 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final prev = _tabController;
     final prevIndex = prev?.index;
     _currentTabCount = count;
-    
+
     // If the user hasn't actively switched tabs yet, always default to defaultIndex (overview tab)
-    final targetIndex = (!_hasUserSwitchedTab && defaultIndex != null && defaultIndex < count)
+    final targetIndex =
+        (!_hasUserSwitchedTab && defaultIndex != null && defaultIndex < count)
         ? defaultIndex
         : (prevIndex != null && prevIndex < count
-            ? prevIndex
-            : (defaultIndex != null && defaultIndex < count ? defaultIndex : 0));
+              ? prevIndex
+              : (defaultIndex != null && defaultIndex < count
+                    ? defaultIndex
+                    : 0));
 
     final newController = TabController(
       length: count,
@@ -540,7 +544,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               ),
               const SizedBox(width: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4.5, vertical: 0.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 4.5,
+                  vertical: 0.5,
+                ),
                 decoration: BoxDecoration(
                   color: colors.error,
                   borderRadius: BorderRadius.circular(10),
@@ -621,11 +628,14 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     // 4. Tab [Đội tham gia]
     tabHeaders.add(Tab(height: 28, text: l10n.tabTeams));
 
-    // 5. Tab [Bảng đấu]
-    final int bracketIndex = tabHeaders.length;
+    // 5. Tab [Lịch] — same date/court timeline as the public web page.
+    final int scheduleIndex = tabHeaders.length;
+    tabHeaders.add(const Tab(height: 28, text: 'Lịch'));
+
+    // 6. Tab [Bảng đấu]
     tabHeaders.add(const Tab(height: 28, text: 'Bảng đấu'));
 
-    // 6. Tab [Tài trợ] (nếu có)
+    // 7. Tab [Tài trợ] (nếu có)
     if (hasSponsors) {
       tabHeaders.add(Tab(height: 28, text: l10n.tabSponsors));
     }
@@ -641,14 +651,14 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         teamCount: teamsAsync.value?.length ?? 0,
         resolveImageUrl: _resolveImageUrl,
         onNavigateToMatches: () {
-          controller.animateTo(bracketIndex);
+          controller.animateTo(scheduleIndex);
         },
         onSelectDivision: (div) {
           setState(() {
             _selectedDivisionId = div.id;
             _selectedDivision = div.name;
           });
-          controller.animateTo(bracketIndex);
+          controller.animateTo(scheduleIndex);
         },
         isFollowing: isFollowing,
         onToggleFollow: () => _toggleFollow(tournament, isFollowing),
@@ -686,6 +696,32 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     selectedDivisionId: _selectedDivisionId,
                     isTeamSport: isTeamSport,
                   )),
+    );
+
+    // Lịch thi đấu (court/date timeline parity with the web).
+    tabViews.add(
+      tournament.divisions.length > 1
+          ? Column(
+              children: [
+                _buildDivisionsSelectorList(tournament, colors),
+                Expanded(
+                  child: MatchesTab(
+                    key: ValueKey('schedule-$_selectedDivisionId'),
+                    tournamentId: widget.tournamentId,
+                    selectedDivisionId: _selectedDivisionId,
+                    selectedDivision: _selectedDivision,
+                    isLite: tournament.isLite,
+                  ),
+                ),
+              ],
+            )
+          : MatchesTab(
+              key: ValueKey('schedule-$_selectedDivisionId'),
+              tournamentId: widget.tournamentId,
+              selectedDivisionId: _selectedDivisionId,
+              selectedDivision: _selectedDivision,
+              isLite: tournament.isLite,
+            ),
     );
 
     // Bảng đấu (BracketTab with divisions selector)
@@ -1025,10 +1061,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         labelPadding: const EdgeInsets.symmetric(horizontal: 12),
         indicatorSize: TabBarIndicatorSize.label,
         indicator: const UnderlineTabIndicator(
-          borderSide: BorderSide(
-            color: AppTheme.primary,
-            width: 2.5,
-          ),
+          borderSide: BorderSide(color: AppTheme.primary, width: 2.5),
           insets: EdgeInsets.only(bottom: 0),
         ),
         dividerColor: Colors.transparent,

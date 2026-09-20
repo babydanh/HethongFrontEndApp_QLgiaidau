@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:app_quanly_giaidau/features/social/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/features/social/models/activity_feed_item.dart';
 import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/features/social/screens/activity_feed_detail_screen.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/activity_feed_card.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_date_selector.dart';
-import 'package:app_quanly_giaidau/features/social/widgets/social_session_card.dart';
 
 class SocialListView extends ConsumerWidget {
   final double topPadding;
@@ -14,134 +14,171 @@ class SocialListView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final filterState = ref.watch(socialFilterProvider);
-    final filteredSessions = ref.watch(filteredSocialSessionsProvider);
-
-    // Group filtered sessions by timeSlot
-    final Map<String, List<SocialSessionModel>> groupedSessions = {};
-    for (final session in filteredSessions) {
-      groupedSessions.putIfAbsent(session.timeSlot, () => []).add(session);
+    final filter = ref.watch(socialFilterProvider);
+    final feed = ref.watch(activityFeedProvider);
+    final activities = _filterActivities(feed.value ?? const [], filter);
+    final grouped = <String, List<ActivityFeedItem>>{};
+    for (final item in activities) {
+      grouped
+          .putIfAbsent(
+            item.startTime.isEmpty ? '--:--' : item.startTime,
+            () => [],
+          )
+          .add(item);
     }
-    final sortedTimeSlots = groupedSessions.keys.toList()..sort();
+    final times = grouped.keys.toList()..sort();
 
     return RefreshIndicator(
-      onRefresh: () async {
-        // Re-fetch or reset mock filter
-        await Future.delayed(const Duration(milliseconds: 300));
-      },
+      onRefresh: () => ref.read(activityFeedProvider.notifier).refresh(),
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
         slivers: [
-          // Offset for top header
-          SliverToBoxAdapter(
-            child: SizedBox(height: topPadding),
-          ),
-
-          // Horizontal Date Selector (IMG1)
-          const SliverToBoxAdapter(
-            child: SocialDateSelector(),
-          ),
-
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 6),
+          SliverToBoxAdapter(child: SizedBox(height: topPadding)),
+          const SliverToBoxAdapter(child: SocialDateSelector()),
+          const SliverToBoxAdapter(child: SizedBox(height: 6)),
+          if (feed.isLoading && feed.value == null)
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (feed.hasError && activities.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: _buildError(
+                context,
+                feed.error,
+                () => ref.read(activityFeedProvider.notifier).refresh(),
               ),
-
-              // Empty State or Grouped Sessions
-              if (filteredSessions.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.white10
-                                : Colors.black.withValues(alpha: 0.04),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.sports_tennis_rounded,
-                            size: 32,
-                            color: isDark ? Colors.white38 : Colors.black38,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Không có buổi Social nào trong ngày ${filterState.selectedDayOfMonth}',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white70 : const Color(0xFF64748B),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Thử chọn ngày khác hoặc mở rộng bán kính tìm kiếm',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
-                          ),
-                        ),
-                      ],
+            )
+          else if (activities.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: _buildEmpty(context, filter.selectedDayOfMonth, isDark),
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final time = times[index];
+                final items = grouped[time]!;
+                final collapsed = filter.collapsedTimeSlots.contains(time);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildTimeSlotHeader(
+                      timeSlot: time,
+                      count: items.length,
+                      isCollapsed: collapsed,
+                      isDark: isDark,
+                      onToggle: () => ref
+                          .read(socialFilterProvider.notifier)
+                          .toggleTimeSlotCollapse(time),
                     ),
-                  ),
-                )
-              else
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final timeSlot = sortedTimeSlots[index];
-                      final sessionsInSlot = groupedSessions[timeSlot]!;
-                      final isCollapsed =
-                          filterState.collapsedTimeSlots.contains(timeSlot);
+                    if (!collapsed)
+                      ...items.map(
+                        (item) => ActivityFeedCard(
+                          item: item,
+                          onTap: () => _openActivity(context, item, ref),
+                          onJoin: item.isJoined
+                              ? null
+                              : () async {
+                                  await _join(context, ref, item);
+                                },
+                          onLeave: item.isJoined
+                              ? () async {
+                                  await _leave(context, ref, item);
+                                }
+                              : null,
+                        ),
+                      ),
+                  ],
+                );
+              }, childCount: times.length),
+            ),
+          const SliverToBoxAdapter(child: SizedBox(height: 80)),
+        ],
+      ),
+    );
+  }
 
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Time Slot Group Header (e.g. 14:45 | 1 gặp gỡ ∨)
-                          _buildTimeSlotHeader(
-                            timeSlot: timeSlot,
-                            count: sessionsInSlot.length,
-                            isCollapsed: isCollapsed,
-                            isDark: isDark,
-                            onToggle: () {
-                              ref
-                                  .read(socialFilterProvider.notifier)
-                                  .toggleTimeSlotCollapse(timeSlot);
-                            },
-                          ),
+  List<ActivityFeedItem> _filterActivities(
+    List<ActivityFeedItem> items,
+    SocialFilterState filter,
+  ) {
+    final sport = _normalize(filter.selectedSport);
+    final query = filter.searchQuery.trim().toLowerCase();
+    return items
+        .where((item) {
+          if (sport != 'all' &&
+              !_normalize(item.sport).contains(sport) &&
+              !sport.contains(_normalize(item.sport))) {
+            return false;
+          }
+          if (query.isNotEmpty &&
+              !'${item.title} ${item.hostName} ${item.location} ${item.sport}'
+                  .toLowerCase()
+                  .contains(query)) {
+            return false;
+          }
+          return item.playDate.isEmpty ||
+              item.playDate == filter.selectedDateKey;
+        })
+        .toList(growable: false);
+  }
 
-                          // Cards in this slot
-                          if (!isCollapsed)
-                            ...sessionsInSlot.map(
-                              (session) => SocialSessionCard(
-                                session: session,
-                                onTap: () =>
-                                    _openSessionDetail(context, session.id),
-                              ),
-                            ),
-                        ],
-                      );
-                    },
-                    childCount: sortedTimeSlots.length,
-                  ),
-                ),
+  String _normalize(String value) => value.trim().toLowerCase().replaceAll(
+    RegExp(r'[^\p{L}\p{N}]', unicode: true),
+    '',
+  );
 
-              // Bottom spacing for bottom nav
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 80),
+  Widget _buildEmpty(BuildContext context, int day, bool isDark) => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.event_busy_rounded,
+          size: 42,
+          color: isDark ? Colors.white38 : Colors.black38,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Không có hoạt động ngày $day',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white70 : const Color(0xFF475569),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Thử chọn ngày khác hoặc bộ môn khác',
+          style: TextStyle(
+            color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _buildError(BuildContext context, Object? _, VoidCallback onRetry) =>
+      Center(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.cloud_off_rounded, size: 42, color: Colors.grey),
+              const SizedBox(height: 10),
+              const Text(
+                'Không thể tải bảng tin lúc này',
+                style: TextStyle(fontWeight: FontWeight.w700),
               ),
+              const SizedBox(height: 12),
+              FilledButton(onPressed: onRetry, child: const Text('Thử lại')),
             ],
           ),
-        );
-      }
-
+        ),
+      );
 
   Widget _buildTimeSlotHeader({
     required String timeSlot,
@@ -149,60 +186,107 @@ class SocialListView extends ConsumerWidget {
     required bool isCollapsed,
     required bool isDark,
     required VoidCallback onToggle,
-  }) {
-    return InkWell(
-      onTap: onToggle,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF161616) : const Color(0xFFF8FAFC),
-          border: Border(
-            top: BorderSide(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.06)
-                  : const Color(0xFFE2E8F0),
-              width: 0.8,
-            ),
+  }) => InkWell(
+    onTap: onToggle,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF161616) : const Color(0xFFF8FAFC),
+        border: Border(
+          top: BorderSide(
+            color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Text(
-                  timeSlot,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  '| $count gặp gỡ',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white60 : const Color(0xFF64748B),
-                  ),
-                ),
-              ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            '$timeSlot  |  $count hoạt động',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
             ),
-            Icon(
-              isCollapsed
-                  ? Icons.keyboard_arrow_down_rounded
-                  : Icons.keyboard_arrow_up_rounded,
-              color: isDark ? Colors.white60 : const Color(0xFF64748B),
-              size: 20,
-            ),
-          ],
+          ),
+          Icon(
+            isCollapsed
+                ? Icons.keyboard_arrow_down_rounded
+                : Icons.keyboard_arrow_up_rounded,
+            color: isDark ? Colors.white60 : const Color(0xFF64748B),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Future<bool> _join(
+    BuildContext context,
+    WidgetRef ref,
+    ActivityFeedItem item,
+  ) async {
+    try {
+      await ref.read(activityFeedProvider.notifier).join(item);
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Đã tham gia hoạt động')));
+      }
+      return true;
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Không thể tham gia: $error')));
+      }
+      return false;
+    }
+  }
+
+  Future<bool> _leave(
+    BuildContext context,
+    WidgetRef ref,
+    ActivityFeedItem item,
+  ) async {
+    try {
+      await ref.read(activityFeedProvider.notifier).leave(item);
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Đã rút khỏi hoạt động')));
+      }
+      return true;
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Không thể rút slot: $error')));
+      }
+      return false;
+    }
+  }
+
+  void _openActivity(
+    BuildContext context,
+    ActivityFeedItem item,
+    WidgetRef ref,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ActivityFeedDetailScreen(
+          item: item,
+          onJoin: () async {
+            if (await _join(context, ref, item) && context.mounted) {
+              Navigator.of(context).pop();
+            }
+          },
+          onLeave: () async {
+            if (await _leave(context, ref, item) && context.mounted) {
+              Navigator.of(context).pop();
+            }
+          },
         ),
       ),
     );
-  }
-
-  void _openSessionDetail(BuildContext context, String sessionId) {
-    context.push('/social/$sessionId');
   }
 }

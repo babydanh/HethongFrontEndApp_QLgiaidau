@@ -283,12 +283,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ],
       ),
       body: profileAsync.when(
-        data: (profile) => _buildBody(context, profile, isDark),
-        loading: () => const ProfileShimmerLoading(),
-        error: (err, _) => _buildError(
-          context,
-          ErrorParser.parse(err, 'Không thể tải thông tin hồ sơ.'),
-        ),
+        data: (profile) {
+          debugPrint('DEBUG_PROFILE data: id=${profile.id}, name=${profile.fullName}');
+          return _buildBody(context, profile, isDark);
+        },
+        loading: () {
+          debugPrint('DEBUG_PROFILE loading...');
+          return const ProfileShimmerLoading();
+        },
+        error: (err, stack) {
+          debugPrint('DEBUG_PROFILE error: $err\n$stack');
+          return _buildError(
+            context,
+            ErrorParser.parse(err, 'Không thể tải thông tin hồ sơ.'),
+          );
+        },
       ),
       bottomNavigationBar: FloatingBottomNav(
         currentIndex: 2,
@@ -416,7 +425,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _buildUserInfo(context, profile),
           const SizedBox(height: 20),
 
-          // Tab bar selector (3 Tabs: Thông tin | Theo dõi | Thành tích)
+          // Tab bar selector (3 Tabs: Thông tin | Bạn bè | Cài đặt)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
@@ -439,6 +448,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Expanded(
                     child: _buildTabButton(
                       1,
+                      'Bạn bè',
+                      Icons.people_outline_rounded,
+                    ),
+                  ),
+                  Expanded(
+                    child: _buildTabButton(
+                      2,
                       l10n.profileTabSettings,
                       Icons.settings_rounded,
                     ),
@@ -494,8 +510,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 10),
             _buildInfoCard(context, profile),
             const SizedBox(height: 32),
+          ] else if (_activeTab == 1) ...[
+            // Tab 1: Bạn bè (Friends)
+            _buildFriendsTab(context, isDark),
+            const SizedBox(height: 32),
           ] else ...[
-            // Tab 1: Cài đặt (Menu buttons)
+            // Tab 2: Cài đặt (Menu buttons)
             _buildSectionTitle(colors, l10n.settingsAccountTitle),
             const SizedBox(height: 10),
             _buildAccountMenu(context),
@@ -2545,6 +2565,431 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  TAB BẠN BÈ (FRIENDS) — Thiết kế chuẩn ảnh mẫu
+  // ═══════════════════════════════════════════════════════
+  Widget _buildFriendsTab(BuildContext context, bool isDark) {
+    final colors = context.colors;
+
+    // Danh sách bạn bè mẫu phong cách ảnh
+    final sampleFriends = [
+      {'name': 'marnie', 'avatar': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150', 'icon': '🎾'},
+      {'name': 'zach', 'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', 'icon': '🏓'},
+      {'name': 'ami', 'avatar': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', 'icon': '🏸'},
+      {'name': 'ven', 'avatar': 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150', 'icon': '⚽'},
+      {'name': 'j', 'avatar': 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150', 'icon': '🎾'},
+      {'name': 'tim', 'avatar': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', 'icon': '🏓'},
+    ];
+
+    // Lời mời kết bạn mẫu (Friend Requests)
+    final sampleRequests = [
+      {
+        'id': '1',
+        'username': 'elton',
+        'fullName': 'Elton Cah',
+        'avatar': 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150',
+        'time': '1d',
+        'expiry': 'Hết hạn sau 1 tháng',
+      },
+      {
+        'id': '2',
+        'username': 'jam',
+        'fullName': 'Jamie Carter',
+        'avatar': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
+        'time': '3d',
+        'expiry': 'Hết hạn sau 1 tháng',
+      },
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Header: Friends + Actions (Invite, Keys/QR)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                'Friends',
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  fontFamily: 'serif',
+                  color: colors.textPrimary,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Đã sao chép liên kết mời bạn bè!'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'Invite',
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                    },
+                    child: Text(
+                      'Keys',
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // 2. Search bar bo góc nhạt
+          Container(
+            height: 42,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              color: isDark ? colors.bgSurface : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.search_rounded,
+                  size: 20,
+                  color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search',
+                      hintStyle: TextStyle(
+                        fontSize: 14.5,
+                        color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // 3. Grid bạn bè 2 hàng (2 x 3) tròn xoe kèm pin icon
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: sampleFriends.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 18,
+              crossAxisSpacing: 16,
+              childAspectRatio: 0.82,
+            ),
+            itemBuilder: (context, index) {
+              final friend = sampleFriends[index];
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: 76,
+                        height: 76,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0xFFE2E8F0),
+                          image: DecorationImage(
+                            image: NetworkImage(friend['avatar']!),
+                            fit: BoxFit.cover,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.06),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Pin / Key / Status icon nhỏ góc trên bên phải
+                      Positioned(
+                        top: 0,
+                        right: -2,
+                        child: Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.12),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.push_pin_rounded,
+                            size: 11,
+                            color: Color(0xFF0F172A),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    friend['name']!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+
+          // Chấm tròn phân trang (dots indicator • • • •)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(width: 5),
+              Container(
+                width: 5,
+                height: 5,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFCBD5E1),
+                ),
+              ),
+              const SizedBox(width: 5),
+              Container(
+                width: 5,
+                height: 5,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFCBD5E1),
+                ),
+              ),
+              const SizedBox(width: 5),
+              Container(
+                width: 5,
+                height: 5,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFCBD5E1),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
+
+          // 4. Mục Friend Requests (2)
+          Text(
+            'Friend Requests (2)',
+            style: TextStyle(
+              fontSize: 14.5,
+              fontWeight: FontWeight.w800,
+              color: colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Danh sách lời mời kết bạn
+          ...sampleRequests.map((req) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 20),
+              child: Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0xFFE2E8F0),
+                          image: DecorationImage(
+                            image: NetworkImage(req['avatar']!),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  req['username']!,
+                                  style: TextStyle(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: colors.textPrimary,
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      req['time']!,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFFEF4444),
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            Text(
+                              req['fullName']!,
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                color: isDark ? Colors.white54 : const Color(0xFF94A3B8),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              req['expiry']!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // 2 nút Accept & Decide Later
+                  Row(
+                    children: [
+                      const SizedBox(width: 56), // Đẩy thẳng lề với phần text
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            HapticFeedback.selectionClick();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Đã chấp nhận lời mời từ ${req['username']}'),
+                                duration: const Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F172A),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            minimumSize: const Size(0, 38),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(19),
+                            ),
+                          ),
+                          child: const Text(
+                            'Accept',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            HapticFeedback.selectionClick();
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: colors.textPrimary,
+                            side: BorderSide(
+                              color: isDark ? Colors.white24 : const Color(0xFFCBD5E1),
+                              width: 1.2,
+                            ),
+                            minimumSize: const Size(0, 38),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(19),
+                            ),
+                          ),
+                          child: const Text(
+                            'Decide Later',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
