@@ -215,7 +215,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final isAdminParam = state.uri.queryParameters['isAdmin'];
-          final isAdmin = isAdminParam != null ? (isAdminParam == 'true') : null;
+          final isAdmin = isAdminParam != null
+              ? (isAdminParam == 'true')
+              : null;
           return SocialDetailScreen(sessionId: id, isAdmin: isAdmin);
         },
       ),
@@ -373,27 +375,25 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ─── Create Tournament Standalone (Must be placed before /tournaments/:id) ───
       GoRoute(
         path: '/tournaments/create',
-        builder: (context, state) => CreatePublicQuickTournamentScreen(
-          communityId: state.uri.queryParameters['communityId'],
-        ),
+        builder: (context, state) => const CreatePublicQuickTournamentScreen(),
       ),
       GoRoute(
         path: '/tournaments/create-advanced',
-        builder: (context, state) => CreatePublicQuickTournamentScreen(
-          communityId: state.uri.queryParameters['communityId'],
-        ),
+        builder: (context, state) {
+          final communityId = state.uri.queryParameters['communityId'];
+          if (communityId != null && communityId.isNotEmpty) {
+            return CreateClubTournamentScreen(clubId: communityId);
+          }
+          return const CreatePublicQuickTournamentScreen();
+        },
       ),
       GoRoute(
         path: '/tournament/create',
-        builder: (context, state) => CreatePublicQuickTournamentScreen(
-          communityId: state.uri.queryParameters['communityId'],
-        ),
+        builder: (context, state) => const CreatePublicQuickTournamentScreen(),
       ),
       GoRoute(
         path: '/tournament-create',
-        builder: (context, state) => CreatePublicQuickTournamentScreen(
-          communityId: state.uri.queryParameters['communityId'],
-        ),
+        builder: (context, state) => const CreatePublicQuickTournamentScreen(),
       ),
 
       // ─── Advanced Organizer Operations ───
@@ -644,7 +644,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'search',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
-              final typeParam = state.uri.queryParameters['type']?.toUpperCase();
+              final typeParam = state.uri.queryParameters['type']
+                  ?.toUpperCase();
               final initialType = switch (typeParam) {
                 'MATCHES' => CommunitySearchType.matches,
                 'MEMBERS' => CommunitySearchType.members,

@@ -27,12 +27,13 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
   late final AnimationController _controller;
   bool _isFinished = false;
 
-  // Cấu hình 4 chấm tròn thể thao tương ứng với 4 tab
+  // Cấu hình 5 chấm tròn thể thao: 4 tab bên trái + 1 nút tiện ích bên phải
   static const List<({String label, Color color, IconData icon})> _tabs = [
     (label: 'Trang chủ', color: Color(0xFF1D8EF8), icon: Icons.home_rounded),
     (label: 'Giải đấu', color: Color(0xFFF59E0B), icon: Icons.emoji_events_rounded),
     (label: 'Khám phá', color: Color(0xFF06B6D4), icon: Icons.explore_rounded),
     (label: 'Cá nhân', color: Color(0xFF10B981), icon: Icons.person_rounded),
+    (label: 'Tiện ích', color: Color(0xFF8B5CF6), icon: Icons.unfold_more_rounded),
   ];
 
   @override
@@ -85,19 +86,24 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
     final safeAreaBottom = media.padding.bottom;
 
     // Tọa độ thanh Bottom Nav trên màn hình (theo chuẩn FloatingBottomNav):
-    // margin: left: 16, bottom: 14 + safeAreaBottom
-    // width: 252, height: 50
+    // Khối trái: left: 16, bottom: 14 + safeAreaBottom, width: 252, height: 50
+    // Khối phải (Tiện ích): right: 16, bottom: 14 + safeAreaBottom, width: 50, height: 50
     const double barWidth = 252.0;
     const double barHeight = 50.0;
     const double slotWidth = barWidth / 4.0;
-    final double navBarLeft = 16.0;
+    const double navBarLeft = 16.0;
     final double navBarBottom = 14.0 + safeAreaBottom;
     final double navBarCenterY = screenH - navBarBottom - (barHeight / 2.0);
 
-    // Tọa độ đích (Target Slot) của 4 icon
-    final targetPositions = List.generate(4, (i) {
-      final slotCenterX = navBarLeft + (i * slotWidth) + (slotWidth / 2.0);
-      return Offset(slotCenterX, navBarCenterY);
+    // Tọa độ đích (Target Slot) của 5 icon: 4 slot thanh trái + 1 tâm nút tiện ích bên phải
+    final targetPositions = List.generate(5, (i) {
+      if (i < 4) {
+        final slotCenterX = navBarLeft + (i * slotWidth) + (slotWidth / 2.0);
+        return Offset(slotCenterX, navBarCenterY);
+      } else {
+        // Tab thứ 5: Nút tiện ích hình tròn bên phải (right: 16, width: 50)
+        return Offset(screenW - 16.0 - 25.0, navBarCenterY);
+      }
     });
 
     // Tâm màn hình loading
@@ -141,11 +147,11 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
           bloomProgress = Curves.easeOutBack.transform(rawBloom.clamp(0.0, 1.0));
         }
 
-        // Tính tọa độ hiện tại của 4 chấm tròn
+        // Tính tọa độ hiện tại của 5 chấm tròn thể thao
         final dotPositions = <Offset>[];
-        for (int i = 0; i < 4; i++) {
-          // Tọa độ lúc ở giữa màn hình (dưới Logo SportO)
-          final startX = centerX - 42.0 + (i * 28.0);
+        for (int i = 0; i < 5; i++) {
+          // 5 chấm căn đều ở giữa màn hình (dưới Logo SportO)
+          final startX = centerX - 56.0 + (i * 28.0);
           final waveOffset = (t < 0.52)
               ? -math.sin(((t / 0.52) * 5 * math.pi) - (i * 0.75)).abs() * 20.0
               : 0.0;
@@ -154,10 +160,10 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
           final target = targetPositions[i];
 
           // Đường cong Bézier bay vút lên rồi lượn xuống đáy:
-          // Control point nâng cao lên tạo cảm giác bóng vung lên trời rồi hạ cánh
+          // Chấm thứ 5 vung sang phải mạnh mẽ để hạ cánh vào nút tiện ích
           final controlPt = Offset(
-            startX + (target.dx - startX) * 0.3,
-            startY - 140.0 + (i * 12.0),
+            startX + (target.dx - startX) * 0.35,
+            startY - 140.0 + (i * 10.0),
           );
 
           // Nội suy Quadratic Bézier: B(p) = (1-p)^2 * P0 + 2(1-p)p * P1 + p^2 * P2
@@ -212,7 +218,7 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
                     ),
                   ),
 
-              // 3. VẼ VỆT SÁNG BAY THEO ĐƯỜNG CỦA 4 CHẤM
+              // 3. VẼ VỆT SÁNG BAY THEO ĐƯỜNG CỦA 5 CHẤM THỂ THAO
               if (flightProgress > 0.05 && flightProgress < 0.95)
                 CustomPaint(
                   size: Size(screenW, screenH),
@@ -223,7 +229,7 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
                   ),
                 ),
 
-              // 4. KHUNG THANH NAVIGATION BAR BUNG MỞ TỪ 4 CHẤM KHI CHẠM ĐÁY
+              // 4a. KHUNG THANH NAVIGATION BAR TRÁI (252x50) BUNG MỞ KHI 4 CHẤM TRÁI CHẠM ĐÁY
               if (bloomProgress > 0.01)
                 Positioned(
                   left: navBarLeft,
@@ -262,8 +268,47 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
                   ),
                 ),
 
-              // 5. 4 CHẤM TRÒN BAY & BIẾN HÌNH (MORPH) THÀNH 4 ICON ĐIỀU HƯỚNG
-              ...List.generate(4, (i) {
+              // 4b. KHUNG NÚT TIỆN ÍCH TRÒN BÊN PHẢI (50x50) BUNG MỞ KHI CHẤM THỨ 5 CHẠM ĐÁY
+              if (bloomProgress > 0.01)
+                Positioned(
+                  right: 16.0,
+                  bottom: navBarBottom,
+                  child: Opacity(
+                    opacity: bloomProgress.clamp(0.0, 1.0),
+                    child: Transform.scale(
+                      scale: 0.85 + (bloomProgress * 0.15),
+                      alignment: Alignment.centerRight,
+                      child: Container(
+                        width: 50.0,
+                        height: 50.0,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(25),
+                          border: Border.all(
+                            color: const Color(0xFFE2E8F0).withValues(alpha: 0.9),
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                            BoxShadow(
+                              color: const Color(0xFF8B5CF6).withValues(alpha: 0.10 * bloomProgress),
+                              blurRadius: 14,
+                              spreadRadius: 1,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+              // 5. 5 CHẤM TRÒN BAY & BIẾN HÌNH (MORPH) THÀNH 5 ICON ĐIỀU HƯỚNG & TIỆN ÍCH
+              ...List.generate(5, (i) {
                 final pos = dotPositions[i];
                 final item = _tabs[i];
 
@@ -323,7 +368,7 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
                             ),
                           ),
 
-                        // Icon Navigation nở bung ra từ chấm tròn
+                        // Icon Navigation & Tiện ích nở bung ra từ chấm tròn
                         if (bloomProgress > 0.15)
                           Transform.scale(
                             scale: iconScale,

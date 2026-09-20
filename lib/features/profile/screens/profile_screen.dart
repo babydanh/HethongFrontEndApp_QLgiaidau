@@ -282,22 +282,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(width: 4),
         ],
       ),
-      body: profileAsync.when(
-        data: (profile) {
-          debugPrint('DEBUG_PROFILE data: id=${profile.id}, name=${profile.fullName}');
-          return _buildBody(context, profile, isDark);
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(userProfileProvider);
+          try {
+            await ref.read(userProfileProvider.future);
+          } catch (_) {}
         },
-        loading: () {
-          debugPrint('DEBUG_PROFILE loading...');
-          return const ProfileShimmerLoading();
-        },
-        error: (err, stack) {
-          debugPrint('DEBUG_PROFILE error: $err\n$stack');
-          return _buildError(
+        color: AppTheme.primary,
+        child: profileAsync.when(
+          data: (profile) => _buildBody(context, profile, isDark),
+          loading: () => const ProfileShimmerLoading(),
+          error: (err, stack) => _buildError(
             context,
             ErrorParser.parse(err, 'Không thể tải thông tin hồ sơ.'),
-          );
-        },
+          ),
+        ),
       ),
       bottomNavigationBar: FloatingBottomNav(
         currentIndex: 2,
@@ -3019,13 +3019,19 @@ class ProfileShimmerLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1);
+    final highlightColor =
+        isDark ? const Color(0xFF475569) : const Color(0xFFF1F5F9);
+
     return Shimmer.fromColors(
-      baseColor: colors.border,
-      highlightColor: colors.bgSurface,
+      baseColor: baseColor,
+      highlightColor: highlightColor,
       child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
           children: [
-            Container(height: 180, color: colors.border),
+            Container(height: 180, color: baseColor),
             const SizedBox(height: 20),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),

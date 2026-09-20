@@ -1182,7 +1182,7 @@
   "dashboard_showMore": "Show more ({count} more tournaments)",
   "dashboard_quickActions": "Quick Actions",
   "dashboard_createLite": "Create Quick Tournament",
-  "dashboard_createLiteSub": "Quickly create in your club",
+  "dashboard_createLiteSub": "Create a public world quick tournament",
   "dashboard_notificationsSub": "View invites, updates and reminders",
   "dashboard_clubInvites": "Club Invites",
   "dashboard_clubInvitesSub": "Receive and respond to club invites",

@@ -22,7 +22,6 @@ import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_ba
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_loading_widget.dart';
-import 'package:app_quanly_giaidau/core/widgets/pickleball_court_3d_animated.dart';
 import 'package:app_quanly_giaidau/core/widgets/morphing_nav_loader_transition.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
@@ -944,7 +943,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   TextButton.icon(
-                    onPressed: () => context.push('/create-quick-tournament'),
+                    onPressed: () => context.push('/tournaments/create'),
                     icon: const Icon(
                       Icons.add_circle_outline_rounded,
                       size: 18,

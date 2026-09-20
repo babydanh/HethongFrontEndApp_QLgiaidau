@@ -3066,7 +3066,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get dashboard_createLite => 'Tạo giải nhanh';
 
   @override
-  String get dashboard_createLiteSub => 'Tạo nhanh trong câu lạc bộ của bạn';
+  String get dashboard_createLiteSub => 'Tạo giải nhanh công khai thế giới';
 
   @override
   String get dashboard_notificationsSub =>

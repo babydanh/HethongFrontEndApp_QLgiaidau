@@ -3077,7 +3077,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboard_createLite => 'Create Quick Tournament';
 
   @override
-  String get dashboard_createLiteSub => 'Quickly create in your club';
+  String get dashboard_createLiteSub =>
+      'Create a public world quick tournament';
 
   @override
   String get dashboard_notificationsSub =>

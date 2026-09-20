@@ -241,6 +241,12 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
         return InteractiveViewer(
           transformationController: _tc,
           constrained: false,
+          // A compact bracket behaves like the Reclub board: it can be
+          // dragged left/right when the rounds exceed the viewport, while a
+          // genuinely tall bracket keeps vertical panning available.
+          panAxis: canvasSize.height > constraints.maxHeight
+              ? PanAxis.free
+              : PanAxis.horizontal,
           boundaryMargin: const EdgeInsets.all(800),
           minScale: 0.25,
           maxScale: 2.5,

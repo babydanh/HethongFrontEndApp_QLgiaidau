@@ -5819,7 +5819,7 @@ abstract class AppLocalizations {
   /// No description provided for @dashboard_createLiteSub.
   ///
   /// In vi, this message translates to:
-  /// **'Tạo nhanh trong câu lạc bộ của bạn'**
+  /// **'Tạo giải nhanh công khai thế giới'**
   String get dashboard_createLiteSub;
 
   /// No description provided for @dashboard_notificationsSub.
