@@ -186,15 +186,15 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
         // Tính tọa độ hiện tại của 5 quả bóng pickleball
         final dotPositions = <Offset>[];
         for (int i = 0; i < 5; i++) {
-          // 5 quả bóng căn đều ở giữa màn hình (dưới Logo SportO)
-          final startX = centerX - 64.0 + (i * 32.0);
+          // 5 quả bóng Pickleball căn đều ở giữa màn hình (dưới Logo SportO), khoảng cách 38px
+          final startX = centerX - 76.0 + (i * 38.0);
           final wavePhase = (t < 0.50)
               ? ((t / 0.50) * 5 * math.pi) - (i * 0.65)
               : 0.0;
           final waveOffset = (t < 0.50)
               ? -math.pow((math.sin(wavePhase) + 1.0) / 2.0, 1.4).toDouble() * 26.0
               : 0.0;
-          final startY = centerY + 40.0 + waveOffset;
+          final startY = centerY + 42.0 + waveOffset;
 
           final target = targetPositions[i];
 
@@ -382,30 +382,33 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
                   final pos = dotPositions[i];
                   final item = _tabs[i];
 
-                  final double ballRadius = (12.0 * (1.0 - (bloomProgress * 0.3))).clamp(6.0, 12.0);
+                  // Khi nảy sóng: bán kính bóng to rõ 16.0px để thấy rõ các lỗ Pickleball và màu sắc riêng
+                  // Khi bay đến Nav: co lại vừa vặn 11.5px để hòa vào icon
+                  final double initialRadius = (1.0 - flightProgress) * 16.5 + flightProgress * 12.0;
+                  final double ballRadius = (initialRadius * (1.0 - (bloomProgress * 0.3))).clamp(6.0, 16.5);
                   final iconScale = (bloomProgress * 1.15).clamp(0.0, 1.0);
 
                   return Positioned(
-                    left: pos.dx - 20,
-                    top: pos.dy - 20,
+                    left: pos.dx - 25,
+                    top: pos.dy - 25,
                     child: SizedBox(
-                      width: 40,
-                      height: 40,
+                      width: 50,
+                      height: 50,
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
                           // Sóng năng lượng xung kích tỏa ra khi bóng tiếp đất (Impact Ripple)
                           if (bloomProgress > 0.05 && bloomProgress < 0.80)
                             Container(
-                              width: 40 * bloomProgress,
-                              height: 40 * bloomProgress,
+                              width: 48 * bloomProgress,
+                              height: 48 * bloomProgress,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: item.color.withValues(
                                     alpha: 1.0 - bloomProgress,
                                   ),
-                                  width: 2.0,
+                                  width: 2.2,
                                 ),
                               ),
                             ),
