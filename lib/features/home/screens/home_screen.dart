@@ -110,12 +110,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _clubRequestVersion = 0;
   static const int _clubsPageSize = 6;
 
-  // Trang chủ (tab 0) hiển thị search bar khi người dùng bấm vào icon tìm kiếm trên Header
+  // Tab 1, 3, 4 hiển thị search bar trên Header
   bool get _shouldShowSearchBar =>
-      (_currentIndex == 0 && _isSearchExpanded) ||
-      _currentIndex == 1 ||
-      _currentIndex == 3 ||
-      _currentIndex == 4;
+      _currentIndex == 1 || _currentIndex == 3 || _currentIndex == 4;
 
   String get _activeSportFilter {
     return switch (_currentIndex) {
@@ -287,9 +284,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   double get _pinnedHeaderHeight {
     double h = _headerHeight;
     if (_currentIndex == 0) {
-      if (_isSearchExpanded) {
-        h += 52.0;
-      }
+      // Tab 0 chỉ có top bar cố định
     } else if (_currentIndex == 3) {
       h += 44.0; // Explore sub-tabs (CLB / Social)
       if (_shouldShowSearchBar) {
@@ -519,8 +514,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    _buildRoundSearchButton(isDark),
-                                    const SizedBox(width: 4),
+                                    if (_currentIndex != 0) ...[
+                                      _buildRoundSearchButton(isDark),
+                                      const SizedBox(width: 4),
+                                    ],
                                     _buildNotificationBellHeader(),
                                   ],
                                 ),
@@ -1604,9 +1601,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                       ),
-                    SliverToBoxAdapter(
-                      child: _buildSuggestedCommunitiesSection(),
-                    ),
                     UnifiedPublicMatchFeed(
                       tournaments: allTournaments,
                       sportFilter: _exploreSport,
@@ -3055,128 +3049,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildSuggestedCommunitiesSection() {
-    final colors = context.colors;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final communitiesAsync = ref.watch(
-      communitiesProvider(const (search: null, provinceCode: null)),
-    );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 104,
-          child: communitiesAsync.when(
-            data: (communities) {
-              if (communities.isEmpty) {
-                return const SizedBox.shrink();
-              }
-              final displayList = communities.take(12).toList();
-              return ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                itemCount: displayList.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 14),
-                itemBuilder: (context, index) {
-                  final club = displayList[index];
-                  // Banner fallback phải lấp đầy avatar carousel để logo dễ nhận diện.
-
-                  return GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      context.push('/communities/${club.id}');
-                    },
-                    child: SizedBox(
-                      width: 68,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ClubBrandAvatar(
-                            logoUrl: club.logoUrl,
-                            bannerUrl: club.bannerUrl,
-                            size: 62,
-                            bannerFit: BoxFit.cover,
-                            backgroundColor: isDark
-                                ? const Color(0xFF1E293B)
-                                : Colors.white,
-                            borderColor: context.colors.border.withValues(
-                              alpha: 0.7,
-                            ),
-                            borderWidth: 1,
-                            boxShadow: [
-                              BoxShadow(
-                                color: isDark
-                                    ? Colors.black26
-                                    : Colors.black.withValues(alpha: 0.08),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            club.name,
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
-                              color: colors.textPrimary,
-                              height: 1.15,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-            loading: () => ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 5,
-              separatorBuilder: (_, _) => const SizedBox(width: 14),
-              itemBuilder: (_, _) => SizedBox(
-                width: 68,
-                child: Column(
-                  children: [
-                    Container(
-                      width: 62,
-                      height: 62,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isDark
-                            ? Colors.white10
-                            : const Color(0xFFF1F5F9),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      width: 48,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.white10
-                            : const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            error: (_, _) => const SizedBox.shrink(),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildEmpty() {
     final l10n = AppLocalizations.of(context)!;
@@ -3435,23 +3308,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           slivers: [
             SliverToBoxAdapter(child: SizedBox(height: _pinnedHeaderHeight)),
-            if (currentList.isNotEmpty) ...[
-              SliverToBoxAdapter(child: const SizedBox(height: 12)),
-              SliverToBoxAdapter(
-                child: _buildSuggestedClubsCarousel(currentList),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 14.0, bottom: 6.0),
-                  child: Divider(
-                    height: 1,
-                    thickness: 0.8,
-                    color: context.colors.border.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
-            ] else
-              SliverToBoxAdapter(child: const SizedBox(height: 8)),
+            SliverToBoxAdapter(child: const SizedBox(height: 8)),
             if (_isClubInitialLoading && currentList.isEmpty)
               const SliverFillRemaining(
                 child: Center(
@@ -3529,68 +3386,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ─── TAB 3: CÂU LẠC BỘ (Clubs) — Compact List Style ───
-  Widget _buildSuggestedClubsCarousel(List<Community> clubs) {
-    // Show up to 10 suggested clubs at the top in circular avatar format
-    final displayClubs = clubs.take(10).toList();
 
-    return SizedBox(
-      height: 98.0,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: displayClubs.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 14.0),
-        itemBuilder: (context, index) {
-          final club = displayClubs[index];
-          // Banner fallback phải lấp đầy avatar carousel để logo dễ nhận diện.
-
-          return GestureDetector(
-            onTap: () => context.push("/club/${club.id}"),
-            child: SizedBox(
-              width: 66.0,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  ClubBrandAvatar(
-                    logoUrl: club.logoUrl,
-                    bannerUrl: club.bannerUrl,
-                    size: 62,
-                    bannerFit: BoxFit.cover,
-                    backgroundColor: context.colors.bgSurface,
-                    borderColor: context.colors.border.withValues(alpha: 0.7),
-                    borderWidth: 1,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6.0),
-                  Text(
-                    club.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textPrimary,
-                      height: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
 
   Widget _buildClubItem(Community club) {
     return Material(
