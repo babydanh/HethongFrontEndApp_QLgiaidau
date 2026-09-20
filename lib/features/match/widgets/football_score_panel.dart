@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class FootballScorePanel extends ConsumerWidget {
   final MatchControlParams params;
@@ -77,7 +78,7 @@ class FootballScorePanel extends ConsumerWidget {
               padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
-                  const Icon(Icons.timer_outlined, size: 18),
+                  const Icon(AppIcons.timer, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: _FootballTimeFields(
@@ -158,7 +159,7 @@ class FootballScorePanel extends ConsumerWidget {
                               event,
                               _eventLabel(l10n, event),
                             ),
-                      icon: const Icon(Icons.flag_outlined, size: 16),
+                      icon: const Icon(AppIcons.target, size: 16),
                       label: Text(_eventLabel(l10n, event)),
                     ),
                 ],
@@ -295,11 +296,11 @@ class _TeamScore extends StatelessWidget {
         children: [
           IconButton(
             onPressed: disabled || score == 0 ? null : onRemove,
-            icon: const Icon(Icons.remove_circle_outline),
+            icon: const Icon(AppIcons.cancel),
           ),
           IconButton(
             onPressed: disabled ? null : onAdd,
-            icon: const Icon(Icons.add_circle, color: Colors.green),
+            icon: const Icon(AppIcons.add, color: Colors.green),
           ),
         ],
       ),

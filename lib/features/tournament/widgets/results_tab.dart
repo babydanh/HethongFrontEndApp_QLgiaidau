@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class ResultsTab extends ConsumerWidget {
   final String tournamentId;
@@ -18,10 +19,12 @@ class ResultsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final resultAsync = ref.watch(tournamentResultProvider((
-      tournamentId: tournamentId,
-      divisionId: selectedDivisionId,
-    )));
+    final resultAsync = ref.watch(
+      tournamentResultProvider((
+        tournamentId: tournamentId,
+        divisionId: selectedDivisionId,
+      )),
+    );
 
     return resultAsync.when(
       data: (data) {
@@ -38,7 +41,7 @@ class ResultsTab extends ConsumerWidget {
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.emoji_events_outlined,
+                    AppIcons.trophy,
                     size: 40,
                     color: Color(0xFF94A3B8),
                   ),
@@ -112,11 +115,16 @@ class ResultsTab extends ConsumerWidget {
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1.5,
+                      ),
                       decoration: BoxDecoration(
                         color: colors.bgSurface,
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: colors.border.withValues(alpha: 0.6)),
+                        border: Border.all(
+                          color: colors.border.withValues(alpha: 0.6),
+                        ),
                       ),
                       child: Text(
                         '${(gold != null ? 1 : 0) + (silver != null ? 1 : 0) + bronzes.length + others.length}',
@@ -175,7 +183,7 @@ class ResultsTab extends ConsumerWidget {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.emoji_events_outlined,
+                AppIcons.trophy,
                 size: 40,
                 color: Color(0xFF94A3B8),
               ),
@@ -239,7 +247,11 @@ class ResultsTab extends ConsumerWidget {
               podiumGradient: const LinearGradient(
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
-                colors: [Color(0xFFE2E8F0), Color(0xFFF1F5F9), Color(0xFFF8FAFC)],
+                colors: [
+                  Color(0xFFE2E8F0),
+                  Color(0xFFF1F5F9),
+                  Color(0xFFF8FAFC),
+                ],
               ),
               borderColor: const Color(0xFFCBD5E1),
               numberColor: const Color(0xFF475569),
@@ -260,7 +272,11 @@ class ResultsTab extends ConsumerWidget {
               podiumGradient: const LinearGradient(
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
-                colors: [Color(0xFFFDE68A), Color(0xFFFEF3C7), Color(0xFFFFFBEB)],
+                colors: [
+                  Color(0xFFFDE68A),
+                  Color(0xFFFEF3C7),
+                  Color(0xFFFFFBEB),
+                ],
               ),
               borderColor: const Color(0xFFF59E0B),
               numberColor: const Color(0xFFB45309),
@@ -283,7 +299,11 @@ class ResultsTab extends ConsumerWidget {
               podiumGradient: const LinearGradient(
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
-                colors: [Color(0xFFFED7AA), Color(0xFFFFEDD5), Color(0xFFFFF7ED)],
+                colors: [
+                  Color(0xFFFED7AA),
+                  Color(0xFFFFEDD5),
+                  Color(0xFFFFF7ED),
+                ],
               ),
               borderColor: const Color(0xFFFB923C),
               numberColor: const Color(0xFFC2410C),
@@ -336,7 +356,7 @@ class ResultsTab extends ConsumerWidget {
                   ),
                 ],
               ),
-              child: const Icon(Icons.star_rounded, color: Colors.white, size: 14),
+              child: const Icon(AppIcons.star, color: Colors.white, size: 14),
             ),
 
           // Avatar display
@@ -439,7 +459,10 @@ class ResultsTab extends ConsumerWidget {
               ),
               const SizedBox(height: 3),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 1.5,
+                ),
                 child: Text(
                   rankLabel,
                   style: TextStyle(
@@ -490,9 +513,9 @@ class ResultsTab extends ConsumerWidget {
     final rawMembers = participant['members'];
     final members = rawMembers is List
         ? rawMembers
-            .whereType<Map>()
-            .map((m) => Map<String, dynamic>.from(m))
-            .toList()
+              .whereType<Map>()
+              .map((m) => Map<String, dynamic>.from(m))
+              .toList()
         : <Map<String, dynamic>>[];
 
     if (members.length >= 2) {
@@ -602,28 +625,25 @@ class ResultsTab extends ConsumerWidget {
     final badgeColor = isGold
         ? const Color(0xFFF59E0B)
         : isSilver
-            ? const Color(0xFF64748B)
-            : isBronze
-                ? const Color(0xFFEA580C)
-                : const Color(0xFF64748B);
+        ? const Color(0xFF64748B)
+        : isBronze
+        ? const Color(0xFFEA580C)
+        : const Color(0xFF64748B);
 
     final borderColor = isGold
         ? const Color(0xFFF59E0B).withValues(alpha: 0.35)
         : isSilver
-            ? const Color(0xFF94A3B8).withValues(alpha: 0.35)
-            : isBronze
-                ? const Color(0xFFEA580C).withValues(alpha: 0.35)
-                : colors.border.withValues(alpha: 0.7);
+        ? const Color(0xFF94A3B8).withValues(alpha: 0.35)
+        : isBronze
+        ? const Color(0xFFEA580C).withValues(alpha: 0.35)
+        : colors.border.withValues(alpha: 0.7);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: colors.bgSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: borderColor,
-          width: isGold ? 1.4 : 1.0,
-        ),
+        border: Border.all(color: borderColor, width: isGold ? 1.4 : 1.0),
       ),
       child: Row(
         children: [
@@ -674,7 +694,10 @@ class ResultsTab extends ConsumerWidget {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1.5,
+                      ),
                       decoration: BoxDecoration(
                         color: badgeColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),

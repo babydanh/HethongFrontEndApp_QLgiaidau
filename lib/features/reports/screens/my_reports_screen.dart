@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/violation_report.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/providers/report_provider.dart';
 
 class MyReportsScreen extends ConsumerWidget {
@@ -23,7 +24,7 @@ class MyReportsScreen extends ConsumerWidget {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           tooltip: l10n.myReportsBack,
           onPressed: () {
             if (context.canPop()) {
@@ -43,7 +44,7 @@ class MyReportsScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh_rounded, color: colors.textSecondary),
+            icon: Icon(AppIcons.refresh, color: colors.textSecondary),
             tooltip: l10n.myReportsRefresh,
             onPressed: () => ref.read(myReportsProvider.notifier).loadPage(1),
           ),
@@ -77,7 +78,7 @@ class _ReportsContent extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(24, 72, 24, 24),
           children: [
-            Icon(Icons.flag_outlined, size: 56, color: colors.textMuted),
+            Icon(AppIcons.target, size: 56, color: colors.textMuted),
             const SizedBox(height: 16),
             Text(
               l10n.myReportsEmptyTitle,
@@ -283,7 +284,7 @@ class _ReportCard extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: TextButton.icon(
                   onPressed: () => context.push(route),
-                  icon: const Icon(Icons.open_in_new_rounded, size: 17),
+                  icon: const Icon(AppIcons.externalLink, size: 17),
                   label: Text(l10n.myReportsViewTarget),
                 ),
               ),
@@ -361,7 +362,7 @@ class _Pagination extends StatelessWidget {
         IconButton(
           onPressed: onPrevious,
           tooltip: l10n.myReportsPreviousPage,
-          icon: const Icon(Icons.chevron_left_rounded),
+          icon: const Icon(AppIcons.chevronLeft),
         ),
         Text(
           l10n.myReportsPageCount(page, totalPages),
@@ -373,7 +374,7 @@ class _Pagination extends StatelessWidget {
         IconButton(
           onPressed: onNext,
           tooltip: l10n.myReportsNextPage,
-          icon: const Icon(Icons.chevron_right_rounded),
+          icon: const Icon(AppIcons.chevronRight),
         ),
       ],
     );
@@ -396,7 +397,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: colors.error),
+            Icon(AppIcons.error, size: 48, color: colors.error),
             const SizedBox(height: 12),
             Text(
               l10n.myReportsLoadError,
@@ -419,7 +420,7 @@ class _ErrorState extends StatelessWidget {
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded, size: 18),
+              icon: const Icon(AppIcons.refresh, size: 18),
               label: Text(l10n.myReportsRetry),
             ),
           ],

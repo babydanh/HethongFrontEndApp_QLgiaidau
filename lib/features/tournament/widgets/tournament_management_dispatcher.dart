@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_management_screen.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 
 /// Keeps the legacy admin deep link stable while routing to the current
@@ -68,7 +69,7 @@ class _StateScaffold extends StatelessWidget {
         backgroundColor: colors.bgDark,
         title: Text(title),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded),
+          icon: const Icon(AppIcons.chevronLeft),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -98,17 +99,13 @@ class _RetryState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.cloud_off_rounded,
-              color: context.colors.error,
-              size: 36,
-            ),
+            Icon(AppIcons.imageOff, color: context.colors.error, size: 36),
             const SizedBox(height: 12),
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const Icon(AppIcons.refresh),
               label: Text(l10n.dashboard_retry),
             ),
           ],

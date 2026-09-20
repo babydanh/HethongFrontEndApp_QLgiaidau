@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 import 'dart:async';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:intl/intl.dart';
 
 /// Trang hiển thị danh sách trận đấu với filter và search.
@@ -198,7 +199,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
         backgroundColor: colors.bgDark,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -211,7 +212,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh_rounded, color: colors.textPrimary),
+            icon: Icon(AppIcons.refresh, color: colors.textPrimary),
             onPressed: _loadData,
           ),
         ],
@@ -252,14 +253,14 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
             hintText: l10n.matchesSearchHint,
             hintStyle: TextStyle(color: colors.textMuted, fontSize: 14),
             prefixIcon: Icon(
-              Icons.search_rounded,
+              AppIcons.search,
               color: colors.textMuted,
               size: 20,
             ),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
                     icon: Icon(
-                      Icons.clear_rounded,
+                      AppIcons.close,
                       color: colors.textMuted,
                       size: 18,
                     ),
@@ -363,7 +364,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
               label: _selectedSport.isEmpty
                   ? l10n.matchesFilterSport
                   : l10n.sportDisplayName(_selectedSport),
-              icon: Icons.sports_rounded,
+              icon: AppIcons.trophy,
               isActive: _selectedSport.isNotEmpty,
               colors: colors,
               onTap: () => _showSportPicker(colors),
@@ -374,7 +375,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
               label: _selectedDateRange != null
                   ? DateFormat('dd/MM').format(_selectedDateRange!.start)
                   : l10n.matchesFilterDate,
-              icon: Icons.calendar_month_rounded,
+              icon: AppIcons.calendar,
               isActive: _selectedDateRange != null,
               colors: colors,
               onTap: _pickDateRange,
@@ -385,7 +386,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
               label: _selectedLocation.isEmpty
                   ? l10n.matchesFilterLocation
                   : _selectedLocation,
-              icon: Icons.location_on_rounded,
+              icon: AppIcons.mapPin,
               isActive: _selectedLocation.isNotEmpty,
               colors: colors,
               onTap: () => _showLocationInput(colors),
@@ -482,7 +483,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
           const SizedBox(width: 4),
           GestureDetector(
             onTap: onRemove,
-            child: Icon(Icons.close_rounded, size: 14, color: colors.info),
+            child: Icon(AppIcons.close, size: 14, color: colors.info),
           ),
         ],
       ),
@@ -544,9 +545,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
     final isSelected = _selectedSport == value;
     return ListTile(
       leading: Icon(
-        sportKey != null
-            ? Icons.sports_tennis_rounded
-            : Icons.all_inclusive_rounded,
+        sportKey != null ? AppIcons.sportTennis : AppIcons.infinity,
         color: isSelected ? colors.info : colors.textMuted,
       ),
       title: Text(
@@ -556,9 +555,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
           fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
         ),
       ),
-      trailing: isSelected
-          ? Icon(Icons.check_rounded, color: colors.info)
-          : null,
+      trailing: isSelected ? Icon(AppIcons.check, color: colors.info) : null,
       onTap: () {
         setState(() {
           _selectedSport = value;
@@ -662,7 +659,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
           padding: const EdgeInsets.symmetric(vertical: 10),
           child: Row(
             children: [
-              Icon(Icons.emoji_events_rounded, size: 16, color: colors.warning),
+              Icon(AppIcons.trophy, size: 16, color: colors.warning),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -816,7 +813,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
-              Icons.sports_tennis_rounded,
+              AppIcons.sportTennis,
               size: 40,
               color: colors.textMuted.withValues(alpha: 0.4),
             ),
@@ -848,7 +845,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+            Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
             Text(
               _error!,
@@ -858,7 +855,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: _loadData,
-              icon: const Icon(Icons.refresh_rounded, size: 18),
+              icon: const Icon(AppIcons.refresh, size: 18),
               label: Text(l10n.matchesRetry),
             ),
           ],

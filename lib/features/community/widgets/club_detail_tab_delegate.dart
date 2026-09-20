@@ -1,3 +1,4 @@
+
 part of '../screens/club_detail_screen.dart';
 
 class _TabBarDelegate extends SliverPersistentHeaderDelegate {
@@ -145,7 +146,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
                 ),
               ),
               const Icon(
-                Icons.arrow_drop_down_rounded,
+                AppIcons.chevronDown,
                 size: 20,
                 color: Color(0xFF64748B),
               ),
@@ -159,7 +160,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
             child: Row(
               children: [
                 const Icon(
-                  Icons.emoji_events_outlined,
+                  AppIcons.trophy,
                   size: 18,
                   color: Color(0xFFF59E0B),
                 ),
@@ -180,7 +181,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
             child: Row(
               children: [
                 const Icon(
-                  Icons.photo_library_outlined,
+                  AppIcons.images,
                   size: 18,
                   color: Color(0xFF0EA5E9),
                 ),

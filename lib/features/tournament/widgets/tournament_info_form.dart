@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/extensions/animation_extensions.dart';
 import 'package:app_quanly_giaidau/core/widgets/form_section.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class TournamentInfoForm extends StatelessWidget {
   final TextEditingController nameController;
@@ -30,7 +31,7 @@ class TournamentInfoForm extends StatelessWidget {
             style: TextStyle(color: context.colors.textPrimary),
             decoration: InputDecoration(
               hintText: l10n.tournamentInfoNameHint,
-              prefixIcon: Icon(Icons.edit, color: AppTheme.primaryLight),
+              prefixIcon: Icon(AppIcons.edit, color: AppTheme.primaryLight),
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -51,7 +52,10 @@ class TournamentInfoForm extends StatelessWidget {
               hintText: l10n.tournamentInfoDescriptionHint,
               prefixIcon: Padding(
                 padding: const EdgeInsets.only(bottom: 40),
-                child: Icon(Icons.notes, color: context.colors.textSecondary),
+                child: Icon(
+                  AppIcons.fileText,
+                  color: context.colors.textSecondary,
+                ),
               ),
             ),
           ),

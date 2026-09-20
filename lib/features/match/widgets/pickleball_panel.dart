@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.da
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Pickleball Side-Out scoring panel.
 class PickleballPanel extends ConsumerWidget {
@@ -61,7 +62,7 @@ class PickleballPanel extends ConsumerWidget {
                 child: Row(
                   children: [
                     const Icon(
-                      Icons.volunteer_activism_rounded,
+                      AppIcons.handshake,
                       size: 18,
                       color: Color(0xFFFFA500),
                     ),
@@ -164,7 +165,7 @@ class PickleballPanel extends ConsumerWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => notifier.pickleballSwitchServer(),
-                        icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+                        icon: const Icon(AppIcons.sort, size: 16),
                         label: Text(
                           l10n.pickleballSwitchServer,
                           style: const TextStyle(fontSize: 11),
@@ -178,7 +179,7 @@ class PickleballPanel extends ConsumerWidget {
                     Expanded(
                       child: FilledButton.icon(
                         onPressed: () => notifier.pickleballSideOut(),
-                        icon: const Icon(Icons.sync_alt_rounded, size: 16),
+                        icon: const Icon(AppIcons.sort, size: 16),
                         label: Text(
                           l10n.pickleballLoseServe,
                           style: const TextStyle(fontSize: 11),
@@ -248,7 +249,7 @@ class PickleballPanel extends ConsumerWidget {
                     children: [
                       if (isServing)
                         const Icon(
-                          Icons.volunteer_activism_rounded,
+                          AppIcons.handshake,
                           size: 16,
                           color: Color(0xFFFFA500),
                         ),
@@ -293,7 +294,7 @@ class PickleballPanel extends ConsumerWidget {
                                 ),
                               ),
                               child: Icon(
-                                Icons.remove_rounded,
+                                AppIcons.remove,
                                 size: 24,
                                 color: colors.textSecondary,
                               ),
@@ -333,11 +334,7 @@ class PickleballPanel extends ConsumerWidget {
                                   width: 1.5,
                                 ),
                               ),
-                              child: Icon(
-                                Icons.add_rounded,
-                                size: 28,
-                                color: color,
-                              ),
+                              child: Icon(AppIcons.add, size: 28, color: color),
                             ),
                           ),
                       ],
@@ -364,7 +361,7 @@ class PickleballPanel extends ConsumerWidget {
                                   ),
                                 ),
                                 child: Icon(
-                                  Icons.add_rounded,
+                                  AppIcons.add,
                                   size: 30,
                                   color: color,
                                 ),
@@ -403,7 +400,7 @@ class PickleballPanel extends ConsumerWidget {
                                   ),
                                 ),
                                 child: Icon(
-                                  Icons.remove_rounded,
+                                  AppIcons.remove,
                                   size: 24,
                                   color: colors.textSecondary,
                                 ),

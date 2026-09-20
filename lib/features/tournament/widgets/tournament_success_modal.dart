@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Modal bottom sheet hiển thị sau khi tạo giải thành công (cho cả Quick & Club)
 class TournamentSuccessModal extends StatelessWidget {
@@ -83,7 +84,7 @@ class TournamentSuccessModal extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.check_circle_rounded,
+                  AppIcons.checkCircle,
                   color: colors.success,
                   size: 34,
                 ),
@@ -136,7 +137,10 @@ class TournamentSuccessModal extends StatelessWidget {
               // ─── Link Container ───
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: colors.bgSurface,
                   borderRadius: BorderRadius.circular(12),
@@ -166,10 +170,13 @@ class TournamentSuccessModal extends StatelessWidget {
                           ),
                         );
                       },
-                      icon: const Icon(Icons.copy_rounded, size: 18),
+                      icon: const Icon(AppIcons.copy, size: 18),
                       label: Text(
                         l10n.createClubTournament_copyLink,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 13),
@@ -192,10 +199,13 @@ class TournamentSuccessModal extends StatelessWidget {
                           ),
                         );
                       },
-                      icon: const Icon(Icons.share_rounded, size: 18),
+                      icon: const Icon(AppIcons.share, size: 18),
                       label: Text(
                         l10n.createClubTournament_share,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 13),
@@ -222,10 +232,13 @@ class TournamentSuccessModal extends StatelessWidget {
                       context.push('/lite-manage/${result.id}');
                     }
                   },
-                  icon: const Icon(Icons.speed_rounded, size: 20),
+                  icon: const Icon(AppIcons.chart, size: 20),
                   label: Text(
                     l10n.createClubTournament_manageQuickly,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                    ),
                   ),
                   style: FilledButton.styleFrom(
                     shape: RoundedRectangleBorder(

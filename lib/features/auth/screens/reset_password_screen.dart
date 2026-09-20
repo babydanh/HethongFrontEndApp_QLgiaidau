@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   final String token;
@@ -94,7 +95,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             shape: BoxShape.circle,
           ),
           child: const Icon(
-            Icons.check_circle_rounded,
+            AppIcons.checkCircle,
             size: 40,
             color: Colors.green,
           ),
@@ -124,11 +125,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           color: context.colors.info.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Icon(
-          Icons.lock_reset_rounded,
-          size: 32,
-          color: Colors.blue,
-        ),
+        child: const Icon(AppIcons.refresh, size: 32, color: Colors.blue),
       ),
       const SizedBox(height: 20),
       Text(
@@ -142,10 +139,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         style: TextStyle(color: context.colors.textPrimary),
         decoration: InputDecoration(
           labelText: l10n.resetPassword_newPasswordLabel,
-          prefixIcon: Icon(
-            Icons.lock_outline_rounded,
-            color: context.colors.textMuted,
-          ),
+          prefixIcon: Icon(AppIcons.lock, color: context.colors.textMuted),
           filled: true,
           fillColor: context.colors.bgDark,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -158,10 +152,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         style: TextStyle(color: context.colors.textPrimary),
         decoration: InputDecoration(
           labelText: l10n.resetPassword_confirmPasswordLabel,
-          prefixIcon: Icon(
-            Icons.lock_outline_rounded,
-            color: context.colors.textMuted,
-          ),
+          prefixIcon: Icon(AppIcons.lock, color: context.colors.textMuted),
           filled: true,
           fillColor: context.colors.bgDark,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -182,7 +173,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                     color: Colors.white,
                   ),
                 )
-              : const Icon(Icons.save_rounded),
+              : const Icon(AppIcons.save),
           label: Text(
             _submitting
                 ? l10n.resetPassword_submitting

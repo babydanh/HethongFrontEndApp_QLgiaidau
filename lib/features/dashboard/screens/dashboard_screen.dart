@@ -20,6 +20,7 @@ import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dar
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:go_router/go_router.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -49,7 +50,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           title: Text(l10n.dashboard_title),
           centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+            icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
             onPressed: () {
               if (context.canPop()) {
                 context.pop();
@@ -72,11 +73,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     color: colors.info.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Icon(
-                    Icons.dashboard_customize_rounded,
-                    size: 40,
-                    color: colors.info,
-                  ),
+                  child: Icon(AppIcons.dashboard, size: 40, color: colors.info),
                 ),
                 const SizedBox(height: 20),
                 Text(
@@ -89,7 +86,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
                   onPressed: () => context.push('/login'),
-                  icon: const Icon(Icons.login),
+                  icon: const Icon(AppIcons.login),
                   label: Text(l10n.loginButton),
                 ),
               ],
@@ -105,7 +102,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         title: Text(l10n.dashboard_title),
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -179,7 +176,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final categories =
         ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
     final sports = [
-      {'id': 'all', 'label': l10n.infoAll, 'icon': Icons.grid_view_rounded},
+      {'id': 'all', 'label': l10n.infoAll, 'icon': AppIcons.grid},
       ...categories.map(
         (category) => <String, Object>{
           'id': category.slug,
@@ -253,15 +250,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   IconData _profileSportIcon(String slug) {
     switch (slug.toLowerCase()) {
       case 'tennis':
-        return Icons.sports_tennis_rounded;
+        return AppIcons.sportTennis;
       case 'football':
-        return Icons.sports_soccer_rounded;
+        return AppIcons.sportFootball;
       case 'badminton':
-        return Icons.sports_tennis_outlined;
+        return AppIcons.sportTennis;
       case 'table_tennis':
-        return Icons.sports_rounded;
+        return AppIcons.trophy;
       default:
-        return Icons.sports_handball_rounded;
+        return AppIcons.sportBadminton;
     }
   }
 
@@ -353,7 +350,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
       child: Column(
         children: [
-          Icon(Icons.emoji_events_outlined, size: 42, color: colors.textMuted),
+          Icon(AppIcons.trophy, size: 42, color: colors.textMuted),
           const SizedBox(height: 10),
           Text(
             l10n.publicProfileNoPlayedElo,
@@ -434,7 +431,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Row(
               children: [
                 Icon(
-                  isDoubles ? Icons.people_alt_rounded : Icons.person_rounded,
+                  isDoubles ? AppIcons.users : AppIcons.user,
                   color: AppTheme.primary,
                   size: 20,
                 ),
@@ -465,11 +462,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                 ),
                 const SizedBox(width: 6),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 18,
-                  color: colors.textMuted,
-                ),
+                Icon(AppIcons.chevronRight, size: 18, color: colors.textMuted),
               ],
             ),
             if (isDoubles && ranking.partnerName?.isNotEmpty == true) ...[
@@ -541,9 +534,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Row(
               children: [
                 Icon(
-                  streakType == 'NONE'
-                      ? Icons.remove_circle_outline_rounded
-                      : Icons.local_fire_department_rounded,
+                  streakType == 'NONE' ? AppIcons.cancel : AppIcons.flame,
                   color: streakColor,
                   size: 18,
                 ),
@@ -685,7 +676,7 @@ class _WorkspaceOverview extends StatelessWidget {
       children: [
         Expanded(
           child: _OverviewMetric(
-            icon: Icons.notifications_active_rounded,
+            icon: AppIcons.bell,
             color: context.colors.warning,
             label: l10n.dashboard_invites,
             value: '${workspace.pendingInviteCount}',
@@ -694,7 +685,7 @@ class _WorkspaceOverview extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(
           child: _OverviewMetric(
-            icon: Icons.verified_user_rounded,
+            icon: AppIcons.shieldCheck,
             color: AppTheme.primary,
             label: l10n.dashboard_roles,
             value: '${workspace.activeRoleCount}',
@@ -703,7 +694,7 @@ class _WorkspaceOverview extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(
           child: _OverviewMetric(
-            icon: Icons.sports_score_rounded,
+            icon: AppIcons.trophy,
             color: const Color(0xFF10B981),
             label: l10n.dashboard_refereeMatchesCount,
             value: '${workspace.refereeMatches.length}',
@@ -786,7 +777,7 @@ class _PendingInviteSection extends StatelessWidget {
       child: Column(
         children: [
           _InfoRow(
-            icon: Icons.gavel_rounded,
+            icon: AppIcons.shield,
             label: latestInvite.tournamentName,
             value: latestInvite.categoryName.isNotEmpty
                 ? latestInvite.categoryName
@@ -794,7 +785,7 @@ class _PendingInviteSection extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           _InfoRow(
-            icon: Icons.schedule_rounded,
+            icon: AppIcons.clock,
             label: l10n.dashboard_inviteDate,
             value: latestInvite.assignedAt != null
                 ? DateFormatterUtils.formatDateTime(
@@ -819,28 +810,28 @@ class _RoleSection extends StatelessWidget {
     final items = <Widget>[
       if (workspace.organizedTournaments.isNotEmpty)
         _RoleChip(
-          icon: Icons.workspace_premium_rounded,
+          icon: AppIcons.award,
           label: l10n.dashboard_organizer,
           count: workspace.organizedTournaments.length,
           color: const Color(0xFF10B981),
         ),
       if (workspace.coOrganizerTournaments.isNotEmpty)
         _RoleChip(
-          icon: Icons.groups_rounded,
+          icon: AppIcons.users,
           label: l10n.dashboard_coOrganizer,
           count: workspace.coOrganizerTournaments.length,
           color: AppTheme.primary,
         ),
       if (workspace.refereeTournaments.isNotEmpty)
         _RoleChip(
-          icon: Icons.gavel_rounded,
+          icon: AppIcons.shield,
           label: l10n.infoReferee,
           count: workspace.refereeTournaments.length,
           color: AppTheme.refereeColor,
         ),
       if (workspace.participatingTournaments.isNotEmpty)
         _RoleChip(
-          icon: Icons.sports_tennis_rounded,
+          icon: AppIcons.sportTennis,
           label: l10n.infoPlayer,
           count: workspace.participatingTournaments.length,
           color: context.colors.info,
@@ -1039,13 +1030,13 @@ class _UnifiedTournamentsSectionState
                   hintText: l10n.dashboard_searchHint,
                   hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
                   prefixIcon: Icon(
-                    Icons.search_rounded,
+                    AppIcons.search,
                     size: 18,
                     color: colors.textMuted,
                   ),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear_rounded, size: 16),
+                          icon: const Icon(AppIcons.close, size: 16),
                           onPressed: () {
                             _searchController.clear();
                             setState(() => _searchQuery = '');
@@ -1067,11 +1058,7 @@ class _UnifiedTournamentsSectionState
               child: Center(
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.emoji_events_outlined,
-                      size: 36,
-                      color: colors.textMuted,
-                    ),
+                    Icon(AppIcons.trophy, size: 36, color: colors.textMuted),
                     const SizedBox(height: 8),
                     Text(
                       _searchQuery.isNotEmpty
@@ -1120,9 +1107,7 @@ class _UnifiedTournamentsSectionState
                 child: TextButton.icon(
                   onPressed: () => setState(() => _isExpanded = !_isExpanded),
                   icon: Icon(
-                    _isExpanded
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded,
+                    _isExpanded ? AppIcons.chevronUp : AppIcons.chevronDown,
                     size: 20,
                     color: AppTheme.primary,
                   ),
@@ -1176,56 +1161,56 @@ class _QuickActions extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           _QuickActionRow(
-            icon: Icons.bolt_rounded,
+            icon: AppIcons.zap,
             title: l10n.dashboard_createLite,
             subtitle: l10n.dashboard_createLiteSub,
             onTap: () => _openLiteCreation(context),
           ),
           const Divider(height: 24),
           _QuickActionRow(
-            icon: Icons.notifications_rounded,
+            icon: AppIcons.bell,
             title: l10n.settingsNotifications,
             subtitle: l10n.dashboard_notificationsSub,
             onTap: () => context.push('/notifications'),
           ),
           const Divider(height: 24),
           _QuickActionRow(
-            icon: Icons.leaderboard_rounded,
+            icon: AppIcons.chart,
             title: l10n.dashboardRankings,
             subtitle: l10n.dashboardRankingsSub,
             onTap: () => context.push('/rankings'),
           ),
           const Divider(height: 24),
           _QuickActionRow(
-            icon: Icons.chat_bubble_outline_rounded,
+            icon: AppIcons.chat,
             title: l10n.dashboardChat,
             subtitle: l10n.dashboardChatSub,
             onTap: () => context.push('/chat'),
           ),
           const Divider(height: 24),
           _QuickActionRow(
-            icon: Icons.flag_outlined,
+            icon: AppIcons.target,
             title: l10n.dashboardReports,
             subtitle: l10n.dashboardReportsSub,
             onTap: () => context.push('/profile/reports'),
           ),
           const Divider(height: 24),
           _QuickActionRow(
-            icon: Icons.sports_soccer_rounded,
+            icon: AppIcons.sportFootball,
             title: l10n.dashboardFootballTeams,
             subtitle: l10n.dashboardFootballTeamsSub,
             onTap: () => context.push('/football-teams'),
           ),
           const Divider(height: 24),
           _QuickActionRow(
-            icon: Icons.groups_rounded,
+            icon: AppIcons.users,
             title: l10n.dashboard_clubInvites,
             subtitle: l10n.dashboard_clubInvitesSub,
             onTap: () => context.push('/club-invites'),
           ),
           const Divider(height: 24),
           _QuickActionRow(
-            icon: Icons.person_rounded,
+            icon: AppIcons.user,
             title: l10n.dashboard_profile,
             subtitle: l10n.dashboard_profileSub,
             onTap: () => context.push('/profile'),
@@ -1295,7 +1280,7 @@ class _QuickActionRow extends StatelessWidget {
               ),
             ),
             Icon(
-              Icons.chevron_right_rounded,
+              AppIcons.chevronRight,
               color: context.colors.textMuted,
               size: 20,
             ),
@@ -1427,10 +1412,7 @@ class _AssignmentTile extends StatelessWidget {
                 color: AppTheme.refereeColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.scoreboard_rounded,
-                color: AppTheme.refereeColor,
-              ),
+              child: const Icon(AppIcons.trophy, color: AppTheme.refereeColor),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1463,7 +1445,7 @@ class _AssignmentTile extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+            Icon(AppIcons.chevronRight, color: colors.textMuted),
           ],
         ),
       ),
@@ -1611,11 +1593,7 @@ class _TournamentTile extends StatelessWidget {
                       tournament.communityName!.isNotEmpty) ...[
                     Row(
                       children: [
-                        Icon(
-                          Icons.groups_rounded,
-                          size: 11,
-                          color: colors.textMuted,
-                        ),
+                        Icon(AppIcons.users, size: 11, color: colors.textMuted),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
@@ -1688,11 +1666,7 @@ class _TournamentTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: colors.textMuted,
-              size: 22,
-            ),
+            Icon(AppIcons.chevronRight, color: colors.textMuted, size: 22),
           ],
         ),
       ),

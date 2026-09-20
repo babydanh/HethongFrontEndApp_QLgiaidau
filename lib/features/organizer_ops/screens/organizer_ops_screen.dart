@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:go_router/go_router.dart';
 
 class OrganizerOpsScreen extends ConsumerStatefulWidget {
@@ -120,7 +121,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
               );
             }
           },
-          icon: const Icon(Icons.refresh_rounded),
+          icon: const Icon(AppIcons.refresh),
         ),
       ],
       body: divisionsAsync.when(
@@ -151,7 +152,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                 children: [
                   _OpsReadOnlyNotice(
-                    icon: Icons.category_outlined,
+                    icon: AppIcons.tags,
                     title: l10n.opsDivision,
                     message: l10n.opsEmptyDivision,
                   ),
@@ -268,7 +269,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 else
                   SliverToBoxAdapter(
                     child: _OpsReadOnlyNotice(
-                      icon: Icons.videocam_outlined,
+                      icon: AppIcons.video,
                       title: l10n.opsCamera,
                       message: l10n.opsCameraNotReady,
                     ),
@@ -304,7 +305,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         if (readModel.auditEntries.isEmpty) {
           return SliverToBoxAdapter(
             child: _OpsReadOnlyNotice(
-              icon: Icons.history_rounded,
+              icon: AppIcons.history,
               title: l10n.opsAudit,
               message: l10n.opsNoActivity,
             ),
@@ -370,7 +371,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         if (readModel.participants.isEmpty) {
           return SliverToBoxAdapter(
             child: _OpsReadOnlyNotice(
-              icon: Icons.people_alt_outlined,
+              icon: AppIcons.users,
               title: l10n.opsRoster,
               message: l10n.opsNoParticipants,
             ),
@@ -385,7 +386,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
               return Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: _OpsReadOnlyNotice(
-                  icon: Icons.info_outline_rounded,
+                  icon: AppIcons.info,
                   title: l10n.opsRoster,
                   message: l10n.opsContextHint,
                 ),
@@ -403,7 +404,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
               return Padding(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
                 child: _OpsReadOnlyNotice(
-                  icon: Icons.search_off_rounded,
+                  icon: AppIcons.searchOff,
                   title: l10n.opsRoster,
                   message: l10n.opsNoFilteredParticipants,
                 ),
@@ -572,7 +573,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         if (matches.isEmpty) {
           return SliverToBoxAdapter(
             child: _OpsReadOnlyNotice(
-              icon: Icons.sports_score_outlined,
+              icon: AppIcons.trophy,
               title: AppLocalizations.of(context)!.opsMatches,
               message: AppLocalizations.of(context)!.opsNoMatches,
             ),
@@ -604,7 +605,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
               return Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                 child: _OpsReadOnlyNotice(
-                  icon: Icons.filter_alt_off_outlined,
+                  icon: AppIcons.filter,
                   title: l10n.opsMatches,
                   message: l10n.opsFilteredNoMatches,
                 ),
@@ -686,7 +687,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                   maxLines: 4,
                   decoration: InputDecoration(
                     labelText: l10n.opsKickReason,
-                    prefixIcon: const Icon(Icons.notes_rounded),
+                    prefixIcon: const Icon(AppIcons.fileText),
                     alignLabelWithHint: true,
                   ),
                   validator: (value) => (value ?? '').trim().length < 5
@@ -740,7 +741,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                           dimension: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.person_remove_outlined),
+                      : const Icon(AppIcons.userRemove),
                   label: Text(l10n.opsKickConfirm),
                 ),
               ],
@@ -763,27 +764,27 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
           children: [
             if (match.status.toUpperCase() == 'SCHEDULED')
               ListTile(
-                leading: const Icon(Icons.play_circle_outline_rounded),
+                leading: const Icon(AppIcons.play),
                 title: Text(l10n.matchStartMatch),
                 onTap: () => Navigator.pop(sheetContext, 'start'),
               ),
             ListTile(
-              leading: const Icon(Icons.account_tree_outlined),
+              leading: const Icon(AppIcons.layers),
               title: Text(l10n.opsOpenBracket),
               onTap: () => Navigator.pop(sheetContext, 'bracket'),
             ),
             ListTile(
-              leading: const Icon(Icons.schedule_rounded),
+              leading: const Icon(AppIcons.clock),
               title: Text(l10n.matchScheduledTime),
               onTap: () => Navigator.pop(sheetContext, 'schedule'),
             ),
             ListTile(
-              leading: const Icon(Icons.scoreboard_outlined),
+              leading: const Icon(AppIcons.trophy),
               title: Text(l10n.opsOpenScoreboard),
               onTap: () => Navigator.pop(sheetContext, 'score'),
             ),
             ListTile(
-              leading: const Icon(Icons.gavel_rounded),
+              leading: const Icon(AppIcons.shield),
               title: Text(l10n.opsSpecialOperation),
               onTap: () => Navigator.pop(sheetContext, 'special'),
             ),
@@ -878,7 +879,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                       dimension: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.play_arrow_rounded),
+                  : const Icon(AppIcons.play),
               label: Text(l10n.matchStartMatch),
             ),
           ],
@@ -951,7 +952,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                     initialValue: selectedAction,
                     decoration: InputDecoration(
                       labelText: l10n.opsSpecialOperation,
-                      prefixIcon: const Icon(Icons.tune_rounded),
+                      prefixIcon: const Icon(AppIcons.tune),
                     ),
                     items: operations.entries
                         .map(
@@ -972,7 +973,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                     initialValue: selectedWinnerId,
                     decoration: InputDecoration(
                       labelText: l10n.opsWinner,
-                      prefixIcon: const Icon(Icons.emoji_events_outlined),
+                      prefixIcon: const Icon(AppIcons.trophy),
                     ),
                     items: winnerItems.entries
                         .map(
@@ -999,7 +1000,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                       labelText: l10n.opsOperationReason,
                       hintText: l10n.opsOperationReasonHint,
                       alignLabelWithHint: true,
-                      prefixIcon: const Icon(Icons.notes_rounded),
+                      prefixIcon: const Icon(AppIcons.fileText),
                     ),
                     validator: (value) {
                       if ((value ?? '').trim().length < 5) {
@@ -1058,7 +1059,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                             dimension: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.gavel_rounded),
+                        : const Icon(AppIcons.shield),
                     label: Text(l10n.opsOperationConfirm),
                   ),
                 ],
@@ -1135,7 +1136,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                   controller: courtController,
                   decoration: InputDecoration(
                     labelText: l10n.matchCourtLabel,
-                    prefixIcon: const Icon(Icons.place_outlined),
+                    prefixIcon: const Icon(AppIcons.mapPin),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -1167,7 +1168,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                       );
                     });
                   },
-                  icon: const Icon(Icons.event_rounded),
+                  icon: const Icon(AppIcons.calendar),
                   label: Text(
                     scheduledAt == null
                         ? l10n.matchNotScheduled
@@ -1180,7 +1181,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                     initialValue: selectedRefereeId,
                     decoration: InputDecoration(
                       labelText: l10n.matchMainReferee,
-                      prefixIcon: const Icon(Icons.sports_outlined),
+                      prefixIcon: const Icon(AppIcons.trophy),
                     ),
                     items: referees
                         .map(
@@ -1258,7 +1259,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                           dimension: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.save_rounded),
+                      : const Icon(AppIcons.save),
                   label: Text(l10n.matchSaveChanges),
                 ),
               ],
@@ -1326,7 +1327,7 @@ class _OpsScaffold extends StatelessWidget {
         leading: IconButton(
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: onBack,
-          icon: const Icon(Icons.arrow_back_ios_rounded),
+          icon: const Icon(AppIcons.chevronLeft),
         ),
         titleSpacing: 0,
         title: Column(
@@ -1453,7 +1454,7 @@ class _OpsDivisionSelector extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
         child: _OpsReadOnlyNotice(
-          icon: Icons.category_outlined,
+          icon: AppIcons.tags,
           title: l10n.opsDivision,
           message: l10n.opsEmptyDivision,
         ),
@@ -1535,12 +1536,12 @@ class _OpsTabBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final items = [
-      (l10n.opsOverview, Icons.dashboard_outlined),
-      (l10n.opsMatches, Icons.sports_score_outlined),
-      (l10n.opsBracket, Icons.account_tree_outlined),
-      (l10n.opsRoster, Icons.people_alt_outlined),
-      (l10n.opsActivity, Icons.history_rounded),
-      (l10n.opsCamera, Icons.videocam_outlined),
+      (l10n.opsOverview, AppIcons.dashboard),
+      (l10n.opsMatches, AppIcons.trophy),
+      (l10n.opsBracket, AppIcons.layers),
+      (l10n.opsRoster, AppIcons.users),
+      (l10n.opsActivity, AppIcons.history),
+      (l10n.opsCamera, AppIcons.video),
     ];
 
     return Padding(
@@ -1625,31 +1626,31 @@ class _OpsOverview extends StatelessWidget {
             runSpacing: 8,
             children: [
               _OpsMetric(
-                icon: Icons.category_outlined,
+                icon: AppIcons.tags,
                 label: l10n.opsDivision,
                 value: '${divisions.length}',
                 color: AppTheme.primary,
               ),
               _OpsMetric(
-                icon: Icons.schedule_rounded,
+                icon: AppIcons.clock,
                 label: l10n.opsScheduled,
                 value: '$scheduled',
                 color: colors.info,
               ),
               _OpsMetric(
-                icon: Icons.play_circle_outline_rounded,
+                icon: AppIcons.play,
                 label: l10n.opsOngoing,
                 value: '$ongoing',
                 color: colors.warning,
               ),
               _OpsMetric(
-                icon: Icons.check_circle_outline_rounded,
+                icon: AppIcons.checkCircle,
                 label: l10n.opsCompleted,
                 value: '$completed',
                 color: colors.success,
               ),
               _OpsMetric(
-                icon: Icons.priority_high_rounded,
+                icon: AppIcons.error,
                 label: l10n.opsAttention,
                 value: '$needsAttention',
                 color: needsAttention > 0 ? colors.error : colors.textMuted,
@@ -1658,9 +1659,7 @@ class _OpsOverview extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           _OpsReadOnlyNotice(
-            icon: readOnly
-                ? Icons.lock_outline_rounded
-                : Icons.info_outline_rounded,
+            icon: readOnly ? AppIcons.lock : AppIcons.info,
             title: l10n.opsOrganizerOnly,
             message: readOnly ? l10n.opsReadOnlyHint : l10n.opsContextHint,
           ),
@@ -1802,11 +1801,11 @@ class _OpsMatchCard extends StatelessWidget {
     final isRoundRobin = isGroupStageMatch(match);
     final contextLabel = isRoundRobin
         ? groupName?.isNotEmpty == true
-            ? l10n.crossTableLegTitle(
-                MatchRoundLabel.formatStageOrGroupName(groupName, l10n: l10n),
-                match.leg ?? 1,
-              )
-            : '#${match.matchNumber}'
+              ? l10n.crossTableLegTitle(
+                  MatchRoundLabel.formatStageOrGroupName(groupName, l10n: l10n),
+                  match.leg ?? 1,
+                )
+              : '#${match.matchNumber}'
         : l10n.organizer_matchTitle(match.round, match.matchNumber);
     final scheduledLabel = match.scheduledTime == null
         ? l10n.opsUnscheduled
@@ -1889,18 +1888,12 @@ class _OpsMatchCard extends StatelessWidget {
                 spacing: 12,
                 runSpacing: 6,
                 children: [
-                  _OpsMeta(
-                    icon: Icons.schedule_rounded,
-                    text: scheduledLabel,
-                  ),
+                  _OpsMeta(icon: AppIcons.clock, text: scheduledLabel),
                   if (match.court.isNotEmpty)
-                    _OpsMeta(icon: Icons.place_outlined, text: match.court),
+                    _OpsMeta(icon: AppIcons.mapPin, text: match.court),
                   if (match.refereeName != null &&
                       match.refereeName!.isNotEmpty)
-                    _OpsMeta(
-                      icon: Icons.sports_rounded,
-                      text: match.refereeName!,
-                    ),
+                    _OpsMeta(icon: AppIcons.trophy, text: match.refereeName!),
                 ],
               ),
             ],
@@ -1940,7 +1933,7 @@ class _OpsRosterFilterBar extends StatelessWidget {
             onChanged: onSearchChanged,
             decoration: InputDecoration(
               hintText: l10n.opsSearchRoster,
-              prefixIcon: const Icon(Icons.search_rounded),
+              prefixIcon: const Icon(AppIcons.search),
               isDense: true,
             ),
           ),
@@ -2016,7 +2009,7 @@ class _OpsActivityCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.history_rounded, color: colors.info, size: 20),
+            Icon(AppIcons.history, color: colors.info, size: 20),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -2118,16 +2111,14 @@ class _OpsParticipantCard extends StatelessWidget {
               runSpacing: 6,
               children: [
                 _OpsMeta(
-                  icon: participant.isPaid
-                      ? Icons.verified_rounded
-                      : Icons.pending_outlined,
+                  icon: participant.isPaid ? AppIcons.verified : AppIcons.clock,
                   text: participant.isPaid
                       ? l10n.payments_statusSuccess
                       : l10n.payments_statusPending,
                 ),
                 if (participant.seed != null)
                   _OpsMeta(
-                    icon: Icons.numbers_rounded,
+                    icon: AppIcons.tag,
                     text: 'Seed ${participant.seed}',
                   ),
               ],
@@ -2138,7 +2129,7 @@ class _OpsParticipantCard extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: OutlinedButton.icon(
                   onPressed: onKick,
-                  icon: const Icon(Icons.person_remove_outlined, size: 18),
+                  icon: const Icon(AppIcons.userRemove, size: 18),
                   label: Text(l10n.opsKick),
                 ),
               ),
@@ -2170,7 +2161,7 @@ class _OpsBracketPreview extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _OpsReadOnlyNotice(
-            icon: Icons.account_tree_outlined,
+            icon: AppIcons.layers,
             title: l10n.opsBracket,
             message: l10n.opsContextHint,
           ),
@@ -2186,7 +2177,7 @@ class _OpsBracketPreview extends StatelessWidget {
                       '/organizer/tournaments/$tournamentId/ops/bracket$query',
                     );
                   },
-            icon: const Icon(Icons.open_in_new_rounded),
+            icon: const Icon(AppIcons.externalLink),
             label: Text(l10n.opsOpenBracket),
           ),
         ],
@@ -2359,11 +2350,7 @@ class _OpsErrorBody extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.cloud_off_rounded,
-              color: context.colors.error,
-              size: 36,
-            ),
+            Icon(AppIcons.imageOff, color: context.colors.error, size: 36),
             const SizedBox(height: 12),
             Text(
               message,
@@ -2373,7 +2360,7 @@ class _OpsErrorBody extends StatelessWidget {
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const Icon(AppIcons.refresh),
               label: Text(l10n.opsRetry),
             ),
           ],

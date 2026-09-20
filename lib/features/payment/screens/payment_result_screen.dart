@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class PaymentResultScreen extends StatelessWidget {
   const PaymentResultScreen({super.key});
@@ -14,9 +15,12 @@ class PaymentResultScreen extends StatelessWidget {
     final extra = state.extra as Map?;
     final q = state.uri.queryParameters;
     final status = extra?['status']?.toString() ?? q['status'] ?? '';
-    final isSuccess = status == 'success' || status == 'PAID' || status == 'COMPLETED';
-    final tournamentId = extra?['tournamentId']?.toString() ?? q['tournamentId'] ?? '';
-    final amount = (extra?['amount'] as num?)?.toDouble() ??
+    final isSuccess =
+        status == 'success' || status == 'PAID' || status == 'COMPLETED';
+    final tournamentId =
+        extra?['tournamentId']?.toString() ?? q['tournamentId'] ?? '';
+    final amount =
+        (extra?['amount'] as num?)?.toDouble() ??
         double.tryParse(q['amount'] ?? '') ??
         0.0;
     final fmt = NumberFormat.decimalPattern(
@@ -33,7 +37,8 @@ class PaymentResultScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 100, height: 100,
+                width: 100,
+                height: 100,
                 decoration: BoxDecoration(
                   color: isSuccess
                       ? context.colors.success.withValues(alpha: 0.1)
@@ -41,22 +46,33 @@ class PaymentResultScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  isSuccess ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                  isSuccess ? AppIcons.checkCircle : AppIcons.cancel,
                   size: 52,
-                  color: isSuccess ? context.colors.success : context.colors.error,
+                  color: isSuccess
+                      ? context.colors.success
+                      : context.colors.error,
                 ),
               ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
               const SizedBox(height: 24),
               Text(
-                isSuccess ? l10n.paymentResult_successTitle : l10n.paymentResult_failedTitle,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: context.colors.textPrimary),
+                isSuccess
+                    ? l10n.paymentResult_successTitle
+                    : l10n.paymentResult_failedTitle,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: context.colors.textPrimary,
+                ),
               ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
               const SizedBox(height: 8),
               Text(
                 isSuccess
                     ? '${l10n.paymentResult_amountLabel}: ${fmt.format(amount.ceil())}đ'
                     : l10n.paymentResult_failedMessage,
-                style: TextStyle(fontSize: 14, color: context.colors.textSecondary),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: context.colors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
               if (isSuccess) ...[
@@ -66,22 +82,35 @@ class PaymentResultScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: context.colors.success.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: context.colors.success.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: context.colors.success.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.emoji_events_rounded, color: context.colors.success, size: 20),
+                      Icon(
+                        AppIcons.trophy,
+                        color: context.colors.success,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
-                      Text(l10n.paymentResult_successMessage,
-                          style: TextStyle(color: context.colors.success, fontWeight: FontWeight.w700, fontSize: 14)),
+                      Text(
+                        l10n.paymentResult_successMessage,
+                        style: TextStyle(
+                          color: context.colors.success,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
                     ],
                   ),
                 ).animate().fadeIn(delay: 700.ms, duration: 400.ms),
               ],
               const SizedBox(height: 40),
               SizedBox(
-                width: double.infinity, height: 50,
+                width: double.infinity,
+                height: 50,
                 child: ElevatedButton.icon(
                   onPressed: () {
                     if (tournamentId.isNotEmpty) {
@@ -90,15 +119,28 @@ class PaymentResultScreen extends StatelessWidget {
                       context.go('/home');
                     }
                   },
-                  icon: const Icon(Icons.arrow_forward_rounded),
-                  label: Text(l10n.paymentResult_backToTournament, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                  icon: const Icon(AppIcons.forward),
+                  label: Text(
+                    l10n.paymentResult_backToTournament,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () => context.go('/home'),
-                child: Text(l10n.paymentResult_backToHome, style: TextStyle(color: context.colors.textMuted)),
+                child: Text(
+                  l10n.paymentResult_backToHome,
+                  style: TextStyle(color: context.colors.textMuted),
+                ),
               ),
             ],
           ),

@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 final myPaymentsProvider = FutureProvider<List<PaymentModel>>((ref) async {
@@ -39,7 +40,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -58,7 +59,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh_rounded, color: colors.textSecondary),
+            icon: Icon(AppIcons.refresh, color: colors.textSecondary),
             tooltip: l10n.payments_refreshTooltip,
             onPressed: () => ref.refresh(myPaymentsProvider),
           ),
@@ -73,11 +74,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.error_outline_rounded,
-                  size: 48,
-                  color: colors.error,
-                ),
+                Icon(AppIcons.error, size: 48, color: colors.error),
                 const SizedBox(height: 12),
                 Text(
                   '${l10n.payments_loadError} $e',
@@ -87,7 +84,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
                   onPressed: () => ref.refresh(myPaymentsProvider),
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  icon: const Icon(AppIcons.refresh, size: 18),
                   label: Text(l10n.infoRetry),
                 ),
               ],
@@ -153,7 +150,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(
-                      Icons.account_balance_wallet_rounded,
+                      AppIcons.wallet,
                       color: AppTheme.primary,
                       size: 24,
                     ),
@@ -243,7 +240,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           border: Border.all(color: colors.border),
                         ),
                         child: Icon(
-                          Icons.receipt_long_rounded,
+                          AppIcons.receipt,
                           size: 40,
                           color: colors.textMuted.withValues(alpha: 0.5),
                         ),
@@ -356,16 +353,16 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
 
     if (payment.isCompleted) {
       statusColor = const Color(0xFF10B981);
-      statusIcon = Icons.check_circle_rounded;
+      statusIcon = AppIcons.checkCircle;
     } else if (payment.isPending) {
       statusColor = const Color(0xFFF59E0B);
-      statusIcon = Icons.access_time_rounded;
+      statusIcon = AppIcons.clock;
     } else if (payment.isTerminalFailure) {
       statusColor = const Color(0xFFEF4444);
-      statusIcon = Icons.cancel_rounded;
+      statusIcon = AppIcons.cancel;
     } else {
       statusColor = colors.textMuted;
-      statusIcon = Icons.replay_rounded;
+      statusIcon = AppIcons.play;
     }
 
     final fmt = NumberFormat.decimalPattern(
@@ -484,11 +481,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.numbers_rounded,
-                          size: 14,
-                          color: colors.textMuted,
-                        ),
+                        Icon(AppIcons.tag, size: 14, color: colors.textMuted),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
@@ -513,7 +506,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           )
                         else
                           Icon(
-                            Icons.chevron_right_rounded,
+                            AppIcons.chevronRight,
                             size: 16,
                             color: colors.textMuted,
                           ),
@@ -544,16 +537,16 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     IconData statusIcon;
     if (payment.isCompleted) {
       statusColor = const Color(0xFF10B981);
-      statusIcon = Icons.check_circle_rounded;
+      statusIcon = AppIcons.checkCircle;
     } else if (payment.isPending) {
       statusColor = const Color(0xFFF59E0B);
-      statusIcon = Icons.access_time_rounded;
+      statusIcon = AppIcons.clock;
     } else if (payment.isTerminalFailure) {
       statusColor = const Color(0xFFEF4444);
-      statusIcon = Icons.cancel_rounded;
+      statusIcon = AppIcons.cancel;
     } else {
       statusColor = colors.textMuted;
-      statusIcon = Icons.replay_rounded;
+      statusIcon = AppIcons.play;
     }
 
     showModalBottomSheet(
@@ -696,7 +689,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                               child: Padding(
                                 padding: const EdgeInsets.all(4),
                                 child: Icon(
-                                  Icons.copy_rounded,
+                                  AppIcons.copy,
                                   size: 16,
                                   color: AppTheme.primary,
                                 ),
@@ -723,7 +716,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       child: Row(
                         children: [
                           const Icon(
-                            Icons.info_outline_rounded,
+                            AppIcons.info,
                             color: Color(0xFFF59E0B),
                             size: 20,
                           ),
@@ -752,7 +745,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                               Navigator.pop(ctx);
                               ref.invalidate(myPaymentsProvider);
                             },
-                            icon: const Icon(Icons.refresh_rounded, size: 18),
+                            icon: const Icon(AppIcons.refresh, size: 18),
                             label: Text(l10n.payments_refreshStatus),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -782,7 +775,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                                       color: Colors.white,
                                     ),
                                   )
-                                : const Icon(Icons.payment_rounded, size: 18),
+                                : const Icon(AppIcons.creditCard, size: 18),
                             label: Text(
                               _isProcessingLink
                                   ? l10n.payments_processing
@@ -816,7 +809,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       child: Row(
                         children: [
                           const Icon(
-                            Icons.verified_user_rounded,
+                            AppIcons.shieldCheck,
                             color: Color(0xFF10B981),
                             size: 20,
                           ),

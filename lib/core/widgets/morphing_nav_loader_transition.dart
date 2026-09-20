@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Hoạt họa chuyển cảnh đỉnh cao Choreographed Morphing Loader -> Navigation Bar:
 /// 1. Màn Loading: 4 chấm tròn thể thao nảy sóng nhịp điệu ở giữa màn hình cùng Logo SportO.
@@ -23,7 +24,8 @@ class MorphingNavLoaderOverlay extends StatefulWidget {
   });
 
   @override
-  State<MorphingNavLoaderOverlay> createState() => MorphingNavLoaderOverlayState();
+  State<MorphingNavLoaderOverlay> createState() =>
+      MorphingNavLoaderOverlayState();
 }
 
 class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
@@ -34,11 +36,11 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
 
   // Cấu hình 5 chấm tròn thể thao: 4 tab bên trái + 1 nút tiện ích bên phải
   static const List<({String label, Color color, IconData icon})> _tabs = [
-    (label: 'Trang chủ', color: Color(0xFF1D8EF8), icon: Icons.home_rounded),
-    (label: 'Giải đấu', color: Color(0xFFF59E0B), icon: Icons.emoji_events_rounded),
-    (label: 'Khám phá', color: Color(0xFF06B6D4), icon: Icons.explore_rounded),
-    (label: 'Hộp thư', color: Color(0xFF10B981), icon: Icons.chat_bubble_rounded),
-    (label: 'Tiện ích', color: Color(0xFF8B5CF6), icon: Icons.unfold_more_rounded),
+    (label: 'Trang chủ', color: Color(0xFF1D8EF8), icon: AppIcons.home),
+    (label: 'Giải đấu', color: Color(0xFFF59E0B), icon: AppIcons.trophy),
+    (label: 'Khám phá', color: Color(0xFF06B6D4), icon: AppIcons.explore),
+    (label: 'Hộp thư', color: Color(0xFF10B981), icon: AppIcons.chat),
+    (label: 'Tiện ích', color: Color(0xFF8B5CF6), icon: AppIcons.chevronDown),
   ];
 
   @override
@@ -176,7 +178,9 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
         double bloomProgress = 0.0;
         if (t >= 0.82) {
           final rawBloom = (t - 0.82) / 0.18;
-          bloomProgress = Curves.easeOutBack.transform(rawBloom.clamp(0.0, 1.0));
+          bloomProgress = Curves.easeOutBack.transform(
+            rawBloom.clamp(0.0, 1.0),
+          );
         }
 
         // Tính tọa độ hiện tại của 5 chấm tròn thể thao
@@ -200,8 +204,14 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
 
           // Nội suy Quadratic Bézier: B(p) = (1-p)^2 * P0 + 2(1-p)p * P1 + p^2 * P2
           final p = flightProgress;
-          final curX = (1 - p) * (1 - p) * startX + 2 * (1 - p) * p * controlPt.dx + p * p * target.dx;
-          final curY = (1 - p) * (1 - p) * startY + 2 * (1 - p) * p * controlPt.dy + p * p * target.dy;
+          final curX =
+              (1 - p) * (1 - p) * startX +
+              2 * (1 - p) * p * controlPt.dx +
+              p * p * target.dx;
+          final curY =
+              (1 - p) * (1 - p) * startY +
+              2 * (1 - p) * p * controlPt.dy +
+              p * p * target.dy;
 
           dotPositions.add(Offset(curX, curY));
         }
@@ -221,9 +231,7 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
                 Positioned.fill(
                   child: Opacity(
                     opacity: overlayOpacity,
-                    child: Container(
-                      color: Colors.white,
-                    ),
+                    child: Container(color: Colors.white),
                   ),
                 ),
 
@@ -250,175 +258,193 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
                     ),
                   ),
 
-              // 3. VẼ VỆT SÁNG BAY THEO ĐƯỜNG CỦA 5 CHẤM THỂ THAO
-              if (flightProgress > 0.05 && flightProgress < 0.95)
-                CustomPaint(
-                  size: Size(screenW, screenH),
-                  painter: _FlightTrailsPainter(
-                    dotPositions: dotPositions,
-                    tabs: _tabs,
-                    flightProgress: flightProgress,
-                  ),
-                ),
-
-              // 4a. KHUNG THANH NAVIGATION BAR TRÁI (252x50) BUNG MỞ KHI 4 CHẤM TRÁI CHẠM ĐÁY
-              if (bloomProgress > 0.01)
-                Positioned(
-                  left: navBarLeft,
-                  bottom: navBarBottom,
-                  child: Opacity(
-                    opacity: bloomProgress.clamp(0.0, 1.0),
-                    child: Transform.scale(
-                      scale: 0.85 + (bloomProgress * 0.15),
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        width: barWidth,
-                        height: barHeight,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(25),
-                          border: Border.all(
-                            color: const Color(0xFFE2E8F0).withValues(alpha: 0.9),
-                            width: 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
-                            ),
-                            BoxShadow(
-                              color: AppTheme.primary.withValues(alpha: 0.10 * bloomProgress),
-                              blurRadius: 14,
-                              spreadRadius: 1,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                      ),
+                // 3. VẼ VỆT SÁNG BAY THEO ĐƯỜNG CỦA 5 CHẤM THỂ THAO
+                if (flightProgress > 0.05 && flightProgress < 0.95)
+                  CustomPaint(
+                    size: Size(screenW, screenH),
+                    painter: _FlightTrailsPainter(
+                      dotPositions: dotPositions,
+                      tabs: _tabs,
+                      flightProgress: flightProgress,
                     ),
                   ),
-                ),
 
-              // 4b. KHUNG NÚT TIỆN ÍCH TRÒN BÊN PHẢI (50x50) BUNG MỞ KHI CHẤM THỨ 5 CHẠM ĐÁY
-              if (bloomProgress > 0.01)
-                Positioned(
-                  right: 16.0,
-                  bottom: navBarBottom,
-                  child: Opacity(
-                    opacity: bloomProgress.clamp(0.0, 1.0),
-                    child: Transform.scale(
-                      scale: 0.85 + (bloomProgress * 0.15),
-                      alignment: Alignment.centerRight,
-                      child: Container(
-                        width: 50.0,
-                        height: 50.0,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(25),
-                          border: Border.all(
-                            color: const Color(0xFFE2E8F0).withValues(alpha: 0.9),
-                            width: 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
+                // 4a. KHUNG THANH NAVIGATION BAR TRÁI (252x50) BUNG MỞ KHI 4 CHẤM TRÁI CHẠM ĐÁY
+                if (bloomProgress > 0.01)
+                  Positioned(
+                    left: navBarLeft,
+                    bottom: navBarBottom,
+                    child: Opacity(
+                      opacity: bloomProgress.clamp(0.0, 1.0),
+                      child: Transform.scale(
+                        scale: 0.85 + (bloomProgress * 0.15),
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          width: barWidth,
+                          height: barHeight,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(25),
+                            border: Border.all(
+                              color: const Color(
+                                0xFFE2E8F0,
+                              ).withValues(alpha: 0.9),
+                              width: 1.2,
                             ),
-                            BoxShadow(
-                              color: const Color(0xFF8B5CF6).withValues(alpha: 0.10 * bloomProgress),
-                              blurRadius: 14,
-                              spreadRadius: 1,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-              // 5. 5 CHẤM TRÒN BAY & BIẾN HÌNH (MORPH) THÀNH 5 ICON ĐIỀU HƯỚNG & TIỆN ÍCH
-              ...List.generate(5, (i) {
-                final pos = dotPositions[i];
-                final item = _tabs[i];
-
-                // Khi bloomProgress tăng: Chấm tròn chuyển đổi kích thước và nở thành Icon
-                final dotSize = (14.0 * (1.0 - (bloomProgress * 0.3))).clamp(8.0, 16.0);
-                final iconScale = (bloomProgress * 1.15).clamp(0.0, 1.0);
-
-                return Positioned(
-                  left: pos.dx - 18,
-                  top: pos.dy - 18,
-                  child: SizedBox(
-                    width: 36,
-                    height: 36,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Sóng xung kích tỏa ra khi chấm chạm đích (Impact Ripple)
-                        if (bloomProgress > 0.05 && bloomProgress < 0.80)
-                          Container(
-                            width: 36 * bloomProgress,
-                            height: 36 * bloomProgress,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: item.color.withValues(alpha: 1.0 - bloomProgress),
-                                width: 2.0,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4),
                               ),
-                            ),
+                              BoxShadow(
+                                color: AppTheme.primary.withValues(
+                                  alpha: 0.10 * bloomProgress,
+                                ),
+                                blurRadius: 14,
+                                spreadRadius: 1,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
+                        ),
+                      ),
+                    ),
+                  ),
 
-                        // Chấm tròn thể thao 3D (Biến mất dần khi Icon xuất hiện)
-                        if (bloomProgress < 0.90)
-                          Opacity(
-                            opacity: (1.0 - (bloomProgress * 1.2)).clamp(0.0, 1.0),
-                            child: Container(
-                              width: dotSize,
-                              height: dotSize,
+                // 4b. KHUNG NÚT TIỆN ÍCH TRÒN BÊN PHẢI (50x50) BUNG MỞ KHI CHẤM THỨ 5 CHẠM ĐÁY
+                if (bloomProgress > 0.01)
+                  Positioned(
+                    right: 16.0,
+                    bottom: navBarBottom,
+                    child: Opacity(
+                      opacity: bloomProgress.clamp(0.0, 1.0),
+                      child: Transform.scale(
+                        scale: 0.85 + (bloomProgress * 0.15),
+                        alignment: Alignment.centerRight,
+                        child: Container(
+                          width: 50.0,
+                          height: 50.0,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(25),
+                            border: Border.all(
+                              color: const Color(
+                                0xFFE2E8F0,
+                              ).withValues(alpha: 0.9),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4),
+                              ),
+                              BoxShadow(
+                                color: const Color(
+                                  0xFF8B5CF6,
+                                ).withValues(alpha: 0.10 * bloomProgress),
+                                blurRadius: 14,
+                                spreadRadius: 1,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // 5. 5 CHẤM TRÒN BAY & BIẾN HÌNH (MORPH) THÀNH 5 ICON ĐIỀU HƯỚNG & TIỆN ÍCH
+                ...List.generate(5, (i) {
+                  final pos = dotPositions[i];
+                  final item = _tabs[i];
+
+                  // Khi bloomProgress tăng: Chấm tròn chuyển đổi kích thước và nở thành Icon
+                  final dotSize = (14.0 * (1.0 - (bloomProgress * 0.3))).clamp(
+                    8.0,
+                    16.0,
+                  );
+                  final iconScale = (bloomProgress * 1.15).clamp(0.0, 1.0);
+
+                  return Positioned(
+                    left: pos.dx - 18,
+                    top: pos.dy - 18,
+                    child: SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Sóng xung kích tỏa ra khi chấm chạm đích (Impact Ripple)
+                          if (bloomProgress > 0.05 && bloomProgress < 0.80)
+                            Container(
+                              width: 36 * bloomProgress,
+                              height: 36 * bloomProgress,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                gradient: RadialGradient(
-                                  center: const Alignment(-0.35, -0.35),
-                                  radius: 0.85,
-                                  colors: [
-                                    Colors.white,
-                                    item.color,
-                                    item.color.withValues(alpha: 0.85),
-                                  ],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: item.color.withValues(alpha: 0.55),
-                                    blurRadius: 8,
-                                    spreadRadius: 1,
+                                border: Border.all(
+                                  color: item.color.withValues(
+                                    alpha: 1.0 - bloomProgress,
                                   ),
-                                ],
+                                  width: 2.0,
+                                ),
                               ),
                             ),
-                          ),
 
-                        // Icon Navigation & Tiện ích nở bung ra từ chấm tròn
-                        if (bloomProgress > 0.15)
-                          Transform.scale(
-                            scale: iconScale,
-                            child: Icon(
-                              item.icon,
-                              color: i == 0 ? AppTheme.primary : const Color(0xFF94A3B8),
-                              size: 24,
+                          // Chấm tròn thể thao 3D (Biến mất dần khi Icon xuất hiện)
+                          if (bloomProgress < 0.90)
+                            Opacity(
+                              opacity: (1.0 - (bloomProgress * 1.2)).clamp(
+                                0.0,
+                                1.0,
+                              ),
+                              child: Container(
+                                width: dotSize,
+                                height: dotSize,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: RadialGradient(
+                                    center: const Alignment(-0.35, -0.35),
+                                    radius: 0.85,
+                                    colors: [
+                                      Colors.white,
+                                      item.color,
+                                      item.color.withValues(alpha: 0.85),
+                                    ],
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: item.color.withValues(alpha: 0.55),
+                                      blurRadius: 8,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                      ],
+
+                          // Icon Navigation & Tiện ích nở bung ra từ chấm tròn
+                          if (bloomProgress > 0.15)
+                            Transform.scale(
+                              scale: iconScale,
+                              child: Icon(
+                                item.icon,
+                                color: i == 0
+                                    ? AppTheme.primary
+                                    : const Color(0xFF94A3B8),
+                                size: 24,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              }),
-            ],
+                  );
+                }),
+              ],
+            ),
           ),
-        ),
-      );
+        );
       },
     );
   }
@@ -443,17 +469,15 @@ class _FlightTrailsPainter extends CustomPainter {
       final color = tabs[i].color;
 
       final trailPaint = Paint()
-        ..color = color.withValues(alpha: (0.45 * (1.0 - flightProgress * 0.5)).clamp(0.0, 0.45))
+        ..color = color.withValues(
+          alpha: (0.45 * (1.0 - flightProgress * 0.5)).clamp(0.0, 0.45),
+        )
         ..strokeWidth = 3.2
         ..strokeCap = StrokeCap.round
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
 
       // Vệt ngắn kéo lùi sau đuôi theo hướng bay xuống
-      canvas.drawLine(
-        pos,
-        Offset(pos.dx, pos.dy - 18.0),
-        trailPaint,
-      );
+      canvas.drawLine(pos, Offset(pos.dx, pos.dy - 18.0), trailPaint);
     }
   }
 

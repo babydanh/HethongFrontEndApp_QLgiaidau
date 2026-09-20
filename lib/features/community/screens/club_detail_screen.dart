@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/club_brand_avatar.dart';
 import 'package:app_quanly_giaidau/core/widgets/club_network_image.dart';
 import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -41,6 +42,7 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/providers/club_member_stats_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_match_sessions_screen.dart';
 
 part '../widgets/club_detail_tab_delegate.dart';
@@ -294,7 +296,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     Row(
                       children: [
                         const Icon(
-                          Icons.notifications_outlined,
+                          AppIcons.bell,
                           color: Color(0xFF2563EB),
                           size: 22,
                         ),
@@ -323,7 +325,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     _buildNotificationOptionItem(
                       title: l10n.clubDetailNotificationsAllTitle,
                       subtitle: l10n.clubDetailNotificationsAllSubtitle,
-                      icon: Icons.notifications_active_outlined,
+                      icon: AppIcons.bell,
                       iconColor: const Color(0xFF2563EB),
                       value: 'ALL',
                       colors: colors,
@@ -336,7 +338,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     _buildNotificationOptionItem(
                       title: l10n.clubDetailNotificationsMentionsTitle,
                       subtitle: l10n.clubDetailNotificationsMentionsSubtitle,
-                      icon: Icons.alternate_email_rounded,
+                      icon: AppIcons.atSign,
                       iconColor: const Color(0xFFD97706),
                       value: 'MENTIONS_ONLY',
                       colors: colors,
@@ -349,7 +351,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     _buildNotificationOptionItem(
                       title: l10n.clubDetailNotificationsMutedTitle,
                       subtitle: l10n.clubDetailNotificationsMutedSubtitle,
-                      icon: Icons.notifications_off_outlined,
+                      icon: AppIcons.bell,
                       iconColor: const Color(0xFF64748B),
                       value: 'MUTED',
                       colors: colors,
@@ -420,13 +422,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
               ),
             ),
             if (isSelected)
-              Icon(Icons.check_circle_rounded, color: iconColor, size: 18),
+              Icon(AppIcons.checkCircle, color: iconColor, size: 18),
           ],
         ),
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -445,7 +446,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.cloud_off_rounded,
+                      AppIcons.imageOff,
                       size: 48,
                       color: context.colors.textMuted,
                     ),
@@ -474,7 +475,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.cloud_off_rounded,
+                    AppIcons.imageOff,
                     size: 48,
                     color: context.colors.error,
                   ),
@@ -516,14 +517,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     return const Color(0xFF0284C7);
   }
 
-  String _sportEmoji(String name) {
-    final n = name.toLowerCase();
-    if (n.contains('badminton') || n.contains('cầu lông')) return '🏸';
-    if (n.contains('tennis')) return '🎾';
-    if (n.contains('pickleball')) return '🏓';
-    return '🏆';
-  }
-
   bool get _isMember => _myMembership?.status == 'JOINED';
 
   bool get _isPending => _myMembership?.status == 'PENDING';
@@ -543,17 +536,16 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ? club.sports.first
         : l10n.club_sportFallback;
     final Color sColor = _sportColor(sportName);
-    final String emoji = _sportEmoji(sportName);
     final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
     final isCreator = club.ownerId != null && club.ownerId == currentUserId;
     final isOwner =
         isCreator || club.myRole == 'OWNER' || _myMembership?.role == 'OWNER';
     final isClubAdmin =
         isOwner ||
-            club.myRole == 'ADMIN' ||
-            club.myRole == 'MODERATOR' ||
-            _myMembership?.role == 'ADMIN' ||
-            _myMembership?.role == 'MODERATOR';
+        club.myRole == 'ADMIN' ||
+        club.myRole == 'MODERATOR' ||
+        _myMembership?.role == 'ADMIN' ||
+        _myMembership?.role == 'MODERATOR';
 
     final topPadding = MediaQuery.of(context).padding.top;
     final logoUrl = _resolveImageUrl(club.logoUrl);
@@ -575,7 +567,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 club,
                 colors,
                 sColor,
-                emoji,
                 topPadding,
                 l10n,
                 isClubAdmin: isClubAdmin,
@@ -585,7 +576,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                   club,
                   colors,
                   sColor,
-                  emoji,
                   isClubAdmin: isClubAdmin,
                 ),
               ),
@@ -653,8 +643,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     child: _buildClubAvatar(
                       logoUrl: logoUrl,
                       colors: colors,
-                      sColor: sColor,
-                      emoji: emoji,
                       isClubAdmin: isClubAdmin,
                       club: club,
                     ),
@@ -674,8 +662,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   }) async {
     await _pickFromPhone(club: club, isLogo: isLogo);
   }
-
-
 
   Future<void> _pickFromPhone({
     required Community club,
@@ -712,18 +698,12 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(
-                Icons.camera_alt_rounded,
-                color: AppTheme.primary,
-              ),
+              leading: const Icon(AppIcons.camera, color: AppTheme.primary),
               title: const Text('Chụp ảnh mới'),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
             ListTile(
-              leading: const Icon(
-                Icons.photo_library_rounded,
-                color: AppTheme.primary,
-              ),
+              leading: const Icon(AppIcons.images, color: AppTheme.primary),
               title: const Text('Chọn từ bộ sưu tập điện thoại'),
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
@@ -760,10 +740,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       final url = await ref
           .read(communitySocialRepositoryProvider)
           .uploadImage(uploadBytes, isLogo ? 'club_logo.png' : picked.name);
-      await ref.read(communityRepositoryProvider).updateCommunity(
-        club.id,
-        {isLogo ? 'logoUrl' : 'bannerUrl': url},
-      );
+      await ref.read(communityRepositoryProvider).updateCommunity(club.id, {
+        isLogo ? 'logoUrl' : 'bannerUrl': url,
+      });
       ref.invalidate(communityDetailProvider(club.id));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

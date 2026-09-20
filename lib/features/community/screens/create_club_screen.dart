@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 
 /// Tạo câu lạc bộ mới — form đơn giản
@@ -245,7 +246,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                   Expanded(
                     child: _sourceAction(
                       context: sheetContext,
-                      icon: Icons.photo_library_outlined,
+                      icon: AppIcons.images,
                       label: l10n.createClub_photoLibrary,
                       source: ImageSource.gallery,
                     ),
@@ -254,7 +255,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                   Expanded(
                     child: _sourceAction(
                       context: sheetContext,
-                      icon: Icons.photo_camera_outlined,
+                      icon: AppIcons.camera,
                       label: l10n.createClub_camera,
                       source: ImageSource.camera,
                     ),
@@ -385,7 +386,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.close_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.close, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -476,7 +477,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(Icons.add_rounded),
+                      : const Icon(AppIcons.add),
                   label: Text(
                     _isLoading
                         ? l10n.createClub_submitting
@@ -575,18 +576,12 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
             child: loading
                 ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
                 : url == null
-                ? Icon(
-                    Icons.add_photo_alternate_outlined,
-                    color: colors.textMuted,
-                    size: 28,
-                  )
+                ? Icon(AppIcons.imageAdd, color: colors.textMuted, size: 28)
                 : Image.network(
                     url.startsWith('http') ? url : 'https://sporto.asia$url',
                     fit: BoxFit.cover,
-                    errorBuilder: (c, o, s) => Icon(
-                      Icons.broken_image_outlined,
-                      color: colors.textMuted,
-                    ),
+                    errorBuilder: (c, o, s) =>
+                        Icon(AppIcons.imageOff, color: colors.textMuted),
                   ),
           ),
         ),
@@ -639,7 +634,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                 style: TextStyle(fontSize: 12, color: colors.textPrimary),
               ),
               trailing: IconButton(
-                icon: Icon(Icons.close, size: 16, color: colors.textMuted),
+                icon: Icon(AppIcons.close, size: 16, color: colors.textMuted),
                 onPressed: () =>
                     setState(() => _joinQuestions.removeAt(entry.key)),
               ),
@@ -659,10 +654,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                 ),
                 IconButton(
                   onPressed: _addJoinQuestion,
-                  icon: const Icon(
-                    Icons.add_circle_rounded,
-                    color: AppTheme.primary,
-                  ),
+                  icon: const Icon(AppIcons.add, color: AppTheme.primary),
                 ),
               ],
             ),
@@ -712,9 +704,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               child: Row(
                 children: [
                   Icon(
-                    selected
-                        ? Icons.radio_button_checked
-                        : Icons.radio_button_off,
+                    selected ? AppIcons.circleDot : AppIcons.circle,
                     color: selected
                         ? AppTheme.primary
                         : context.colors.textMuted,
@@ -757,18 +747,22 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
       (
         AppConstants.sportPickleball,
         l10n.createClubTournament_sportPickleball,
-        '🏓',
+        AppIcons.sportPickleball,
       ),
       (
         AppConstants.sportBadminton,
         l10n.createClubTournament_sportBadminton,
-        '🏸',
+        AppIcons.sportBadminton,
       ),
-      (AppConstants.sportTennis, l10n.createClubTournament_sportTennis, '🎾'),
+      (
+        AppConstants.sportTennis,
+        l10n.createClubTournament_sportTennis,
+        AppIcons.sportTennis,
+      ),
       (
         AppConstants.sportTableTennis,
         l10n.createClubTournament_sportTableTennis,
-        '🏓',
+        AppIcons.sportTableTennis,
       ),
     ];
     return Row(
@@ -793,7 +787,13 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                 ),
                 child: Column(
                   children: [
-                    Text(s.$3, style: const TextStyle(fontSize: 20)),
+                    Icon(
+                      s.$3,
+                      size: 22,
+                      color: selected
+                          ? AppTheme.primary
+                          : context.colors.textSecondary,
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       s.$2,
@@ -852,9 +852,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               child: Row(
                 children: [
                   Icon(
-                    selected
-                        ? Icons.check_circle_rounded
-                        : Icons.circle_outlined,
+                    selected ? AppIcons.checkCircle : AppIcons.circle,
                     color: selected
                         ? AppTheme.primary
                         : context.colors.textMuted,
@@ -934,7 +932,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
-                  Icons.sync_rounded,
+                  AppIcons.refresh,
                   color: AppTheme.primary,
                   size: 20,
                 ),
@@ -1012,7 +1010,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                         if (_recurringSlots.length > 1)
                           IconButton(
                             icon: Icon(
-                              Icons.delete_outline_rounded,
+                              AppIcons.delete,
                               size: 18,
                               color: colors.error,
                             ),
@@ -1126,7 +1124,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                                         ),
                                       ),
                                       Icon(
-                                        Icons.access_time_rounded,
+                                        AppIcons.clock,
                                         size: 16,
                                         color: colors.textMuted,
                                       ),
@@ -1206,7 +1204,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                     });
                   });
                 },
-                icon: const Icon(Icons.add, size: 16),
+                icon: const Icon(AppIcons.add, size: 16),
                 label: Text(
                   l10n.createClub_addSlot,
                   style: const TextStyle(fontSize: 12),

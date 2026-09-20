@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/domain/repositories/community_repository.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:flutter/material.dart';
 
 class CommunitySocialSettingsSheet extends StatefulWidget {
@@ -195,7 +196,7 @@ class _CommunitySocialSettingsSheetState
                       IconButton(
                         onPressed: () => Navigator.pop(context, _settings),
                         tooltip: l10n.communitySocialSettingsClose,
-                        icon: const Icon(Icons.close),
+                        icon: const Icon(AppIcons.close),
                       ),
                     ],
                   ),
@@ -276,7 +277,7 @@ class _CommunitySocialSettingsSheetState
                   const SizedBox(height: 14),
                   FilledButton.icon(
                     onPressed: _saving ? null : _save,
-                    icon: const Icon(Icons.save_outlined),
+                    icon: const Icon(AppIcons.save),
                     label: Text(
                       _saving
                           ? l10n.communitySocialSettingsSaving
@@ -331,7 +332,7 @@ class _CommunitySocialSettingsSheetState
                       const SizedBox(width: 8),
                       IconButton.filled(
                         onPressed: _createPreset,
-                        icon: const Icon(Icons.add),
+                        icon: const Icon(AppIcons.add),
                       ),
                     ],
                   ),

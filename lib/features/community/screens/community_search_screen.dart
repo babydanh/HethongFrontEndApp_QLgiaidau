@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:go_router/go_router.dart';
 
 class CommunitySearchScreen extends ConsumerStatefulWidget {
@@ -53,7 +54,8 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
       _controller.text = query;
       setState(() => _activeQuery = query.length >= 2 ? query : '');
     }
-    if (widget.initialType != oldWidget.initialType && widget.initialType != null) {
+    if (widget.initialType != oldWidget.initialType &&
+        widget.initialType != null) {
       setState(() => _type = widget.initialType!);
     }
   }
@@ -106,7 +108,7 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
           titleSpacing: 0,
           leading: IconButton(
             tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-            icon: const Icon(Icons.arrow_back_ios_rounded),
+            icon: const Icon(AppIcons.chevronLeft),
             onPressed: () => context.pop(),
           ),
           title: SizedBox(
@@ -161,7 +163,7 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
                             height: 34,
                           ),
                           padding: EdgeInsets.zero,
-                          icon: const Icon(Icons.close_rounded, size: 20),
+                          icon: const Icon(AppIcons.close, size: 20),
                           onPressed: () {
                             _controller.clear();
                             setState(() => _activeQuery = '');
@@ -260,7 +262,7 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_off_outlined, color: colors.textMuted, size: 42),
+            Icon(AppIcons.imageOff, color: colors.textMuted, size: 42),
             const SizedBox(height: 10),
             Text(
               l10n.communitySearchError,
@@ -405,11 +407,7 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
               ),
             ),
             if (onTap != null)
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 18,
-                color: colors.textMuted,
-              ),
+              Icon(AppIcons.chevronRight, size: 18, color: colors.textMuted),
           ],
         ),
       ),
@@ -504,7 +502,7 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
         .map<Widget>(
           (match) => _resultTile(
             leading: const Icon(
-              Icons.sports_tennis_outlined,
+              AppIcons.sportTennis,
               color: AppTheme.primary,
               size: 28,
             ),
@@ -545,7 +543,7 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
         .map<Widget>(
           (tournament) => _resultTile(
             leading: const Icon(
-              Icons.emoji_events_outlined,
+              AppIcons.trophy,
               color: AppTheme.primary,
               size: 28,
             ),

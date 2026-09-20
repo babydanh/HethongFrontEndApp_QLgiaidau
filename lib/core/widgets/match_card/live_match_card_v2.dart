@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/tennis_game_point_display.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Sport-tech match card — dùng cho cả 3 trạng thái: live / scheduled / completed
@@ -49,123 +50,94 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
         ? widget.match.currentLiveScore
         : SetScore(score1: widget.match.score1, score2: widget.match.score2);
 
-    final cardBorder = widget.isLive
-        ? Border.all(
-            color: const Color(0xFFEF4444).withValues(alpha: 0.35),
-            width: 1.2,
-          )
-        : Border.all(color: colors.border.withValues(alpha: 0.6), width: 1);
-
-    final cardShadow = widget.isLive
-        ? [
-            BoxShadow(
-              color: const Color(
-                0xFFEF4444,
-              ).withValues(alpha: isDark ? 0.12 : 0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ]
-        : [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ];
 
     final t1EloDelta = _teamEloDelta(widget.match.team1MemberInfos);
     final t2EloDelta = _teamEloDelta(widget.match.team2MemberInfos);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: widget.onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(16),
-              border: cardBorder,
-              boxShadow: cardShadow,
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // ─── Status Bar ───
-                if (widget.isLive) _buildLiveBar(context),
-                if (widget.isCompleted) _buildCompletedBar(context),
-                if (!widget.isLive && !widget.isCompleted)
-                  _buildScheduledBar(context),
 
-                // ─── Main Score Area ───
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Team 1
-                      Expanded(
-                        child: _buildTeamSide(
-                          context,
-                          teamName: widget.match.team1Name,
-                          teamLogoUrl: widget.match.team1LogoUrl,
-                          members: widget.match.team1MemberInfos,
-                          score: cardScore.score1,
-                          currentGamePoint: currentTennisGamePoints?.team1,
-                          eloDelta: t1EloDelta,
-                          isWinner:
-                              widget.isCompleted &&
-                              widget.match.winnerId == widget.match.team1Id,
-                          isLeading:
-                              widget.isLive &&
-                              cardScore.score1 > cardScore.score2,
-                          alignment: CrossAxisAlignment.start,
-                        ),
-                      ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: widget.onTap,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ─── Status Bar ───
+            if (widget.isLive) _buildLiveBar(context),
+            if (widget.isCompleted) _buildCompletedBar(context),
+            if (!widget.isLive && !widget.isCompleted)
+              _buildScheduledBar(context),
 
-                      // Central Score & VS Box
-                      _buildCenterDivider(context, l10n),
-
-                      // Team 2
-                      Expanded(
-                        child: _buildTeamSide(
-                          context,
-                          teamName: widget.match.team2Name,
-                          teamLogoUrl: widget.match.team2LogoUrl,
-                          members: widget.match.team2MemberInfos,
-                          score: cardScore.score2,
-                          currentGamePoint: currentTennisGamePoints?.team2,
-                          eloDelta: t2EloDelta,
-                          isWinner:
-                              widget.isCompleted &&
-                              widget.match.winnerId == widget.match.team2Id,
-                          isLeading:
-                              widget.isLive &&
-                              cardScore.score2 > cardScore.score1,
-                          alignment: CrossAxisAlignment.end,
-                        ),
-                      ),
-                    ],
+            // ─── Main Score Area ───
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Team 1
+                  Expanded(
+                    child: _buildTeamSide(
+                      context,
+                      teamName: widget.match.team1Name,
+                      teamLogoUrl: widget.match.team1LogoUrl,
+                      members: widget.match.team1MemberInfos,
+                      score: cardScore.score1,
+                      currentGamePoint: currentTennisGamePoints?.team1,
+                      eloDelta: t1EloDelta,
+                      isWinner:
+                          widget.isCompleted &&
+                          widget.match.winnerId == widget.match.team1Id,
+                      isLeading:
+                          widget.isLive &&
+                          cardScore.score1 > cardScore.score2,
+                      alignment: CrossAxisAlignment.start,
+                    ),
                   ),
-                ),
 
-                // ─── Set Scores (nếu có) ───
-                if (widget.match.scoreHistory.isNotEmpty)
-                  _buildSetScores(context),
+                  // Central Score & VS Box
+                  _buildCenterDivider(context, l10n),
 
-                // ─── Bottom Info ───
-                if (widget.match.scheduledTime != null ||
-                    widget.match.refereeName != null)
-                  _buildBottomInfo(context),
-
-                if (widget.footer != null) widget.footer!,
-              ],
+                  // Team 2
+                  Expanded(
+                    child: _buildTeamSide(
+                      context,
+                      teamName: widget.match.team2Name,
+                      teamLogoUrl: widget.match.team2LogoUrl,
+                      members: widget.match.team2MemberInfos,
+                      score: cardScore.score2,
+                      currentGamePoint: currentTennisGamePoints?.team2,
+                      eloDelta: t2EloDelta,
+                      isWinner:
+                          widget.isCompleted &&
+                          widget.match.winnerId == widget.match.team2Id,
+                      isLeading:
+                          widget.isLive &&
+                          cardScore.score2 > cardScore.score1,
+                      alignment: CrossAxisAlignment.end,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+
+            // ─── Set Scores (nếu có) ───
+            if (widget.match.scoreHistory.isNotEmpty)
+              _buildSetScores(context),
+
+            // ─── Bottom Info ───
+            if (widget.match.scheduledTime != null ||
+                widget.match.refereeName != null)
+              _buildBottomInfo(context),
+
+            if (widget.footer != null) widget.footer!,
+
+            // ─── Separator ───
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: colors.border.withValues(alpha: 0.5),
+            ),
+          ],
         ),
       ),
     );
@@ -248,7 +220,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: context.colors.textSecondary,
+                color: context.colors.textPrimary,
               ),
             ),
           ],
@@ -268,7 +240,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.location_on_outlined,
+                    AppIcons.mapPin,
                     size: 11,
                     color: context.colors.textMuted,
                   ),
@@ -335,11 +307,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.check_circle_rounded,
-                  size: 11,
-                  color: colors.success,
-                ),
+                Icon(AppIcons.checkCircle, size: 11, color: colors.success),
                 const SizedBox(width: 4),
                 Text(
                   l10n.liveMatchCompletedStatus.toUpperCase(),
@@ -360,7 +328,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: colors.textSecondary,
+                color: colors.textPrimary,
               ),
             ),
           ],
@@ -405,7 +373,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
       ),
       child: Row(
         children: [
-          Icon(Icons.schedule_rounded, size: 12, color: colors.textMuted),
+          Icon(AppIcons.clock, size: 12, color: colors.textMuted),
           const SizedBox(width: 5),
           Text(
             l10n.liveMatchScheduledStatus.toUpperCase(),
@@ -423,7 +391,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
               style: TextStyle(
                 fontSize: 10.5,
                 fontWeight: FontWeight.w600,
-                color: colors.textMuted,
+                color: colors.textPrimary,
               ),
             ),
           ],
@@ -578,7 +546,9 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                       : FontWeight.w600,
                   color: isWinner
                       ? colors.success
-                      : (isLeading ? const Color(0xFFDC2626) : colors.textPrimary),
+                      : (isLeading
+                            ? const Color(0xFFDC2626)
+                            : colors.textPrimary),
                   height: 1.25,
                 ),
                 textAlign: alignment == CrossAxisAlignment.start
@@ -785,11 +755,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.access_time_rounded,
-                  size: 12,
-                  color: colors.textMuted,
-                ),
+                Icon(AppIcons.clock, size: 12, color: colors.textMuted),
                 const SizedBox(width: 4),
                 Text(
                   '${widget.match.scheduledTime!.hour.toString().padLeft(2, '0')}:${widget.match.scheduledTime!.minute.toString().padLeft(2, '0')}',
@@ -807,7 +773,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.sports_rounded, size: 12, color: colors.textMuted),
+                Icon(AppIcons.trophy, size: 12, color: colors.textMuted),
                 const SizedBox(width: 4),
                 Text(
                   'TT: ${widget.match.refereeName}',

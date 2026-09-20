@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Full-screen bracket diagram for all 3 format types.
@@ -225,7 +226,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         backgroundColor: colors.bgDark,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
           tooltip: l10n.bracketDiagramBack,
         ),
@@ -251,7 +252,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.pinch_rounded, size: 12, color: colors.textMuted),
+                  Icon(AppIcons.expand, size: 12, color: colors.textMuted),
                   const SizedBox(width: 4),
                   Text(
                     l10n.bracketDiagramZoomHint,
@@ -360,7 +361,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.account_tree_outlined,
+            AppIcons.layers,
             size: 72,
             color: colors.textMuted.withValues(alpha: 0.25),
           ),

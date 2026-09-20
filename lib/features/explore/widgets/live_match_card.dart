@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 
 class LiveMatchCard extends StatelessWidget {
@@ -130,11 +131,7 @@ class LiveMatchCard extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.location_on_outlined,
-                    size: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  Icon(AppIcons.mapPin, size: 14, color: Colors.grey.shade600),
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(

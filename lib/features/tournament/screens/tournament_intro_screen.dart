@@ -21,6 +21,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/sponsors_tab.dart
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentIntroScreen extends ConsumerStatefulWidget {
@@ -301,11 +302,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.error_outline_rounded,
-                  color: colors.error,
-                  size: 42,
-                ),
+                Icon(AppIcons.error, color: colors.error, size: 42),
                 const SizedBox(height: 12),
                 Text(
                   l10n.tournamentLoadError,
@@ -352,11 +349,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           color: colors.bgCard.withValues(alpha: 0.88),
           shape: BoxShape.circle,
         ),
-        child: Icon(
-          Icons.arrow_back_ios_rounded,
-          color: colors.textPrimary,
-          size: 20,
-        ),
+        child: Icon(AppIcons.chevronLeft, color: colors.textPrimary, size: 20),
       ),
       onPressed: _goBack,
     );
@@ -429,11 +422,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       color: colors.error.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.lock_outline_rounded,
-                      size: 36,
-                      color: colors.error,
-                    ),
+                    child: Icon(AppIcons.lock, size: 36, color: colors.error),
                   ),
                   const SizedBox(height: 20),
                   Text(
@@ -458,7 +447,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   if (tournament.communityId != null &&
                       tournament.communityId!.isNotEmpty)
                     FilledButton.icon(
-                      icon: const Icon(Icons.groups_rounded),
+                      icon: const Icon(AppIcons.users),
                       label: const Text('Xem câu lạc bộ'),
                       onPressed: () => context.push(
                         '/communities/${tournament.communityId}',
@@ -586,7 +575,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.emoji_events_rounded, size: 14),
+              Icon(AppIcons.trophy, size: 14),
               SizedBox(width: 4),
               Text('Kết quả'),
             ],
@@ -947,7 +936,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                             ),
                           ),
                           child: Icon(
-                            Icons.check_circle_rounded,
+                            AppIcons.checkCircle,
                             size: 13,
                             color: colors.textMuted,
                           ),
@@ -958,7 +947,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.people_alt_outlined,
+                            AppIcons.users,
                             size: 13,
                             color: colors.textMuted,
                           ),
@@ -1015,16 +1004,14 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           ),
           IconButton(
             icon: Icon(
-              isFollowing
-                  ? Icons.bookmark_rounded
-                  : Icons.bookmark_border_rounded,
+              isFollowing ? AppIcons.bookmark : AppIcons.bookmark,
               color: isFollowing ? AppTheme.primary : colors.textMuted,
               size: 22,
             ),
             onPressed: () => _toggleFollow(tournament, isFollowing),
           ),
           IconButton(
-            icon: Icon(Icons.share_outlined, color: colors.textMuted, size: 20),
+            icon: Icon(AppIcons.share, color: colors.textMuted, size: 20),
             onPressed: () => _shareTournament(tournament),
           ),
         ],
@@ -1126,7 +1113,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.group_outlined,
+              AppIcons.users,
               size: 64,
               color: colors.textMuted.withValues(alpha: 0.4),
             ),

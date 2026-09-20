@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_tier.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Widget hiển thị huy hiệu ELO Tier chuẩn SportO (đồng bộ 100% với EloTierBadge.tsx trên Web).
 /// - Có icon môn thể thao (Pickleball, Tennis, Badminton, Football...).
@@ -38,14 +39,18 @@ class EloTierBadge extends StatelessWidget {
         height: sizePx,
       );
     }
-    if (s.contains('football') || s.contains('bóng đá') || s.contains('soccer')) {
+    if (s.contains('football') ||
+        s.contains('bóng đá') ||
+        s.contains('soccer')) {
       return SvgPicture.asset(
         'assets/icons/football.svg',
         width: sizePx,
         height: sizePx,
       );
     }
-    if (s.contains('ping') || s.contains('bóng bàn') || s.contains('table tennis')) {
+    if (s.contains('ping') ||
+        s.contains('bóng bàn') ||
+        s.contains('table tennis')) {
       return SvgPicture.asset(
         'assets/icons/ping-pong.svg',
         width: sizePx,
@@ -59,7 +64,7 @@ class EloTierBadge extends StatelessWidget {
       width: sizePx,
       height: sizePx,
       errorBuilder: (context, error, stackTrace) => Icon(
-        Icons.sports_tennis_rounded,
+        AppIcons.sportTennis,
         size: sizePx,
         color: const Color(0xFF0D9488),
       ),
@@ -71,17 +76,11 @@ class EloTierBadge extends StatelessWidget {
     final info = resolveEloTier(elo: elo, tierName: tierName);
 
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: 8 * scale,
-        vertical: 3 * scale,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 3 * scale),
       decoration: BoxDecoration(
         color: info.backgroundColor,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: info.borderColor,
-          width: 1.5 * scale,
-        ),
+        border: Border.all(color: info.borderColor, width: 1.5 * scale),
         boxShadow: [
           BoxShadow(
             color: const Color(0x1F0F172A),

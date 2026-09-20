@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class ClubRankingWidget extends ConsumerStatefulWidget {
@@ -255,10 +256,11 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
         final teams = dataList
             .map((item) {
               final json = item as Map<String, dynamic>;
-              final rawName =
-                  (json['teamName'] ?? json['team_name'])?.toString().trim();
-              final id =
-                  (json['id'] ?? json['teamId'] ?? rawName ?? '').toString();
+              final rawName = (json['teamName'] ?? json['team_name'])
+                  ?.toString()
+                  .trim();
+              final id = (json['id'] ?? json['teamId'] ?? rawName ?? '')
+                  .toString();
               final name = (rawName != null && rawName.isNotEmpty)
                   ? rawName
                   : '';
@@ -394,11 +396,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Icon(
-                  Icons.emoji_events_rounded,
-                  size: 16,
-                  color: colors.textSecondary,
-                ),
+                Icon(AppIcons.trophy, size: 16, color: colors.textSecondary),
                 const SizedBox(width: 6),
                 Text(
                   l10n.clubRankingTitle,
@@ -425,7 +423,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
                   icon: Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      const Icon(Icons.tune_rounded, size: 19),
+                      const Icon(AppIcons.tune, size: 19),
                       if (_activeFilterCount > 0)
                         Positioned(
                           top: -3,
@@ -601,7 +599,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(sheetContext),
-                      icon: const Icon(Icons.close_rounded),
+                      icon: const Icon(AppIcons.close),
                     ),
                   ],
                 ),
@@ -901,10 +899,10 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
               children: [
                 Icon(
                   rank == 1
-                      ? Icons.emoji_events_rounded
+                      ? AppIcons.trophy
                       : rank == 2
-                      ? Icons.military_tech_rounded
-                      : Icons.workspace_premium_rounded,
+                      ? AppIcons.medal
+                      : AppIcons.award,
                   size: isCenter ? 13 : 11,
                   color: medalColors.icon,
                 ),

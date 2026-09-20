@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class SportoHeader extends StatelessWidget {
@@ -74,7 +75,7 @@ class SportoHeader extends StatelessWidget {
                               ),
                               alignment: Alignment.center,
                               child: const Icon(
-                                Icons.forum_outlined,
+                                AppIcons.messages,
                                 color: Colors.white,
                                 size: 20,
                               ),
@@ -114,11 +115,7 @@ class SportoHeader extends StatelessWidget {
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
-            const Icon(
-              Icons.notifications_outlined,
-              color: Colors.white,
-              size: 22,
-            ),
+            const Icon(AppIcons.bell, color: Colors.white, size: 22),
             if (notificationsCount > 0)
               Positioned(
                 top: -1,
@@ -162,7 +159,7 @@ class SportoHeader extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.login_rounded, color: Colors.white, size: 16),
+            Icon(AppIcons.login, color: Colors.white, size: 16),
             SizedBox(width: 6),
             Text(
               l10n.sportoHeaderLoginRegister,
@@ -249,7 +246,7 @@ class SportoHeader extends StatelessWidget {
                       ),
                       child: const Center(
                         child: Icon(
-                          Icons.stars_rounded,
+                          AppIcons.sparkles,
                           color: Colors.white,
                           size: 20,
                         ),
@@ -346,7 +343,9 @@ class SportoHeaderPainter extends CustomPainter {
 
   SportoHeaderPainter({required this.isLoggedIn, required this.colors});
 
-  bool get _isDark => colors.bgDark == const Color(0xFF18191A) || colors.bgDark == const Color(0xFF000000);
+  bool get _isDark =>
+      colors.bgDark == const Color(0xFF18191A) ||
+      colors.bgDark == const Color(0xFF000000);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -514,7 +513,7 @@ class SportoSearchBar extends StatelessWidget {
           hintText: hintText,
           hintStyle: TextStyle(color: colors.textMuted, fontSize: 14.0),
           prefixIcon: Icon(
-            Icons.search,
+            AppIcons.search,
             color: colors.textSecondary,
             size: 20.0,
           ),
@@ -527,7 +526,7 @@ class SportoSearchBar extends StatelessWidget {
                   if (value.text.isEmpty) return const SizedBox.shrink();
                   return IconButton(
                     icon: Icon(
-                      Icons.clear,
+                      AppIcons.close,
                       color: colors.textSecondary,
                       size: 18.0,
                     ),
@@ -543,7 +542,7 @@ class SportoSearchBar extends StatelessWidget {
                   children: [
                     IconButton(
                       icon: Icon(
-                        Icons.tune_rounded,
+                        AppIcons.tune,
                         color: filterCount > 0
                             ? AppTheme.primary
                             : colors.textSecondary,

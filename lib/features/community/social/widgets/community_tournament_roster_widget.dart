@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 const List<Color> _kSlotAvatarColors = [
   Color(0xFF10B981), // Emerald
@@ -224,11 +225,7 @@ class _CommunityTournamentRosterWidgetState
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
-            Icon(
-              Icons.warning_amber_rounded,
-              color: Color(0xFFEF4444),
-              size: 24,
-            ),
+            Icon(AppIcons.warning, color: Color(0xFFEF4444), size: 24),
             SizedBox(width: 8),
             Text(
               'Hủy tham gia giải đấu',
@@ -502,11 +499,7 @@ class _CommunityTournamentRosterWidgetState
                             ),
                           ),
                           SizedBox(width: 3),
-                          Icon(
-                            Icons.arrow_outward_rounded,
-                            size: 13,
-                            color: Colors.white,
-                          ),
+                          Icon(AppIcons.upRight, size: 13, color: Colors.white),
                         ],
                       ),
                     ),
@@ -719,7 +712,7 @@ class _CommunityTournamentRosterWidgetState
                                         shape: BoxShape.circle,
                                       ),
                                       child: const Icon(
-                                        Icons.close_rounded,
+                                        AppIcons.close,
                                         size: 12,
                                         color: Colors.white,
                                       ),
@@ -793,7 +786,7 @@ class _CommunityTournamentRosterWidgetState
                                       ),
                                     )
                                   : const Icon(
-                                      Icons.add_rounded,
+                                      AppIcons.add,
                                       size: 22,
                                       color: Color(0xFF94A3B8),
                                     ),

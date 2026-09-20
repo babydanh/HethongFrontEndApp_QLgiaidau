@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
@@ -74,7 +75,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             if (categories.isEmpty) {
               return _emptyState(
                 context,
-                icon: Icons.sports_rounded,
+                icon: AppIcons.trophy,
                 title: l10n.leaderboardNoSports,
                 subtitle: l10n.leaderboardNoSportsSubtitle,
                 onRetry: () => ref.refresh(categoriesProvider),
@@ -137,7 +138,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                           ),
                           error: (e, _) => _emptyState(
                             context,
-                            icon: Icons.cloud_off_rounded,
+                            icon: AppIcons.imageOff,
                             title: l10n.rankingLoadErrorTitle,
                             subtitle: ErrorParser.parse(
                               e,
@@ -161,7 +162,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                           ),
                           error: (e, _) => _emptyState(
                             context,
-                            icon: Icons.cloud_off_rounded,
+                            icon: AppIcons.imageOff,
                             title: l10n.rankingLoadErrorTitle,
                             subtitle: ErrorParser.parse(
                               e,
@@ -176,12 +177,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             );
             return content;
           },
-          loading: () => const Center(
-            child: CircularProgressIndicator(strokeWidth: 2.5),
-          ),
+          loading: () =>
+              const Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
           error: (e, _) => _emptyState(
             context,
-            icon: Icons.warning_amber_rounded,
+            icon: AppIcons.warning,
             title: l10n.homeDataLoadError,
             subtitle: ErrorParser.parse(e, l10n.rankingLoadErrorSubtitle),
             onRetry: () => ref.refresh(categoriesProvider),
@@ -195,8 +195,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   Widget _buildGenderFilter(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     final options = [
-      ('MALE', l10n.clubRankingMale, Icons.male_rounded),
-      ('FEMALE', l10n.clubRankingFemale, Icons.female_rounded),
+      ('MALE', l10n.clubRankingMale, AppIcons.user),
+      ('FEMALE', l10n.clubRankingFemale, AppIcons.user),
     ];
 
     return SizedBox(
@@ -277,11 +277,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.person_search_rounded,
-                  size: 48,
-                  color: colors.textMuted,
-                ),
+                Icon(AppIcons.search, size: 48, color: colors.textMuted),
                 const SizedBox(height: 16),
                 Text(
                   l10n.leaderboardSearchEmpty(query),
@@ -308,11 +304,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.emoji_events_outlined,
-                size: 48,
-                color: colors.textMuted,
-              ),
+              Icon(AppIcons.trophy, size: 48, color: colors.textMuted),
               const SizedBox(height: 16),
               Text(
                 l10n.clubRankingEmpty,
@@ -339,10 +331,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildTableHeader(colors, l10n),
-        ...filtered.map(
-          (r) => _buildEloRow(r, colors, isAuth, currentUserId),
-        ),
-        if (isAuth && currentUserId != null &&
+        ...filtered.map((r) => _buildEloRow(r, colors, isAuth, currentUserId)),
+        if (isAuth &&
+            currentUserId != null &&
             !filtered.any((r) => r.userId == currentUserId))
           _buildMyRankBanner(filtered, colors, currentUserId),
         const SizedBox(height: 100),
@@ -379,10 +370,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               style: labelStyle,
             ),
           ),
-          Text(
-            l10n.leaderboardTablePoints.toUpperCase(),
-            style: labelStyle,
-          ),
+          Text(l10n.leaderboardTablePoints.toUpperCase(), style: labelStyle),
         ],
       ),
     );
@@ -402,7 +390,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: isMe ? colors.info.withValues(alpha: 0.08) : Colors.transparent,
+          color: isMe
+              ? colors.info.withValues(alpha: 0.08)
+              : Colors.transparent,
           border: Border(
             bottom: BorderSide(color: colors.border.withValues(alpha: 0.5)),
           ),
@@ -531,11 +521,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.emoji_events_outlined,
-            color: colors.textMuted,
-            size: 22,
-          ),
+          Icon(AppIcons.trophy, color: colors.textMuted, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -556,7 +542,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     if (teams.isEmpty) {
       return _emptyState(
         context,
-        icon: Icons.sports_soccer_rounded,
+        icon: AppIcons.sportFootball,
         title: l10n.leaderboardNoRank4To10,
         subtitle: l10n.leaderboardNoRank11To100,
         onRetry: () {},

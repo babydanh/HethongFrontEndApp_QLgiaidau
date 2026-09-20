@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/pickleball_court_3d_animated.dart';
 import 'package:app_quanly_giaidau/core/widgets/pickleball_rally_animation.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_loading_widget.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Màn hình Trình diễn và Thử nghiệm các Hoạt họa Loading Thể Thao SportO:
 /// Cho phép người dùng trực tiếp xem và chọn mẫu loading ưng ý nhất.
@@ -19,14 +20,17 @@ class _LoadingShowcaseScreenState extends State<LoadingShowcaseScreen> {
   int _selectedTab = 0; // 0: Rally, 1: Court 3D, 2: Orbit, 3: Bounce
   static SportoLoadingVariant activeAppVariant = SportoLoadingVariant.rally;
 
-  final List<({
-    String id,
-    String title,
-    String subtitle,
-    String badge,
-    String description,
-    SportoLoadingVariant variant,
-  })> _models = [
+  final List<
+    ({
+      String id,
+      String title,
+      String subtitle,
+      String badge,
+      String description,
+      SportoLoadingVariant variant,
+    })
+  >
+  _models = [
     (
       id: 'rally',
       title: 'Pickleball Rally Pro',
@@ -75,7 +79,7 @@ class _LoadingShowcaseScreenState extends State<LoadingShowcaseScreen> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white),
+            const Icon(AppIcons.checkCircle, color: Colors.white),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -103,7 +107,7 @@ class _LoadingShowcaseScreenState extends State<LoadingShowcaseScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF0F172A)),
+          icon: const Icon(AppIcons.chevronLeft, color: Color(0xFF0F172A)),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -166,8 +170,12 @@ class _LoadingShowcaseScreenState extends State<LoadingShowcaseScreen> {
                           item.id.toUpperCase(),
                           style: TextStyle(
                             fontSize: 11.5,
-                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                            color: isSelected ? AppTheme.primary : const Color(0xFF64748B),
+                            fontWeight: isSelected
+                                ? FontWeight.w800
+                                : FontWeight.w600,
+                            color: isSelected
+                                ? AppTheme.primary
+                                : const Color(0xFF64748B),
                           ),
                         ),
                       ),
@@ -186,7 +194,10 @@ class _LoadingShowcaseScreenState extends State<LoadingShowcaseScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFFAFAFA),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+                  border: Border.all(
+                    color: const Color(0xFFE2E8F0),
+                    width: 1.2,
+                  ),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -194,7 +205,10 @@ class _LoadingShowcaseScreenState extends State<LoadingShowcaseScreen> {
                   children: [
                     // Badge nhãn
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -232,24 +246,24 @@ class _LoadingShowcaseScreenState extends State<LoadingShowcaseScreen> {
                     Center(
                       child: switch (_selectedTab) {
                         0 => const PickleballRallyAnimation(
-                            width: 270,
-                            height: 140,
-                            message: 'Đang tải giải đấu sôi động...',
-                          ),
+                          width: 270,
+                          height: 140,
+                          message: 'Đang tải giải đấu sôi động...',
+                        ),
                         1 => const Pickleball3DCourtAnimation(
-                            size: 190,
-                            message: 'Đang khởi tạo sân thi đấu...',
-                          ),
+                          size: 190,
+                          message: 'Đang khởi tạo sân thi đấu...',
+                        ),
                         2 => const SportoLoadingWidget(
-                            size: 120,
-                            variant: SportoLoadingVariant.orbit,
-                            message: 'Đang kết nối hệ thống SportO...',
-                          ),
+                          size: 120,
+                          variant: SportoLoadingVariant.orbit,
+                          message: 'Đang kết nối hệ thống SportO...',
+                        ),
                         3 => const SportoLoadingWidget(
-                            size: 120,
-                            variant: SportoLoadingVariant.bounce,
-                            message: 'Đang chuẩn bị giao bóng...',
-                          ),
+                          size: 120,
+                          variant: SportoLoadingVariant.bounce,
+                          message: 'Đang chuẩn bị giao bóng...',
+                        ),
                         _ => const SizedBox.shrink(),
                       },
                     ),
@@ -258,7 +272,10 @@ class _LoadingShowcaseScreenState extends State<LoadingShowcaseScreen> {
 
                     // Mô tả chi tiết
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
@@ -266,7 +283,11 @@ class _LoadingShowcaseScreenState extends State<LoadingShowcaseScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.info_outline_rounded, size: 18, color: AppTheme.primary),
+                          const Icon(
+                            AppIcons.info,
+                            size: 18,
+                            color: AppTheme.primary,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -304,7 +325,7 @@ class _LoadingShowcaseScreenState extends State<LoadingShowcaseScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  icon: const Icon(Icons.check_circle_outline_rounded, size: 20),
+                  icon: const Icon(AppIcons.checkCircle, size: 20),
                   label: Text(
                     'Áp Dụng "${current.title}" Cho App',
                     style: const TextStyle(

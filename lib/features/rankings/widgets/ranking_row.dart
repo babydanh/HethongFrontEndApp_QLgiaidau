@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Một dòng xếp hạng (hạng 4 trở đi). Hiển thị số hạng, avatar chữ, tên,
 // tier badge, ELO, W/L và tỉ lệ thắng.
@@ -83,7 +84,7 @@ class RankingRow extends StatelessWidget {
                   Positioned(
                     top: -10,
                     child: const Icon(
-                      Icons.emoji_events_rounded,
+                      AppIcons.trophy,
                       size: 16,
                       color: Color(0xFFF59E0B),
                     ),

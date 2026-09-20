@@ -1,3 +1,4 @@
+
 part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailMemberItem on _ClubDetailScreenState {
@@ -209,7 +210,7 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
           if (isAdmin && !isOwner && m.userId != _myMembership?.userId)
             PopupMenuButton<String>(
               icon: Icon(
-                Icons.more_horiz_rounded,
+                AppIcons.moreHorizontal,
                 color: colors.textMuted,
                 size: 20,
               ),
@@ -222,7 +223,7 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
                   child: Row(
                     children: [
                       const Icon(
-                        Icons.shield_outlined,
+                        AppIcons.shield,
                         size: 16,
                         color: Colors.blue,
                       ),
@@ -239,7 +240,7 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
                   child: Row(
                     children: [
                       const Icon(
-                        Icons.security_rounded,
+                        AppIcons.shieldCheck,
                         size: 16,
                         color: Colors.blue,
                       ),
@@ -257,7 +258,7 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
                     child: Row(
                       children: [
                         const Icon(
-                          Icons.person_outline,
+                          AppIcons.user,
                           size: 16,
                           color: Colors.orange,
                         ),
@@ -275,7 +276,7 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
                     child: Row(
                       children: [
                         const Icon(
-                          Icons.workspace_premium_rounded,
+                          AppIcons.award,
                           size: 16,
                           color: Colors.amber,
                         ),
@@ -292,7 +293,7 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
                   child: Row(
                     children: [
                       const Icon(
-                        Icons.military_tech_rounded,
+                        AppIcons.medal,
                         size: 16,
                         color: AppTheme.primary,
                       ),
@@ -306,7 +307,7 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
                   child: Row(
                     children: [
                       Icon(
-                        Icons.sell_rounded,
+                        AppIcons.tag,
                         size: 16,
                         color: colors.textMuted,
                       ),
@@ -324,7 +325,7 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
                   child: Row(
                     children: [
                       const Icon(
-                        Icons.person_remove_rounded,
+                        AppIcons.userRemove,
                         size: 16,
                         color: Colors.red,
                       ),
@@ -341,7 +342,7 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
                   child: Row(
                     children: [
                       const Icon(
-                        Icons.block_rounded,
+                        AppIcons.ban,
                         size: 16,
                         color: Colors.red,
                       ),

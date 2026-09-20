@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 
 /// Màn hình trung gian: resolve mã mời (code) → chuyển đúng luồng tham gia.
@@ -31,9 +32,7 @@ class _InviteCodeJoinScreenState extends ConsumerState<InviteCodeJoinScreen> {
 
   Future<void> _resolve() async {
     final repo = ref.read(tournamentRepositoryProvider);
-    final Tournament? t = await repo.getByInviteCode(
-      widget.inviteCode.trim(),
-    );
+    final Tournament? t = await repo.getByInviteCode(widget.inviteCode.trim());
     if (!mounted) return;
     if (t == null) {
       setState(() => _failed = true);
@@ -60,7 +59,7 @@ class _InviteCodeJoinScreenState extends ConsumerState<InviteCodeJoinScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.search_off_rounded,
+                      AppIcons.searchOff,
                       size: 56,
                       color: context.colors.textMuted,
                     ),
@@ -77,7 +76,7 @@ class _InviteCodeJoinScreenState extends ConsumerState<InviteCodeJoinScreen> {
                     const SizedBox(height: 24),
                     FilledButton.icon(
                       onPressed: () => context.pop(),
-                      icon: const Icon(Icons.arrow_back_ios_rounded),
+                      icon: const Icon(AppIcons.chevronLeft),
                       label: Text(l10n.matchBack),
                     ),
                   ],

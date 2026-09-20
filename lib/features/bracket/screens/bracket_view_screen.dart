@@ -18,6 +18,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_filter_botto
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class BracketViewScreen extends ConsumerStatefulWidget {
@@ -252,7 +253,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.account_tree_outlined,
+                    AppIcons.layers,
                     size: 64,
                     color: context.colors.textMuted.withValues(alpha: 0.4),
                   ),
@@ -391,7 +392,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         backgroundColor: context.colors.bgDark,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded),
+          icon: const Icon(AppIcons.chevronLeft),
           onPressed: () {
             if (auth.role == UserRole.admin) {
               context.go('/admin/tournament/${widget.tournamentId}');
@@ -409,7 +410,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             ? [
                 IconButton(
                   icon: Icon(
-                    Icons.logout_rounded,
+                    AppIcons.logout,
                     color: context.colors.textSecondary,
                   ),
                   onPressed: () {
@@ -787,18 +788,22 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                     ),
                   );
                   ref.invalidate(bracketMatchesProvider(widget.tournamentId));
-                  ref.invalidate(liteBracketMatchesProvider(widget.tournamentId));
+                  ref.invalidate(
+                    liteBracketMatchesProvider(widget.tournamentId),
+                  );
                   ref.invalidate(matchesProvider(widget.tournamentId));
                   final params = (
                     tournamentId: widget.tournamentId,
                     divisionId: widget.divisionId,
                   );
                   ref.invalidate(bracketMatchesWithDivisionProvider(params));
-                  ref.invalidate(liteBracketMatchesWithDivisionProvider(params));
+                  ref.invalidate(
+                    liteBracketMatchesWithDivisionProvider(params),
+                  );
                   ref.invalidate(matchesWithDivisionProvider(params));
                   if (mounted) setState(() {});
                 },
-                icon: const Icon(Icons.account_tree_rounded, size: 14),
+                icon: const Icon(AppIcons.layers, size: 14),
                 label: Text(
                   isGroupStageKnockout || bracketType == 'group_stage_knockout'
                       ? l10n.bracketView_knockoutMap
@@ -854,7 +859,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                     hintText: l10n.bracketView_searchHint,
                     hintStyle: TextStyle(fontSize: 12, color: colors.textMuted),
                     prefixIcon: Icon(
-                      Icons.search_rounded,
+                      AppIcons.search,
                       size: 18,
                       color: colors.textMuted,
                     ),
@@ -863,7 +868,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                       builder: (context, value, _) {
                         if (value.text.isEmpty) return const SizedBox.shrink();
                         return IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 16),
+                          icon: const Icon(AppIcons.close, size: 16),
                           onPressed: () {
                             _debounceTimer?.cancel();
                             _searchController.clear();
@@ -911,7 +916,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          Icons.tune_rounded,
+                          AppIcons.tune,
                           size: 18,
                           color: _currentFilterState.hasActiveFilters
                               ? AppTheme.primary
@@ -1036,7 +1041,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.search_off_rounded,
+                  AppIcons.searchOff,
                   size: 40,
                   color: colors.textMuted.withValues(alpha: 0.4),
                 ),
@@ -1170,7 +1175,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                 color: AppTheme.primary.withValues(alpha: 0.2),
               ),
               child: const Icon(
-                Icons.close_rounded,
+                AppIcons.close,
                 size: 11,
                 color: AppTheme.primary,
               ),

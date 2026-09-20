@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/match_card_detail.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/team_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Unified bracket match card used in both single-elim and double-elim diagrams.
@@ -113,7 +114,7 @@ class BracketMatchCard extends StatelessWidget {
               message: AppLocalizations.of(context)!.lite_unassignBracket,
               child: IconButton(
                 onPressed: () => onUnassignSlot!(dragData),
-                icon: const Icon(Icons.link_off_rounded, size: 14),
+                icon: const Icon(AppIcons.link, size: 14),
                 color: Theme.of(context).colorScheme.error,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints.tightFor(

@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class AppShareModal {
@@ -48,11 +49,7 @@ class AppShareModal {
             // Header
             Row(
               children: [
-                const Icon(
-                  Icons.share_rounded,
-                  color: AppTheme.primary,
-                  size: 22,
-                ),
+                const Icon(AppIcons.share, color: AppTheme.primary, size: 22),
                 const SizedBox(width: 8),
                 Text(
                   l10n!.coreShareTitle,
@@ -65,11 +62,7 @@ class AppShareModal {
                 const Spacer(),
                 IconButton(
                   onPressed: () => Navigator.pop(ctx),
-                  icon: Icon(
-                    Icons.close_rounded,
-                    color: colors.textMuted,
-                    size: 20,
-                  ),
+                  icon: Icon(AppIcons.close, color: colors.textMuted, size: 20),
                 ),
               ],
             ),
@@ -159,7 +152,7 @@ class AppShareModal {
               children: [
                 _shareActionButton(
                   context: ctx,
-                  icon: Icons.copy_rounded,
+                  icon: AppIcons.copy,
                   color: const Color(0xFF3B82F6),
                   label: l10n!.coreCopyLink,
                   onTap: () {
@@ -175,7 +168,7 @@ class AppShareModal {
                 ),
                 _shareActionButton(
                   context: ctx,
-                  icon: Icons.send_rounded,
+                  icon: AppIcons.send,
                   color: const Color(0xFF059669),
                   label: l10n!.coreShareViaApp,
                   onTap: () {
@@ -190,7 +183,7 @@ class AppShareModal {
                 ),
                 _shareActionButton(
                   context: ctx,
-                  icon: Icons.qr_code_2_rounded,
+                  icon: AppIcons.qrCode,
                   color: const Color(0xFFF59E0B),
                   label: l10n!.coreQrCode,
                   onTap: () {
@@ -291,7 +284,7 @@ class AppShareModal {
                   context,
                 ).showSnackBar(SnackBar(content: Text(l10n!.coreLinkCopied)));
               },
-              icon: const Icon(Icons.copy_rounded, size: 16),
+              icon: const Icon(AppIcons.copy, size: 16),
               label: Text(l10n!.coreCopyLink),
             ),
           ],
@@ -305,11 +298,8 @@ class AppShareModal {
       return SvgPicture.network(
         "https://sporto.asia/sporto_v1_with_text.svg",
         fit: BoxFit.contain,
-        placeholderBuilder: (_) => const Icon(
-          Icons.emoji_events_rounded,
-          color: AppTheme.primary,
-          size: 24,
-        ),
+        placeholderBuilder: (_) =>
+            const Icon(AppIcons.trophy, color: AppTheme.primary, size: 24),
       );
     }
     final resolved = _resolveImageUrl(url);
@@ -317,11 +307,8 @@ class AppShareModal {
       return SvgPicture.network(
         resolved,
         fit: BoxFit.contain,
-        placeholderBuilder: (_) => const Icon(
-          Icons.emoji_events_rounded,
-          color: AppTheme.primary,
-          size: 24,
-        ),
+        placeholderBuilder: (_) =>
+            const Icon(AppIcons.trophy, color: AppTheme.primary, size: 24),
       );
     }
     return Image.network(
@@ -330,11 +317,8 @@ class AppShareModal {
       errorBuilder: (context, error, stackTrace) => SvgPicture.network(
         "https://sporto.asia/sporto_v1_with_text.svg",
         fit: BoxFit.contain,
-        placeholderBuilder: (_) => const Icon(
-          Icons.emoji_events_rounded,
-          color: AppTheme.primary,
-          size: 24,
-        ),
+        placeholderBuilder: (_) =>
+            const Icon(AppIcons.trophy, color: AppTheme.primary, size: 24),
       ),
     );
   }

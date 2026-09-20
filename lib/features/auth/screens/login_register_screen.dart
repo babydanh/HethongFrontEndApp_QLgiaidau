@@ -15,6 +15,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/utils/token_generator.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class LoginRegisterScreen extends ConsumerStatefulWidget {
   final String? redirectPath;
@@ -345,7 +346,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                         child: Row(
                           children: [
                             Icon(
-                              Icons.error_outline_rounded,
+                              AppIcons.error,
                               color: context.colors.error,
                               size: 18.0,
                             ),
@@ -379,7 +380,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                                       controller: _fullNameController,
                                       label: l10n.fullNameLabel,
                                       hint: l10n.loginRegister_fullNameHint,
-                                      icon: Icons.person_outline,
+                                      icon: AppIcons.user,
                                       validator: (val) {
                                         if (_isRegisterMode &&
                                             (val == null ||
@@ -399,7 +400,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                           controller: _emailController,
                           label: l10n.emailLabel,
                           hint: l10n.loginRegister_emailHint,
-                          icon: Icons.email_outlined,
+                          icon: AppIcons.mail,
                           keyboardType: TextInputType.emailAddress,
                           validator: (val) {
                             if (val == null || val.trim().isEmpty) {
@@ -418,13 +419,11 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                           controller: _passwordController,
                           label: l10n.passwordLabel,
                           hint: l10n.loginRegister_passwordHint,
-                          icon: Icons.lock_outline,
+                          icon: AppIcons.lock,
                           obscureText: _obscurePassword,
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
+                              _obscurePassword ? AppIcons.eye : AppIcons.eyeOff,
                               color: isDark ? Colors.white70 : Colors.black54,
                               size: 18.0,
                             ),

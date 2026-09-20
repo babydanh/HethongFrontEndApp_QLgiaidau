@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CommunityCommentSheet extends ConsumerStatefulWidget {
@@ -526,7 +527,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                       visualDensity: VisualDensity.compact,
                       onPressed: () => Navigator.pop(context),
                       icon: Icon(
-                        Icons.close_rounded,
+                        AppIcons.close,
                         size: 20,
                         color: colors.textMuted,
                       ),
@@ -554,7 +555,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.chat_bubble_outline_rounded,
+                                AppIcons.chat,
                                 size: 44,
                                 color: colors.textMuted.withValues(alpha: 0.5),
                               ),
@@ -599,7 +600,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                                         ),
                                       )
                                     : const Icon(
-                                        Icons.expand_more_rounded,
+                                        AppIcons.chevronDown,
                                         size: 16,
                                       ),
                                 label: Text(
@@ -676,7 +677,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                   child: Row(
                     children: [
                       const Icon(
-                        Icons.reply_rounded,
+                        AppIcons.reply,
                         size: 15,
                         color: AppTheme.primary,
                       ),
@@ -701,7 +702,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                           _replyAuthorName = null;
                         }),
                         child: Icon(
-                          Icons.close_rounded,
+                          AppIcons.close,
                           size: 16,
                           color: colors.textMuted,
                         ),
@@ -800,7 +801,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                         visualDensity: VisualDensity.compact,
                         onPressed: (_canSend && !_busy) ? _submit : null,
                         icon: Icon(
-                          Icons.send_rounded,
+                          AppIcons.send,
                           size: 20,
                           color: _canSend
                               ? AppTheme.primary
@@ -1043,7 +1044,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(
-                                Icons.favorite_rounded,
+                                AppIcons.heart,
                                 size: 12,
                                 color: Color(0xFFEF4444),
                               ),

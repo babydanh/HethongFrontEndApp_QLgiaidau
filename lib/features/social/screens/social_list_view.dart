@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/features/social/providers/social_provider.dar
 import 'package:app_quanly_giaidau/features/social/screens/activity_feed_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/activity_feed_card.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_date_selector.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class SocialListView extends ConsumerWidget {
   final double topPadding;
@@ -137,7 +138,7 @@ class SocialListView extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(
-          Icons.event_busy_rounded,
+          AppIcons.calendarX,
           size: 42,
           color: isDark ? Colors.white38 : Colors.black38,
         ),
@@ -167,7 +168,7 @@ class SocialListView extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.cloud_off_rounded, size: 42, color: Colors.grey),
+              const Icon(AppIcons.imageOff, size: 42, color: Colors.grey),
               const SizedBox(height: 10),
               const Text(
                 'Không thể tải bảng tin lúc này',
@@ -210,9 +211,7 @@ class SocialListView extends ConsumerWidget {
             ),
           ),
           Icon(
-            isCollapsed
-                ? Icons.keyboard_arrow_down_rounded
-                : Icons.keyboard_arrow_up_rounded,
+            isCollapsed ? AppIcons.chevronDown : AppIcons.chevronUp,
             color: isDark ? Colors.white60 : const Color(0xFF64748B),
           ),
         ],

@@ -10,8 +10,10 @@ class AppConstants {
   static const String logoFullSvg = 'assets/images/sporto_v1_with_text.svg';
   static const String logoFullPng = 'assets/images/sporto_v1_with_text.png';
   static const String appIconPng = 'assets/logos/icon.png';
-  static const String defaultFallbackImage = 'assets/images/sporto_v1_with_text.png';
-  static const String remoteLogoFullSvg = 'https://sporto.asia/sporto_v1_with_text.svg';
+  static const String defaultFallbackImage =
+      'assets/images/sporto_v1_with_text.png';
+  static const String remoteLogoFullSvg =
+      'https://sporto.asia/sporto_v1_with_text.svg';
   static const String remoteLogoIconSvg = 'https://sporto.asia/sporto_v1.svg';
 
   // ─── Sports ───
@@ -27,14 +29,6 @@ class AppConstants {
     sportBadminton: 'Cầu lông',
     sportTennis: 'Tennis',
     sportTableTennis: 'Bóng bàn',
-  };
-
-  static const Map<String, String> sportIcons = {
-    sportFootball: '⚽',
-    sportPickleball: 'assets/icons/pickleball.png',
-    sportBadminton: '🏸',
-    sportTennis: '🎾',
-    sportTableTennis: '🏓',
   };
 
   // ─── Tag BQT (P2C.4/P2C.5) ───

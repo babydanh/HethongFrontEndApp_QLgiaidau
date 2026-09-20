@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:go_router/go_router.dart';
 
 class RefereeInvitesScreen extends ConsumerWidget {
@@ -27,7 +28,7 @@ class RefereeInvitesScreen extends ConsumerWidget {
         backgroundColor: colors.bgDark,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -175,7 +176,7 @@ class _InviteCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(
-                  Icons.gavel_rounded,
+                  AppIcons.shield,
                   color: AppTheme.refereeColor,
                   size: 24,
                 ),
@@ -225,13 +226,13 @@ class _InviteCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           _InviteMetaRow(
-            icon: Icons.schedule_rounded,
+            icon: AppIcons.clock,
             label: l10n.refereeInviteDateLabel,
             value: assignedText,
           ),
           const SizedBox(height: 8),
           _InviteMetaRow(
-            icon: Icons.flag_rounded,
+            icon: AppIcons.target,
             label: l10n.refereeInviteTournamentStatusLabel,
             value: _mapTournamentStatus(invite.tournamentStatus),
           ),
@@ -241,7 +242,7 @@ class _InviteCard extends StatelessWidget {
               Expanded(
                 child: FilledButton.icon(
                   onPressed: onAccept,
-                  icon: const Icon(Icons.check_rounded, size: 18),
+                  icon: const Icon(AppIcons.check, size: 18),
                   label: Text(
                     l10n.refereeInviteAccept,
                     style: TextStyle(fontWeight: FontWeight.w800),
@@ -261,7 +262,7 @@ class _InviteCard extends StatelessWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: onDecline,
-                  icon: const Icon(Icons.close_rounded, size: 18),
+                  icon: const Icon(AppIcons.close, size: 18),
                   label: Text(
                     l10n.refereeInviteDecline,
                     style: TextStyle(fontWeight: FontWeight.w800),
@@ -345,7 +346,7 @@ class _InviteEmptyView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Icon(
-                Icons.mail_outline_rounded,
+                AppIcons.mail,
                 size: 40,
                 color: colors.textMuted.withValues(alpha: 0.6),
               ),
@@ -387,7 +388,7 @@ class _InviteErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+            Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
             const SizedBox(height: 16),
             Text(
               l10n.refereeInvitesLoadError,

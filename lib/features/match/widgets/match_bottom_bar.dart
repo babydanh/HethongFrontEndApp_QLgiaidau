@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier
 import 'package:app_quanly_giaidau/features/match/utils/score_validation_localizer.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Bottom bar: penalty, override, end set/match.
 class MatchBottomBar extends ConsumerWidget {
@@ -64,7 +65,7 @@ class MatchBottomBar extends ConsumerWidget {
               Expanded(
                 child: _actionButton(
                   label: l10n.matchBottom_team1Wins,
-                  icon: Icons.emoji_events_rounded,
+                  icon: AppIcons.trophy,
                   color: const Color(0xFF2979FF),
                   loading: state.isSubmitting,
                   onTap: notifier.canCompleteAs(1)
@@ -77,7 +78,7 @@ class MatchBottomBar extends ConsumerWidget {
               Expanded(
                 child: _actionButton(
                   label: l10n.matchBottom_team2Wins,
-                  icon: Icons.emoji_events_rounded,
+                  icon: AppIcons.trophy,
                   color: const Color(0xFFEA580C),
                   loading: state.isSubmitting,
                   onTap: notifier.canCompleteAs(2)
@@ -93,7 +94,7 @@ class MatchBottomBar extends ConsumerWidget {
             TextButton.icon(
               onPressed: () => notifier.setOverride(true, ''),
               icon: const Icon(
-                Icons.warning_amber_rounded,
+                AppIcons.warning,
                 size: 14,
                 color: Colors.orange,
               ),
@@ -106,8 +107,11 @@ class MatchBottomBar extends ConsumerWidget {
           if (state.overrideEnabled)
             TextButton.icon(
               onPressed: () => notifier.setOverride(false, ''),
-              icon: const Icon(Icons.close_rounded, size: 14),
-              label: Text(l10n.matchBottom_cancelOverride, style: const TextStyle(fontSize: 11)),
+              icon: const Icon(AppIcons.close, size: 14),
+              label: Text(
+                l10n.matchBottom_cancelOverride,
+                style: const TextStyle(fontSize: 11),
+              ),
             ),
         ],
       ),
@@ -142,7 +146,9 @@ class MatchBottomBar extends ConsumerWidget {
         foregroundColor: Colors.white,
         disabledBackgroundColor: color.withValues(alpha: 0.3),
         padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusXL)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        ),
       ),
     );
   }

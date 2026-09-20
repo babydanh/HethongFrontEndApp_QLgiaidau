@@ -1,12 +1,13 @@
+
 part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailJoinActions on _ClubDetailScreenState {
   // ─── Join button helpers ───
   IconData _getJoinIcon() {
-    if (_isMember) return Icons.check_rounded;
-    if (_isPending) return Icons.hourglass_empty_rounded;
-    if (_isInvited) return Icons.mail_rounded;
-    return Icons.person_add_alt_1_rounded;
+    if (_isMember) return AppIcons.check;
+    if (_isPending) return AppIcons.hourglass;
+    if (_isInvited) return AppIcons.mail;
+    return AppIcons.userAdd;
   }
 
   String _getJoinLabel() {
@@ -51,8 +52,8 @@ extension _ClubDetailJoinActions on _ClubDetailScreenState {
                   ),
                   child: Icon(
                     _notificationPref == 'MUTED'
-                        ? Icons.notifications_off_outlined
-                        : Icons.notifications_active_outlined,
+                        ? AppIcons.bell
+                        : AppIcons.bell,
                     color: AppTheme.primary,
                     size: 20,
                   ),
@@ -82,7 +83,7 @@ extension _ClubDetailJoinActions on _ClubDetailScreenState {
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.logout_rounded,
+                    AppIcons.logout,
                     color: Colors.redAccent,
                     size: 20,
                   ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class LeaderboardView extends StatelessWidget {
@@ -23,7 +24,7 @@ class LeaderboardView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.emoji_events_outlined,
+              AppIcons.trophy,
               size: 64,
               color: context.colors.textMuted.withValues(alpha: 0.3),
             ),
@@ -39,10 +40,7 @@ class LeaderboardView extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               l10n.noStandings,
-              style: TextStyle(
-                fontSize: 14,
-                color: context.colors.textMuted,
-              ),
+              style: TextStyle(fontSize: 14, color: context.colors.textMuted),
             ),
           ],
         ),
@@ -106,7 +104,11 @@ class LeaderboardView extends StatelessWidget {
     );
   }
 
-  Widget _statHeader(String text, AppColorsExtension colors, {bool isHighlight = false}) {
+  Widget _statHeader(
+    String text,
+    AppColorsExtension colors, {
+    bool isHighlight = false,
+  }) {
     return Expanded(
       child: Text(
         text,
@@ -152,7 +154,7 @@ class LeaderboardView extends StatelessWidget {
                   color: rankColor.withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
-                )
+                ),
               ]
             : null,
       ),
@@ -163,11 +165,7 @@ class LeaderboardView extends StatelessWidget {
             child: Row(
               children: [
                 if (isTop3)
-                  Icon(
-                    Icons.emoji_events,
-                    size: 18,
-                    color: rankColor,
-                  )
+                  Icon(AppIcons.trophy, size: 18, color: rankColor)
                 else
                   Text(
                     "$rank",
@@ -197,14 +195,26 @@ class LeaderboardView extends StatelessWidget {
           _statCell(fmt.format(standing.won), colors),
           _statCell(fmt.format(standing.drawn), colors),
           _statCell(fmt.format(standing.lost), colors),
-          _statCell((standing.pointDifference > 0 ? "+" : "") + fmt.format(standing.pointDifference), colors),
-          _statCell(fmt.format(standing.totalPoints), colors, isHighlight: true),
+          _statCell(
+            (standing.pointDifference > 0 ? "+" : "") +
+                fmt.format(standing.pointDifference),
+            colors,
+          ),
+          _statCell(
+            fmt.format(standing.totalPoints),
+            colors,
+            isHighlight: true,
+          ),
         ],
       ),
     );
   }
 
-  Widget _statCell(String text, AppColorsExtension colors, {bool isHighlight = false}) {
+  Widget _statCell(
+    String text,
+    AppColorsExtension colors, {
+    bool isHighlight = false,
+  }) {
     return Expanded(
       child: Text(
         text,

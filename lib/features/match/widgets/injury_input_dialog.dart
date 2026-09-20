@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class InjuryInputDialog extends StatefulWidget {
   final String team1Name;
@@ -36,10 +37,12 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
 
     return AlertDialog(
       backgroundColor: context.colors.bgCard,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusXL)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+      ),
       title: Row(
         children: [
-          Icon(Icons.local_hospital_rounded, color: context.colors.warning),
+          Icon(AppIcons.activity, color: context.colors.warning),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

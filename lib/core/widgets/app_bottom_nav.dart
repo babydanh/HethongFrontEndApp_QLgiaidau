@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class AppBottomNav extends StatelessWidget {
   final VoidCallback onFabTap;
@@ -32,11 +33,15 @@ class AppBottomNav extends StatelessWidget {
               color: AppTheme.accent.withValues(alpha: 0.4),
               blurRadius: 12,
               spreadRadius: 2,
-            )
+            ),
           ],
         ),
-        child: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 36),
+        child: const Icon(AppIcons.scan, color: Colors.white, size: 36),
       ),
-    ).animate().scale(delay: 500.ms, duration: 400.ms, curve: Curves.easeOutBack);
+    ).animate().scale(
+      delay: 500.ms,
+      duration: 400.ms,
+      curve: Curves.easeOutBack,
+    );
   }
 }

@@ -72,6 +72,7 @@ import 'package:app_quanly_giaidau/features/chat/screens/chat_screen.dart';
 import 'package:app_quanly_giaidau/features/chat/screens/chat_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_social_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_dispatcher.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/features/social/screens/social_detail_screen.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
@@ -79,7 +80,7 @@ final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
-    initialLocation: '/home',
+    initialLocation: '/',
     redirect: (context, state) {
       final auth = ref.read(authProvider);
       final isAuth = auth.status == AuthStatus.authenticated;
@@ -90,9 +91,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           currentPath == '/join-team' ||
           currentPath.startsWith('/lite-join/');
 
-      // Redirect root / to /home
+      // Màn hình khởi động SplashScreen
       if (currentPath == '/') {
-        return '/home';
+        return null;
       }
 
       // Login screen & auth flows — luôn cho phép
@@ -118,6 +119,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Chưa auth thì mặc định về /home (cho phép truy cập các trang công khai)
       if (!isAuth &&
+          currentPath != '/' &&
           currentPath != '/home' &&
           currentPath != '/login-loading' &&
           currentPath != '/forgot-password' &&
@@ -1049,7 +1051,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const Icon(AppIcons.error, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
               AppLocalizations.of(context)!.tournamentNotFound,
@@ -1154,11 +1156,7 @@ class _ClubChatRouteWrapperState extends ConsumerState<_ClubChatRouteWrapper> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.cloud_off_rounded,
-                  size: 48,
-                  color: Colors.red,
-                ),
+                const Icon(AppIcons.imageOff, size: 48, color: Colors.red),
                 const SizedBox(height: 12),
                 Text(
                   _error ?? 'Không thể tải phòng chat',

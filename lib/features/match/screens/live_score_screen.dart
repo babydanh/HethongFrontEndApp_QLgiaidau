@@ -25,6 +25,7 @@ import 'package:app_quanly_giaidau/domain/entities/match_event.dart';
 import 'package:app_quanly_giaidau/domain/entities/penalty.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:intl/intl.dart';
 
 class _HeartModel {
@@ -422,11 +423,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         backgroundColor: context.colors.bgCard,
         title: Row(
           children: [
-            const Icon(
-              Icons.sports_kabaddi_rounded,
-              color: Colors.orange,
-              size: 24,
-            ),
+            const Icon(AppIcons.sportBadminton, color: Colors.orange, size: 24),
             const SizedBox(width: 8),
             Text(
               l10n.liveFoulSelectTeam,
@@ -440,10 +437,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             ListTile(
               leading: CircleAvatar(
                 backgroundColor: Colors.blueAccent.withValues(alpha: 0.2),
-                child: const Icon(
-                  Icons.sports_rounded,
-                  color: Colors.blueAccent,
-                ),
+                child: const Icon(AppIcons.trophy, color: Colors.blueAccent),
               ),
               title: Text(
                 match.team1Name,
@@ -458,10 +452,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             ListTile(
               leading: CircleAvatar(
                 backgroundColor: Colors.redAccent.withValues(alpha: 0.2),
-                child: const Icon(
-                  Icons.sports_rounded,
-                  color: Colors.redAccent,
-                ),
+                child: const Icon(AppIcons.trophy, color: Colors.redAccent),
               ),
               title: Text(
                 match.team2Name,
@@ -486,7 +477,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         backgroundColor: context.colors.bgCard,
         title: Row(
           children: [
-            const Icon(Icons.gavel_rounded, color: Colors.red, size: 24),
+            const Icon(AppIcons.shield, color: Colors.red, size: 24),
             const SizedBox(width: 8),
             Text(
               l10n.liveForceWinTitle,
@@ -653,10 +644,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         centerTitle: true,
         toolbarHeight: isLandscape ? 40 : 52,
         leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_new_rounded,
-            size: isLandscape ? 18 : 22,
-          ),
+          icon: Icon(AppIcons.chevronLeft, size: isLandscape ? 18 : 22),
           onPressed: () => context.pop(),
         ),
         actions: [
@@ -666,7 +654,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               child: match.isScheduled
                   ? IconButton(
                       tooltip: l10n.liveStartMatch,
-                      icon: const Icon(Icons.play_circle_fill_rounded),
+                      icon: const Icon(AppIcons.play),
                       color: const Color(0xFF16A34A),
                       onPressed: () async {
                         await _startMatchSafely(
@@ -676,7 +664,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     )
                   : IconButton(
                       tooltip: l10n.liveOpenScoreboardShort,
-                      icon: const Icon(Icons.scoreboard_rounded),
+                      icon: const Icon(AppIcons.trophy),
                       color: AppTheme.primary,
                       onPressed: () {
                         showOfficialScoreModal(
@@ -705,7 +693,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        Icons.search_off_rounded,
+                        AppIcons.searchOff,
                         size: 64,
                         color: context.colors.textMuted,
                       ),
@@ -752,11 +740,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.error_outline_rounded,
-                      size: 48,
-                      color: context.colors.error,
-                    ),
+                    Icon(AppIcons.error, size: 48, color: context.colors.error),
                     const SizedBox(height: 12),
                     Text(
                       ErrorParser.parse(e, l10n.liveMatchLoadError),
@@ -787,7 +771,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       child: Transform.scale(
                         scale: heart.scale,
                         child: Icon(
-                          Icons.favorite_rounded,
+                          AppIcons.heart,
                           color: heart.color,
                           size: 26,
                         ),
@@ -833,11 +817,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(
-                Icons.sports_score_rounded,
-                color: context.colors.info,
-                size: 42,
-              ),
+              Icon(AppIcons.trophy, color: context.colors.info, size: 42),
               const SizedBox(height: 12),
               Text(
                 l10n.liveMatchInfo,
@@ -937,7 +917,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       onRecordPenalty: () => _showFoulSelectionDialog(match),
                     );
                   },
-                  icon: const Icon(Icons.play_arrow_rounded, size: 22),
+                  icon: const Icon(AppIcons.play, size: 22),
                   label: Text(
                     l10n.liveStartMatch,
                     style: TextStyle(
@@ -1021,7 +1001,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                 ),
                 child: Icon(
-                  Icons.settings_rounded,
+                  AppIcons.settings,
                   color: context.colors.info,
                   size: 28,
                 ),
@@ -1141,7 +1121,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   labelText: scoreLabel,
                   helperText: l10n.liveTournamentConfigurationDescription,
                   prefixIcon: Icon(
-                    Icons.track_changes_rounded,
+                    AppIcons.target,
                     color: context.colors.textMuted,
                   ),
                   filled: true,
@@ -1169,7 +1149,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   labelText: l10n.liveTimeLimitLabel,
                   helperText: l10n.liveTimeLimitHelper,
                   prefixIcon: Icon(
-                    Icons.timer_outlined,
+                    AppIcons.timer,
                     color: context.colors.textMuted,
                   ),
                   filled: true,
@@ -1199,7 +1179,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 child: Row(
                   children: [
                     Icon(
-                      Icons.swap_vert_rounded,
+                      AppIcons.sort,
                       color: context.colors.textSecondary,
                       size: 20,
                     ),
@@ -1236,7 +1216,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     final effectiveId = _effectiveTournamentId(match);
                     await _startMatchSafely(tournamentId: effectiveId);
                   },
-                  icon: const Icon(Icons.play_arrow_rounded),
+                  icon: const Icon(AppIcons.play),
                   label: Text(
                     l10n.liveStartMatch,
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
@@ -1347,20 +1327,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildInfoChip(
-                Icons.track_changes_rounded,
+                AppIcons.target,
                 'Tối đa: ${match.maxScore ?? '∞'}',
               ),
               if (match.winByTwo) ...[
                 const SizedBox(width: 12),
-                _buildInfoChip(Icons.swap_vert_rounded, 'Cách biệt 2'),
+                _buildInfoChip(AppIcons.sort, 'Cách biệt 2'),
               ],
               if (match.refereeName != null &&
                   match.refereeName!.isNotEmpty) ...[
                 const SizedBox(width: 12),
-                _buildInfoChip(
-                  Icons.person_outline_rounded,
-                  match.refereeName!,
-                ),
+                _buildInfoChip(AppIcons.user, match.refereeName!),
               ],
             ],
           ).animate().fadeIn(duration: 300.ms),
@@ -1418,7 +1395,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.fiber_manual_record,
+                            AppIcons.circleDot,
                             size: 8,
                             color: Colors.white,
                           ),
@@ -1466,7 +1443,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    icon: const Icon(Icons.sports_kabaddi_rounded, size: 20),
+                    icon: const Icon(AppIcons.sportBadminton, size: 20),
                     label: Text(
                       l10n.liveWhistle,
                       style: TextStyle(
@@ -1488,7 +1465,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    icon: const Icon(Icons.check_circle_outline, size: 20),
+                    icon: const Icon(AppIcons.checkCircle, size: 20),
                     label: Text(
                       l10n.liveEndMatch,
                       style: TextStyle(
@@ -1693,8 +1670,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             ),
                             child: Icon(
                               match.isScheduled
-                                  ? Icons.play_arrow_rounded
-                                  : Icons.gavel_rounded,
+                                  ? AppIcons.play
+                                  : AppIcons.shield,
                               color: Colors.white,
                               size: 20,
                             ),
@@ -1769,7 +1746,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               onForceWin: () => _showForceWinDialog(match),
                             );
                           },
-                          icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                          icon: const Icon(AppIcons.play, size: 18),
                           label: Text(
                             l10n.liveStartMatch,
                             style: TextStyle(
@@ -1808,7 +1785,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               onForceWin: () => _showForceWinDialog(match),
                             );
                           },
-                          icon: const Icon(Icons.scoreboard_rounded, size: 18),
+                          icon: const Icon(AppIcons.trophy, size: 18),
                           label: Text(
                             l10n.liveOpenScoreboard,
                             style: TextStyle(
@@ -1833,9 +1810,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
-                        match.isScheduled
-                            ? Icons.play_arrow_rounded
-                            : Icons.gavel_rounded,
+                        match.isScheduled ? AppIcons.play : AppIcons.shield,
                         color: Colors.white,
                         size: 22,
                       ),
@@ -1906,7 +1881,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             onForceWin: () => _showForceWinDialog(match),
                           );
                         },
-                        icon: const Icon(Icons.play_arrow_rounded, size: 16),
+                        icon: const Icon(AppIcons.play, size: 16),
                         label: Text(
                           l10n.liveStartShort,
                           style: TextStyle(
@@ -1943,7 +1918,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             onForceWin: () => _showForceWinDialog(match),
                           );
                         },
-                        icon: const Icon(Icons.scoreboard_rounded, size: 16),
+                        icon: const Icon(AppIcons.trophy, size: 16),
                         label: Text(
                           l10n.liveOpenScoreboardShort,
                           style: TextStyle(
@@ -2000,7 +1975,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           child: Opacity(
                             opacity: 0.15,
                             child: Icon(
-                              Icons.videocam_rounded,
+                              AppIcons.video,
                               size: 64,
                               color: Colors.white,
                             ),
@@ -2118,7 +2093,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.videocam_rounded,
+                            AppIcons.video,
                             size: 10,
                             color: Colors.white.withValues(alpha: 0.7),
                           ),
@@ -2159,7 +2134,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       child: Row(
                         children: [
                           const Icon(
-                            Icons.play_arrow_rounded,
+                            AppIcons.play,
                             color: Colors.white,
                             size: 16,
                           ),
@@ -2196,13 +2171,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           ),
                           const SizedBox(width: 8),
                           const Icon(
-                            Icons.volume_up_rounded,
+                            AppIcons.volume,
                             color: Colors.white,
                             size: 14,
                           ),
                           const SizedBox(width: 8),
                           const Icon(
-                            Icons.fullscreen_rounded,
+                            AppIcons.expand,
                             color: Colors.white,
                             size: 16,
                           ),
@@ -2225,7 +2200,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         ),
                       ),
                       child: const Icon(
-                        Icons.play_arrow_rounded,
+                        AppIcons.play,
                         color: Colors.white,
                         size: 26,
                       ),
@@ -2263,7 +2238,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(
-                          Icons.remove_red_eye_rounded,
+                          AppIcons.eyeOff,
                           color: Color(0xFFEF4444),
                           size: 14,
                         ),
@@ -2581,7 +2556,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.gavel_rounded, size: 18, color: colors.textSecondary),
+              Icon(AppIcons.shield, size: 18, color: colors.textSecondary),
               const SizedBox(width: 8),
               Text(
                 l10n.livePenaltyLogTitle,
@@ -2611,7 +2586,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
               child: Row(
                 children: [
-                  Icon(Icons.flag_rounded, size: 16, color: color),
+                  Icon(AppIcons.target, size: 16, color: color),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -2757,11 +2732,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.location_on_rounded,
-                  size: 16,
-                  color: AppTheme.primary,
-                ),
+                Icon(AppIcons.mapPin, size: 16, color: AppTheme.primary),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -3174,7 +3145,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 ),
               ),
               leading: Icon(
-                Icons.info_outline_rounded,
+                AppIcons.info,
                 color: colors.textSecondary,
                 size: 20,
               ),
@@ -3374,7 +3345,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             ),
                           ),
                           child: Icon(
-                            Icons.chat_bubble_outline_rounded,
+                            AppIcons.chat,
                             size: 28,
                             color: colors.textMuted,
                           ),
@@ -3420,17 +3391,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         final eventType = item['eventType'] as MatchEventType;
                         final text = item['commentText']?.toString() ?? '';
 
-                        IconData eventIcon = Icons.notifications_rounded;
+                        IconData eventIcon = AppIcons.bell;
                         Color badgeColor = Colors.blue;
                         if (eventType == MatchEventType.score) {
-                          eventIcon = Icons.sports_tennis_rounded;
+                          eventIcon = AppIcons.sportTennis;
                           badgeColor = Colors.green;
                         } else if (eventType == MatchEventType.foul ||
                             eventType == MatchEventType.yellowCard) {
-                          eventIcon = Icons.warning_amber_rounded;
+                          eventIcon = AppIcons.warning;
                           badgeColor = Colors.amber;
                         } else if (eventType == MatchEventType.redCard) {
-                          eventIcon = Icons.gavel_rounded;
+                          eventIcon = AppIcons.shield;
                           badgeColor = Colors.red;
                         }
 
@@ -3603,10 +3574,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(
-                    Icons.favorite_rounded,
-                    color: Color(0xFFE11D48),
-                  ),
+                  icon: const Icon(AppIcons.heart, color: Color(0xFFE11D48)),
                   onPressed: _handleCheer,
                 ),
                 if (!isAuth)
@@ -3631,10 +3599,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               color: AppTheme.primary,
                             ),
                           )
-                        : const Icon(
-                            Icons.send_rounded,
-                            color: AppTheme.primary,
-                          ),
+                        : const Icon(AppIcons.send, color: AppTheme.primary),
                     onPressed: _postComment,
                   ),
               ],

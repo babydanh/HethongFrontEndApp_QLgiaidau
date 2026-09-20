@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:go_router/go_router.dart';
 
 class MatchCardDetail extends StatelessWidget {
@@ -102,11 +103,7 @@ class MatchCardDetail extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.fiber_manual_record,
-                        size: 8,
-                        color: Colors.white,
-                      ),
+                      Icon(AppIcons.circleDot, size: 8, color: Colors.white),
                       SizedBox(width: 4),
                       Text(
                         l10n.matchTableLive,
@@ -172,21 +169,21 @@ class MatchCardDetail extends StatelessWidget {
                   children: [
                     _infoRow(
                       context,
-                      Icons.schedule_rounded,
+                      AppIcons.clock,
                       l10n.liveScheduledTimeLabel,
                       scheduleText,
                     ),
                     const SizedBox(height: 8),
                     _infoRow(
                       context,
-                      Icons.location_on_rounded,
+                      AppIcons.mapPin,
                       l10n.matchesFilterLocation,
                       venueText,
                     ),
                     const SizedBox(height: 8),
                     _infoRow(
                       context,
-                      Icons.verified_user_rounded,
+                      AppIcons.shieldCheck,
                       l10n.infoReferee,
                       refereeText,
                     ),
@@ -194,7 +191,7 @@ class MatchCardDetail extends StatelessWidget {
                       const SizedBox(height: 8),
                       _infoRow(
                         context,
-                        Icons.sports_score_rounded,
+                        AppIcons.trophy,
                         l10n.liveSetScoresTitle,
                         match.scoreHistory
                             .asMap()
@@ -240,10 +237,10 @@ class MatchCardDetail extends StatelessWidget {
                         },
                         icon: Icon(
                           isLive
-                              ? Icons.live_tv_rounded
+                              ? AppIcons.radio
                               : (canScoreMatch
-                                    ? Icons.edit_note_rounded
-                                    : Icons.sports_score_rounded),
+                                    ? AppIcons.fileText
+                                    : AppIcons.trophy),
                           size: 18,
                         ),
                         label: Text(
@@ -340,7 +337,7 @@ class MatchCardDetail extends StatelessWidget {
       child: Row(
         children: [
           if (isWinner) ...[
-            const Icon(Icons.emoji_events, size: 14, color: AppTheme.accent),
+            const Icon(AppIcons.trophy, size: 14, color: AppTheme.accent),
             const SizedBox(width: 6),
           ],
           Expanded(

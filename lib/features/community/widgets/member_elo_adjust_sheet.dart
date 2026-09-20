@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_tier.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 enum EloOperationType { add, subtract, set }
 
@@ -52,12 +53,15 @@ class MemberEloAdjustSheet extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<MemberEloAdjustSheet> createState() => _MemberEloAdjustSheetState();
+  ConsumerState<MemberEloAdjustSheet> createState() =>
+      _MemberEloAdjustSheetState();
 }
 
 class _MemberEloAdjustSheetState extends ConsumerState<MemberEloAdjustSheet> {
   EloOperationType _operation = EloOperationType.add;
-  final TextEditingController _amountController = TextEditingController(text: '25');
+  final TextEditingController _amountController = TextEditingController(
+    text: '25',
+  );
   final TextEditingController _reasonController = TextEditingController();
   bool _isSubmitting = false;
   String? _errorText;
@@ -91,12 +95,17 @@ class _MemberEloAdjustSheetState extends ConsumerState<MemberEloAdjustSheet> {
       setState(() => _errorText = 'Điểm ELO không thể nhỏ hơn 0');
       return;
     }
-    if ((_operation == EloOperationType.add || _operation == EloOperationType.subtract) && amount <= 0) {
+    if ((_operation == EloOperationType.add ||
+            _operation == EloOperationType.subtract) &&
+        amount <= 0) {
       setState(() => _errorText = 'Vui lòng nhập số điểm thay đổi lớn hơn 0');
       return;
     }
     if (reason.isEmpty) {
-      setState(() => _errorText = 'Vui lòng nhập lý do điều chỉnh ELO (để lưu lịch sử minh bạch)');
+      setState(
+        () => _errorText =
+            'Vui lòng nhập lý do điều chỉnh ELO (để lưu lịch sử minh bạch)',
+      );
       return;
     }
 
@@ -110,8 +119,8 @@ class _MemberEloAdjustSheetState extends ConsumerState<MemberEloAdjustSheet> {
       final opString = _operation == EloOperationType.add
           ? 'ADD'
           : _operation == EloOperationType.subtract
-              ? 'SUBTRACT'
-              : 'SET';
+          ? 'SUBTRACT'
+          : 'SET';
 
       await repo.adjustMemberElo(
         widget.communityId,
@@ -187,7 +196,7 @@ class _MemberEloAdjustSheetState extends ConsumerState<MemberEloAdjustSheet> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
-                      Icons.military_tech_rounded,
+                      AppIcons.medal,
                       color: AppTheme.primary,
                       size: 22,
                     ),
@@ -246,21 +255,21 @@ class _MemberEloAdjustSheetState extends ConsumerState<MemberEloAdjustSheet> {
                     _buildOpTab(
                       type: EloOperationType.add,
                       label: 'Thêm (+)',
-                      icon: Icons.add_rounded,
+                      icon: AppIcons.add,
                       activeColor: const Color(0xFF10B981),
                     ),
                     const SizedBox(width: 4),
                     _buildOpTab(
                       type: EloOperationType.subtract,
                       label: 'Bớt (-)',
-                      icon: Icons.remove_rounded,
+                      icon: AppIcons.remove,
                       activeColor: const Color(0xFFEF4444),
                     ),
                     const SizedBox(width: 4),
                     _buildOpTab(
                       type: EloOperationType.set,
                       label: 'Đặt mới (=)',
-                      icon: Icons.edit_rounded,
+                      icon: AppIcons.edit,
                       activeColor: AppTheme.primary,
                     ),
                   ],
@@ -273,7 +282,9 @@ class _MemberEloAdjustSheetState extends ConsumerState<MemberEloAdjustSheet> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _operation == EloOperationType.set ? 'ĐIỂM ELO MỚI' : 'SỐ ĐIỂM THAY ĐỔI',
+                    _operation == EloOperationType.set
+                        ? 'ĐIỂM ELO MỚI'
+                        : 'SỐ ĐIỂM THAY ĐỔI',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -294,14 +305,19 @@ class _MemberEloAdjustSheetState extends ConsumerState<MemberEloAdjustSheet> {
                             },
                             borderRadius: BorderRadius.circular(6),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
                                 color: colors.bgSurface,
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(color: colors.borderLight),
                               ),
                               child: Text(
-                                _operation == EloOperationType.add ? '+$val' : '-$val',
+                                _operation == EloOperationType.add
+                                    ? '+$val'
+                                    : '-$val',
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
@@ -332,10 +348,10 @@ class _MemberEloAdjustSheetState extends ConsumerState<MemberEloAdjustSheet> {
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
                   prefixIcon: Icon(
                     _operation == EloOperationType.add
-                        ? Icons.add_rounded
+                        ? AppIcons.add
                         : _operation == EloOperationType.subtract
-                            ? Icons.remove_rounded
-                            : Icons.pin_rounded,
+                        ? AppIcons.remove
+                        : AppIcons.mapPin,
                     color: colors.textMuted,
                     size: 18,
                   ),
@@ -349,9 +365,15 @@ class _MemberEloAdjustSheetState extends ConsumerState<MemberEloAdjustSheet> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
+                    borderSide: const BorderSide(
+                      color: AppTheme.primary,
+                      width: 1.5,
+                    ),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -378,7 +400,10 @@ class _MemberEloAdjustSheetState extends ConsumerState<MemberEloAdjustSheet> {
                     ),
                     const SizedBox(height: 10),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: colors.bgCard,
                         borderRadius: BorderRadius.circular(10),
@@ -403,7 +428,7 @@ class _MemberEloAdjustSheetState extends ConsumerState<MemberEloAdjustSheet> {
                           ),
                           const Spacer(),
                           Icon(
-                            Icons.arrow_forward_rounded,
+                            AppIcons.forward,
                             size: 16,
                             color: colors.textMuted,
                           ),
@@ -423,8 +448,8 @@ class _MemberEloAdjustSheetState extends ConsumerState<MemberEloAdjustSheet> {
                               color: _previewElo > widget.currentElo
                                   ? const Color(0xFF10B981)
                                   : _previewElo < widget.currentElo
-                                      ? const Color(0xFFEF4444)
-                                      : colors.textPrimary,
+                                  ? const Color(0xFFEF4444)
+                                  : colors.textPrimary,
                             ),
                           ),
                         ],
@@ -435,7 +460,7 @@ class _MemberEloAdjustSheetState extends ConsumerState<MemberEloAdjustSheet> {
                       Row(
                         children: [
                           const Icon(
-                            Icons.info_outline_rounded,
+                            AppIcons.info,
                             size: 14,
                             color: Color(0xFFF59E0B),
                           ),
@@ -476,7 +501,8 @@ class _MemberEloAdjustSheetState extends ConsumerState<MemberEloAdjustSheet> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: colors.bgSurface,
-                  hintText: 'Ví dụ: Đạt giải nhất nội bộ, điều chỉnh ELO nhập môn...',
+                  hintText:
+                      'Ví dụ: Đạt giải nhất nội bộ, điều chỉnh ELO nhập môn...',
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -488,9 +514,15 @@ class _MemberEloAdjustSheetState extends ConsumerState<MemberEloAdjustSheet> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
+                    borderSide: const BorderSide(
+                      color: AppTheme.primary,
+                      width: 1.5,
+                    ),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                 ),
               ),
 

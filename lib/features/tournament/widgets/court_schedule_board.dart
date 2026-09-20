@@ -1,8 +1,8 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 
 /// Mobile counterpart of the web PublicCourtScheduleBoard.
@@ -180,11 +180,7 @@ class _CourtScheduleBoardState extends State<CourtScheduleBoard> {
     final colors = context.colors;
     return Row(
       children: [
-        Icon(
-          Icons.calendar_view_week_rounded,
-          size: 18,
-          color: AppTheme.primary,
-        ),
+        Icon(AppIcons.calendar, size: 18, color: AppTheme.primary),
         const SizedBox(width: 7),
         Expanded(
           child: Text(
@@ -198,7 +194,7 @@ class _CourtScheduleBoardState extends State<CourtScheduleBoard> {
         ),
         _zoomButton(
           context,
-          icon: Icons.remove_rounded,
+          icon: AppIcons.remove,
           enabled: _zoom > .7,
           onTap: () => setState(() => _zoom = math.max(.7, _zoom - .1)),
         ),
@@ -211,7 +207,7 @@ class _CourtScheduleBoardState extends State<CourtScheduleBoard> {
         ),
         _zoomButton(
           context,
-          icon: Icons.add_rounded,
+          icon: AppIcons.add,
           enabled: _zoom < 1.4,
           onTap: () => setState(() => _zoom = math.min(1.4, _zoom + .1)),
         ),
@@ -616,7 +612,7 @@ class _CourtScheduleBoardState extends State<CourtScheduleBoard> {
       ),
       child: Column(
         children: [
-          Icon(Icons.event_busy_rounded, size: 36, color: colors.textMuted),
+          Icon(AppIcons.calendarX, size: 36, color: colors.textMuted),
           const SizedBox(height: 8),
           Text(
             'Chưa có trận được xếp lịch trong ngày này',
@@ -689,7 +685,7 @@ class _CourtScheduleBoardState extends State<CourtScheduleBoard> {
         ),
         child: Row(
           children: [
-            Icon(Icons.schedule_rounded, size: 17, color: colors.textMuted),
+            Icon(AppIcons.clock, size: 17, color: colors.textMuted),
             const SizedBox(width: 8),
             Expanded(
               child: Text(

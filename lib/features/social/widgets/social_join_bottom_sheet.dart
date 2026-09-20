@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/features/social/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
 
 class SocialJoinBottomSheet extends ConsumerStatefulWidget {
@@ -41,7 +42,10 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: 'đ',
+    );
     final totalPrice = _ticketCount * widget.session.pricePerSlot;
 
     return Padding(
@@ -95,7 +99,7 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded),
+                    icon: const Icon(AppIcons.close),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -172,8 +176,8 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                           color: _remainingSlots <= 3
                               ? Colors.redAccent
                               : (isDark
-                                  ? const Color(0xFF94A3B8)
-                                  : const Color(0xFF64748B)),
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF64748B)),
                         ),
                       ),
                     ],
@@ -181,7 +185,7 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                   Row(
                     children: [
                       _buildCounterButton(
-                        icon: Icons.remove,
+                        icon: AppIcons.remove,
                         onTap: _ticketCount > 1
                             ? () => setState(() => _ticketCount--)
                             : null,
@@ -201,7 +205,7 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                         ),
                       ),
                       _buildCounterButton(
-                        icon: Icons.add,
+                        icon: AppIcons.add,
                         onTap: _ticketCount < _remainingSlots
                             ? () => setState(() => _ticketCount++)
                             : null,
@@ -215,7 +219,10 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
 
               // Total Price Row
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: isDark
                       ? const Color(0xFF2C2C2E)
@@ -289,7 +296,9 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
         decoration: BoxDecoration(
           color: isEnabled
               ? (isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE2E8F0))
-              : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04)),
+              : (isDark
+                    ? Colors.white10
+                    : Colors.black.withValues(alpha: 0.04)),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
@@ -304,7 +313,9 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
   }
 
   void _handleConfirmJoin() {
-    final success = ref.read(socialSessionsProvider.notifier).joinSession(
+    final success = ref
+        .read(socialSessionsProvider.notifier)
+        .joinSession(
           sessionId: widget.session.id,
           ticketCount: _ticketCount,
           userName: 'Bạn',

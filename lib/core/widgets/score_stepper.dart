@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class ScoreStepper extends StatelessWidget {
   final int currentScore;
@@ -19,13 +20,13 @@ class ScoreStepper extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         ScoreStepperButton(
-          icon: Icons.remove,
+          icon: AppIcons.remove,
           onTap: currentScore > 0 ? onDecrement : null,
           color: context.colors.error,
         ),
         const SizedBox(width: 8),
         ScoreStepperButton(
-          icon: Icons.add,
+          icon: AppIcons.add,
           onTap: onIncrement,
           color: context.colors.success,
         ),

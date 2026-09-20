@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Thanh hiển thị các bậc ELO (tier) của môn thể thao đang chọn.
 /// Mỗi bậc hiển thị: badge chữ đầy đủ (TIER S / HIGH TIER A...) + dải ELO.
@@ -60,7 +61,7 @@ class TierLegendView extends StatelessWidget {
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
-                                  Icons.info_outline_rounded,
+                                  AppIcons.info,
                                   color: AppTheme.primary,
                                   size: 20,
                                 ),
@@ -77,7 +78,7 @@ class TierLegendView extends StatelessWidget {
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.close_rounded),
+                                icon: const Icon(AppIcons.close),
                                 onPressed: () => Navigator.pop(ctx),
                               ),
                             ],
@@ -194,7 +195,7 @@ class TierLegendView extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.info_outline_rounded,
+                  AppIcons.info,
                   color: AppTheme.primary,
                   size: 20,
                 ),

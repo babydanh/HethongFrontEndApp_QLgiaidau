@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// P2C.5 — Bottom sheet gán tag BQT cho thành viên (OWNER/MODERATOR).
 /// Replace toàn bộ khi lưu; mảng rỗng = xoá hết. Tối đa 3 tag, mỗi tag ≤ 15 ký tự.
@@ -159,11 +160,7 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(
-                  Icons.sell_rounded,
-                  color: AppTheme.primary,
-                  size: 20,
-                ),
+                const Icon(AppIcons.tag, color: AppTheme.primary, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -177,11 +174,7 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
                 ),
                 IconButton(
                   onPressed: _saving ? null : () => Navigator.of(context).pop(),
-                  icon: Icon(
-                    Icons.close_rounded,
-                    color: colors.textMuted,
-                    size: 20,
-                  ),
+                  icon: Icon(AppIcons.close, color: colors.textMuted, size: 20),
                 ),
               ],
             ),
@@ -224,7 +217,7 @@ class _TagAssignSheetState extends State<TagAssignSheet> {
                           child: Padding(
                             padding: const EdgeInsets.all(4),
                             child: Icon(
-                              Icons.close_rounded,
+                              AppIcons.close,
                               size: 12,
                               color: colors.textMuted,
                             ),

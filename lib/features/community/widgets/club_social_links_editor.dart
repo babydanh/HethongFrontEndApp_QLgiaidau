@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Editor danh sách liên hệ của CLB, đồng bộ web (SettingsTab.tsx):
 /// - 5 loại sẵn có: Facebook, Zalo, Website, Instagram, TikTok + "Khác..." (nhãn tự do)
@@ -77,18 +78,18 @@ class _ClubSocialLinksEditorState extends State<ClubSocialLinksEditor> {
     _customLabelCtrl.clear();
     _newValueCtrl.clear();
     _notify();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.clubSocialLinks_added)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.clubSocialLinks_added)));
   }
 
   void _removeLink(String key) {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _links = {..._links}..remove(key));
     _notify();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.clubSocialLinks_removed)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.clubSocialLinks_removed)));
   }
 
   @override
@@ -103,11 +104,16 @@ class _ClubSocialLinksEditorState extends State<ClubSocialLinksEditor> {
             (entry) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: colors.bgSurface,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: colors.border.withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: colors.border.withValues(alpha: 0.5),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -126,7 +132,10 @@ class _ClubSocialLinksEditorState extends State<ClubSocialLinksEditor> {
                           const SizedBox(height: 2),
                           Text(
                             entry.value,
-                            style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: colors.textPrimary,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -134,8 +143,11 @@ class _ClubSocialLinksEditorState extends State<ClubSocialLinksEditor> {
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.delete_outline_rounded,
-                          size: 18, color: colors.error),
+                      icon: Icon(
+                        AppIcons.delete,
+                        size: 18,
+                        color: colors.error,
+                      ),
                       onPressed: () => _removeLink(entry.key),
                     ),
                   ],
@@ -155,9 +167,15 @@ class _ClubSocialLinksEditorState extends State<ClubSocialLinksEditor> {
                 decoration: const InputDecoration(isDense: true),
                 items: [
                   ..._presetTypes.entries.map(
-                    (type) => DropdownMenuItem(value: type.key, child: Text(type.value)),
+                    (type) => DropdownMenuItem(
+                      value: type.key,
+                      child: Text(type.value),
+                    ),
                   ),
-                  DropdownMenuItem(value: _customKey, child: Text(l10n.clubSocialLinks_other)),
+                  DropdownMenuItem(
+                    value: _customKey,
+                    child: Text(l10n.clubSocialLinks_other),
+                  ),
                 ],
                 onChanged: (value) {
                   if (value != null) setState(() => _newType = value);

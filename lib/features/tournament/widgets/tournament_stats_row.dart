@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentStatsRow extends StatelessWidget {
@@ -23,28 +24,28 @@ class TournamentStatsRow extends StatelessWidget {
       children: [
         _buildStatCard(
           context,
-          icon: Icons.group_rounded,
+          icon: AppIcons.users,
           value: totalTeams,
           label: l10n.totalTeamsLabel,
           color: const Color(0xFF2979FF),
         ),
         _buildStatCard(
           context,
-          icon: Icons.emoji_events_rounded,
+          icon: AppIcons.trophy,
           value: totalMatches,
           label: l10n.totalMatchesLabel,
           color: const Color(0xFFFFD700),
         ),
         _buildStatCard(
           context,
-          icon: Icons.check_circle_rounded,
+          icon: AppIcons.checkCircle,
           value: completedMatches,
           label: l10n.completedMatchesLabel,
           color: context.colors.success,
         ),
         _buildStatCard(
           context,
-          icon: Icons.play_circle_rounded,
+          icon: AppIcons.play,
           value: liveMatches,
           label: l10n.liveMatchesLabel,
           color: context.colors.warning,

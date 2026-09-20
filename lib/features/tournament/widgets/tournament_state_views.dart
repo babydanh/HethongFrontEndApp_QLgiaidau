@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class ShimmerPlaceholder extends StatelessWidget {
@@ -67,11 +68,7 @@ class NotFoundView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.search_off_rounded,
-            size: 72,
-            color: context.colors.textMuted,
-          ),
+          Icon(AppIcons.searchOff, size: 72, color: context.colors.textMuted),
           const SizedBox(height: 16),
           Text(
             l10n.tournamentNotFound,
@@ -84,7 +81,7 @@ class NotFoundView extends StatelessWidget {
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: onGoHome,
-            icon: const Icon(Icons.home_rounded),
+            icon: const Icon(AppIcons.home),
             label: Text(l10n.matchGoHome),
           ),
         ],
@@ -108,11 +105,7 @@ class ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline_rounded,
-              size: 72,
-              color: context.colors.error,
-            ),
+            Icon(AppIcons.error, size: 72, color: context.colors.error),
             const SizedBox(height: 16),
             Text(
               l10n.tournamentLoadError,
@@ -133,7 +126,7 @@ class ErrorView extends StatelessWidget {
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const Icon(AppIcons.refresh),
               label: Text(l10n.infoRetry),
             ),
           ],
@@ -188,7 +181,7 @@ class _PrivateTournamentAccessViewState
                 border: Border.all(color: const Color(0xFFFDE68A), width: 2),
               ),
               child: const Icon(
-                Icons.lock_rounded,
+                AppIcons.lock,
                 size: 56,
                 color: Color(0xFFD97706),
               ),
@@ -251,7 +244,7 @@ class _PrivateTournamentAccessViewState
                     borderSide: BorderSide(color: colors.border),
                   ),
                   suffixIcon: IconButton(
-                    icon: const Icon(Icons.arrow_forward_rounded),
+                    icon: const Icon(AppIcons.forward),
                     onPressed: () {
                       final code = _inviteController.text.trim();
                       if (code.isNotEmpty) {
@@ -270,7 +263,7 @@ class _PrivateTournamentAccessViewState
             const SizedBox(height: 20),
             OutlinedButton.icon(
               onPressed: widget.onGoHome,
-              icon: const Icon(Icons.home_rounded, size: 18),
+              icon: const Icon(AppIcons.home, size: 18),
               label: const Text('Về trang chủ'),
             ),
           ],

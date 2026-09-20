@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Chế độ hiển thị CLB — radio cards giống web (SettingsTab.tsx):
 /// PUBLIC / RESTRICTED / PRIVATE kèm icon và mô tả ngắn.
@@ -23,19 +24,19 @@ class ClubVisibilitySelector extends StatelessWidget {
         code: 'PUBLIC',
         label: l10n.createClub_visibilityPublic,
         description: l10n.createClub_visibilityPublicDescription,
-        icon: Icons.public_rounded,
+        icon: AppIcons.globe,
       ),
       (
         code: 'RESTRICTED',
         label: l10n.createClub_visibilityRestricted,
         description: l10n.createClub_visibilityRestrictedDescription,
-        icon: Icons.shield_outlined,
+        icon: AppIcons.shield,
       ),
       (
         code: 'PRIVATE',
         label: l10n.createClub_visibilityPrivate,
         description: l10n.createClub_visibilityPrivateDescription,
-        icon: Icons.lock_rounded,
+        icon: AppIcons.lock,
       ),
     ];
     return Column(
@@ -60,7 +61,7 @@ class ClubVisibilitySelector extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(
-                    selected ? Icons.radio_button_checked : option.icon,
+                    selected ? AppIcons.circleDot : option.icon,
                     color: selected ? AppTheme.primary : colors.textMuted,
                     size: 20,
                   ),
@@ -74,12 +75,17 @@ class ClubVisibilitySelector extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: selected ? AppTheme.primary : colors.textPrimary,
+                            color: selected
+                                ? AppTheme.primary
+                                : colors.textPrimary,
                           ),
                         ),
                         Text(
                           option.description,
-                          style: TextStyle(fontSize: 11, color: colors.textMuted),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colors.textMuted,
+                          ),
                         ),
                       ],
                     ),

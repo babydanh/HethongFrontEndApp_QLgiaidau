@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class CommunityTournamentPreview extends ConsumerWidget {
   final CommunityPostModel post;
@@ -164,7 +165,7 @@ class CommunityTournamentPreview extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Icon(
-                    Icons.arrow_forward_ios_rounded,
+                    AppIcons.chevronRight,
                     size: 13,
                     color: colors.textMuted,
                   ),
@@ -349,7 +350,7 @@ class CommunityTournamentPreview extends ConsumerWidget {
                   ),
                   const SizedBox(width: 4),
                   Icon(
-                    Icons.chevron_right_rounded,
+                    AppIcons.chevronRight,
                     size: 16,
                     color: AppTheme.primary,
                   ),

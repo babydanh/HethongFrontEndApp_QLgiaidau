@@ -1,3 +1,4 @@
+
 part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailGalleryPreview on _ClubDetailScreenState {
@@ -17,7 +18,7 @@ extension _ClubDetailGalleryPreview on _ClubDetailScreenState {
                 color: Colors.black,
                 child: const Center(
                   child: Icon(
-                    Icons.broken_image,
+                    AppIcons.imageOff,
                     color: Colors.white54,
                     size: 48,
                   ),

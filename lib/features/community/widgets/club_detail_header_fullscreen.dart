@@ -1,3 +1,4 @@
+
 part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailHeaderFullscreen on _ClubDetailScreenState {
@@ -19,7 +20,7 @@ extension _ClubDetailHeaderFullscreen on _ClubDetailScreenState {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.close_rounded,
+                  AppIcons.close,
                   color: colors.textPrimary,
                   size: 20,
                 ),
@@ -60,7 +61,7 @@ extension _ClubDetailHeaderFullscreen on _ClubDetailScreenState {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.close_rounded,
+                  AppIcons.close,
                   color: colors.textPrimary,
                   size: 20,
                 ),
@@ -104,7 +105,7 @@ extension _ClubDetailHeaderFullscreen on _ClubDetailScreenState {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.close_rounded,
+                  AppIcons.close,
                   color: colors.textPrimary,
                   size: 20,
                 ),

@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// BottomSheet cho phép người dùng nộp đơn xin cấp quyền Ban Tổ Chức (Organizer)
 /// Gọi POST /admin/verification-tickets và GET /admin/verification-tickets/my
@@ -130,10 +131,13 @@ class _OrganizerVerificationSheetState
     setState(() => _isSubmitting = true);
     try {
       final dio = ref.read(dioClientProvider).dio;
-      await dio.post('/admin/verification-tickets', data: {
-        'contactPhone': phone,
-        'evidenceUrls': [_evidenceUrl],
-      });
+      await dio.post(
+        '/admin/verification-tickets',
+        data: {
+          'contactPhone': phone,
+          'evidenceUrls': [_evidenceUrl],
+        },
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -203,7 +207,7 @@ class _OrganizerVerificationSheetState
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
-                        Icons.verified_user_rounded,
+                        AppIcons.shieldCheck,
                         color: AppTheme.primary,
                         size: 22,
                       ),
@@ -258,7 +262,7 @@ class _OrganizerVerificationSheetState
                         Row(
                           children: [
                             const Icon(
-                              Icons.hourglass_top_rounded,
+                              AppIcons.hourglass,
                               color: Color(0xFFF59E0B),
                               size: 20,
                             ),
@@ -330,7 +334,7 @@ class _OrganizerVerificationSheetState
                           Row(
                             children: [
                               const Icon(
-                                Icons.cancel_outlined,
+                                AppIcons.cancel,
                                 color: Color(0xFFEF4444),
                                 size: 18,
                               ),
@@ -410,7 +414,7 @@ class _OrganizerVerificationSheetState
                         color: colors.textMuted,
                       ),
                       prefixIcon: Icon(
-                        Icons.phone_outlined,
+                        AppIcons.phone,
                         size: 18,
                         color: colors.textMuted,
                       ),
@@ -466,7 +470,7 @@ class _OrganizerVerificationSheetState
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
-                                Icons.close_rounded,
+                                AppIcons.close,
                                 color: Colors.white,
                                 size: 18,
                               ),
@@ -506,7 +510,7 @@ class _OrganizerVerificationSheetState
                               ),
                             ] else ...[
                               Icon(
-                                Icons.cloud_upload_outlined,
+                                AppIcons.upload,
                                 size: 36,
                                 color: colors.textMuted,
                               ),

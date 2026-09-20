@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier
 import 'package:app_quanly_giaidau/features/match/utils/score_validation_localizer.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 SportRuleKind _resolveMatchSportKind(MatchModel match) {
@@ -175,7 +176,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                         ),
                         IconButton(
                           icon: Icon(
-                            Icons.info_outline_rounded,
+                            AppIcons.info,
                             size: 19,
                             color: AppTheme.primary,
                           ),
@@ -200,7 +201,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                         ),
                         const SizedBox(width: 2),
                         IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 19),
+                          icon: const Icon(AppIcons.close, size: 19),
                           visualDensity: VisualDensity.compact,
                           constraints: const BoxConstraints(
                             minWidth: 30,
@@ -269,7 +270,8 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                                   style: TextStyle(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w700,
-                                    color: historySets[i].score1 >
+                                    color:
+                                        historySets[i].score1 >
                                             historySets[i].score2
                                         ? const Color(0xFF2563EB)
                                         : const Color(0xFFEA580C),
@@ -817,7 +819,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.rule_rounded, color: AppTheme.primary),
+                const Icon(AppIcons.checkCircle, color: AppTheme.primary),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -902,9 +904,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                             ),
                           ),
                           trailing: Icon(
-                            isSelected
-                                ? Icons.check_circle_rounded
-                                : Icons.radio_button_unchecked,
+                            isSelected ? AppIcons.checkCircle : AppIcons.circle,
                             color: option.color,
                             size: 18,
                           ),
@@ -960,8 +960,8 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                           ),
                           trailing: Icon(
                             selectedPenalty.id == option.id
-                                ? Icons.check_circle_rounded
-                                : Icons.radio_button_unchecked,
+                                ? AppIcons.checkCircle
+                                : AppIcons.circle,
                             color: option.color,
                           ),
                         ),
@@ -1083,7 +1083,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                 });
               }
             },
-            icon: const Icon(Icons.gavel_rounded),
+            icon: const Icon(AppIcons.shield),
             label: Text(l10n.matchRecordPenalty),
           ),
           const SizedBox(height: 6),
@@ -1211,7 +1211,7 @@ class ScoreWarningBox extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.warning_amber_rounded, size: 18, color: colors.warning),
+          Icon(AppIcons.warning, size: 18, color: colors.warning),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -1248,7 +1248,7 @@ void _showMatchInfoDialog(
       ),
       title: Row(
         children: [
-          Icon(Icons.info_outline_rounded, color: AppTheme.primary, size: 22),
+          Icon(AppIcons.info, color: AppTheme.primary, size: 22),
           const SizedBox(width: 8),
           Text(
             l10n.officialScore_matchInfoTitle,

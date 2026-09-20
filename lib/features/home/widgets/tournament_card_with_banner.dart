@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
 import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentCardWithBanner extends ConsumerStatefulWidget {
@@ -197,7 +198,7 @@ class _TournamentCardWithBannerState
     );
   }
 
-  String _getSportEmojiAndLabel(BuildContext context, String sport) {
+  String _getSportLabel(BuildContext context, String sport) {
     final l10n = AppLocalizations.of(context)!;
     final sportKey = sport.toLowerCase();
     final label = switch (sportKey) {
@@ -208,13 +209,7 @@ class _TournamentCardWithBannerState
       'football' => l10n.createClubTournament_sportFootball,
       _ => l10n.homeSportFallback,
     };
-    final emoji = switch (sportKey) {
-      'badminton' => '🏸',
-      'tennis' => '🎾',
-      'pickleball' || 'table_tennis' => '🏓',
-      _ => '🏆',
-    };
-    return '$emoji ${label.toUpperCase()}';
+    return label.toUpperCase();
   }
 
   @override
@@ -235,7 +230,8 @@ class _TournamentCardWithBannerState
 
     final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl);
     final hasLogo = resolvedLogoUrl.isNotEmpty;
-    final hasIdentity = hasLogo || _resolveImageUrl(widget.tournament.bannerUrl).isNotEmpty;
+    final hasIdentity =
+        hasLogo || _resolveImageUrl(widget.tournament.bannerUrl).isNotEmpty;
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -330,7 +326,12 @@ class _TournamentCardWithBannerState
 
                   // Bottom Details Body (chỉ cộng padding-top khi có floating logo)
                   Padding(
-                    padding: EdgeInsets.fromLTRB(12, hasIdentity ? 18 : 12, 12, 12),
+                    padding: EdgeInsets.fromLTRB(
+                      12,
+                      hasIdentity ? 18 : 12,
+                      12,
+                      12,
+                    ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -353,8 +354,14 @@ class _TournamentCardWithBannerState
                               // Row 1: Sport + ELO Tag
                               Row(
                                 children: [
+                                  Icon(
+                                    AppIcons.forSport(widget.tournament.sport),
+                                    size: 14,
+                                    color: colors.textMuted,
+                                  ),
+                                  const SizedBox(width: 4),
                                   Text(
-                                    _getSportEmojiAndLabel(
+                                    _getSportLabel(
                                       context,
                                       widget.tournament.sport,
                                     ),
@@ -437,7 +444,7 @@ class _TournamentCardWithBannerState
                                 Row(
                                   children: [
                                     Icon(
-                                      Icons.location_on_rounded,
+                                      AppIcons.mapPin,
                                       size: 12,
                                       color: colors.textMuted,
                                     ),

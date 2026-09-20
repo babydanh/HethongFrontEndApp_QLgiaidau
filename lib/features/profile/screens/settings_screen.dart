@@ -18,6 +18,7 @@ import 'package:app_quanly_giaidau/features/profile/utils/phone_verification_flo
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/language_setting_card.dart';
 import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/core/extensions/string_extensions.dart';
 
 /// Màn hình Cài đặt — 3 tab: Hồ sơ, Ngân hàng, Bảo mật.
@@ -61,7 +62,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         backgroundColor: colors.bgDark,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -223,18 +224,12 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
             children: [
               const SizedBox(height: 12),
               ListTile(
-                leading: const Icon(
-                  Icons.camera_alt_rounded,
-                  color: AppTheme.primary,
-                ),
+                leading: const Icon(AppIcons.camera, color: AppTheme.primary),
                 title: Text(l10n.profileTakePhoto),
                 onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
               ),
               ListTile(
-                leading: const Icon(
-                  Icons.photo_library_rounded,
-                  color: AppTheme.primary,
-                ),
+                leading: const Icon(AppIcons.images, color: AppTheme.primary),
                 title: Text(l10n.profileChooseFromGallery),
                 onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
               ),
@@ -559,7 +554,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
               AppTextFormField(
                 controller: _nameCtrl,
                 hint: l10n.settingsFullNameHint,
-                prefixIcon: Icons.person_outline,
+                prefixIcon: AppIcons.user,
                 validator: (v) {
                   final value = v?.trim() ?? '';
                   if (value.isEmpty) return l10n.settingsFullNameRequired;
@@ -574,7 +569,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
               AppTextFormField(
                 initialValue: email ?? '',
                 hint: 'email@domain.com',
-                prefixIcon: Icons.email_outlined,
+                prefixIcon: AppIcons.mail,
                 enabled: false,
               ),
               const SizedBox(height: 16),
@@ -584,7 +579,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 controller: _phoneCtrl,
                 hint: '0912345678',
                 keyboardType: TextInputType.phone,
-                prefixIcon: Icons.phone_outlined,
+                prefixIcon: AppIcons.phone,
                 validator: (v) {
                   final value = v?.trim() ?? '';
                   if (value.isEmpty) return null;
@@ -616,7 +611,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
               AppTextFormField(
                 controller: _addressCtrl,
                 hint: l10n.settingsDetailedAddressHint,
-                prefixIcon: Icons.location_on_outlined,
+                prefixIcon: AppIcons.mapPin,
                 validator: (v) =>
                     (v ?? '').length > 255 ? l10n.settingsAddressMax : null,
               ),
@@ -626,7 +621,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 Row(
                   children: [
                     const Icon(
-                      Icons.auto_awesome,
+                      AppIcons.sparkles,
                       size: 14,
                       color: AppTheme.primary,
                     ),
@@ -649,7 +644,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 controller: _bioCtrl,
                 hint: l10n.settingsBioHint,
                 maxLines: 3,
-                prefixIcon: Icons.edit_note_rounded,
+                prefixIcon: AppIcons.fileText,
                 validator: (v) =>
                     (v ?? '').length > 500 ? l10n.settingsBioMax : null,
               ),
@@ -731,7 +726,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                             )
                           else
                             const Icon(
-                              Icons.camera_alt_rounded,
+                              AppIcons.camera,
                               size: 13,
                               color: Colors.white,
                             ),
@@ -802,11 +797,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.camera_alt_rounded,
-                      size: 12,
-                      color: colors.textMuted,
-                    ),
+                    Icon(AppIcons.camera, size: 12, color: colors.textMuted),
                     const SizedBox(width: 4),
                     Text(
                       AppLocalizations.of(context)!.settingsTapToChangeAvatar,
@@ -843,7 +834,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         ),
         child: Row(
           children: [
-            Icon(Icons.cake_rounded, size: 18, color: colors.textMuted),
+            Icon(AppIcons.cake, size: 18, color: colors.textMuted),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -860,11 +851,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 ),
               ),
             ),
-            Icon(
-              Icons.calendar_month_rounded,
-              size: 18,
-              color: colors.textMuted,
-            ),
+            Icon(AppIcons.calendar, size: 18, color: colors.textMuted),
           ],
         ),
       ),
@@ -1202,7 +1189,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
                     ? (l10n.settingsWalletNumberHint)
                     : (l10n.settingsBankNumberHint),
                 keyboardType: TextInputType.number,
-                prefixIcon: Icons.numbers_rounded,
+                prefixIcon: AppIcons.tag,
               ),
               const SizedBox(height: 16),
               _fieldLabel(colors, l10n.settingsAccountHolder),
@@ -1210,7 +1197,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
               AppTextFormField(
                 controller: _accountNameCtrl,
                 hint: l10n.settingsAccountHolderHint,
-                prefixIcon: Icons.person_rounded,
+                prefixIcon: AppIcons.user,
                 onChanged: (value) {
                   final normalized = _normalizeAccountName(value);
                   if (normalized != value) {
@@ -1245,7 +1232,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            Icons.lock_rounded,
+            AppIcons.lock,
             size: 18,
             color: AppTheme.primary.withValues(alpha: 0.8),
           ),
@@ -1318,7 +1305,7 @@ class _SecurityTab extends ConsumerWidget {
               backgroundColor: colors.bgCard,
               title: Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, color: colors.error),
+                  Icon(AppIcons.warning, color: colors.error),
                   const SizedBox(width: 8),
                   Expanded(child: Text(l10n.settingsConfirmDeleteTitle)),
                 ],
@@ -1339,11 +1326,7 @@ class _SecurityTab extends ConsumerWidget {
                     decoration: InputDecoration(
                       labelText: l10n.settingsConfirmPassword,
                       suffixIcon: IconButton(
-                        icon: Icon(
-                          obscure
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                        ),
+                        icon: Icon(obscure ? AppIcons.eyeOff : AppIcons.eye),
                         onPressed: () => setState(() => obscure = !obscure),
                       ),
                     ),
@@ -1403,7 +1386,7 @@ class _SecurityTab extends ConsumerWidget {
                 _securityRow(
                   context,
                   colors,
-                  icon: Icons.email_outlined,
+                  icon: AppIcons.mail,
                   title: l10n.emailLabel,
                   verified: profile.isEmailVerified == true,
                   fallbackText: profile.email,
@@ -1412,7 +1395,7 @@ class _SecurityTab extends ConsumerWidget {
                 _securityRow(
                   context,
                   colors,
-                  icon: Icons.phone_android_rounded,
+                  icon: AppIcons.phone,
                   title: l10n.infoPhone,
                   verified: profile.isPhoneVerified == true,
                   fallbackText:
@@ -1422,7 +1405,7 @@ class _SecurityTab extends ConsumerWidget {
                   _divider(colors),
                   _actionRow(
                     colors,
-                    icon: Icons.mark_email_unread_rounded,
+                    icon: AppIcons.mail,
                     title: l10n.settingsVerifyEmail,
                     subtitle: l10n.settingsVerifyEmailSubtitle,
                     onTap: () => startEmailVerificationFlow(
@@ -1436,7 +1419,7 @@ class _SecurityTab extends ConsumerWidget {
                   _divider(colors),
                   _actionRow(
                     colors,
-                    icon: Icons.sms_rounded,
+                    icon: AppIcons.chat,
                     title: l10n.settingsVerifyPhone,
                     subtitle: l10n.settingsVerifyPhoneSubtitle,
                     onTap: () => startPhoneVerificationFlow(
@@ -1472,7 +1455,7 @@ class _SecurityTab extends ConsumerWidget {
           _card(colors, [
             _actionRow(
               colors,
-              icon: Icons.lock_outline_rounded,
+              icon: AppIcons.lock,
               title: l10n.settingsChangePassword,
               subtitle: l10n.settingsChangePasswordSubtitle,
               onTap: () => context.push('/profile/change-password'),
@@ -1480,11 +1463,11 @@ class _SecurityTab extends ConsumerWidget {
             _divider(colors),
             _actionRow(
               colors,
-              icon: Icons.security_rounded,
+              icon: AppIcons.shieldCheck,
               title: l10n.settingsStrongPassword,
               subtitle: l10n.settingsStrongPasswordSubtitle,
               trailing: Icon(
-                Icons.check_circle_rounded,
+                AppIcons.checkCircle,
                 color: colors.success,
                 size: 20,
               ),
@@ -1498,7 +1481,7 @@ class _SecurityTab extends ConsumerWidget {
           _card(colors, [
             _actionRow(
               colors,
-              icon: Icons.devices_rounded,
+              icon: AppIcons.layers,
               title: l10n.settingsCurrentDevice,
               subtitle: l10n.settingsActive,
               trailing: Container(
@@ -1537,7 +1520,7 @@ class _SecurityTab extends ConsumerWidget {
           _card(colors, [
             _actionRow(
               colors,
-              icon: Icons.flag_outlined,
+              icon: AppIcons.target,
               title: l10n.settingsMyReports,
               subtitle: l10n.settingsMyReportsSubtitle,
               onTap: () => context.push('/profile/reports'),
@@ -1561,7 +1544,7 @@ class _SecurityTab extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.shield_outlined, size: 18, color: colors.error),
+                    Icon(AppIcons.shield, size: 18, color: colors.error),
                     const SizedBox(width: 8),
                     Text(
                       l10n.settingsDeleteAccountTitle,
@@ -1587,7 +1570,7 @@ class _SecurityTab extends ConsumerWidget {
                   height: 44,
                   child: ElevatedButton.icon(
                     onPressed: () => _confirmDeleteAccount(context, ref),
-                    icon: const Icon(Icons.delete_forever_rounded, size: 18),
+                    icon: const Icon(AppIcons.delete, size: 18),
                     label: Text(
                       l10n.settingsDeleteAccount,
                       style: TextStyle(fontWeight: FontWeight.w800),
@@ -1678,10 +1661,7 @@ class _StrangerMessagesSettingsCardState
                   _value ?? profile.allowStrangerMessages ?? false;
               return SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
-                secondary: Icon(
-                  Icons.mark_unread_chat_alt_outlined,
-                  color: AppTheme.primary,
-                ),
+                secondary: Icon(AppIcons.chat, color: AppTheme.primary),
                 title: Text(
                   l.settingsStrangerMessages,
                   style: TextStyle(
@@ -1847,11 +1827,7 @@ class _ClubNotificationSettingsCardState
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      Icon(
-                        Icons.groups_outlined,
-                        size: 36,
-                        color: colors.textMuted,
-                      ),
+                      Icon(AppIcons.users, size: 36, color: colors.textMuted),
                       const SizedBox(height: 8),
                       Text(
                         l10n.settingsNoClubsForNotifications,
@@ -1994,7 +1970,7 @@ class _ClubNotificationSettingsCardState
                               Expanded(
                                 child: _buildSegmentButton(
                                   title: l10n.settingsNotificationAll,
-                                  icon: Icons.notifications_active_outlined,
+                                  icon: AppIcons.bell,
                                   isSelected:
                                       club.notificationPreference == 'ALL',
                                   activeColor: const Color(0xFF2563EB),
@@ -2011,7 +1987,7 @@ class _ClubNotificationSettingsCardState
                               Expanded(
                                 child: _buildSegmentButton(
                                   title: l10n.settingsNotificationMentions,
-                                  icon: Icons.alternate_email_rounded,
+                                  icon: AppIcons.atSign,
                                   isSelected:
                                       club.notificationPreference ==
                                       'MENTIONS_ONLY',
@@ -2029,7 +2005,7 @@ class _ClubNotificationSettingsCardState
                               Expanded(
                                 child: _buildSegmentButton(
                                   title: l10n.settingsNotificationMuted,
-                                  icon: Icons.notifications_off_outlined,
+                                  icon: AppIcons.bell,
                                   isSelected:
                                       club.notificationPreference == 'MUTED',
                                   activeColor: const Color(0xFFE11D48),
@@ -2175,7 +2151,7 @@ Widget _dropdown(
       child: DropdownButton<String>(
         value: value,
         isExpanded: true,
-        icon: Icon(Icons.arrow_drop_down_rounded, color: colors.textMuted),
+        icon: Icon(AppIcons.chevronDown, color: colors.textMuted),
         style: TextStyle(fontSize: 14, color: colors.textPrimary),
         dropdownColor: colors.bgCard,
         items: effectiveItems
@@ -2303,9 +2279,7 @@ Widget _securityRow(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                verified
-                    ? Icons.check_circle_rounded
-                    : Icons.error_outline_rounded,
+                verified ? AppIcons.checkCircle : AppIcons.error,
                 size: 13,
                 color: verified ? colors.success : colors.warning,
               ),
@@ -2376,11 +2350,7 @@ Widget _actionRow(
           if (trailing != null)
             trailing
           else if (onTap != null)
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: colors.textMuted,
-            ),
+            Icon(AppIcons.chevronRight, size: 20, color: colors.textMuted),
         ],
       ),
     ),
@@ -2399,7 +2369,7 @@ Widget _buildErrorState(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+          Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
           const SizedBox(height: 16),
           Text(
             message,

@@ -18,6 +18,7 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/data/models/community_ranking_model.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:intl/intl.dart';
 
 /// Màn hình Điều phối CLB — dành cho OWNER/ADMIN/MODERATOR.
@@ -141,7 +142,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -154,7 +155,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             : [
                 IconButton(
                   icon: Icon(
-                    Icons.refresh_rounded,
+                    AppIcons.refresh,
                     color: colors.textSecondary,
                     size: 20,
                   ),
@@ -232,11 +233,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.mark_email_read_outlined,
-                    size: 20,
-                    color: Color(0xFF10B981),
-                  ),
+                  const Icon(AppIcons.mail, size: 20, color: Color(0xFF10B981)),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -649,7 +646,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Icon(
-                                    Icons.bolt_rounded,
+                                    AppIcons.zap,
                                     color: Color(0xFFF59E0B),
                                     size: 24,
                                   ),
@@ -705,7 +702,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   ),
                                 ),
                                 Icon(
-                                  Icons.chevron_right_rounded,
+                                  AppIcons.chevronRight,
                                   color: colors.textMuted,
                                 ),
                               ],
@@ -748,7 +745,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Icon(
-                                    Icons.workspace_premium_rounded,
+                                    AppIcons.award,
                                     color: Color(0xFF3B82F6),
                                     size: 24,
                                   ),
@@ -804,7 +801,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   ),
                                 ),
                                 Icon(
-                                  Icons.chevron_right_rounded,
+                                  AppIcons.chevronRight,
                                   color: colors.textMuted,
                                 ),
                               ],
@@ -816,7 +813,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                   ),
                 );
               },
-              icon: const Icon(Icons.add_rounded, size: 18),
+              icon: const Icon(AppIcons.add, size: 18),
               label: Text(
                 l10n.club_createNewTournament,
                 style: const TextStyle(fontWeight: FontWeight.bold),
@@ -897,9 +894,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
-                                isQuick
-                                    ? Icons.bolt_rounded
-                                    : Icons.emoji_events_rounded,
+                                isQuick ? AppIcons.zap : AppIcons.trophy,
                                 color: isQuick
                                     ? const Color(0xFFF59E0B)
                                     : AppTheme.primary,
@@ -955,7 +950,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               const Icon(
-                                                Icons.sync_rounded,
+                                                AppIcons.refresh,
                                                 size: 9,
                                                 color: Color(0xFF6366F1),
                                               ),
@@ -985,10 +980,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                             Expanded(
                               child: OutlinedButton.icon(
                                 onPressed: () => context.push('/intro/${t.id}'),
-                                icon: const Icon(
-                                  Icons.remove_red_eye_outlined,
-                                  size: 14,
-                                ),
+                                icon: const Icon(AppIcons.eyeOff, size: 14),
                                 label: Text(
                                   l10n.club_viewTournament,
                                   style: const TextStyle(fontSize: 11.5),
@@ -1012,9 +1004,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                 onPressed: () =>
                                     context.push('/lite-manage/${t.id}'),
                                 icon: Icon(
-                                  isQuick
-                                      ? Icons.bolt_rounded
-                                      : Icons.settings_rounded,
+                                  isQuick ? AppIcons.zap : AppIcons.settings,
                                   size: 14,
                                 ),
                                 label: Text(
@@ -1053,7 +1043,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                       ),
                                     )
                                   : Icon(
-                                      Icons.delete_outline_rounded,
+                                      AppIcons.delete,
                                       size: 18,
                                       color: colors.error,
                                     ),
@@ -1125,7 +1115,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
-                      Icons.sync_rounded,
+                      AppIcons.refresh,
                       color: Color(0xFF6366F1),
                       size: 18,
                     ),
@@ -1197,11 +1187,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                   ),
                   child: Column(
                     children: [
-                      Icon(
-                        Icons.schedule_rounded,
-                        size: 28,
-                        color: colors.textMuted,
-                      ),
+                      Icon(AppIcons.clock, size: 28, color: colors.textMuted),
                       const SizedBox(height: 6),
                       Text(
                         l10n.communityRecurringEmpty,
@@ -1315,8 +1301,8 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   children: [
                                     Icon(
                                       isEnabled
-                                          ? Icons.play_arrow_rounded
-                                          : Icons.pause_rounded,
+                                          ? AppIcons.play
+                                          : AppIcons.pause,
                                       size: 11,
                                       color: isEnabled
                                           ? const Color(0xFF10B981)
@@ -1387,7 +1373,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                               ),
                               const SizedBox(width: 10),
                               Icon(
-                                Icons.schedule_rounded,
+                                AppIcons.clock,
                                 size: 12,
                                 color: colors.textMuted,
                               ),
@@ -1459,8 +1445,8 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                       )
                                     : Icon(
                                         isEnabled
-                                            ? Icons.pause_rounded
-                                            : Icons.play_arrow_rounded,
+                                            ? AppIcons.pause
+                                            : AppIcons.play,
                                         size: 13,
                                       ),
                                 label: Text(
@@ -1500,7 +1486,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                         ),
                                       )
                                     : Icon(
-                                        Icons.delete_outline_rounded,
+                                        AppIcons.delete,
                                         size: 18,
                                         color: colors.error,
                                       ),
@@ -1816,7 +1802,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
               hintText: 'Tìm thành viên để chỉnh ELO...',
               hintStyle: TextStyle(color: colors.textMuted, fontSize: 12),
               prefixIcon: Icon(
-                Icons.search_rounded,
+                AppIcons.search,
                 color: colors.textMuted,
                 size: 18,
               ),
@@ -1968,7 +1954,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                               onSuccess: () => _loadData(),
                             );
                           },
-                          icon: const Icon(Icons.edit_rounded, size: 14),
+                          icon: const Icon(AppIcons.edit, size: 14),
                           label: const Text(
                             'Chỉnh ELO',
                             style: TextStyle(
@@ -2227,7 +2213,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
               hintText: l10n.club_searchHint,
               hintStyle: TextStyle(color: colors.textMuted, fontSize: 12),
               prefixIcon: Icon(
-                Icons.search_rounded,
+                AppIcons.search,
                 color: colors.textMuted,
                 size: 20,
               ),

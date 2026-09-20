@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentTeamSheet extends StatelessWidget {
@@ -28,7 +29,7 @@ class TournamentTeamSheet extends StatelessWidget {
                     : null,
                 child: team.photoUrl.isEmpty
                     ? const Icon(
-                        Icons.group,
+                        AppIcons.users,
                         size: 24,
                         color: Color(0xFF2979FF),
                       )
@@ -101,7 +102,7 @@ class TournamentTeamSheet extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 18, color: colors.textMuted),
+                  Icon(AppIcons.info, size: 18, color: colors.textMuted),
                   const SizedBox(width: 8),
                   Text(
                     l10n.tournamentTeamNoMembers,
@@ -192,7 +193,7 @@ class TournamentTeamSheet extends StatelessWidget {
                         ),
                       ),
                       Icon(
-                        Icons.arrow_forward_ios_rounded,
+                        AppIcons.chevronRight,
                         size: 16,
                         color: colors.textMuted,
                       ),
@@ -215,7 +216,7 @@ class TournamentTeamSheet extends StatelessWidget {
               child: Row(
                 children: [
                   const Icon(
-                    Icons.warning_amber_rounded,
+                    AppIcons.warning,
                     size: 16,
                     color: Color(0xFFD97706),
                   ),
@@ -267,7 +268,7 @@ class _MemberProfileScreen extends StatelessWidget {
         backgroundColor: colors.bgDark,
         elevation: 0.0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colors.textPrimary),
+          icon: Icon(AppIcons.back, color: colors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(

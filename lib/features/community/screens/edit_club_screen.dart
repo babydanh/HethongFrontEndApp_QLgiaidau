@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/club_region_select
 import 'package:app_quanly_giaidau/features/community/widgets/club_social_links_editor.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_visibility_selector.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Màn hình chỉnh sửa thông tin câu lạc bộ — đồng bộ web (SettingsTab.tsx).
@@ -87,10 +88,6 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     }
     return selected.id;
   }
-
-
-
-
 
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context)!;
@@ -200,7 +197,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
         backgroundColor: colors.bgDark,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.close_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.close, color: colors.textPrimary),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -281,7 +278,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                   AppTextFormField(
                     controller: _nameCtrl,
                     hint: l10n.editClub_clubNameHint,
-                    prefixIcon: Icons.badge_outlined,
+                    prefixIcon: AppIcons.verified,
                     validator: (v) {
                       final value = v?.trim() ?? '';
                       if (value.isEmpty) return l10n.editClub_clubNameRequired;
@@ -311,7 +308,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                     controller: _descCtrl,
                     hint: l10n.editClub_descriptionHint,
                     maxLines: 3,
-                    prefixIcon: Icons.description_outlined,
+                    prefixIcon: AppIcons.fileText,
                   ),
                 ],
               ),
@@ -344,7 +341,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                   AppTextFormField(
                     controller: _locationCtrl,
                     hint: l10n.editClub_detailedAddressHint,
-                    prefixIcon: Icons.location_on_outlined,
+                    prefixIcon: AppIcons.mapPin,
                   ),
                 ],
               ),
@@ -386,7 +383,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                     controller: _maxMembersCtrl,
                     hint: l10n.editClub_memberLimitHint,
                     keyboardType: TextInputType.number,
-                    prefixIcon: Icons.group_outlined,
+                    prefixIcon: AppIcons.users,
                   ),
                   const SizedBox(height: 16),
 
@@ -396,7 +393,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                     controller: _rulesCtrl,
                     hint: l10n.editClub_rulesHint,
                     maxLines: 4,
-                    prefixIcon: Icons.gavel_rounded,
+                    prefixIcon: AppIcons.shield,
                   ),
                 ],
               ),
@@ -418,7 +415,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                           child: AppTextFormField(
                             controller: _joinQuestionCtrl,
                             hint: l10n.editClub_questionHint,
-                            prefixIcon: Icons.help_outline_rounded,
+                            prefixIcon: AppIcons.help,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -434,10 +431,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                               _joinQuestionCtrl.clear();
                             });
                           },
-                          icon: const Icon(
-                            Icons.add_rounded,
-                            color: Colors.white,
-                          ),
+                          icon: const Icon(AppIcons.add, color: Colors.white),
                           style: IconButton.styleFrom(
                             backgroundColor: AppTheme.primary,
                             padding: const EdgeInsets.all(12),
@@ -483,7 +477,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                               ),
                               IconButton(
                                 icon: Icon(
-                                  Icons.close_rounded,
+                                  AppIcons.close,
                                   size: 16,
                                   color: colors.textSecondary,
                                 ),
@@ -531,7 +525,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Icon(Icons.check_circle_outline_rounded, size: 20),
+                    : const Icon(AppIcons.checkCircle, size: 20),
                 label: Text(
                   _isLoading
                       ? (club?.status.trim().toUpperCase() == 'REJECTED'
@@ -585,12 +579,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            isRejected
-                ? Icons.error_outline_rounded
-                : Icons.hourglass_empty_rounded,
-            color: color,
-          ),
+          Icon(isRejected ? AppIcons.error : AppIcons.hourglass, color: color),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -679,7 +668,6 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
     );
   }
 
-
   Widget _buildDangerZone(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
@@ -695,7 +683,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.warning_amber_rounded, size: 18, color: colors.error),
+              Icon(AppIcons.warning, size: 18, color: colors.error),
               const SizedBox(width: 6),
               Text(
                 l10n.editClub_dangerTitle,
@@ -720,11 +708,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: _isLoading ? null : _confirmDeleteClub,
-            icon: Icon(
-              Icons.delete_forever_rounded,
-              size: 18,
-              color: colors.error,
-            ),
+            icon: Icon(AppIcons.delete, size: 18, color: colors.error),
             label: Text(
               l10n.editClub_deleteClub,
               style: TextStyle(
@@ -891,9 +875,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
               child: Row(
                 children: [
                   Icon(
-                    selected
-                        ? Icons.radio_button_checked
-                        : Icons.radio_button_off,
+                    selected ? AppIcons.circleDot : AppIcons.circle,
                     color: selected
                         ? AppTheme.primary
                         : context.colors.textMuted,
@@ -941,7 +923,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+            Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
             Text(
               l10n.editClub_loadError,

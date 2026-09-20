@@ -18,8 +18,6 @@ extension _ClubDetailHeaderHelpers on _ClubDetailScreenState {
   Widget _buildClubAvatar({
     required String logoUrl,
     required AppColorsExtension colors,
-    required Color sColor,
-    required String emoji,
     required bool isClubAdmin,
     required Community club,
   }) {
@@ -30,31 +28,20 @@ extension _ClubDetailHeaderHelpers on _ClubDetailScreenState {
           onTap: isClubAdmin
               ? () => _showChangePhotoOptions(club: club, isLogo: true)
               : null,
-          child: Container(
-            width: 84,
-            height: 84,
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              shape: BoxShape.circle,
-              border: Border.all(color: colors.bgCard, width: 3.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.16),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: ClipOval(
-              child: logoUrl.isNotEmpty
-                  ? ClubNetworkImage(
-                logoUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    _logoSportBg(sColor, emoji),
-              )
-                  : _logoSportBg(sColor, emoji),
-            ),
+          child: ClubBrandAvatar(
+            logoUrl: logoUrl,
+            size: 84,
+            showWhenNoLogo: false,
+            backgroundColor: colors.bgCard,
+            borderColor: colors.bgCard,
+            borderWidth: 3.5,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.16),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
         ),
         // Camera icon overlay cho avatar khi là Admin (Yêu cầu 1)
@@ -63,8 +50,7 @@ extension _ClubDetailHeaderHelpers on _ClubDetailScreenState {
             bottom: 0,
             right: 0,
             child: GestureDetector(
-              onTap: () =>
-                  _showChangePhotoOptions(club: club, isLogo: true),
+              onTap: () => _showChangePhotoOptions(club: club, isLogo: true),
               child: Container(
                 width: 28,
                 height: 28,
@@ -81,7 +67,7 @@ extension _ClubDetailHeaderHelpers on _ClubDetailScreenState {
                   ],
                 ),
                 child: const Icon(
-                  Icons.camera_alt_rounded,
+                  AppIcons.camera,
                   size: 15,
                   color: Colors.white,
                 ),
@@ -93,10 +79,10 @@ extension _ClubDetailHeaderHelpers on _ClubDetailScreenState {
   }
 
   Widget _buildHeaderActions(
-      Community club,
-      AppColorsExtension colors,
-      bool isClubAdmin,
-      ) {
+    Community club,
+    AppColorsExtension colors,
+    bool isClubAdmin,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     final currentUserId = ref.watch(userProfileProvider).asData?.value.id;
     final isCreator = club.ownerId != null && club.ownerId == currentUserId;
@@ -113,76 +99,70 @@ extension _ClubDetailHeaderHelpers on _ClubDetailScreenState {
               height: 36,
               child: isClubAdmin
                   ? FilledButton.icon(
-                onPressed: () => context.push(
-                  '/club/${club.id}/manage',
-                  extra: isOwner,
-                ),
-                icon: const Icon(
-                  Icons.shield_outlined,
-                  size: 16,
-                ),
-                label: Text(
-                  l10n.club_manageClub,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  ),
-                ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  elevation: 0,
-                ),
-              )
-                  : OutlinedButton(
-                onPressed: _isJoinLoading
-                    ? null
-                    : () => _showMemberOptionsSheet(context, club),
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: colors.bgSurface,
-                  foregroundColor: colors.textPrimary,
-                  side: BorderSide(color: colors.border),
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  elevation: 0,
-                ),
-                child: _isJoinLoading
-                    ? const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-                    : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.check_rounded,
-                      size: 15,
-                      color: Color(0xFF059669),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      l10n.club_joined,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
+                      onPressed: () => context.push(
+                        '/club/${club.id}/manage',
+                        extra: isOwner,
                       ),
+                      icon: const Icon(AppIcons.shield, size: 16),
+                      label: Text(
+                        l10n.club_manageClub,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
+                      ),
+                    )
+                  : OutlinedButton(
+                      onPressed: _isJoinLoading
+                          ? null
+                          : () => _showMemberOptionsSheet(context, club),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: colors.bgSurface,
+                        foregroundColor: colors.textPrimary,
+                        side: BorderSide(color: colors.border),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: _isJoinLoading
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  AppIcons.check,
+                                  size: 15,
+                                  color: Color(0xFF059669),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  l10n.club_joined,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                const SizedBox(width: 2),
+                                const Icon(AppIcons.chevronDown, size: 16),
+                              ],
+                            ),
                     ),
-                    const SizedBox(width: 2),
-                    const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      size: 16,
-                    ),
-                  ],
-                ),
-              ),
             ),
           ),
           if (hasInvite) ...[
@@ -197,20 +177,24 @@ extension _ClubDetailHeaderHelpers on _ClubDetailScreenState {
                       context: context,
                       title: club.name,
                       subtitle:
-                      '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
+                          '${club.locationAddress ?? l10n.vietnam} • ${l10n.club_memberCount(club.memberCount)}',
                       webUrl: 'https://sporto.asia/communities/${club.id}',
                       imageUrl: club.logoUrl ?? club.bannerUrl,
                       badgeText: l10n.club_badge,
                     );
                   },
-                  icon: const Icon(Icons.person_add_alt_1_rounded, size: 15),
+                  icon: const Icon(AppIcons.userAdd, size: 15),
                   label: const Text(
                     'Mời',
                     style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: isClubAdmin ? colors.bgSurface : AppTheme.primary,
-                    foregroundColor: isClubAdmin ? colors.textPrimary : Colors.white,
+                    backgroundColor: isClubAdmin
+                        ? colors.bgSurface
+                        : AppTheme.primary,
+                    foregroundColor: isClubAdmin
+                        ? colors.textPrimary
+                        : Colors.white,
                     side: isClubAdmin ? BorderSide(color: colors.border) : null,
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     shape: RoundedRectangleBorder(
@@ -233,13 +217,13 @@ extension _ClubDetailHeaderHelpers on _ClubDetailScreenState {
           onPressed: _isJoinLoading ? null : () => _handleJoinAction(club),
           icon: _isJoinLoading
               ? const SizedBox(
-            width: 14,
-            height: 14,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Colors.white,
-            ),
-          )
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
               : Icon(_getJoinIcon(), size: 15),
           label: Text(
             _getJoinLabel(),
@@ -259,7 +243,7 @@ extension _ClubDetailHeaderHelpers on _ClubDetailScreenState {
     }
   }
 
-  Widget _bannerGradient(Color c, String emoji) {
+  Widget _bannerGradient(Color c) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // Taste: màu phẳng, không gradient.
     return Container(
@@ -273,20 +257,6 @@ extension _ClubDetailHeaderHelpers on _ClubDetailScreenState {
             fit: BoxFit.contain,
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _logoSportBg(Color c, String emoji) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        shape: BoxShape.circle,
-      ),
-      padding: const EdgeInsets.all(10),
-      child: Center(
-        child: SvgPicture.asset(AppConstants.logoFullSvg, fit: BoxFit.contain),
       ),
     );
   }

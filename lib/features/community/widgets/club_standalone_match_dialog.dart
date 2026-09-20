@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
 
 class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
@@ -267,7 +268,7 @@ class _ClubStandaloneMatchDialogState
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.sports_tennis_rounded,
+                      AppIcons.sportTennis,
                       color: AppTheme.primary,
                       size: 20,
                     ),
@@ -301,7 +302,7 @@ class _ClubStandaloneMatchDialogState
                   ),
                   IconButton(
                     icon: Icon(
-                      Icons.close_rounded,
+                      AppIcons.close,
                       color: colors.textMuted,
                       size: 20,
                     ),
@@ -362,13 +363,13 @@ class _ClubStandaloneMatchDialogState
                     hintText: l10n.club_searchMemberHint,
                     hintStyle: TextStyle(fontSize: 12, color: colors.textMuted),
                     prefixIcon: Icon(
-                      Icons.search_rounded,
+                      AppIcons.search,
                       size: 17,
                       color: colors.textMuted,
                     ),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear_rounded, size: 15),
+                            icon: const Icon(AppIcons.close, size: 15),
                             padding: EdgeInsets.zero,
                             onPressed: () {
                               _searchController.clear();
@@ -501,10 +502,12 @@ class _ClubStandaloneMatchDialogState
                       onPressed: _canSubmit ? _handleCreateMatch : null,
                       style: FilledButton.styleFrom(
                         backgroundColor: AppTheme.primary,
-                        disabledBackgroundColor:
-                            AppTheme.primary.withValues(alpha: 0.25),
-                        disabledForegroundColor:
-                            Colors.white.withValues(alpha: 0.7),
+                        disabledBackgroundColor: AppTheme.primary.withValues(
+                          alpha: 0.25,
+                        ),
+                        disabledForegroundColor: Colors.white.withValues(
+                          alpha: 0.7,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -583,7 +586,10 @@ class _ClubStandaloneMatchDialogState
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 1.5,
+                ),
                 decoration: BoxDecoration(
                   color: badgeColor,
                   borderRadius: BorderRadius.circular(6),
@@ -624,8 +630,8 @@ class _ClubStandaloneMatchDialogState
     final accentColor = isSideA
         ? const Color(0xFF2563EB)
         : isSideB
-            ? const Color(0xFFEA580C)
-            : null;
+        ? const Color(0xFFEA580C)
+        : null;
 
     return InkWell(
       onTap: () => _cycleMemberTeam(member.userId),
@@ -653,10 +659,15 @@ class _ClubStandaloneMatchDialogState
                         ? Image.network(
                             member.userAvatarUrl!.trim(),
                             fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) =>
-                                _avatarFallback(fullName, accentColor ?? AppTheme.primary),
+                            errorBuilder: (_, _, _) => _avatarFallback(
+                              fullName,
+                              accentColor ?? AppTheme.primary,
+                            ),
                           )
-                        : _avatarFallback(fullName, accentColor ?? AppTheme.primary),
+                        : _avatarFallback(
+                            fullName,
+                            accentColor ?? AppTheme.primary,
+                          ),
                   ),
                 ),
                 if (accentColor != null)

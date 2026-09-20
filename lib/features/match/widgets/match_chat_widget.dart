@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Widget chat trực tiếp cho trận đấu — gửi/nhận tin nhắn realtime.
@@ -169,7 +170,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                       const SizedBox(height: 10),
                       OutlinedButton.icon(
                         onPressed: _initRoom,
-                        icon: const Icon(Icons.refresh_rounded, size: 16),
+                        icon: const Icon(AppIcons.refresh, size: 16),
                         label: Text(l10n.infoRetry),
                       ),
                     ],
@@ -180,11 +181,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.chat_bubble_outline_rounded,
-                        size: 32,
-                        color: colors.textMuted,
-                      ),
+                      Icon(AppIcons.chat, size: 32, color: colors.textMuted),
                       const SizedBox(height: 8),
                       Text(
                         l10n.matchChatNoMessages,
@@ -320,7 +317,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                     borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                   ),
                   child: const Icon(
-                    Icons.send_rounded,
+                    AppIcons.send,
                     color: Colors.white,
                     size: 18,
                   ),
@@ -365,7 +362,7 @@ class LiveCameraPlaceholder extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               ),
               child: const Icon(
-                Icons.videocam_rounded,
+                AppIcons.video,
                 size: 36,
                 color: Colors.white54,
               ),

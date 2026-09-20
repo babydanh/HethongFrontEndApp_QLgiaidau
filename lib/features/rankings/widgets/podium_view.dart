@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/sport_rank_badge.dart';
 
 /// Bục vinh danh Top 3. Người hạng 1 ở giữa cao nhất, 2 bên trái, 3 bên phải.
@@ -184,11 +185,7 @@ class _PodiumSlot extends StatelessWidget {
           if (isKing)
             const Padding(
               padding: EdgeInsets.only(bottom: 4),
-              child: Icon(
-                Icons.emoji_events_rounded,
-                color: Color(0xFFF59E0B),
-                size: 24,
-              ),
+              child: Icon(AppIcons.trophy, color: Color(0xFFF59E0B), size: 24),
             )
           else
             const SizedBox(height: 28),
@@ -206,8 +203,7 @@ class _PodiumSlot extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          if (ranking != null)
-            SportRankBadge(ranking: ranking!, compact: true),
+          if (ranking != null) SportRankBadge(ranking: ranking!, compact: true),
           const SizedBox(height: 8),
           // Khối bục xếp hạng với số
           Container(

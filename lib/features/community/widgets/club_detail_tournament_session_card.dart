@@ -1,3 +1,4 @@
+
 part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailTournamentSessionCard on _ClubDetailScreenState {
@@ -70,7 +71,7 @@ extension _ClubDetailTournamentSessionCard on _ClubDetailScreenState {
         return (
           const [Color(0xFF10B981), Color(0xFF0D9488), Color(0xFF0891B2)],
           'PICKLEBALL',
-          Icons.sports_tennis_rounded,
+          AppIcons.sportTennis,
         );
       }
       if (sportLower.contains('cầu lông') ||
@@ -79,14 +80,14 @@ extension _ClubDetailTournamentSessionCard on _ClubDetailScreenState {
         return (
           const [Color(0xFF2563EB), Color(0xFF4F46E5), Color(0xFF0284C7)],
           'BADMINTON',
-          Icons.sports_tennis_rounded,
+          AppIcons.sportTennis,
         );
       }
       if (sportLower.contains('tennis') || sportLower.contains('quần vợt')) {
         return (
           const [Color(0xFFF59E0B), Color(0xFFEA580C), Color(0xFFE11D48)],
           'TENNIS',
-          Icons.sports_tennis_rounded,
+          AppIcons.sportTennis,
         );
       }
       if (sportLower.contains('bóng đá') ||
@@ -95,7 +96,7 @@ extension _ClubDetailTournamentSessionCard on _ClubDetailScreenState {
         return (
           const [Color(0xFF10B981), Color(0xFF059669), Color(0xFF0284C7)],
           'FOOTBALL',
-          Icons.sports_soccer_rounded,
+          AppIcons.sportFootball,
         );
       }
       if (sportLower.contains('bóng bàn') ||
@@ -104,13 +105,13 @@ extension _ClubDetailTournamentSessionCard on _ClubDetailScreenState {
         return (
           const [Color(0xFFF43F5E), Color(0xFFEC4899), Color(0xFF9333EA)],
           'PING PONG',
-          Icons.sports_tennis_rounded,
+          AppIcons.sportTennis,
         );
       }
       return (
         const [Color(0xFF0D9488), Color(0xFF0284C7), Color(0xFF4F46E5)],
         'SESSION',
-        Icons.sports_tennis_rounded,
+        AppIcons.sportTennis,
       );
     }();
 
@@ -273,7 +274,7 @@ extension _ClubDetailTournamentSessionCard on _ClubDetailScreenState {
                     Row(
                       children: [
                         Icon(
-                          Icons.calendar_today_rounded,
+                          AppIcons.calendar,
                           size: 13,
                           color: colors.textMuted,
                         ),
@@ -299,7 +300,7 @@ extension _ClubDetailTournamentSessionCard on _ClubDetailScreenState {
                   Row(
                     children: [
                       Icon(
-                        Icons.groups_rounded,
+                        AppIcons.users,
                         size: 14,
                         color: colors.textMuted,
                       ),
@@ -361,7 +362,7 @@ extension _ClubDetailTournamentSessionCard on _ClubDetailScreenState {
                           ),
                           SizedBox(width: 3),
                           Icon(
-                            Icons.arrow_forward_rounded,
+                            AppIcons.forward,
                             size: 13,
                             color: Color(0xFF0D9488),
                           ),

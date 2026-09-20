@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Standalone standings view for round-robin / group-stage tournaments.
@@ -157,7 +158,7 @@ class StandingsView extends ConsumerWidget {
                         child: Row(
                           children: [
                             const Icon(
-                              Icons.shield_outlined,
+                              AppIcons.shield,
                               size: 18,
                               color: AppTheme.primary,
                             ),

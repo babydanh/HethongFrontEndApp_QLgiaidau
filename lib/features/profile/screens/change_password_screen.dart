@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class ChangePasswordScreen extends ConsumerStatefulWidget {
@@ -97,7 +98,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () => context.go('/profile'),
         ),
         title: Text(
@@ -151,10 +152,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                       hint: l10n.changePassword_currentHint,
 
                       obscureText: _obscureCurrent,
-                      prefixIcon: Icons.lock_outline,
+                      prefixIcon: AppIcons.lock,
                       suffixIcon: _obscureCurrent
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
+                          ? AppIcons.eye
+                          : AppIcons.eyeOff,
                       onSuffixIconPressed: () {
                         setState(() => _obscureCurrent = !_obscureCurrent);
                       },
@@ -176,10 +177,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                       hint: l10n.changePassword_newHint,
 
                       obscureText: _obscureNew,
-                      prefixIcon: Icons.lock_outline,
-                      suffixIcon: _obscureNew
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
+                      prefixIcon: AppIcons.lock,
+                      suffixIcon: _obscureNew ? AppIcons.eye : AppIcons.eyeOff,
                       onSuffixIconPressed: () {
                         setState(() => _obscureNew = !_obscureNew);
                       },
@@ -225,10 +224,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                       hint: l10n.changePassword_confirmHint,
 
                       obscureText: _obscureConfirm,
-                      prefixIcon: Icons.lock_outline,
+                      prefixIcon: AppIcons.lock,
                       suffixIcon: _obscureConfirm
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
+                          ? AppIcons.eye
+                          : AppIcons.eyeOff,
                       onSuffixIconPressed: () {
                         setState(() => _obscureConfirm = !_obscureConfirm);
                       },
@@ -304,7 +303,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Icon(
-                        Icons.info_outline_rounded,
+                        AppIcons.info,
                         size: 18,
                         color: AppTheme.primary.withValues(alpha: 0.7),
                       ),
@@ -338,9 +337,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     return Row(
       children: [
         Icon(
-          isMet
-              ? Icons.check_circle_rounded
-              : Icons.radio_button_unchecked_rounded,
+          isMet ? AppIcons.checkCircle : AppIcons.circle,
           size: 16,
           color: isMet ? colors.success : colors.textMuted,
         ),

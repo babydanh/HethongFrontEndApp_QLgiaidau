@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
 class JoinTeamScreen extends ConsumerStatefulWidget {
@@ -31,7 +32,9 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
     try {
       final dio = ref.read(dioClientProvider).dio;
       if (widget.token.isEmpty) {
-        await dio.post('/tournaments/participants/${widget.participantId}/accept-partner');
+        await dio.post(
+          '/tournaments/participants/${widget.participantId}/accept-partner',
+        );
       } else {
         await dio.post(
           '/tournaments/${widget.tournamentId}/join-team',
@@ -46,7 +49,9 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ErrorParser.parse(e, AppLocalizations.of(context)!.joinTeamError)),
+            content: Text(
+              ErrorParser.parse(e, AppLocalizations.of(context)!.joinTeamError),
+            ),
           ),
         );
       }
@@ -78,7 +83,7 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
               onPressed: () => context.push(
                 '/login?redirect=${Uri.encodeComponent(redirect)}',
               ),
-              icon: const Icon(Icons.login_rounded),
+              icon: const Icon(AppIcons.login),
               label: Text(l10n.joinTeamLogin),
             ),
           ),
@@ -97,7 +102,7 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.check_circle_rounded,
+                      AppIcons.checkCircle,
                       size: 72,
                       color: context.colors.success,
                     ),
@@ -128,7 +133,7 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Icon(
-                        Icons.group_add_rounded,
+                        AppIcons.userAdd,
                         size: 36,
                         color: Colors.blue,
                       ),
@@ -161,9 +166,11 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Icon(Icons.check_circle_outline_rounded),
+                            : const Icon(AppIcons.checkCircle),
                         label: Text(
-                          _submitting ? l10n.joinTeamProcessing : l10n.joinTeamConfirm,
+                          _submitting
+                              ? l10n.joinTeamProcessing
+                              : l10n.joinTeamConfirm,
                         ),
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(

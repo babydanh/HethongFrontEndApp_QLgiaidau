@@ -6,17 +6,14 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/providers/team_notifier.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class AddTeamScreen extends ConsumerStatefulWidget {
   final String tournamentId;
   final Team? teamToEdit;
 
-  const AddTeamScreen({
-    super.key, 
-    required this.tournamentId,
-    this.teamToEdit,
-  });
+  const AddTeamScreen({super.key, required this.tournamentId, this.teamToEdit});
 
   @override
   ConsumerState<AddTeamScreen> createState() => _AddTeamScreenState();
@@ -39,7 +36,7 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
         _memberControllers.add(TextEditingController(text: member));
       }
     }
-    
+
     if (_memberControllers.isEmpty) {
       _memberControllers.add(TextEditingController());
     }
@@ -70,7 +67,7 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
     }
   }
 
-    Future<void> _saveTeam() async {
+  Future<void> _saveTeam() async {
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
@@ -94,7 +91,7 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
         );
 
         await ref.read(teamServiceProvider(widget.tournamentId)).addTeam(team);
-            
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -111,7 +108,9 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
           contactEmail: _emailController.text.trim(),
         );
 
-        await ref.read(teamServiceProvider(widget.tournamentId)).updateTeam(updatedTeam);
+        await ref
+            .read(teamServiceProvider(widget.tournamentId))
+            .updateTeam(updatedTeam);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -126,7 +125,10 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.teamAdd_error), backgroundColor: context.colors.error),
+          SnackBar(
+            content: Text(l10n.teamAdd_error),
+            backgroundColor: context.colors.error,
+          ),
         );
       }
     } finally {
@@ -141,7 +143,11 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
       backgroundColor: context.colors.bgDark,
       appBar: AppBar(
         backgroundColor: context.colors.bgDark,
-        title: Text(widget.teamToEdit == null ? l10n.teamAdd_createTitle : l10n.teamAdd_editTitle),
+        title: Text(
+          widget.teamToEdit == null
+              ? l10n.teamAdd_createTitle
+              : l10n.teamAdd_editTitle,
+        ),
       ),
       body: Form(
         key: _formKey,
@@ -149,28 +155,44 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
           padding: const EdgeInsets.all(20),
           children: [
             // Tên đội
-            Text(l10n.teamAdd_nameLabel,
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textSecondary)),
+            Text(
+              l10n.teamAdd_nameLabel,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: context.colors.textSecondary,
+              ),
+            ),
             const SizedBox(height: 8),
             AppTextFormField(
               controller: _nameController,
               hint: l10n.teamAdd_nameHint,
-              prefixIcon: Icons.group,
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? l10n.teamAdd_nameRequired : null,
+              prefixIcon: AppIcons.users,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? l10n.teamAdd_nameRequired
+                  : null,
             ),
             const SizedBox(height: 24),
 
             // Thành viên
             Row(
               children: [
-                Text(l10n.teamAdd_members,
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textSecondary)),
+                Text(
+                  l10n.teamAdd_members,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: context.colors.textSecondary,
+                  ),
+                ),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: _addMemberField,
-                  icon: const Icon(Icons.add, size: 16),
-                  label: Text(l10n.teamAdd_add, style: const TextStyle(fontSize: 12)),
+                  icon: const Icon(AppIcons.add, size: 16),
+                  label: Text(
+                    l10n.teamAdd_add,
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ),
               ],
             ),
@@ -184,13 +206,16 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
                       child: AppTextFormField(
                         controller: _memberControllers[index],
                         hint: l10n.teamAdd_memberHint(index + 1),
-                        prefixIcon: Icons.person_outline,
+                        prefixIcon: AppIcons.user,
                       ),
                     ),
                     if (_memberControllers.length > 1)
                       IconButton(
-                        icon: Icon(Icons.remove_circle_outline,
-                            color: context.colors.error, size: 20),
+                        icon: Icon(
+                          AppIcons.cancel,
+                          color: context.colors.error,
+                          size: 20,
+                        ),
                         onPressed: () => _removeMemberField(index),
                       ),
                   ],
@@ -200,14 +225,20 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
             const SizedBox(height: 24),
 
             // Email
-            Text(l10n.teamAdd_contactEmail,
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textSecondary)),
+            Text(
+              l10n.teamAdd_contactEmail,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: context.colors.textSecondary,
+              ),
+            ),
             const SizedBox(height: 8),
             AppTextFormField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               hint: 'email@example.com',
-              prefixIcon: Icons.email_outlined,
+              prefixIcon: AppIcons.mail,
             ),
             const SizedBox(height: 40),
 
@@ -218,11 +249,20 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
                 onPressed: _isLoading ? null : _saveTeam,
                 child: _isLoading
                     ? const SizedBox(
-                        width: 24, height: 24,
+                        width: 24,
+                        height: 24,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2.5, color: Colors.white))
-                    : Text(l10n.teamAdd_save,
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                          strokeWidth: 2.5,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        l10n.teamAdd_save,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ),
           ],

@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 
 class ProvinceSelectionScreen extends StatefulWidget {
   final String? selectedProvinceCode;
 
-  const ProvinceSelectionScreen({
-    super.key,
-    this.selectedProvinceCode,
-  });
+  const ProvinceSelectionScreen({super.key, this.selectedProvinceCode});
 
   static String _removeDiacritics(String str) {
     const withDia =
@@ -55,14 +53,15 @@ class _ProvinceSelectionScreenState extends State<ProvinceSelectionScreen> {
       return;
     }
 
-    final normalizedQuery =
-        ProvinceSelectionScreen._removeDiacritics(query).toLowerCase();
+    final normalizedQuery = ProvinceSelectionScreen._removeDiacritics(
+      query,
+    ).toLowerCase();
 
     setState(() {
       _filteredProvinces = ProvinceData.all.where((province) {
-        final normalizedName =
-            ProvinceSelectionScreen._removeDiacritics(province.name)
-                .toLowerCase();
+        final normalizedName = ProvinceSelectionScreen._removeDiacritics(
+          province.name,
+        ).toLowerCase();
         return normalizedName.contains(normalizedQuery) ||
             province.name.toLowerCase().contains(query.toLowerCase());
       }).toList();
@@ -105,14 +104,14 @@ class _ProvinceSelectionScreenState extends State<ProvinceSelectionScreen> {
                             fontSize: 14,
                           ),
                           prefixIcon: Icon(
-                            Icons.search_rounded,
+                            AppIcons.search,
                             color: colors.textMuted,
                             size: 20,
                           ),
                           suffixIcon: _searchController.text.isNotEmpty
                               ? IconButton(
                                   icon: Icon(
-                                    Icons.clear_rounded,
+                                    AppIcons.close,
                                     size: 18,
                                     color: colors.textMuted,
                                   ),
@@ -120,8 +119,9 @@ class _ProvinceSelectionScreenState extends State<ProvinceSelectionScreen> {
                                 )
                               : null,
                           border: InputBorder.none,
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                          ),
                         ),
                       ),
                     ),
@@ -158,10 +158,7 @@ class _ProvinceSelectionScreenState extends State<ProvinceSelectionScreen> {
                   ? Center(
                       child: Text(
                         'Không tìm thấy tỉnh / thành',
-                        style: TextStyle(
-                          color: colors.textMuted,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: colors.textMuted, fontSize: 14),
                       ),
                     )
                   : ListView.builder(
@@ -174,10 +171,9 @@ class _ProvinceSelectionScreenState extends State<ProvinceSelectionScreen> {
 
                         return InkWell(
                           onTap: () {
-                            Navigator.of(context).pop({
-                              'action': 'select',
-                              'code': province.code,
-                            });
+                            Navigator.of(
+                              context,
+                            ).pop({'action': 'select', 'code': province.code});
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
@@ -202,7 +198,7 @@ class _ProvinceSelectionScreenState extends State<ProvinceSelectionScreen> {
                                 ),
                                 if (isSelected)
                                   const Icon(
-                                    Icons.check_rounded,
+                                    AppIcons.check,
                                     color: AppTheme.primary,
                                     size: 20,
                                   ),

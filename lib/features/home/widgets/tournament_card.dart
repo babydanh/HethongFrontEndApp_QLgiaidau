@@ -12,15 +12,13 @@ import 'package:app_quanly_giaidau/providers/saved_tournaments_provider.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/token_input_sheet.dart';
 
 import 'package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart';
-import 'package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentCard extends ConsumerWidget {
   final Tournament tournament;
-
   const TournamentCard({super.key, required this.tournament});
-
   void _showTokenSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -33,7 +31,6 @@ class TournamentCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final sportIcon = AppConstants.sportIcons[tournament.sport] ?? '🏆';
     final sportName = switch (tournament.sport) {
       AppConstants.sportFootball => l10n.createClubTournament_sportFootball,
       AppConstants.sportBadminton => l10n.createClubTournament_sportBadminton,
@@ -58,11 +55,11 @@ class TournamentCard extends ConsumerWidget {
         l10n.createClubTournament_bracketGroupStageKnockout,
       _ => '',
     };
-
-    final statusColor =
-        StatusHelper.getTournamentStatusColor(tournament.status, context);
+    final statusColor = StatusHelper.getTournamentStatusColor(
+      tournament.status,
+      context,
+    );
     final ledIndicator = StatusIndicator(status: tournament.status);
-
     final isCreator = tournament.creatorId == 'admin-mobile-id';
 
     return GestureDetector(
@@ -139,7 +136,11 @@ class TournamentCard extends ConsumerWidget {
                 border: Border.all(color: context.colors.border, width: 0.5),
               ),
               child: Center(
-                child: SportIconWidget(iconData: sportIcon),
+                child: AppSportIcon(
+                  sportKey: tournament.sport,
+                  size: 24,
+                  color: context.colors.textPrimary,
+                ),
               ),
             ),
             const SizedBox(width: 16),
@@ -207,7 +208,7 @@ class TournamentCard extends ConsumerWidget {
             if (isCreator)
               PopupMenuButton<String>(
                 icon: Icon(
-                  Icons.more_vert,
+                  AppIcons.moreVertical,
                   color: context.colors.textSecondary,
                 ),
                 onSelected: (value) async {
@@ -237,7 +238,8 @@ class TournamentCard extends ConsumerWidget {
                             SnackBar(
                               content: Text(
                                 l10n.tournamentCardDeleteError(
-                                  error ?? l10n.tournamentCardDeleteUnknownError,
+                                  error ??
+                                      l10n.tournamentCardDeleteUnknownError,
                                 ),
                               ),
                             ),
@@ -258,7 +260,7 @@ class TournamentCard extends ConsumerWidget {
                 ],
               )
             else
-              Icon(Icons.chevron_right, color: context.colors.textMuted),
+              Icon(AppIcons.chevronRight, color: context.colors.textMuted),
           ],
         ),
       ),

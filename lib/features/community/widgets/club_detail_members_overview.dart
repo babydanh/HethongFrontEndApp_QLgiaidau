@@ -1,10 +1,11 @@
+
 part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailMembersOverview on _ClubDetailScreenState {
   Widget _buildMembersTab(Community club, AppColorsExtension colors) {
     if (club.visibility.toUpperCase() == 'PRIVATE' && !_isMember) {
       return _buildPrivateLockView(
-        icon: Icons.people_rounded,
+        icon: AppIcons.users,
         title: 'Danh sách thành viên riêng tư',
         description:
             'CLB này đặt chế độ riêng tư. Hãy tham gia CLB để xem danh sách thành viên và kết nối giao lưu.',
@@ -50,7 +51,7 @@ extension _ClubDetailMembersOverview on _ClubDetailScreenState {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+            Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
             Text(
               l10n.club_loadListError,
@@ -72,7 +73,7 @@ extension _ClubDetailMembersOverview on _ClubDetailScreenState {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.people_outline, size: 48, color: colors.textMuted),
+            Icon(AppIcons.users, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
             Text(
               l10n.club_noMembers,
@@ -190,7 +191,7 @@ extension _ClubDetailMembersOverview on _ClubDetailScreenState {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.emoji_events_rounded,
+                            AppIcons.trophy,
                             size: 13,
                             color: _memberSortMode == 'elo'
                                 ? Colors.amber

@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:intl/intl.dart';
 
 // ─── Models ───
@@ -174,10 +175,7 @@ class SeriesDetailScreen extends ConsumerWidget {
               appBar: AppBar(
                 backgroundColor: colors.bgDark,
                 leading: IconButton(
-                  icon: Icon(
-                    Icons.arrow_back_ios_rounded,
-                    color: colors.textPrimary,
-                  ),
+                  icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
                   onPressed: () => context.pop(),
                 ),
               ),
@@ -185,11 +183,7 @@ class SeriesDetailScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.search_off_rounded,
-                      size: 64,
-                      color: colors.textMuted,
-                    ),
+                    Icon(AppIcons.searchOff, size: 64, color: colors.textMuted),
                     const SizedBox(height: 16),
                     Text(
                       l10n.seriesNotFound,
@@ -211,7 +205,7 @@ class SeriesDetailScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+              Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
               const SizedBox(height: 12),
               Text(
                 l10n.seriesLoadError,
@@ -220,7 +214,7 @@ class SeriesDetailScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               FilledButton.icon(
                 onPressed: () => ref.refresh(_seriesDetailProvider(slug)),
-                icon: const Icon(Icons.refresh_rounded, size: 18),
+                icon: const Icon(AppIcons.refresh, size: 18),
                 label: Text(l10n.infoRetry),
               ),
             ],
@@ -279,7 +273,7 @@ class _SeriesDetailContentState extends ConsumerState<_SeriesDetailContent>
           floating: false,
           pinned: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+            icon: Icon(AppIcons.chevronLeft, color: Colors.white),
             onPressed: () => context.pop(),
           ),
           flexibleSpace: FlexibleSpaceBar(
@@ -559,7 +553,7 @@ class _ScheduleTab extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.event_note_rounded,
+              AppIcons.calendarClock,
               size: 48,
               color: colors.textMuted.withValues(alpha: 0.4),
             ),
@@ -622,11 +616,7 @@ class _ScheduleTab extends StatelessWidget {
               color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              Icons.emoji_events_rounded,
-              color: statusColor,
-              size: 22,
-            ),
+            child: Icon(AppIcons.trophy, color: statusColor, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -677,7 +667,7 @@ class _ScheduleTab extends StatelessWidget {
             ),
           ),
           if (leg.slug != null)
-            Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+            Icon(AppIcons.chevronRight, color: colors.textMuted),
         ],
       ),
     ).animate().fadeIn(duration: 300.ms);
@@ -702,7 +692,7 @@ class _RankingsTab extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.leaderboard_outlined,
+              AppIcons.chart,
               size: 48,
               color: colors.textMuted.withValues(alpha: 0.4),
             ),
@@ -764,11 +754,7 @@ class _RankingsTab extends StatelessWidget {
           SizedBox(
             width: 32,
             child: isPodium
-                ? Icon(
-                    Icons.emoji_events_rounded,
-                    color: medalColors[index],
-                    size: 20,
-                  )
+                ? Icon(AppIcons.trophy, color: medalColors[index], size: 20)
                 : Text(
                     '${rank.position}',
                     style: TextStyle(

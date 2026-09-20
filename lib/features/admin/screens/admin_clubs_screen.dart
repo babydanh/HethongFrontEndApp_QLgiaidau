@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Admin quản lý câu lạc bộ — danh sách tất cả CLB, filter theo status, tìm kiếm.
@@ -56,7 +57,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -88,11 +89,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
         decoration: InputDecoration(
           hintText: l10n.adminClubsSearchHint,
           hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
-          prefixIcon: Icon(
-            Icons.search_rounded,
-            color: colors.textMuted,
-            size: 20,
-          ),
+          prefixIcon: Icon(AppIcons.search, color: colors.textMuted, size: 20),
           filled: true,
           fillColor: colors.bgCard,
           border: OutlineInputBorder(
@@ -207,7 +204,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+            Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
             Text(
               l10n.adminClubsLoadError,
@@ -412,7 +409,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
           const SizedBox(height: 10),
           Row(
             children: [
-              Icon(Icons.group_outlined, size: 14, color: colors.textMuted),
+              Icon(AppIcons.users, size: 14, color: colors.textMuted),
               const SizedBox(width: 4),
               Text(
                 l10n.adminClubsMembers(club.memberCount),
@@ -421,11 +418,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
               const SizedBox(width: 16),
               if (club.locationAddress != null &&
                   club.locationAddress!.isNotEmpty) ...[
-                Icon(
-                  Icons.location_on_outlined,
-                  size: 14,
-                  color: colors.textMuted,
-                ),
+                Icon(AppIcons.mapPin, size: 14, color: colors.textMuted),
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
@@ -445,7 +438,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
               // Xem chi tiết
               Expanded(
                 child: _actionBtn(
-                  icon: Icons.visibility_rounded,
+                  icon: AppIcons.eye,
                   label: l10n.adminClubsView,
                   color: AppTheme.primary,
                   onTap: () => context.push('/club/${club.id}'),
@@ -456,7 +449,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
               if (club.status == 'PENDING')
                 Expanded(
                   child: _actionBtn(
-                    icon: Icons.check_rounded,
+                    icon: AppIcons.check,
                     label: l10n.adminClubsApprove,
                     color: const Color(0xFF10B981),
                     onTap: () => _handleAction(club.id, 'APPROVED', colors),
@@ -467,7 +460,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
               if (club.status != 'REJECTED')
                 Expanded(
                   child: _actionBtn(
-                    icon: Icons.block_rounded,
+                    icon: AppIcons.ban,
                     label: club.status == 'PENDING'
                         ? (l10n.adminClubsReject)
                         : (l10n.adminClubsDisable),
@@ -571,11 +564,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
         backgroundColor: colors.bgCard,
         title: Row(
           children: [
-            const Icon(
-              Icons.warning_amber_rounded,
-              color: Colors.orange,
-              size: 22,
-            ),
+            const Icon(AppIcons.warning, color: Colors.orange, size: 22),
             const SizedBox(width: 8),
             Text(
               club.status == 'PENDING'
@@ -664,7 +653,7 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.groups_rounded,
+            AppIcons.users,
             size: 64,
             color: colors.textMuted.withValues(alpha: 0.4),
           ),

@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_mention_helpers.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Các widget hiển thị dùng chung cho composer đăng bài.
 
@@ -40,7 +41,7 @@ class ComposerSheetHeader extends StatelessWidget {
           child: Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.close_rounded, size: 22),
+                icon: const Icon(AppIcons.close, size: 22),
                 onPressed: onClose,
               ),
               Expanded(
@@ -137,7 +138,7 @@ class ComposerImagePreviewGrid extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.close_rounded,
+                      AppIcons.close,
                       size: 14,
                       color: Colors.white,
                     ),
@@ -281,7 +282,7 @@ class _SuggestionRow extends StatelessWidget {
             if (canManageTags && onTag != null)
               IconButton(
                 tooltip: l10n.communityComposerAssignFunTag,
-                icon: const Icon(Icons.sell_outlined, size: 18),
+                icon: const Icon(AppIcons.tag, size: 18),
                 onPressed: () => onTag!(member),
               ),
           ],

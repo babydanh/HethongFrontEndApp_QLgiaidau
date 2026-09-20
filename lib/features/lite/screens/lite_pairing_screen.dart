@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Lightweight model for a Lite participant from the pairing API.
@@ -352,7 +353,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
       backgroundColor: colors.bgDark,
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -366,7 +367,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh_rounded, color: colors.textPrimary),
+            icon: Icon(AppIcons.refresh, color: colors.textPrimary),
             onPressed: _loading ? null : _fetchParticipants,
           ),
         ],
@@ -388,7 +389,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline_rounded, size: 40, color: colors.error),
+              Icon(AppIcons.error, size: 40, color: colors.error),
               const SizedBox(height: 12),
               Text(
                 _error!,
@@ -425,7 +426,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
             _sectionHeader(
               colors,
               '${l10n.lite_waitingPair} (${pending.length})',
-              Icons.people_outline_rounded,
+              AppIcons.users,
             ),
             const SizedBox(height: 8),
             if (pending.isEmpty)
@@ -450,7 +451,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(Icons.link_rounded, size: 18),
+                      : const Icon(AppIcons.link, size: 18),
                   label: Text(
                     _pairing ? l10n.lite_pairing : l10n.lite_pairSelected,
                     style: const TextStyle(fontWeight: FontWeight.w600),
@@ -467,11 +468,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
             // ─── Auto generate section ───
             if (pending.length >= 2) ...[
               const SizedBox(height: 16),
-              _sectionHeader(
-                colors,
-                l10n.lite_autoPairing,
-                Icons.auto_fix_high_rounded,
-              ),
+              _sectionHeader(colors, l10n.lite_autoPairing, AppIcons.sparkles),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -551,11 +548,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.info_outline_rounded,
-                      size: 18,
-                      color: colors.warning,
-                    ),
+                    Icon(AppIcons.info, size: 18, color: colors.warning),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -577,7 +570,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
               _sectionHeader(
                 colors,
                 '${l10n.lite_paired} (${allPaired.length})',
-                Icons.check_circle_outline_rounded,
+                AppIcons.checkCircle,
               ),
               const SizedBox(height: 8),
               ...allPaired.map((p) => _pairedTile(p, colors)),
@@ -608,7 +601,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Icon(Icons.emoji_events_rounded, size: 20),
+                    : const Icon(AppIcons.trophy, size: 20),
                 label: Text(
                   _generating ? l10n.lite_creating : l10n.lite_createBracket,
                   style: const TextStyle(fontWeight: FontWeight.w600),
@@ -744,7 +737,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
           child: Row(
             children: [
               Icon(
-                selected ? Icons.check_circle_rounded : Icons.circle_outlined,
+                selected ? AppIcons.checkCircle : AppIcons.circle,
                 size: 22,
                 color: selected ? AppTheme.primary : colors.textMuted,
               ),
@@ -812,7 +805,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
               color: colors.info.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(18),
             ),
-            child: Icon(Icons.person_rounded, size: 20, color: colors.info),
+            child: Icon(AppIcons.user, size: 20, color: colors.info),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -876,7 +869,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
               color: colors.success.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             ),
-            child: Icon(Icons.group_rounded, size: 20, color: colors.success),
+            child: Icon(AppIcons.users, size: 20, color: colors.success),
           ),
           const SizedBox(width: 12),
           Expanded(

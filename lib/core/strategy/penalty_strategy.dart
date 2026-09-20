@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class PenaltyOption {
   final String id;
@@ -23,11 +24,36 @@ abstract class IPenaltyStrategy {
 class BadmintonPenaltyStrategy implements IPenaltyStrategy {
   @override
   List<PenaltyOption> getOptions() => const [
-    PenaltyOption(id: 'WARNING', name: 'Nhắc nhở', color: Colors.amber, icon: Icons.warning_rounded),
-    PenaltyOption(id: 'SERVICE_FAULT', name: 'Lỗi giao cầu', color: Colors.orange, icon: Icons.sports_score),
-    PenaltyOption(id: 'MISCONDUCT', name: 'Hành vi không đúng mực', color: Colors.deepOrange, icon: Icons.gavel_rounded),
-    PenaltyOption(id: 'YELLOW_CARD', name: 'Thẻ vàng', color: Colors.amber, icon: Icons.style),
-    PenaltyOption(id: 'RED_CARD', name: 'Thẻ đỏ', color: Colors.red, icon: Icons.style),
+    PenaltyOption(
+      id: 'WARNING',
+      name: 'Nhắc nhở',
+      color: Colors.amber,
+      icon: AppIcons.warning,
+    ),
+    PenaltyOption(
+      id: 'SERVICE_FAULT',
+      name: 'Lỗi giao cầu',
+      color: Colors.orange,
+      icon: AppIcons.trophy,
+    ),
+    PenaltyOption(
+      id: 'MISCONDUCT',
+      name: 'Hành vi không đúng mực',
+      color: Colors.deepOrange,
+      icon: AppIcons.shield,
+    ),
+    PenaltyOption(
+      id: 'YELLOW_CARD',
+      name: 'Thẻ vàng',
+      color: Colors.amber,
+      icon: AppIcons.sparkles,
+    ),
+    PenaltyOption(
+      id: 'RED_CARD',
+      name: 'Thẻ đỏ',
+      color: Colors.red,
+      icon: AppIcons.sparkles,
+    ),
   ];
 
   @override
@@ -38,10 +64,30 @@ class BadmintonPenaltyStrategy implements IPenaltyStrategy {
 class TennisPenaltyStrategy implements IPenaltyStrategy {
   @override
   List<PenaltyOption> getOptions() => const [
-    PenaltyOption(id: 'WARNING', name: 'Nhắc nhở', color: Colors.amber, icon: Icons.warning_rounded),
-    PenaltyOption(id: 'CODE_VIOLATION', name: 'Vi phạm tác phong', color: Colors.orange, icon: Icons.gavel_rounded),
-    PenaltyOption(id: 'POINT_PENALTY', name: 'Phạt 1 điểm', color: Colors.deepOrange, icon: Icons.remove_circle_outline),
-    PenaltyOption(id: 'GAME_PENALTY', name: 'Phạt 1 game', color: Colors.red, icon: Icons.cancel_outlined),
+    PenaltyOption(
+      id: 'WARNING',
+      name: 'Nhắc nhở',
+      color: Colors.amber,
+      icon: AppIcons.warning,
+    ),
+    PenaltyOption(
+      id: 'CODE_VIOLATION',
+      name: 'Vi phạm tác phong',
+      color: Colors.orange,
+      icon: AppIcons.shield,
+    ),
+    PenaltyOption(
+      id: 'POINT_PENALTY',
+      name: 'Phạt 1 điểm',
+      color: Colors.deepOrange,
+      icon: AppIcons.cancel,
+    ),
+    PenaltyOption(
+      id: 'GAME_PENALTY',
+      name: 'Phạt 1 game',
+      color: Colors.red,
+      icon: AppIcons.cancel,
+    ),
   ];
 
   @override
@@ -52,10 +98,30 @@ class TennisPenaltyStrategy implements IPenaltyStrategy {
 class PickleballPenaltyStrategy implements IPenaltyStrategy {
   @override
   List<PenaltyOption> getOptions() => const [
-    PenaltyOption(id: 'WARNING', name: 'Cảnh cáo', color: Colors.amber, icon: Icons.warning_rounded),
-    PenaltyOption(id: 'SERVICE_FAULT', name: 'Lỗi giao bóng', color: Colors.orange, icon: Icons.sports_score),
-    PenaltyOption(id: 'TECHNICAL_FAULT', name: 'Lỗi kỹ thuật', color: Colors.red, icon: Icons.gavel_rounded),
-    PenaltyOption(id: 'UNSPORTSMANLIKE', name: 'Thi đấu thiếu fair-play', color: Colors.deepOrange, icon: Icons.sports_kabaddi_rounded),
+    PenaltyOption(
+      id: 'WARNING',
+      name: 'Cảnh cáo',
+      color: Colors.amber,
+      icon: AppIcons.warning,
+    ),
+    PenaltyOption(
+      id: 'SERVICE_FAULT',
+      name: 'Lỗi giao bóng',
+      color: Colors.orange,
+      icon: AppIcons.trophy,
+    ),
+    PenaltyOption(
+      id: 'TECHNICAL_FAULT',
+      name: 'Lỗi kỹ thuật',
+      color: Colors.red,
+      icon: AppIcons.shield,
+    ),
+    PenaltyOption(
+      id: 'UNSPORTSMANLIKE',
+      name: 'Thi đấu thiếu fair-play',
+      color: Colors.deepOrange,
+      icon: AppIcons.sportBadminton,
+    ),
   ];
 
   @override
@@ -66,11 +132,36 @@ class PickleballPenaltyStrategy implements IPenaltyStrategy {
 class TableTennisPenaltyStrategy implements IPenaltyStrategy {
   @override
   List<PenaltyOption> getOptions() => const [
-    PenaltyOption(id: 'WARNING', name: 'Nhắc nhở', color: Colors.amber, icon: Icons.warning_rounded),
-    PenaltyOption(id: 'SERVICE_FAULT', name: 'Lỗi giao bóng', color: Colors.orange, icon: Icons.sports_score),
-    PenaltyOption(id: 'MISCONDUCT', name: 'Hành vi không đúng mực', color: Colors.deepOrange, icon: Icons.gavel_rounded),
-    PenaltyOption(id: 'YELLOW_CARD', name: 'Thẻ vàng', color: Colors.amber, icon: Icons.style),
-    PenaltyOption(id: 'RED_CARD', name: 'Thẻ đỏ', color: Colors.red, icon: Icons.style),
+    PenaltyOption(
+      id: 'WARNING',
+      name: 'Nhắc nhở',
+      color: Colors.amber,
+      icon: AppIcons.warning,
+    ),
+    PenaltyOption(
+      id: 'SERVICE_FAULT',
+      name: 'Lỗi giao bóng',
+      color: Colors.orange,
+      icon: AppIcons.trophy,
+    ),
+    PenaltyOption(
+      id: 'MISCONDUCT',
+      name: 'Hành vi không đúng mực',
+      color: Colors.deepOrange,
+      icon: AppIcons.shield,
+    ),
+    PenaltyOption(
+      id: 'YELLOW_CARD',
+      name: 'Thẻ vàng',
+      color: Colors.amber,
+      icon: AppIcons.sparkles,
+    ),
+    PenaltyOption(
+      id: 'RED_CARD',
+      name: 'Thẻ đỏ',
+      color: Colors.red,
+      icon: AppIcons.sparkles,
+    ),
   ];
 
   @override
@@ -81,8 +172,18 @@ class TableTennisPenaltyStrategy implements IPenaltyStrategy {
 class DefaultPenaltyStrategy implements IPenaltyStrategy {
   @override
   List<PenaltyOption> getOptions() => const [
-    PenaltyOption(id: 'WARNING', name: 'Nhắc nhở', color: Colors.amber, icon: Icons.warning_rounded),
-    PenaltyOption(id: 'FOUL', name: 'Lỗi / Truất quyền', color: Colors.red, icon: Icons.gavel_rounded),
+    PenaltyOption(
+      id: 'WARNING',
+      name: 'Nhắc nhở',
+      color: Colors.amber,
+      icon: AppIcons.warning,
+    ),
+    PenaltyOption(
+      id: 'FOUL',
+      name: 'Lỗi / Truất quyền',
+      color: Colors.red,
+      icon: AppIcons.shield,
+    ),
   ];
 
   @override

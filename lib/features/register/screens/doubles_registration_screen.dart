@@ -16,6 +16,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/shared/widgets/withdraw_sheet.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 
 class DoublesRegistrationFlow extends ConsumerStatefulWidget {
@@ -765,7 +766,11 @@ class _DoublesRegistrationFlowState
                 ),
                 child: Center(
                   child: done
-                      ? const Icon(Icons.check, size: 18, color: Colors.white)
+                      ? const Icon(
+                          AppIcons.check,
+                          size: 18,
+                          color: Colors.white,
+                        )
                       : Text(
                           '$i',
                           style: TextStyle(
@@ -821,7 +826,7 @@ class _DoublesRegistrationFlowState
           decoration: InputDecoration(
             labelText: l10n.doublesRegTeamName,
             hintText: l10n.doublesRegTeamNameHint,
-            prefixIcon: const Icon(Icons.group_rounded),
+            prefixIcon: const Icon(AppIcons.users),
             filled: true,
             fillColor: colors.bgCard,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -841,11 +846,7 @@ class _DoublesRegistrationFlowState
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.error_outline_rounded,
-                    size: 16,
-                    color: colors.error,
-                  ),
+                  Icon(AppIcons.error, size: 16, color: colors.error),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -874,11 +875,7 @@ class _DoublesRegistrationFlowState
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.trending_up_rounded,
-                    size: 16,
-                    color: colors.error,
-                  ),
+                  Icon(AppIcons.trendingUp, size: 16, color: colors.error),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -928,9 +925,7 @@ class _DoublesRegistrationFlowState
             TextButton.icon(
               onPressed: () => setState(() => _inviteLater = !_inviteLater),
               icon: Icon(
-                _inviteLater
-                    ? Icons.check_box_rounded
-                    : Icons.check_box_outline_blank_rounded,
+                _inviteLater ? AppIcons.squareCheck : AppIcons.square,
                 size: 18,
               ),
               label: Text(
@@ -948,7 +943,7 @@ class _DoublesRegistrationFlowState
             onChanged: _onSearchChanged,
             decoration: InputDecoration(
               hintText: l10n.doublesRegPartnerHint,
-              prefixIcon: const Icon(Icons.search_rounded),
+              prefixIcon: const Icon(AppIcons.search),
               suffixIcon: _searching
                   ? const Padding(
                       padding: EdgeInsets.all(12),
@@ -1012,7 +1007,7 @@ class _DoublesRegistrationFlowState
                       style: TextStyle(fontSize: 11, color: colors.textMuted),
                     ),
                     trailing: sel
-                        ? Icon(Icons.check_circle, color: AppTheme.primary)
+                        ? Icon(AppIcons.checkCircle, color: AppTheme.primary)
                         : null,
                     onTap: () =>
                         setState(() => _selectedPartner = sel ? null : u),
@@ -1037,7 +1032,7 @@ class _DoublesRegistrationFlowState
                       color: Colors.white,
                     ),
                   )
-                : const Icon(Icons.arrow_forward_rounded),
+                : const Icon(AppIcons.forward),
             label: Text(
               _submitting
                   ? l10n.doublesRegProcessing
@@ -1152,7 +1147,7 @@ class _DoublesRegistrationFlowState
                       ),
                     );
                   },
-                  icon: const Icon(Icons.copy_rounded, size: 16),
+                  icon: const Icon(AppIcons.copy, size: 16),
                   label: Text(
                     l10n.doublesRegCopyLink,
                     style: const TextStyle(fontWeight: FontWeight.w600),
@@ -1177,7 +1172,7 @@ class _DoublesRegistrationFlowState
                       badgeText: l10n.doublesRegInviteBadge,
                     );
                   },
-                  icon: const Icon(Icons.share_rounded, size: 16),
+                  icon: const Icon(AppIcons.share, size: 16),
                   label: Text(
                     l10n.doublesRegShareToTeam,
                     style: const TextStyle(fontWeight: FontWeight.w600),
@@ -1202,11 +1197,7 @@ class _DoublesRegistrationFlowState
             ),
             child: Column(
               children: [
-                const Icon(
-                  Icons.check_circle_rounded,
-                  size: 48,
-                  color: Colors.blue,
-                ),
+                const Icon(AppIcons.checkCircle, size: 48, color: Colors.blue),
                 const SizedBox(height: 12),
                 Text(
                   l10n.doublesRegInviteSentTitle,
@@ -1273,11 +1264,7 @@ class _DoublesRegistrationFlowState
               if (!mounted || !withdrew) return;
               context.go('/intro/${widget.tournamentId}');
             },
-            icon: Icon(
-              Icons.exit_to_app_rounded,
-              size: 16,
-              color: colors.error,
-            ),
+            icon: Icon(AppIcons.logout, size: 16, color: colors.error),
             label: Text(
               l10n.registerWithdraw,
               style: TextStyle(color: colors.error, fontSize: 13),
@@ -1319,7 +1306,7 @@ class _DoublesRegistrationFlowState
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            isUrgent ? Icons.timer_off_rounded : Icons.timer_rounded,
+            isUrgent ? AppIcons.clock : AppIcons.timer,
             size: 18,
             color: badgeColor,
           ),
@@ -1362,7 +1349,10 @@ class _DoublesRegistrationFlowState
               rawInviteLink.startsWith('https://')
         ? rawInviteLink
         : 'https://sporto.asia${rawInviteLink.startsWith('/') ? '' : '/'}$rawInviteLink';
-    final isComplete = _teamStatus == 'COMPLETE' || _teamStatus == 'CONFIRMED' || _teamStatus == 'APPROVED';
+    final isComplete =
+        _teamStatus == 'COMPLETE' ||
+        _teamStatus == 'CONFIRMED' ||
+        _teamStatus == 'APPROVED';
     final canPay =
         _entryFee != null &&
         _entryFee! > 0 &&
@@ -1410,7 +1400,7 @@ class _DoublesRegistrationFlowState
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 20),
+                const Icon(AppIcons.info, color: Colors.amber, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -1446,7 +1436,7 @@ class _DoublesRegistrationFlowState
                   badgeText: l10n.doublesRegInviteBadge,
                 );
               },
-              icon: const Icon(Icons.share_rounded, size: 18),
+              icon: const Icon(AppIcons.share, size: 18),
               label: Text(l10n.doublesRegShareToPartner),
             ),
           ),
@@ -1463,9 +1453,7 @@ class _DoublesRegistrationFlowState
           child: Column(
             children: [
               Icon(
-                isWaitlisted
-                    ? Icons.hourglass_top_rounded
-                    : Icons.check_circle_rounded,
+                isWaitlisted ? AppIcons.hourglass : AppIcons.checkCircle,
                 size: 48,
                 color: isWaitlisted ? colors.warning : colors.success,
               ),
@@ -1548,8 +1536,8 @@ class _DoublesRegistrationFlowState
               }
             },
             icon: canPay
-                ? const Icon(Icons.payment_rounded)
-                : const Icon(Icons.check_rounded),
+                ? const Icon(AppIcons.creditCard)
+                : const Icon(AppIcons.check),
             label: Text(
               canPay ? l10n.doublesRegProceedPayment : l10n.doublesRegComplete,
             ),
@@ -1576,11 +1564,7 @@ class _DoublesRegistrationFlowState
               if (!mounted || !withdrew) return;
               context.go('/intro/${widget.tournamentId}');
             },
-            icon: Icon(
-              Icons.exit_to_app_rounded,
-              size: 16,
-              color: colors.error,
-            ),
+            icon: Icon(AppIcons.logout, size: 16, color: colors.error),
             label: Text(
               l10n.registerWithdraw,
               style: TextStyle(color: colors.error, fontSize: 13),
@@ -1609,7 +1593,7 @@ class _DoublesRegistrationFlowState
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.check_circle_rounded,
+                  AppIcons.checkCircle,
                   size: 52,
                   color: colors.success,
                 ),
@@ -1636,11 +1620,7 @@ class _DoublesRegistrationFlowState
                   if (!mounted || !withdrew) return;
                   context.go('/intro/${widget.tournamentId}');
                 },
-                icon: Icon(
-                  Icons.exit_to_app_rounded,
-                  size: 16,
-                  color: colors.error,
-                ),
+                icon: Icon(AppIcons.logout, size: 16, color: colors.error),
                 label: Text(
                   AppLocalizations.of(context)!.registerWithdraw,
                   style: TextStyle(color: colors.error, fontSize: 13),

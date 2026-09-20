@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class TournamentCardLive extends StatelessWidget {
   final Tournament tournament;
@@ -28,7 +29,10 @@ class TournamentCardLive extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF0F172A), Color(0xFF1E293B)], // Dark bento gradient
+            colors: [
+              Color(0xFF0F172A),
+              Color(0xFF1E293B),
+            ], // Dark bento gradient
           ),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Colors.red.withAlpha(40), width: 1.0),
@@ -37,7 +41,7 @@ class TournamentCardLive extends StatelessWidget {
               color: Colors.red.withAlpha(25),
               blurRadius: 20,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Row(
@@ -51,27 +55,41 @@ class TournamentCardLive extends StatelessWidget {
                       const _LiveBadge(),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withAlpha(20),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           sportLabel.toUpperCase(),
-                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       if (formatLabel.isNotEmpty) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withAlpha(15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             formatLabel,
-                            style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w500),
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       ],
@@ -79,7 +97,9 @@ class TournamentCardLive extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    tournament.name.isNotEmpty ? tournament.name : "(Chưa có tên)",
+                    tournament.name.isNotEmpty
+                        ? tournament.name
+                        : "(Chưa có tên)",
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -91,10 +111,16 @@ class TournamentCardLive extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      _buildInfoChip(Icons.group_rounded, "${tournament.maxTeams} đội"),
+                      _buildInfoChip(
+                        AppIcons.users,
+                        "${tournament.maxTeams} đội",
+                      ),
                       if (tournament.maxPlayersPerTeam != null) ...[
                         const SizedBox(width: 12),
-                        _buildInfoChip(Icons.person_rounded, "tối đa ${tournament.maxPlayersPerTeam} VĐV"),
+                        _buildInfoChip(
+                          AppIcons.user,
+                          "tối đa ${tournament.maxPlayersPerTeam} VĐV",
+                        ),
                       ],
                     ],
                   ),
@@ -110,7 +136,11 @@ class TournamentCardLive extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.red.withAlpha(50)),
               ),
-              child: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.red, size: 16),
+              child: const Icon(
+                AppIcons.chevronRight,
+                color: Colors.red,
+                size: 16,
+              ),
             ),
           ],
         ),
@@ -126,7 +156,11 @@ class TournamentCardLive extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           text,
-          style: const TextStyle(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.w500),
+          style: const TextStyle(
+            color: Colors.white54,
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );
@@ -140,18 +174,22 @@ class _LiveBadge extends StatefulWidget {
   State<_LiveBadge> createState() => _LiveBadgeState();
 }
 
-class _LiveBadgeState extends State<_LiveBadge> with SingleTickerProviderStateMixin {
+class _LiveBadgeState extends State<_LiveBadge>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _pulse;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
-      ..repeat(reverse: true);
-    _pulse = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _pulse = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -164,10 +202,8 @@ class _LiveBadgeState extends State<_LiveBadge> with SingleTickerProviderStateMi
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _pulse,
-      builder: (context, child) => Transform.scale(
-        scale: _pulse.value,
-        child: child,
-      ),
+      builder: (context, child) =>
+          Transform.scale(scale: _pulse.value, child: child),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
@@ -178,17 +214,21 @@ class _LiveBadgeState extends State<_LiveBadge> with SingleTickerProviderStateMi
               color: const Color(0xFFEF4444).withAlpha(100),
               blurRadius: 8,
               offset: const Offset(0, 2),
-            )
+            ),
           ],
         ),
         child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.sensors_rounded, color: Colors.white, size: 10),
+            Icon(AppIcons.radio, color: Colors.white, size: 10),
             SizedBox(width: 3),
             Text(
               "LIVE",
-              style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ],
         ),

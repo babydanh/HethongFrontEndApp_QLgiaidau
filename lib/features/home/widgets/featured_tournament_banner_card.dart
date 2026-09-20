@@ -1,5 +1,4 @@
 import 'dart:io' show Platform;
-
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
@@ -7,6 +6,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class FeaturedTournamentBannerCard extends StatelessWidget {
@@ -121,7 +121,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                     children: [
                       _CompactTopSportBadge(
                         label: _sportLabel(l10n),
-                        icon: Icons.sports_tennis_rounded,
+                        icon: AppIcons.sportTennis,
                       ),
                       const Spacer(),
                       _CompactTopStatusBadge(
@@ -161,7 +161,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                       if ((tournament.locationAddress ?? '').isNotEmpty) ...[
                         const SizedBox(height: 6),
                         _MetaChip(
-                          icon: Icons.location_on_rounded,
+                          icon: AppIcons.mapPin,
                           label: tournament.locationAddress!,
                         ),
                       ],

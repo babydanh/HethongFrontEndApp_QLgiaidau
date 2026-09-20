@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/data/models/match_event_model.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 abstract class IMatchEventRenderer {
   IconData getIcon(MatchEvent event);
@@ -12,7 +13,7 @@ abstract class IMatchEventRenderer {
 class ScoreEventRenderer implements IMatchEventRenderer {
   @override
   IconData getIcon(MatchEvent event) =>
-      event.pointsChange > 0 ? Icons.add_circle : Icons.remove_circle;
+      event.pointsChange > 0 ? AppIcons.add : AppIcons.cancel;
 
   @override
   Color getColor(BuildContext context, MatchEvent event) =>
@@ -27,7 +28,7 @@ class ScoreEventRenderer implements IMatchEventRenderer {
 
 class YellowCardEventRenderer implements IMatchEventRenderer {
   @override
-  IconData getIcon(MatchEvent event) => Icons.rectangle;
+  IconData getIcon(MatchEvent event) => AppIcons.square;
 
   @override
   Color getColor(BuildContext context, MatchEvent event) =>
@@ -40,7 +41,7 @@ class YellowCardEventRenderer implements IMatchEventRenderer {
 
 class RedCardEventRenderer implements IMatchEventRenderer {
   @override
-  IconData getIcon(MatchEvent event) => Icons.rectangle;
+  IconData getIcon(MatchEvent event) => AppIcons.square;
 
   @override
   Color getColor(BuildContext context, MatchEvent event) => Colors.red.shade700;
@@ -52,7 +53,7 @@ class RedCardEventRenderer implements IMatchEventRenderer {
 
 class FoulEventRenderer implements IMatchEventRenderer {
   @override
-  IconData getIcon(MatchEvent event) => Icons.warning_rounded;
+  IconData getIcon(MatchEvent event) => AppIcons.warning;
 
   @override
   Color getColor(BuildContext context, MatchEvent event) =>
@@ -65,7 +66,7 @@ class FoulEventRenderer implements IMatchEventRenderer {
 
 class DefaultEventRenderer implements IMatchEventRenderer {
   @override
-  IconData getIcon(MatchEvent event) => Icons.info;
+  IconData getIcon(MatchEvent event) => AppIcons.info;
 
   @override
   Color getColor(BuildContext context, MatchEvent event) => context.colors.info;

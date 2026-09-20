@@ -1,3 +1,4 @@
+
 part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailAboutTab on _ClubDetailScreenState {
@@ -114,8 +115,8 @@ extension _ClubDetailAboutTab on _ClubDetailScreenState {
               // Thông tin cơ bản: Công khai / Riêng tư, Hiển thị, Lịch sử nhóm
               _buildFbMetaRow(
                 icon: club.visibility.toUpperCase() == 'PRIVATE'
-                    ? Icons.lock_outline_rounded
-                    : Icons.public_rounded,
+                    ? AppIcons.lock
+                    : AppIcons.globe,
                 title: club.visibility.toUpperCase() == 'PRIVATE'
                     ? l10n.club_aboutPrivacyPrivate
                     : l10n.club_aboutPrivacyPublic,
@@ -126,7 +127,7 @@ extension _ClubDetailAboutTab on _ClubDetailScreenState {
               ),
               const SizedBox(height: 12),
               _buildFbMetaRow(
-                icon: Icons.visibility_outlined,
+                icon: AppIcons.eye,
                 title: 'Hiển thị',
                 subtitle: club.visibility.toUpperCase() == 'HIDDEN'
                     ? 'Nhóm bị ẩn, chỉ thành viên mới tìm thấy.'
@@ -136,7 +137,7 @@ extension _ClubDetailAboutTab on _ClubDetailScreenState {
               if (createdDateText.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 _buildFbMetaRow(
-                  icon: Icons.access_time_rounded,
+                  icon: AppIcons.clock,
                   title: 'Xem lịch sử nhóm',
                   subtitle: 'Ngày tạo nhóm: $createdDateText',
                   colors: colors,
@@ -144,7 +145,7 @@ extension _ClubDetailAboutTab on _ClubDetailScreenState {
               ],
               const SizedBox(height: 12),
               _buildFbMetaRow(
-                icon: Icons.sports_tennis_rounded,
+                icon: AppIcons.sportTennis,
                 title: l10n.club_sportLabel,
                 subtitle: finalSportsText,
                 colors: colors,
@@ -152,7 +153,7 @@ extension _ClubDetailAboutTab on _ClubDetailScreenState {
               if ((club.locationAddress ?? '').trim().isNotEmpty) ...[
                 const SizedBox(height: 12),
                 _buildFbMetaRow(
-                  icon: Icons.location_on_outlined,
+                  icon: AppIcons.mapPin,
                   title: l10n.club_location,
                   subtitle: club.locationAddress!,
                   colors: colors,
@@ -197,7 +198,7 @@ extension _ClubDetailAboutTab on _ClubDetailScreenState {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.edit_note_rounded,
+                              AppIcons.fileText,
                               size: 16,
                               color: colors.textSecondary,
                             ),
@@ -265,8 +266,8 @@ extension _ClubDetailAboutTab on _ClubDetailScreenState {
                                   const SizedBox(width: 4),
                                   Icon(
                                     _isAboutRulesExpanded
-                                        ? Icons.keyboard_arrow_up_rounded
-                                        : Icons.keyboard_arrow_down_rounded,
+                                        ? AppIcons.chevronUp
+                                        : AppIcons.chevronDown,
                                     size: 18,
                                     color: AppTheme.primary,
                                   ),
@@ -313,7 +314,7 @@ extension _ClubDetailAboutTab on _ClubDetailScreenState {
               ),
               const SizedBox(height: 14),
               _buildFbActivityItem(
-                icon: Icons.group_outlined,
+                icon: AppIcons.users,
                 title:
                     'Tổng số thành viên: ${club.memberCount}${club.maxMembers != null ? " / ${club.maxMembers}" : ""}',
                 subtitle: club.joinMode == "OPEN"
@@ -325,7 +326,7 @@ extension _ClubDetailAboutTab on _ClubDetailScreenState {
               ),
               const SizedBox(height: 12),
               _buildFbActivityItem(
-                icon: Icons.emoji_events_outlined,
+                icon: AppIcons.trophy,
                 title: '${club.tournamentCount} giải đấu đã tổ chức',
                 subtitle: 'Giao lưu thi đấu chuyên nghiệp và phong trào',
                 colors: colors,

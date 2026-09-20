@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class MatchCardLive extends StatelessWidget {
   final MatchModel match;
@@ -42,7 +43,7 @@ class MatchCardLive extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.fiber_manual_record, size: 10, color: Colors.white),
+                Icon(AppIcons.circleDot, size: 10, color: Colors.white),
                 SizedBox(width: 6),
                 Text(
                   l10n.liveLiveBadge,

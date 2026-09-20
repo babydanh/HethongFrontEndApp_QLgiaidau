@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Admin — Danh sách yêu cầu thay đổi (Change Requests)
@@ -35,7 +36,7 @@ class _AdminChangeRequestsScreenState
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -130,7 +131,7 @@ class _AdminChangeRequestsScreenState
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.edit_note_rounded,
+                  AppIcons.fileText,
                   size: 64,
                   color: colors.textMuted.withValues(alpha: 0.4),
                 ),
@@ -161,7 +162,7 @@ class _AdminChangeRequestsScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+            Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
             Text(
               l10n!.adminChangeRequestsLoadError,
@@ -224,7 +225,7 @@ class _AdminChangeRequestsScreenState
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
-                  Icons.edit_note_rounded,
+                  AppIcons.fileText,
                   color: AppTheme.primary,
                   size: 20,
                 ),
@@ -295,7 +296,7 @@ class _AdminChangeRequestsScreenState
                 Expanded(
                   child: _actionBtn(
                     l10n!.adminChangeRequestsApprove,
-                    Icons.check_rounded,
+                    AppIcons.check,
                     const Color(0xFF10B981),
                     () => _handleAction(request['id'], 'APPROVED', colors),
                   ),
@@ -304,7 +305,7 @@ class _AdminChangeRequestsScreenState
                 Expanded(
                   child: _actionBtn(
                     l10n!.adminChangeRequestsReject,
-                    Icons.close_rounded,
+                    AppIcons.close,
                     const Color(0xFFEF4444),
                     () => _handleAction(request['id'], 'REJECTED', colors),
                     outlined: true,

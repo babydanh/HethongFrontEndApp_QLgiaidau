@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/features/social/models/activity_feed_item.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class ActivityFeedCard extends StatefulWidget {
   final ActivityFeedItem item;
@@ -142,7 +143,7 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
                                   Row(
                                     children: [
                                       Icon(
-                                        Icons.trending_up_rounded,
+                                        AppIcons.trendingUp,
                                         size: 15,
                                         color: isDark
                                             ? const Color(0xFF60A5FA)
@@ -171,7 +172,7 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
                                       ),
                                       const SizedBox(width: 3),
                                       Icon(
-                                        Icons.info_outline_rounded,
+                                        AppIcons.info,
                                         size: 13,
                                         color: isDark
                                             ? Colors.white38
@@ -188,7 +189,7 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  Icons.location_on_outlined,
+                                  AppIcons.mapPin,
                                   size: 14,
                                   color: isDark
                                       ? Colors.white54
@@ -196,7 +197,9 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
                                 ),
                                 const SizedBox(width: 3),
                                 ConstrainedBox(
-                                  constraints: const BoxConstraints(maxWidth: 80),
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 80,
+                                  ),
                                   child: Text(
                                     _formatDistanceOrLocation(item),
                                     maxLines: 1,
@@ -234,7 +237,7 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
                               // Cột 1: Players
                               Expanded(
                                 child: _buildStatItem(
-                                  icon: Icons.groups_2_outlined,
+                                  icon: AppIcons.users,
                                   iconBgColor: const Color(0xFFEFF6FF),
                                   iconColor: const Color(0xFF2563EB),
                                   label: 'Players',
@@ -251,7 +254,7 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
                               // Cột 2: Level
                               Expanded(
                                 child: _buildStatItem(
-                                  icon: Icons.emoji_events_outlined,
+                                  icon: AppIcons.trophy,
                                   iconBgColor: const Color(0xFFFEF2F2),
                                   iconColor: const Color(0xFFEF4444),
                                   label: 'Level',
@@ -264,7 +267,7 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
                               // Cột 3: Gender
                               Expanded(
                                 child: _buildStatItem(
-                                  icon: Icons.person_outline_rounded,
+                                  icon: AppIcons.user,
                                   iconBgColor: const Color(0xFFF1F5F9),
                                   iconColor: const Color(0xFF475569),
                                   label: 'Gender',
@@ -283,7 +286,9 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
                                   onPressed: _busy || (!item.isJoined && isFull)
                                       ? null
                                       : () => _run(
-                                          item.isJoined ? widget.onLeave : widget.onJoin,
+                                          item.isJoined
+                                              ? widget.onLeave
+                                              : widget.onJoin,
                                         ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: item.isJoined
@@ -346,7 +351,8 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
     final imageUrl = item.isPersonal
         ? (item.host?.avatarUrl ?? item.bannerUrl)
         : (item.club?.avatarUrl ?? item.host?.avatarUrl ?? item.bannerUrl);
-    final usesBannerFallback = imageUrl != null &&
+    final usesBannerFallback =
+        imageUrl != null &&
         imageUrl.isNotEmpty &&
         ((item.isPersonal && item.host?.avatarUrl == null) ||
             (!item.isPersonal &&
@@ -382,13 +388,18 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
           ? Image.network(
               imageUrl,
               fit: usesBannerFallback ? BoxFit.contain : BoxFit.cover,
-              errorBuilder: (_, _, _) => _buildFallbackAvatar(item, displayName, sportColor),
+              errorBuilder: (_, _, _) =>
+                  _buildFallbackAvatar(item, displayName, sportColor),
             )
           : _buildFallbackAvatar(item, displayName, sportColor),
     );
   }
 
-  Widget _buildFallbackAvatar(ActivityFeedItem item, String name, Color sportColor) {
+  Widget _buildFallbackAvatar(
+    ActivityFeedItem item,
+    String name,
+    Color sportColor,
+  ) {
     return Container(
       alignment: Alignment.center,
       color: sportColor.withValues(alpha: 0.1),
@@ -396,7 +407,7 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            item.isPersonal ? Icons.person_rounded : Icons.groups_2_rounded,
+            item.isPersonal ? AppIcons.user : AppIcons.users,
             size: 22,
             color: sportColor,
           ),
@@ -472,10 +483,13 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
   Color _getSportColor(String sport) {
     final s = sport.toLowerCase().trim();
     if (s.contains('pickle')) return const Color(0xFF0D9488); // Teal
-    if (s.contains('basket') || s.contains('rổ')) return const Color(0xFFEA580C); // Orange
-    if (s.contains('badminton') || s.contains('lông')) return const Color(0xFF2563EB); // Blue
+    if (s.contains('basket') || s.contains('rổ'))
+      return const Color(0xFFEA580C); // Orange
+    if (s.contains('badminton') || s.contains('lông'))
+      return const Color(0xFF2563EB); // Blue
     if (s.contains('tennis')) return const Color(0xFF16A34A); // Green
-    if (s.contains('football') || s.contains('đá')) return const Color(0xFF059669); // Emerald
+    if (s.contains('football') || s.contains('đá'))
+      return const Color(0xFF059669); // Emerald
     return const Color(0xFF0284C7); // Default Sky Blue
   }
 
@@ -489,7 +503,20 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
     if (item.startDateTime != null) {
       final dt = item.startDateTime!.toLocal();
       const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
       final weekday = weekdays[dt.weekday - 1];
       final month = months[dt.month - 1];
       final hour12 = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
@@ -520,7 +547,9 @@ class _ActivityFeedCardState extends State<ActivityFeedCard> {
 
   String _getLevelLabel(ActivityFeedItem item) {
     final t = item.sportTier.toLowerCase();
-    if (t.contains('chuyên') || t.contains('compet') || t.contains('nâng cao')) {
+    if (t.contains('chuyên') ||
+        t.contains('compet') ||
+        t.contains('nâng cao')) {
       return 'Competitive';
     }
     return 'Social';

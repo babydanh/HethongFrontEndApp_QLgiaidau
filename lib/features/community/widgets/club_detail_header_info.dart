@@ -4,14 +4,14 @@ extension _ClubDetailHeaderInfo on _ClubDetailScreenState {
   Widget _buildClubInfoSection(
     Community club,
     AppColorsExtension colors,
-    Color sColor,
-    String emoji, {
+    Color sColor, {
     required bool isClubAdmin,
   }) {
     final l10n = AppLocalizations.of(context)!;
     final sportLabel = club.sports.isNotEmpty
         ? l10n.sportDisplayName(club.sports.first.trim())
         : l10n.club_sportFallback.toUpperCase();
+    final hasLogo = _resolveImageUrl(club.logoUrl).isNotEmpty;
 
     return Container(
       color: colors.bgCard,
@@ -19,11 +19,11 @@ extension _ClubDetailHeaderInfo on _ClubDetailScreenState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Luôn chừa chỗ cho avatar nổi.
+          // Chỉ chừa chỗ cho avatar khi CLB thật sự có logo.
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(width: 84 + 12),
+              if (hasLogo) const SizedBox(width: 84 + 12),
               // Thông tin CLB bên phải
               Expanded(
                 child: Column(
@@ -52,7 +52,7 @@ extension _ClubDetailHeaderInfo on _ClubDetailScreenState {
                             ),
                             const SizedBox(width: 4),
                             Icon(
-                              Icons.arrow_forward_ios_rounded,
+                              AppIcons.chevronRight,
                               size: 14,
                               color: colors.textMuted,
                             ),
@@ -72,8 +72,8 @@ extension _ClubDetailHeaderInfo on _ClubDetailScreenState {
                           children: [
                             Icon(
                               club.visibility.toUpperCase() == 'PRIVATE'
-                                  ? Icons.lock_outline_rounded
-                                  : Icons.public_outlined,
+                                  ? AppIcons.lock
+                                  : AppIcons.globe,
                               size: 14,
                               color: colors.textSecondary,
                             ),
@@ -95,7 +95,7 @@ extension _ClubDetailHeaderInfo on _ClubDetailScreenState {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.group_outlined,
+                              AppIcons.users,
                               size: 14,
                               color: colors.textSecondary,
                             ),
@@ -126,7 +126,7 @@ extension _ClubDetailHeaderInfo on _ClubDetailScreenState {
                       Row(
                         children: [
                           Icon(
-                            Icons.location_on_outlined,
+                            AppIcons.mapPin,
                             size: 14,
                             color: colors.textSecondary,
                           ),

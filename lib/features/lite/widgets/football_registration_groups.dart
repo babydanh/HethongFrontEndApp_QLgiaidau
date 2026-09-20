@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Compact team-first registration view for football Lite management.
 /// The organizer opens one team card to inspect its roster instead of seeing
@@ -11,7 +12,7 @@ class FootballRegistrationGroups extends StatefulWidget {
   final AppColorsExtension colors;
   final bool rosterConfirmed;
   final Future<void> Function(LiteParticipant participant, String reason)?
-      onKickParticipant;
+  onKickParticipant;
 
   const FootballRegistrationGroups({
     super.key,
@@ -107,9 +108,7 @@ class _FootballRegistrationGroupsState
                         ),
                       ),
                       Icon(
-                        expanded
-                            ? Icons.keyboard_arrow_up_rounded
-                            : Icons.keyboard_arrow_down_rounded,
+                        expanded ? AppIcons.chevronUp : AppIcons.chevronDown,
                         color: widget.colors.textMuted,
                       ),
                     ],
@@ -139,14 +138,15 @@ class _FootballRegistrationGroupsState
                             children: [
                               CircleAvatar(
                                 radius: 15,
-                                backgroundColor: AppTheme.primary
-                                    .withValues(alpha: 0.1),
+                                backgroundColor: AppTheme.primary.withValues(
+                                  alpha: 0.1,
+                                ),
                                 backgroundImage: member.avatarUrl.isNotEmpty
                                     ? NetworkImage(member.avatarUrl)
                                     : null,
                                 child: member.avatarUrl.isEmpty
                                     ? Icon(
-                                        Icons.person_outline,
+                                        AppIcons.user,
                                         size: 17,
                                         color: AppTheme.primary,
                                       )
@@ -181,12 +181,14 @@ class _FootballRegistrationGroupsState
                           alignment: Alignment.centerRight,
                           child: OutlinedButton.icon(
                             onPressed: () => _confirmKick(context, team),
-                            icon: const Icon(Icons.person_remove_outlined, size: 16),
+                            icon: const Icon(AppIcons.userRemove, size: 16),
                             label: Text(l10n.lite_removeTeamFromTournament),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: widget.colors.error,
                               side: BorderSide(
-                                color: widget.colors.error.withValues(alpha: 0.35),
+                                color: widget.colors.error.withValues(
+                                  alpha: 0.35,
+                                ),
                               ),
                               visualDensity: VisualDensity.compact,
                             ),
@@ -203,7 +205,10 @@ class _FootballRegistrationGroupsState
     );
   }
 
-  String _statusLabel(List<LiteParticipant> participants, AppLocalizations l10n) {
+  String _statusLabel(
+    List<LiteParticipant> participants,
+    AppLocalizations l10n,
+  ) {
     final statuses = participants.map((item) => item.status).toSet();
     if (statuses.contains('KICKED')) return l10n.lite_statusKicked;
     // Lite is direct participation. Legacy approval statuses are displayed as
@@ -252,13 +257,9 @@ class _FootballRegistrationGroupsState
             child: Text(l10n.commonCancel),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(
-              dialogContext,
-              reasonController.text.trim(),
-            ),
-            style: FilledButton.styleFrom(
-              backgroundColor: widget.colors.error,
-            ),
+            onPressed: () =>
+                Navigator.pop(dialogContext, reasonController.text.trim()),
+            style: FilledButton.styleFrom(backgroundColor: widget.colors.error),
             child: Text(l10n.lite_kickTeamAction),
           ),
         ],
@@ -270,7 +271,6 @@ class _FootballRegistrationGroupsState
     }
     await widget.onKickParticipant!(participant, reason);
   }
-
 }
 
 class _TeamLogo extends StatelessWidget {
@@ -303,7 +303,6 @@ class _TeamLogo extends StatelessWidget {
           : null,
     );
   }
-
 }
 
 class _StatusChip extends StatelessWidget {
@@ -330,5 +329,4 @@ class _StatusChip extends StatelessWidget {
       ),
     );
   }
-
 }

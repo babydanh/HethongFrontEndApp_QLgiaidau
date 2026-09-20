@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 String _resolveImageUrl(String? url) {
@@ -144,7 +145,7 @@ class AchievementsTab extends ConsumerWidget {
                 child: Column(
                   children: [
                     Icon(
-                      Icons.emoji_events_outlined,
+                      AppIcons.trophy,
                       size: 36,
                       color: colors.textMuted.withValues(alpha: 0.5),
                     ),
@@ -190,19 +191,19 @@ class AchievementsTab extends ConsumerWidget {
   static IconData _getSportIcon(String sport) {
     final s = sport.toLowerCase();
     if (s.contains('pickle') || s.contains('padd')) {
-      return Icons.sports_tennis_rounded;
+      return AppIcons.sportTennis;
     }
 
     if (s.contains('badminton') || s.contains('cầu')) {
-      return Icons.sports_tennis_outlined;
+      return AppIcons.sportTennis;
     }
 
     if (s.contains('foot') || s.contains('socc') || s.contains('bóng')) {
-      return Icons.sports_soccer_rounded;
+      return AppIcons.sportFootball;
     }
 
-    if (s.contains('tennis')) return Icons.sports_baseball_rounded;
-    return Icons.emoji_events_rounded;
+    if (s.contains('tennis')) return AppIcons.sportPickleball;
+    return AppIcons.trophy;
   }
 
   Widget _buildSectionHeader(
@@ -253,7 +254,7 @@ class AchievementsTab extends ConsumerWidget {
                     ),
                   ),
                   Icon(
-                    Icons.chevron_right_rounded,
+                    AppIcons.chevronRight,
                     size: 16,
                     color: AppTheme.primary,
                   ),
@@ -472,11 +473,7 @@ class _AchievementCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 Row(
                   children: [
-                    Icon(
-                      Icons.calendar_today_rounded,
-                      size: 11,
-                      color: colors.textMuted,
-                    ),
+                    Icon(AppIcons.calendar, size: 11, color: colors.textMuted),
                     const SizedBox(width: 4),
                     Text(
                       achievement.date,

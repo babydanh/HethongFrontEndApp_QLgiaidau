@@ -35,6 +35,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_update_service.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_update_gate.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -91,10 +92,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const SizedBox(height: 12),
               ListTile(
-                leading: const Icon(
-                  Icons.camera_alt_rounded,
-                  color: AppTheme.primary,
-                ),
+                leading: const Icon(AppIcons.camera, color: AppTheme.primary),
                 title: Text(
                   l10n.profileTakePhoto,
                   style: TextStyle(color: colors.textPrimary),
@@ -102,10 +100,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onTap: () => Navigator.pop(context, ImageSource.camera),
               ),
               ListTile(
-                leading: const Icon(
-                  Icons.photo_library_rounded,
-                  color: AppTheme.primary,
-                ),
+                leading: const Icon(AppIcons.images, color: AppTheme.primary),
                 title: Text(
                   l10n.profileChooseFromGallery,
                   style: TextStyle(color: colors.textPrimary),
@@ -247,10 +242,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_rounded,
-            color: context.colors.textPrimary,
-          ),
+          icon: Icon(AppIcons.chevronLeft, color: context.colors.textPrimary),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -271,11 +263,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         actions: [
           TextButton.icon(
             onPressed: () => context.go('/profile/edit'),
-            icon: const Icon(
-              Icons.edit_rounded,
-              size: 18,
-              color: AppTheme.primary,
-            ),
+            icon: const Icon(AppIcons.edit, size: 18, color: AppTheme.primary),
             label: Text(
               l10n.infoEdit,
               style: const TextStyle(
@@ -324,7 +312,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -382,7 +370,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 height: 50,
                 child: FilledButton.icon(
                   onPressed: () => context.go('/login'),
-                  icon: const Icon(Icons.login_rounded, size: 20),
+                  icon: const Icon(AppIcons.login, size: 20),
                   label: Text(
                     l10n.profileLoginButton,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -454,21 +442,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     child: _buildTabButton(
                       0,
                       l10n.profileTabInfo,
-                      Icons.person_outline_rounded,
+                      AppIcons.user,
                     ),
                   ),
-                  Expanded(
-                    child: _buildTabButton(
-                      1,
-                      'Bạn bè',
-                      Icons.people_outline_rounded,
-                    ),
-                  ),
+                  Expanded(child: _buildTabButton(1, 'Bạn bè', AppIcons.users)),
                   Expanded(
                     child: _buildTabButton(
                       2,
                       l10n.profileTabSettings,
-                      Icons.settings_rounded,
+                      AppIcons.settings,
                     ),
                   ),
                 ],
@@ -485,7 +467,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               l10n.infoMyTournaments,
               trailing: IconButton(
                 onPressed: () => showPublicTournamentTypeSheet(context),
-                icon: const Icon(Icons.add_circle_outline_rounded, size: 22),
+                icon: const Icon(AppIcons.add, size: 22),
                 color: AppTheme.primary,
                 tooltip: 'Tạo giải đấu',
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
@@ -696,11 +678,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : const Icon(
-                      Icons.camera_alt_rounded,
-                      size: 17,
-                      color: Colors.white,
-                    ),
+                  : const Icon(AppIcons.camera, size: 17, color: Colors.white),
             ),
           ),
         ),
@@ -743,7 +721,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               ),
                             )
                           : const Icon(
-                              Icons.camera_alt_rounded,
+                              AppIcons.camera,
                               size: 16,
                               color: Colors.white,
                             ),
@@ -860,7 +838,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.email_outlined, size: 14, color: colors.textMuted),
+              Icon(AppIcons.mail, size: 14, color: colors.textMuted),
               const SizedBox(width: 5),
               Flexible(
                 child: Text(
@@ -877,7 +855,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               if (isEmailVerified) ...[
                 const SizedBox(width: 5),
                 const Icon(
-                  Icons.verified_rounded,
+                  AppIcons.verified,
                   size: 15,
                   color: Color(0xFF2563EB), // Web Royal Blue Verified Check
                 ),
@@ -890,11 +868,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.calendar_today_outlined,
-                size: 13,
-                color: colors.textMuted,
-              ),
+              Icon(AppIcons.calendar, size: 13, color: colors.textMuted),
               const SizedBox(width: 5),
               Text(
                 joinedDateText,
@@ -974,33 +948,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final emailVerified = profile.isEmailVerified == true;
     final items = <_InfoItem>[
       _InfoItem(
-        Icons.phone_rounded,
+        AppIcons.phone,
         l10n.profilePhoneLabel,
         profile.phoneNumber ?? '—',
       ),
       _InfoItem(
-        Icons.cake_rounded,
+        AppIcons.cake,
         l10n.profileDobLabel,
         profile.dateOfBirth ?? '—',
       ),
+      _InfoItem(AppIcons.users, l10n.profileGenderLabel, profile.gender ?? '—'),
       _InfoItem(
-        Icons.wc_rounded,
-        l10n.profileGenderLabel,
-        profile.gender ?? '—',
-      ),
-      _InfoItem(
-        Icons.location_on_rounded,
+        AppIcons.mapPin,
         l10n.profileAddressLabel,
         profile.address ?? '—',
       ),
-      _InfoItem(Icons.map_rounded, l10n.profileProvinceLabel, provinceDisplay),
+      _InfoItem(AppIcons.map, l10n.profileProvinceLabel, provinceDisplay),
       _InfoItem(
-        Icons.verified_outlined,
+        AppIcons.verified,
         l10n.infoEmailVerified,
         emailVerified ? l10n.infoEmailVerified : l10n.infoEmailUnverified,
       ),
       _InfoItem(
-        Icons.phone_android_rounded,
+        AppIcons.phone,
         l10n.profilePhoneVerifiedLabel,
         profile.isPhoneVerified == true
             ? l10n.infoEmailVerified
@@ -1009,18 +979,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     ];
     if (profile.bankName != null && profile.bankName!.isNotEmpty) {
       items.add(
-        _InfoItem(
-          Icons.account_balance_rounded,
-          l10n.profileBankLabel,
-          profile.bankName!,
-        ),
+        _InfoItem(AppIcons.landmark, l10n.profileBankLabel, profile.bankName!),
       );
     }
     if (profile.bankAccountNumber != null &&
         profile.bankAccountNumber!.isNotEmpty) {
       items.add(
         _InfoItem(
-          Icons.numbers_rounded,
+          AppIcons.tag,
           l10n.profileBankAccountLabel,
           profile.bankAccountNumber!,
         ),
@@ -1053,9 +1019,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    emailVerified
-                        ? Icons.verified_rounded
-                        : Icons.mark_email_unread_rounded,
+                    emailVerified ? AppIcons.verified : AppIcons.mail,
                     color: emailVerified
                         ? const Color(0xFF16A34A)
                         : colors.warning,
@@ -1171,25 +1135,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             <({String label, IconData icon, Color color, List<dynamic> items})>[
               (
                 label: l10n.profileOwnerTournamentRole,
-                icon: Icons.workspace_premium_rounded,
+                icon: AppIcons.award,
                 color: const Color(0xFF059669),
                 items: workspace.organizedTournaments,
               ),
               (
                 label: l10n.profileOrganizerTournamentRole,
-                icon: Icons.groups_rounded,
+                icon: AppIcons.users,
                 color: AppTheme.primary,
                 items: workspace.coOrganizerTournaments,
               ),
               (
                 label: l10n.profileRefereeTournamentRole,
-                icon: Icons.gavel_rounded,
+                icon: AppIcons.shield,
                 color: AppTheme.refereeColor,
                 items: workspace.refereeTournaments,
               ),
               (
                 label: l10n.profilePlayerTournamentRole,
-                icon: Icons.sports_tennis_rounded,
+                icon: AppIcons.sportTennis,
                 color: context.colors.info,
                 items: workspace.participatingTournaments,
               ),
@@ -1248,7 +1212,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                       ),
                       child: const Icon(
-                        Icons.add_rounded,
+                        AppIcons.add,
                         size: 32,
                         color: AppTheme.primary,
                       ),
@@ -1262,7 +1226,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 8),
                   TextButton.icon(
                     onPressed: () => context.go('/dashboard'),
-                    icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                    icon: const Icon(AppIcons.externalLink, size: 16),
                     label: Text(l10n.profileViewDashboard),
                   ),
                 ],
@@ -1293,7 +1257,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 padding: const EdgeInsets.all(8),
                 child: TextButton.icon(
                   onPressed: () => context.go('/dashboard'),
-                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                  icon: const Icon(AppIcons.externalLink, size: 16),
                   label: Text(
                     l10n.profileViewAllCount(
                       deduplicatedItems.length.toString(),
@@ -1324,7 +1288,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.cloud_off_rounded, size: 32, color: colors.textMuted),
+              Icon(AppIcons.imageOff, size: 32, color: colors.textMuted),
               const SizedBox(height: 8),
               Text(
                 l10n.profileTournamentLoadError,
@@ -1356,11 +1320,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Center(
               child: Column(
                 children: [
-                  Icon(
-                    Icons.groups_outlined,
-                    size: 40,
-                    color: colors.textMuted,
-                  ),
+                  Icon(AppIcons.users, size: 40, color: colors.textMuted),
                   const SizedBox(height: 8),
                   Text(
                     l10n.profileNoClubs,
@@ -1369,7 +1329,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 12),
                   FilledButton.icon(
                     onPressed: () => context.push('/club/create'),
-                    icon: const Icon(Icons.add_rounded, size: 16),
+                    icon: const Icon(AppIcons.add, size: 16),
                     label: Text(l10n.profileCreateClub),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppTheme.primary,
@@ -1399,7 +1359,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 padding: const EdgeInsets.all(8),
                 child: TextButton.icon(
                   onPressed: () => context.push('/club/create'),
-                  icon: const Icon(Icons.add_rounded, size: 16),
+                  icon: const Icon(AppIcons.add, size: 16),
                   label: Text(l10n.profileCreateClub),
                 ),
               ),
@@ -1617,11 +1577,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ],
             ),
             const SizedBox(width: 6),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: colors.textMuted,
-            ),
+            Icon(AppIcons.chevronRight, size: 18, color: colors.textMuted),
           ],
         ),
       ),
@@ -1807,7 +1763,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   padding: const EdgeInsets.all(8),
                   child: TextButton.icon(
                     onPressed: () => context.go('/dashboard'),
-                    icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                    icon: const Icon(AppIcons.externalLink, size: 16),
                     label: Text(
                       l10n.profileViewAllCount(visible.length.toString()),
                     ),
@@ -1836,7 +1792,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.cloud_off_rounded, size: 32, color: colors.textMuted),
+              Icon(AppIcons.imageOff, size: 32, color: colors.textMuted),
               const SizedBox(height: 8),
               Text(
                 l10n.profileFollowedLoadError,
@@ -1917,11 +1873,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: colors.textMuted,
-            ),
+            Icon(AppIcons.chevronRight, size: 18, color: colors.textMuted),
           ],
         ),
       ),
@@ -2049,7 +2001,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       Row(
                         children: [
                           Icon(
-                            Icons.groups_rounded,
+                            AppIcons.users,
                             size: 11,
                             color: colors.textMuted,
                           ),
@@ -2113,11 +2065,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 18,
-                color: colors.textMuted,
-              ),
+              Icon(AppIcons.chevronRight, size: 18, color: colors.textMuted),
             ],
           ),
         ),
@@ -2130,37 +2078,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final colors = context.colors;
     final l = AppLocalizations.of(context)!;
     final items = [
-      _MenuItem(Icons.dashboard_rounded, l.settingsDashboard, '/dashboard'),
-      _MenuItem(Icons.leaderboard_rounded, l.navRankings, '/rankings'),
+      _MenuItem(AppIcons.dashboard, l.settingsDashboard, '/dashboard'),
+      _MenuItem(AppIcons.chart, l.navRankings, '/rankings'),
+      _MenuItem(AppIcons.user, l.settingsEditProfile, '/profile/edit'),
+      _MenuItem(AppIcons.wallet, l.settingsPaymentHistory, '/payments'),
+      _MenuItem(AppIcons.trophy, l.settingsSeries, '/series'),
+      _MenuItem(AppIcons.mail, l.settingsClubInvites, '/club-invites'),
       _MenuItem(
-        Icons.person_outline_rounded,
-        l.settingsEditProfile,
-        '/profile/edit',
-      ),
-      _MenuItem(
-        Icons.account_balance_wallet_rounded,
-        l.settingsPaymentHistory,
-        '/payments',
-      ),
-      _MenuItem(Icons.emoji_events_rounded, l.settingsSeries, '/series'),
-      _MenuItem(
-        Icons.mail_outline_rounded,
-        l.settingsClubInvites,
-        '/club-invites',
-      ),
-      _MenuItem(
-        Icons.lock_outline_rounded,
+        AppIcons.lock,
         l.settingsChangePassword,
         '/profile/change-password',
       ),
+      _MenuItem(AppIcons.chart, l.settingsEloHistory, '/profile/elo'),
+      _MenuItem(AppIcons.target, l.myReportsTitle, '/profile/reports'),
       _MenuItem(
-        Icons.leaderboard_rounded,
-        l.settingsEloHistory,
-        '/profile/elo',
-      ),
-      _MenuItem(Icons.flag_outlined, l.myReportsTitle, '/profile/reports'),
-      _MenuItem(
-        Icons.verified_user_outlined,
+        AppIcons.shieldCheck,
         l.organizer_becomeOrganizer,
         null, // Custom handler to open OrganizerVerificationSheet
       ),
@@ -2218,7 +2150,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                   ),
                   Icon(
-                    Icons.chevron_right_rounded,
+                    AppIcons.chevronRight,
                     size: 18,
                     color: colors.textMuted,
                   ),
@@ -2259,7 +2191,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
-                      Icons.notifications_outlined,
+                      AppIcons.bell,
                       size: 16,
                       color: AppTheme.primary,
                     ),
@@ -2276,7 +2208,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                   ),
                   Icon(
-                    Icons.chevron_right_rounded,
+                    AppIcons.chevronRight,
                     size: 18,
                     color: colors.textMuted,
                   ),
@@ -2297,7 +2229,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
-                    Icons.language_rounded,
+                    AppIcons.globe,
                     size: 16,
                     color: AppTheme.primary,
                   ),
@@ -2353,7 +2285,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
-                    Icons.dark_mode_rounded,
+                    AppIcons.moon,
                     size: 16,
                     color: AppTheme.primary,
                   ),
@@ -2427,7 +2359,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
-                      Icons.system_update_rounded,
+                      AppIcons.upload,
                       size: 16,
                       color: AppTheme.primary,
                     ),
@@ -2444,7 +2376,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                   ),
                   Icon(
-                    Icons.chevron_right_rounded,
+                    AppIcons.chevronRight,
                     size: 18,
                     color: colors.textMuted,
                   ),
@@ -2469,7 +2401,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: Row(
                 children: [
                   const Icon(
-                    Icons.logout_rounded,
+                    AppIcons.logout,
                     size: 20,
                     color: AppTheme.adminColor,
                   ),
@@ -2566,7 +2498,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+            Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
             const SizedBox(height: 16),
             Text(
               AppLocalizations.of(context)!.profileLoadErrorTitle,
@@ -2601,12 +2533,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     // Danh sách bạn bè mẫu phong cách ảnh
     final sampleFriends = [
-      {'name': 'marnie', 'avatar': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150', 'icon': '🎾'},
-      {'name': 'zach', 'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', 'icon': '🏓'},
-      {'name': 'ami', 'avatar': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', 'icon': '🏸'},
-      {'name': 'ven', 'avatar': 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150', 'icon': '⚽'},
-      {'name': 'j', 'avatar': 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150', 'icon': '🎾'},
-      {'name': 'tim', 'avatar': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', 'icon': '🏓'},
+      {
+        'name': 'marnie',
+        'avatar':
+            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      },
+      {
+        'name': 'zach',
+        'avatar':
+            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      },
+      {
+        'name': 'ami',
+        'avatar':
+            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+      },
+      {
+        'name': 'ven',
+        'avatar':
+            'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150',
+      },
+      {
+        'name': 'j',
+        'avatar':
+            'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150',
+      },
+      {
+        'name': 'tim',
+        'avatar':
+            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+      },
     ];
 
     // Lời mời kết bạn mẫu (Friend Requests)
@@ -2615,7 +2571,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         'id': '1',
         'username': 'elton',
         'fullName': 'Elton Cah',
-        'avatar': 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150',
+        'avatar':
+            'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150',
         'time': '1d',
         'expiry': 'Hết hạn sau 1 tháng',
       },
@@ -2623,7 +2580,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         'id': '2',
         'username': 'jam',
         'fullName': 'Jamie Carter',
-        'avatar': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
+        'avatar':
+            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
         'time': '3d',
         'expiry': 'Hết hạn sau 1 tháng',
       },
@@ -2701,7 +2659,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.search_rounded,
+                  AppIcons.search,
                   size: 20,
                   color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
                 ),
@@ -2712,16 +2670,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       hintText: 'Search',
                       hintStyle: TextStyle(
                         fontSize: 14.5,
-                        color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                        color: isDark
+                            ? Colors.white38
+                            : const Color(0xFF94A3B8),
                       ),
                       border: InputBorder.none,
                       isDense: true,
                       contentPadding: EdgeInsets.zero,
                     ),
-                    style: TextStyle(
-                      fontSize: 14.5,
-                      color: colors.textPrimary,
-                    ),
+                    style: TextStyle(fontSize: 14.5, color: colors.textPrimary),
                   ),
                 ),
               ],
@@ -2775,7 +2732,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           width: 20,
                           height: 20,
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                            color: isDark
+                                ? const Color(0xFF1E293B)
+                                : Colors.white,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
@@ -2787,7 +2746,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                           alignment: Alignment.center,
                           child: const Icon(
-                            Icons.push_pin_rounded,
+                            AppIcons.mapPin,
                             size: 11,
                             color: Color(0xFF0F172A),
                           ),
@@ -2910,7 +2869,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                       req['time']!,
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                                        color: isDark
+                                            ? Colors.white38
+                                            : const Color(0xFF94A3B8),
                                       ),
                                     ),
                                     const SizedBox(width: 5),
@@ -2930,7 +2891,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               req['fullName']!,
                               style: TextStyle(
                                 fontSize: 12.5,
-                                color: isDark ? Colors.white54 : const Color(0xFF94A3B8),
+                                color: isDark
+                                    ? Colors.white54
+                                    : const Color(0xFF94A3B8),
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -2958,7 +2921,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             HapticFeedback.selectionClick();
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Đã chấp nhận lời mời từ ${req['username']}'),
+                                content: Text(
+                                  'Đã chấp nhận lời mời từ ${req['username']}',
+                                ),
                                 duration: const Duration(seconds: 1),
                               ),
                             );
@@ -2990,7 +2955,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: colors.textPrimary,
                             side: BorderSide(
-                              color: isDark ? Colors.white24 : const Color(0xFFCBD5E1),
+                              color: isDark
+                                  ? Colors.white24
+                                  : const Color(0xFFCBD5E1),
                               width: 1.2,
                             ),
                             minimumSize: const Size(0, 38),
@@ -3044,9 +3011,12 @@ class ProfileShimmerLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1);
-    final highlightColor =
-        isDark ? const Color(0xFF475569) : const Color(0xFFF1F5F9);
+    final baseColor = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFCBD5E1);
+    final highlightColor = isDark
+        ? const Color(0xFF475569)
+        : const Color(0xFFF1F5F9);
 
     return Shimmer.fromColors(
       baseColor: baseColor,

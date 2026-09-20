@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_history_log.dart';
 import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_chart.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class EloHistoryScreen extends ConsumerStatefulWidget {
@@ -82,7 +83,7 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
         backgroundColor: colors.bgDark,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -244,7 +245,7 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.show_chart_rounded,
+                    AppIcons.chart,
                     color: AppTheme.primary,
                     size: 24,
                   ),
@@ -517,11 +518,7 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                Icon(
-                  Icons.person_outline_rounded,
-                  size: 15,
-                  color: colors.textMuted,
-                ),
+                Icon(AppIcons.user, size: 15, color: colors.textMuted),
                 const SizedBox(width: 5),
                 Expanded(
                   child: Text(
@@ -532,11 +529,7 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
                   ),
                 ),
                 if (score != null) ...[
-                  Icon(
-                    Icons.sports_score_rounded,
-                    size: 15,
-                    color: colors.textMuted,
-                  ),
+                  Icon(AppIcons.trophy, size: 15, color: colors.textMuted),
                   const SizedBox(width: 4),
                   Text(
                     '${l10n.publicProfileScore}: $score',

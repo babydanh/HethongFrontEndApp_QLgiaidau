@@ -26,6 +26,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 const List<String> _kQuickReactions = ['❤️', '👍', '😂', '😮', '😢', '🔥'];
@@ -979,10 +980,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               const Divider(height: 16),
               if (message.reactions.isNotEmpty)
                 ListTile(
-                  leading: const Icon(
-                    Icons.favorite_outline_rounded,
-                    color: Colors.pink,
-                  ),
+                  leading: const Icon(AppIcons.heart, color: Colors.pink),
                   title: Text(l10n!.chatViewReactions),
                   onTap: () {
                     Navigator.pop(sheetCtx);
@@ -990,7 +988,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                   },
                 ),
               ListTile(
-                leading: const Icon(Icons.reply_rounded),
+                leading: const Icon(AppIcons.reply),
                 title: Text(l10n!.chatReplyAction),
                 onTap: () {
                   Navigator.pop(sheetCtx);
@@ -1000,7 +998,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               ),
               if (message.content.isNotEmpty && !message.isRevoked)
                 ListTile(
-                  leading: const Icon(Icons.copy_rounded),
+                  leading: const Icon(AppIcons.copy),
                   title: Text(l10n!.chatCopyTextAction),
                   onTap: () {
                     Navigator.pop(sheetCtx);
@@ -1012,9 +1010,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                 ),
               ListTile(
                 leading: Icon(
-                  message.isPinned
-                      ? Icons.push_pin_outlined
-                      : Icons.push_pin_rounded,
+                  message.isPinned ? AppIcons.mapPin : AppIcons.mapPin,
                 ),
                 title: Text(
                   message.isPinned
@@ -1028,10 +1024,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               ),
               if (message.isMine && !message.isRevoked)
                 ListTile(
-                  leading: Icon(
-                    Icons.delete_outline_rounded,
-                    color: colors.error,
-                  ),
+                  leading: Icon(AppIcons.delete, color: colors.error),
                   title: Text(
                     l10n!.chatRevokeMessageAction,
                     style: TextStyle(color: colors.error),
@@ -1158,7 +1151,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         elevation: 0.5,
         titleSpacing: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          icon: const Icon(AppIcons.chevronLeft, size: 20),
           onPressed: () => context.pop(),
         ),
         title: GestureDetector(
@@ -1272,12 +1265,12 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.poll_outlined, size: 22),
+            icon: const Icon(AppIcons.chart, size: 22),
             tooltip: l10n!.chatDetailPollTooltip,
             onPressed: _openCreatePollDialog,
           ),
           IconButton(
-            icon: const Icon(Icons.info_outline_rounded, size: 22),
+            icon: const Icon(AppIcons.info, size: 22),
             tooltip: l10n!.chatDetailRoomSettingsTooltip,
             onPressed: _openRoomSettings,
           ),
@@ -1315,7 +1308,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.push_pin_rounded,
+                      AppIcons.mapPin,
                       size: 15,
                       color: Color(0xFFD97706),
                     ),
@@ -1373,7 +1366,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                   IconButton(
                     visualDensity: VisualDensity.compact,
                     icon: const Icon(
-                      Icons.arrow_forward_rounded,
+                      AppIcons.forward,
                       size: 18,
                       color: Color(0xFFD97706),
                     ),
@@ -1396,7 +1389,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.forum_outlined,
+                              AppIcons.messages,
                               size: 54,
                               color: colors.textMuted.withValues(alpha: 0.4),
                             ),
@@ -1623,7 +1616,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                           ],
                         ),
                         child: const Icon(
-                          Icons.keyboard_arrow_down_rounded,
+                          AppIcons.chevronDown,
                           color: AppTheme.primary,
                           size: 24,
                         ),
@@ -1659,11 +1652,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.reply_rounded,
-                    size: 18,
-                    color: AppTheme.primary,
-                  ),
+                  const Icon(AppIcons.reply, size: 18, color: AppTheme.primary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -1693,7 +1682,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                   ),
                   IconButton(
                     icon: Icon(
-                      Icons.close_rounded,
+                      AppIcons.close,
                       size: 18,
                       color: colors.textMuted,
                     ),
@@ -1743,7 +1732,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                     radius: 13,
                                     backgroundColor: Color(0xFFEDE9FE),
                                     child: Icon(
-                                      Icons.auto_awesome,
+                                      AppIcons.sparkles,
                                       size: 15,
                                       color: Color(0xFF7C3AED),
                                     ),
@@ -1778,7 +1767,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       IconButton(
                         visualDensity: VisualDensity.compact,
                         icon: const Icon(
-                          Icons.image_outlined,
+                          AppIcons.image,
                           color: AppTheme.primary,
                           size: 22,
                         ),
@@ -1788,7 +1777,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       IconButton(
                         visualDensity: VisualDensity.compact,
                         icon: const Icon(
-                          Icons.camera_alt_outlined,
+                          AppIcons.camera,
                           color: AppTheme.primary,
                           size: 22,
                         ),
@@ -1798,7 +1787,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       IconButton(
                         visualDensity: VisualDensity.compact,
                         icon: const Icon(
-                          Icons.poll_outlined,
+                          AppIcons.chart,
                           color: AppTheme.primary,
                           size: 22,
                         ),
@@ -1848,7 +1837,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         IconButton(
                           visualDensity: VisualDensity.compact,
                           icon: Icon(
-                            Icons.send_rounded,
+                            AppIcons.send,
                             color: _isSending
                                 ? colors.textMuted
                                 : AppTheme.primary,
@@ -1861,7 +1850,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         IconButton(
                           visualDensity: VisualDensity.compact,
                           icon: const Icon(
-                            Icons.thumb_up_rounded,
+                            AppIcons.thumbsUp,
                             color: AppTheme.primary,
                             size: 22,
                           ),
@@ -2542,7 +2531,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.poll_rounded, color: AppTheme.primary, size: 18),
+              const Icon(AppIcons.chart, color: AppTheme.primary, size: 18),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -2604,7 +2593,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                             const Padding(
                               padding: EdgeInsets.only(right: 6),
                               child: Icon(
-                                Icons.check_circle_rounded,
+                                AppIcons.checkCircle,
                                 color: AppTheme.primary,
                                 size: 16,
                               ),

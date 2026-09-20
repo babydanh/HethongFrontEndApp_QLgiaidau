@@ -1,3 +1,4 @@
+
 part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailSettingsHelpers on _ClubDetailScreenState {
@@ -19,7 +20,7 @@ extension _ClubDetailSettingsHelpers on _ClubDetailScreenState {
         children: [
           _quickStatusRow(
             colors,
-            icon: Icons.bolt_rounded,
+            icon: AppIcons.zap,
             label: l10n.clubDetailStatus,
             value: l10n.clubDetailActiveStatus,
             valueColor: colors.success,
@@ -27,7 +28,7 @@ extension _ClubDetailSettingsHelpers on _ClubDetailScreenState {
           Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
           _quickStatusRow(
             colors,
-            icon: Icons.visibility_outlined,
+            icon: AppIcons.eye,
             label: l10n.clubDetailVisibility,
             value: visibilityLabel,
           ),
@@ -40,7 +41,7 @@ extension _ClubDetailSettingsHelpers on _ClubDetailScreenState {
               final chatEnabled = snapshot.data?.chatEnabled ?? true;
               return _quickStatusRow(
                 colors,
-                icon: Icons.chat_bubble_outline_rounded,
+                icon: AppIcons.chat,
                 label: l10n.clubDetailInternalChat,
                 value: chatEnabled
                     ? l10n.clubDetailChatOpen
@@ -149,7 +150,7 @@ extension _ClubDetailSettingsHelpers on _ClubDetailScreenState {
             ),
             if (onTap != null)
               Icon(
-                Icons.chevron_right_rounded,
+                AppIcons.chevronRight,
                 color: colors.textMuted,
                 size: 20,
               ),

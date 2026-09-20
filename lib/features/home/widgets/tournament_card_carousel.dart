@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentCardCarousel extends StatelessWidget {
@@ -341,7 +342,7 @@ class TournamentCardCarousel extends StatelessWidget {
                       Row(
                         children: [
                           Icon(
-                            Icons.calendar_today_rounded,
+                            AppIcons.calendar,
                             color: colors.textMuted,
                             size: 13,
                           ),
@@ -356,7 +357,7 @@ class TournamentCardCarousel extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Icon(
-                            Icons.group_rounded,
+                            AppIcons.users,
                             color: colors.textMuted,
                             size: 14,
                           ),
@@ -371,7 +372,7 @@ class TournamentCardCarousel extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Icon(
-                            Icons.account_tree_rounded,
+                            AppIcons.layers,
                             color: colors.textMuted,
                             size: 13,
                           ),

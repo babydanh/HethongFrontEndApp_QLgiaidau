@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class ClubChatScreen extends ConsumerStatefulWidget {
@@ -157,7 +158,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                     Row(
                       children: [
                         const Icon(
-                          Icons.notifications_outlined,
+                          AppIcons.bell,
                           color: Color(0xFF2563EB),
                           size: 22,
                         ),
@@ -188,7 +189,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                     _buildNotificationOption(
                       title: l10n.clubChat_allMessages,
                       subtitle: l10n.clubChat_allMessagesDescription,
-                      icon: Icons.notifications_active_outlined,
+                      icon: AppIcons.bell,
                       iconColor: const Color(0xFF2563EB),
                       value: 'ALL',
                       colors: colors,
@@ -201,7 +202,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                     _buildNotificationOption(
                       title: l10n.clubChat_mentionsOnly,
                       subtitle: l10n.clubChat_mentionsOnlyDescription,
-                      icon: Icons.alternate_email_rounded,
+                      icon: AppIcons.atSign,
                       iconColor: const Color(0xFFD97706),
                       value: 'MENTIONS_ONLY',
                       colors: colors,
@@ -214,7 +215,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                     _buildNotificationOption(
                       title: l10n.clubChat_muted,
                       subtitle: l10n.clubChat_mutedDescription,
-                      icon: Icons.notifications_off_outlined,
+                      icon: AppIcons.bell,
                       iconColor: const Color(0xFF64748B),
                       value: 'MUTED',
                       colors: colors,
@@ -285,7 +286,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
               ),
             ),
             if (isSelected)
-              Icon(Icons.check_circle_rounded, color: iconColor, size: 18),
+              Icon(AppIcons.checkCircle, color: iconColor, size: 18),
           ],
         ),
       ),
@@ -309,7 +310,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.delete_outline_rounded,
+                AppIcons.delete,
                 color: Color(0xFFE11D48),
                 size: 22,
               ),
@@ -745,7 +746,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
         child: Wrap(
           children: [
             ListTile(
-              leading: const Icon(Icons.reply),
+              leading: const Icon(AppIcons.reply),
               title: Text(l10n.clubChat_reply),
               onTap: () {
                 Navigator.pop(ctx);
@@ -754,7 +755,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
             ),
             if (message.text.isNotEmpty)
               ListTile(
-                leading: const Icon(Icons.copy),
+                leading: const Icon(AppIcons.copy),
                 title: Text(l10n.clubChat_copy),
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: message.text));
@@ -762,7 +763,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                 },
               ),
             ListTile(
-              leading: const Icon(Icons.push_pin_outlined),
+              leading: const Icon(AppIcons.mapPin),
               title: Text(l10n.clubChat_pin),
               onTap: () {
                 Navigator.pop(ctx);
@@ -772,7 +773,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
             if (message.senderId ==
                 (ref.read(userProfileProvider).asData?.value.id ?? ''))
               ListTile(
-                leading: const Icon(Icons.delete_outline),
+                leading: const Icon(AppIcons.delete),
                 title: Text(l10n.clubChat_revoke),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -916,7 +917,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
         ),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert_rounded),
+            icon: const Icon(AppIcons.moreVertical),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
             ),
@@ -934,10 +935,10 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                   children: [
                     Icon(
                       _notificationPref == 'MUTED'
-                          ? Icons.notifications_off_outlined
+                          ? AppIcons.bell
                           : _notificationPref == 'MENTIONS_ONLY'
-                          ? Icons.alternate_email_rounded
-                          : Icons.notifications_active_outlined,
+                          ? AppIcons.atSign
+                          : AppIcons.bell,
                       size: 20,
                       color: const Color(0xFF2563EB),
                     ),
@@ -957,11 +958,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                 value: 'clear',
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.delete_outline_rounded,
-                      size: 20,
-                      color: Color(0xFFE11D48),
-                    ),
+                    Icon(AppIcons.delete, size: 20, color: Color(0xFFE11D48)),
                     SizedBox(width: 10),
                     Text(
                       l10n.clubChat_menuClear,
@@ -1140,8 +1137,8 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                 onPressed: () => _toggleReaction(message, '❤️'),
                 icon: Icon(
                   message.reactions.contains('❤️')
-                      ? Icons.favorite
-                      : Icons.favorite_border,
+                      ? AppIcons.heart
+                      : AppIcons.heart,
                   size: 18,
                   color: colors.textMuted,
                 ),
@@ -1235,7 +1232,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                 width: 220,
                 height: 160,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => const Icon(Icons.broken_image),
+                errorBuilder: (_, _, _) => const Icon(AppIcons.imageOff),
               ),
             ),
           ),
@@ -1267,10 +1264,10 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
           if (_replyingTo != null)
             ListTile(
               dense: true,
-              leading: const Icon(Icons.reply, size: 16),
+              leading: const Icon(AppIcons.reply, size: 16),
               title: Text(l10n.clubChat_replyTo(_replyingTo!.senderName)),
               trailing: IconButton(
-                icon: const Icon(Icons.close),
+                icon: const Icon(AppIcons.close),
                 onPressed: () => setState(() => _replyingTo = null),
               ),
             ),
@@ -1299,7 +1296,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                         dimension: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.image_outlined),
+                    : const Icon(AppIcons.image),
               ),
               Expanded(
                 child: TextField(
@@ -1321,7 +1318,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                         dimension: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.send_rounded),
+                    : const Icon(AppIcons.send),
               ),
             ],
           ),

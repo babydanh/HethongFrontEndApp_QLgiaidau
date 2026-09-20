@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/features/community/providers/user_club_rank_p
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/tag_assign_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Bottom sheet xem nhanh hồ sơ người dùng & thành viên CLB (tương đương UserProfilePopover trên Web).
 /// Cho phép xem nhanh thông tin, ELO, Danh hiệu CLB, gán tag (nếu là BQT) và nút nhắn tin / xem hồ sơ chi tiết.
@@ -283,7 +284,7 @@ class _UserProfileBottomSheetState
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
-                          Icons.close_rounded,
+                          AppIcons.close,
                           color: Colors.white,
                           size: 18,
                         ),
@@ -302,7 +303,15 @@ class _UserProfileBottomSheetState
                       _buildErrorContent(colors, err.toString(), l10n),
                   data: (profile) {
                     final clubRankInfo = communityId != null
-                        ? ref.watch(userClubRankProvider((userId: widget.userId, communityId: communityId))).asData?.value
+                        ? ref
+                              .watch(
+                                userClubRankProvider((
+                                  userId: widget.userId,
+                                  communityId: communityId,
+                                )),
+                              )
+                              .asData
+                              ?.value
                         : null;
                     return _buildProfileContent(
                       context,
@@ -420,9 +429,12 @@ class _UserProfileBottomSheetState
     final clubTier = clubRankInfo?.tierName ?? 'Low Tier D';
     final clubMatchesPlayed = clubRankInfo?.matchesPlayed ?? 0;
     final clubMatchesWon = clubRankInfo?.matchesWon ?? 0;
-    final clubWinRate = clubMatchesPlayed > 0 ? (clubMatchesWon / clubMatchesPlayed * 100).round() : 0;
+    final clubWinRate = clubMatchesPlayed > 0
+        ? (clubMatchesWon / clubMatchesPlayed * 100).round()
+        : 0;
     final clubCategory = clubRankInfo?.categoryName ?? 'Pickleball';
-    final isRankedInClub = inClubContext && clubRankInfo != null && clubMatchesPlayed > 0;
+    final isRankedInClub =
+        inClubContext && clubRankInfo != null && clubMatchesPlayed > 0;
 
     final effectiveElo = inClubContext
         ? (isRankedInClub ? clubElo : 0)
@@ -529,8 +541,8 @@ class _UserProfileBottomSheetState
                     child: Text(
                       profile.fullName.isNotEmpty
                           ? profile.fullName
-                      : (widget.initialFullName ??
-                            l10n.publicProfileUserFallback),
+                          : (widget.initialFullName ??
+                                l10n.publicProfileUserFallback),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -544,7 +556,7 @@ class _UserProfileBottomSheetState
                   if (profile.isVerified) ...[
                     const SizedBox(width: 6),
                     const Icon(
-                      Icons.verified_rounded,
+                      AppIcons.verified,
                       size: 18,
                       color: Color(0xFF22C55E),
                     ),
@@ -552,9 +564,7 @@ class _UserProfileBottomSheetState
                   if (profile.gender != null && profile.gender!.isNotEmpty) ...[
                     const SizedBox(width: 8),
                     Icon(
-                      profile.gender == 'Nam'
-                          ? Icons.male_rounded
-                          : Icons.female_rounded,
+                      profile.gender == 'Nam' ? AppIcons.user : AppIcons.user,
                       size: 16,
                       color: colors.textMuted,
                     ),
@@ -642,7 +652,10 @@ class _UserProfileBottomSheetState
                     ],
                     if (isRankedInClub && clubRankInfo.streakCount > 0)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2.5,
+                        ),
                         decoration: BoxDecoration(
                           color: clubRankInfo.streakType == 'WIN'
                               ? const Color(0xFF10B981).withValues(alpha: 0.12)
@@ -651,14 +664,16 @@ class _UserProfileBottomSheetState
                           border: Border.all(
                             color: clubRankInfo.streakType == 'WIN'
                                 ? const Color(0xFF10B981).withValues(alpha: 0.3)
-                                : const Color(0xFFEF4444).withValues(alpha: 0.3),
+                                : const Color(
+                                    0xFFEF4444,
+                                  ).withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.local_fire_department_rounded,
+                              AppIcons.flame,
                               size: 13,
                               color: clubRankInfo.streakType == 'WIN'
                                   ? const Color(0xFF10B981)
@@ -686,7 +701,10 @@ class _UserProfileBottomSheetState
                 const SizedBox(height: 10),
                 // Telemetry 2 columns
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.bgCard,
                     borderRadius: BorderRadius.circular(10),
@@ -759,12 +777,18 @@ class _UserProfileBottomSheetState
                   child: OutlinedButton.icon(
                     onPressed: () {
                       Navigator.pop(context);
-                      final name = profile.fullName.isNotEmpty ? profile.fullName : (widget.initialFullName ?? '');
+                      final name = profile.fullName.isNotEmpty
+                          ? profile.fullName
+                          : (widget.initialFullName ?? '');
                       if (widget.onFilterMatches != null && name.isNotEmpty) {
                         widget.onFilterMatches!(name);
                       }
                     },
-                    icon: const Icon(Icons.emoji_events_rounded, size: 15, color: Color(0xFF3B82F6)),
+                    icon: const Icon(
+                      AppIcons.trophy,
+                      size: 15,
+                      color: Color(0xFF3B82F6),
+                    ),
                     label: const Text(
                       'Xem các trận trong CLB',
                       style: TextStyle(
@@ -951,7 +975,7 @@ class _UserProfileBottomSheetState
                     Row(
                       children: [
                         const Icon(
-                          Icons.sell_rounded,
+                          AppIcons.tag,
                           size: 14,
                           color: Color(0xFF3B82F6),
                         ),
@@ -1004,7 +1028,7 @@ class _UserProfileBottomSheetState
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(
-                                Icons.edit_rounded,
+                                AppIcons.edit,
                                 size: 11,
                                 color: Color(0xFF2563EB),
                               ),
@@ -1074,7 +1098,7 @@ class _UserProfileBottomSheetState
                           color: Colors.white,
                         ),
                       )
-                    : const Icon(Icons.chat_bubble_rounded, size: 16),
+                    : const Icon(AppIcons.chat, size: 16),
                 label: Text(
                   _isOpeningChat
                       ? l10n.userProfileOpeningChat
@@ -1112,7 +1136,7 @@ class _UserProfileBottomSheetState
                     router.push(uri);
                   });
                 },
-                icon: const Icon(Icons.person_rounded, size: 16),
+                icon: const Icon(AppIcons.user, size: 16),
                 label: Text(
                   l10n.userProfileViewProfile,
                   style: const TextStyle(
@@ -1198,7 +1222,7 @@ class _UserProfileBottomSheetState
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: Column(
         children: [
-          Icon(Icons.error_outline_rounded, size: 36, color: colors.error),
+          Icon(AppIcons.error, size: 36, color: colors.error),
           const SizedBox(height: 8),
           Text(
             l10n.userProfileLoadError,

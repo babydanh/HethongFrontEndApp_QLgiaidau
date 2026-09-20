@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class StatusBadge extends StatelessWidget {
   final String statusKey;
@@ -40,11 +41,7 @@ class StatusBadge extends StatelessWidget {
             ),
             const SizedBox(width: 5),
           ] else if (isCompleted) ...[
-            const Icon(
-              Icons.check_circle_rounded,
-              size: 12,
-              color: Colors.white,
-            ),
+            const Icon(AppIcons.checkCircle, size: 12, color: Colors.white),
             const SizedBox(width: 4),
           ],
           Text(

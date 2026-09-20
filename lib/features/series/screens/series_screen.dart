@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:go_router/go_router.dart';
 
 class SeriesItem {
@@ -20,18 +21,33 @@ class SeriesItem {
   final String? bannerUrl;
 
   const SeriesItem({
-    required this.id, required this.name, required this.slug,
-    this.description, required this.status, this.legCount = 0,
-    this.participantCount = 0, this.startDate, this.endDate, this.bannerUrl,
+    required this.id,
+    required this.name,
+    required this.slug,
+    this.description,
+    required this.status,
+    this.legCount = 0,
+    this.participantCount = 0,
+    this.startDate,
+    this.endDate,
+    this.bannerUrl,
   });
 
   factory SeriesItem.fromJson(Map<String, dynamic> json) => SeriesItem(
-    id: json['id'] ?? '', name: json['name'] ?? '', slug: json['slug'] ?? '',
-    description: json['description'], status: json['status'] ?? 'UPCOMING',
+    id: json['id'] ?? '',
+    name: json['name'] ?? '',
+    slug: json['slug'] ?? '',
+    description: json['description'],
+    status: json['status'] ?? 'UPCOMING',
     legCount: json['_count']?['legs'] ?? json['legCount'] ?? 0,
-    participantCount: json['_count']?['participants'] ?? json['participantCount'] ?? 0,
-    startDate: json['startDate'] != null ? DateTime.parse(json['startDate']).toLocal() : null,
-    endDate: json['endDate'] != null ? DateTime.parse(json['endDate']).toLocal() : null,
+    participantCount:
+        json['_count']?['participants'] ?? json['participantCount'] ?? 0,
+    startDate: json['startDate'] != null
+        ? DateTime.parse(json['startDate']).toLocal()
+        : null,
+    endDate: json['endDate'] != null
+        ? DateTime.parse(json['endDate']).toLocal()
+        : null,
     bannerUrl: json['bannerUrl'],
   );
 }
@@ -42,10 +58,14 @@ final _seriesListProvider = FutureProvider<List<SeriesItem>>((ref) async {
     final response = await dio.get('/series');
     if (response.statusCode == 200) {
       final List<dynamic> list = response.data['data'] ?? [];
-      return list.map((j) => SeriesItem.fromJson(j as Map<String, dynamic>)).toList();
+      return list
+          .map((j) => SeriesItem.fromJson(j as Map<String, dynamic>))
+          .toList();
     }
     return [];
-  } catch (_) { return []; }
+  } catch (_) {
+    return [];
+  }
 });
 
 class SeriesScreen extends ConsumerWidget {
@@ -60,7 +80,7 @@ class SeriesScreen extends ConsumerWidget {
         title: Text(AppLocalizations.of(context)!.seriesTitle),
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: context.colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: context.colors.textPrimary),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -84,32 +104,64 @@ class SeriesScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(AppLocalizations.of(context)!.seriesError(e.toString()))),
+        error: (e, _) => Center(
+          child: Text(AppLocalizations.of(context)!.seriesError(e.toString())),
+        ),
       ),
     );
   }
 
   Widget _buildEmpty(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Container(width: 80, height: 80, decoration: BoxDecoration(color: context.colors.bgSurface, borderRadius: BorderRadius.circular(20)),
-        child: Icon(Icons.emoji_events_outlined, size: 40, color: context.colors.textMuted.withValues(alpha: 0.4))),
-      const SizedBox(height: 16),
-      Text(l10n.seriesEmptyTitle, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
-      const SizedBox(height: 6),
-      Text(l10n.seriesEmptyDescription, style: TextStyle(fontSize: 13, color: context.colors.textMuted)),
-    ]));
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: context.colors.bgSurface,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              AppIcons.trophy,
+              size: 40,
+              color: context.colors.textMuted.withValues(alpha: 0.4),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.seriesEmptyTitle,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: context.colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.seriesEmptyDescription,
+            style: TextStyle(fontSize: 13, color: context.colors.textMuted),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildCard(BuildContext context, SeriesItem series) {
     final l10n = AppLocalizations.of(context)!;
     final isActive = series.status == 'ONGOING' || series.status == 'ACTIVE';
-    final statusColor = isActive ? context.colors.error : (series.status == 'COMPLETED' ? context.colors.success : context.colors.info);
+    final statusColor = isActive
+        ? context.colors.error
+        : (series.status == 'COMPLETED'
+              ? context.colors.success
+              : context.colors.info);
     final statusLabel = isActive
         ? l10n.seriesStatusOngoing
         : (series.status == 'COMPLETED'
-            ? l10n.seriesStatusCompleted
-            : l10n.seriesStatusUpcoming);
+              ? l10n.seriesStatusCompleted
+              : l10n.seriesStatusUpcoming);
     final locale = Localizations.localeOf(context).toLanguageTag();
     final dateStr = series.startDate != null
         ? DateFormat('dd/MM/yyyy', locale).format(series.startDate!)
@@ -122,37 +174,102 @@ class SeriesScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: context.colors.bgCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isActive ? context.colors.error.withValues(alpha: 0.3) : context.colors.border),
-        boxShadow: isActive ? [BoxShadow(color: context.colors.error.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4))] : null,
+        border: Border.all(
+          color: isActive
+              ? context.colors.error.withValues(alpha: 0.3)
+              : context.colors.border,
+        ),
+        boxShadow: isActive
+            ? [
+                BoxShadow(
+                  color: context.colors.error.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
       ),
       child: InkWell(
         onTap: series.slug.isEmpty
             ? null
-            : () => context.push(
-                  '/series/${Uri.encodeComponent(series.slug)}',
-                ),
+            : () => context.push('/series/${Uri.encodeComponent(series.slug)}'),
         borderRadius: BorderRadius.circular(12),
-        child: Row(children: [
-          Container(
-            width: 52, height: 52,
-            decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(14)),
-            child: Icon(Icons.emoji_events_rounded, color: statusColor, size: 26),
-          ),
-          const SizedBox(width: 14),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(series.name, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: context.colors.textPrimary), maxLines: 2, overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 6),
-            Row(children: [
-              Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
-                child: Text(statusLabel, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: statusColor))),
-              if (dateStr.isNotEmpty) ...[const SizedBox(width: 8), Text(dateStr, style: TextStyle(fontSize: 11, color: context.colors.textMuted))],
-            ]),
-            const SizedBox(height: 4),
-            Text(l10n.seriesSummary(series.legCount, fmt.format(series.participantCount)), style: TextStyle(fontSize: 11, color: context.colors.textMuted)),
-          ])),
-          Icon(Icons.chevron_right_rounded, color: context.colors.textMuted),
-        ]),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(AppIcons.trophy, color: statusColor, size: 26),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    series.name,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: context.colors.textPrimary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          statusLabel,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: statusColor,
+                          ),
+                        ),
+                      ),
+                      if (dateStr.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          dateStr,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: context.colors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.seriesSummary(
+                      series.legCount,
+                      fmt.format(series.participantCount),
+                    ),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: context.colors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(AppIcons.chevronRight, color: context.colors.textMuted),
+          ],
+        ),
       ),
     ).animate().fadeIn(duration: 300.ms);
   }

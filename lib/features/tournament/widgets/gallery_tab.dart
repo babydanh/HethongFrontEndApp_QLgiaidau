@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/shared/widgets/app_image_viewer.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class GalleryTab extends StatelessWidget {
   final List<String> galleryImages;
@@ -25,7 +26,11 @@ class GalleryTab extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.photo_library_outlined, size: 64, color: colors.textMuted.withValues(alpha: 0.4)),
+            Icon(
+              AppIcons.images,
+              size: 64,
+              color: colors.textMuted.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: 16),
             Text(
               l10n.noGalleryImages,
@@ -36,7 +41,9 @@ class GalleryTab extends StatelessWidget {
       );
     }
 
-    final resolvedImages = galleryImages.map((img) => resolveImageUrl(img)).toList();
+    final resolvedImages = galleryImages
+        .map((img) => resolveImageUrl(img))
+        .toList();
 
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
@@ -69,13 +76,15 @@ class GalleryTab extends StatelessWidget {
                   fit: BoxFit.cover,
                   errorBuilder: (_, _, _) => Container(
                     color: colors.bgSurface,
-                    child: Icon(Icons.broken_image_outlined, color: colors.textMuted),
+                    child: Icon(AppIcons.imageOff, color: colors.textMuted),
                   ),
                   loadingBuilder: (_, child, progress) {
                     if (progress == null) return child;
                     return Container(
                       color: colors.bgSurface,
-                      child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                      child: const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                     );
                   },
                 ),
@@ -89,7 +98,11 @@ class GalleryTab extends StatelessWidget {
                     color: Colors.black.withValues(alpha: 0.6),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.zoom_in_rounded, color: Colors.white, size: 16),
+                  child: const Icon(
+                    AppIcons.zoomIn,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                 ),
               ),
             ],

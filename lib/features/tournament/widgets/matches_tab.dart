@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.da
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/court_schedule_board.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class MatchesTab extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -135,14 +136,14 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                                   color: colors.textMuted,
                                 ),
                                 prefixIcon: Icon(
-                                  Icons.search_rounded,
+                                  AppIcons.search,
                                   size: 19,
                                   color: colors.textMuted,
                                 ),
                                 suffixIcon: _searchQuery.isNotEmpty
                                     ? IconButton(
                                         icon: const Icon(
-                                          Icons.close_rounded,
+                                          AppIcons.close,
                                           size: 16,
                                         ),
                                         onPressed: () {
@@ -184,8 +185,8 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                               ),
                               child: Icon(
                                 _scheduleView
-                                    ? Icons.view_list_rounded
-                                    : Icons.calendar_view_week_rounded,
+                                    ? AppIcons.list
+                                    : AppIcons.calendar,
                                 size: 19,
                                 color: _scheduleView
                                     ? Colors.white
@@ -242,7 +243,7 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          Icons.sports_rounded,
+                          AppIcons.trophy,
                           size: 48,
                           color: colors.textMuted.withValues(alpha: 0.4),
                         ),
@@ -281,21 +282,18 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
               )
             else
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 6, 16, 100),
+                padding: const EdgeInsets.only(bottom: 100),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final match = matches[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: LiveMatchCardV2(
+                    return LiveMatchCardV2(
                         match: match,
                         isLive: match.isLive,
                         isCompleted:
                             match.isCompleted ||
                             match.status == AppConstants.matchCompleted,
                         onTap: () => _openMatch(match),
-                      ),
-                    );
+                      );
                   }, childCount: matches.length),
                 ),
               ),

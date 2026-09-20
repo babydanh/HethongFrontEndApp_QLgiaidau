@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 enum ClubStandaloneMatchAction { saved, openScoreboard }
@@ -294,7 +295,7 @@ class _ClubStandaloneMatchResultDialogState
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          Icons.add_rounded,
+                                          AppIcons.add,
                                           size: 18,
                                           color: AppTheme.primary,
                                         ),
@@ -339,7 +340,7 @@ class _ClubStandaloneMatchResultDialogState
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          Icons.delete_outline_rounded,
+                                          AppIcons.delete,
                                           size: 17,
                                           color: colors.error,
                                         ),
@@ -410,7 +411,7 @@ class _ClubStandaloneMatchResultDialogState
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.edit_note_rounded,
+              AppIcons.fileText,
               color: AppTheme.primary,
               size: 21,
             ),
@@ -429,7 +430,7 @@ class _ClubStandaloneMatchResultDialogState
           IconButton(
             visualDensity: VisualDensity.compact,
             onPressed: () => Navigator.of(context).pop(),
-            icon: Icon(Icons.close_rounded, color: colors.textMuted, size: 21),
+            icon: Icon(AppIcons.close, color: colors.textMuted, size: 21),
           ),
         ],
       ),
@@ -635,7 +636,8 @@ class _ClubStandaloneMatchResultDialogState
               colors: colors,
               onDecrement: () => _updateScore(index, isSideA: true, delta: -1),
               onIncrement: () => _updateScore(index, isSideA: true, delta: 1),
-              onChanged: (val) => _onScoreChanged(index, isSideA: true, value: val),
+              onChanged: (val) =>
+                  _onScoreChanged(index, isSideA: true, value: val),
             ),
           ),
           Padding(
@@ -658,7 +660,8 @@ class _ClubStandaloneMatchResultDialogState
               colors: colors,
               onDecrement: () => _updateScore(index, isSideA: false, delta: -1),
               onIncrement: () => _updateScore(index, isSideA: false, delta: 1),
-              onChanged: (val) => _onScoreChanged(index, isSideA: false, value: val),
+              onChanged: (val) =>
+                  _onScoreChanged(index, isSideA: false, value: val),
             ),
           ),
         ],
@@ -700,7 +703,7 @@ class _ClubStandaloneMatchResultDialogState
               ),
               alignment: Alignment.center,
               child: Icon(
-                Icons.remove_rounded,
+                AppIcons.remove,
                 size: 16,
                 color: score > 0 && !_isReadOnly
                     ? colors.textPrimary
@@ -753,7 +756,9 @@ class _ClubStandaloneMatchResultDialogState
           ),
           // Nút cộng
           InkWell(
-            onTap: !_isReadOnly && !_isSaving && score < 99 ? onIncrement : null,
+            onTap: !_isReadOnly && !_isSaving && score < 99
+                ? onIncrement
+                : null,
             borderRadius: BorderRadius.circular(6),
             child: Container(
               width: 28,
@@ -763,11 +768,7 @@ class _ClubStandaloneMatchResultDialogState
                 borderRadius: BorderRadius.circular(6),
               ),
               alignment: Alignment.center,
-              child: Icon(
-                Icons.add_rounded,
-                size: 16,
-                color: color,
-              ),
+              child: Icon(AppIcons.add, size: 16, color: color),
             ),
           ),
         ],
@@ -790,7 +791,7 @@ class _ClubStandaloneMatchResultDialogState
                   : () => Navigator.of(
                       context,
                     ).pop(ClubStandaloneMatchAction.openScoreboard),
-              icon: const Icon(Icons.scoreboard_rounded, size: 18),
+              icon: const Icon(AppIcons.trophy, size: 18),
               label: Text(
                 l10n.club_openScoreboard,
                 style: const TextStyle(
@@ -818,7 +819,7 @@ class _ClubStandaloneMatchResultDialogState
                         height: 14,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.save_outlined, size: 16),
+                    : const Icon(AppIcons.save, size: 16),
                 label: Text(
                   _isSaving ? 'Đang lưu...' : 'Lưu kết quả thủ công',
                   style: TextStyle(

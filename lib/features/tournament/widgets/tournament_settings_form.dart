@@ -5,10 +5,10 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/extensions/animation_extensions.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/widgets/form_section.dart';
-import 'package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class TournamentSettingsForm extends ConsumerWidget {
   final String selectedSport;
@@ -72,11 +72,7 @@ class TournamentSettingsForm extends ConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.info_outline,
-                  color: AppTheme.primaryLight,
-                  size: 16,
-                ),
+                Icon(AppIcons.info, color: AppTheme.primaryLight, size: 16),
                 SizedBox(width: 4),
                 Text(
                   l10n.tournamentSettingsDetails,
@@ -106,7 +102,7 @@ class TournamentSettingsForm extends ConsumerWidget {
                   ? l10n.tournamentSettingsTeamsRoundRobinHint
                   : l10n.tournamentSettingsTeamsStandardHint,
               prefixIcon: const Icon(
-                Icons.groups,
+                AppIcons.users,
                 color: AppTheme.secondaryLight,
               ),
             ),
@@ -140,7 +136,7 @@ class TournamentSettingsForm extends ConsumerWidget {
               decoration: InputDecoration(
                 hintText: l10n.tournamentSettingsRoundCountHint,
                 prefixIcon: const Icon(
-                  Icons.repeat,
+                  AppIcons.repeat,
                   color: AppTheme.secondaryLight,
                 ),
               ),
@@ -171,7 +167,6 @@ class TournamentSettingsForm extends ConsumerWidget {
       runSpacing: 10,
       children: categories.map((category) {
         final isSelected = selectedSport == category.slug;
-        final icon = AppConstants.sportIcons[category.slug] ?? '🏆';
         return GestureDetector(
           onTap: () {
             onSportChanged(category.slug);
@@ -212,7 +207,13 @@ class TournamentSettingsForm extends ConsumerWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        SportIconWidget(iconData: icon, size: 18),
+                        AppSportIcon(
+                          sportKey: category.slug,
+                          size: 18,
+                          color: isSelected
+                              ? AppTheme.primary
+                              : context.colors.textSecondary,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           category.name,
@@ -252,8 +253,8 @@ class TournamentSettingsForm extends ConsumerWidget {
             ? l10n.createClubTournament_formatSingles
             : l10n.createClubTournament_formatDoubles;
         final icon = formatKey == AppConstants.formatSingles
-            ? Icons.person
-            : Icons.people;
+            ? AppIcons.user
+            : AppIcons.users;
         return Expanded(
           child: GestureDetector(
             onTap: () {
@@ -490,7 +491,7 @@ class TournamentSettingsForm extends ConsumerWidget {
                           ),
                           child: isSelected
                               ? const Icon(
-                                  Icons.check,
+                                  AppIcons.check,
                                   size: 14,
                                   color: Colors.white,
                                 )

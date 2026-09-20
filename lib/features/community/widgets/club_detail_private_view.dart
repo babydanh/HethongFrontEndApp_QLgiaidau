@@ -1,3 +1,4 @@
+
 part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailPrivateView on _ClubDetailScreenState {
@@ -35,7 +36,7 @@ extension _ClubDetailPrivateView on _ClubDetailScreenState {
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.lock_rounded,
+                        AppIcons.lock,
                         size: 14,
                         color: Color(0xFFD97706),
                       ),

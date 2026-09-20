@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Bottom sheet xác nhận rút lui khỏi giải đấu.
 /// - Giải miễn phí: xác nhận đơn giản, rút luôn.
@@ -80,7 +81,8 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
       // chưa resolve → .asData?.value == null → bỏ sót bank trong profile.
       final profile = await ref.read(userProfileProvider.future);
       if (!mounted) return;
-      final hasBank = (profile.bankName?.isNotEmpty ?? false) &&
+      final hasBank =
+          (profile.bankName?.isNotEmpty ?? false) &&
           (profile.bankAccountNumber?.isNotEmpty ?? false) &&
           (profile.bankAccountName?.isNotEmpty ?? false);
       if (hasBank) {
@@ -143,30 +145,38 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
         }
       }
 
-      await ref.read(tournamentRepositoryProvider).withdraw(
-        tournamentId: widget.tournamentId,
-        divisionId: widget.divisionId,
-        // Chỉ gửi bank khi giải có phí (backend cũng fallback từ profile nếu null)
-        bankName: widget.hasPaid ? bankName : null,
-        bankAccountNumber: widget.hasPaid ? bankAccountNumber : null,
-        bankAccountName: widget.hasPaid ? bankAccountName : null,
-      );
+      await ref
+          .read(tournamentRepositoryProvider)
+          .withdraw(
+            tournamentId: widget.tournamentId,
+            divisionId: widget.divisionId,
+            // Chỉ gửi bank khi giải có phí (backend cũng fallback từ profile nếu null)
+            bankName: widget.hasPaid ? bankName : null,
+            bankAccountNumber: widget.hasPaid ? bankAccountNumber : null,
+            bankAccountName: widget.hasPaid ? bankAccountName : null,
+          );
 
       if (mounted) {
-        Navigator.pop(context, true); // trả về true → caller biết rút lui thành công
+        Navigator.pop(
+          context,
+          true,
+        ); // trả về true → caller biết rút lui thành công
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.hasPaid
-                ? l10n.withdraw_refundSuccess
-                : l10n.withdraw_success),
+            content: Text(
+              widget.hasPaid
+                  ? l10n.withdraw_refundSuccess
+                  : l10n.withdraw_success,
+            ),
             backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.withdraw_error)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.withdraw_error)));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -219,7 +229,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
               ),
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: Icon(Icons.close, color: colors.textSecondary),
+                icon: Icon(AppIcons.close, color: colors.textSecondary),
               ),
             ],
           ),
@@ -229,8 +239,8 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
           Text(
             widget.hasPaid
                 ? (_usingProfileBank
-                    ? l10n.withdraw_refundProfileDescription
-                    : l10n.withdraw_refundInputDescription)
+                      ? l10n.withdraw_refundProfileDescription
+                      : l10n.withdraw_refundInputDescription)
                 : l10n.withdraw_freeDescription,
             style: TextStyle(
               fontSize: 13,
@@ -276,12 +286,12 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                         filled: true,
                         fillColor: colors.bgDark,
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty)
-                              ? l10n.withdraw_bankNameRequired
-                              : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? l10n.withdraw_bankNameRequired
+                          : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -294,12 +304,12 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                         filled: true,
                         fillColor: colors.bgDark,
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      validator: (v) =>
-                          (v == null || v.trim().length < 6)
-                              ? l10n.withdraw_accountNumberInvalid
-                              : null,
+                      validator: (v) => (v == null || v.trim().length < 6)
+                          ? l10n.withdraw_accountNumberInvalid
+                          : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -312,12 +322,12 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                         filled: true,
                         fillColor: colors.bgDark,
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty)
-                              ? l10n.withdraw_accountNameRequired
-                              : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? l10n.withdraw_accountNameRequired
+                          : null,
                     ),
                   ],
                 ),
@@ -336,7 +346,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
             ),
             child: Row(
               children: [
-                Icon(Icons.warning_rounded, size: 20, color: colors.error),
+                Icon(AppIcons.warning, size: 20, color: colors.error),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -360,15 +370,19 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
-                  : const Icon(Icons.exit_to_app_rounded),
-              label:
-                  Text(_submitting ? l10n.withdraw_processing : l10n.withdraw_confirm),
+                  : const Icon(AppIcons.logout),
+              label: Text(
+                _submitting ? l10n.withdraw_processing : l10n.withdraw_confirm,
+              ),
               style: FilledButton.styleFrom(
                 backgroundColor: colors.error,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
           ),
@@ -411,19 +425,24 @@ class _BankInfoCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(children: [
-                Icon(Icons.account_balance_rounded,
-                    size: 16, color: colors.textSecondary),
-                const SizedBox(width: 6),
-                Text(
-                  l10n.withdraw_bankInfoTitle,
-                  style: TextStyle(
-                    fontSize: 12,
+              Row(
+                children: [
+                  Icon(
+                    AppIcons.landmark,
+                    size: 16,
                     color: colors.textSecondary,
-                    fontWeight: FontWeight.w600,
                   ),
-                ),
-              ]),
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.withdraw_bankInfoTitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
               GestureDetector(
                 onTap: onChangePressed,
                 child: Text(
@@ -438,11 +457,23 @@ class _BankInfoCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          _BankRow(label: l10n.withdraw_bankLabel, value: bankName, colors: colors),
+          _BankRow(
+            label: l10n.withdraw_bankLabel,
+            value: bankName,
+            colors: colors,
+          ),
           const SizedBox(height: 4),
-          _BankRow(label: l10n.withdraw_accountNumberShort, value: accountNumber, colors: colors),
+          _BankRow(
+            label: l10n.withdraw_accountNumberShort,
+            value: accountNumber,
+            colors: colors,
+          ),
           const SizedBox(height: 4),
-          _BankRow(label: l10n.withdraw_accountNameShort, value: accountName, colors: colors),
+          _BankRow(
+            label: l10n.withdraw_accountNameShort,
+            value: accountName,
+            colors: colors,
+          ),
         ],
       ),
     );

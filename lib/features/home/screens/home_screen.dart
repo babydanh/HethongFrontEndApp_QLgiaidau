@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
-import 'package:app_quanly_giaidau/core/widgets/club_network_image.dart';
+import 'package:app_quanly_giaidau/core/widgets/club_brand_avatar.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -34,7 +33,7 @@ import 'package:app_quanly_giaidau/features/chat/screens/chat_screen.dart';
 
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -752,7 +751,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         alignment: Alignment.center,
         child: Icon(
-          _isSearchExpanded ? Icons.close_rounded : Icons.search_rounded,
+          _isSearchExpanded ? AppIcons.close : AppIcons.search,
           size: 21,
           color: _isSearchExpanded
               ? AppTheme.primary
@@ -765,8 +764,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildSportFilterBadge(AppLocalizations l10n, bool isDark) {
     final activeSport = _activeSportFilter;
     final currentVisual = activeSport == 'all'
-        ? '🏆'
-        : (AppConstants.sportIcons[activeSport] ?? '🏅');
+        ? AppIcons.trophy
+        : AppIcons.forSport(activeSport);
 
     return PopupMenuButton<String>(
       onSelected: _setActiveSportFilter,
@@ -785,16 +784,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         height: 34.0,
         color: Colors.transparent,
         alignment: Alignment.center,
-        child: currentVisual.startsWith('assets/')
-            ? Image.asset(
-                currentVisual,
-                width: 22,
-                height: 22,
-                fit: BoxFit.contain,
-                errorBuilder: (_, _, _) =>
-                    const Text('🏅', style: TextStyle(fontSize: 18)),
-              )
-            : Text(currentVisual, style: const TextStyle(fontSize: 20)),
+        child: Icon(
+          currentVisual,
+          size: 21,
+          color: isDark ? Colors.white : context.colors.textPrimary,
+        ),
       ),
     );
   }
@@ -832,7 +826,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.account_circle_outlined,
+                        AppIcons.userRound,
                         color: AppTheme.primary,
                         size: 36,
                       ),
@@ -912,8 +906,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 final user = ref.watch(userProfileProvider).value;
                 final fullName = user?.fullName?.trim() ?? '';
                 final displayName = fullName.isNotEmpty ? fullName : 'bạn';
-                final avatarUrl = user?.avatarUrl?.trim() ?? '';
-
                 final hour = DateTime.now().hour;
                 final greetingTime = hour < 12
                     ? 'Chào buổi sáng'
@@ -924,69 +916,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     horizontal: 16.0,
                     vertical: 4.0,
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppTheme.primary.withValues(alpha: 0.35),
-                            width: 1.5,
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '$greetingTime, ',
+                          style: TextStyle(
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w500,
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B),
                           ),
-                          color: AppTheme.primary.withValues(alpha: 0.08),
                         ),
-                        clipBehavior: Clip.antiAlias,
-                        child: avatarUrl.isNotEmpty
-                            ? Image.network(
-                                avatarUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) => const Icon(
-                                  Icons.person_rounded,
-                                  color: AppTheme.primary,
-                                  size: 22,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.person_rounded,
-                                color: AppTheme.primary,
-                                size: 22,
-                              ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '$greetingTime 👋',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: isDark
-                                    ? const Color(0xFF94A3B8)
-                                    : const Color(0xFF64748B),
-                              ),
-                            ),
-                            const SizedBox(height: 1),
-                            Text(
-                              displayName,
-                              style: TextStyle(
-                                fontSize: 16.5,
-                                fontWeight: FontWeight.w800,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF0F172A),
-                                letterSpacing: -0.3,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+                        TextSpan(
+                          text: displayName,
+                          style: TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0F172A),
+                            letterSpacing: -0.3,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 );
               },
@@ -1037,7 +994,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
-                                    Icons.group_add_rounded,
+                                    AppIcons.userAdd,
                                     color: AppTheme.primary,
                                     size: 18,
                                   ),
@@ -1067,7 +1024,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ),
                                 ),
                                 const Icon(
-                                  Icons.arrow_forward_ios_rounded,
+                                  AppIcons.chevronRight,
                                   size: 13,
                                   color: AppTheme.primary,
                                 ),
@@ -1081,37 +1038,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Câu lạc bộ của bạn',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                  color: isDark
-                                      ? Colors.white
-                                      : const Color(0xFF0F172A),
-                                  letterSpacing: -0.2,
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () => _switchTab(3),
-                                child: const Text(
-                                  'Xem tất cả',
-                                  style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppTheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 10),
                         SizedBox(
                           height: 96,
                           child: ListView.separated(
@@ -1144,7 +1070,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                                 : Colors.grey.shade100,
                                           ),
                                           child: const Icon(
-                                            Icons.add_rounded,
+                                            AppIcons.add,
                                             color: AppTheme.primary,
                                             size: 24,
                                           ),
@@ -1182,12 +1108,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ? 'Chủ'
                                   : (isAdmin ? 'Quản trị' : null);
 
-                              final logo = _resolveClubLogoUrl(club.logoUrl);
-                              final banner = _resolveClubBannerUrl(club.bannerUrl);
-                              final visualUrl = logo.isNotEmpty ? logo : banner;
                               // Carousel vẫn giữ item khi thiếu logo; banner được phóng đầy khung
                               // để logo trong banner không bị thu nhỏ thành một chấm nhỏ.
-                              final visualFit = BoxFit.cover;
 
                               return GestureDetector(
                                 onTap: () {
@@ -1201,94 +1123,76 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       SizedBox(
                                         width: 56,
                                         height: 56,
-                                        child: visualUrl.isNotEmpty
-                                            ? Stack(
-                                                clipBehavior: Clip.none,
-                                                children: [
-                                                  Container(
-                                                    decoration: BoxDecoration(
-                                                      shape: BoxShape.circle,
+                                        child: Stack(
+                                          clipBehavior: Clip.none,
+                                          children: [
+                                            ClubBrandAvatar(
+                                              logoUrl: club.logoUrl,
+                                              bannerUrl: club.bannerUrl,
+                                              size: 56,
+                                              bannerFit: BoxFit.cover,
+                                              backgroundColor: isDark
+                                                  ? const Color(0xFF1E293B)
+                                                  : Colors.white,
+                                              borderColor: isOwner
+                                                  ? const Color(0xFFF59E0B)
+                                                  : AppTheme.primary,
+                                              borderWidth: 2,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withValues(
+                                                        alpha: isDark
+                                                            ? 0.3
+                                                            : 0.08,
+                                                      ),
+                                                  blurRadius: 6,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            if (roleBadgeText != null)
+                                              Positioned(
+                                                bottom: -2,
+                                                right: -2,
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 5,
+                                                        vertical: 1.5,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: isOwner
+                                                        ? const Color(
+                                                            0xFFF59E0B,
+                                                          )
+                                                        : AppTheme.primary,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          6,
+                                                        ),
+                                                    border: Border.all(
                                                       color: isDark
                                                           ? const Color(
-                                                              0xFF1E293B,
+                                                              0xFF0F172A,
                                                             )
                                                           : Colors.white,
-                                                      border: Border.all(
-                                                        color: isOwner
-                                                            ? const Color(
-                                                                0xFFF59E0B,
-                                                              )
-                                                            : AppTheme.primary,
-                                                        width: 2,
-                                                      ),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: Colors.black
-                                                              .withValues(
-                                                                alpha: isDark
-                                                                    ? 0.3
-                                                                    : 0.08,
-                                                              ),
-                                                          blurRadius: 6,
-                                                          offset: const Offset(
-                                                            0,
-                                                            2,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    clipBehavior:
-                                                        Clip.antiAlias,
-                                                    child: ClubNetworkImage(
-                                                      visualUrl,
-                                                      fit: visualFit,
-                                                      errorBuilder: (_, _, _) =>
-                                                          _buildClubFallbackAvatar(),
+                                                      width: 1.2,
                                                     ),
                                                   ),
-                                                  if (roleBadgeText != null)
-                                                    Positioned(
-                                                      bottom: -2,
-                                                      right: -2,
-                                                      child: Container(
-                                                        padding:
-                                                            const EdgeInsets.symmetric(
-                                                              horizontal: 5,
-                                                              vertical: 1.5,
-                                                            ),
-                                                        decoration: BoxDecoration(
-                                                          color: isOwner
-                                                              ? const Color(
-                                                                  0xFFF59E0B,
-                                                                )
-                                                              : AppTheme.primary,
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                6,
-                                                              ),
-                                                          border: Border.all(
-                                                            color: isDark
-                                                                ? const Color(
-                                                                    0xFF0F172A,
-                                                                  )
-                                                                : Colors.white,
-                                                            width: 1.2,
-                                                          ),
-                                                        ),
-                                                        child: Text(
-                                                          roleBadgeText,
-                                                          style: const TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 8.5,
-                                                            fontWeight:
-                                                                FontWeight.w900,
-                                                          ),
-                                                        ),
-                                                      ),
+                                                  child: Text(
+                                                    roleBadgeText,
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 8.5,
+                                                      fontWeight:
+                                                          FontWeight.w900,
                                                     ),
-                                                ],
-                                              )
-                                            : _buildClubFallbackAvatar(),
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
@@ -1341,10 +1245,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   TextButton.icon(
                     onPressed: () => context.push('/tournaments/create'),
-                    icon: const Icon(
-                      Icons.add_circle_outline_rounded,
-                      size: 16,
-                    ),
+                    icon: const Icon(AppIcons.add, size: 16),
                     label: const Text(
                       'Tạo giải',
                       style: TextStyle(
@@ -1399,7 +1300,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Column(
                         children: [
                           Icon(
-                            Icons.sports_score_rounded,
+                            AppIcons.trophy,
                             size: 44,
                             color: isDark
                                 ? Colors.white38
@@ -1479,7 +1380,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                               alignment: Alignment.center,
                               child: const Icon(
-                                Icons.emoji_events_rounded,
+                                AppIcons.trophy,
                                 color: AppTheme.primary,
                                 size: 20,
                               ),
@@ -1733,9 +1634,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   SliverToBoxAdapter(
                     child: SizedBox(height: _pinnedHeaderHeight),
                   ),
-                  SliverFillRemaining(
-                    child: _buildHomeShimmerLoading(),
-                  ),
+                  SliverFillRemaining(child: _buildHomeShimmerLoading()),
                 ],
               ),
               error: (e, st) => CustomScrollView(
@@ -1757,24 +1656,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildHomeShimmerLoading() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
-    final highlightColor =
-        isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+    final baseColor = isDark
+        ? const Color(0xFF1E293B)
+        : const Color(0xFFE2E8F0);
+    final highlightColor = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFF1F5F9);
 
     return SingleChildScrollView(
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
         children: [
-          const SizedBox(height: 8),
-          const Center(
-            child: SportoLoadingWidget(
-              size: 100,
-              variant: SportoLoadingVariant.pickleballWave5,
-              message: 'Đang tải dữ liệu giải đấu...',
-            ),
-          ),
-          const SizedBox(height: 16),
           Shimmer.fromColors(
             baseColor: baseColor,
             highlightColor: highlightColor,
@@ -1841,7 +1734,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
-            Icon(Icons.notifications_none_rounded, color: iconColor, size: 21),
+            Icon(AppIcons.bell, color: iconColor, size: 21),
             if (unread > 0)
               Positioned(
                 top: -1.0,
@@ -1880,25 +1773,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final activeSport = _activeSportFilter;
     final isSelected =
         activeSport == key || (key == '' && activeSport == 'all');
-    final iconVisual = key == 'all'
-        ? '🏆'
-        : (AppConstants.sportIcons[key] ?? '🏅');
+    final iconVisual = key == 'all' ? AppIcons.trophy : AppIcons.forSport(key);
 
     return PopupMenuItem<String>(
       value: key,
       child: Row(
         children: [
-          if (iconVisual.startsWith('assets/'))
-            Image.asset(
-              iconVisual,
-              width: 18,
-              height: 18,
-              fit: BoxFit.contain,
-              errorBuilder: (_, _, _) =>
-                  const Text('🏅', style: TextStyle(fontSize: 15)),
-            )
-          else
-            Text(iconVisual, style: const TextStyle(fontSize: 15)),
+          Icon(
+            iconVisual,
+            size: 17,
+            color: isSelected ? AppTheme.primary : context.colors.textSecondary,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -1915,7 +1800,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           if (isSelected) ...[
             const SizedBox(width: 6),
-            const Icon(Icons.check_rounded, color: AppTheme.primary, size: 16),
+            const Icon(AppIcons.check, color: AppTheme.primary, size: 16),
           ],
         ],
       ),
@@ -1950,11 +1835,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               color: AppTheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.person_outline_rounded,
-              color: AppTheme.primary,
-              size: 22,
-            ),
+            child: const Icon(AppIcons.user, color: AppTheme.primary, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -2113,7 +1994,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
           alignment: Alignment.center,
-          child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
+          child: const Icon(AppIcons.add, color: Colors.white, size: 22),
         ),
       ),
     );
@@ -2511,7 +2392,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                         icon: Icon(
-                          Icons.arrow_drop_down_rounded,
+                          AppIcons.chevronDown,
                           color: context.colors.textMuted,
                         ),
                         dropdownColor: context.colors.bgCard,
@@ -2586,7 +2467,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                             ),
                             icon: Icon(
-                              Icons.arrow_drop_down_rounded,
+                              AppIcons.chevronDown,
                               color: context.colors.textMuted,
                             ),
                             dropdownColor: context.colors.bgCard,
@@ -2644,10 +2525,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               setSheetState(() => localStartDate = picked);
                             }
                           },
-                          icon: const Icon(
-                            Icons.calendar_today_rounded,
-                            size: 16,
-                          ),
+                          icon: const Icon(AppIcons.calendar, size: 16),
                           label: Text(
                             localStartDate == null
                                 ? l10n.homeFromDate
@@ -2674,10 +2552,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               setSheetState(() => localEndDate = picked);
                             }
                           },
-                          icon: const Icon(
-                            Icons.event_available_rounded,
-                            size: 16,
-                          ),
+                          icon: const Icon(AppIcons.calendarCheck, size: 16),
                           label: Text(
                             localEndDate == null
                                 ? l10n.homeToDate
@@ -2839,7 +2714,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                       icon: Icon(
-                        Icons.arrow_drop_down_rounded,
+                        AppIcons.chevronDown,
                         color: context.colors.textMuted,
                       ),
                       dropdownColor: context.colors.bgCard,
@@ -2953,7 +2828,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.location_on_outlined,
+              AppIcons.mapPin,
               size: 18,
               color: hasFilter ? AppTheme.primary : colors.textSecondary,
             ),
@@ -2974,11 +2849,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     _rankingsProvince = null;
                   });
                 },
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 16,
-                  color: colors.textMuted,
-                ),
+                child: Icon(AppIcons.close, size: 16, color: colors.textMuted),
               ),
             ],
           ],
@@ -3128,7 +2999,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   const SizedBox(width: 2),
                   const Icon(
-                    Icons.arrow_forward_ios_rounded,
+                    AppIcons.chevronRight,
                     size: 12.0,
                     color: AppTheme.primary,
                   ),
@@ -3216,11 +3087,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 separatorBuilder: (_, _) => const SizedBox(width: 14),
                 itemBuilder: (context, index) {
                   final club = displayList[index];
-                  final logoUrl = _resolveClubLogoUrl(club.logoUrl);
-                  final bannerUrl = _resolveClubBannerUrl(club.bannerUrl);
-                  final visualUrl = logoUrl.isNotEmpty ? logoUrl : bannerUrl;
                   // Banner fallback phải lấp đầy avatar carousel để logo dễ nhận diện.
-                  final visualFit = BoxFit.cover;
 
                   return GestureDetector(
                     onTap: () {
@@ -3232,43 +3099,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          SizedBox(
-                            width: 62,
-                            height: 62,
-                            child: visualUrl.isNotEmpty
-                                ? Container(
-                                    clipBehavior: Clip.antiAlias,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: isDark
-                                          ? const Color(0xFF1E293B)
-                                          : Colors.white,
-                                      border: Border.all(
-                                        color: context.colors.border.withValues(
-                                          alpha: 0.7,
-                                        ),
-                                        width: 1,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: isDark
-                                              ? Colors.black26
-                                              : Colors.black.withValues(
-                                                  alpha: 0.08,
-                                                ),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 3),
-                                        ),
-                                      ],
-                                    ),
-                                    child: ClubNetworkImage(
-                                      visualUrl,
-                                      fit: visualFit,
-                                      errorBuilder: (_, _, _) =>
-                                          _buildClubFallbackAvatar(),
-                                    ),
-                                  )
-                                : _buildClubFallbackAvatar(),
+                          ClubBrandAvatar(
+                            logoUrl: club.logoUrl,
+                            bannerUrl: club.bannerUrl,
+                            size: 62,
+                            bannerFit: BoxFit.cover,
+                            backgroundColor: isDark
+                                ? const Color(0xFF1E293B)
+                                : Colors.white,
+                            borderColor: context.colors.border.withValues(
+                              alpha: 0.7,
+                            ),
+                            borderWidth: 1,
+                            boxShadow: [
+                              BoxShadow(
+                                color: isDark
+                                    ? Colors.black26
+                                    : Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 6),
                           Text(
@@ -3346,7 +3197,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               borderRadius: BorderRadius.circular(20.0),
             ),
             child: const Icon(
-              Icons.search_off_rounded,
+              AppIcons.searchOff,
               size: 36,
               color: Color(0xFFB0BEC5),
             ),
@@ -3428,7 +3279,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.search_off,
+                      AppIcons.searchOff,
                       size: 48.0,
                       color: context.colors.textMuted,
                     ),
@@ -3512,7 +3363,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.expand_more_rounded, size: 20),
+                            const Icon(AppIcons.chevronDown, size: 20),
                             const SizedBox(width: 6),
                             Text(
                               loadMoreLabel,
@@ -3627,7 +3478,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           borderRadius: BorderRadius.circular(20.0),
                         ),
                         child: const Icon(
-                          Icons.group_off_rounded,
+                          AppIcons.users,
                           size: 36,
                           color: Color(0xFFB0BEC5),
                         ),
@@ -3698,11 +3549,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         separatorBuilder: (_, _) => const SizedBox(width: 14.0),
         itemBuilder: (context, index) {
           final club = displayClubs[index];
-          final logoUrl = _resolveClubLogoUrl(club.logoUrl);
-          final bannerUrl = _resolveClubBannerUrl(club.bannerUrl);
-          final visualUrl = logoUrl.isNotEmpty ? logoUrl : bannerUrl;
           // Banner fallback phải lấp đầy avatar carousel để logo dễ nhận diện.
-          final visualFit = BoxFit.cover;
 
           return GestureDetector(
             onTap: () => context.push("/club/${club.id}"),
@@ -3712,37 +3559,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SizedBox(
-                    width: 62.0,
-                    height: 62.0,
-                    child: visualUrl.isNotEmpty
-                        ? Container(
-                            clipBehavior: Clip.antiAlias,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: context.colors.bgSurface,
-                              border: Border.all(
-                                color: context.colors.border.withValues(
-                                  alpha: 0.7,
-                                ),
-                                width: 1.0,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: ClubNetworkImage(
-                              visualUrl,
-                              fit: visualFit,
-                              errorBuilder: (_, _, _) =>
-                                  _buildClubFallbackAvatar(),
-                            ),
-                          )
-                        : _buildClubFallbackAvatar(),
+                  ClubBrandAvatar(
+                    logoUrl: club.logoUrl,
+                    bannerUrl: club.bannerUrl,
+                    size: 62,
+                    bannerFit: BoxFit.cover,
+                    backgroundColor: context.colors.bgSurface,
+                    borderColor: context.colors.border.withValues(alpha: 0.7),
+                    borderWidth: 1,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 6.0),
                   Text(
@@ -3766,59 +3597,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  String _resolveClubLogoUrl(String? url) {
-    final value = url?.trim().split(',').first.trim() ?? '';
-    final normalized = value.toLowerCase();
-    if (value.isEmpty ||
-        normalized.contains('sporto_v1') ||
-        normalized.contains('defaultfallback')) {
-      return '';
-    }
-    return _resolveClubImageUrl(value);
-  }
-
-  String _resolveClubBannerUrl(String? url) {
-    final value = url?.trim().split(',').first.trim() ?? '';
-    if (value.isEmpty) return '';
-    return _resolveClubImageUrl(value);
-  }
-
-  Widget _buildClubFallbackAvatar() {
-    return Image.asset(
-      AppConstants.appIconPng,
-      fit: BoxFit.contain,
-    );
-  }
-
-  String _resolveClubImageUrl(String? url) {
-    final value = url?.trim() ?? '';
-    if (value.isEmpty || value.startsWith('data:')) {
-      return '';
-    }
-    if (value.startsWith('http://') || value.startsWith('https://')) {
-      if (Platform.isAndroid && value.contains('localhost')) {
-        return value.replaceFirst('localhost', '10.0.2.2');
-      }
-      if (Platform.isAndroid && value.contains('127.0.0.1')) {
-        return value.replaceFirst('127.0.0.1', '10.0.2.2');
-      }
-      return value;
-    }
-
-    var apiBase = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
-    if (Platform.isAndroid && apiBase.contains('localhost')) {
-      apiBase = apiBase.replaceAll('localhost', '10.0.2.2');
-    }
-    final host = apiBase.replaceFirst(RegExp(r'/api/v1/?$'), '');
-    return '${host.replaceFirst(RegExp(r'/$'), '')}/${value.replaceFirst(RegExp(r'^/'), '')}';
-  }
-
   Widget _buildClubItem(Community club) {
-    final logoUrl = _resolveClubLogoUrl(club.logoUrl);
-    final bannerUrl = _resolveClubBannerUrl(club.bannerUrl);
-    final visualUrl = logoUrl.isNotEmpty ? logoUrl : bannerUrl;
-    final visualFit = logoUrl.isNotEmpty ? BoxFit.cover : BoxFit.contain;
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -3827,25 +3606,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           child: Row(
             children: [
-              Container(
-                width: 44.0,
-                height: 44.0,
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: context.colors.bgSurface,
-                  border: Border.all(
-                    color: context.colors.border.withValues(alpha: 0.6),
-                    width: 0.8,
-                  ),
-                ),
-                child: visualUrl.isNotEmpty
-                    ? ClubNetworkImage(
-                        visualUrl,
-                        fit: visualFit,
-                        errorBuilder: (_, _, _) => _buildClubFallbackAvatar(),
-                      )
-                    : _buildClubFallbackAvatar(),
+              ClubBrandAvatar(
+                logoUrl: club.logoUrl,
+                bannerUrl: club.bannerUrl,
+                size: 44,
+                bannerFit: BoxFit.cover,
+                backgroundColor: context.colors.bgSurface,
+                borderColor: context.colors.border.withValues(alpha: 0.6),
+                borderWidth: 0.8,
               ),
               const SizedBox(width: 14.0),
               Expanded(
@@ -3892,7 +3660,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(
-                                  Icons.shield_rounded,
+                                  AppIcons.shield,
                                   size: 11,
                                   color: AppTheme.primary,
                                 ),
@@ -3935,11 +3703,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.cloud_off_rounded,
-              size: 48,
-              color: Color(0xFFB0BEC5),
-            ),
+            const Icon(AppIcons.imageOff, size: 48, color: Color(0xFFB0BEC5)),
             const SizedBox(height: 16),
             Text(
               l10n.homeDataLoadError,

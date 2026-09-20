@@ -69,7 +69,8 @@ dependencies:
   socket_io_client: ^3.1.6
   url_launcher: ^6.3.2
   fl_chart: ^0.69.2
-  phosphor_flutter: ^2.1.0
+  # One shared icon source for the app. Keep icon shapes aligned with the web Lucide system.
+  lucide_icons_flutter: ^3.1.15
   shadcn_ui: ^0.53.6
 
   # Firebase & Push Notifications

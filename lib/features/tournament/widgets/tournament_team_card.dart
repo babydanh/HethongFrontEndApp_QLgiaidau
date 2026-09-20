@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentTeamCard extends StatefulWidget {
@@ -111,9 +112,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                   // initials only when the profile has no image.
                   CircleAvatar(
                     radius: 18,
-                    backgroundColor: AppTheme.primary.withValues(
-                      alpha: 0.12,
-                    ),
+                    backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
                     child: singleInfo?.avatarUrl?.isNotEmpty == true
                         ? ClipOval(
                             child: Image.network(
@@ -121,15 +120,15 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                               fit: BoxFit.cover,
                               width: 36,
                               height: 36,
-                              errorBuilder:
-                                  (context, error, stackTrace) => Text(
-                                _getInitials(team.name),
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.primary,
-                                ),
-                              ),
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Text(
+                                    _getInitials(team.name),
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.primary,
+                                    ),
+                                  ),
                             ),
                           )
                         : Text(
@@ -209,24 +208,34 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                             ],
                             const SizedBox(width: 6),
                             Tooltip(
-                              message: team.isPaid ? 'Đã đóng phí' : 'Chờ thanh toán',
+                              message: team.isPaid
+                                  ? 'Đã đóng phí'
+                                  : 'Chờ thanh toán',
                               child: Container(
                                 padding: const EdgeInsets.all(3),
                                 decoration: BoxDecoration(
                                   color: team.isPaid
-                                      ? const Color(0xFF059669).withValues(alpha: 0.12)
-                                      : const Color(0xFFD97706).withValues(alpha: 0.12),
+                                      ? const Color(
+                                          0xFF059669,
+                                        ).withValues(alpha: 0.12)
+                                      : const Color(
+                                          0xFFD97706,
+                                        ).withValues(alpha: 0.12),
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: team.isPaid
-                                        ? const Color(0xFF059669).withValues(alpha: 0.4)
-                                        : const Color(0xFFD97706).withValues(alpha: 0.4),
+                                        ? const Color(
+                                            0xFF059669,
+                                          ).withValues(alpha: 0.4)
+                                        : const Color(
+                                            0xFFD97706,
+                                          ).withValues(alpha: 0.4),
                                   ),
                                 ),
                                 child: Icon(
                                   team.isPaid
-                                      ? Icons.check_circle_rounded
-                                      : Icons.access_time_rounded,
+                                      ? AppIcons.checkCircle
+                                      : AppIcons.clock,
                                   size: 13,
                                   color: team.isPaid
                                       ? const Color(0xFF059669)
@@ -242,7 +251,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
 
                   // Chevron right profile indicator
                   Icon(
-                    Icons.chevron_right_rounded,
+                    AppIcons.chevronRight,
                     color: colors.textMuted,
                     size: 20,
                   ),
@@ -335,24 +344,34 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                               ],
                               const SizedBox(width: 6),
                               Tooltip(
-                                message: team.isPaid ? 'Đã đóng phí' : 'Chờ thanh toán',
+                                message: team.isPaid
+                                    ? 'Đã đóng phí'
+                                    : 'Chờ thanh toán',
                                 child: Container(
                                   padding: const EdgeInsets.all(3),
                                   decoration: BoxDecoration(
                                     color: team.isPaid
-                                        ? const Color(0xFF059669).withValues(alpha: 0.12)
-                                        : const Color(0xFFD97706).withValues(alpha: 0.12),
+                                        ? const Color(
+                                            0xFF059669,
+                                          ).withValues(alpha: 0.12)
+                                        : const Color(
+                                            0xFFD97706,
+                                          ).withValues(alpha: 0.12),
                                     shape: BoxShape.circle,
                                     border: Border.all(
                                       color: team.isPaid
-                                          ? const Color(0xFF059669).withValues(alpha: 0.4)
-                                          : const Color(0xFFD97706).withValues(alpha: 0.4),
+                                          ? const Color(
+                                              0xFF059669,
+                                            ).withValues(alpha: 0.4)
+                                          : const Color(
+                                              0xFFD97706,
+                                            ).withValues(alpha: 0.4),
                                     ),
                                   ),
                                   child: Icon(
                                     team.isPaid
-                                        ? Icons.check_circle_rounded
-                                        : Icons.access_time_rounded,
+                                        ? AppIcons.checkCircle
+                                        : AppIcons.clock,
                                     size: 13,
                                     color: team.isPaid
                                         ? const Color(0xFF059669)
@@ -387,9 +406,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        _isExpanded
-                            ? Icons.keyboard_arrow_up_rounded
-                            : Icons.keyboard_arrow_down_rounded,
+                        _isExpanded ? AppIcons.chevronUp : AppIcons.chevronDown,
                         color: colors.textMuted,
                         size: 20,
                       ),
@@ -594,7 +611,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
 
                               // Profile chevron arrow
                               Icon(
-                                Icons.chevron_right_rounded,
+                                AppIcons.chevronRight,
                                 size: 16,
                                 color: colors.textMuted,
                               ),

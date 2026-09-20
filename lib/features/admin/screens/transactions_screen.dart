@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Admin — Lịch sử giao dịch (Transactions)
@@ -37,7 +38,7 @@ class _AdminTransactionsScreenState
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -132,7 +133,7 @@ class _AdminTransactionsScreenState
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.receipt_long_rounded,
+                  AppIcons.receipt,
                   size: 64,
                   color: colors.textMuted.withValues(alpha: 0.4),
                 ),
@@ -163,7 +164,7 @@ class _AdminTransactionsScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+            Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
             Text(
               l10n!.adminTransactionsLoadError,
@@ -214,22 +215,22 @@ class _AdminTransactionsScreenState
       case 'COMPLETED':
         statusColor = const Color(0xFF10B981);
         statusLabel = l10n!.adminTransactionsStatusCompleted;
-        statusIcon = Icons.check_circle_rounded;
+        statusIcon = AppIcons.checkCircle;
         break;
       case 'PENDING':
         statusColor = const Color(0xFFF59E0B);
         statusLabel = l10n!.adminTransactionsStatusPending;
-        statusIcon = Icons.access_time_rounded;
+        statusIcon = AppIcons.clock;
         break;
       case 'FAILED':
         statusColor = const Color(0xFFEF4444);
         statusLabel = l10n!.adminTransactionsStatusFailed;
-        statusIcon = Icons.cancel_rounded;
+        statusIcon = AppIcons.cancel;
         break;
       default:
         statusColor = colors.textMuted;
         statusLabel = status;
-        statusIcon = Icons.help_outline_rounded;
+        statusIcon = AppIcons.help;
     }
 
     return Container(

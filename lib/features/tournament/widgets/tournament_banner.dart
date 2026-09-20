@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
 import 'package:app_quanly_giaidau/shared/widgets/app_image_viewer.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
 
 class TournamentHeaderView extends StatefulWidget {
@@ -264,16 +265,14 @@ class _HeaderBadges extends StatelessWidget {
         StatusBadge(statusKey: tournament.status),
         _HeaderTag(
           tournament.isRanked ? l10n.rankedELO : l10n.unranked,
-          icon: tournament.isRanked
-              ? Icons.stars_rounded
-              : Icons.sports_score_rounded,
+          icon: tournament.isRanked ? AppIcons.sparkles : AppIcons.trophy,
           iconColor: tournament.isRanked
               ? const Color(0xFFF59E0B)
               : const Color(0xFF10B981),
         ),
         _HeaderTag(
           bracketLabel.toUpperCase(),
-          icon: Icons.loop_rounded,
+          icon: AppIcons.repeat,
           iconColor: const Color(0xFFD97706),
         ),
       ],
@@ -359,7 +358,7 @@ class _HeaderMeta extends StatelessWidget {
                 isDense: true,
                 isExpanded: true,
                 icon: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
+                  AppIcons.chevronDown,
                   color: AppTheme.primary,
                   size: 20,
                 ),
@@ -404,11 +403,7 @@ class _HeaderMeta extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(
-                  Icons.groups_rounded,
-                  size: 16,
-                  color: AppTheme.primary,
-                ),
+                const Icon(AppIcons.users, size: 16, color: AppTheme.primary),
                 const SizedBox(width: 7),
                 Expanded(
                   child: Text(
@@ -435,7 +430,7 @@ class _HeaderMeta extends StatelessWidget {
           runSpacing: 6,
           children: [
             _HeaderIconText(
-              icon: Icons.calendar_today_rounded,
+              icon: AppIcons.calendar,
               text: _formatDateRange(
                 tournament.registrationStartDate,
                 tournament.registrationEndDate,
@@ -443,7 +438,7 @@ class _HeaderMeta extends StatelessWidget {
               ),
             ),
             _HeaderIconText(
-              icon: Icons.location_on_outlined,
+              icon: AppIcons.mapPin,
               text: locationLabel.isNotEmpty
                   ? locationLabel
                   : l10n.locationNotUpdated,
@@ -455,7 +450,7 @@ class _HeaderMeta extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(Icons.view_list_rounded, size: 16, color: colors.textMuted),
+              Icon(AppIcons.list, size: 16, color: colors.textMuted),
               const SizedBox(width: 7),
               Expanded(child: divisionSelector),
             ],
@@ -726,8 +721,8 @@ class _TournamentBannerState extends State<TournamentBanner> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                  width: 56,
-                  height: 56,
+                    width: 56,
+                    height: 56,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
@@ -737,9 +732,13 @@ class _TournamentBannerState extends State<TournamentBanner> {
                       borderRadius: BorderRadius.circular(11),
                       child: Builder(
                         builder: (context) {
-                          final logoUrl = widget.tournament.logoUrl?.trim() ?? '';
-                          final bannerUrl = widget.tournament.bannerUrl?.trim() ?? '';
-                          final identityUrl = logoUrl.isNotEmpty ? logoUrl : bannerUrl;
+                          final logoUrl =
+                              widget.tournament.logoUrl?.trim() ?? '';
+                          final bannerUrl =
+                              widget.tournament.bannerUrl?.trim() ?? '';
+                          final identityUrl = logoUrl.isNotEmpty
+                              ? logoUrl
+                              : bannerUrl;
                           final isLogo = logoUrl.isNotEmpty;
                           final fallback = const SportoBrandFallback(
                             withTagline: true,
@@ -747,7 +746,8 @@ class _TournamentBannerState extends State<TournamentBanner> {
                             padding: EdgeInsets.all(8),
                           );
                           if (identityUrl.isEmpty) return fallback;
-                          final resolvedIdentityUrl = identityUrl.startsWith('http')
+                          final resolvedIdentityUrl =
+                              identityUrl.startsWith('http')
                               ? identityUrl
                               : 'https://sporto.asia$identityUrl';
                           return Image.network(
@@ -755,13 +755,15 @@ class _TournamentBannerState extends State<TournamentBanner> {
                             fit: isLogo ? BoxFit.cover : BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
                               if (isLogo && bannerUrl.isNotEmpty) {
-                                final resolvedBannerUrl = bannerUrl.startsWith('http')
+                                final resolvedBannerUrl =
+                                    bannerUrl.startsWith('http')
                                     ? bannerUrl
                                     : 'https://sporto.asia$bannerUrl';
                                 return Image.network(
                                   resolvedBannerUrl,
                                   fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) => fallback,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      fallback,
                                 );
                               }
                               return fallback;
@@ -804,7 +806,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                             _buildTag(
                               l10n.roundRobinTag,
                               colors,
-                              icon: Icons.loop_rounded,
+                              icon: AppIcons.repeat,
                               iconColor: const Color(0xFFD97706),
                             ),
                             const SizedBox(width: 6),
@@ -838,7 +840,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                                       : l10n.advancedTournament,
                                 );
                               },
-                              icon: const Icon(Icons.share, size: 12),
+                              icon: const Icon(AppIcons.share, size: 12),
                               label: Text(
                                 l10n.share,
                                 style: TextStyle(fontSize: 10),
@@ -852,7 +854,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                           runSpacing: 6,
                           children: [
                             _iconText(
-                              Icons.calendar_today_rounded,
+                              AppIcons.calendar,
                               _formatDateRange(
                                 widget.tournament.registrationStartDate,
                                 widget.tournament.registrationEndDate,
@@ -861,14 +863,14 @@ class _TournamentBannerState extends State<TournamentBanner> {
                               colors,
                             ),
                             _iconText(
-                              Icons.location_on_outlined,
+                              AppIcons.mapPin,
                               _locationLabel(widget.tournament),
                               colors,
                               maxTextWidth: 280,
                               maxLines: 5,
                             ),
                             _iconText(
-                              Icons.group_rounded,
+                              AppIcons.users,
                               "0 / 16 ${l10n.teamsUnit}",
                               colors,
                             ),

@@ -23,6 +23,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 String _localizedSessionStatus(AppLocalizations l10n, String status) =>
     switch (status) {
@@ -118,7 +119,7 @@ class _ClubMatchSessionsScreenState
       appBar: AppBar(title: Text(l10n.clubMatchSessionTitle)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showCreateDialog,
-        icon: const Icon(Icons.add_rounded),
+        icon: const Icon(AppIcons.add),
         label: Text(l10n.clubMatchSessionCreate),
       ),
       body: sessions.when(
@@ -140,7 +141,7 @@ class _ClubMatchSessionsScreenState
                   children: [
                     const SizedBox(height: 160),
                     Icon(
-                      Icons.sports_tennis_rounded,
+                      AppIcons.sportTennis,
                       size: 52,
                       color: Theme.of(context).colorScheme.outline,
                     ),
@@ -226,7 +227,7 @@ class _ClubMatchSessionsScreenState
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Icon(
-                                    Icons.sports_tennis_rounded,
+                                    AppIcons.sportTennis,
                                     color: Color(0xFF2563EB),
                                     size: 24,
                                   ),
@@ -266,7 +267,7 @@ class _ClubMatchSessionsScreenState
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 Icon(
-                                                  Icons.insights_rounded,
+                                                  AppIcons.chart,
                                                   size: 13,
                                                   color: session.isRanked
                                                       ? const Color(0xFF2563EB)
@@ -293,7 +294,7 @@ class _ClubMatchSessionsScreenState
                                           if (session.startAt != null) ...[
                                             const SizedBox(width: 8),
                                             Icon(
-                                              Icons.schedule_rounded,
+                                              AppIcons.clock,
                                               size: 13,
                                               color: colors.textMuted,
                                             ),
@@ -361,7 +362,7 @@ class _ClubMatchSessionsScreenState
                                 Row(
                                   children: [
                                     Icon(
-                                      Icons.people_outline_rounded,
+                                      AppIcons.users,
                                       size: 15,
                                       color: colors.textSecondary,
                                     ),
@@ -378,7 +379,7 @@ class _ClubMatchSessionsScreenState
                                         session.matchCount! > 0) ...[
                                       const SizedBox(width: 12),
                                       Icon(
-                                        Icons.sports_rounded,
+                                        AppIcons.trophy,
                                         size: 15,
                                         color: colors.textSecondary,
                                       ),
@@ -406,7 +407,7 @@ class _ClubMatchSessionsScreenState
                                       ),
                                     ),
                                     Icon(
-                                      Icons.chevron_right_rounded,
+                                      AppIcons.chevronRight,
                                       size: 16,
                                       color: colors.info,
                                     ),
@@ -750,12 +751,12 @@ class _ClubMatchSessionDetailPageState
               webUrl:
                   '${AppConstants.appDomain}/communities/${session.communityId}/match-sessions/${session.id}',
             ),
-            icon: const Icon(Icons.share_outlined),
+            icon: const Icon(AppIcons.share),
           ),
           IconButton(
             tooltip: l10n.infoRetry,
             onPressed: _scheduleSessionDetailRefresh,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(AppIcons.refresh),
           ),
         ],
       ),
@@ -912,13 +913,24 @@ class _ClubMatchSessionDetailPageState
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(color: colors.border),
                       ),
-                      child: Text(
-                        '🏓 Buổi giao lưu',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textPrimary,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            AppIcons.sportPickleball,
+                            size: 13,
+                            color: colors.textPrimary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Buổi giao lưu',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     // Format badge
@@ -1007,14 +1019,14 @@ class _ClubMatchSessionDetailPageState
 
                 // 3 dòng inline thông tin (Thời gian, Địa điểm, Lệ phí)
                 _buildInlineInfoRow(
-                  icon: Icons.calendar_today_outlined,
+                  icon: AppIcons.calendar,
                   label: 'Thời gian:',
                   value: dateRangeStr,
                   colors: colors,
                 ),
                 const SizedBox(height: 6),
                 _buildInlineInfoRow(
-                  icon: Icons.location_on_outlined,
+                  icon: AppIcons.mapPin,
                   label: 'Địa điểm:',
                   value: currentSession.description?.isNotEmpty == true
                       ? currentSession.description!
@@ -1023,7 +1035,7 @@ class _ClubMatchSessionDetailPageState
                 ),
                 const SizedBox(height: 6),
                 _buildInlineInfoRow(
-                  icon: Icons.payments_outlined,
+                  icon: AppIcons.wallet,
                   label: 'Lệ phí:',
                   value: 'Miễn phí',
                   colors: colors,
@@ -1038,11 +1050,7 @@ class _ClubMatchSessionDetailPageState
                     Expanded(
                       child: Row(
                         children: [
-                          Icon(
-                            Icons.people_alt_outlined,
-                            size: 18,
-                            color: colors.info,
-                          ),
+                          Icon(AppIcons.users, size: 18, color: colors.info),
                           const SizedBox(width: 6),
                           Text(
                             '${activeParticipants.length}/$totalSlots người tham gia',
@@ -1058,7 +1066,7 @@ class _ClubMatchSessionDetailPageState
                     Row(
                       children: [
                         Icon(
-                          Icons.sports_tennis_outlined,
+                          AppIcons.sportTennis,
                           size: 18,
                           color: colors.warning,
                         ),
@@ -1102,7 +1110,7 @@ class _ClubMatchSessionDetailPageState
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
-                      Icons.admin_panel_settings_rounded,
+                      AppIcons.shieldCheck,
                       color: AppTheme.primary,
                       size: 22,
                     ),
@@ -1159,10 +1167,7 @@ class _ClubMatchSessionDetailPageState
                           value: 'CREATE_MATCH',
                           child: Row(
                             children: [
-                              const Icon(
-                                Icons.add_circle_outline_rounded,
-                                size: 18,
-                              ),
+                              const Icon(AppIcons.add, size: 18),
                               const SizedBox(width: 8),
                               Text(l10n.clubMatchSessionCreateMatch),
                             ],
@@ -1172,10 +1177,7 @@ class _ClubMatchSessionDetailPageState
                         value: 'ASSIGN_MEMBERS',
                         child: Row(
                           children: [
-                            const Icon(
-                              Icons.person_add_alt_1_rounded,
-                              size: 18,
-                            ),
+                            const Icon(AppIcons.userAdd, size: 18),
                             const SizedBox(width: 8),
                             Text(l10n.clubMatchSessionAssignMembers),
                           ],
@@ -1186,10 +1188,7 @@ class _ClubMatchSessionDetailPageState
                           value: 'CREATE_MOCK',
                           child: Row(
                             children: [
-                              const Icon(
-                                Icons.person_add_alt_rounded,
-                                size: 18,
-                              ),
+                              const Icon(AppIcons.userAdd, size: 18),
                               const SizedBox(width: 8),
                               Text(l10n.clubMatchSessionCreateMock),
                             ],
@@ -1201,7 +1200,7 @@ class _ClubMatchSessionDetailPageState
                           value: 'CLOSE',
                           child: Row(
                             children: [
-                              const Icon(Icons.lock_clock_rounded, size: 18),
+                              const Icon(AppIcons.clock, size: 18),
                               const SizedBox(width: 8),
                               Text(l10n.clubMatchSessionCloseRegistration),
                             ],
@@ -1213,7 +1212,7 @@ class _ClubMatchSessionDetailPageState
                           value: 'END',
                           child: Row(
                             children: [
-                              const Icon(Icons.flag_rounded, size: 18),
+                              const Icon(AppIcons.target, size: 18),
                               const SizedBox(width: 8),
                               Text(l10n.clubMatchSessionEnd),
                             ],
@@ -1226,7 +1225,7 @@ class _ClubMatchSessionDetailPageState
                           child: Row(
                             children: [
                               const Icon(
-                                Icons.cancel_outlined,
+                                AppIcons.cancel,
                                 size: 18,
                                 color: Colors.red,
                               ),
@@ -1261,7 +1260,7 @@ class _ClubMatchSessionDetailPageState
                           ),
                           SizedBox(width: 4),
                           Icon(
-                            Icons.arrow_drop_down_rounded,
+                            AppIcons.chevronDown,
                             size: 18,
                             color: Colors.white,
                           ),
@@ -1499,7 +1498,7 @@ class _ClubMatchSessionDetailPageState
                                         shape: BoxShape.circle,
                                       ),
                                       child: const Icon(
-                                        Icons.close_rounded,
+                                        AppIcons.close,
                                         size: 12,
                                         color: Colors.white,
                                       ),
@@ -1576,7 +1575,7 @@ class _ClubMatchSessionDetailPageState
                             ),
                             child: const Center(
                               child: Icon(
-                                Icons.add_rounded,
+                                AppIcons.add,
                                 size: 22,
                                 color: Color(0xFF94A3B8),
                               ),
@@ -1813,7 +1812,7 @@ class _ClubMatchSessionDetailPageState
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: [
           _SessionSectionTitle(
-            icon: Icons.people_alt_outlined,
+            icon: AppIcons.users,
             title: l10n.clubMatchSessionParticipants,
             count: value.participants.length,
           ),
@@ -1864,9 +1863,7 @@ class _ClubMatchSessionDetailPageState
                                         l10n.clubMatchSessionRemoveParticipant,
                                     onPressed: () =>
                                         _removeParticipant(context, ref, item),
-                                    icon: const Icon(
-                                      Icons.person_remove_rounded,
-                                    ),
+                                    icon: const Icon(AppIcons.userRemove),
                                   )
                                 : null,
                           ),
@@ -1892,14 +1889,14 @@ class _ClubMatchSessionDetailPageState
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: [
           _SessionSectionTitle(
-            icon: Icons.sports_tennis_outlined,
+            icon: AppIcons.sportTennis,
             title: l10n.clubMatchSessionMatches,
             count: value.matches.length,
             action: value.session.canCreateMatch
                 ? FilledButton.tonalIcon(
                     onPressed: () =>
                         _createMatch(context, ref, value.participants),
-                    icon: const Icon(Icons.add_rounded),
+                    icon: const Icon(AppIcons.add),
                     label: Text(l10n.clubMatchSessionCreateMatch),
                   )
                 : null,
@@ -1947,7 +1944,7 @@ class _ClubMatchSessionDetailPageState
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: [
           _SessionSectionTitle(
-            icon: Icons.insights_outlined,
+            icon: AppIcons.chart,
             title: l10n.club_statsSection,
             count: stats.length,
           ),
@@ -1986,7 +1983,7 @@ class _ClubMatchSessionDetailPageState
                     child: _StatsHighlight(
                       label: 'Thắng nhiều nhất',
                       stat: topWins,
-                      icon: Icons.emoji_events_outlined,
+                      icon: AppIcons.trophy,
                       color: colors.success,
                     ),
                   ),
@@ -1997,7 +1994,7 @@ class _ClubMatchSessionDetailPageState
                     child: _StatsHighlight(
                       label: 'Thua nhiều nhất',
                       stat: topLosses,
-                      icon: Icons.trending_down_rounded,
+                      icon: AppIcons.trendingDown,
                       color: const Color(0xFFDC2626),
                     ),
                   ),
@@ -2556,7 +2553,7 @@ class _ClubMatchEloFooter extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            Icons.trending_flat_rounded,
+            AppIcons.activity,
             size: 15,
             color: isApplied ? colors.success : colors.textMuted,
           ),

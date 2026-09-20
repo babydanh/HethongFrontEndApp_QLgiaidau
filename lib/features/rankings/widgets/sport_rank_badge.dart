@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class SportRankBadge extends StatelessWidget {
   final PlayerRanking ranking;
@@ -86,14 +87,14 @@ class SportRankBadge extends StatelessWidget {
         name.contains('bóng đá')) {
       return const _SportVisual(
         label: 'Football',
-        icon: Icons.sports_soccer_rounded,
+        icon: AppIcons.sportFootball,
         color: Color(0xFF0F766E),
       );
     }
     if (name.contains('badminton') || name.contains('cầu lông')) {
       return const _SportVisual(
         label: 'Badminton',
-        icon: Icons.sports_tennis_rounded,
+        icon: AppIcons.sportTennis,
         color: Color(0xFF2563EB),
       );
     }
@@ -102,27 +103,27 @@ class SportRankBadge extends StatelessWidget {
         name.contains('bóng bàn')) {
       return const _SportVisual(
         label: 'Table tennis',
-        icon: Icons.sports_tennis_rounded,
+        icon: AppIcons.sportTennis,
         color: Color(0xFFE11D48),
       );
     }
     if (name.contains('pickleball')) {
       return const _SportVisual(
         label: 'Pickleball',
-        icon: Icons.sports_tennis_rounded,
+        icon: AppIcons.sportTennis,
         color: Color(0xFF059669),
       );
     }
     if (name.contains('tennis') || name.contains('quần vợt')) {
       return const _SportVisual(
         label: 'Tennis',
-        icon: Icons.sports_tennis_rounded,
+        icon: AppIcons.sportTennis,
         color: Color(0xFFD97706),
       );
     }
     return const _SportVisual(
       label: 'Sport',
-      icon: Icons.sports_rounded,
+      icon: AppIcons.trophy,
       color: Color(0xFF64748B),
     );
   }

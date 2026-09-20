@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/club_network_image.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_type_sheet.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Thanh Navigation Bar lơ lửng căn sát trái + Khối Tiện ích đứng riêng bên phải:
 /// - Bên trái: 4 tab điều hướng chính (Trang chủ 0, Giải đấu 1, Khám phá 3, Tin nhắn 2)
@@ -67,7 +68,8 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
     final media = MediaQuery.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final safeAreaBottom = media.padding.bottom;
-    final double popupBottom = 12.0 + safeAreaBottom + 48.0; // Ngay trên đỉnh nút tiện ích
+    final double popupBottom =
+        12.0 + safeAreaBottom + 48.0; // Ngay trên đỉnh nút tiện ích
     const double popupRight = 16.0;
 
     setState(() => _isPopoverOpen = true);
@@ -95,9 +97,13 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
                 type: MaterialType.transparency,
                 child: ScaleTransition(
                   scale: Tween<double>(begin: 0.70, end: 1.0).animate(curved),
-                  alignment: Alignment.bottomRight, // Bung nở từ góc phải nút tiện ích
+                  alignment:
+                      Alignment.bottomRight, // Bung nở từ góc phải nút tiện ích
                   child: FadeTransition(
-                    opacity: CurvedAnimation(parent: anim1, curve: Curves.easeOut),
+                    opacity: CurvedAnimation(
+                      parent: anim1,
+                      curve: Curves.easeOut,
+                    ),
                     child: _QuickUtilityPopoverCard(
                       isDark: isDark,
                       activeNavIndex: widget.currentIndex,
@@ -164,7 +170,9 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
     // Nền hover/active 1 cục màu xanh nhạt nguyên khối tinh tế (không viền đậm)
     final activeFillColor = isDark
         ? AppTheme.primary.withValues(alpha: 0.22)
-        : const Color(0xFFEFF6FF); // Xanh nhạt tinh tế kiểu web (blue-50/blue-100)
+        : const Color(
+            0xFFEFF6FF,
+          ); // Xanh nhạt tinh tế kiểu web (blue-50/blue-100)
 
     // Icon khi active: màu xanh Sport Blue đặc trưng của web
     final activeIconColor = AppTheme.primary;
@@ -257,7 +265,9 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
                         height: indicatorHeight,
                         decoration: BoxDecoration(
                           color: activeFillColor,
-                          borderRadius: BorderRadius.circular(indicatorHeight / 2),
+                          borderRadius: BorderRadius.circular(
+                            indicatorHeight / 2,
+                          ),
                           // Không viền đậm, 1 khối màu nhạt mềm mại
                         ),
                       ),
@@ -273,8 +283,8 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
                         // Tab 1: Trang chủ (Index 0)
                         Expanded(
                           child: _buildNavItem(
-                            icon: Icons.home_outlined,
-                            activeIcon: Icons.home_rounded,
+                            icon: AppIcons.home,
+                            activeIcon: AppIcons.home,
                             isSelected: hasSelectedSlot && slotIndex == 0,
                             activeColor: activeIconColor,
                             inactiveColor: inactiveColor,
@@ -285,8 +295,8 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
                         // Tab 2: Giải đấu (Index 1)
                         Expanded(
                           child: _buildNavItem(
-                            icon: Icons.emoji_events_outlined,
-                            activeIcon: Icons.emoji_events_rounded,
+                            icon: AppIcons.trophy,
+                            activeIcon: AppIcons.trophy,
                             isSelected: hasSelectedSlot && slotIndex == 1,
                             activeColor: activeIconColor,
                             inactiveColor: inactiveColor,
@@ -297,8 +307,8 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
                         // Tab 3: Khám phá / CLB (Index 3)
                         Expanded(
                           child: _buildNavItem(
-                            icon: Icons.explore_outlined,
-                            activeIcon: Icons.explore_rounded,
+                            icon: AppIcons.explore,
+                            activeIcon: AppIcons.explore,
                             isSelected: hasSelectedSlot && slotIndex == 2,
                             activeColor: activeIconColor,
                             inactiveColor: inactiveColor,
@@ -309,8 +319,8 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
                         // Tab 4: Chat / Hộp thư (Index 2)
                         Expanded(
                           child: _buildNavItem(
-                            icon: Icons.chat_bubble_outline_rounded,
-                            activeIcon: Icons.chat_bubble_rounded,
+                            icon: AppIcons.chat,
+                            activeIcon: AppIcons.chat,
                             isSelected: hasSelectedSlot && slotIndex == 3,
                             activeColor: activeIconColor,
                             inactiveColor: inactiveColor,
@@ -359,6 +369,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
     final iconColor = isActive ? activeColor : inactiveColor;
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTapDown: (_) => setState(() => _isUtilityPressed = true),
       onTapUp: (_) => setState(() => _isUtilityPressed = false),
       onTapCancel: () => setState(() => _isUtilityPressed = false),
@@ -373,10 +384,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
           decoration: BoxDecoration(
             color: bgColor,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: borderColor,
-              width: 1.2,
-            ),
+            border: Border.all(color: borderColor, width: 1.2),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
@@ -392,7 +400,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeOutBack,
               child: Icon(
-                isActive ? Icons.widgets_rounded : Icons.unfold_more_rounded,
+                isActive ? AppIcons.box : AppIcons.chevronDown,
                 color: iconColor,
                 size: 20,
               ),
@@ -502,7 +510,9 @@ class _QuickUtilityPopoverCard extends ConsumerWidget {
           Divider(
             height: 1,
             thickness: 1,
-            color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF1F5F9),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : const Color(0xFFF1F5F9),
           ),
 
           const SizedBox(height: 4),
@@ -516,39 +526,43 @@ class _QuickUtilityPopoverCard extends ConsumerWidget {
               children: [
                 // Tab Bảng xếp hạng (Nav mở rộng quan trọng: tab 4)
                 _buildItem(
-                  icon: Icons.leaderboard_rounded,
+                  icon: AppIcons.chart,
                   title: 'Bảng xếp hạng',
                   isSelected: activeNavIndex == 4,
                   onTap: () => onActionSelected(_UtilityActionType.rankings),
                 ),
                 _buildItem(
-                  icon: Icons.add_circle_outline_rounded,
+                  icon: AppIcons.add,
                   title: 'Tạo giải đấu',
-                  onTap: () => onActionSelected(_UtilityActionType.createTournament),
+                  onTap: () =>
+                      onActionSelected(_UtilityActionType.createTournament),
                 ),
                 _buildItem(
-                  icon: Icons.shield_outlined,
+                  icon: AppIcons.shield,
                   title: 'Tạo câu lạc bộ',
                   onTap: () => onActionSelected(_UtilityActionType.createClub),
                 ),
                 _buildItem(
-                  icon: Icons.search_rounded,
+                  icon: AppIcons.search,
                   title: 'Tìm giải & CLB',
                   isSelected: activeNavIndex == 1,
-                  onTap: () => onActionSelected(_UtilityActionType.exploreTournaments),
+                  onTap: () =>
+                      onActionSelected(_UtilityActionType.exploreTournaments),
                 ),
                 Divider(
                   height: 9,
                   thickness: 1,
-                  color: isDark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFF1F5F9),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : const Color(0xFFF1F5F9),
                 ),
                 _buildItem(
-                  icon: Icons.arrow_upward_rounded,
+                  icon: AppIcons.up,
                   title: 'Lên đầu trang',
                   onTap: () => onActionSelected(_UtilityActionType.scrollToTop),
                 ),
                 _buildItem(
-                  icon: Icons.refresh_rounded,
+                  icon: AppIcons.refresh,
                   title: 'Làm mới dữ liệu',
                   onTap: () => onActionSelected(_UtilityActionType.refresh),
                 ),
@@ -565,7 +579,9 @@ class _QuickUtilityPopoverCard extends ConsumerWidget {
   Widget _buildProfileHeader(BuildContext context, dynamic profile) {
     final avatarUrl = profile?.avatarUrl as String?;
     final fullName = (profile?.fullName as String?)?.trim();
-    final displayName = (fullName != null && fullName.isNotEmpty) ? fullName : 'Tài khoản của tôi';
+    final displayName = (fullName != null && fullName.isNotEmpty)
+        ? fullName
+        : 'Tài khoản của tôi';
     final role = (profile?.role as String?)?.toUpperCase() ?? 'THÀNH VIÊN';
 
     return Material(
@@ -623,18 +639,26 @@ class _QuickUtilityPopoverCard extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
-                        color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
+                        color: isDark
+                            ? const Color(0xFFF1F5F9)
+                            : const Color(0xFF0F172A),
                       ),
                     ),
                     const SizedBox(height: 1.5),
                     Row(
                       children: [
                         Text(
-                          role == 'ORGANIZER' ? 'Ban tổ chức' : (role == 'ADMIN' ? 'Quản trị viên' : 'Hồ sơ cá nhân'),
+                          role == 'ORGANIZER'
+                              ? 'Ban tổ chức'
+                              : (role == 'ADMIN'
+                                    ? 'Quản trị viên'
+                                    : 'Hồ sơ cá nhân'),
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
-                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B),
                           ),
                         ),
                       ],
@@ -645,9 +669,11 @@ class _QuickUtilityPopoverCard extends ConsumerWidget {
 
               // Mũi tên dẫn sang profile
               Icon(
-                Icons.chevron_right_rounded,
+                AppIcons.chevronRight,
                 size: 19,
-                color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                color: isDark
+                    ? const Color(0xFF64748B)
+                    : const Color(0xFF94A3B8),
               ),
             ],
           ),
@@ -661,7 +687,7 @@ class _QuickUtilityPopoverCard extends ConsumerWidget {
       color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
       alignment: Alignment.center,
       child: Icon(
-        Icons.person_rounded,
+        AppIcons.user,
         size: 20,
         color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
       ),
@@ -682,8 +708,8 @@ class _QuickUtilityPopoverCard extends ConsumerWidget {
         : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B));
     final itemBgColor = isSelected
         ? (isDark
-            ? AppTheme.primary.withValues(alpha: 0.18)
-            : AppTheme.primary.withValues(alpha: 0.10))
+              ? AppTheme.primary.withValues(alpha: 0.18)
+              : AppTheme.primary.withValues(alpha: 0.10))
         : Colors.transparent;
 
     return Material(
@@ -705,11 +731,7 @@ class _QuickUtilityPopoverCard extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           child: Row(
             children: [
-              Icon(
-                icon,
-                size: 18,
-                color: itemIconColor,
-              ),
+              Icon(icon, size: 18, color: itemIconColor),
               const SizedBox(width: 9),
               Expanded(
                 child: Text(

@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/data/models/community_invite_model.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Màn hình danh sách lời mời tham gia CLB của người dùng.
@@ -92,7 +93,7 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
         backgroundColor: colors.bgDark,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -173,14 +174,14 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               const Icon(
-                                Icons.groups_rounded,
+                                AppIcons.users,
                                 color: AppTheme.primary,
                                 size: 24,
                               ),
                         ),
                       )
                     : const Icon(
-                        Icons.groups_rounded,
+                        AppIcons.users,
                         color: AppTheme.primary,
                         size: 24,
                       ),
@@ -237,7 +238,7 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
               Expanded(
                 child: FilledButton.icon(
                   onPressed: () => _handleAction(invite.communityId, 'accept'),
-                  icon: const Icon(Icons.check_rounded, size: 18),
+                  icon: const Icon(AppIcons.check, size: 18),
                   label: Text(
                     l10n.notification_accept,
                     style: const TextStyle(fontWeight: FontWeight.w800),
@@ -257,7 +258,7 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => _handleAction(invite.communityId, 'decline'),
-                  icon: const Icon(Icons.close_rounded, size: 18),
+                  icon: const Icon(AppIcons.close, size: 18),
                   label: Text(
                     l10n.notification_decline,
                     style: const TextStyle(fontWeight: FontWeight.w800),
@@ -296,7 +297,7 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Icon(
-                Icons.mail_outline_rounded,
+                AppIcons.mail,
                 size: 40,
                 color: colors.textMuted.withValues(alpha: 0.5),
               ),
@@ -333,7 +334,7 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+            Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
             const SizedBox(height: 16),
             Text(
               l10n.clubInvitesLoadError,

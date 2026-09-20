@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/social/models/activity_feed_item.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class ActivityFeedDetailScreen extends StatelessWidget {
   final ActivityFeedItem item;
@@ -63,22 +64,14 @@ class ActivityFeedDetailScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
+          _info(AppIcons.trophy, '${item.sport} · ${item.sportTier}', isDark),
           _info(
-            Icons.sports_outlined,
-            '${item.sport} · ${item.sportTier}',
-            isDark,
-          ),
-          _info(
-            Icons.schedule_rounded,
+            AppIcons.clock,
             '${item.playDate} · ${item.startTime}${item.endTime.isEmpty ? '' : ' - ${item.endTime}'}',
             isDark,
           ),
-          _info(Icons.location_on_outlined, item.location, isDark),
-          _info(
-            Icons.person_outline_rounded,
-            'Người tổ chức: ${item.hostName}',
-            isDark,
-          ),
+          _info(AppIcons.mapPin, item.location, isDark),
+          _info(AppIcons.user, 'Người tổ chức: ${item.hostName}', isDark),
           if (slots != null) ...[
             const SizedBox(height: 10),
             Card(
@@ -88,10 +81,7 @@ class ActivityFeedDetailScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(14),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.people_alt_outlined,
-                      color: AppTheme.primary,
-                    ),
+                    const Icon(AppIcons.users, color: AppTheme.primary),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -126,7 +116,7 @@ class ActivityFeedDetailScreen extends StatelessWidget {
       borderRadius: BorderRadius.circular(18),
     ),
     child: const Center(
-      child: Icon(Icons.sports_rounded, size: 52, color: AppTheme.primary),
+      child: Icon(AppIcons.trophy, size: 52, color: AppTheme.primary),
     ),
   );
 

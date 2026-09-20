@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_ic
 import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_type_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Tạo giải nhanh Public trên mobile app.
 /// Giải thuộc CLB phải được tạo từ trang chi tiết/quản lý CLB.
@@ -496,7 +497,7 @@ class _CreatePublicQuickTournamentScreenState
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
-                      Icons.bolt_rounded,
+                      AppIcons.zap,
                       color: Color(0xFF2563EB),
                       size: 22,
                     ),
@@ -536,7 +537,7 @@ class _CreatePublicQuickTournamentScreenState
               controller: _nameController,
               decoration: InputDecoration(
                 hintText: 'VD: Giải Giao Lưu Mùa Hè 2026',
-                prefixIcon: const Icon(Icons.emoji_events_outlined, size: 20),
+                prefixIcon: const Icon(AppIcons.trophy, size: 20),
                 filled: true,
                 fillColor: colors.bgSurface,
                 border: OutlineInputBorder(
@@ -592,10 +593,7 @@ class _CreatePublicQuickTournamentScreenState
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           hintText: '16',
-                          prefixIcon: const Icon(
-                            Icons.people_outline_rounded,
-                            size: 20,
-                          ),
+                          prefixIcon: const Icon(AppIcons.users, size: 20),
                           filled: true,
                           fillColor: colors.bgSurface,
                           border: OutlineInputBorder(
@@ -635,11 +633,7 @@ class _CreatePublicQuickTournamentScreenState
                     ),
                     child: const Row(
                       children: [
-                        Icon(
-                          Icons.public_rounded,
-                          size: 18,
-                          color: AppTheme.primary,
-                        ),
+                        Icon(AppIcons.globe, size: 18, color: AppTheme.primary),
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -670,7 +664,7 @@ class _CreatePublicQuickTournamentScreenState
                     value: _startDate == null
                         ? null
                         : _withTime(_startDate!, _startTime),
-                    icon: Icons.calendar_today_rounded,
+                    icon: AppIcons.calendar,
                     onTap: _pickStartDateTime,
                     colors: colors,
                   ),
@@ -682,7 +676,7 @@ class _CreatePublicQuickTournamentScreenState
                     value: _endDate == null
                         ? null
                         : _withTime(_endDate!, _endTime),
-                    icon: Icons.event_available_rounded,
+                    icon: AppIcons.calendarCheck,
                     onTap: _pickEndDateTime,
                     onClear: () => setState(() => _endDate = null),
                     colors: colors,
@@ -702,11 +696,7 @@ class _CreatePublicQuickTournamentScreenState
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.timer_outlined,
-                    size: 16,
-                    color: colors.textSecondary,
-                  ),
+                  Icon(AppIcons.timer, size: 16, color: colors.textSecondary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -855,7 +845,7 @@ class _CreatePublicQuickTournamentScreenState
               controller: _venueNameController,
               decoration: InputDecoration(
                 hintText: 'VD: Sân Cầu Lông Kỳ Hòa',
-                prefixIcon: const Icon(Icons.stadium_outlined, size: 20),
+                prefixIcon: const Icon(AppIcons.landmark, size: 20),
                 filled: true,
                 fillColor: colors.bgSurface,
                 border: OutlineInputBorder(
@@ -870,7 +860,7 @@ class _CreatePublicQuickTournamentScreenState
               onChanged: (_) => _detectAddressSuggestion(),
               decoration: InputDecoration(
                 hintText: 'VD: 238 Kỳ Đồng, Quận 3, TP.HCM',
-                prefixIcon: const Icon(Icons.location_on_outlined, size: 20),
+                prefixIcon: const Icon(AppIcons.mapPin, size: 20),
                 filled: true,
                 fillColor: colors.bgSurface,
                 border: OutlineInputBorder(
@@ -896,7 +886,7 @@ class _CreatePublicQuickTournamentScreenState
                 child: Row(
                   children: [
                     const Icon(
-                      Icons.auto_awesome,
+                      AppIcons.sparkles,
                       size: 16,
                       color: AppTheme.primary,
                     ),
@@ -948,7 +938,7 @@ class _CreatePublicQuickTournamentScreenState
                     value: _regStartDate == null
                         ? null
                         : _withTime(_regStartDate!, _regStartTime),
-                    icon: Icons.login_rounded,
+                    icon: AppIcons.login,
                     onTap: _pickRegStartDateTime,
                     onClear: () => setState(() => _regStartDate = null),
                     colors: colors,
@@ -961,7 +951,7 @@ class _CreatePublicQuickTournamentScreenState
                     value: _regEndDate == null
                         ? null
                         : _withTime(_regEndDate!, _regEndTime),
-                    icon: Icons.logout_rounded,
+                    icon: AppIcons.logout,
                     onTap: _pickRegEndDateTime,
                     onClear: () => setState(() => _regEndDate = null),
                     colors: colors,
@@ -1004,7 +994,7 @@ class _CreatePublicQuickTournamentScreenState
                           color: Colors.white,
                         ),
                       )
-                    : const Icon(Icons.flash_on_rounded, size: 20),
+                    : const Icon(AppIcons.zap, size: 20),
                 label: Text(
                   _isSubmitting
                       ? 'Đang tạo giải đấu...'
@@ -1043,11 +1033,11 @@ class _CreatePublicQuickTournamentScreenState
             ref.watch(categoriesProvider).value ?? const [];
 
         final sportsMeta = {
-          'pickleball': ('Pickleball', Icons.sports_baseball_rounded),
-          'badminton': ('Cầu lông', Icons.sports_tennis_rounded),
-          'tennis': ('Tennis', Icons.sports_tennis_outlined),
-          'table_tennis': ('Bóng bàn', Icons.sports_cricket_rounded),
-          'football': ('Bóng đá', Icons.sports_soccer_rounded),
+          'pickleball': ('Pickleball', AppIcons.sportPickleball),
+          'badminton': ('Cầu lông', AppIcons.sportTennis),
+          'tennis': ('Tennis', AppIcons.sportTennis),
+          'table_tennis': ('Bóng bàn', AppIcons.sportTableTennis),
+          'football': ('Bóng đá', AppIcons.sportFootball),
         };
 
         // Chỉ hiển thị các môn thể thao đang ACTIVE từ backend, tuyệt đối không fallback hiển thị môn đã tắt
@@ -1057,7 +1047,7 @@ class _CreatePublicQuickTournamentScreenState
             (k) => slug.contains(k) || k.contains(slug),
             orElse: () => 'pickleball',
           );
-          final meta = sportsMeta[metaKey] ?? (cat.name, Icons.sports_rounded);
+          final meta = sportsMeta[metaKey] ?? (cat.name, AppIcons.trophy);
           return (metaKey, cat.name.isNotEmpty ? cat.name : meta.$1, meta.$2);
         }).toList();
 
@@ -1166,7 +1156,7 @@ class _CreatePublicQuickTournamentScreenState
                 vertical: 10,
               ),
               labelText: 'Tỉnh / thành',
-              prefixIcon: const Icon(Icons.map_outlined, size: 18),
+              prefixIcon: const Icon(AppIcons.map, size: 18),
               filled: true,
               fillColor: colors.bgSurface,
               border: OutlineInputBorder(
@@ -1212,7 +1202,7 @@ class _CreatePublicQuickTournamentScreenState
                 vertical: 10,
               ),
               labelText: 'Phường / xã',
-              prefixIcon: const Icon(Icons.location_city_outlined, size: 18),
+              prefixIcon: const Icon(AppIcons.building, size: 18),
               filled: true,
               fillColor: colors.bgSurface,
               border: OutlineInputBorder(
@@ -1432,25 +1422,25 @@ class _CreatePublicQuickTournamentScreenState
         AppConstants.bracketSingleElimination,
         l10n.quickCreateBracketSingle,
         l10n.quickCreateBracketSingleDesc,
-        Icons.account_tree_outlined,
+        AppIcons.layers,
       ),
       (
         AppConstants.bracketDoubleElimination,
         l10n.quickCreateBracketDouble,
         l10n.quickCreateBracketDoubleDesc,
-        Icons.call_split_rounded,
+        AppIcons.sort,
       ),
       (
         AppConstants.bracketRoundRobin,
         l10n.quickCreateBracketRoundRobin,
         l10n.quickCreateBracketRoundRobinDesc,
-        Icons.sync_rounded,
+        AppIcons.refresh,
       ),
       (
         AppConstants.bracketGroupStageKnockout,
         l10n.quickCreateBracketGroup,
         l10n.quickCreateBracketGroupDesc,
-        Icons.grid_view_rounded,
+        AppIcons.grid,
       ),
     ];
 
@@ -1526,9 +1516,7 @@ class _CreatePublicQuickTournamentScreenState
                   ),
                   const SizedBox(width: 8),
                   Icon(
-                    selected
-                        ? Icons.radio_button_checked
-                        : Icons.radio_button_off,
+                    selected ? AppIcons.circleDot : AppIcons.circle,
                     color: selected ? AppTheme.primary : colors.textMuted,
                     size: 20,
                   ),
@@ -1715,11 +1703,7 @@ class _CreatePublicQuickTournamentScreenState
             if (value != null && onClear != null)
               GestureDetector(
                 onTap: onClear,
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 15,
-                  color: colors.textMuted,
-                ),
+                child: Icon(AppIcons.close, size: 15, color: colors.textMuted),
               ),
           ],
         ),

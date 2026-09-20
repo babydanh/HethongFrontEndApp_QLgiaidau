@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart';
 
 import 'package:app_quanly_giaidau/data/models/token_model.dart';
 import 'package:app_quanly_giaidau/providers/token_management_notifier.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TokenManagementScreen extends ConsumerWidget {
@@ -32,7 +33,7 @@ class TokenManagementScreen extends ConsumerWidget {
         leading: isEmbedded
             ? const SizedBox.shrink()
             : IconButton(
-                icon: const Icon(Icons.arrow_back_ios_rounded),
+                icon: const Icon(AppIcons.chevronLeft),
                 onPressed: () => context.go('/admin/tournament/$tournamentId'),
               ),
         title: Text(l10n.tokenManagement),
@@ -121,7 +122,7 @@ class _TokenCard extends ConsumerWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.circle,
+                            AppIcons.circle,
                             size: 10,
                             color: count > 0
                                 ? context.colors.success
@@ -170,7 +171,7 @@ class _TokenCard extends ConsumerWidget {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.qr_code, color: AppTheme.primary),
+                    icon: const Icon(AppIcons.qrCode, color: AppTheme.primary),
                     onPressed: () => _showQrDialog(context, token.code),
                   ),
                 ],
@@ -182,7 +183,7 @@ class _TokenCard extends ConsumerWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _regenerateToken(context, ref),
-                    icon: const Icon(Icons.refresh),
+                    icon: const Icon(AppIcons.refresh),
                     label: Text(l10n.refreshToken),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: context.colors.error,

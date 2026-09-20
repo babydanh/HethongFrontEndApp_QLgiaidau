@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class CommunityPollWidget extends ConsumerStatefulWidget {
   final String communityId;
@@ -215,7 +216,7 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.people_alt_outlined, size: 15, color: colors.textMuted),
+          Icon(AppIcons.users, size: 15, color: colors.textMuted),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
@@ -279,7 +280,7 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
         children: [
           Row(
             children: [
-              Icon(Icons.poll_outlined, color: AppTheme.primary),
+              Icon(AppIcons.chart, color: AppTheme.primary),
               const SizedBox(width: AppTheme.spacingSM),
               Expanded(
                 child: Text(
@@ -343,11 +344,11 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
                                 Icon(
                                   option.isVoted
                                       ? (_poll.allowMultipleAnswers
-                                            ? Icons.check_box
-                                            : Icons.radio_button_checked)
+                                            ? AppIcons.squareCheck
+                                            : AppIcons.circleDot)
                                       : (_poll.allowMultipleAnswers
-                                            ? Icons.check_box_outline_blank
-                                            : Icons.radio_button_unchecked),
+                                            ? AppIcons.square
+                                            : AppIcons.circle),
                                   size: 18,
                                   color: option.isVoted
                                       ? AppTheme.primary
@@ -391,7 +392,7 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: _busy ? null : _addOption,
-                icon: const Icon(Icons.add, size: 18),
+                icon: const Icon(AppIcons.add, size: 18),
                 label: Text(l10n.communityPoll_addOption),
               ),
             ),

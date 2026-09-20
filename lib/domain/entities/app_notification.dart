@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Entity cho thông báo từ API GET /notifications
 class AppNotification {
@@ -309,7 +310,7 @@ class AppNotification {
 
   /// Icon theo loại thông báo
   IconData get icon {
-    if (type.startsWith('FOOTBALL_TEAM_')) return Icons.sports_soccer_rounded;
+    if (type.startsWith('FOOTBALL_TEAM_')) return AppIcons.sportFootball;
     switch (type) {
       case 'TOURNAMENT':
       case 'TOURNAMENT_REGISTER_PENDING':
@@ -318,27 +319,27 @@ class AppNotification {
       case 'TOURNAMENT_PARTICIPANT_NEW':
       case 'TOURNAMENT_WITHDRAWN':
       case 'TOURNAMENT_KICKED':
-        return Icons.emoji_events_rounded;
+        return AppIcons.trophy;
       case 'MATCH':
       case 'MATCH_SCHEDULED':
       case 'MATCH_REMINDER':
       case 'MATCH_COMPLETED':
-        return Icons.sports_tennis_rounded;
+        return AppIcons.sportTennis;
       case 'PAYMENT':
       case 'PAYOUT_APPROVED':
       case 'PAYOUT_REJECTED':
-        return Icons.payments_rounded;
+        return AppIcons.wallet;
       case 'PARTNER_INVITE_RECEIVED':
       case 'PARTNER_INVITE_ACCEPTED':
       case 'PARTNER_INVITE_REJECTED':
       case 'PARTNER_INVITE_CANCELLED':
-        return Icons.group_add_rounded;
+        return AppIcons.userAdd;
       case 'REFEREE_INVITED':
       case 'REFEREE_INVITE_ACCEPTED':
       case 'REFEREE_INVITE_DECLINED':
       case 'REFEREE_INVITE_REVOKED':
       case 'REFEREE_ASSIGNED':
-        return Icons.sports_rounded;
+        return AppIcons.trophy;
       case 'COMMUNITY_INVITED':
       case 'COMMUNITY_ROLE_PROMOTED':
       case 'COMMUNITY_ROLE_DEMOTED':
@@ -346,13 +347,13 @@ class AppNotification {
       case 'COMMUNITY_INVITE_REVOKED':
       case 'COMMUNITY_JOIN_APPROVED':
       case 'COMMUNITY_JOIN_REJECTED':
-        return Icons.groups_rounded;
+        return AppIcons.users;
       case 'CHAT':
-        return Icons.chat_rounded;
+        return AppIcons.chat;
       case 'REMINDER':
-        return Icons.notifications_rounded;
+        return AppIcons.bell;
       default:
-        return Icons.notifications_outlined;
+        return AppIcons.bell;
     }
   }
 

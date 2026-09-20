@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 
 /// Trang xem hồ sơ công khai của người dùng khác.
@@ -100,7 +101,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.arrow_back_ios_rounded,
+                AppIcons.chevronLeft,
                 color: colors.textPrimary,
                 size: 20,
               ),
@@ -118,7 +119,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.chat_bubble_rounded,
+                    AppIcons.chat,
                     color: colors.textPrimary,
                     size: 20,
                   ),
@@ -142,7 +143,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.share_rounded,
+                  AppIcons.share,
                   color: colors.textPrimary,
                   size: 20,
                 ),
@@ -327,13 +328,13 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         ),
         error: (err, stack) => _buildEmptyPlaceholder(
           colors,
-          Icons.sports_tennis_outlined,
+          AppIcons.sportTennis,
           l10n.publicProfileMatchesLoadError,
         ),
         data: (matches) => matches.isEmpty
             ? _buildEmptyPlaceholder(
                 colors,
-                Icons.sports_tennis_outlined,
+                AppIcons.sportTennis,
                 l10n.publicProfileNoPublicMatches,
               )
             : Column(
@@ -359,9 +360,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       child: Row(
         children: [
           Icon(
-            completed
-                ? Icons.check_circle_outline_rounded
-                : Icons.schedule_rounded,
+            completed ? AppIcons.checkCircle : AppIcons.clock,
             color: completed ? Colors.green : AppTheme.primary,
           ),
           const SizedBox(width: 12),
@@ -430,11 +429,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         children: [
           Row(
             children: [
-              Icon(
-                Icons.emoji_events_rounded,
-                size: 20,
-                color: AppTheme.primary,
-              ),
+              Icon(AppIcons.trophy, size: 20, color: AppTheme.primary),
               const SizedBox(width: 8),
               Text(
                 l10n.publicProfileAchievementsTitle,
@@ -454,7 +449,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 child: Column(
                   children: [
                     Icon(
-                      Icons.emoji_events_outlined,
+                      AppIcons.trophy,
                       size: 40,
                       color: colors.textMuted.withValues(alpha: 0.5),
                     ),
@@ -722,7 +717,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     if (profile.isVerified) ...[
                       const SizedBox(width: 6),
                       const Icon(
-                        Icons.verified_rounded,
+                        AppIcons.verified,
                         size: 18,
                         color: Color(0xFF22C55E),
                       ),
@@ -767,9 +762,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                         profile.gender!.isNotEmpty) ...[
                       const SizedBox(width: 8),
                       Icon(
-                        profile.gender == 'Nam'
-                            ? Icons.male_rounded
-                            : Icons.female_rounded,
+                        profile.gender == 'Nam' ? AppIcons.user : AppIcons.user,
                         size: 14,
                         color: colors.textMuted,
                       ),
@@ -981,9 +974,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
-                        isDoubles
-                            ? Icons.people_alt_rounded
-                            : Icons.person_rounded,
+                        isDoubles ? AppIcons.users : AppIcons.user,
                         size: 18,
                         color: AppTheme.primary,
                       ),
@@ -1024,7 +1015,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     ),
                     const SizedBox(width: 4),
                     Icon(
-                      Icons.chevron_right_rounded,
+                      AppIcons.chevronRight,
                       size: 18,
                       color: colors.textMuted,
                     ),
@@ -1037,7 +1028,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   Row(
                     children: [
                       Icon(
-                        Icons.handshake_rounded,
+                        AppIcons.handshake,
                         size: 15,
                         color: colors.textMuted,
                       ),
@@ -1123,9 +1114,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   child: Row(
                     children: [
                       Icon(
-                        streakType == 'NONE'
-                            ? Icons.remove_circle_outline_rounded
-                            : Icons.local_fire_department_rounded,
+                        streakType == 'NONE' ? AppIcons.cancel : AppIcons.flame,
                         size: 18,
                         color: streakColor,
                       ),
@@ -1194,11 +1183,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         padding: const EdgeInsets.symmetric(vertical: 32),
         child: Column(
           children: [
-            Icon(
-              Icons.emoji_events_outlined,
-              size: 48,
-              color: colors.textMuted,
-            ),
+            Icon(AppIcons.trophy, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
             Text(
               l10n.publicProfileNoRankData,
@@ -1267,7 +1252,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.person_off_rounded, size: 48, color: colors.textMuted),
+            Icon(AppIcons.user, size: 48, color: colors.textMuted),
             const SizedBox(height: 16),
             Text(
               l10n.publicProfileLoadError,

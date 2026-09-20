@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Composer đăng bài kiểu Facebook (bottom sheet), đủ tính năng như web:
 /// nội dung + @mention, tối đa 10 ảnh (upload ngay khi chọn), bình chọn
@@ -430,7 +431,7 @@ class _CommunityPostComposerSheetState
             const Spacer(),
             IconButton(
               icon: const Icon(
-                Icons.photo_library_rounded,
+                AppIcons.images,
                 color: Color(0xFF45BD62),
                 size: 22,
               ),
@@ -439,7 +440,7 @@ class _CommunityPostComposerSheetState
             ),
             IconButton(
               icon: Icon(
-                Icons.poll_rounded,
+                AppIcons.chart,
                 color: _pollOpen ? AppTheme.primary : const Color(0xFFF7B125),
                 size: 22,
               ),
@@ -449,7 +450,7 @@ class _CommunityPostComposerSheetState
             if (widget.canMention)
               IconButton(
                 icon: const Icon(
-                  Icons.alternate_email_rounded,
+                  AppIcons.atSign,
                   color: Color(0xFF1877F2),
                   size: 22,
                 ),
@@ -547,11 +548,7 @@ class _AuthorRow extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.groups_rounded,
-                      size: 13,
-                      color: colors.textSecondary,
-                    ),
+                    Icon(AppIcons.users, size: 13, color: colors.textSecondary),
                     const SizedBox(width: 4),
                     Text(
                       l10n.userProfileClubMemberRole,

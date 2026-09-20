@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class IntroTab extends StatelessWidget {
   final Tournament tournament;
@@ -78,10 +79,7 @@ class IntroTab extends StatelessWidget {
                     ),
                     Text(
                       'Đơn vị tổ chức chuyên nghiệp',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colors.textMuted,
-                      ),
+                      style: TextStyle(fontSize: 12, color: colors.textMuted),
                     ),
                   ],
                 ),
@@ -105,9 +103,17 @@ class IntroTab extends StatelessWidget {
           // ─── 3. THÔNG TIN ĐĂNG KÝ & LỆ PHÍ ───
           _buildSectionHeader(context, 'THỜI GIAN ĐĂNG KÝ & LỆ PHÍ'),
           const SizedBox(height: 12),
-          _buildMetaRow(context, 'Mở đăng ký:', _formatDate(t.registrationStartDate)),
+          _buildMetaRow(
+            context,
+            'Mở đăng ký:',
+            _formatDate(t.registrationStartDate),
+          ),
           const SizedBox(height: 8),
-          _buildMetaRow(context, 'Hạn chót đăng ký:', _formatDate(t.registrationEndDate)),
+          _buildMetaRow(
+            context,
+            'Hạn chót đăng ký:',
+            _formatDate(t.registrationEndDate),
+          ),
           const SizedBox(height: 8),
           _buildMetaRow(
             context,
@@ -135,7 +141,7 @@ class IntroTab extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.location_on, color: AppTheme.primary, size: 20),
+              Icon(AppIcons.mapPin, color: AppTheme.primary, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -151,7 +157,9 @@ class IntroTab extends StatelessWidget {
                         ),
                       ),
                     Text(
-                      t.locationAddress ?? t.city ?? 'Chưa cập nhật địa chỉ cụ thể',
+                      t.locationAddress ??
+                          t.city ??
+                          'Chưa cập nhật địa chỉ cụ thể',
                       style: TextStyle(
                         fontSize: 13,
                         color: colors.textSecondary,

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Cropper dùng chung cho avatar/logo: kéo ảnh, zoom và xuất ảnh vuông PNG.
 class ImageCropDialog extends StatefulWidget {
@@ -111,7 +112,7 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.zoom_out, size: 18),
+                const Icon(AppIcons.zoomOut, size: 18),
                 Expanded(
                   child: Slider(
                     value: _zoom,
@@ -120,12 +121,12 @@ class _ImageCropDialogState extends State<ImageCropDialog> {
                     onChanged: _setZoom,
                   ),
                 ),
-                const Icon(Icons.zoom_in, size: 18),
+                const Icon(AppIcons.zoomIn, size: 18),
               ],
             ),
             TextButton.icon(
               onPressed: _reset,
-              icon: const Icon(Icons.refresh, size: 18),
+              icon: const Icon(AppIcons.refresh, size: 18),
               label: const Text('Đặt lại căn chỉnh'),
             ),
           ],

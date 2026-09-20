@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class AppImageViewer extends StatefulWidget {
   final List<String> imageUrls;
@@ -175,7 +176,7 @@ class _AppImageViewerState extends State<AppImageViewer> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(
-                              Icons.broken_image_rounded,
+                              AppIcons.imageOff,
                               color: Colors.white60,
                               size: 54,
                             ),
@@ -229,7 +230,7 @@ class _AppImageViewerState extends State<AppImageViewer> {
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.close_rounded,
+                        AppIcons.close,
                         color: Colors.white,
                         size: 20,
                       ),
@@ -271,7 +272,7 @@ class _AppImageViewerState extends State<AppImageViewer> {
                     TextButton.icon(
                       onPressed: _resetZoom,
                       icon: const Icon(
-                        Icons.restart_alt_rounded,
+                        AppIcons.refresh,
                         color: Colors.white,
                         size: 18,
                       ),
@@ -322,7 +323,7 @@ class _AppImageViewerState extends State<AppImageViewer> {
                 children: [
                   IconButton(
                     icon: const Icon(
-                      Icons.zoom_out_rounded,
+                      AppIcons.zoomOut,
                       color: Colors.white,
                       size: 22,
                     ),
@@ -336,7 +337,7 @@ class _AppImageViewerState extends State<AppImageViewer> {
                   ),
                   IconButton(
                     icon: const Icon(
-                      Icons.zoom_in_rounded,
+                      AppIcons.zoomIn,
                       color: Colors.white,
                       size: 22,
                     ),
@@ -361,7 +362,7 @@ class _AppImageViewerState extends State<AppImageViewer> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.pinch_rounded, color: Colors.white70, size: 16),
+                  Icon(AppIcons.expand, color: Colors.white70, size: 16),
                   SizedBox(width: 6),
                   Text(
                     l10n.imageViewerZoomHint,

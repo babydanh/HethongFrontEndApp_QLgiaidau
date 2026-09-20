@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:flutter/material.dart';
 
 class ChatPollDialog extends StatefulWidget {
@@ -116,7 +117,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.poll_rounded,
+                      AppIcons.chart,
                       color: AppTheme.primary,
                       size: 20,
                     ),
@@ -133,7 +134,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                   const Spacer(),
                   IconButton(
                     icon: Icon(
-                      Icons.close_rounded,
+                      AppIcons.close,
                       color: colors.textMuted,
                       size: 20,
                     ),
@@ -209,7 +210,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
                       if (_optionControllers.length > 2)
                         IconButton(
                           icon: Icon(
-                            Icons.remove_circle_outline,
+                            AppIcons.cancel,
                             color: colors.error,
                             size: 20,
                           ),
@@ -222,7 +223,7 @@ class _ChatPollDialogState extends State<ChatPollDialog> {
               if (_optionControllers.length < 10)
                 TextButton.icon(
                   onPressed: _addOption,
-                  icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                  icon: const Icon(AppIcons.add, size: 18),
                   label: Text(
                     l10n.chatPollAddOption,
                     style: const TextStyle(fontWeight: FontWeight.w600),

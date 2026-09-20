@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.da
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_filter_segment.dart';
 
 class LiveMatchScreen extends ConsumerStatefulWidget {
@@ -56,10 +57,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
         backgroundColor: context.colors.bgDark,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_rounded,
-            color: context.colors.textPrimary,
-          ),
+          icon: Icon(AppIcons.chevronLeft, color: context.colors.textPrimary),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -219,7 +217,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
             SliverToBoxAdapter(
               child: _buildSectionHeader(
                 context,
-                icon: Icons.sensors_rounded,
+                icon: AppIcons.radio,
                 title: l10n.matchesStatusLive,
                 count: liveMatches.length,
                 color: context.colors.error,
@@ -253,7 +251,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
             SliverToBoxAdapter(
               child: _buildSectionHeader(
                 context,
-                icon: Icons.calendar_today_rounded,
+                icon: AppIcons.calendar,
                 title: l10n.matchesStatusScheduled,
                 count: upcomingMatches.length,
                 color: context.colors.info,
@@ -279,7 +277,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
             SliverToBoxAdapter(
               child: _buildSectionHeader(
                 context,
-                icon: Icons.check_circle_outline_rounded,
+                icon: AppIcons.checkCircle,
                 title: l10n.matchesStatusCompleted,
                 count: completedMatches.length,
                 color: context.colors.success,
@@ -403,7 +401,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                     borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                   ),
                   child: const Icon(
-                    Icons.sports_esports_rounded,
+                    AppIcons.trophy,
                     color: Colors.white,
                     size: 22,
                   ),
@@ -499,21 +497,21 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
             Row(
               children: [
                 _buildStatItem(
-                  icon: Icons.sensors_rounded,
+                  icon: AppIcons.radio,
                   value: '$liveCount',
                   label: l10n.matchesStatusLive,
                   color: context.colors.error,
                 ),
                 const SizedBox(width: 12),
                 _buildStatItem(
-                  icon: Icons.schedule_rounded,
+                  icon: AppIcons.clock,
                   value: '${matches.length - liveCount}',
                   label: l10n.liveMatchRemainingLabel,
                   color: context.colors.info,
                 ),
                 const SizedBox(width: 12),
                 _buildStatItem(
-                  icon: Icons.check_circle_outline_rounded,
+                  icon: AppIcons.checkCircle,
                   value:
                       '${matches.where((m) => m.status == AppConstants.matchCompleted).length}',
                   label: l10n.matchesStatusCompleted,
@@ -679,7 +677,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                       borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                     ),
                     child: const Icon(
-                      Icons.sports_esports_rounded,
+                      AppIcons.trophy,
                       color: Colors.white,
                       size: 22,
                     ),
@@ -758,7 +756,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                       borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                     ),
                     child: Icon(
-                      Icons.sports_score_rounded,
+                      AppIcons.trophy,
                       size: 44,
                       color: context.colors.textMuted.withValues(alpha: 0.4),
                     ),
@@ -806,7 +804,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.refresh_rounded,
+                            AppIcons.refresh,
                             size: 16,
                             color: context.colors.info,
                           ),
@@ -915,7 +913,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                 borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               ),
               child: Icon(
-                Icons.cloud_off_rounded,
+                AppIcons.imageOff,
                 size: 40,
                 color: context.colors.error,
               ),
@@ -945,7 +943,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
                   tournamentDivisionsProvider(widget.tournamentId),
                 );
               },
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const Icon(AppIcons.refresh),
               label: Text(l10n.matchesRetry),
               style: FilledButton.styleFrom(
                 shape: RoundedRectangleBorder(

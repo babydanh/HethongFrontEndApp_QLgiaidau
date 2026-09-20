@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 const List<Color> _kSlotAvatarColors = [
   Color(0xFF10B981), // Emerald
@@ -58,10 +59,16 @@ class _CommunityClubMatchSessionRosterWidgetState
       if (mounted) {
         final session = values[0] as ClubMatchSessionModel;
         final participants = values[1] as List<ClubMatchParticipantModel>;
-        final activeCount = participants.where((p) => p.status == 'ACTIVE').length;
-        final totalSlots = session.maxParticipants < activeCount ? activeCount : session.maxParticipants;
-        final totalPages = totalSlots <= 0 ? 1 : (totalSlots + _kRosterSlotsPerPage - 1) ~/ _kRosterSlotsPerPage;
-        
+        final activeCount = participants
+            .where((p) => p.status == 'ACTIVE')
+            .length;
+        final totalSlots = session.maxParticipants < activeCount
+            ? activeCount
+            : session.maxParticipants;
+        final totalPages = totalSlots <= 0
+            ? 1
+            : (totalSlots + _kRosterSlotsPerPage - 1) ~/ _kRosterSlotsPerPage;
+
         // Tự động qua trang kế nếu trang hiện tại đã đầy đủ 8 slots
         int targetPage = (activeCount ~/ _kRosterSlotsPerPage) + 1;
         if (targetPage > totalPages) targetPage = totalPages;
@@ -112,11 +119,7 @@ class _CommunityClubMatchSessionRosterWidgetState
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
-            Icon(
-              Icons.warning_amber_rounded,
-              color: Color(0xFFEF4444),
-              size: 24,
-            ),
+            Icon(AppIcons.warning, color: Color(0xFFEF4444), size: 24),
             SizedBox(width: 8),
             Text(
               'Hủy tham gia giao lưu',
@@ -264,7 +267,9 @@ class _CommunityClubMatchSessionRosterWidgetState
                 color: Theme.of(context).brightness == Brightness.dark
                     ? colors.bgElevated
                     : const Color(0xFFF8FAFC),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(15),
+                ),
                 border: Border(
                   bottom: BorderSide(
                     color: colors.border.withValues(alpha: 0.5),
@@ -320,7 +325,7 @@ class _CommunityClubMatchSessionRosterWidgetState
                     ),
                   ),
                   Icon(
-                    Icons.chevron_right_rounded,
+                    AppIcons.chevronRight,
                     size: 20,
                     color: colors.textMuted,
                   ),
@@ -388,7 +393,7 @@ class _CommunityClubMatchSessionRosterWidgetState
                       ),
                       const SizedBox(width: 4),
                       Icon(
-                        Icons.chevron_right_rounded,
+                        AppIcons.chevronRight,
                         size: 16,
                         color: colors.textMuted,
                       ),
@@ -503,7 +508,7 @@ class _CommunityClubMatchSessionRosterWidgetState
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
-                                  Icons.close_rounded,
+                                  AppIcons.close,
                                   size: 12,
                                   color: Colors.white,
                                 ),
@@ -570,7 +575,7 @@ class _CommunityClubMatchSessionRosterWidgetState
                       ),
                       child: Center(
                         child: Icon(
-                          Icons.add_rounded,
+                          AppIcons.add,
                           size: 22,
                           color: canTapEmptySlot
                               ? const Color(0xFF3B82F6)
@@ -606,7 +611,7 @@ class _CommunityClubMatchSessionRosterWidgetState
                     onPressed: currentPage > 1
                         ? () => setState(() => _rosterPage = currentPage - 1)
                         : null,
-                    icon: const Icon(Icons.chevron_left_rounded),
+                    icon: const Icon(AppIcons.chevronLeft),
                   ),
                   Text(
                     'Trang $currentPage/$totalPages',
@@ -621,7 +626,7 @@ class _CommunityClubMatchSessionRosterWidgetState
                     onPressed: currentPage < totalPages
                         ? () => setState(() => _rosterPage = currentPage + 1)
                         : null,
-                    icon: const Icon(Icons.chevron_right_rounded),
+                    icon: const Icon(AppIcons.chevronRight),
                   ),
                 ],
               ),

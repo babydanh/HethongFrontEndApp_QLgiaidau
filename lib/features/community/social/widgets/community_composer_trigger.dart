@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Ô kích hoạt đăng bài chuẩn phong cách Facebook:
 /// - Toàn chiều rộng (full-width), không bo góc viền hộp ngoài lơ lửng.
@@ -89,9 +90,7 @@ class CommunityComposerTrigger extends StatelessWidget {
                   l10n.communityComposerTriggerHint,
                   style: TextStyle(
                     fontSize: 13.5,
-                    color: isDark
-                        ? Colors.grey[300]
-                        : const Color(0xFF65676B),
+                    color: isDark ? Colors.grey[300] : const Color(0xFF65676B),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -105,7 +104,7 @@ class CommunityComposerTrigger extends StatelessWidget {
           IconButton(
             onPressed: onOpenWithImage,
             icon: const Icon(
-              Icons.photo_library_rounded,
+              AppIcons.images,
               color: Color(0xFF45BD62), // Màu xanh lá biểu tượng ảnh Facebook
               size: 24,
             ),

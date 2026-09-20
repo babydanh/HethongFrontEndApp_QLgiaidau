@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Rally Point scoring panel — cho Badminton, Table Tennis, Pickleball Rally.
@@ -140,7 +141,7 @@ class RallyScorePanel extends ConsumerWidget {
                         ),
                       ),
                       child: Icon(
-                        Icons.remove_rounded,
+                        AppIcons.remove,
                         size: 28,
                         color: colors.textMuted,
                       ),
@@ -188,7 +189,7 @@ class RallyScorePanel extends ConsumerWidget {
                         ],
                       ),
                       child: const Icon(
-                        Icons.add_rounded,
+                        AppIcons.add,
                         size: 34,
                         color: Colors.white,
                       ),

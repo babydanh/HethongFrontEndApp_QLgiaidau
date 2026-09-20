@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Các lý do báo cáo vi phạm
 class ReportReason {
@@ -17,10 +18,10 @@ class ReportReason {
 }
 
 const _reportReasons = [
-  ReportReason(key: 'spam', icon: Icons.campaign_rounded),
-  ReportReason(key: 'inappropriate', icon: Icons.block_rounded),
-  ReportReason(key: 'cheating', icon: Icons.gavel_rounded),
-  ReportReason(key: 'other', icon: Icons.more_horiz_rounded),
+  ReportReason(key: 'spam', icon: AppIcons.megaphone),
+  ReportReason(key: 'inappropriate', icon: AppIcons.ban),
+  ReportReason(key: 'cheating', icon: AppIcons.shield),
+  ReportReason(key: 'other', icon: AppIcons.moreHorizontal),
 ];
 
 String _categoryForReason(String key) => switch (key) {
@@ -217,11 +218,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
                     color: colors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    Icons.flag_rounded,
-                    color: colors.error,
-                    size: 22,
-                  ),
+                  child: Icon(AppIcons.target, color: colors.error, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -301,7 +298,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
                           height: 14,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.upload_file_rounded, size: 18),
+                      : const Icon(AppIcons.upload, size: 18),
                   label: Text(l10n.report_uploadFile),
                 ),
               ],
@@ -339,12 +336,9 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
                                   url,
                                   fit: BoxFit.cover,
                                   errorBuilder: (_, _, _) =>
-                                      const Icon(Icons.broken_image_outlined),
+                                      const Icon(AppIcons.imageOff),
                                 )
-                              : const Icon(
-                                  Icons.insert_drive_file_outlined,
-                                  size: 30,
-                                ),
+                              : const Icon(AppIcons.file, size: 30),
                         ),
                       ),
                       Positioned(
@@ -357,7 +351,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
                             radius: 10,
                             backgroundColor: Colors.black54,
                             child: Icon(
-                              Icons.close,
+                              AppIcons.close,
                               size: 13,
                               color: Colors.white,
                             ),
@@ -461,7 +455,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.check_rounded,
+                  AppIcons.check,
                   size: 14,
                   color: Colors.white,
                 ),

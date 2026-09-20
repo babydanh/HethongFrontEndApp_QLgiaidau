@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class NotificationScreen extends ConsumerStatefulWidget {
@@ -235,7 +236,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         backgroundColor: colors.bgDark,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -319,11 +320,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.notifications_none_rounded,
-              size: 64,
-              color: colors.textMuted,
-            ),
+            Icon(AppIcons.bell, size: 64, color: colors.textMuted),
             const SizedBox(height: 16),
             Text(
               l10n.notification_emptyTitle,
@@ -350,7 +347,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(
-          Icons.done_all_rounded,
+          AppIcons.checkCircle,
           size: 48,
           color: colors.success.withValues(alpha: 0.5),
         ),
@@ -382,7 +379,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+          Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
           const SizedBox(height: 12),
           Text(
             message,
@@ -581,7 +578,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                             Padding(
                               padding: const EdgeInsets.only(right: 6),
                               child: Icon(
-                                Icons.bolt_rounded,
+                                AppIcons.zap,
                                 size: 14,
                                 color: colors.warning,
                               ),
@@ -766,7 +763,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.check_circle_outline_rounded,
+                        AppIcons.checkCircle,
                         size: 14,
                         color: Color(0xFF059669),
                       ),
@@ -900,7 +897,7 @@ class _FilterSegment extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              isActive ? Icons.filter_alt_rounded : Icons.filter_alt_outlined,
+              isActive ? AppIcons.filter : AppIcons.filter,
               size: 16,
               color: isActive ? const Color(0xFF2979FF) : colors.textMuted,
             ),

@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:go_router/go_router.dart';
 
 /// Màn sinh hoạt CLB gọn cho mobile. Có thể mở từ club detail hoặc tab CLB.
@@ -301,7 +302,7 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                   child: Row(
                     children: [
                       const Icon(
-                        Icons.shield_outlined,
+                        AppIcons.shield,
                         size: 20,
                         color: Color(0xFFD97706),
                       ),
@@ -429,14 +430,14 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                           )
                           .reactToPost(post.id, reaction)
                           .then((ok) {
-                        if (!ok) {
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(l10n.communityFeedReactError),
-                            ),
-                          );
-                        }
-                      });
+                            if (!ok) {
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(l10n.communityFeedReactError),
+                                ),
+                              );
+                            }
+                          });
                     },
                     currentUserId: currentUserId,
                     canModerateComments: isModerator,
@@ -510,7 +511,7 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
               onPressed: () => context.push(
                 '/club/${widget.communityId}/chat?name=${Uri.encodeComponent(widget.communityName)}',
               ),
-              icon: const Icon(Icons.forum_outlined),
+              icon: const Icon(AppIcons.messages),
             ),
         ],
       ),
@@ -521,7 +522,7 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
               onPressed: () => context.push(
                 '/club/${widget.communityId}/chat?name=${Uri.encodeComponent(widget.communityName)}',
               ),
-              child: const Icon(Icons.chat_bubble_rounded),
+              child: const Icon(AppIcons.chat),
             )
           : null,
     );
@@ -542,17 +543,17 @@ class _CompactHighlights extends StatelessWidget {
         children: [
           _Highlight(
             label: communityName,
-            icon: Icons.groups_rounded,
+            icon: AppIcons.users,
             color: AppTheme.primary,
           ),
           _Highlight(
             label: l10n.communitySocial_recentMatches,
-            icon: Icons.sports_tennis_rounded,
+            icon: AppIcons.sportTennis,
             color: Color(0xFF8B5CF6),
           ),
           _Highlight(
             label: l10n.communitySocial_eloBoard,
-            icon: Icons.leaderboard_rounded,
+            icon: AppIcons.chart,
             color: Color(0xFFF59E0B),
           ),
         ],
@@ -625,7 +626,7 @@ class _FeedError extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Card(
     child: ListTile(
-      leading: const Icon(Icons.cloud_off_rounded),
+      leading: const Icon(AppIcons.imageOff),
       title: Text(message),
       trailing: TextButton(
         onPressed: onRetry,
@@ -642,7 +643,7 @@ class _SocialNotice extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     child: ListTile(
       dense: true,
-      leading: const Icon(Icons.info_outline_rounded),
+      leading: const Icon(AppIcons.info),
       title: Text(message),
     ),
   );

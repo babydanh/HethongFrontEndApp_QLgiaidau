@@ -1,3 +1,4 @@
+
 part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailGalleryTab on _ClubDetailScreenState {
@@ -8,7 +9,7 @@ extension _ClubDetailGalleryTab on _ClubDetailScreenState {
   }) {
     if (club.visibility.toUpperCase() == 'PRIVATE' && !_isMember) {
       return _buildPrivateLockView(
-        icon: Icons.photo_library_rounded,
+        icon: AppIcons.images,
         title: 'Thư viện hình ảnh riêng tư',
         description:
             'Hình ảnh hoạt động và khoảnh khắc của CLB chỉ dành riêng cho thành viên chính thức.',
@@ -61,7 +62,7 @@ extension _ClubDetailGalleryTab on _ClubDetailScreenState {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.photo_library_outlined,
+                  AppIcons.images,
                   size: 48,
                   color: colors.textMuted,
                 ),
@@ -85,7 +86,7 @@ extension _ClubDetailGalleryTab on _ClubDetailScreenState {
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.add_photo_alternate_outlined),
+                        : const Icon(AppIcons.imageAdd),
                     label: Text(l10n.clubDetailAddFirstImage),
                   ),
                 ],
@@ -123,7 +124,7 @@ extension _ClubDetailGalleryTab on _ClubDetailScreenState {
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.add_photo_alternate_outlined),
+                          : const Icon(AppIcons.imageAdd),
                     ),
                 ],
               ),
@@ -168,7 +169,7 @@ extension _ClubDetailGalleryTab on _ClubDetailScreenState {
                                   Container(
                                     color: colors.bgSurface,
                                     child: Icon(
-                                      Icons.broken_image_rounded,
+                                      AppIcons.imageOff,
                                       color: colors.textMuted,
                                       size: 28,
                                     ),
@@ -226,7 +227,7 @@ extension _ClubDetailGalleryTab on _ClubDetailScreenState {
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(
-                                      Icons.delete_outline_rounded,
+                                      AppIcons.delete,
                                       color: Colors.white,
                                       size: 16,
                                     ),
@@ -256,7 +257,7 @@ extension _ClubDetailGalleryTab on _ClubDetailScreenState {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.photo_library_outlined,
+                AppIcons.images,
                 size: 48,
                 color: colors.textMuted,
               ),
@@ -280,7 +281,7 @@ extension _ClubDetailGalleryTab on _ClubDetailScreenState {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+              Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
               const SizedBox(height: 12),
               Text(
                 l10n.club_loadImagesError,

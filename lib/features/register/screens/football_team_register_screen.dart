@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dar
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class FootballTeamRegisterScreen extends ConsumerStatefulWidget {
   const FootballTeamRegisterScreen({
@@ -331,7 +332,7 @@ class _FootballTeamRegisterScreenState
                           onPressed: _rosterAction
                               ? null
                               : () => _respondToRoster('CONFIRM'),
-                          icon: const Icon(Icons.check, size: 16),
+                          icon: const Icon(AppIcons.check, size: 16),
                           label: Text(l10n.register_confirmRoster),
                         ),
                         const SizedBox(width: 8),
@@ -339,7 +340,7 @@ class _FootballTeamRegisterScreenState
                           onPressed: _rosterAction
                               ? null
                               : () => _respondToRoster('DECLINE'),
-                          icon: const Icon(Icons.close, size: 16),
+                          icon: const Icon(AppIcons.close, size: 16),
                           label: Text(l10n.register_declineRoster),
                         ),
                       ],
@@ -466,7 +467,7 @@ class _FootballTeamRegisterScreenState
                     _selectedReserveIds.length > widget.maxReserve
                 ? null
                 : _register,
-            icon: const Icon(Icons.check),
+            icon: const Icon(AppIcons.check),
             label: Text(
               widget.participantId != null
                   ? l10n.register_updateRoster
@@ -494,7 +495,7 @@ class _FootballTeamRegisterScreenState
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.sports_soccer),
+              leading: const Icon(AppIcons.sportFootball),
               title: Text(l10n.register_mainPlayer),
               enabled:
                   current != 'MAIN' &&
@@ -504,7 +505,7 @@ class _FootballTeamRegisterScreenState
               onTap: () => Navigator.pop(sheetContext, 'MAIN'),
             ),
             ListTile(
-              leading: const Icon(Icons.event_seat),
+              leading: const Icon(AppIcons.users),
               title: Text(l10n.register_reservePlayer),
               enabled:
                   current != 'RESERVE' &&
@@ -514,7 +515,7 @@ class _FootballTeamRegisterScreenState
               onTap: () => Navigator.pop(sheetContext, 'RESERVE'),
             ),
             ListTile(
-              leading: const Icon(Icons.remove_circle_outline),
+              leading: const Icon(AppIcons.cancel),
               title: Text(l10n.register_removeSelection),
               onTap: () => Navigator.pop(sheetContext, 'NONE'),
             ),

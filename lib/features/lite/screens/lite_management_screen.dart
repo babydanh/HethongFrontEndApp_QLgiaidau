@@ -22,6 +22,7 @@ import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.
 import 'package:app_quanly_giaidau/features/lite/widgets/football_registration_groups.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 class LiteManagementScreen extends ConsumerStatefulWidget {
@@ -317,7 +318,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       backgroundColor: colors.bgDark,
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -339,7 +340,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           if (state.inviteCode != null && state.inviteCode!.isNotEmpty)
             IconButton(
               tooltip: l10n.lite_shareTournament,
-              icon: Icon(Icons.share_rounded, color: colors.textPrimary),
+              icon: Icon(AppIcons.share, color: colors.textPrimary),
               onPressed: () {
                 final invite = state.inviteCode!;
                 final link = LiteTournamentCreateResult.resolveUrl(
@@ -355,13 +356,13 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               },
             ),
           IconButton(
-            icon: Icon(Icons.refresh_rounded, color: colors.textPrimary),
+            icon: Icon(AppIcons.refresh, color: colors.textPrimary),
             onPressed: state.loading
                 ? null
                 : () => notifier.refresh(widget.tournamentId),
           ),
           PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert_rounded, color: colors.textPrimary),
+            icon: Icon(AppIcons.moreVertical, color: colors.textPrimary),
             tooltip: l10n.deleteTournament,
             onSelected: (value) {
               if (value == 'delete') {
@@ -373,11 +374,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 value: 'delete',
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.delete_outline_rounded,
-                      color: Colors.red,
-                      size: 20,
-                    ),
+                    const Icon(AppIcons.delete, color: Colors.red, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       l10n.deleteTournament,
@@ -409,15 +406,15 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           indicatorSize: TabBarIndicatorSize.tab,
           tabs: [
             Tab(
-              icon: const Icon(Icons.dashboard_outlined, size: 18),
+              icon: const Icon(AppIcons.dashboard, size: 18),
               text: l10n.organizer_tabOverview,
             ),
             Tab(
-              icon: const Icon(Icons.people_outline_rounded, size: 18),
+              icon: const Icon(AppIcons.users, size: 18),
               text: l10n.lite_participantsTab,
             ),
             Tab(
-              icon: const Icon(Icons.account_tree_outlined, size: 18),
+              icon: const Icon(AppIcons.layers, size: 18),
               text: l10n.lite_bracketAndMatches,
             ),
           ],
@@ -432,11 +429,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.cloud_off_rounded,
-                      size: 44,
-                      color: colors.textMuted,
-                    ),
+                    Icon(AppIcons.imageOff, size: 44, color: colors.textMuted),
                     const SizedBox(height: 12),
                     Text(
                       state.error!,
@@ -449,7 +442,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     const SizedBox(height: 16),
                     FilledButton.icon(
                       onPressed: () => notifier.init(widget.tournamentId),
-                      icon: const Icon(Icons.refresh_rounded),
+                      icon: const Icon(AppIcons.refresh),
                       label: Text(l10n.infoRetry),
                     ),
                   ],
@@ -517,7 +510,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                                     child: Row(
                                       children: [
                                         Icon(
-                                          Icons.emoji_events_rounded,
+                                          AppIcons.trophy,
                                           size: 20,
                                           color: AppTheme.primary,
                                         ),
@@ -550,7 +543,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                                                         ),
                                                   )
                                                 : const Icon(
-                                                    Icons.refresh_rounded,
+                                                    AppIcons.refresh,
                                                     size: 16,
                                                   ),
                                             label: Text(
@@ -668,11 +661,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           const SizedBox(height: 24),
 
           // ─── Info Grid ───
-          _sectionHeader(
-            colors,
-            l10n.lite_tournamentInfo,
-            Icons.info_outline_rounded,
-          ),
+          _sectionHeader(colors, l10n.lite_tournamentInfo, AppIcons.info),
           const SizedBox(height: 10),
           _infoGrid(colors, [
             (l10n.sportLabel, sportLabel),
@@ -717,11 +706,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.warning_amber_rounded,
-                color: Colors.red,
-                size: 20,
-              ),
+              const Icon(AppIcons.warning, color: Colors.red, size: 20),
               const SizedBox(width: 8),
               Text(
                 l10n.deleteTournament,
@@ -763,7 +748,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                         color: Colors.red,
                       ),
                     )
-                  : const Icon(Icons.delete_forever_rounded, size: 18),
+                  : const Icon(AppIcons.delete, size: 18),
               label: Text(
                 _isDeleting ? '...' : l10n.deleteTournament,
                 style: const TextStyle(fontWeight: FontWeight.bold),
@@ -892,7 +877,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.check_circle_rounded, size: 14, color: colors.success),
+          Icon(AppIcons.checkCircle, size: 14, color: colors.success),
           const SizedBox(width: 4),
           Text(
             l10n.lite_saved,
@@ -944,11 +929,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         children: [
           Row(
             children: [
-              Icon(
-                Icons.calendar_month_rounded,
-                size: 20,
-                color: AppTheme.primary,
-              ),
+              Icon(AppIcons.calendar, size: 20, color: AppTheme.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -997,7 +978,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     child: Row(
                       children: [
                         Icon(
-                          Icons.today_rounded,
+                          AppIcons.calendar,
                           size: 16,
                           color: colors.textSecondary,
                         ),
@@ -1061,7 +1042,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     child: Row(
                       children: [
                         Icon(
-                          Icons.access_time_rounded,
+                          AppIcons.clock,
                           size: 16,
                           color: colors.textSecondary,
                         ),
@@ -1106,11 +1087,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.timer_outlined,
-                  size: 16,
-                  color: colors.textSecondary,
-                ),
+                Icon(AppIcons.timer, size: 16, color: colors.textSecondary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -1242,11 +1219,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         children: [
           Row(
             children: [
-              Icon(
-                Icons.location_on_outlined,
-                size: 20,
-                color: AppTheme.primary,
-              ),
+              Icon(AppIcons.mapPin, size: 20, color: AppTheme.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -1339,7 +1312,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               ),
               child: Row(
                 children: [
-                  Icon(Icons.auto_awesome, size: 16, color: AppTheme.primary),
+                  Icon(AppIcons.sparkles, size: 16, color: AppTheme.primary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -1544,7 +1517,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.notes_rounded, size: 20, color: AppTheme.primary),
+              Icon(AppIcons.fileText, size: 20, color: AppTheme.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -1829,7 +1802,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       if (ok) setState(() => _formatDraft = selected);
                     }
                   : null,
-              icon: const Icon(Icons.save_outlined, size: 18),
+              icon: const Icon(AppIcons.save, size: 18),
               label: Text(l10n.matchSaveChanges),
             ),
           ),
@@ -1841,22 +1814,14 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   Widget _buildLiteFlow(AppColorsExtension colors, LiteManagementState state) {
     final l10n = AppLocalizations.of(context)!;
     final steps = [
-      (
-        l10n.lite_participants,
-        state.participants.isNotEmpty,
-        Icons.people_outline_rounded,
-      ),
+      (l10n.lite_participants, state.participants.isNotEmpty, AppIcons.users),
       (
         l10n.lite_stepPairing,
         state.isDoubles ? state.completeParticipants.isNotEmpty : true,
-        Icons.link_rounded,
+        AppIcons.link,
       ),
-      (l10n.lite_createBracket, state.hasBracket, Icons.account_tree_outlined),
-      (
-        l10n.lite_stepFollowMatches,
-        state.hasBracket,
-        Icons.sports_tennis_rounded,
-      ),
+      (l10n.lite_createBracket, state.hasBracket, AppIcons.layers),
+      (l10n.lite_stepFollowMatches, state.hasBracket, AppIcons.sportTennis),
     ];
 
     return Container(
@@ -2043,7 +2008,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                           height: 48,
                           errorBuilder: (ctx, err, stack) => const Center(
                             child: Icon(
-                              Icons.emoji_events_rounded,
+                              AppIcons.trophy,
                               color: Colors.white,
                               size: 24,
                             ),
@@ -2051,7 +2016,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                         )
                       : const Center(
                           child: Icon(
-                            Icons.emoji_events_rounded,
+                            AppIcons.trophy,
                             color: Colors.white,
                             size: 24,
                           ),
@@ -2092,7 +2057,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.sports_rounded, size: 16, color: colors.textSecondary),
+              Icon(AppIcons.trophy, size: 16, color: colors.textSecondary),
               const SizedBox(width: 6),
               Text(
                 tournament != null
@@ -2101,11 +2066,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 style: TextStyle(fontSize: 13, color: colors.textSecondary),
               ),
               const SizedBox(width: 20),
-              Icon(
-                Icons.people_outline_rounded,
-                size: 16,
-                color: colors.textSecondary,
-              ),
+              Icon(AppIcons.users, size: 16, color: colors.textSecondary),
               const SizedBox(width: 6),
               Text(
                 matchTypeLabel,
@@ -2117,7 +2078,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           const SizedBox(height: 6),
           Row(
             children: [
-              Icon(Icons.groups_rounded, size: 16, color: colors.textSecondary),
+              Icon(AppIcons.users, size: 16, color: colors.textSecondary),
               const SizedBox(width: 6),
               Text(
                 '${l10n.maxTeamsLabel}: ${tournament?.maxTeams ?? '--'} ${l10n.teamsUnit}',
@@ -2216,7 +2177,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
-                    Icons.qr_code_2_rounded,
+                    AppIcons.qrCode,
                     size: 20,
                     color: AppTheme.primary,
                   ),
@@ -2244,7 +2205,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 IconButton(
                   tooltip: l10n.lite_shareTournament,
                   icon: const Icon(
-                    Icons.share_rounded,
+                    AppIcons.share,
                     color: AppTheme.primary,
                     size: 20,
                   ),
@@ -2310,7 +2271,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
-                          Icons.fullscreen_rounded,
+                          AppIcons.expand,
                           size: 14,
                           color: Colors.white,
                         ),
@@ -2376,7 +2337,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                               child: Padding(
                                 padding: const EdgeInsets.all(4),
                                 child: Icon(
-                                  Icons.copy_rounded,
+                                  AppIcons.copy,
                                   size: 16,
                                   color: AppTheme.primary,
                                 ),
@@ -2415,7 +2376,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                         SnackBar(content: Text(l10n.lite_linkCopied)),
                       );
                     },
-                    icon: const Icon(Icons.link_rounded, size: 16),
+                    icon: const Icon(AppIcons.link, size: 16),
                     label: Text(
                       l10n.lite_copyLink,
                       style: const TextStyle(
@@ -2443,7 +2404,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       );
                       SharePlus.instance.share(ShareParams(text: text));
                     },
-                    icon: const Icon(Icons.share_rounded, size: 16),
+                    icon: const Icon(AppIcons.share, size: 16),
                     label: Text(
                       l10n.lite_shareTournament,
                       style: const TextStyle(
@@ -2498,7 +2459,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded),
+                    icon: const Icon(AppIcons.close),
                     onPressed: () => Navigator.pop(dialogContext),
                   ),
                 ],
@@ -2558,7 +2519,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     );
                     SharePlus.instance.share(ShareParams(text: text));
                   },
-                  icon: const Icon(Icons.share_rounded, size: 16),
+                  icon: const Icon(AppIcons.share, size: 16),
                   label: Text(l10n.lite_shareTournament),
                   style: FilledButton.styleFrom(
                     shape: RoundedRectangleBorder(
@@ -2596,7 +2557,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline_rounded, size: 40, color: colors.error),
+              Icon(AppIcons.error, size: 40, color: colors.error),
               const SizedBox(height: 12),
               Text(
                 state.error!,
@@ -2649,7 +2610,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 child: OutlinedButton.icon(
                   onPressed: () =>
                       _showClubMemberPicker(colors, state, notifier),
-                  icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                  icon: const Icon(AppIcons.userAdd, size: 18),
                   label: Text(l10n.lite_addClubMember),
                 ),
               ),
@@ -2666,11 +2627,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.info_outline_rounded,
-                    size: 18,
-                    color: colors.info,
-                  ),
+                  Icon(AppIcons.info, size: 18, color: colors.info),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -2695,7 +2652,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 padding: const EdgeInsets.all(12),
                 child: Row(
                   children: [
-                    const Icon(Icons.fact_check_outlined, color: Colors.amber),
+                    const Icon(AppIcons.checkCircle, color: Colors.amber),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -2771,11 +2728,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   onPressed: state.mockLoading
                       ? null
                       : () => _confirmClearMock(colors, notifier),
-                  icon: Icon(
-                    Icons.delete_sweep_outlined,
-                    size: 18,
-                    color: colors.error,
-                  ),
+                  icon: Icon(AppIcons.delete, size: 18, color: colors.error),
                   label: Text(
                     l10n.lite_clearMockPlayers,
                     style: TextStyle(
@@ -2796,11 +2749,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                         height: 14,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Icon(
-                        Icons.science_outlined,
-                        size: 18,
-                        color: colors.warning,
-                      ),
+                    : Icon(AppIcons.sparkles, size: 18, color: colors.warning),
                 label: Text(
                   state.mockLoading
                       ? l10n.lite_creating
@@ -2819,7 +2768,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             _sectionHeader(
               colors,
               l10n.lite_footballRegisteredTeams(state.participants.length),
-              Icons.shield_outlined,
+              AppIcons.shield,
             ),
             const SizedBox(height: 8),
             if (state.participants.isEmpty)
@@ -2842,7 +2791,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             _sectionHeader(
               colors,
               '${l10n.lite_waitingPair} (${pending.length})',
-              Icons.people_outline_rounded,
+              AppIcons.users,
             ),
             const SizedBox(height: 8),
             if (pending.isEmpty)
@@ -2869,7 +2818,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(Icons.link_rounded, size: 18),
+                      : const Icon(AppIcons.link, size: 18),
                   label: Text(
                     state.pairing ? l10n.lite_pairing : l10n.lite_pairSelected,
                     style: const TextStyle(fontWeight: FontWeight.w600),
@@ -2886,11 +2835,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             // ─── Auto generate section ───
             if (pending.length >= 2) ...[
               const SizedBox(height: 16),
-              _sectionHeader(
-                colors,
-                l10n.lite_autoPairing,
-                Icons.auto_fix_high_rounded,
-              ),
+              _sectionHeader(colors, l10n.lite_autoPairing, AppIcons.sparkles),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -2979,11 +2924,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.info_outline_rounded,
-                      size: 18,
-                      color: colors.warning,
-                    ),
+                    Icon(AppIcons.info, size: 18, color: colors.warning),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -3005,7 +2946,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               _sectionHeader(
                 colors,
                 '${l10n.lite_paired} (${allPaired.length})',
-                Icons.check_circle_outline_rounded,
+                AppIcons.checkCircle,
               ),
               const SizedBox(height: 8),
               ...allPaired.map((p) => _pairedTile(colors, notifier, p)),
@@ -3015,7 +2956,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             _sectionHeader(
               colors,
               '${l10n.lite_participants} (${state.participants.length})',
-              Icons.people_rounded,
+              AppIcons.users,
             ),
             const SizedBox(height: 6),
             if (state.participants.isEmpty)
@@ -3050,9 +2991,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                         ),
                       )
                     : Icon(
-                        state.hasBracket
-                            ? Icons.refresh_rounded
-                            : Icons.emoji_events_rounded,
+                        state.hasBracket ? AppIcons.refresh : AppIcons.trophy,
                         size: 20,
                       ),
                 label: Text(
@@ -3347,9 +3286,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              state.hasBracket
-                  ? Icons.emoji_events_rounded
-                  : Icons.dashboard_customize_rounded,
+              state.hasBracket ? AppIcons.trophy : AppIcons.dashboard,
               size: 56,
               color: colors.textMuted,
             ),
@@ -3381,7 +3318,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     onPressed: () {
                       context.push('/tournaments/${widget.tournamentId}');
                     },
-                    icon: const Icon(Icons.visibility_rounded, size: 18),
+                    icon: const Icon(AppIcons.eye, size: 18),
                     label: Text(l10n.viewBracket),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
@@ -3400,7 +3337,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.refresh_rounded, size: 18),
+                          : const Icon(AppIcons.refresh, size: 18),
                       label: Text(
                         state.creatingBracket
                             ? l10n.lite_creating
@@ -3438,7 +3375,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(Icons.add_rounded, size: 20),
+                      : const Icon(AppIcons.add, size: 20),
                   label: Text(
                     state.creatingBracket
                         ? l10n.lite_creating
@@ -3608,7 +3545,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
           child: Row(
             children: [
               Icon(
-                selected ? Icons.check_circle_rounded : Icons.circle_outlined,
+                selected ? AppIcons.checkCircle : AppIcons.circle,
                 size: 22,
                 color: selected ? AppTheme.primary : colors.textMuted,
               ),
@@ -4104,7 +4041,7 @@ class _LiteClubMemberPickerSheetState
                       IconButton(
                         tooltip: l10n.close,
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close_rounded),
+                        icon: const Icon(AppIcons.close),
                       ),
                     ],
                   ),
@@ -4132,7 +4069,7 @@ class _LiteClubMemberPickerSheetState
                   TextField(
                     onChanged: (value) => setState(() => _query = value),
                     decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search_rounded),
+                      prefixIcon: const Icon(AppIcons.search),
                       hintText: l10n.lite_clubMemberSearchPlaceholder,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -4148,7 +4085,7 @@ class _LiteClubMemberPickerSheetState
                     )
                   else if (_error != null)
                     _PickerMessage(
-                      icon: Icons.cloud_off_rounded,
+                      icon: AppIcons.imageOff,
                       message: _error!,
                       actionLabel: l10n.infoRetry,
                       onAction: _loadMembers,
@@ -4156,7 +4093,7 @@ class _LiteClubMemberPickerSheetState
                     )
                   else if (filtered.isEmpty)
                     _PickerMessage(
-                      icon: Icons.people_outline_rounded,
+                      icon: AppIcons.users,
                       message: _members.isEmpty
                           ? l10n.lite_noClubMembers
                           : l10n.lite_allClubMembersAdded,

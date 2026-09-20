@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_info_dialog.dart';
 import 'package:app_quanly_giaidau/core/strategy/penalty_strategy.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class PenaltyInputDialog extends StatefulWidget {
   final String sportType;
@@ -64,7 +65,9 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
 
     return AlertDialog(
       backgroundColor: context.colors.bgCard,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusXL)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+      ),
       insetPadding: EdgeInsets.symmetric(
         horizontal: isLandscape ? 24.0 : 40.0,
         vertical: isLandscape ? 8.0 : 24.0,
@@ -89,7 +92,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
       ),
       title: Row(
         children: [
-          Icon(Icons.style, color: context.colors.error),
+          Icon(AppIcons.sparkles, color: context.colors.error),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -99,7 +102,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
           ),
           IconButton(
             icon: Icon(
-              Icons.info_outline,
+              AppIcons.info,
               color: context.colors.textMuted,
               size: 20,
             ),

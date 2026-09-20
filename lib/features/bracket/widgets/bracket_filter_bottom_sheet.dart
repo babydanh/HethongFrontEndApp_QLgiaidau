@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/filter_chips.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Immutable model representing the active filter state for bracket matches.
 class BracketFilterState {
@@ -178,11 +179,7 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.tune_rounded,
-                    size: 20,
-                    color: AppTheme.primary,
-                  ),
+                  Icon(AppIcons.tune, size: 20, color: AppTheme.primary),
                   const SizedBox(width: 8),
                   Text(
                     'Bộ lọc trận đấu',
@@ -210,7 +207,7 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                       ),
                     ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20),
+                    icon: const Icon(AppIcons.close, size: 20),
                     color: colors.textMuted,
                     visualDensity: VisualDensity.compact,
                     onPressed: () => Navigator.of(context).pop(),
@@ -234,7 +231,8 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                       runSpacing: 8,
                       children: [
                         RoundFilterPill(
-                          isSelected: _matchFilter.isEmpty || _matchFilter == 'all',
+                          isSelected:
+                              _matchFilter.isEmpty || _matchFilter == 'all',
                           label: 'Tất cả',
                           onTap: () => setState(() => _matchFilter = ''),
                         ),
@@ -243,7 +241,9 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                           label: l10n.bracketView_live,
                           count: widget.liveCount,
                           onTap: () => setState(
-                            () => _matchFilter = _matchFilter == 'live' ? '' : 'live',
+                            () => _matchFilter = _matchFilter == 'live'
+                                ? ''
+                                : 'live',
                           ),
                         ),
                         RoundFilterPill(
@@ -251,7 +251,9 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                           label: l10n.bracketView_scheduled,
                           count: widget.scheduledCount,
                           onTap: () => setState(
-                            () => _matchFilter = _matchFilter == 'scheduled' ? '' : 'scheduled',
+                            () => _matchFilter = _matchFilter == 'scheduled'
+                                ? ''
+                                : 'scheduled',
                           ),
                         ),
                         RoundFilterPill(
@@ -259,7 +261,9 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                           label: l10n.bracketView_completed,
                           count: widget.completedCount,
                           onTap: () => setState(
-                            () => _matchFilter = _matchFilter == 'completed' ? '' : 'completed',
+                            () => _matchFilter = _matchFilter == 'completed'
+                                ? ''
+                                : 'completed',
                           ),
                         ),
                       ],
@@ -274,7 +278,9 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                         runSpacing: 8,
                         children: [
                           RoundFilterPill(
-                            isSelected: _selectedBranch.isEmpty || _selectedBranch == 'all',
+                            isSelected:
+                                _selectedBranch.isEmpty ||
+                                _selectedBranch == 'all',
                             label: 'Tất cả nhánh',
                             onTap: () => setState(() {
                               _selectedBranch = '';
@@ -285,7 +291,9 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                             isSelected: _selectedBranch == 'winners',
                             label: l10n.bracketView_winners,
                             onTap: () => setState(() {
-                              _selectedBranch = _selectedBranch == 'winners' ? '' : 'winners';
+                              _selectedBranch = _selectedBranch == 'winners'
+                                  ? ''
+                                  : 'winners';
                               _selectedRound = 0;
                             }),
                           ),
@@ -293,7 +301,9 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                             isSelected: _selectedBranch == 'losers',
                             label: l10n.bracketView_losers,
                             onTap: () => setState(() {
-                              _selectedBranch = _selectedBranch == 'losers' ? '' : 'losers';
+                              _selectedBranch = _selectedBranch == 'losers'
+                                  ? ''
+                                  : 'losers';
                               _selectedRound = 0;
                             }),
                           ),
@@ -322,7 +332,9 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                             isSelected: _selectedBranch == 'group_stage',
                             label: l10n.bracketView_groupStage,
                             onTap: () => setState(() {
-                              _selectedBranch = _selectedBranch == 'group_stage' ? '' : 'group_stage';
+                              _selectedBranch = _selectedBranch == 'group_stage'
+                                  ? ''
+                                  : 'group_stage';
                               _selectedRound = 0;
                             }),
                           ),
@@ -330,7 +342,9 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                             isSelected: _selectedBranch == 'knockout',
                             label: l10n.bracketView_knockoutStage,
                             onTap: () => setState(() {
-                              _selectedBranch = _selectedBranch == 'knockout' ? '' : 'knockout';
+                              _selectedBranch = _selectedBranch == 'knockout'
+                                  ? ''
+                                  : 'knockout';
                               _selectedGroup = '';
                               _selectedLeg = 0;
                               _selectedRound = 0;
@@ -342,7 +356,8 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                     ],
 
                     // Section 3: Bảng đấu
-                    if (cleanGroups.isNotEmpty && _selectedBranch != 'knockout') ...[
+                    if (cleanGroups.isNotEmpty &&
+                        _selectedBranch != 'knockout') ...[
                       _buildSectionTitle(l10n.bracketView_groupTitle),
                       Wrap(
                         spacing: 8,
@@ -361,7 +376,9 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                               isSelected: _selectedGroup == group,
                               label: group,
                               onTap: () => setState(() {
-                                _selectedGroup = _selectedGroup == group ? '' : group;
+                                _selectedGroup = _selectedGroup == group
+                                    ? ''
+                                    : group;
                                 _selectedRound = 0;
                               }),
                             ),
@@ -372,7 +389,8 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                     ],
 
                     // Section 4: Lượt đấu
-                    if (widget.availableLegs.length > 1 && _selectedBranch != 'knockout') ...[
+                    if (widget.availableLegs.length > 1 &&
+                        _selectedBranch != 'knockout') ...[
                       _buildSectionTitle(l10n.seriesLegCount),
                       Wrap(
                         spacing: 8,
@@ -389,7 +407,10 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                           ...widget.availableLegs.map(
                             (leg) => RoundFilterPill(
                               isSelected: _selectedLeg == leg,
-                              label: l10n.crossTableLegIndicator(leg, widget.availableLegs.length),
+                              label: l10n.crossTableLegIndicator(
+                                leg,
+                                widget.availableLegs.length,
+                              ),
                               onTap: () => setState(() {
                                 _selectedLeg = _selectedLeg == leg ? 0 : leg;
                                 _selectedRound = 0;
@@ -403,7 +424,8 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
 
                     // Section 5: Vòng đấu (Knockout)
                     if (!widget.isRoundRobin &&
-                        (!widget.isGroupStageKnockout || _selectedBranch == 'knockout') &&
+                        (!widget.isGroupStageKnockout ||
+                            _selectedBranch == 'knockout') &&
                         widget.availableRounds.length > 1) ...[
                       _buildSectionTitle(l10n.bracketView_roundTitle),
                       Wrap(
@@ -416,9 +438,11 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                             onTap: () => setState(() => _selectedRound = 0),
                           ),
                           ...widget.availableRounds.map((r) {
-                            final isGroupStageRound = widget.isGroupStageKnockout &&
+                            final isGroupStageRound =
+                                widget.isGroupStageKnockout &&
                                 _selectedBranch != 'knockout';
-                            final label = widget.isRoundRobin || isGroupStageRound
+                            final label =
+                                widget.isRoundRobin || isGroupStageRound
                                 ? l10n.bracketView_round(r)
                                 : MatchRoundLabel.knockoutRoundName(
                                     r,
@@ -429,7 +453,9 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                               isSelected: _selectedRound == r,
                               label: label,
                               onTap: () => setState(
-                                () => _selectedRound = _selectedRound == r ? 0 : r,
+                                () => _selectedRound = _selectedRound == r
+                                    ? 0
+                                    : r,
                               ),
                             );
                           }),
@@ -460,10 +486,7 @@ class _BracketFilterBottomSheetState extends State<BracketFilterBottomSheet> {
                   ),
                   child: const Text(
                     'Áp dụng bộ lọc',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Admin — Yêu cầu xác thực (Verification Requests)
@@ -36,7 +37,7 @@ class _AdminVerificationScreenState
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -194,7 +195,7 @@ class _AdminVerificationScreenState
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.verified_outlined,
+                  AppIcons.verified,
                   size: 64,
                   color: colors.textMuted.withValues(alpha: 0.4),
                 ),
@@ -225,7 +226,7 @@ class _AdminVerificationScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+            Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
             Text(
               l10n!.adminVerificationLoadError,
@@ -261,10 +262,10 @@ class _AdminVerificationScreenState
         ? (l10n!.adminVerificationTypeClub)
         : (l10n!.adminVerificationTypeTournament);
     final typeIcon = type == 'USER'
-        ? Icons.person_rounded
+        ? AppIcons.user
         : type == 'CLUB'
-        ? Icons.groups_rounded
-        : Icons.emoji_events_rounded;
+        ? AppIcons.users
+        : AppIcons.trophy;
     final typeColor = type == 'USER'
         ? const Color(0xFF3B82F6)
         : type == 'CLUB'
@@ -410,7 +411,7 @@ class _AdminVerificationScreenState
                 Expanded(
                   child: _actionBtn(
                     l10n!.adminVerificationApprove,
-                    Icons.check_rounded,
+                    AppIcons.check,
                     const Color(0xFF10B981),
                     () => _handleAction(request['id'], 'VERIFIED', colors),
                   ),
@@ -419,7 +420,7 @@ class _AdminVerificationScreenState
                 Expanded(
                   child: _actionBtn(
                     l10n!.adminVerificationReject,
-                    Icons.close_rounded,
+                    AppIcons.close,
                     const Color(0xFFEF4444),
                     () => _handleReject(request['id'], colors),
                     outlined: true,

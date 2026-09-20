@@ -6,17 +6,14 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/social/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_join_bottom_sheet.dart';
 
 class SocialDetailScreen extends ConsumerStatefulWidget {
   final String sessionId;
   final bool? isAdmin;
 
-  const SocialDetailScreen({
-    super.key,
-    required this.sessionId,
-    this.isAdmin,
-  });
+  const SocialDetailScreen({super.key, required this.sessionId, this.isAdmin});
 
   @override
   ConsumerState<SocialDetailScreen> createState() => _SocialDetailScreenState();
@@ -53,10 +50,13 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
         backgroundColor: colors.bgDark,
         appBar: AppBar(
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: colors.textPrimary),
+            icon: Icon(AppIcons.back, color: colors.textPrimary),
             onPressed: () => context.pop(),
           ),
-          title: Text('Chi tiết Social', style: TextStyle(color: colors.textPrimary)),
+          title: Text(
+            'Chi tiết Social',
+            style: TextStyle(color: colors.textPrimary),
+          ),
         ),
         body: Center(
           child: Text(
@@ -92,10 +92,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
           Container(
             decoration: BoxDecoration(
               border: Border(
-                bottom: BorderSide(
-                  color: colors.border,
-                  width: 1,
-                ),
+                bottom: BorderSide(color: colors.border, width: 1),
               ),
             ),
             child: TabBar(
@@ -155,11 +152,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
       elevation: 0,
       scrolledUnderElevation: 0,
       leading: IconButton(
-        icon: Icon(
-          Icons.arrow_back,
-          color: colors.textPrimary,
-          size: 24,
-        ),
+        icon: Icon(AppIcons.back, color: colors.textPrimary, size: 24),
         onPressed: () => context.pop(),
       ),
       centerTitle: true,
@@ -173,16 +166,12 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
       ),
       actions: [
         IconButton(
-          icon: Icon(
-            Icons.ios_share_rounded,
-            color: colors.textPrimary,
-            size: 22,
-          ),
+          icon: Icon(AppIcons.share, color: colors.textPrimary, size: 22),
           onPressed: () => _handleShare(session),
         ),
         IconButton(
           icon: Icon(
-            Icons.more_vert_rounded,
+            AppIcons.moreVertical,
             color: colors.textPrimary,
             size: 22,
           ),
@@ -196,8 +185,10 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
   //  TAB 1: CHI TIẾT (IMG2 Upper + IMG3 Lower)
   // ═══════════════════════════════════════════════════════
   Widget _buildDetailsTab(bool isDark, SocialSessionModel session) {
-    final currencyFormatter =
-        NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: 'đ',
+    );
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -237,7 +228,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                   ),
                   child: const Center(
                     child: Icon(
-                      Icons.sports_tennis_rounded,
+                      AppIcons.sportTennis,
                       size: 22,
                       color: Color(0xFF16A34A),
                     ),
@@ -297,8 +288,10 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                   },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFF2563EB)),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     shape: RoundedRectangleBorder(
@@ -397,7 +390,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
-                Icons.calendar_today_outlined,
+                AppIcons.calendar,
                 size: 22,
                 color: isDark ? Colors.white70 : const Color(0xFF1E293B),
               ),
@@ -457,7 +450,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
-                Icons.location_on_outlined,
+                AppIcons.mapPin,
                 size: 24,
                 color: isDark ? Colors.white70 : const Color(0xFF1E293B),
               ),
@@ -506,7 +499,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
           Row(
             children: [
               Icon(
-                Icons.sports_tennis_outlined,
+                AppIcons.sportTennis,
                 size: 22,
                 color: isDark ? Colors.white70 : const Color(0xFF1E293B),
               ),
@@ -527,7 +520,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
           Row(
             children: [
               Icon(
-                Icons.local_offer_outlined,
+                AppIcons.tag,
                 size: 22,
                 color: isDark ? Colors.white70 : const Color(0xFF1E293B),
               ),
@@ -539,7 +532,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       text: 'Mỗi người · ',
                       style: TextStyle(
                         fontSize: 15,
-                        color: isDark ? Colors.white70 : const Color(0xFF334155),
+                        color: isDark
+                            ? Colors.white70
+                            : const Color(0xFF334155),
                       ),
                     ),
                     TextSpan(
@@ -606,8 +601,12 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
   // ═══════════════════════════════════════════════════════
   //  TAB 2: NGƯỜI THAM GIA (Ảnh 3 Reclub)
   // ═══════════════════════════════════════════════════════
-  Widget _buildParticipantsTab(AppColorsExtension colors, SocialSessionModel session) {
-    final host = session.participants.where((p) => p.isHost).firstOrNull ??
+  Widget _buildParticipantsTab(
+    AppColorsExtension colors,
+    SocialSessionModel session,
+  ) {
+    final host =
+        session.participants.where((p) => p.isHost).firstOrNull ??
         SocialParticipantModel(
           id: 'host_default',
           name: 'Sơn Bảo',
@@ -677,7 +676,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.shield_rounded,
+                        AppIcons.shield,
                         size: 13,
                         color: Colors.white,
                       ),
@@ -719,7 +718,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
               icon: Icon(
-                Icons.more_horiz_rounded,
+                AppIcons.moreHorizontal,
                 color: colors.textSecondary,
                 size: 22,
               ),
@@ -741,11 +740,11 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500,
-                    color: colors.textSecondary,
+                    color: context.colors.textSecondary,
                   ),
                 ),
                 Icon(
-                  Icons.arrow_drop_down_rounded,
+                  AppIcons.chevronDown,
                   size: 18,
                   color: colors.textSecondary,
                 ),
@@ -759,11 +758,11 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500,
-                    color: colors.textSecondary,
+                    color: context.colors.textSecondary,
                   ),
                 ),
                 Icon(
-                  Icons.arrow_drop_down_rounded,
+                  AppIcons.chevronDown,
                   size: 18,
                   color: colors.textSecondary,
                 ),
@@ -833,7 +832,8 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
               // Empty slot with '+' icon
               return InkWell(
                 onTap: _isAdmin
-                    ? () => _showAddParticipantDialog(context, session, index + 1)
+                    ? () =>
+                          _showAddParticipantDialog(context, session, index + 1)
                     : null,
                 borderRadius: BorderRadius.circular(28),
                 child: Column(
@@ -845,13 +845,10 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: colors.bgSurface,
-                        border: Border.all(
-                          color: colors.border,
-                          width: 1.5,
-                        ),
+                        border: Border.all(color: colors.border, width: 1.5),
                       ),
                       child: Icon(
-                        Icons.add_rounded,
+                        AppIcons.add,
                         size: 26,
                         color: colors.textMuted,
                       ),
@@ -859,10 +856,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                     const SizedBox(height: 6),
                     Text(
                       'Slot ${index + 1}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: colors.textMuted,
-                      ),
+                      style: TextStyle(fontSize: 11, color: colors.textMuted),
                     ),
                   ],
                 ),
@@ -877,12 +871,21 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
   // ═══════════════════════════════════════════════════════
   //  TAB THANH TOÁN (Dành cho Quản lý CLB)
   // ═══════════════════════════════════════════════════════
-  Widget _buildPaymentTab(AppColorsExtension colors, SocialSessionModel session) {
-    final currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+  Widget _buildPaymentTab(
+    AppColorsExtension colors,
+    SocialSessionModel session,
+  ) {
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: 'đ',
+    );
     final totalExpected = session.maxParticipants * session.pricePerSlot;
     final payments = session.payments;
     final paidPayments = payments.where((p) => p.status == 'PAID').toList();
-    final totalPaidAmount = paidPayments.fold<int>(0, (sum, p) => sum + p.totalAmount);
+    final totalPaidAmount = paidPayments.fold<int>(
+      0,
+      (sum, p) => sum + p.totalAmount,
+    );
     final pendingCount = session.participants.length - paidPayments.length;
 
     return ListView(
@@ -935,11 +938,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       ],
                     ),
                   ),
-                  Container(
-                    width: 1,
-                    height: 36,
-                    color: colors.border,
-                  ),
+                  Container(width: 1, height: 36, color: colors.border),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
@@ -1057,7 +1056,12 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                         : colors.warning.withValues(alpha: 0.2),
                     child: Text(
                       payment.participantName.isNotEmpty
-                          ? payment.participantName.trim().split(' ').last.substring(0, 1).toUpperCase()
+                          ? payment.participantName
+                                .trim()
+                                .split(' ')
+                                .last
+                                .substring(0, 1)
+                                .toUpperCase()
                           : 'P',
                       style: TextStyle(
                         fontSize: 14,
@@ -1104,25 +1108,29 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       const SizedBox(height: 4),
                       InkWell(
                         onTap: () {
-                          ref.read(socialSessionsProvider.notifier).togglePaymentStatus(
-                                session.id,
-                                payment.id,
-                              );
+                          ref
+                              .read(socialSessionsProvider.notifier)
+                              .togglePaymentStatus(session.id, payment.id);
                         },
                         borderRadius: BorderRadius.circular(6),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: isPaid
                                 ? colors.success.withValues(alpha: 0.15)
                                 : colors.warning.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusSmall,
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                isPaid ? Icons.check_circle_rounded : Icons.pending_rounded,
+                                isPaid ? AppIcons.checkCircle : AppIcons.clock,
                                 size: 12,
                                 color: isPaid ? colors.success : colors.warning,
                               ),
@@ -1132,7 +1140,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                                 style: TextStyle(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w800,
-                                  color: isPaid ? colors.success : colors.warning,
+                                  color: isPaid
+                                      ? colors.success
+                                      : colors.warning,
                                 ),
                               ),
                             ],
@@ -1192,14 +1202,18 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             onPressed: () {
               final name = textController.text.trim();
               if (name.isNotEmpty) {
-                ref.read(socialSessionsProvider.notifier).addParticipantToSlot(
+                ref
+                    .read(socialSessionsProvider.notifier)
+                    .addParticipantToSlot(
                       sessionId: session.id,
                       participantName: name,
                     );
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Đã thêm $name vào slot $slotNumber thành công!'),
+                    content: Text(
+                      'Đã thêm $name vào slot $slotNumber thành công!',
+                    ),
                     backgroundColor: colors.success,
                     behavior: SnackBarBehavior.floating,
                   ),
@@ -1225,7 +1239,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.sports_tennis_rounded,
+                AppIcons.sportTennis,
                 size: 48,
                 color: isDark ? Colors.white30 : Colors.black26,
               ),
@@ -1304,14 +1318,38 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                 ],
               ),
               const SizedBox(height: 10),
-              Text(
-                '🎾 ${match.team1Name}',
-                style: const TextStyle(fontWeight: FontWeight.w600),
+              Row(
+                children: [
+                  Icon(
+                    AppIcons.sportTennis,
+                    size: 15,
+                    color: context.colors.textSecondary,
+                  ),
+                  const SizedBox(width: 5),
+                  Flexible(
+                    child: Text(
+                      match.team1Name,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 4),
-              Text(
-                '🎾 ${match.team2Name}',
-                style: const TextStyle(fontWeight: FontWeight.w600),
+              Row(
+                children: [
+                  Icon(
+                    AppIcons.sportTennis,
+                    size: 15,
+                    color: context.colors.textSecondary,
+                  ),
+                  const SizedBox(width: 5),
+                  Flexible(
+                    child: Text(
+                      match.team2Name,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
               ),
               if (match.score != null) ...[
                 const SizedBox(height: 6),
@@ -1386,7 +1424,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                                 '${msg.time.hour}:${msg.time.minute.toString().padLeft(2, '0')}',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: isDark ? Colors.white38 : Colors.black38,
+                                  color: isDark
+                                      ? Colors.white38
+                                      : Colors.black38,
                                 ),
                               ),
                             ],
@@ -1396,7 +1436,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                             msg.message,
                             style: TextStyle(
                               fontSize: 13.5,
-                              color: isDark ? Colors.white70 : const Color(0xFF1E293B),
+                              color: isDark
+                                  ? Colors.white70
+                                  : const Color(0xFF1E293B),
                             ),
                           ),
                         ],
@@ -1450,10 +1492,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(
-                    Icons.send_rounded,
-                    color: Color(0xFF2563EB),
-                  ),
+                  icon: const Icon(AppIcons.send, color: Color(0xFF2563EB)),
                   onPressed: () {
                     final text = _chatInputController.text.trim();
                     if (text.isNotEmpty) {
@@ -1586,7 +1625,10 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                 const SizedBox(height: 16),
                 if (session.hostPhone != null)
                   ListTile(
-                    leading: const Icon(Icons.phone, color: Color(0xFF16A34A)),
+                    leading: const Icon(
+                      AppIcons.phone,
+                      color: Color(0xFF16A34A),
+                    ),
                     title: Text('Gọi điện: ${session.hostPhone}'),
                     onTap: () {
                       Navigator.pop(ctx);
@@ -1595,7 +1637,10 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                   ),
                 if (session.zaloGroupUrl != null)
                   ListTile(
-                    leading: const Icon(Icons.group, color: Color(0xFF2563EB)),
+                    leading: const Icon(
+                      AppIcons.users,
+                      color: Color(0xFF2563EB),
+                    ),
                     title: const Text('Tham gia nhóm Zalo'),
                     subtitle: Text(session.zaloGroupUrl!),
                     onTap: () {
@@ -1607,7 +1652,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                     },
                   ),
                 ListTile(
-                  leading: const Icon(Icons.chat_bubble_outline, color: AppTheme.primary),
+                  leading: const Icon(AppIcons.chat, color: AppTheme.primary),
                   title: const Text('Gửi tin nhắn trong app'),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -1647,7 +1692,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.report_problem_outlined),
+                leading: const Icon(AppIcons.warning),
                 title: const Text('Báo cáo buổi Social này'),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -1660,7 +1705,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.block_outlined),
+                leading: const Icon(AppIcons.ban),
                 title: const Text('Ẩn các buổi của Host này'),
                 onTap: () {
                   Navigator.pop(ctx);

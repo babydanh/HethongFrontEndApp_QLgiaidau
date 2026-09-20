@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.da
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/shared/widgets/report_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 String _communityReactionEmoji(String reactionType) {
@@ -283,7 +284,7 @@ class CommunityPostCard extends ConsumerWidget {
                           ),
                           const SizedBox(width: 4),
                           Icon(
-                            Icons.public_rounded,
+                            AppIcons.globe,
                             size: 12,
                             color: colors.textMuted,
                           ),
@@ -295,28 +296,20 @@ class CommunityPostCard extends ConsumerWidget {
                 if (post.isPinned)
                   Padding(
                     padding: const EdgeInsets.only(right: 4),
-                    child: Icon(
-                      Icons.push_pin_rounded,
-                      size: 18,
-                      color: colors.info,
-                    ),
+                    child: Icon(AppIcons.mapPin, size: 18, color: colors.info),
                   ),
                 if (onDelete != null)
                   IconButton(
                     tooltip: l10n.communityPostDeleteTooltip,
                     visualDensity: VisualDensity.compact,
                     onPressed: onDelete,
-                    icon: Icon(
-                      Icons.delete_outline_rounded,
-                      size: 20,
-                      color: colors.error,
-                    ),
+                    icon: Icon(AppIcons.delete, size: 20, color: colors.error),
                   ),
                 IconButton(
                   tooltip: l10n.communityPostOptionsTooltip,
                   visualDensity: VisualDensity.compact,
                   onPressed: () => _showPostActions(context),
-                  icon: Icon(Icons.more_horiz_rounded, color: colors.textMuted),
+                  icon: Icon(AppIcons.moreHorizontal, color: colors.textMuted),
                 ),
               ],
             ),
@@ -348,11 +341,7 @@ class CommunityPostCard extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.hourglass_empty_rounded,
-                      size: 16,
-                      color: colors.warning,
-                    ),
+                    Icon(AppIcons.hourglass, size: 16, color: colors.warning),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -475,7 +464,7 @@ class CommunityPostCard extends ConsumerWidget {
                       errorBuilder: (context, error, stackTrace) => ColoredBox(
                         color: colors.bgSurface,
                         child: const Center(
-                          child: Icon(Icons.broken_image_outlined, size: 36),
+                          child: Icon(AppIcons.imageOff, size: 36),
                         ),
                       ),
                     ),
@@ -497,7 +486,7 @@ class CommunityPostCard extends ConsumerWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(
-                                  Icons.collections_rounded,
+                                  AppIcons.images,
                                   color: Colors.white,
                                   size: 14,
                                 ),
@@ -537,7 +526,7 @@ class CommunityPostCard extends ConsumerWidget {
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
-                            Icons.favorite_rounded,
+                            AppIcons.heart,
                             size: 10,
                             color: Colors.white,
                           ),
@@ -612,8 +601,8 @@ class CommunityPostCard extends ConsumerWidget {
                         children: [
                           Icon(
                             post.viewerReaction == 'CHEER'
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
+                                ? AppIcons.heart
+                                : AppIcons.heart,
                             size: 19,
                             color: post.viewerReaction == 'CHEER'
                                 ? const Color(0xFFEF4444)
@@ -646,7 +635,7 @@ class CommunityPostCard extends ConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.chat_bubble_outline_rounded,
+                              AppIcons.chat,
                               size: 18,
                               color: colors.textMuted,
                             ),
@@ -697,7 +686,7 @@ class CommunityPostCard extends ConsumerWidget {
       context: context,
       builder: (sheetContext) => SafeArea(
         child: ListTile(
-          leading: const Icon(Icons.flag_outlined),
+          leading: const Icon(AppIcons.target),
           title: Text(l10n.communityPostReport),
           onTap: () => Navigator.pop(sheetContext, 'report'),
         ),
@@ -729,7 +718,7 @@ class CommunityPostCard extends ConsumerWidget {
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) => const Center(
                     child: Icon(
-                      Icons.broken_image_outlined,
+                      AppIcons.imageOff,
                       color: Colors.white,
                       size: 40,
                     ),
@@ -743,7 +732,7 @@ class CommunityPostCard extends ConsumerWidget {
               child: IconButton(
                 tooltip: l10n.communityPostClose,
                 onPressed: () => Navigator.pop(dialogContext),
-                icon: const Icon(Icons.close, color: Colors.white),
+                icon: const Icon(AppIcons.close, color: Colors.white),
               ),
             ),
           ],

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
@@ -13,7 +13,6 @@ class SportPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final sportName = l10n.sportDisplayName(sportKey);
-    final icon = AppConstants.sportIcons[sportKey] ?? "🏆";
     final colors = context.colors;
 
     return Container(
@@ -26,16 +25,7 @@ class SportPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon.startsWith("assets/"))
-            Image.asset(
-              icon,
-              width: 14,
-              height: 14,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Text("🏆", style: TextStyle(fontSize: 12)),
-            )
-          else
-            Text(icon, style: const TextStyle(fontSize: 12)),
+          AppSportIcon(sportKey: sportKey, size: 14, color: colors.textPrimary),
           const SizedBox(width: 6),
           Text(
             sportName,

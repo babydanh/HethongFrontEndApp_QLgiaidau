@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Admin duyệt CLB mới — danh sách PENDING clubs, nút Duyệt/Từ chối.
@@ -22,7 +23,7 @@ class PendingClubsScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -38,11 +39,7 @@ class PendingClubsScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.check_circle_outline_rounded,
-                    size: 64,
-                    color: colors.textMuted,
-                  ),
+                  Icon(AppIcons.checkCircle, size: 64, color: colors.textMuted),
                   const SizedBox(height: 16),
                   Text(
                     l10n!.pendingClubsEmpty,
@@ -75,11 +72,7 @@ class PendingClubsScreen extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.cloud_off_rounded,
-                  size: 48,
-                  color: colors.textMuted,
-                ),
+                Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
                 const SizedBox(height: 12),
                 Text(
                   l10n!.pendingClubsLoadError,
@@ -179,11 +172,7 @@ class PendingClubsScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(
-                Icons.person_outline_rounded,
-                size: 14,
-                color: colors.textMuted,
-              ),
+              Icon(AppIcons.user, size: 14, color: colors.textMuted),
               const SizedBox(width: 4),
               Text(
                 l10n!.pendingClubsMemberCount(club.memberCount),
@@ -247,11 +236,7 @@ class PendingClubsScreen extends ConsumerWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.check_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
+                        Icon(AppIcons.check, color: Colors.white, size: 18),
                         SizedBox(width: 6),
                         Text(
                           l10n!.pendingClubsApprove,
@@ -281,7 +266,7 @@ class PendingClubsScreen extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.close_rounded,
+                          AppIcons.close,
                           color: colors.textSecondary,
                           size: 18,
                         ),
@@ -320,11 +305,7 @@ class PendingClubsScreen extends ConsumerWidget {
         backgroundColor: colors.bgCard,
         title: Row(
           children: [
-            const Icon(
-              Icons.warning_amber_rounded,
-              color: Colors.orange,
-              size: 22,
-            ),
+            const Icon(AppIcons.warning, color: Colors.orange, size: 22),
             const SizedBox(width: 8),
             Text(
               l10n!.pendingClubsRejectTitle,

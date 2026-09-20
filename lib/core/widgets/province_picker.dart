@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
 /// Mapping tỉnh/thành Việt Nam theo mã code.
@@ -91,7 +92,9 @@ class ProvinceData {
     final lower = name.toLowerCase().trim();
     try {
       return all.firstWhere(
-        (p) => p.name.toLowerCase().contains(lower) || lower.contains(p.name.toLowerCase()),
+        (p) =>
+            p.name.toLowerCase().contains(lower) ||
+            lower.contains(p.name.toLowerCase()),
       );
     } catch (_) {
       return null;
@@ -124,12 +127,18 @@ class ProvincePicker extends StatelessWidget {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          value: selectedCode != null && ProvinceData.fromCode(selectedCode!) != null
+          value:
+              selectedCode != null &&
+                  ProvinceData.fromCode(selectedCode!) != null
               ? selectedCode
               : ProvinceData.all.first.code,
           isExpanded: true,
-          icon: Icon(Icons.arrow_drop_down_rounded, color: colors.textMuted),
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronDown, color: colors.textMuted),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: colors.textPrimary,
+          ),
           dropdownColor: colors.bgSurface,
           items: ProvinceData.all.map((p) {
             return DropdownMenuItem(

@@ -1,3 +1,4 @@
+
 part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailAboutHelpers on _ClubDetailScreenState {
@@ -152,11 +153,11 @@ extension _ClubDetailAboutHelpers on _ClubDetailScreenState {
   IconData _socialIcon(String key) {
     switch (key.toLowerCase()) {
       case 'facebook':
-        return Icons.facebook_rounded;
+        return AppIcons.externalLink;
       case 'zalo':
-        return Icons.chat_rounded;
+        return AppIcons.chat;
       default:
-        return Icons.language_rounded;
+        return AppIcons.globe;
     }
   }
 

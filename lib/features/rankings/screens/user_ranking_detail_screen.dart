@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 // ═══════════════════════════════════════════════════════════
@@ -47,11 +48,7 @@ class UserRankingDetailScreen extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.cloud_off_rounded,
-                  size: 48,
-                  color: colors.textMuted,
-                ),
+                Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
                 const SizedBox(height: 16),
                 Text(
                   l10n.rankingLoadErrorTitle,
@@ -107,7 +104,7 @@ class UserRankingDetailScreen extends ConsumerWidget {
                       border: Border.all(color: colors.border),
                     ),
                     child: Icon(
-                      Icons.arrow_back_ios_rounded,
+                      AppIcons.chevronLeft,
                       color: colors.textPrimary,
                       size: 20,
                     ),
@@ -300,7 +297,7 @@ class UserRankingDetailScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   Icon(
-                    Icons.sports_tennis_rounded,
+                    AppIcons.sportTennis,
                     size: 40,
                     color: Colors.white.withValues(alpha: 0.3),
                   ),

@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/cursor_pagination.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 
 class LiveTournamentWithMatchesCard extends ConsumerStatefulWidget {
@@ -358,7 +359,7 @@ class _LiveTournamentWithMatchesCardState
                     ),
                   ),
                   child: Icon(
-                    Icons.chevron_left_rounded,
+                    AppIcons.chevronLeft,
                     size: 20,
                     color: canGoPrev
                         ? colors.textPrimary
@@ -404,7 +405,7 @@ class _LiveTournamentWithMatchesCardState
                     ),
                   ),
                   child: Icon(
-                    Icons.chevron_right_rounded,
+                    AppIcons.chevronRight,
                     size: 20,
                     color: canGoNext
                         ? colors.textPrimary
@@ -670,11 +671,7 @@ class _LiveTournamentWithMatchesCardState
             // ── Single Merged Footer Row: Location & Clean Action Icons ──
             Row(
               children: [
-                Icon(
-                  Icons.location_on_outlined,
-                  size: 14,
-                  color: colors.textMuted,
-                ),
+                Icon(AppIcons.mapPin, size: 14, color: colors.textMuted),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
@@ -727,9 +724,7 @@ class _LiveTournamentWithMatchesCardState
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          isCheered
-                              ? Icons.favorite
-                              : Icons.favorite_border_rounded,
+                          isCheered ? AppIcons.heart : AppIcons.heart,
                           size: 18,
                           color: isCheered
                               ? const Color(0xFFDC2626)
@@ -778,7 +773,7 @@ class _LiveTournamentWithMatchesCardState
                   child: Padding(
                     padding: const EdgeInsets.all(4),
                     child: Icon(
-                      Icons.share_outlined,
+                      AppIcons.share,
                       size: 18,
                       color: colors.textMuted,
                     ),
@@ -1005,11 +1000,7 @@ class _LiveTournamentWithMatchesCardState
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.location_on_outlined,
-                      size: 11,
-                      color: colors.textMuted,
-                    ),
+                    Icon(AppIcons.mapPin, size: 11, color: colors.textMuted),
                     const SizedBox(width: 3),
                     Flexible(
                       child: Text(

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/sporto_loading_widget.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -20,12 +21,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    debugPrint('>>> [SplashScreen] Mounted and started animation <<<');
 
     // Nạp dữ liệu Auth song song
     _preWarmAuth();
 
-    // Chuyển màn hình ngay lập tức sang /home để màn loading MorphingNavLoader thực hiện
-    _navTimer = Timer(const Duration(milliseconds: 200), () {
+    // Tự động chuyển màn hình mượt mà sau 2.5 giây sau khi xem animation 5 trái bóng nảy
+    _navTimer = Timer(const Duration(milliseconds: 2500), () {
+      debugPrint('>>> [SplashScreen] Timer fired, navigating to next screen <<<');
       if (mounted) {
         _navigateToNextScreen();
       }
@@ -110,17 +113,28 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             ),
           ),
 
-          // LOGO CHÍNH THỨC SPORTO NGUYÊN BẢN (KHÔNG SÂN CŨ, KHÔNG CHỮ THỪA)
+          // KHỐI TRUNG TÂM: LOGO SPORTO + 5 TRÁI BÓNG PICKLEBALL NẢY SÓNG
           Center(
-            child: SvgPicture.asset(
-              'assets/images/sporto_v1.svg',
-              width: 230,
-              fit: BoxFit.contain,
-              placeholderBuilder: (context) => Image.asset(
-                'assets/images/sporto_v1.png',
-                width: 230,
-                fit: BoxFit.contain,
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SvgPicture.asset(
+                  'assets/images/sporto_v1.svg',
+                  width: 220,
+                  fit: BoxFit.contain,
+                  placeholderBuilder: (context) => Image.asset(
+                    'assets/images/sporto_v1.png',
+                    width: 220,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                // 5 trái bóng Pickleball vàng Neon nảy sóng nhịp điệu liên hoàn
+                const SportoLoadingWidget(
+                  size: 100,
+                  variant: SportoLoadingVariant.pickleballWave5,
+                ),
+              ],
             ),
           ),
         ],

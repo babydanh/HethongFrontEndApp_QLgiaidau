@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final bool isEmbedded;
@@ -280,15 +281,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   ),
                   tabs: [
                     Tab(
-                      icon: const Icon(Icons.chat_bubble_outline_rounded, size: 17),
+                      icon: const Icon(AppIcons.chat, size: 17),
                       text: l10n.chatScreenConversations,
                     ),
                     Tab(
-                      icon: const Icon(Icons.auto_awesome_rounded, size: 17),
+                      icon: const Icon(AppIcons.sparkles, size: 17),
                       text: l10n.chatScreenAiAssistant,
                     ),
                     Tab(
-                      icon: const Icon(Icons.headset_mic_outlined, size: 17),
+                      icon: const Icon(AppIcons.headset, size: 17),
                       text: l10n.chatScreenSupport,
                     ),
                   ],
@@ -299,7 +300,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               backgroundColor: colors.bgCard,
               elevation: 0.5,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                icon: const Icon(AppIcons.chevronLeft, size: 20),
                 onPressed: () => context.pop(),
               ),
               title: Row(
@@ -312,7 +313,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                         : null,
                     child: profile?.avatarUrl == null
                         ? const Icon(
-                            Icons.person,
+                            AppIcons.user,
                             color: AppTheme.primaryDark,
                             size: 18,
                           )
@@ -321,7 +322,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   const SizedBox(width: 10),
                   Text(
                     l10n.chatScreenTitle,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 19,
+                    ),
                   ),
                 ],
               ),
@@ -337,15 +341,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 ),
                 tabs: [
                   Tab(
-                    icon: const Icon(Icons.chat_bubble_outline_rounded, size: 20),
+                    icon: const Icon(AppIcons.chat, size: 20),
                     text: l10n.chatScreenConversations,
                   ),
                   Tab(
-                    icon: const Icon(Icons.auto_awesome_rounded, size: 20),
+                    icon: const Icon(AppIcons.sparkles, size: 20),
                     text: l10n.chatScreenAiAssistant,
                   ),
                   Tab(
-                    icon: const Icon(Icons.headset_mic_outlined, size: 20),
+                    icon: const Icon(AppIcons.headset, size: 20),
                     text: l10n.chatScreenSupport,
                   ),
                 ],
@@ -381,7 +385,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                           fontSize: 13.5,
                         ),
                         prefixIcon: Icon(
-                          Icons.search_rounded,
+                          AppIcons.search,
                           color: colors.textMuted,
                           size: 20,
                         ),
@@ -406,7 +410,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.forum_outlined,
+                                AppIcons.messages,
                                 size: 52,
                                 color: colors.textMuted.withValues(alpha: 0.4),
                               ),
@@ -641,7 +645,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             padding: const EdgeInsets.only(right: 8),
                             child: ActionChip(
                               avatar: const Icon(
-                                Icons.auto_awesome_rounded,
+                                AppIcons.sparkles,
                                 size: 14,
                                 color: AppTheme.primary,
                               ),
@@ -676,7 +680,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                               radius: 14,
                               backgroundColor: AppTheme.primary,
                               child: Icon(
-                                Icons.auto_awesome_rounded,
+                                AppIcons.sparkles,
                                 size: 14,
                                 color: Colors.white,
                               ),
@@ -722,7 +726,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                               radius: 14,
                               backgroundColor: AppTheme.primary,
                               child: Icon(
-                                Icons.auto_awesome_rounded,
+                                AppIcons.sparkles,
                                 size: 14,
                                 color: Colors.white,
                               ),
@@ -792,10 +796,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      icon: const Icon(
-                        Icons.send_rounded,
-                        color: AppTheme.primary,
-                      ),
+                      icon: const Icon(AppIcons.send, color: AppTheme.primary),
                       onPressed: _sendAiMessage,
                     ),
                   ],
@@ -816,7 +817,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(
-                              Icons.headset_mic_rounded,
+                              AppIcons.headset,
                               size: 54,
                               color: AppTheme.primary,
                             ),
@@ -909,10 +910,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      icon: const Icon(
-                        Icons.send_rounded,
-                        color: AppTheme.primary,
-                      ),
+                      icon: const Icon(AppIcons.send, color: AppTheme.primary),
                       onPressed: _sendSupportMessage,
                     ),
                   ],

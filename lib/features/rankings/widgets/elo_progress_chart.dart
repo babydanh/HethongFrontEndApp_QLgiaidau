@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// A reusable ELO progression line chart widget.
@@ -50,7 +51,7 @@ class EloProgressChart extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.show_chart_outlined,
+                    AppIcons.chart,
                     size: 40,
                     color: colors.textMuted.withValues(alpha: 0.5),
                   ),
@@ -86,11 +87,7 @@ class EloProgressChart extends StatelessWidget {
             padding: const EdgeInsets.only(left: 8, bottom: 16),
             child: Row(
               children: [
-                Icon(
-                  Icons.trending_up_rounded,
-                  size: 18,
-                  color: colors.success,
-                ),
+                Icon(AppIcons.trendingUp, size: 18, color: colors.success),
                 const SizedBox(width: 6),
                 Text(
                   l10n.ranking_progressTitle,
@@ -116,11 +113,7 @@ class EloProgressChart extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.emoji_events_rounded,
-                        size: 14,
-                        color: colors.warning,
-                      ),
+                      Icon(AppIcons.trophy, size: 14, color: colors.warning),
                       const SizedBox(width: 5),
                       Text(
                         NumberFormat.decimalPattern(

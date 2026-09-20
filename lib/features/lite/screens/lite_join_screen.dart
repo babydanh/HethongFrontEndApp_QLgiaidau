@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class LiteJoinScreen extends ConsumerStatefulWidget {
   final String inviteCode;
@@ -63,9 +64,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorParser.parse(e, l10n.lite_joinError)),
-          ),
+          SnackBar(content: Text(ErrorParser.parse(e, l10n.lite_joinError))),
         );
       }
     } finally {
@@ -82,18 +81,16 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
       final dio = ref.read(dioClientProvider).dio;
       await dio.post('/communities/$communityId/join');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.lite_clubRequestSuccess)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.lite_clubRequestSuccess)));
         _fetchStatus();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              ErrorParser.parse(e, l10n.lite_clubRequestError),
-            ),
+            content: Text(ErrorParser.parse(e, l10n.lite_clubRequestError)),
           ),
         );
       }
@@ -134,11 +131,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
               child: Column(
                 children: [
                   // Tournament info
-                  Icon(
-                    Icons.workspace_premium_outlined,
-                    size: 48,
-                    color: context.colors.info,
-                  ),
+                  Icon(AppIcons.award, size: 48, color: context.colors.info),
                   const SizedBox(height: 16),
                   Text(
                     tournament['name'] ?? '',
@@ -164,7 +157,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                   // Case: Already joined
                   if (_status?['alreadyJoined'] == true) ...[
                     Icon(
-                      Icons.check_circle,
+                      AppIcons.checkCircle,
                       size: 40,
                       color: context.colors.success,
                     ),
@@ -186,7 +179,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                   // Case: Registration closed
                   if (_status?['registrationClosed'] == true) ...[
                     Icon(
-                      Icons.warning_amber_rounded,
+                      AppIcons.warning,
                       size: 40,
                       color: context.colors.warning,
                     ),
@@ -196,7 +189,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
 
                   if (_status?['registrationNotOpen'] == true) ...[
                     Icon(
-                      Icons.schedule_rounded,
+                      AppIcons.clock,
                       size: 40,
                       color: context.colors.warning,
                     ),
@@ -207,7 +200,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                   // Case: Tournament full
                   if (_status?['tournamentFull'] == true) ...[
                     Icon(
-                      Icons.warning_amber_rounded,
+                      AppIcons.warning,
                       size: 40,
                       color: context.colors.warning,
                     ),
@@ -218,7 +211,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                   // Case: Requires club join - OPEN
                   if (_status?['requiresClubJoin'] == true &&
                       _status?['clubPolicy'] == 'OPEN') ...[
-                    Icon(Icons.people, size: 40, color: context.colors.info),
+                    Icon(AppIcons.users, size: 40, color: context.colors.info),
                     const SizedBox(height: 12),
                     Text.rich(
                       TextSpan(
@@ -243,7 +236,9 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                                 _fetchStatus();
                               },
                         child: Text(
-                          _requestingClub ? l10n.lite_sending : l10n.lite_joinClub,
+                          _requestingClub
+                              ? l10n.lite_sending
+                              : l10n.lite_joinClub,
                         ),
                       ),
                     ),
@@ -260,7 +255,11 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                   // Case: Requires club join - APPROVAL
                   if (_status?['requiresClubJoin'] == true &&
                       _status?['clubPolicy'] == 'APPROVAL') ...[
-                    Icon(Icons.shield, size: 40, color: context.colors.warning),
+                    Icon(
+                      AppIcons.shield,
+                      size: 40,
+                      color: context.colors.warning,
+                    ),
                     const SizedBox(height: 12),
                     Text.rich(
                       TextSpan(
@@ -286,7 +285,9 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                                 _fetchStatus();
                               },
                         child: Text(
-                          _requestingClub ? l10n.lite_sending : l10n.lite_requestClub,
+                          _requestingClub
+                              ? l10n.lite_sending
+                              : l10n.lite_requestClub,
                         ),
                       ),
                     ),
@@ -303,7 +304,11 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                   // Case: Requires club join - INVITE_ONLY
                   if (_status?['requiresClubJoin'] == true &&
                       _status?['clubPolicy'] == 'INVITE_ONLY') ...[
-                    Icon(Icons.shield, size: 40, color: context.colors.warning),
+                    Icon(
+                      AppIcons.shield,
+                      size: 40,
+                      color: context.colors.warning,
+                    ),
                     const SizedBox(height: 12),
                     Text.rich(
                       TextSpan(
@@ -323,7 +328,7 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
                   // Case: Club join pending
                   if (_status?['clubJoinPending'] == true) ...[
                     Icon(
-                      Icons.warning_amber_rounded,
+                      AppIcons.warning,
                       size: 40,
                       color: context.colors.warning,
                     ),

@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 enum ChatNotificationMode { all, mentionsOnly, muted }
@@ -251,9 +252,9 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.chatRoomUploadAvatarError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.chatRoomUploadAvatarError)));
       }
     } finally {
       if (mounted) setState(() => _isUpdatingAdminSettings = false);
@@ -365,7 +366,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
             ),
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.person_outline_rounded),
+              leading: const Icon(AppIcons.user),
               title: Text(l10n.chatRoomViewProfile),
               onTap: () {
                 final router = GoRouter.of(context);
@@ -377,10 +378,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               },
             ),
             ListTile(
-              leading: const Icon(
-                Icons.chat_bubble_outline_rounded,
-                color: AppTheme.primary,
-              ),
+              leading: const Icon(AppIcons.chat, color: AppTheme.primary),
               title: Text(l10n.chatRoomPrivateMessage),
               onTap: () async {
                 Navigator.pop(sheetCtx);
@@ -405,7 +403,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.block_rounded, color: context.colors.error),
+              leading: Icon(AppIcons.ban, color: context.colors.error),
               title: Text(
                 l10n.chatRoomBlockUser,
                 style: TextStyle(color: context.colors.error),
@@ -488,7 +486,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 22),
+                  icon: const Icon(AppIcons.close, size: 22),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -513,7 +511,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 if (_isRoomAdmin) ...[
                   _buildSectionHeader(
                     l10n.chatRoomAdminSection,
-                    Icons.admin_panel_settings_outlined,
+                    AppIcons.shieldCheck,
                     colors,
                   ),
                   const SizedBox(height: 8),
@@ -524,7 +522,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 // ── Notification Settings Section ──
                 _buildSectionHeader(
                   l10n.chatRoomNotificationsSection,
-                  Icons.notifications_active_outlined,
+                  AppIcons.bell,
                   colors,
                 ),
                 const SizedBox(height: 8),
@@ -539,7 +537,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                         widget.pinnedMessage!.poll != null)) ...[
                   _buildSectionHeader(
                     l10n.chatRoomPinnedSection,
-                    Icons.push_pin_outlined,
+                    AppIcons.mapPin,
                     colors,
                   ),
                   const SizedBox(height: 8),
@@ -550,7 +548,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 // ── Shared Media Section ──
                 _buildSectionHeader(
                   l10n.chatRoomSharedMediaSection(_allSharedMedia.length),
-                  Icons.photo_library_outlined,
+                  AppIcons.images,
                   colors,
                 ),
                 const SizedBox(height: 8),
@@ -562,7 +560,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                   l10n.chatRoomMembersSection(
                     _participants.isNotEmpty ? _participants.length : 1,
                   ),
-                  Icons.people_alt_outlined,
+                  AppIcons.users,
                   colors,
                 ),
                 const SizedBox(height: 8),
@@ -572,7 +570,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 // ── Danger / Clear Actions ──
                 _buildSectionHeader(
                   l10n.chatRoomOtherOptionsSection,
-                  Icons.settings_outlined,
+                  AppIcons.settings,
                   colors,
                 ),
                 const SizedBox(height: 8),
@@ -654,7 +652,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.camera_alt_rounded,
+                        AppIcons.camera,
                         color: Colors.white,
                         size: 14,
                       ),
@@ -683,7 +681,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 InkWell(
                   onTap: _updateRoomNameDialog,
                   child: const Icon(
-                    Icons.edit_rounded,
+                    AppIcons.edit,
                     size: 16,
                     color: AppTheme.primary,
                   ),
@@ -738,7 +736,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                         ),
                       ),
                       SizedBox(width: 2),
-                      Icon(Icons.arrow_forward_ios_rounded, size: 10),
+                      Icon(AppIcons.chevronRight, size: 10),
                     ],
                   ),
                 ),
@@ -757,8 +755,8 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
         Expanded(
           child: _buildActionButton(
             icon: _notifMode == ChatNotificationMode.muted
-                ? Icons.notifications_off_rounded
-                : Icons.notifications_active_rounded,
+                ? AppIcons.bell
+                : AppIcons.bell,
             label: _notifMode == ChatNotificationMode.muted
                 ? (l10n.chatRoomMutedTitle)
                 : (l10n.chatRoomNotificationsSection),
@@ -779,7 +777,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
         if (widget.communityId != null)
           Expanded(
             child: _buildActionButton(
-              icon: Icons.groups_rounded,
+              icon: AppIcons.users,
               label: l10n.chatRoomViewClub,
               color: const Color(0xFF059669),
               onTap: () {
@@ -847,7 +845,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.edit_note_rounded,
+                AppIcons.fileText,
                 size: 18,
                 color: AppTheme.primary,
               ),
@@ -860,7 +858,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               _currentRoomName,
               style: TextStyle(fontSize: 11.5, color: colors.textMuted),
             ),
-            trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+            trailing: const Icon(AppIcons.chevronRight, size: 20),
             onTap: _updateRoomNameDialog,
           ),
           const Divider(height: 1),
@@ -874,7 +872,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.image_outlined,
+                AppIcons.image,
                 size: 18,
                 color: AppTheme.primary,
               ),
@@ -893,7 +891,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                     height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.chevron_right_rounded, size: 20),
+                : const Icon(AppIcons.chevronRight, size: 20),
             onTap: _isUpdatingAdminSettings ? null : _pickAndUploadAvatar,
           ),
           const Divider(height: 1),
@@ -907,7 +905,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.campaign_outlined,
+                AppIcons.megaphone,
                 size: 18,
                 color: Color(0xFFD97706),
               ),
@@ -938,7 +936,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.timer_outlined,
+                AppIcons.timer,
                 size: 18,
                 color: Color(0xFF6366F1),
               ),
@@ -1005,7 +1003,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           _buildRadioTile(
             title: l10n.chatRoomAllNotificationsTitle,
             subtitle: l10n.chatRoomAllNotificationsSubtitle,
-            icon: Icons.notifications_active_outlined,
+            icon: AppIcons.bell,
             selected: _notifMode == ChatNotificationMode.all,
             onTap: () => _updateNotifMode(ChatNotificationMode.all),
             colors: colors,
@@ -1016,7 +1014,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           _buildRadioTile(
             title: l10n.chatRoomMentionsTitle,
             subtitle: l10n.chatRoomMentionsSubtitle,
-            icon: Icons.alternate_email_rounded,
+            icon: AppIcons.atSign,
             selected: _notifMode == ChatNotificationMode.mentionsOnly,
             onTap: () => _updateNotifMode(ChatNotificationMode.mentionsOnly),
             colors: colors,
@@ -1027,7 +1025,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           _buildRadioTile(
             title: l10n.chatRoomMutedTitle,
             subtitle: l10n.chatRoomMutedSubtitle,
-            icon: Icons.notifications_off_outlined,
+            icon: AppIcons.bell,
             selected: _notifMode == ChatNotificationMode.muted,
             onTap: () => _updateNotifMode(ChatNotificationMode.muted),
             colors: colors,
@@ -1130,16 +1128,8 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
         style: TextStyle(fontSize: 11.5, color: colors.textMuted),
       ),
       trailing: selected
-          ? const Icon(
-              Icons.check_circle_rounded,
-              color: AppTheme.primary,
-              size: 20,
-            )
-          : const Icon(
-              Icons.radio_button_unchecked_rounded,
-              size: 20,
-              color: Colors.grey,
-            ),
+          ? const Icon(AppIcons.checkCircle, color: AppTheme.primary, size: 20)
+          : const Icon(AppIcons.circle, size: 20, color: Colors.grey),
       onTap: onTap,
     );
   }
@@ -1163,7 +1153,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.push_pin_rounded,
+              AppIcons.mapPin,
               color: Color(0xFFD97706),
               size: 18,
             ),
@@ -1195,7 +1185,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           ),
           if (widget.onJumpToMessage != null)
             IconButton(
-              icon: const Icon(Icons.arrow_forward_rounded, size: 20),
+              icon: const Icon(AppIcons.forward, size: 20),
               tooltip: l10n.chatRoomGoToMessage,
               onPressed: () {
                 Navigator.pop(context);
@@ -1273,7 +1263,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.info_outline_rounded, size: 18),
+            const Icon(AppIcons.info, size: 18),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -1353,11 +1343,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
                 color: colors.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.delete_sweep_outlined,
-                size: 18,
-                color: colors.error,
-              ),
+              child: Icon(AppIcons.delete, size: 18, color: colors.error),
             ),
             title: Text(
               l10n.chatRoomClearHistoryAction,

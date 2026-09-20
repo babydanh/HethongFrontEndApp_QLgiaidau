@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/features/social/models/social_session_model.dart';
 
 class SocialSessionCard extends StatelessWidget {
@@ -46,10 +47,7 @@ class SocialSessionCard extends StatelessWidget {
                   // Subtitle / Host tag with flag
                   Row(
                     children: [
-                      const Text(
-                        '🇻🇳',
-                        style: TextStyle(fontSize: 12),
-                      ),
+                      const Text('🇻🇳', style: TextStyle(fontSize: 12)),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -119,7 +117,7 @@ class SocialSessionCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.location_on_outlined,
+                            AppIcons.mapPin,
                             size: 13,
                             color: isDark
                                 ? const Color(0xFF94A3B8)
@@ -205,21 +203,17 @@ class SocialSessionCard extends StatelessWidget {
       child: Center(
         child: session.sport == 'tennis'
             ? const Icon(
-                Icons.sports_tennis_rounded,
+                AppIcons.sportTennis,
                 size: 22,
                 color: Color(0xFF15803D),
               )
             : session.sport == 'pickleball'
-                ? const Icon(
-                    Icons.sports_handball_rounded,
-                    size: 22,
-                    color: Color(0xFFD97706),
-                  )
-                : const Icon(
-                    Icons.sports_score_rounded,
-                    size: 22,
-                    color: AppTheme.primary,
-                  ),
+            ? const Icon(
+                AppIcons.sportBadminton,
+                size: 22,
+                color: Color(0xFFD97706),
+              )
+            : const Icon(AppIcons.trophy, size: 22, color: AppTheme.primary),
       ),
     );
   }
@@ -228,13 +222,13 @@ class SocialSessionCard extends StatelessWidget {
     IconData iconData;
     switch (session.sport) {
       case 'tennis':
-        iconData = Icons.sports_tennis_outlined;
+        iconData = AppIcons.sportTennis;
         break;
       case 'pickleball':
-        iconData = Icons.sports_tennis_rounded;
+        iconData = AppIcons.sportTennis;
         break;
       default:
-        iconData = Icons.sports_outlined;
+        iconData = AppIcons.trophy;
     }
 
     return Container(

@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 
@@ -134,7 +135,10 @@ class _TokenInputSheetState extends ConsumerState<TokenInputSheet> {
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: Icon(Icons.close, color: context.colors.textSecondary),
+                  icon: Icon(
+                    AppIcons.close,
+                    color: context.colors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -153,11 +157,7 @@ class _TokenInputSheetState extends ConsumerState<TokenInputSheet> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(
-                    Icons.error_outline_rounded,
-                    size: 16,
-                    color: context.colors.error,
-                  ),
+                  Icon(AppIcons.error, size: 16, color: context.colors.error),
                   const SizedBox(width: 8),
                   Text(
                     _tokenError!,

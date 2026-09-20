@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_team_card.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class TeamsTab extends StatefulWidget {
   final List<Team> teams;
@@ -49,7 +50,7 @@ class _TeamsTabState extends State<TeamsTab> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.group_outlined,
+              AppIcons.users,
               size: 64,
               color: colors.textMuted.withValues(alpha: 0.4),
             ),
@@ -136,7 +137,7 @@ class _TeamsTabState extends State<TeamsTab> {
                   hintText: l10n.teamsTabSearchHint,
                   hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
                   prefixIcon: Icon(
-                    Icons.search,
+                    AppIcons.search,
                     size: 18,
                     color: colors.textMuted,
                   ),
@@ -146,7 +147,7 @@ class _TeamsTabState extends State<TeamsTab> {
                       if (value.text.isEmpty) return const SizedBox.shrink();
                       return IconButton(
                         icon: Icon(
-                          Icons.close,
+                          AppIcons.close,
                           size: 16,
                           color: colors.textMuted,
                         ),
@@ -255,8 +256,8 @@ class _TeamsTabState extends State<TeamsTab> {
                             onMemberTap: (userId, memberName) {
                               final targetId =
                                   (userId != null && userId.isNotEmpty)
-                                      ? userId
-                                      : team.userId;
+                                  ? userId
+                                  : team.userId;
                               if (targetId != null && targetId.isNotEmpty) {
                                 context.push('/user/$targetId');
                               } else {

@@ -1,3 +1,4 @@
+
 part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailSettingsDelete on _ClubDetailScreenState {
@@ -14,7 +15,7 @@ extension _ClubDetailSettingsDelete on _ClubDetailScreenState {
         title: Row(
           children: [
             const Icon(
-              Icons.warning_amber_rounded,
+              AppIcons.warning,
               color: Colors.red,
               size: 22,
             ),

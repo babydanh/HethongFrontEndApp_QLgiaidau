@@ -1,3 +1,4 @@
+
 part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailTournamentOverview on _ClubDetailScreenState {
@@ -236,7 +237,7 @@ class _ClubTournamentsFullScreenViewState
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+              Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
               const SizedBox(height: 12),
               Text(
                 l10n.club_loadDataError,
@@ -245,7 +246,7 @@ class _ClubTournamentsFullScreenViewState
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: _refresh,
-                icon: const Icon(Icons.refresh_rounded, size: 18),
+                icon: const Icon(AppIcons.refresh, size: 18),
                 label: Text(l10n.infoRetry),
               ),
             ],
@@ -260,7 +261,7 @@ class _ClubTournamentsFullScreenViewState
             children: [
               const SizedBox(height: 80),
               Icon(
-                Icons.sports_tennis_rounded,
+                AppIcons.sportTennis,
                 size: 52,
                 color: colors.textMuted,
               ),
@@ -287,7 +288,7 @@ class _ClubTournamentsFullScreenViewState
                           ),
                         );
                       },
-                      icon: const Icon(Icons.groups_rounded, size: 18),
+                      icon: const Icon(AppIcons.users, size: 18),
                       label: Text(l10n.clubMatchSessionTitle),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: colors.border),
@@ -298,7 +299,7 @@ class _ClubTournamentsFullScreenViewState
                     ),
                     OutlinedButton.icon(
                       onPressed: _refresh,
-                      icon: const Icon(Icons.refresh_rounded, size: 18),
+                      icon: const Icon(AppIcons.refresh, size: 18),
                       label: Text(l10n.infoRetry),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: colors.border),
@@ -359,7 +360,7 @@ class _ClubTournamentsFullScreenViewState
                 child: Column(
                   children: [
                     Icon(
-                      Icons.filter_alt_off_rounded,
+                      AppIcons.filter,
                       size: 42,
                       color: colors.textMuted,
                     ),
@@ -456,7 +457,7 @@ class _ClubTournamentsFullScreenViewState
                               ),
                             ),
                             Icon(
-                              Icons.chevron_right_rounded,
+                              AppIcons.chevronRight,
                               size: 14,
                               color: colors.textMuted,
                             ),
@@ -556,7 +557,7 @@ class _ClubTournamentsFullScreenViewState
               shape: BoxShape.circle,
             ),
             child: Icon(
-              Icons.close_rounded,
+              AppIcons.close,
               color: colors.textPrimary,
               size: 20,
             ),
@@ -574,7 +575,7 @@ class _ClubTournamentsFullScreenViewState
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(AppIcons.refresh),
             tooltip: l10n.infoRetry,
             onPressed: _refresh,
           ),

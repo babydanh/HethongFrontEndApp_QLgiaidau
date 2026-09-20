@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:flutter/material.dart';
 
 class ChatImageViewer extends StatelessWidget {
@@ -64,11 +65,7 @@ class ChatImageViewer extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.broken_image_rounded,
-                        color: Colors.white60,
-                        size: 48,
-                      ),
+                      Icon(AppIcons.imageOff, color: Colors.white60, size: 48),
                       SizedBox(height: 8),
                       Text(
                         l10n!.chatImageLoadError,
@@ -107,7 +104,7 @@ class ChatImageViewer extends StatelessWidget {
                 children: [
                   IconButton(
                     icon: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
+                      AppIcons.chevronLeft,
                       color: Colors.white,
                       size: 22,
                     ),

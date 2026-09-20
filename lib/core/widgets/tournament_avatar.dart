@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/club_brand_avatar.dart';
 
-/// Reusable Tournament Avatar widget with graceful sport emoji & initial letter fallback.
-/// Conforms to taste-skill design standards (anti-slop, clean visual hierarchy, no squished images).
+/// Tournament identity avatar backed by the shared entity image widget.
 class TournamentAvatar extends StatelessWidget {
   final String? imageUrl;
   final String? bannerUrl;
@@ -28,118 +24,17 @@ class TournamentAvatar extends StatelessWidget {
     this.borderColor,
   });
 
-  String _resolveImageUrl(String? url) {
-    final normalized = url?.split(',').first.trim() ?? '';
-    if (normalized.isEmpty ||
-        normalized.toLowerCase().startsWith('data:') ||
-        normalized.toLowerCase().contains('sporto_v1') ||
-        normalized.toLowerCase().contains('defaultfallback') ||
-        normalized.toLowerCase().contains('default_fallback')) {
-      return '';
-    }
-    if (normalized.startsWith('http')) return normalized;
-
-    String apiBase = 'http://localhost:3000/api/v1';
-    try {
-      apiBase = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
-      if (!kIsWeb && Platform.isAndroid && apiBase.contains('localhost')) {
-        apiBase = apiBase.replaceAll('localhost', '10.0.2.2');
-      }
-    } catch (_) {}
-
-    final host = apiBase.replaceAll('/api/v1', '');
-    return '$host$normalized';
-  }
-
-  String _getInitials(String name) {
-    final clean = name
-        .replaceFirst(RegExp(r'^(Giải|GIẢI)\s+', caseSensitive: false), '')
-        .trim();
-    if (clean.isEmpty) return 'T';
-    final parts = clean
-        .split(RegExp(r'\s+'))
-        .where((p) => p.isNotEmpty)
-        .toList();
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return clean.substring(0, clean.length >= 2 ? 2 : 1).toUpperCase();
-  }
-
-  String _getSportEmoji(String? sportKey) {
-    if (sportKey == null) return '🏆';
-    switch (sportKey.toLowerCase()) {
-      case 'pickleball':
-        return '🏓';
-      case 'badminton':
-        return '🏸';
-      case 'tennis':
-        return '🎾';
-      case 'table_tennis':
-        return '🏓';
-      case 'football':
-        return '⚽';
-      default:
-        return '🏆';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final resolvedLogoUrl = _resolveImageUrl(imageUrl);
-    final resolvedBannerUrl = _resolveImageUrl(bannerUrl);
-    final resolvedUrl = resolvedLogoUrl.isNotEmpty
-        ? resolvedLogoUrl
-        : resolvedBannerUrl;
-    final isBannerFallback = resolvedLogoUrl.isEmpty && resolvedBannerUrl.isNotEmpty;
-    final initials = _getInitials(tournamentName);
-    final emoji = _getSportEmoji(sport);
-
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: borderColor ?? colors.border,
-          width: borderWidth ?? 1,
-        ),
-      ),
-      child: ClipOval(
-        child: resolvedUrl.isNotEmpty
-            ? Image.network(
-                resolvedUrl,
-                fit: isBannerFallback ? BoxFit.contain : BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  if (!isBannerFallback && resolvedBannerUrl.isNotEmpty) {
-                    return Image.network(
-                      resolvedBannerUrl,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _buildFallback(context, initials, emoji),
-                    );
-                  }
-                  return _buildFallback(context, initials, emoji);
-                },
-              )
-            : _buildFallback(context, initials, emoji),
-      ),
-    );
-  }
-
-  Widget _buildFallback(BuildContext context, String initials, String emoji) {
-    final colors = context.colors;
-    return Container(
-      color: colors.bgSurface,
-      alignment: Alignment.center,
-      padding: EdgeInsets.all(size * 0.12),
-      child: SvgPicture.asset(
-        'assets/images/sporto_v1.svg',
-        fit: BoxFit.contain,
-        semanticsLabel: 'SportO',
-      ),
+    return ClubBrandAvatar(
+      logoUrl: imageUrl,
+      bannerUrl: bannerUrl,
+      size: size,
+      bannerFit: BoxFit.contain,
+      backgroundColor: colors.bgSurface,
+      borderColor: borderColor ?? colors.border,
+      borderWidth: borderWidth ?? 1,
     );
   }
 }

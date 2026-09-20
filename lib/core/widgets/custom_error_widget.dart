@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class CustomErrorWidget extends StatelessWidget {
@@ -34,11 +35,7 @@ class CustomErrorWidget extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.warning_rounded,
-                color: context.colors.error,
-                size: 48,
-              ),
+              Icon(AppIcons.warning, color: context.colors.error, size: 48),
               const SizedBox(height: 16),
               Text(
                 l10n.customErrorDisplay,

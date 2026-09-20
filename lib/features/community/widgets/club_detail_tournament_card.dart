@@ -70,10 +70,10 @@ extension _ClubDetailTournamentCard on _ClubDetailScreenState {
                       resolvedImageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) =>
-                          _bannerGradient(AppTheme.primary, '🏆'),
+                          _bannerGradient(AppTheme.primary),
                     )
                   else
-                    _bannerGradient(AppTheme.primary, '🏆'),
+                    _bannerGradient(AppTheme.primary),
                   // Overlay chuyển màu mờ nhẹ để đọc text tốt hơn
                   Container(
                     decoration: BoxDecoration(
@@ -166,7 +166,7 @@ extension _ClubDetailTournamentCard on _ClubDetailScreenState {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(
-                                  Icons.bolt_rounded,
+                                  AppIcons.zap,
                                   size: 11,
                                   color: Colors.black,
                                 ),
@@ -206,7 +206,7 @@ extension _ClubDetailTournamentCard on _ClubDetailScreenState {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(
-                              Icons.sports_tennis_rounded,
+                              AppIcons.sportTennis,
                               size: 11,
                               color: Colors.white,
                             ),
@@ -272,7 +272,7 @@ extension _ClubDetailTournamentCard on _ClubDetailScreenState {
                   Row(
                     children: [
                       Icon(
-                        Icons.calendar_today_rounded,
+                        AppIcons.calendar,
                         size: 13,
                         color: colors.textMuted,
                       ),
@@ -303,7 +303,7 @@ extension _ClubDetailTournamentCard on _ClubDetailScreenState {
                     Row(
                       children: [
                         Icon(
-                          Icons.location_on_outlined,
+                          AppIcons.mapPin,
                           size: 14,
                           color: colors.textMuted,
                         ),
@@ -338,7 +338,7 @@ extension _ClubDetailTournamentCard on _ClubDetailScreenState {
                       Row(
                         children: [
                           Icon(
-                            Icons.groups_rounded,
+                            AppIcons.users,
                             size: 15,
                             color: colors.textSecondary,
                           ),
@@ -381,7 +381,7 @@ extension _ClubDetailTournamentCard on _ClubDetailScreenState {
                           ),
                           const SizedBox(width: 2),
                           const Icon(
-                            Icons.arrow_forward_rounded,
+                            AppIcons.forward,
                             size: 13,
                             color: AppTheme.primary,
                           ),

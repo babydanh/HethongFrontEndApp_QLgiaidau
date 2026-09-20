@@ -1,33 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_indicator.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 class TournamentCardV2 extends ConsumerWidget {
   final Tournament tournament;
   final VoidCallback? onTap;
 
-  const TournamentCardV2({
-    super.key,
-    required this.tournament,
-    this.onTap,
-  });
+  const TournamentCardV2({super.key, required this.tournament, this.onTap});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final sportIcon = AppConstants.sportIcons[tournament.sport] ?? "🏆";
     final sportName = l10n.sportDisplayName(tournament.sport);
     final bracketName = l10n.bracketDisplayName(tournament.bracketType);
     final formatName = l10n.formatDisplayName(tournament.format);
 
-    final statusColor =
-        StatusHelper.getTournamentStatusColor(tournament.status, context);
+    final statusColor = StatusHelper.getTournamentStatusColor(
+      tournament.status,
+      context,
+    );
     final statusName = StatusHelper.getTournamentStatusLabel(
       tournament.status,
       l10n: l10n,
@@ -44,12 +41,12 @@ class TournamentCardV2 extends ConsumerWidget {
           border: Border.all(color: context.colors.border),
           boxShadow: [
             BoxShadow(
-              color: isLive 
+              color: isLive
                   ? context.colors.error.withValues(alpha: 0.08)
                   : Colors.black.withValues(alpha: 0.04),
               blurRadius: 12,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -68,9 +65,10 @@ class TournamentCardV2 extends ConsumerWidget {
                       border: Border.all(color: context.colors.borderLight),
                     ),
                     child: Center(
-                      child: Text(
-                        sportIcon,
-                        style: const TextStyle(fontSize: 22),
+                      child: AppSportIcon(
+                        sportKey: tournament.sport,
+                        size: 24,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ),
@@ -80,7 +78,9 @@ class TournamentCardV2 extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          tournament.name.isNotEmpty ? tournament.name : "(Chưa có tên)",
+                          tournament.name.isNotEmpty
+                              ? tournament.name
+                              : "(Chưa có tên)",
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -111,9 +111,17 @@ class TournamentCardV2 extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  _infoChip(context, Icons.calendar_today_rounded, _formatDate(tournament.createdAt)),
+                  _infoChip(
+                    context,
+                    AppIcons.calendar,
+                    _formatDate(tournament.createdAt),
+                  ),
                   const SizedBox(width: 12),
-                  _infoChip(context, Icons.group_rounded, "${tournament.maxTeams} đội"),
+                  _infoChip(
+                    context,
+                    AppIcons.users,
+                    "${tournament.maxTeams} đội",
+                  ),
                 ],
               ),
             ),
@@ -122,7 +130,10 @@ class TournamentCardV2 extends ConsumerWidget {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
@@ -145,7 +156,7 @@ class TournamentCardV2 extends ConsumerWidget {
                   ),
                   const Spacer(),
                   Icon(
-                    Icons.arrow_forward_ios_rounded,
+                    AppIcons.chevronRight,
                     color: context.colors.textMuted,
                     size: 20,
                   ),
@@ -162,11 +173,7 @@ class TournamentCardV2 extends ConsumerWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          icon,
-          size: 13,
-          color: context.colors.textMuted,
-        ),
+        Icon(icon, size: 13, color: context.colors.textMuted),
         const SizedBox(width: 4),
         Text(
           text,

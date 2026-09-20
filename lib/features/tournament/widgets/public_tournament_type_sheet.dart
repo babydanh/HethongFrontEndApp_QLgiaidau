@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/features/profile/widgets/organizer_verificati
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Entry point used by general settings/profile/dashboard actions.
 ///
@@ -36,7 +37,7 @@ void showOrganizerRequiredDialog(
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.shield_outlined,
+              AppIcons.shield,
               color: Color(0xFF2563EB),
               size: 24,
             ),
@@ -81,7 +82,7 @@ void showOrganizerRequiredDialog(
             Navigator.pop(dialogCtx);
             OrganizerVerificationSheet.show(context);
           },
-          icon: const Icon(Icons.verified_user_rounded, size: 17),
+          icon: const Icon(AppIcons.shieldCheck, size: 17),
           label: Text(l10n.organizer_applyNow),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.primary,

@@ -3,15 +3,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
-const _kTierOrder = [
-  'TITLE',
-  'DIAMOND',
-  'GOLD',
-  'SILVER',
-  'BRONZE',
-  'IN_KIND',
-];
+const _kTierOrder = ['TITLE', 'DIAMOND', 'GOLD', 'SILVER', 'BRONZE', 'IN_KIND'];
 
 class _TierStyle {
   final Color accent;
@@ -125,17 +119,19 @@ class SponsorsTab extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Group sponsors by Tier according to kTierOrder
-    final groups = _kTierOrder.map((tier) {
-      final list = sponsors.where((s) => s.tier == tier).toList()
-        ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
-      return (tier: tier, sponsors: list);
-    }).where((group) => group.sponsors.isNotEmpty).toList();
+    final groups = _kTierOrder
+        .map((tier) {
+          final list = sponsors.where((s) => s.tier == tier).toList()
+            ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+          return (tier: tier, sponsors: list);
+        })
+        .where((group) => group.sponsors.isNotEmpty)
+        .toList();
 
     // Catch any unrecognized tiers not in kTierOrder
-    final otherSponsors = sponsors
-        .where((s) => !_kTierOrder.contains(s.tier))
-        .toList()
-      ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+    final otherSponsors =
+        sponsors.where((s) => !_kTierOrder.contains(s.tier)).toList()
+          ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
     if (otherSponsors.isNotEmpty) {
       groups.add((tier: 'IN_KIND', sponsors: otherSponsors));
     }
@@ -147,7 +143,7 @@ class SponsorsTab extends StatelessWidget {
           child: Column(
             children: [
               Icon(
-                Icons.handshake_outlined,
+                AppIcons.handshake,
                 size: 48,
                 color: colors.textSecondary.withValues(alpha: 0.5),
               ),
@@ -181,7 +177,11 @@ class SponsorsTab extends StatelessWidget {
                   color: colors.warning.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.handshake_outlined, color: colors.warning, size: 22),
+                child: Icon(
+                  AppIcons.handshake,
+                  color: colors.warning,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -241,7 +241,10 @@ class SponsorsTab extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: tierStyle.badgeBg,
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: tierStyle.border, width: 1),
+                            border: Border.all(
+                              color: tierStyle.border,
+                              width: 1,
+                            ),
                           ),
                           child: Text(
                             _getTierLabel(group.tier, l10n).toUpperCase(),
@@ -338,10 +341,7 @@ class _SponsorLogoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? colors.bgCard : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: tierStyle.border,
-          width: 1.2,
-        ),
+        border: Border.all(color: tierStyle.border, width: 1.2),
         boxShadow: [
           BoxShadow(
             color: tierStyle.accent.withValues(alpha: 0.05),
@@ -388,11 +388,7 @@ class _SponsorLogoCard extends StatelessWidget {
               ),
               if (hasWebsite) ...[
                 const SizedBox(width: 4),
-                Icon(
-                  Icons.open_in_new_rounded,
-                  size: 11,
-                  color: tierStyle.accent,
-                ),
+                Icon(AppIcons.externalLink, size: 11, color: tierStyle.accent),
               ],
             ],
           ),

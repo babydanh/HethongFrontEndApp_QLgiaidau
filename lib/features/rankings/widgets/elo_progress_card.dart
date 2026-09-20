@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:flutter/material.dart';
 
 /// Card ELO nổi bật dùng lại cho Home/Dashboard/Profile.
@@ -44,7 +45,9 @@ class _EloProgressCardState extends State<EloProgressCard> {
     };
     final activeRanks = _selectedCategoryId == null
         ? widget.rankings
-        : widget.rankings.where((rank) => rank.categoryId == _selectedCategoryId).toList();
+        : widget.rankings
+              .where((rank) => rank.categoryId == _selectedCategoryId)
+              .toList();
     final activeRank = EloHelpers.getBestRankForCategory(activeRanks);
     final hasRank = activeRank != null && activeRank.matchesPlayed > 0;
     final eloPoints = activeRank?.eloPoints ?? 1000;
@@ -79,7 +82,9 @@ class _EloProgressCardState extends State<EloProgressCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.userName.isNotEmpty ? widget.userName : l10n.ranking_userFallback,
+                      widget.userName.isNotEmpty
+                          ? widget.userName
+                          : l10n.ranking_userFallback,
                       style: TextStyle(
                         color: context.colors.textPrimary,
                         fontSize: 18,
@@ -108,7 +113,7 @@ class _EloProgressCardState extends State<EloProgressCard> {
                 IconButton(
                   onPressed: widget.onTapProfile,
                   icon: Icon(
-                    Icons.chevron_right_rounded,
+                    AppIcons.chevronRight,
                     color: context.colors.textMuted,
                   ),
                   tooltip: l10n.ranking_profileTooltip,
@@ -134,7 +139,8 @@ class _EloProgressCardState extends State<EloProgressCard> {
                   (entry) => ChoiceChip(
                     label: Text(entry.value),
                     selected: _selectedCategoryId == entry.key,
-                    onSelected: (_) => setState(() => _selectedCategoryId = entry.key),
+                    onSelected: (_) =>
+                        setState(() => _selectedCategoryId = entry.key),
                   ),
                 ),
               ],
@@ -148,7 +154,9 @@ class _EloProgressCardState extends State<EloProgressCard> {
               decoration: BoxDecoration(
                 color: AppTheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: AppTheme.primary.withValues(alpha: 0.2),
+                ),
               ),
               child: Row(
                 children: [
@@ -159,9 +167,18 @@ class _EloProgressCardState extends State<EloProgressCard> {
                             width: 24,
                             height: 24,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.groups_rounded, color: AppTheme.primary, size: 18),
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                                  AppIcons.users,
+                                  color: AppTheme.primary,
+                                  size: 18,
+                                ),
                           )
-                        : const Icon(Icons.groups_rounded, color: AppTheme.primary, size: 18),
+                        : const Icon(
+                            AppIcons.users,
+                            color: AppTheme.primary,
+                            size: 18,
+                          ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -220,7 +237,10 @@ class _EloProgressCardState extends State<EloProgressCard> {
                           Text(
                             activeRank == null
                                 ? l10n.ranking_overviewLabel
-                                : EloHelpers.getRankDisplayName(activeRank, l10n),
+                                : EloHelpers.getRankDisplayName(
+                                    activeRank,
+                                    l10n,
+                                  ),
                             style: TextStyle(
                               color: context.colors.textPrimary,
                               fontSize: 14,
@@ -261,7 +281,9 @@ class _EloProgressCardState extends State<EloProgressCard> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      hasRank ? EloHelpers.getTierName(progress.currentIndex, l10n) : '1000',
+                      hasRank
+                          ? EloHelpers.getTierName(progress.currentIndex, l10n)
+                          : '1000',
                       style: TextStyle(
                         color: context.colors.textPrimary,
                         fontSize: 11,
@@ -309,7 +331,9 @@ class _EloProgressCardState extends State<EloProgressCard> {
                       ),
                     ),
                     Text(
-                      nextThreshold == null ? l10n.ranking_maxElo : '${nextThreshold.minElo}',
+                      nextThreshold == null
+                          ? l10n.ranking_maxElo
+                          : '${nextThreshold.minElo}',
                       style: TextStyle(
                         color: context.colors.textMuted,
                         fontSize: 10,
@@ -325,7 +349,10 @@ class _EloProgressCardState extends State<EloProgressCard> {
           const SizedBox(height: 14),
           Row(
             children: [
-              _StatChip(label: l10n.ranking_matchesLabel, value: '$matchesPlayed'),
+              _StatChip(
+                label: l10n.ranking_matchesLabel,
+                value: '$matchesPlayed',
+              ),
               const SizedBox(width: 8),
               _StatChip(label: l10n.ranking_winsLabel, value: '$matchesWon'),
               const SizedBox(width: 8),
@@ -378,17 +405,17 @@ class _ShieldRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final config = switch (status.state) {
       ShieldState.active => (
-        icon: Icons.verified_user_rounded,
+        icon: AppIcons.shieldCheck,
         color: context.colors.success,
         bg: context.colors.success.withValues(alpha: 0.13),
       ),
       ShieldState.broken => (
-        icon: Icons.shield_outlined,
+        icon: AppIcons.shield,
         color: context.colors.warning,
         bg: context.colors.warning.withValues(alpha: 0.13),
       ),
       ShieldState.onboarding => (
-        icon: Icons.shield_outlined,
+        icon: AppIcons.shield,
         // This card is rendered on the light surface used by “Của tôi”.
         // White onboarding text was effectively invisible there.
         color: context.colors.textSecondary,
@@ -437,7 +464,9 @@ class _StatChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: context.colors.bgSurface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.colors.border.withValues(alpha: 0.5)),
+          border: Border.all(
+            color: context.colors.border.withValues(alpha: 0.5),
+          ),
         ),
         child: Column(
           children: [

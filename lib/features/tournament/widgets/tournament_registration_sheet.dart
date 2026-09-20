@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Compatibility sheet for older call sites.
@@ -49,10 +50,7 @@ class TournamentRegistrationSheet extends StatelessWidget {
                     color: AppTheme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(
-                    Icons.how_to_reg_rounded,
-                    color: AppTheme.primary,
-                  ),
+                  child: const Icon(AppIcons.userAdd, color: AppTheme.primary),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -101,7 +99,7 @@ class TournamentRegistrationSheet extends StatelessWidget {
                   Navigator.of(context).pop();
                   context.push('/register/${tournament.id}');
                 },
-                icon: const Icon(Icons.arrow_forward_rounded),
+                icon: const Icon(AppIcons.forward),
                 label: Text(
                   l10n.tournamentRegistrationSheetContinue,
                   style: const TextStyle(fontWeight: FontWeight.w800),

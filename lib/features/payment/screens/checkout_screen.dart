@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
@@ -40,7 +41,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   ) async {
     final l10n = AppLocalizations.of(context)!;
     final rawDivisionId = widget.divisionId?.trim();
-    final cleanDivisionId = (rawDivisionId != null &&
+    final cleanDivisionId =
+        (rawDivisionId != null &&
             rawDivisionId.isNotEmpty &&
             isValidUuid(rawDivisionId))
         ? rawDivisionId
@@ -124,10 +126,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              ErrorParser.parse(
-                e,
-                l10n.checkout_createPaymentError,
-              ),
+              ErrorParser.parse(e, l10n.checkout_createPaymentError),
             ),
             backgroundColor: Colors.redAccent,
           ),
@@ -171,7 +170,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -206,7 +205,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               child: Column(
                 children: [
                   Text(
-                    isFree ? l10n.checkout_freeBadge : l10n.checkout_entryFeeLabel,
+                    isFree
+                        ? l10n.checkout_freeBadge
+                        : l10n.checkout_entryFeeLabel,
                     style: TextStyle(
                       color: isFree
                           ? const Color(0xFF10B981)
@@ -360,7 +361,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     : Text(
                         isFree
                             ? l10n.checkout_freeConfirmButton
-                            : l10n.checkout_payButton(fmt.format(effectiveAmount.ceil())),
+                            : l10n.checkout_payButton(
+                                fmt.format(effectiveAmount.ceil()),
+                              ),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,

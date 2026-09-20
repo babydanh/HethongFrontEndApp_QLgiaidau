@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class OverviewTab extends StatefulWidget {
   final Tournament tournament;
@@ -350,14 +351,14 @@ class _OverviewTabState extends State<OverviewTab> {
 
                 // Thông tin nhanh (Thời gian, Địa điểm, Lệ phí)
                 _buildInlineInfo(
-                  icon: Icons.calendar_today_outlined,
+                  icon: AppIcons.calendar,
                   label: 'Thời gian:',
                   value: dateRangeStr,
                   colors: colors,
                 ),
                 const SizedBox(height: 6),
                 _buildInlineInfo(
-                  icon: Icons.location_on_outlined,
+                  icon: AppIcons.mapPin,
                   label: 'Địa điểm:',
                   value: locationStr.isNotEmpty
                       ? locationStr
@@ -366,7 +367,7 @@ class _OverviewTabState extends State<OverviewTab> {
                 ),
                 const SizedBox(height: 6),
                 _buildInlineInfo(
-                  icon: Icons.payments_outlined,
+                  icon: AppIcons.wallet,
                   label: 'Lệ phí:',
                   value: _formatCurrency(t.entryFee),
                   colors: colors,
@@ -438,7 +439,7 @@ class _OverviewTabState extends State<OverviewTab> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Icon(
-                              Icons.admin_panel_settings_rounded,
+                              AppIcons.shieldCheck,
                               color: AppTheme.primary,
                               size: 22,
                             ),
@@ -488,10 +489,7 @@ class _OverviewTabState extends State<OverviewTab> {
                                 );
                               }
                             },
-                            icon: const Icon(
-                              Icons.settings_suggest_rounded,
-                              size: 16,
-                            ),
+                            icon: const Icon(AppIcons.settings, size: 16),
                             label: const Text(
                               'Quản lý',
                               style: TextStyle(
@@ -528,10 +526,7 @@ class _OverviewTabState extends State<OverviewTab> {
                           widget.onNavigateToMatches!();
                         }
                       },
-                      icon: const Icon(
-                        Icons.calendar_month_rounded,
-                        size: 16,
-                      ),
+                      icon: const Icon(AppIcons.calendar, size: 16),
                       label: const Text(
                         'Lịch thi đấu',
                         style: TextStyle(
@@ -819,7 +814,7 @@ class _OverviewTabState extends State<OverviewTab> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.check_circle_rounded,
+                            AppIcons.checkCircle,
                             size: 11,
                             color: colors.textMuted,
                           ),
@@ -840,11 +835,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.people_alt_outlined,
-                        size: 14,
-                        color: colors.textMuted,
-                      ),
+                      Icon(AppIcons.users, size: 14, color: colors.textMuted),
                       const SizedBox(width: 4),
                       Text(
                         maxP > 0 ? '$curP/$maxP' : '$curP VĐV',
@@ -858,9 +849,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   ),
                   const SizedBox(width: 4),
                   Icon(
-                    isExpanded
-                        ? Icons.expand_less_rounded
-                        : Icons.expand_more_rounded,
+                    isExpanded ? AppIcons.chevronUp : AppIcons.chevronDown,
                     size: 18,
                     color: isExpanded ? AppTheme.primary : colors.textMuted,
                   ),
@@ -876,7 +865,7 @@ class _OverviewTabState extends State<OverviewTab> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildInlineInfo(
-                    icon: Icons.sports_score_rounded,
+                    icon: AppIcons.trophy,
                     label: 'Thể thức:',
                     value: _getBracketFormatLabel(
                       div.bracketType,
@@ -886,7 +875,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   ),
                   const SizedBox(height: 6),
                   _buildInlineInfo(
-                    icon: Icons.people_outline_rounded,
+                    icon: AppIcons.users,
                     label: 'Định dạng:',
                     value: div.matchType == 'DOUBLES' ? 'Đánh Đôi' : 'Đánh Đơn',
                     colors: colors,
@@ -895,7 +884,7 @@ class _OverviewTabState extends State<OverviewTab> {
                       div.genderRestriction!.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     _buildInlineInfo(
-                      icon: Icons.wc_rounded,
+                      icon: AppIcons.users,
                       label: 'Giới tính:',
                       value: div.genderRestriction!,
                       colors: colors,
@@ -903,7 +892,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   ],
                   const SizedBox(height: 6),
                   _buildInlineInfo(
-                    icon: Icons.group_outlined,
+                    icon: AppIcons.users,
                     label: 'Quy mô:',
                     value: maxP > 0 ? '$curP / $maxP VĐV (đội)' : '$curP VĐV',
                     colors: colors,
@@ -925,7 +914,7 @@ class _OverviewTabState extends State<OverviewTab> {
                           widget.onSelectDivision!(div);
                         }
                       },
-                      icon: const Icon(Icons.account_tree_outlined, size: 16),
+                      icon: const Icon(AppIcons.layers, size: 16),
                       label: const Text(
                         'Xem Bảng đấu phân hạng này',
                         style: TextStyle(
@@ -1123,13 +1112,20 @@ class _OverviewTabState extends State<OverviewTab> {
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: colors.border),
       ),
-      child: Text(
-        '🏓 $name',
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: colors.textPrimary,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(AppIcons.forSport(sport), size: 13, color: colors.textPrimary),
+          const SizedBox(width: 4),
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
+        ],
       ),
     );
   }

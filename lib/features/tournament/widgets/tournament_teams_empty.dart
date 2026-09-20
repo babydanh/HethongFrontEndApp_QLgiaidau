@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TeamsEmptyView extends StatelessWidget {
@@ -14,11 +15,7 @@ class TeamsEmptyView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.group_rounded,
-              size: 64,
-              color: context.colors.textMuted,
-            ),
+            Icon(AppIcons.users, size: 64, color: context.colors.textMuted),
             const SizedBox(height: 16),
             Text(
               l10n.tournamentTeamsEmptyTitle,

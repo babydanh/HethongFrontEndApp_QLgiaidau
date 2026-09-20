@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Hiển thị set history dạng badge
@@ -171,11 +172,7 @@ class PickleballServerIndicator extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.volunteer_activism_rounded,
-            size: 12,
-            color: AppTheme.primary,
-          ),
+          Icon(AppIcons.handshake, size: 12, color: AppTheme.primary),
           const SizedBox(width: 4),
           Text(
             AppLocalizations.of(context)!.scoreServingIndicator(

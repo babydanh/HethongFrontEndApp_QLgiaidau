@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class LiveTab extends StatefulWidget {
   final List<MatchModel> liveMatches;
@@ -68,7 +69,7 @@ class _LiveTabState extends State<LiveTab> {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.radio_outlined,
+                AppIcons.radio,
                 size: 26,
                 color: colors.textMuted.withValues(alpha: 0.5),
               ),
@@ -267,7 +268,7 @@ class _LiveTabState extends State<LiveTab> {
                               ),
                             ),
                             child: Icon(
-                              Icons.check_circle_rounded,
+                              AppIcons.checkCircle,
                               size: 13,
                               color: colors.textMuted,
                             ),
@@ -278,7 +279,7 @@ class _LiveTabState extends State<LiveTab> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.people_alt_outlined,
+                              AppIcons.users,
                               size: 13,
                               color: colors.textMuted,
                             ),
@@ -299,7 +300,7 @@ class _LiveTabState extends State<LiveTab> {
                           duration: const Duration(milliseconds: 250),
                           curve: Curves.fastOutSlowIn,
                           child: Icon(
-                            Icons.keyboard_arrow_down_rounded,
+                            AppIcons.chevronDown,
                             size: 22,
                             color: isExpanded
                                 ? AppTheme.primary
@@ -354,7 +355,7 @@ class _LiveTabState extends State<LiveTab> {
                             child: Row(
                               children: [
                                 Icon(
-                                  Icons.info_outline_rounded,
+                                  AppIcons.info,
                                   size: 16,
                                   color: colors.textMuted,
                                 ),

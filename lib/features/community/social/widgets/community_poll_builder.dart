@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Dữ liệu bình chọn sẽ gửi kèm bài đăng (khớp CreatePollDto backend/web).
 class CommunityPollDraft {
@@ -19,12 +20,12 @@ class CommunityPollDraft {
   });
 
   Map<String, dynamic> toPayload() => {
-        'question': question,
-        'options': options,
-        'allowMultipleAnswers': allowMultipleAnswers,
-        'allowAddOptions': allowAddOptions,
-        if (expiresAt != null) 'expiresAt': expiresAt,
-      };
+    'question': question,
+    'options': options,
+    'allowMultipleAnswers': allowMultipleAnswers,
+    'allowAddOptions': allowAddOptions,
+    if (expiresAt != null) 'expiresAt': expiresAt,
+  };
 }
 
 /// Panel tạo bình chọn trong composer — đồng bộ web (CommunityPostComposer):
@@ -96,7 +97,10 @@ class CommunityPollBuilder extends StatelessWidget {
                 style: TextButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                 ),
-                child: Text(l10n.communityPollBuilder_cancel, style: const TextStyle(fontSize: 12)),
+                child: Text(
+                  l10n.communityPollBuilder_cancel,
+                  style: const TextStyle(fontSize: 12),
+                ),
               ),
             ],
           ),
@@ -113,80 +117,103 @@ class CommunityPollBuilder extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacingSM),
           ...optionControllers.asMap().entries.map(
-                (entry) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 20,
-                        child: Text('${entry.key + 1}.',
-                            style: TextStyle(
-                                fontSize: 12, color: colors.textSecondary)),
+            (entry) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    child: Text(
+                      '${entry.key + 1}.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colors.textSecondary,
                       ),
-                      Expanded(
-                        child: TextField(
-                          controller: entry.value,
-                          maxLength: 150,
-                          decoration: InputDecoration(
-                            hintText: l10n.communityPollBuilder_optionHint(entry.key + 1),
-                            isDense: true,
-                            counterText: '',
-                          ),
-                        ),
-                      ),
-                      if (optionControllers.length > CommunityPollBuilder.minOptions)
-                        IconButton(
-                          visualDensity: VisualDensity.compact,
-                          icon: Icon(Icons.close_rounded,
-                              size: 18, color: colors.textMuted),
-                          onPressed: () => onRemoveOption(entry.key),
-                        ),
-                    ],
+                    ),
                   ),
-                ),
+                  Expanded(
+                    child: TextField(
+                      controller: entry.value,
+                      maxLength: 150,
+                      decoration: InputDecoration(
+                        hintText: l10n.communityPollBuilder_optionHint(
+                          entry.key + 1,
+                        ),
+                        isDense: true,
+                        counterText: '',
+                      ),
+                    ),
+                  ),
+                  if (optionControllers.length >
+                      CommunityPollBuilder.minOptions)
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      icon: Icon(
+                        AppIcons.close,
+                        size: 18,
+                        color: colors.textMuted,
+                      ),
+                      onPressed: () => onRemoveOption(entry.key),
+                    ),
+                ],
               ),
+            ),
+          ),
           if (optionControllers.length < CommunityPollBuilder.maxOptions)
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: onAddOption,
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: Text(l10n.communityPollBuilder_addOption, style: const TextStyle(fontSize: 13)),
+                icon: const Icon(AppIcons.add, size: 18),
+                label: Text(
+                  l10n.communityPollBuilder_addOption,
+                  style: const TextStyle(fontSize: 13),
+                ),
               ),
             ),
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
             dense: true,
-            title: Text(l10n.communityPollBuilder_allowMultiple,
-                style: TextStyle(fontSize: 13)),
+            title: Text(
+              l10n.communityPollBuilder_allowMultiple,
+              style: TextStyle(fontSize: 13),
+            ),
             value: allowMultipleAnswers,
             onChanged: onAllowMultipleChanged,
           ),
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
             dense: true,
-            title: Text(l10n.communityPollBuilder_allowAddOptions,
-                style: TextStyle(fontSize: 13)),
+            title: Text(
+              l10n.communityPollBuilder_allowAddOptions,
+              style: TextStyle(fontSize: 13),
+            ),
             value: allowAddOptions,
             onChanged: onAllowAddOptionsChanged,
           ),
           Row(
             children: [
               Expanded(
-                child: Text(l10n.communityPollBuilder_expiry,
-                    style: TextStyle(fontSize: 13, color: colors.textSecondary)),
+                child: Text(
+                  l10n.communityPollBuilder_expiry,
+                  style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                ),
               ),
               DropdownButton<int>(
                 value: expiryDays,
                 underline: const SizedBox.shrink(),
                 items: expiryChoices
-                    .map((days) => DropdownMenuItem(
-                          value: days,
-                          child: Text(
-                            days == 0 ? l10n.communityPollBuilder_noLimit : l10n.communityPollBuilder_days(days),
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                        ))
+                    .map(
+                      (days) => DropdownMenuItem(
+                        value: days,
+                        child: Text(
+                          days == 0
+                              ? l10n.communityPollBuilder_noLimit
+                              : l10n.communityPollBuilder_days(days),
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    )
                     .toList(),
                 onChanged: (value) {
                   if (value != null) onExpiryChanged(value);

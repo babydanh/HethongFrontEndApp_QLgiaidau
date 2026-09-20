@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PayOSVerifyScreen extends ConsumerStatefulWidget {
@@ -150,7 +151,7 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.receipt_long_rounded,
+                  AppIcons.receipt,
                   size: 40,
                   color: Color(0xFFFF5622),
                 ),
@@ -272,7 +273,7 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
                       Uri.parse(widget.paymentUrl!),
                       mode: LaunchMode.externalApplication,
                     ),
-                    icon: const Icon(Icons.open_in_new_rounded),
+                    icon: const Icon(AppIcons.externalLink),
                     label: Text(l10n.payosVerifyOpenPaymentPage),
                   ),
                 ),
@@ -292,7 +293,7 @@ class _PayOSVerifyScreenState extends ConsumerState<PayOSVerifyScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(Icons.check_circle_rounded),
+                      : const Icon(AppIcons.checkCircle),
                   label: Text(
                     l10n.payosVerifyPaidButton,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),

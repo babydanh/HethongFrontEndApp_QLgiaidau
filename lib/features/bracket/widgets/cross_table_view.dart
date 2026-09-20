@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class CrossTableView extends ConsumerStatefulWidget {
   final List<MatchModel> matches;
@@ -231,7 +232,7 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.table_chart_outlined,
+            AppIcons.table,
             size: 64,
             color: context.colors.textMuted.withValues(alpha: 0.4),
           ),
@@ -303,11 +304,7 @@ class _GroupCrossTable extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(
-                  Icons.grid_on_rounded,
-                  size: 18,
-                  color: AppTheme.primary,
-                ),
+                const Icon(AppIcons.grid, size: 18, color: AppTheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -335,7 +332,7 @@ class _GroupCrossTable extends StatelessWidget {
                     tooltip: l10n.crossTablePreviousLeg,
                     onPressed: onPrevLeg,
                     icon: Icon(
-                      Icons.chevron_left_rounded,
+                      AppIcons.chevronLeft,
                       color: onPrevLeg != null
                           ? AppTheme.primary
                           : colors.textMuted.withValues(alpha: 0.3),
@@ -369,7 +366,7 @@ class _GroupCrossTable extends StatelessWidget {
                     tooltip: l10n.crossTableNextLeg,
                     onPressed: onNextLeg,
                     icon: Icon(
-                      Icons.chevron_right_rounded,
+                      AppIcons.chevronRight,
                       color: onNextLeg != null
                           ? AppTheme.primary
                           : colors.textMuted.withValues(alpha: 0.3),
@@ -550,7 +547,7 @@ class _GroupCrossTable extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Icon(
-        Icons.remove_rounded,
+        AppIcons.remove,
         size: 16,
         color: context.colors.textMuted.withValues(alpha: 0.55),
       ),

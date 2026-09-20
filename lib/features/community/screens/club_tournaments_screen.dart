@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class ClubTournamentsScreen extends ConsumerStatefulWidget {
@@ -122,7 +123,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_rounded),
+            icon: const Icon(AppIcons.add),
             onPressed: canCreateLite
                 ? () => context.push('/club/${widget.clubId}/create-tournament')
                 : null,
@@ -150,7 +151,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    Icons.cloud_off_rounded,
+                                    AppIcons.imageOff,
                                     size: 48,
                                     color: colors.textMuted,
                                   ),
@@ -167,7 +168,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
                                   OutlinedButton.icon(
                                     onPressed: _resetAndReload,
                                     icon: const Icon(
-                                      Icons.refresh_rounded,
+                                      AppIcons.refresh,
                                       size: 18,
                                     ),
                                     label: const Text('Thử lại'),
@@ -365,7 +366,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.chevron_left_rounded,
+                        AppIcons.chevronLeft,
                         size: 17,
                         color: canGoPrev
                             ? colors.textPrimary
@@ -421,7 +422,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
                       ),
                       const SizedBox(width: 2),
                       Icon(
-                        Icons.chevron_right_rounded,
+                        AppIcons.chevronRight,
                         size: 17,
                         color: canGoNext
                             ? Colors.white
@@ -456,7 +457,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
-              Icons.emoji_events_outlined,
+              AppIcons.trophy,
               size: 40,
               color: context.colors.textMuted.withValues(alpha: 0.4),
             ),
@@ -477,7 +478,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
             ElevatedButton.icon(
               onPressed: () =>
                   context.push('/club/${widget.clubId}/create-tournament'),
-              icon: const Icon(Icons.add),
+              icon: const Icon(AppIcons.add),
               label: Text(l10n.clubTournamentsCreate),
             ),
         ],
@@ -527,7 +528,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
-                isLite ? Icons.bolt_rounded : Icons.emoji_events_rounded,
+                isLite ? AppIcons.zap : AppIcons.trophy,
                 color: isLite
                     ? const Color(0xFFF59E0B)
                     : (isLive ? context.colors.error : context.colors.info),
@@ -576,9 +577,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              isLite
-                                  ? Icons.bolt_rounded
-                                  : Icons.workspace_premium_rounded,
+                              isLite ? AppIcons.zap : AppIcons.award,
                               size: 10,
                               color: isLite
                                   ? const Color(0xFFF59E0B)
@@ -620,7 +619,7 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(
-                                Icons.sync_rounded,
+                                AppIcons.refresh,
                                 size: 10,
                                 color: Color(0xFF6366F1),
                               ),
@@ -654,11 +653,10 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.chevron_right_rounded, color: context.colors.textMuted),
+            Icon(AppIcons.chevronRight, color: context.colors.textMuted),
           ],
         ),
       ),
     );
   }
 }
-

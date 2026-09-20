@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 
@@ -96,7 +97,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
+          icon: const Icon(AppIcons.close, color: Colors.white),
           onPressed: () => context.pop(),
         ),
         title: Text(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 
 /// A self-contained language preference control for the Settings screen.
@@ -34,7 +35,7 @@ class LanguageSettingCard extends ConsumerWidget {
               color: AppTheme.primary.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.language_rounded, color: AppTheme.primary),
+            child: const Icon(AppIcons.globe, color: AppTheme.primary),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -71,14 +72,8 @@ class LanguageSettingCard extends ConsumerWidget {
                 fontWeight: FontWeight.w700,
               ),
               items: [
-                DropdownMenuItem(
-                  value: 'vi',
-                  child: Text(l10n.languageVi),
-                ),
-                DropdownMenuItem(
-                  value: 'en',
-                  child: Text(l10n.languageEn),
-                ),
+                DropdownMenuItem(value: 'vi', child: Text(l10n.languageVi)),
+                DropdownMenuItem(value: 'en', child: Text(l10n.languageEn)),
               ],
               onChanged: (languageCode) {
                 if (languageCode == null) {

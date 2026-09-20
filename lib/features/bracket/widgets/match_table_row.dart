@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Clean, specs-driven schedule match card.
@@ -57,7 +58,7 @@ class MatchTableRow extends StatelessWidget {
                 : match.team2Id,
           ),
         ),
-        icon: const Icon(Icons.link_off_rounded, size: 14),
+        icon: const Icon(AppIcons.link, size: 14),
         color: Theme.of(context).colorScheme.error,
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints.tightFor(width: 22, height: 22),
@@ -532,7 +533,7 @@ class MatchTableRow extends StatelessWidget {
                             ),
                             SizedBox(width: 2),
                             Icon(
-                              Icons.sensors,
+                              AppIcons.radio,
                               size: 9,
                               color: Color(0xFFEF4444),
                             ),
@@ -588,11 +589,7 @@ class MatchTableRow extends StatelessWidget {
                     const SizedBox(width: 4),
 
                     // Time
-                    Icon(
-                      Icons.access_time_rounded,
-                      size: 10,
-                      color: colors.textMuted,
-                    ),
+                    Icon(AppIcons.clock, size: 10, color: colors.textMuted),
                     const SizedBox(width: 2),
                     Text(
                       timeStr,
@@ -610,7 +607,7 @@ class MatchTableRow extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.grid_view_rounded,
+                            AppIcons.grid,
                             size: 10,
                             color: colors.textMuted,
                           ),

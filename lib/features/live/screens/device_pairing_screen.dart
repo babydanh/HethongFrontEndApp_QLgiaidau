@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class DevicePairingScreen extends ConsumerStatefulWidget {
   const DevicePairingScreen({required this.communityId, super.key});
@@ -134,7 +135,7 @@ class _DevicePairingScreenState extends ConsumerState<DevicePairingScreen> {
         actions: <Widget>[
           IconButton(
             tooltip: l10n.devicePairingClose,
-            icon: const Icon(Icons.close),
+            icon: const Icon(AppIcons.close),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
@@ -186,7 +187,7 @@ class _DevicePairingScreenState extends ConsumerState<DevicePairingScreen> {
                       setState(() => _errorMessage = null);
                       await _scannerController.start();
                     },
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(AppIcons.refresh),
               label: Text(l10n.devicePairingScanAgain),
             ),
           ],

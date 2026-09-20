@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.da
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 /// Tennis scoring panel với 15-30-40, Deuce/Advantage, Tiebreak mode.
 class TennisScorePanel extends ConsumerWidget {
@@ -76,11 +77,7 @@ class TennisScorePanel extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                const Icon(
-                  Icons.warning_amber_rounded,
-                  color: Colors.white,
-                  size: 16,
-                ),
+                const Icon(AppIcons.warning, color: Colors.white, size: 16),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -227,7 +224,7 @@ class TennisScorePanel extends ConsumerWidget {
                         border: Border.all(color: colors.border, width: 1.5),
                       ),
                       child: Icon(
-                        Icons.remove_rounded,
+                        AppIcons.remove,
                         size: 26,
                         color: colors.textSecondary,
                       ),
@@ -271,7 +268,7 @@ class TennisScorePanel extends ConsumerWidget {
                           width: 1.8,
                         ),
                       ),
-                      child: Icon(Icons.add_rounded, size: 32, color: color),
+                      child: Icon(AppIcons.add, size: 32, color: color),
                     ),
                   )
                 else

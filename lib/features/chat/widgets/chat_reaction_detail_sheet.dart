@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:flutter/material.dart';
 
 class ChatReactionDetailSheet extends StatelessWidget {
@@ -197,11 +198,7 @@ class ChatReactionDetailSheet extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.format_quote_rounded,
-                  size: 16,
-                  color: colors.textMuted,
-                ),
+                Icon(AppIcons.chat, size: 16, color: colors.textMuted),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(

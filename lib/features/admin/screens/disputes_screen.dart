@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Admin — Danh sách khiếu nại (Disputes)
@@ -34,7 +35,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          icon: Icon(AppIcons.chevronLeft, color: colors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -116,7 +117,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.gavel_rounded,
+                  AppIcons.shield,
                   size: 64,
                   color: colors.textMuted.withValues(alpha: 0.4),
                 ),
@@ -147,7 +148,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
+            Icon(AppIcons.imageOff, size: 48, color: colors.textMuted),
             const SizedBox(height: 12),
             Text(
               l10n!.adminDisputesLoadError,
@@ -210,7 +211,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
-                  Icons.report_problem_rounded,
+                  AppIcons.warning,
                   color: Color(0xFFEF4444),
                   size: 20,
                 ),
@@ -290,7 +291,7 @@ class _AdminDisputesScreenState extends ConsumerState<AdminDisputesScreen> {
                 Expanded(
                   child: _actionBtn(
                     l10n!.adminDisputesResolve,
-                    Icons.check_rounded,
+                    AppIcons.check,
                     const Color(0xFF10B981),
                     () => _handleResolve(dispute['id'], colors),
                   ),

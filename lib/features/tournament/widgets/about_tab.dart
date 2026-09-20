@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class AboutTab extends StatefulWidget {
   final Tournament tournament;
@@ -175,8 +176,8 @@ class _AboutTabState extends State<AboutTab> {
     final dateRangeStr = (t.startDate != null && t.endDate != null)
         ? '${_formatDate(t.startDate)} - ${_formatDate(t.endDate)}'
         : (t.startDate != null
-            ? _formatDate(t.startDate)
-            : 'Chưa cập nhật thời gian');
+              ? _formatDate(t.startDate)
+              : 'Chưa cập nhật thời gian');
     final locationStr = TournamentLocationFormatter.tournamentFullLocation(t);
     final divisionCount = t.divisions.isNotEmpty ? t.divisions.length : 1;
 
@@ -285,7 +286,7 @@ class _AboutTabState extends State<AboutTab> {
                   children: [
                     Expanded(
                       child: _buildMiniStat(
-                        icon: Icons.calendar_today_outlined,
+                        icon: AppIcons.calendar,
                         label: 'Thời gian',
                         value: dateRangeStr,
                         colors: colors,
@@ -294,7 +295,7 @@ class _AboutTabState extends State<AboutTab> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _buildMiniStat(
-                        icon: Icons.emoji_events_outlined,
+                        icon: AppIcons.trophy,
                         label: 'Nội dung',
                         value: '$divisionCount phân hạng',
                         colors: colors,
@@ -304,7 +305,7 @@ class _AboutTabState extends State<AboutTab> {
                 ),
                 const SizedBox(height: 8),
                 _buildMiniStat(
-                  icon: Icons.location_on_outlined,
+                  icon: AppIcons.mapPin,
                   label: 'Địa điểm',
                   value: locationStr.isNotEmpty
                       ? locationStr
@@ -374,10 +375,7 @@ class _AboutTabState extends State<AboutTab> {
                             widget.onNavigateToMatches!();
                           }
                         },
-                        icon: const Icon(
-                          Icons.calendar_month_rounded,
-                          size: 16,
-                        ),
+                        icon: const Icon(AppIcons.calendar, size: 16),
                         label: const Text(
                           'Lịch thi đấu',
                           style: TextStyle(
@@ -407,8 +405,8 @@ class _AboutTabState extends State<AboutTab> {
                       },
                       icon: Icon(
                         widget.isFollowing
-                            ? Icons.bookmark_rounded
-                            : Icons.bookmark_border_rounded,
+                            ? AppIcons.bookmark
+                            : AppIcons.bookmark,
                         size: 16,
                         color: widget.isFollowing
                             ? AppTheme.primary
@@ -447,7 +445,7 @@ class _AboutTabState extends State<AboutTab> {
         color: context.colors.bgSurface,
         child: Center(
           child: Icon(
-            Icons.emoji_events_outlined,
+            AppIcons.trophy,
             size: 48,
             color: context.colors.textMuted.withValues(alpha: 0.4),
           ),
@@ -463,7 +461,7 @@ class _AboutTabState extends State<AboutTab> {
           fit: BoxFit.cover,
           errorBuilder: (ctx, err, stack) => Container(
             color: context.colors.bgSurface,
-            child: const Center(child: Icon(Icons.broken_image, size: 36)),
+            child: const Center(child: Icon(AppIcons.imageOff, size: 36)),
           ),
         ),
         Container(
@@ -684,11 +682,7 @@ class _AboutTabState extends State<AboutTab> {
     }
     return Text(
       text,
-      style: TextStyle(
-        fontSize: 13,
-        color: colors.textSecondary,
-        height: 1.5,
-      ),
+      style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.5),
     );
   }
 
@@ -754,7 +748,7 @@ class _AboutTabState extends State<AboutTab> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.sports_tennis_rounded, size: 12),
+          const Icon(AppIcons.sportTennis, size: 12),
           const SizedBox(width: 4),
           Text(
             name,

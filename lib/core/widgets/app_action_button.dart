@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 
 class AppActionButton extends StatelessWidget {
   final IconData icon;
@@ -79,7 +80,9 @@ class AppActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.1) : context.colors.bgCard,
+          color: isSelected
+              ? color.withValues(alpha: 0.1)
+              : context.colors.bgCard,
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
           border: Border.all(color: isSelected ? color : context.colors.border),
         ),
@@ -112,13 +115,15 @@ class AppActionButton extends StatelessWidget {
                       subtitle!,
                       style: TextStyle(
                         fontSize: 12,
-                        color: context.colors.textSecondary.withValues(alpha: 0.7),
+                        color: context.colors.textSecondary.withValues(
+                          alpha: 0.7,
+                        ),
                       ),
                     ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: context.colors.textMuted),
+            Icon(AppIcons.chevronRight, color: context.colors.textMuted),
           ],
         ),
       ),

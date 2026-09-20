@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/shared/widgets/withdraw_sheet.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:intl/intl.dart';
 
 final _divisionsProvider =
@@ -381,8 +382,9 @@ class _TournamentRegisterScreenState
     if (_alreadyRegistered &&
         _existingDivisionId != null &&
         _existingDivisionId != id) {
-      final existingDiv =
-          divisions.where((d) => d.id == _existingDivisionId).firstOrNull;
+      final existingDiv = divisions
+          .where((d) => d.id == _existingDivisionId)
+          .firstOrNull;
       final name = existingDiv?.name ?? 'nội dung khác';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -913,8 +915,10 @@ class _TournamentRegisterScreenState
     final isPendingApproval = status == 'PENDING_APPROVAL';
     final isPendingPartner = status == 'PENDING_PARTNER';
     final isWaitlisted = status == 'WAITLISTED';
-    final isComplete = status == 'COMPLETE' || status == 'CONFIRMED' || status == 'APPROVED';
-    final canPay = !_existingIsPaid &&
+    final isComplete =
+        status == 'COMPLETE' || status == 'CONFIRMED' || status == 'APPROVED';
+    final canPay =
+        !_existingIsPaid &&
         fee > 0 &&
         (_existingPaymentEligible || isComplete) &&
         !isWaitlisted &&
@@ -941,7 +945,7 @@ class _TournamentRegisterScreenState
       child: Column(
         children: [
           Icon(
-            _existingIsPaid ? Icons.verified_rounded : Icons.how_to_reg_rounded,
+            _existingIsPaid ? AppIcons.verified : AppIcons.userAdd,
             size: 52,
             color: _existingIsPaid ? context.colors.success : AppTheme.primary,
           ),
@@ -966,7 +970,7 @@ class _TournamentRegisterScreenState
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 20),
+                  const Icon(AppIcons.info, color: Colors.amber, size: 20),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -989,11 +993,17 @@ class _TournamentRegisterScreenState
               decoration: BoxDecoration(
                 color: AppTheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppTheme.primary.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.group_add_rounded, color: AppTheme.primary, size: 20),
+                  const Icon(
+                    AppIcons.userAdd,
+                    color: AppTheme.primary,
+                    size: 20,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -1020,7 +1030,11 @@ class _TournamentRegisterScreenState
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.hourglass_top_rounded, color: Colors.orange, size: 20),
+                  const Icon(
+                    AppIcons.hourglass,
+                    color: Colors.orange,
+                    size: 20,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -1057,7 +1071,7 @@ class _TournamentRegisterScreenState
                     extra: existingDivision,
                   );
                 },
-                icon: const Icon(Icons.qr_code_rounded),
+                icon: const Icon(AppIcons.qrCode),
                 label: Text(l10n.registerViewInviteCode),
               ),
             ),
@@ -1078,10 +1092,13 @@ class _TournamentRegisterScreenState
                     'tournamentName': tournament.name,
                   },
                 ),
-                icon: const Icon(Icons.payment_rounded),
+                icon: const Icon(AppIcons.creditCard),
                 label: Text(
                   l10n.registerPayNow(_formatAmount(fee)),
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
                 ),
               ),
             ),
@@ -1098,7 +1115,7 @@ class _TournamentRegisterScreenState
               if (!withdrew || !mounted) return;
               context.go('/intro/${tournament.id}');
             },
-            icon: Icon(Icons.exit_to_app_rounded, color: context.colors.error),
+            icon: Icon(AppIcons.logout, color: context.colors.error),
             label: Text(
               l10n.registerWithdraw,
               style: TextStyle(color: context.colors.error),
@@ -1197,7 +1214,7 @@ class _TournamentRegisterScreenState
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.check_circle_rounded,
+                AppIcons.checkCircle,
                 size: 52,
                 color: context.colors.success,
               ),
@@ -1242,15 +1259,20 @@ class _TournamentRegisterScreenState
             if (_registrationTeamStatus == 'PENDING_APPROVAL') ...[
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.amber.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: Colors.amber.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 20),
+                    const Icon(AppIcons.info, color: Colors.amber, size: 20),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -1285,10 +1307,13 @@ class _TournamentRegisterScreenState
                       'tournamentName': t?.name ?? '',
                     },
                   ),
-                  icon: const Icon(Icons.payment_rounded),
+                  icon: const Icon(AppIcons.creditCard),
                   label: Text(
                     l10n.registerPayNow(_formatAmount(_registeredEntryFee!)),
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                    ),
                   ),
                 ),
               ),
@@ -1301,7 +1326,8 @@ class _TournamentRegisterScreenState
             const SizedBox(height: 12),
             TextButton.icon(
               onPressed: () async {
-                final targetDivisionId = _registeredDivision?.id ??
+                final targetDivisionId =
+                    _registeredDivision?.id ??
                     _existingDivisionId ??
                     _selectedDiv;
                 final withdrew = await WithdrawSheet.show(
@@ -1314,7 +1340,7 @@ class _TournamentRegisterScreenState
                 context.go('/intro/${widget.tournamentId}');
               },
               icon: Icon(
-                Icons.exit_to_app_rounded,
+                AppIcons.logout,
                 size: 16,
                 color: context.colors.error,
               ),
@@ -1417,7 +1443,7 @@ class _TournamentRegisterScreenState
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.lock_rounded, size: 64, color: context.colors.textMuted),
+        Icon(AppIcons.lock, size: 64, color: context.colors.textMuted),
         const SizedBox(height: 24),
         Text(
           l10n.registerPrivateTitle,
@@ -1481,7 +1507,7 @@ class _TournamentRegisterScreenState
                       color: Colors.white,
                     ),
                   )
-                : const Icon(Icons.login_rounded),
+                : const Icon(AppIcons.login),
             label: Text(
               _inviteValidating
                   ? l10n.registerInviteValidating
@@ -1511,11 +1537,7 @@ class _TournamentRegisterScreenState
         ),
         child: Column(
           children: [
-            Icon(
-              Icons.login_rounded,
-              size: 48,
-              color: context.colors.textMuted,
-            ),
+            Icon(AppIcons.login, size: 48, color: context.colors.textMuted),
             const SizedBox(height: 12),
             Text(l10n.registerLoginPrompt, textAlign: TextAlign.center),
             const SizedBox(height: 16),
@@ -1535,7 +1557,7 @@ class _TournamentRegisterScreenState
                   '/login?redirect=${Uri.encodeComponent(redirect)}',
                 );
               },
-              icon: const Icon(Icons.login),
+              icon: const Icon(AppIcons.login),
               label: Text(l10n.registerLoginButton),
             ),
           ],
@@ -1631,7 +1653,7 @@ class _TournamentRegisterScreenState
                 Row(
                   children: [
                     Icon(
-                      Icons.warning_rounded,
+                      AppIcons.warning,
                       color: context.colors.error,
                       size: 20,
                     ),
@@ -1659,7 +1681,7 @@ class _TournamentRegisterScreenState
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () => context.push('/profile/edit'),
-                    icon: const Icon(Icons.edit_rounded, size: 16),
+                    icon: const Icon(AppIcons.edit, size: 16),
                     label: Text(
                       l10n.registerUpdateProfile,
                       style: const TextStyle(fontWeight: FontWeight.w700),
@@ -1677,468 +1699,474 @@ class _TournamentRegisterScreenState
           const SizedBox(height: 16),
           _buildTournamentHighlightsCard(t),
         ] else ...[
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: context.colors.bgCard,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: context.colors.border),
-          ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.registerInfoTitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1,
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: context.colors.bgCard,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: context.colors.border),
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.registerInfoTitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                // Only show name input after division selected
-                if (_selectedDivision != null)
-                  if (_normalizedMatchType(_selectedDivision?.matchType) ==
-                      'SINGLES')
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppTheme.primary.withValues(alpha: 0.2),
+                  const SizedBox(height: 16),
+                  // Only show name input after division selected
+                  if (_selectedDivision != null)
+                    if (_normalizedMatchType(_selectedDivision?.matchType) ==
+                        'SINGLES')
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.primary.withValues(alpha: 0.2),
+                          ),
                         ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.registerPlayerName,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: context.colors.textMuted,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              user?.fullName ?? l10n.registerNameNotUpdated,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: context.colors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              l10n.registerNameFromAccount,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: context.colors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.primary.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Text(l10n.registerTeamNameNext),
                       ),
-                      child: Column(
+                  const SizedBox(height: 16),
+                  divAsync.when(
+                    data: (divs) {
+                      if (divs.isEmpty) return const SizedBox.shrink();
+                      if (divs.length == 1 && _selectedDiv == null) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted && _selectedDiv == null) {
+                            _onDivisionSelected(divs.first.id, divs);
+                          }
+                        });
+                      }
+                      return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            l10n.registerPlayerName,
+                            l10n.registerContentTitle,
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: context.colors.textMuted,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            user?.fullName ?? l10n.registerNameNotUpdated,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: context.colors.textPrimary,
+                          const SizedBox(height: 12),
+                          ...divs.map((d) {
+                            final id = d.id;
+                            final name = d.name;
+                            final sel = _selectedDiv == id;
+                            final formatLabel = _divisionTypeLabel(d);
+                            final hasFormatLabel =
+                                formatLabel != l10n.registerContentTitle;
+                            final meta = _divisionMeta(
+                              d,
+                            ).where((label) => label != formatLabel).toList();
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: GestureDetector(
+                                onTap: () => _onDivisionSelected(id, divs),
+                                child: Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: context.colors.bgDark,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: sel
+                                          ? AppTheme.primary
+                                          : context.colors.border,
+                                      width: sel ? 2 : 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              hasFormatLabel
+                                                  ? formatLabel
+                                                  : name,
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w800,
+                                                color:
+                                                    context.colors.textPrimary,
+                                              ),
+                                            ),
+                                            if (hasFormatLabel &&
+                                                name.trim().isNotEmpty &&
+                                                name.trim() !=
+                                                    formatLabel.trim())
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                  top: 3,
+                                                ),
+                                                child: Text(
+                                                  name,
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: context
+                                                        .colors
+                                                        .textMuted,
+                                                  ),
+                                                ),
+                                              ),
+                                            const SizedBox(height: 8),
+                                            Wrap(
+                                              spacing: 6,
+                                              runSpacing: 6,
+                                              children: meta
+                                                  .map(
+                                                    (label) => Container(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 8,
+                                                            vertical: 4,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color: sel
+                                                            ? AppTheme.primary
+                                                                  .withValues(
+                                                                    alpha: 0.10,
+                                                                  )
+                                                            : context
+                                                                  .colors
+                                                                  .bgCard,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              999,
+                                                            ),
+                                                        border: Border.all(
+                                                          color: sel
+                                                              ? AppTheme.primary
+                                                                    .withValues(
+                                                                      alpha:
+                                                                          0.24,
+                                                                    )
+                                                              : context
+                                                                    .colors
+                                                                    .border,
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        label,
+                                                        style: TextStyle(
+                                                          fontSize: 11,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          color: sel
+                                                              ? AppTheme.primary
+                                                              : context
+                                                                    .colors
+                                                                    .textSecondary,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  )
+                                                  .toList(),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        width: 20,
+                                        height: 20,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: sel
+                                                ? AppTheme.primary
+                                                : context.colors.border,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: sel
+                                            ? Center(
+                                                child: Container(
+                                                  width: 10,
+                                                  height: 10,
+                                                  decoration: BoxDecoration(
+                                                    color: AppTheme.primary,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                              )
+                                            : null,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                          if (_divisionError != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                _divisionError!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: context.colors.error,
+                                ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            l10n.registerNameFromAccount,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: context.colors.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppTheme.primary.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      child: Text(l10n.registerTeamNameNext),
-                    ),
-                const SizedBox(height: 16),
-                divAsync.when(
-                  data: (divs) {
-                    if (divs.isEmpty) return const SizedBox.shrink();
-                    if (divs.length == 1 && _selectedDiv == null) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (mounted && _selectedDiv == null) {
-                          _onDivisionSelected(divs.first.id, divs);
-                        }
-                      });
-                    }
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.registerContentTitle,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        ...divs.map((d) {
-                          final id = d.id;
-                          final name = d.name;
-                          final sel = _selectedDiv == id;
-                          final formatLabel = _divisionTypeLabel(d);
-                          final hasFormatLabel =
-                              formatLabel != l10n.registerContentTitle;
-                          final meta = _divisionMeta(
-                            d,
-                          ).where((label) => label != formatLabel).toList();
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: GestureDetector(
-                              onTap: () => _onDivisionSelected(id, divs),
+                          if (_genderError != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
                               child: Container(
-                                padding: const EdgeInsets.all(14),
+                                padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: context.colors.bgDark,
-                                  borderRadius: BorderRadius.circular(12),
+                                  color: context.colors.error.withValues(
+                                    alpha: 0.08,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
-                                    color: sel
-                                        ? AppTheme.primary
-                                        : context.colors.border,
-                                    width: sel ? 2 : 1,
+                                    color: context.colors.error.withValues(
+                                      alpha: 0.2,
+                                    ),
                                   ),
                                 ),
                                 child: Row(
                                   children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            hasFormatLabel ? formatLabel : name,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w800,
-                                              color: context.colors.textPrimary,
-                                            ),
-                                          ),
-                                          if (hasFormatLabel &&
-                                              name.trim().isNotEmpty &&
-                                              name.trim() != formatLabel.trim())
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                top: 3,
-                                              ),
-                                              child: Text(
-                                                name,
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color:
-                                                      context.colors.textMuted,
-                                                ),
-                                              ),
-                                            ),
-                                          const SizedBox(height: 8),
-                                          Wrap(
-                                            spacing: 6,
-                                            runSpacing: 6,
-                                            children: meta
-                                                .map(
-                                                  (label) => Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 8,
-                                                          vertical: 4,
-                                                        ),
-                                                    decoration: BoxDecoration(
-                                                      color: sel
-                                                          ? AppTheme.primary
-                                                                .withValues(
-                                                                  alpha: 0.10,
-                                                                )
-                                                          : context
-                                                                .colors
-                                                                .bgCard,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            999,
-                                                          ),
-                                                      border: Border.all(
-                                                        color: sel
-                                                            ? AppTheme.primary
-                                                                  .withValues(
-                                                                    alpha: 0.24,
-                                                                  )
-                                                            : context
-                                                                  .colors
-                                                                  .border,
-                                                      ),
-                                                    ),
-                                                    child: Text(
-                                                      label,
-                                                      style: TextStyle(
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        color: sel
-                                                            ? AppTheme.primary
-                                                            : context
-                                                                  .colors
-                                                                  .textSecondary,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                )
-                                                .toList(),
-                                          ),
-                                        ],
-                                      ),
+                                    Icon(
+                                      AppIcons.users,
+                                      size: 16,
+                                      color: context.colors.error,
                                     ),
-                                    Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: sel
-                                              ? AppTheme.primary
-                                              : context.colors.border,
-                                          width: 2,
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        _genderError!,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: context.colors.error,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
-                                      child: sel
-                                          ? Center(
-                                              child: Container(
-                                                width: 10,
-                                                height: 10,
-                                                decoration: BoxDecoration(
-                                                  color: AppTheme.primary,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                              ),
-                                            )
-                                          : null,
                                     ),
                                   ],
                                 ),
                               ),
                             ),
-                          );
-                        }),
-                        if (_divisionError != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              _divisionError!,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: context.colors.error,
-                              ),
-                            ),
-                          ),
-                        if (_genderError != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: context.colors.error.withValues(
-                                  alpha: 0.08,
-                                ),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: context.colors.error.withValues(
-                                    alpha: 0.2,
-                                  ),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.transgender,
-                                    size: 16,
-                                    color: context.colors.error,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      _genderError!,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: context.colors.error,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        if (_eloError != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: context.colors.warning.withValues(
-                                  alpha: 0.15,
-                                ),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
+                          if (_eloError != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
                                   color: context.colors.warning.withValues(
-                                    alpha: 0.3,
+                                    alpha: 0.15,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: context.colors.warning.withValues(
+                                      alpha: 0.3,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.trending_up,
-                                    size: 16,
-                                    color: Colors.amber,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      _eloError!,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.amber,
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      AppIcons.trendingUp,
+                                      size: 16,
+                                      color: Colors.amber,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        _eloError!,
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.amber,
+                                        ),
                                       ),
                                     ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          if (_eloChecking)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    l10n.registerEloSchedule,
+                                    style: const TextStyle(fontSize: 12),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                        if (_eloChecking)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  l10n.registerEloSchedule,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                  loading: () => const SizedBox(
-                    height: 24,
-                    child: Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                        ],
+                      );
+                    },
+                    loading: () => const SizedBox(
+                      height: 24,
+                      child: Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                    error: (error, _) => Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: context.colors.error.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(l10n.registerDivisionLoadError),
                     ),
                   ),
-                  error: (error, _) => Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: context.colors.error.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(l10n.registerDivisionLoadError),
-                  ),
-                ),
-                _buildCustomFields(t),
-                const SizedBox(height: 12),
-                if (t.isRanked) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: context.colors.bgSurface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: context.colors.border),
-                    ),
-                    child: CheckboxListTile(
-                      contentPadding: EdgeInsets.zero,
-                      value: _rankingConsent,
-                      onChanged: (value) =>
-                          setState(() => _rankingConsent = value ?? false),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      title: Text(
-                        l10n.registerRankingConsentTitle,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
+                  _buildCustomFields(t),
+                  const SizedBox(height: 12),
+                  if (t.isRanked) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: context.colors.bgSurface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: context.colors.border),
+                      ),
+                      child: CheckboxListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: _rankingConsent,
+                        onChanged: (value) =>
+                            setState(() => _rankingConsent = value ?? false),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        title: Text(
+                          l10n.registerRankingConsentTitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        subtitle: Text(
+                          l10n.registerRankingConsentDescription,
+                          style: TextStyle(fontSize: 12),
                         ),
                       ),
-                      subtitle: Text(
-                        l10n.registerRankingConsentDescription,
-                        style: TextStyle(fontSize: 12),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: FilledButton(
+                      onPressed: (isRegistrationClosed || _submitting)
+                          ? null
+                          : _register,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        disabledBackgroundColor: context.colors.bgSurface,
+                        foregroundColor: Colors.white,
+                        disabledForegroundColor: context.colors.textMuted,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
+                      child: _submitting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              isRegistrationClosed
+                                  ? l10n.registerRegClosed
+                                  : (_selectedDivision?.entryFee != null &&
+                                        _selectedDivision!.entryFee! > 0)
+                                  ? l10n.registerSubmitFee(
+                                      _getSubmitLabel(t),
+                                      _formatFee(_selectedDivision!.entryFee!),
+                                    )
+                                  : (t.entryFee != null && t.entryFee! > 0)
+                                  ? l10n.registerSubmitFee(
+                                      _getSubmitLabel(t),
+                                      _formatFee(t.entryFee!),
+                                    )
+                                  : l10n.registerSubmitFree(_getSubmitLabel(t)),
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
                     ),
                   ),
-                  const SizedBox(height: 12),
                 ],
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: FilledButton(
-                    onPressed: (isRegistrationClosed || _submitting)
-                        ? null
-                        : _register,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.primary,
-                      disabledBackgroundColor: context.colors.bgSurface,
-                      foregroundColor: Colors.white,
-                      disabledForegroundColor: context.colors.textMuted,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: _submitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            isRegistrationClosed
-                                ? l10n.registerRegClosed
-                                : (_selectedDivision?.entryFee != null &&
-                                      _selectedDivision!.entryFee! > 0)
-                                ? l10n.registerSubmitFee(
-                                    _getSubmitLabel(t),
-                                    _formatFee(_selectedDivision!.entryFee!),
-                                  )
-                                : (t.entryFee != null && t.entryFee! > 0)
-                                ? l10n.registerSubmitFee(
-                                    _getSubmitLabel(t),
-                                    _formatFee(t.entryFee!),
-                                  )
-                                : l10n.registerSubmitFree(_getSubmitLabel(t)),
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.2,
-                            ),
-                          ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
-        const SizedBox(height: 16),
-        _buildTournamentHighlightsCard(t),
+          ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
+          const SizedBox(height: 16),
+          _buildTournamentHighlightsCard(t),
+        ],
       ],
-    ],
-  );
-}
+    );
+  }
 
   Widget _buildTournamentHighlightsCard(Tournament t) {
     final l10n = AppLocalizations.of(context)!;
@@ -2172,26 +2200,26 @@ class _TournamentRegisterScreenState
           ),
           const SizedBox(height: 14),
           _buildInfoRow(
-            Icons.event_available_rounded,
+            AppIcons.calendarCheck,
             l10n.registerScheduleTitle,
             endDateStr != null ? '$startDateStr - $endDateStr' : startDateStr,
             colors,
           ),
           if (t.locationAddress != null && t.locationAddress!.isNotEmpty)
             _buildInfoRow(
-              Icons.location_on_rounded,
+              AppIcons.mapPin,
               l10n.registerLocationTitle,
               t.locationAddress!,
               colors,
             ),
           _buildInfoRow(
-            Icons.verified_user_rounded,
+            AppIcons.shieldCheck,
             l10n.registerEloScheduleDesc,
             l10n.registerPublicBracketElo,
             colors,
           ),
           _buildInfoRow(
-            Icons.support_agent_rounded,
+            AppIcons.headset,
             l10n.registerSupportDesc,
             l10n.registerSupportDesc,
             colors,
@@ -2302,7 +2330,7 @@ class _RegistrationCountdownCardState
         ),
         child: Row(
           children: [
-            Icon(Icons.timer_off_rounded, color: colors.error, size: 20),
+            Icon(AppIcons.clock, color: colors.error, size: 20),
             const SizedBox(width: 10),
             Text(
               l10n.registerDeadlineExpired,
@@ -2334,7 +2362,7 @@ class _RegistrationCountdownCardState
         children: [
           Row(
             children: [
-              Icon(Icons.timer_outlined, color: colors.textSecondary, size: 16),
+              Icon(AppIcons.timer, color: colors.textSecondary, size: 16),
               const SizedBox(width: 8),
               Text(
                 l10n.registerDeadline,
