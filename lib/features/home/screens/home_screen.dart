@@ -24,7 +24,6 @@ import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
-import 'package:app_quanly_giaidau/features/rankings/screens/province_selection_screen.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/unified_public_match_feed.dart';
 import 'package:app_quanly_giaidau/features/social/screens/social_list_view.dart';
 import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
@@ -60,7 +59,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _homeHeaderTab = 0; // 0: Khám phá, 1: Bản tin, 2: Của tôi
   bool _isSearchExpanded = false;
   _HomeSearchCategory _searchCategory = _HomeSearchCategory.matches;
-  int _exploreSubTabIndex = 0; // 0: CLB (default), 1: Social
   // ─── Per-tab search state ───
   final Map<int, String> _searchQueries = {0: '', 1: '', 3: '', 4: ''};
   final Map<int, TextEditingController> _searchControllers = {
@@ -71,6 +69,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   };
   final FocusNode _searchFocusNode = FocusNode();
   Timer? _searchDebounceTimer;
+  Timer? _searchFocusTimer;
 
   TextEditingController get _activeSearchController =>
       _searchControllers[_currentIndex] ?? _searchControllers[0]!;
@@ -112,10 +111,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _serverClubHasMore = false;
   int _clubRequestVersion = 0;
   static const int _clubsPageSize = 6;
-
-  // Tab 3, 4 vẫn hiển thị search bar inline. Tab Giải đấu mở search theo
-  // nhu cầu bằng bottom sheet từ icon trên header để giữ màn hình gọn hơn.
-  bool get _shouldShowSearchBar => _currentIndex == 3 || _currentIndex == 4;
 
   static const double _searchCategoryPanelHeight = 60.0;
 
@@ -284,17 +279,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Timer? _carouselTimer;
   int _carouselCurrentPage = 0;
 
-  double get _safeAreaTop => MediaQuery.of(context).padding.top;
+  // Subscribe only to the safe-area aspect. IME viewInsets changes should not
+  // rebuild the entire feed while the keyboard animation is running.
+  double get _safeAreaTop => MediaQuery.paddingOf(context).top;
   double get _headerHeight => 54.0 + _safeAreaTop;
   double get _pinnedHeaderHeight {
     double h = _headerHeight;
-    if (_currentIndex == 3) {
-      h += 44.0; // Explore sub-tabs (CLB / Social)
-    }
     if (_isSearchExpanded) {
       h += _searchCategoryPanelHeight;
-    } else if (_shouldShowSearchBar) {
-      h += 52.0; // Existing per-tab search bar
     }
     return h;
   }
@@ -335,6 +327,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _searchDebounceTimer?.cancel();
+    _searchFocusTimer?.cancel();
     _carouselTimer?.cancel();
     _carouselController?.dispose();
     _scrollController.dispose();
@@ -408,8 +401,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _homeHeaderTab = 1;
       } else if (category == _HomeSearchCategory.matches) {
         _homeHeaderTab = 0;
-      } else if (category == _HomeSearchCategory.clubs) {
-        _exploreSubTabIndex = 0;
       }
     });
 
@@ -418,8 +409,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           .read(socialFilterProvider.notifier)
           .setSearchQuery(_searchQueries[0] ?? '');
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _searchFocusNode.requestFocus();
+    _scheduleSearchFocus();
+  }
+
+  void _scheduleSearchFocus() {
+    _searchFocusTimer?.cancel();
+    _searchFocusTimer = Timer(const Duration(milliseconds: 220), () {
+      if (mounted && _isSearchExpanded) _searchFocusNode.requestFocus();
     });
   }
 
@@ -432,11 +428,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  Future<void> _showTournamentSearchSheet() async {
+  Future<void> _showHeaderSearchSheet() async {
     if (!mounted) return;
 
     _searchFocusNode.unfocus();
     final l10n = AppLocalizations.of(context)!;
+    final title = switch (_currentIndex) {
+      1 => l10n.navTournaments,
+      3 => 'Câu lạc bộ',
+      4 => l10n.homeRankingsTab,
+      _ => 'Tìm kiếm',
+    };
 
     await showModalBottomSheet<void>(
       context: context,
@@ -488,7 +490,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            l10n.navTournaments,
+                            title,
                             style: TextStyle(
                               color: colors.textPrimary,
                               fontSize: 18,
@@ -541,6 +543,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Scaffold(
             backgroundColor: Colors.white,
             extendBody: true,
+            // Header search lives at the top. Keeping the feed height stable
+            // avoids relaying the full HomeScreen tree on every IME frame.
+            resizeToAvoidBottomInset: false,
             body: Stack(
               children: [
                 // Body Content filling top to bottom
@@ -634,6 +639,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
+                                    if (_currentIndex == 3) ...[
+                                      _buildCreateClubButton(),
+                                      const SizedBox(width: 4),
+                                    ],
                                     _buildRoundSearchButton(isDark),
                                     const SizedBox(width: 4),
                                     _buildNotificationBellHeader(),
@@ -644,81 +653,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
 
-                        // Explore sub-tabs cho Cộng đồng (CLB / Social) nếu đang ở tab 3
-                        if (_currentIndex == 3)
-                          Container(
-                            height: 44,
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: _buildExploreSubTabItem(
-                                    title: 'CLB',
-                                    isSelected: _exploreSubTabIndex == 0,
-                                    onTap: () {
-                                      if (_exploreSubTabIndex != 0) {
-                                        setState(() {
-                                          _exploreSubTabIndex = 0;
-                                        });
-                                        if (_serverClubsList.isEmpty) {
-                                          _fetchServerClubPage(
-                                            isLoadMore: false,
-                                          );
-                                        }
-                                      }
-                                    },
-                                  ),
-                                ),
-                                Expanded(
-                                  child: _buildExploreSubTabItem(
-                                    title: 'Social',
-                                    isSelected: _exploreSubTabIndex == 1,
-                                    onTap: () {
-                                      if (_exploreSubTabIndex != 1) {
-                                        setState(() {
-                                          _exploreSubTabIndex = 1;
-                                        });
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                        // Search theo từng tab vẫn giữ nguyên khi overlay chưa mở.
-                        if (_shouldShowSearchBar && !_isSearchExpanded)
-                          Container(
-                            color: Colors.white,
-                            padding: const EdgeInsets.fromLTRB(
-                              16.0,
-                              6.0,
-                              16.0,
-                              8.0,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _currentIndex == 3 && _exploreSubTabIndex == 0
-                                    ? Row(
-                                        children: [
-                                          Expanded(child: _buildSearchBar()),
-                                          const SizedBox(width: 10),
-                                          _buildCreateClubButton(),
-                                        ],
-                                      )
-                                    : _buildSearchBar(),
-                                if (_currentIndex == 4 &&
-                                    _isRankingsFilterExpanded) ...[
-                                  const SizedBox(height: 8),
-                                  _buildRankingsProvinceFilterChip(context),
-                                ],
-                              ],
-                            ),
-                          ),
                         if (_isSearchExpanded)
                           _buildSearchCategoryPanel(isDark),
                       ],
@@ -776,10 +710,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
       case 3:
         return KeyedSubtree(
-          key: ValueKey('explore_$_exploreSubTabIndex'),
-          child: _exploreSubTabIndex == 0
-              ? _buildCommunityTab()
-              : SocialListView(topPadding: _pinnedHeaderHeight),
+          key: const ValueKey('community_clubs'),
+          child: _buildCommunityTab(),
         );
       case 4:
       default:
@@ -929,8 +861,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildRoundSearchButton(bool isDark) {
     return GestureDetector(
       onTap: () {
-        if (_currentIndex == 1) {
-          _showTournamentSearchSheet();
+        if (_currentIndex == 1 || _currentIndex == 3 || _currentIndex == 4) {
+          _showHeaderSearchSheet();
           return;
         }
 
@@ -941,10 +873,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           _isSearchExpanded = !_isSearchExpanded;
         });
         if (_isSearchExpanded) {
-          Future.delayed(const Duration(milliseconds: 100), () {
-            if (mounted) _searchFocusNode.requestFocus();
-          });
+          // Let the 260ms header expansion finish before the IME animation;
+          // running both animations against the full screen drops frames.
+          _scheduleSearchFocus();
         } else {
+          _searchFocusTimer?.cancel();
           _searchFocusNode.unfocus();
         }
       },
@@ -1811,49 +1744,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExploreSubTabItem({
-    required String title,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    const activeColor = AppTheme.primary;
-
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Center(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                  color: isSelected
-                      ? (isDark ? const Color(0xFF4ADE80) : activeColor)
-                      : (isDark ? Colors.white60 : const Color(0xFF64748B)),
-                ),
-              ),
-            ),
-          ),
-          Container(
-            height: 3,
-            width: 70,
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? (isDark ? const Color(0xFF4ADE80) : activeColor)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(1.5),
-            ),
-          ),
         ],
       ),
     );
@@ -3160,93 +3050,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildRankingsProvinceFilterChip(BuildContext context) {
-    final colors = context.colors;
-    final provinceName =
-        ProvinceData.fromCode(_rankingsProvince ?? '')?.name ?? 'Tỉnh / T.Phố';
-    final hasFilter = _rankingsProvince != null;
-
-    return GestureDetector(
-      onTap: _showProvinceFullScreenModal,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: hasFilter ? AppTheme.primary : colors.border,
-            width: 1.0,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              AppIcons.mapPin,
-              size: 18,
-              color: hasFilter ? AppTheme.primary : colors.textSecondary,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              provinceName,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: hasFilter ? FontWeight.w600 : FontWeight.w500,
-                color: hasFilter ? AppTheme.primary : colors.textPrimary,
-              ),
-            ),
-            if (hasFilter) ...[
-              const SizedBox(width: 6),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _rankingsProvince = null;
-                  });
-                },
-                child: Icon(AppIcons.close, size: 16, color: colors.textMuted),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showProvinceFullScreenModal() async {
-    final result = await Navigator.of(context).push<Map<String, dynamic>>(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            ProvinceSelectionScreen(selectedProvinceCode: _rankingsProvince),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(0.0, 1.0);
-          const end = Offset.zero;
-          const curve = Curves.easeOutCubic;
-          final tween = Tween(
-            begin: begin,
-            end: end,
-          ).chain(CurveTween(curve: curve));
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-        fullscreenDialog: true,
-      ),
-    );
-
-    if (result != null && mounted) {
-      if (result['action'] == 'clear') {
-        setState(() {
-          _rankingsProvince = null;
-        });
-      } else if (result['action'] == 'select') {
-        setState(() {
-          _rankingsProvince = result['code'] as String?;
-        });
-      }
-    }
-  }
-
   Widget _buildFilterChips({
     required List<(String key, String label)> items,
     required String selected,
@@ -3792,23 +3595,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           slivers: [
             SliverToBoxAdapter(child: SizedBox(height: _pinnedHeaderHeight)),
-            if (currentList.isNotEmpty) ...[
-              SliverToBoxAdapter(child: const SizedBox(height: 12)),
-              SliverToBoxAdapter(
-                child: _buildSuggestedClubsCarousel(currentList),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 14.0, bottom: 6.0),
-                  child: Divider(
-                    height: 1,
-                    thickness: 0.8,
-                    color: context.colors.border.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
-            ] else
-              SliverToBoxAdapter(child: const SizedBox(height: 8)),
+            SliverToBoxAdapter(child: const SizedBox(height: 8)),
             if (_isClubInitialLoading && currentList.isEmpty)
               const SliverFillRemaining(
                 child: Center(
@@ -3882,68 +3669,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
           ],
         ),
-      ),
-    );
-  }
-
-  // ─── TAB 3: CÂU LẠC BỘ (Clubs) — Compact List Style ───
-  Widget _buildSuggestedClubsCarousel(List<Community> clubs) {
-    // Show up to 10 suggested clubs at the top in circular avatar format
-    final displayClubs = clubs.take(10).toList();
-
-    return SizedBox(
-      height: 98.0,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: displayClubs.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 14.0),
-        itemBuilder: (context, index) {
-          final club = displayClubs[index];
-
-          return GestureDetector(
-            onTap: () => context.push("/club/${club.id}"),
-            child: SizedBox(
-              width: 66.0,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  ClubBrandAvatar(
-                    logoUrl: club.logoUrl,
-                    bannerUrl: club.bannerUrl,
-                    size: 62,
-                    bannerFit: BoxFit.cover,
-                    backgroundColor: context.colors.bgSurface,
-                    borderColor: context.colors.border.withValues(alpha: 0.7),
-                    borderWidth: 1,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6.0),
-                  Text(
-                    club.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textPrimary,
-                      height: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
       ),
     );
   }
