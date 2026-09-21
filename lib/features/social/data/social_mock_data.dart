@@ -31,7 +31,7 @@ class SocialMockData {
       maxParticipants: 8,
       pricePerSlot: 50000,
       skillLevel: 'Tất cả trình độ',
-      descriptionNotes: '''🏓 PICKLEBALL GIAO HỮU CLB SB CLUB 🏓
+      notes: '''🏓 PICKLEBALL GIAO HỮU CLB SB CLUB 🏓
 
 - Buổi chơi giao hữu hàng tuần dành cho các thành viên CLB và khách mời.
 - Địa điểm: Cụm sân Pickleball 22 Cộng Hòa, Tân Bình.
@@ -111,7 +111,7 @@ class SocialMockData {
       maxParticipants: 8,
       pricePerSlot: 99000,
       skillLevel: 'Trình 2 - 3 năm',
-      descriptionNotes: '''🎾 [QUẬN 4] TÌM THÀNH VIÊN VÃNG LAI (Social) - TRÌNH 2 - 3 NĂM 🎾
+      notes: '''🎾 [QUẬN 4] TÌM THÀNH VIÊN VÃNG LAI (Social) - TRÌNH 2 - 3 NĂM 🎾
 
 - Nhóm mình đang cần tuyển thêm thành viên vãng lai để giao lưu, nâng cao trình tại khu vực Quận 4
 
@@ -205,7 +205,7 @@ class SocialMockData {
       maxParticipants: 31,
       pricePerSlot: 99000,
       skillLevel: 'Trình Newbie - 2.5',
-      descriptionNotes: '''🪷 NABI PICKLEBALL - ĐỒNG GIÁ 99K GIAO LƯU 🪷
+      notes: '''🪷 NABI PICKLEBALL - ĐỒNG GIÁ 99K GIAO LƯU 🪷
 
 - Sân trong nhà máy lạnh GOPICK, bao gồm nước uống và bóng thi đấu Franklin X-40.
 - Có huấn luyện viên hỗ trợ hướng dẫn luật chơi cơ bản cho người mới.
@@ -291,7 +291,7 @@ class SocialMockData {
       maxParticipants: 24,
       pricePerSlot: 60000,
       skillLevel: 'Trình 2.5 - 3.5',
-      descriptionNotes: '''🔥 RUDAL PICKLEBALL - GIAO LƯU NHIỆT HUYẾT 🔥
+      notes: '''🔥 RUDAL PICKLEBALL - GIAO LƯU NHIỆT HUYẾT 🔥
 
 - Sân tiêu chuẩn quốc tế, đèn LED chống chói.
 - Đánh đôi xoay vòng liên tục, xếp cặp tự động theo trình độ DUPR.
@@ -368,7 +368,7 @@ class SocialMockData {
       maxParticipants: 16,
       pricePerSlot: 50000,
       skillLevel: 'Trình 2.0 - 3.0',
-      descriptionNotes:
+      notes:
           'Giao lưu vui vẻ, rèn luyện kỹ thuật cơ bản và nâng cao độ dẻo dai.',
       participants: const [],
       matches: const [],
@@ -399,7 +399,7 @@ class SocialMockData {
       maxParticipants: 12,
       pricePerSlot: 80000,
       skillLevel: 'Trình 2.5 - 3.5',
-      descriptionNotes: 'Đánh đôi xoay vòng, bao banh mới, nước uống.',
+      notes: 'Đánh đôi xoay vòng, bao banh mới, nước uống.',
       participants: const [],
       matches: const [],
       chatMessages: const [],
@@ -431,7 +431,7 @@ class SocialMockData {
       maxParticipants: 16,
       pricePerSlot: 40000,
       skillLevel: 'Mọi trình độ',
-      descriptionNotes: 'Bao cầu Yonex, sân thảm đẹp, không gian thoáng mát.',
+      notes: 'Bao cầu Yonex, sân thảm đẹp, không gian thoáng mát.',
       participants: const [],
       matches: const [],
       chatMessages: const [],
@@ -461,7 +461,7 @@ class SocialMockData {
       maxParticipants: 20,
       pricePerSlot: 75000,
       skillLevel: 'Trình 2.5 - 3.5',
-      descriptionNotes: 'Giao lưu nâng cao trình độ, thi đấu cọ xát chuẩn bị giải.',
+      notes: 'Giao lưu nâng cao trình độ, thi đấu cọ xát chuẩn bị giải.',
       participants: const [],
       matches: const [],
       chatMessages: const [],
@@ -493,7 +493,7 @@ class SocialMockData {
       maxParticipants: 16,
       pricePerSlot: 110000,
       skillLevel: 'Trình 3.0 - 4.0',
-      descriptionNotes:
+      notes:
           'Kèo đánh đôi gay cấn, có phân tài trọng tài bắt điểm và tính điểm ranking.',
       participants: const [],
       matches: const [],
@@ -526,7 +526,7 @@ class SocialMockData {
       maxParticipants: 32,
       pricePerSlot: 65000,
       skillLevel: 'Mọi trình độ',
-      descriptionNotes:
+      notes:
           'Ngày hội giao lưu chủ nhật, tiệc nhẹ trái cây và nước tăng lực.',
       participants: const [],
       matches: const [],
@@ -559,7 +559,7 @@ class SocialMockData {
       maxParticipants: 8,
       pricePerSlot: 90000,
       skillLevel: 'Trình 2.0 - 3.0',
-      descriptionNotes: 'Giải tỏa căng thẳng đầu tuần, vận động nâng cao thể lực.',
+      notes: 'Giải tỏa căng thẳng đầu tuần, vận động nâng cao thể lực.',
       participants: const [],
       matches: const [],
       chatMessages: const [],

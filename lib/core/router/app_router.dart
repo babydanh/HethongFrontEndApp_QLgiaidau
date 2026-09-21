@@ -209,9 +209,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/social/:id',
         builder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
-          final isAdminParam = state.uri.queryParameters['isAdmin'];
-          final isAdmin = isAdminParam != null ? (isAdminParam == 'true') : null;
-          return SocialDetailScreen(sessionId: id, isAdmin: isAdmin);
+          final isHostParam = state.uri.queryParameters['isHost'];
+          final isHost = isHostParam != null ? (isHostParam == 'true') : null;
+          return SocialDetailScreen(sessionId: id, isHost: isHost);
         },
       ),
 

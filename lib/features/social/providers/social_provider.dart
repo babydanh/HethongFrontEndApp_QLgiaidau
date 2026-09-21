@@ -242,6 +242,10 @@ class SocialSessionsNotifier extends Notifier<List<SocialSessionModel>> {
     state = updatedList;
     return true;
   }
+
+  void addSession(SocialSessionModel session) {
+    state = [session, ...state];
+  }
 }
 
 final socialSessionsProvider =

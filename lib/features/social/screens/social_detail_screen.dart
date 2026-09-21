@@ -8,15 +8,16 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/social/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_join_bottom_sheet.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 
 class SocialDetailScreen extends ConsumerStatefulWidget {
   final String sessionId;
-  final bool? isAdmin;
+  final bool? isHost;
 
   const SocialDetailScreen({
     super.key,
     required this.sessionId,
-    this.isAdmin,
+    this.isHost,
   });
 
   @override
@@ -28,12 +29,29 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
   late TabController _tabController;
   final TextEditingController _chatInputController = TextEditingController();
 
-  bool get _isAdmin => widget.isAdmin ?? true;
+  bool get _isHost {
+    if (widget.isHost != null) return widget.isHost!;
+    final session = ref.read(socialSessionDetailProvider(widget.sessionId));
+    if (session != null) {
+      final currentUser = ref.read(userProfileProvider).asData?.value;
+      if (session.creatorId != null && currentUser != null && session.creatorId == currentUser.id) {
+        return true;
+      }
+      if (session.creatorId == 'me') return true;
+      if (session.participants.any((p) =>
+          p.isHost &&
+          (p.id == currentUser?.id ||
+              (currentUser != null && p.name == currentUser.fullName)))) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _isAdmin ? 4 : 3, vsync: this);
+    _tabController = TabController(length: _isHost ? 4 : 3, vsync: this);
   }
 
   @override
@@ -116,7 +134,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                         isActive: activeIndex == 1,
                         colors: colors,
                       ),
-                      if (_isAdmin) ...[
+                      if (_isHost) ...[
                         const SizedBox(width: 14),
                         _buildTabItem(
                           index: 2,
@@ -127,9 +145,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       ],
                       const SizedBox(width: 14),
                       _buildTabItem(
-                        index: _isAdmin ? 3 : 2,
+                        index: _isHost ? 3 : 2,
                         label: 'Trò chuyện',
-                        isActive: activeIndex == (_isAdmin ? 3 : 2),
+                        isActive: activeIndex == (_isHost ? 3 : 2),
                         colors: colors,
                       ),
                     ],
@@ -146,7 +164,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
               children: [
                 _buildDetailsTab(isDark, session, colors),
                 _buildParticipantsTab(colors, session),
-                if (_isAdmin) _buildPaymentTab(colors, session),
+                if (_isHost) _buildPaymentTab(colors, session),
                 _buildChatTab(isDark, session, colors),
               ],
             ),
@@ -639,7 +657,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
               ),
             ),
             child: SelectableText(
-              session.descriptionNotes,
+              session.notes,
               style: TextStyle(
                 fontSize: 14.5,
                 color: colors.textPrimary,
@@ -648,7 +666,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             ),
           ),
 
-          if (_isAdmin) ...[
+          if (_isHost) ...[
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -887,7 +905,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             } else {
               // Empty slot with '+' icon
               return InkWell(
-                onTap: _isAdmin
+                onTap: _isHost
                     ? () => _showAddParticipantDialog(context, session, index + 1)
                     : null,
                 borderRadius: BorderRadius.circular(28),
@@ -1669,7 +1687,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
     SocialSessionModel session,
     AppColorsExtension colors,
   ) {
-    if (_isAdmin) {
+    if (_isHost) {
       return const SizedBox.shrink();
     }
 
@@ -1970,7 +1988,7 @@ RSVP: https://sporto.vn/social/${session.id}''';
                     ref
                         .read(socialSessionsProvider.notifier)
                         .addSharedSessionMessage(session.id, session);
-                    _tabController.animateTo(_isAdmin ? 3 : 2);
+                    _tabController.animateTo(_isHost ? 3 : 2);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: const Text(
@@ -2045,7 +2063,7 @@ RSVP: https://sporto.vn/social/${session.id}''';
                   title: const Text('Gửi tin nhắn trong app'),
                   onTap: () {
                     Navigator.pop(ctx);
-                    _tabController.animateTo(_isAdmin ? 3 : 2); // Switch to Chat tab
+                    _tabController.animateTo(_isHost ? 3 : 2); // Switch to Chat tab
                   },
                 ),
               ],

@@ -25,6 +25,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_ma
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_result_dialog.dart';
 import 'package:app_quanly_giaidau/features/social/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.dart';
 
 class ClubActivityTab extends ConsumerStatefulWidget {
   final String communityId;
@@ -1040,15 +1041,21 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
               heroTag: 'fab_club_activity_social_${widget.communityId}',
               backgroundColor: AppTheme.primary,
               elevation: 4,
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Tạo buổi Social mới cho ${widget.club?.name ?? 'CLB'}',
-                    ),
-                    behavior: SnackBarBehavior.floating,
+              onPressed: () async {
+                final createdSession =
+                    await showModalBottomSheet<SocialSessionModel>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => CreateSocialScreen(
+                    clubId: widget.communityId,
+                    clubName: widget.club?.name ?? 'CLB',
+                    clubLogoUrl: widget.club?.logoUrl,
                   ),
                 );
+                if (createdSession != null && context.mounted) {
+                  context.push('/social/${createdSession.id}?isHost=true');
+                }
               },
               child: const Icon(Icons.add, color: Colors.white, size: 28),
             ),
@@ -1248,7 +1255,16 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   ) {
     return InkWell(
       onTap: () {
-        context.push('/social/${session.id}?isAdmin=$isClubManager');
+        final currentUserId = ref.read(userProfileProvider).asData?.value.id;
+        final currentUserName = ref.read(userProfileProvider).asData?.value.fullName;
+        final isCreator = (session.creatorId != null && session.creatorId == currentUserId) ||
+                          (session.creatorId == 'me') ||
+                          (session.participants.any((p) =>
+                              p.isHost &&
+                              (p.id == currentUserId ||
+                                  (currentUserName != null && p.name == currentUserName))));
+        final isHost = isCreator || isClubManager;
+        context.push('/social/${session.id}?isHost=$isHost');
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),

@@ -141,6 +141,7 @@ class SocialPaymentModel {
 class SocialSessionModel {
   final String id;
   final String? clubId;
+  final String? creatorId;
   final String title;
   final String status; // 'OPEN', 'COMPLETED', 'CANCELLED'
   final String sport; // 'tennis', 'pickleball', 'badminton'
@@ -166,7 +167,7 @@ class SocialSessionModel {
   final int maxParticipants;
   final int pricePerSlot;
   final String skillLevel;
-  final String descriptionNotes;
+  final String notes;
   final List<SocialParticipantModel> participants;
   final List<SocialMatchModel> matches;
   final List<SocialChatMessageModel> chatMessages;
@@ -175,6 +176,7 @@ class SocialSessionModel {
   const SocialSessionModel({
     required this.id,
     this.clubId,
+    this.creatorId,
     required this.title,
     this.status = 'OPEN',
     required this.sport,
@@ -200,7 +202,7 @@ class SocialSessionModel {
     required this.maxParticipants,
     required this.pricePerSlot,
     required this.skillLevel,
-    required this.descriptionNotes,
+    required this.notes,
     this.participants = const [],
     this.matches = const [],
     this.chatMessages = const [],
@@ -210,6 +212,7 @@ class SocialSessionModel {
   SocialSessionModel copyWith({
     String? id,
     String? clubId,
+    String? creatorId,
     String? title,
     String? status,
     String? sport,
@@ -235,7 +238,7 @@ class SocialSessionModel {
     int? maxParticipants,
     int? pricePerSlot,
     String? skillLevel,
-    String? descriptionNotes,
+    String? notes,
     List<SocialParticipantModel>? participants,
     List<SocialMatchModel>? matches,
     List<SocialChatMessageModel>? chatMessages,
@@ -244,6 +247,7 @@ class SocialSessionModel {
     return SocialSessionModel(
       id: id ?? this.id,
       clubId: clubId ?? this.clubId,
+      creatorId: creatorId ?? this.creatorId,
       title: title ?? this.title,
       status: status ?? this.status,
       sport: sport ?? this.sport,
@@ -269,7 +273,7 @@ class SocialSessionModel {
       maxParticipants: maxParticipants ?? this.maxParticipants,
       pricePerSlot: pricePerSlot ?? this.pricePerSlot,
       skillLevel: skillLevel ?? this.skillLevel,
-      descriptionNotes: descriptionNotes ?? this.descriptionNotes,
+      notes: notes ?? this.notes,
       participants: participants ?? this.participants,
       matches: matches ?? this.matches,
       chatMessages: chatMessages ?? this.chatMessages,
