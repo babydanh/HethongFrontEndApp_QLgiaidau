@@ -39,6 +39,40 @@ class _QuickTournamentContentDraft {
   final int? maxElo;
 }
 
+/// Owns the editor controllers for the dialog route.
+///
+/// `showDialog` completes its future when Navigator.pop is called, before the
+/// reverse transition has removed the dialog subtree. Keeping the controllers
+/// on a widget that lives inside that route prevents them from being disposed
+/// while TextField/Focus/Inherited dependencies are still active.
+class _QuickTournamentContentDialogOwner extends StatefulWidget {
+  const _QuickTournamentContentDialogOwner({
+    required this.controllers,
+    required this.builder,
+  });
+
+  final List<TextEditingController> controllers;
+  final WidgetBuilder builder;
+
+  @override
+  State<_QuickTournamentContentDialogOwner> createState() =>
+      _QuickTournamentContentDialogOwnerState();
+}
+
+class _QuickTournamentContentDialogOwnerState
+    extends State<_QuickTournamentContentDialogOwner> {
+  @override
+  void dispose() {
+    for (final controller in widget.controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context);
+}
+
 /// Tạo giải nhanh Public trên mobile app.
 /// Giải thuộc CLB phải được tạo từ trang chi tiết/quản lý CLB.
 class CreatePublicQuickTournamentScreen extends ConsumerStatefulWidget {
@@ -1436,10 +1470,16 @@ class _CreatePublicQuickTournamentScreenState
       text: maxElo?.toString() ?? '',
     );
 
-    try {
-      final saved = await showDialog<_QuickTournamentContentDraft>(
-        context: context,
-        barrierDismissible: true,
+    final saved = await showDialog<_QuickTournamentContentDraft>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => _QuickTournamentContentDialogOwner(
+        controllers: [
+          nameController,
+          limitController,
+          minEloController,
+          maxEloController,
+        ],
         builder: (dialogContext) => StatefulBuilder(
           builder: (dialogContext, setDialogState) {
             final dialogColors = dialogContext.colors;
@@ -1804,24 +1844,19 @@ class _CreatePublicQuickTournamentScreenState
             );
           },
         ),
-      );
+      ),
+    );
 
-      if (!mounted || saved == null) return;
-      setState(() {
-        if (existing == null) {
-          _contentDrafts = [..._contentDrafts, saved];
-        } else {
-          _contentDrafts = _contentDrafts
-              .map((draft) => draft.id == saved.id ? saved : draft)
-              .toList();
-        }
-      });
-    } finally {
-      nameController.dispose();
-      limitController.dispose();
-      minEloController.dispose();
-      maxEloController.dispose();
-    }
+    if (!mounted || saved == null) return;
+    setState(() {
+      if (existing == null) {
+        _contentDrafts = [..._contentDrafts, saved];
+      } else {
+        _contentDrafts = _contentDrafts
+            .map((draft) => draft.id == saved.id ? saved : draft)
+            .toList();
+      }
+    });
   }
 
   Widget _buildBracketSelector(AppColorsExtension colors) {
