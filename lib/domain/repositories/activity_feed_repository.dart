@@ -29,6 +29,18 @@ abstract class IActivityFeedRepository {
     int limit = 50,
   });
 
+  Future<void> createPersonalPickup({
+    required String categoryId,
+    required String title,
+    required String description,
+    required String playDate,
+    required String startTime,
+    required String endTime,
+    required String location,
+    int? feePerSlot,
+    required int maxSlots,
+  });
+
   Future<void> joinPersonalPickup(String id);
   Future<void> leavePersonalPickup(String id);
   Future<void> joinClubSession(String sessionId);

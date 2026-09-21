@@ -14,8 +14,8 @@ import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/live_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_tab.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/matches_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/matches_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sponsors_tab.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
@@ -613,11 +613,11 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     // 4. Tab [Đội tham gia]
     tabHeaders.add(Tab(height: 28, text: l10n.tabTeams));
 
-    // 5. Tab [Lịch] — same date/court timeline as the public web page.
+    // 5. Tab [Lịch thi đấu] — vẫn giữ ở cấp chi tiết giải.
     final int scheduleIndex = tabHeaders.length;
     tabHeaders.add(const Tab(height: 28, text: 'Lịch'));
 
-    // 6. Tab [Bảng đấu]
+    // 6. Tab [Bảng đấu] — chỉ mở sơ đồ kiểu Reclub, không có lịch lồng bên trong.
     tabHeaders.add(const Tab(height: 28, text: 'Bảng đấu'));
 
     // 7. Tab [Tài trợ] (nếu có)
@@ -683,7 +683,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   )),
     );
 
-    // Lịch thi đấu (court/date timeline parity with the web).
+    // Lịch thi đấu: giữ một luồng lịch duy nhất ở cấp chi tiết giải.
     tabViews.add(
       tournament.divisions.length > 1
           ? Column(
@@ -691,54 +691,59 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 _buildDivisionsSelectorList(tournament, colors),
                 Expanded(
                   child: MatchesTab(
-                    key: ValueKey('schedule-$_selectedDivisionId'),
+                    key: ValueKey('matches-$_selectedDivisionId'),
                     tournamentId: widget.tournamentId,
                     selectedDivisionId: _selectedDivisionId,
                     selectedDivision: _selectedDivision,
-                    isLite: tournament.isLite,
+                    isLite: tournament.isClubLite,
                   ),
                 ),
               ],
             )
           : MatchesTab(
-              key: ValueKey('schedule-$_selectedDivisionId'),
+              key: ValueKey('matches-$_selectedDivisionId'),
               tournamentId: widget.tournamentId,
               selectedDivisionId: _selectedDivisionId,
               selectedDivision: _selectedDivision,
-              isLite: tournament.isLite,
+              isLite: tournament.isClubLite,
             ),
     );
 
-    // Bảng đấu (BracketTab with divisions selector)
+    // Bảng đấu: render the diagram directly, without a nested schedule view.
     tabViews.add(
-      SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 160),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (tournament.divisions.length > 1)
-              _buildDivisionsSelectorList(tournament, colors),
-            BracketTab(
+      tournament.divisions.length > 1
+          ? Column(
+              children: [
+                _buildDivisionsSelectorList(tournament, colors),
+                Expanded(
+                  child: BracketTab(
+                    key: ValueKey('bracket-$_selectedDivisionId'),
+                    tournamentId: widget.tournamentId,
+                    selectedDivisionId: _selectedDivisionId,
+                    bracketType:
+                        tournament.divisions
+                            .where((d) => d.id == _selectedDivisionId)
+                            .firstOrNull
+                            ?.bracketType ??
+                        tournament.bracketType,
+                    configuredLegs:
+                        tournament.divisions
+                            .where((d) => d.id == _selectedDivisionId)
+                            .firstOrNull
+                            ?.roundRobinLegs ??
+                        1,
+                  ),
+                ),
+              ],
+            )
+          : BracketTab(
               key: ValueKey('bracket-$_selectedDivisionId'),
               tournamentId: widget.tournamentId,
               selectedDivisionId: _selectedDivisionId,
-              bracketType:
-                  tournament.divisions
-                      .where((d) => d.id == _selectedDivisionId)
-                      .firstOrNull
-                      ?.bracketType ??
-                  tournament.bracketType,
+              bracketType: tournament.bracketType,
               configuredLegs:
-                  tournament.divisions
-                      .where((d) => d.id == _selectedDivisionId)
-                      .firstOrNull
-                      ?.roundRobinLegs ??
-                  1,
+                  tournament.divisions.firstOrNull?.roundRobinLegs ?? 1,
             ),
-          ],
-        ),
-      ),
     );
 
     // Tài trợ
@@ -757,7 +762,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         // ─── Clean Minimalist TopBar (Bỏ hoàn toàn dropdown trên đầu) ───
         _buildTopBar(tournament, colors, isFollowing),
 
-        // ─── Dynamic Tab Bar Navigation (Đang diễn ra, Kết quả, Tổng quan, Đội, Bảng đấu, Lịch...) ───
+        // ─── Dynamic Tab Bar Navigation (Đang diễn ra, Kết quả, Tổng quan, Đội, Bảng đấu...) ───
         _buildStickyTabBar(controller, tabHeaders, colors),
 
         // ─── Tab Views Content ───

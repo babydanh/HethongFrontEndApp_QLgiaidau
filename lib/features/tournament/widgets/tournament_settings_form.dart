@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 
 class TournamentSettingsForm extends ConsumerWidget {
   final String selectedSport;
@@ -167,76 +168,17 @@ class TournamentSettingsForm extends ConsumerWidget {
       runSpacing: 10,
       children: categories.map((category) {
         final isSelected = selectedSport == category.slug;
-        return GestureDetector(
+        return SportChoiceTile(
+          sportKey: category.slug,
+          label: category.name,
+          selected: isSelected,
+          expanded: false,
+          iconSize: 18,
           onTap: () {
             onSportChanged(category.slug);
             onFormatChanged(AppConstants.formatSingles);
             onCategoryChanged(AppConstants.categoryMenSingles);
           },
-          child:
-              AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeInOut,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppTheme.primary.withValues(alpha: 0.12)
-                          : context.colors.bgSurface,
-                      borderRadius: BorderRadius.circular(
-                        AppTheme.radiusMedium,
-                      ),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppTheme.primary
-                            : context.colors.border,
-                        width: isSelected ? 1.8 : 1,
-                      ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: AppTheme.primary.withValues(alpha: 0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        AppSportIcon(
-                          sportKey: category.slug,
-                          size: 18,
-                          color: isSelected
-                              ? AppTheme.primary
-                              : context.colors.textSecondary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          category.name,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: isSelected
-                                ? context.colors.textPrimary
-                                : context.colors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                  .animate(target: isSelected ? 1 : 0)
-                  .scale(
-                    begin: const Offset(1, 1),
-                    end: const Offset(1.04, 1.04),
-                    duration: 200.ms,
-                    curve: Curves.easeOutBack,
-                  ),
         );
       }).toList(),
     );

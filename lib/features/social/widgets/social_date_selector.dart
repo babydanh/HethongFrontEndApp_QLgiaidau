@@ -52,7 +52,7 @@ class SocialDateSelector extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    index == 0 ? 'HN' : weekLabels[item.weekday % 7],
+                    weekLabels[item.weekday % 7],
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: isSelected

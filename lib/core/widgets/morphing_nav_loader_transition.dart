@@ -120,10 +120,10 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
     final safeAreaBottom = media.padding.bottom;
 
     // Tọa độ thanh Bottom Nav trên màn hình (theo chuẩn FloatingBottomNav):
-    // Khối trái: left: 16, bottom: 12 + safeAreaBottom, width: 252, height: 44
-    // Khối phải (Tiện ích): right: 16, bottom: 12 + safeAreaBottom, width: 44, height: 44
-    const double barWidth = 252.0;
-    const double barHeight = 44.0;
+    // Khối trái: left: 16, bottom: 34 + safeAreaBottom, width: 276, height: 52
+    // Khối phải (Tiện ích): right: 16, bottom: 34 + safeAreaBottom, width: 52, height: 52
+    const double barWidth = 276.0;
+    const double barHeight = 52.0;
     const double slotWidth = barWidth / 4.0;
     const double navBarLeft = 16.0;
     final double navBarBottom = 34.0 + safeAreaBottom;
@@ -135,8 +135,8 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
         final slotCenterX = navBarLeft + (i * slotWidth) + (slotWidth / 2.0);
         return Offset(slotCenterX, navBarCenterY);
       } else {
-        // Tab thứ 5: Nút tiện ích hình tròn bên phải (right: 16, width: 44)
-        return Offset(screenW - 16.0 - 22.0, navBarCenterY);
+        // Tab thứ 5: Nút tiện ích hình tròn bên phải (right: 16, width: 52)
+        return Offset(screenW - 16.0 - 26.0, navBarCenterY);
       }
     });
 
@@ -334,7 +334,7 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
                     ),
                   ),
 
-                // 4b. KHUNG NÚT TIỆN ÍCH TRÒN BÊN PHẢI (44x44) BUNG MỞ KHI QUẢ BÓNG THỨ 5 CHẠM ĐÁY
+                // 4b. KHUNG NÚT TIỆN ÍCH TRÒN BÊN PHẢI (52x52) BUNG MỞ KHI QUẢ BÓNG THỨ 5 CHẠM ĐÁY
                 if (bloomProgress > 0.01)
                   Positioned(
                     right: 16.0,
@@ -345,11 +345,11 @@ class MorphingNavLoaderOverlayState extends State<MorphingNavLoaderOverlay>
                         scale: 0.88 + (bloomProgress * 0.12),
                         alignment: Alignment.centerRight,
                         child: Container(
-                          width: 44.0,
-                          height: 44.0,
+                          width: 52.0,
+                          height: 52.0,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(22),
+                            borderRadius: BorderRadius.circular(26),
                             border: Border.all(
                               color: const Color(
                                 0xFFE2E8F0,

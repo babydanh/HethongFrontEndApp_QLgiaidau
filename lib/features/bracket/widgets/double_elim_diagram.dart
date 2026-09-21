@@ -198,14 +198,16 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
           canvasSize,
         );
 
+        final canPanVertically = canvasSize.height > constraints.maxHeight + 1;
+
         return InteractiveViewer(
           transformationController: _tc,
           constrained: false,
-          // Keep short diagrams locked to horizontal panning. Only a bracket
-          // that is taller than the viewport may be dragged vertically.
-          panAxis: canvasSize.height > constraints.maxHeight
-              ? PanAxis.free
-              : PanAxis.horizontal,
+          // Lock each gesture to its dominant axis. Short brackets scroll
+          // horizontally; tall brackets allow vertical movement as well,
+          // without the diagonal drift caused by free panning.
+          panAxis: canPanVertically ? PanAxis.aligned : PanAxis.horizontal,
+          clipBehavior: Clip.hardEdge,
           boundaryMargin: const EdgeInsets.all(800),
           minScale: 0.2,
           maxScale: 2.5,

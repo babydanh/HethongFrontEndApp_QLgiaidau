@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/club_social_links_
 import 'package:app_quanly_giaidau/features/community/widgets/club_visibility_selector.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Màn hình chỉnh sửa thông tin câu lạc bộ — đồng bộ web (SettingsTab.tsx).
@@ -825,14 +826,13 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
       children: categories.map((category) {
         final selected =
             _selectedSport == category.slug || _selectedSport == category.name;
-        return ChoiceChip(
-          label: Text(category.name),
+        return SportChoiceTile(
+          sportKey: category.slug,
+          label: category.name,
           selected: selected,
-          onSelected: (_) => setState(() => _selectedSport = category.slug),
-          selectedColor: AppTheme.primary.withValues(alpha: 0.15),
-          side: BorderSide(
-            color: selected ? AppTheme.primary : context.colors.border,
-          ),
+          expanded: false,
+          iconSize: 18,
+          onTap: () => setState(() => _selectedSport = category.slug),
         );
       }).toList(),
     );

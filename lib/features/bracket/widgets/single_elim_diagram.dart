@@ -238,15 +238,17 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
           canvasSize,
         );
 
+        final canPanVertically = canvasSize.height > constraints.maxHeight + 1;
+
         return InteractiveViewer(
           transformationController: _tc,
           constrained: false,
-          // A compact bracket behaves like the Reclub board: it can be
-          // dragged left/right when the rounds exceed the viewport, while a
-          // genuinely tall bracket keeps vertical panning available.
-          panAxis: canvasSize.height > constraints.maxHeight
-              ? PanAxis.free
-              : PanAxis.horizontal,
+          // Keep the bracket gesture on one axis at a time. A compact board
+          // only moves left/right; a tall board may move either direction,
+          // but never diagonally, so a drag cannot accidentally shift both
+          // the bracket and the surrounding tab.
+          panAxis: canPanVertically ? PanAxis.aligned : PanAxis.horizontal,
+          clipBehavior: Clip.hardEdge,
           boundaryMargin: const EdgeInsets.all(800),
           minScale: 0.25,
           maxScale: 2.5,

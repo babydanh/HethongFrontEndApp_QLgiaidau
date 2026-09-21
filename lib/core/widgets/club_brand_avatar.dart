@@ -16,6 +16,10 @@ class ClubBrandAvatar extends StatelessWidget {
   final String? logoUrl;
   final String? bannerUrl;
   final double size;
+
+  /// Enlarges only the logo pixels inside the clipped avatar. The default
+  /// keeps existing surfaces unchanged.
+  final double logoScale;
   final bool showWhenNoLogo;
   final BoxFit bannerFit;
   final Color? backgroundColor;
@@ -28,6 +32,7 @@ class ClubBrandAvatar extends StatelessWidget {
     this.logoUrl,
     this.bannerUrl,
     this.size = 56,
+    this.logoScale = 1,
     this.showWhenNoLogo = true,
     this.bannerFit = BoxFit.cover,
     this.backgroundColor,
@@ -95,13 +100,15 @@ class ClubBrandAvatar extends StatelessWidget {
 
     Widget renderPrimary() {
       if (primary.isEmpty) return _fallback();
-      return ClubNetworkImage(
+      final image = ClubNetworkImage(
         primary,
         fit: primaryFit,
-        errorBuilder: (_, _, _) => logo.isNotEmpty && banner.isNotEmpty
-            ? renderBanner()
-            : _fallback(),
+        errorBuilder: (_, _, _) =>
+            logo.isNotEmpty && banner.isNotEmpty ? renderBanner() : _fallback(),
       );
+      return logo.isNotEmpty && logoScale > 1
+          ? Transform.scale(scale: logoScale, child: image)
+          : image;
     }
 
     return SizedBox(

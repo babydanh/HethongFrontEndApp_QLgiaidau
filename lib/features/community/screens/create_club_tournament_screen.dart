@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Tạo giải đấu Lite trong câu lạc bộ
@@ -78,20 +79,24 @@ class _CreateClubTournamentScreenState
     if (slug.contains('pickleball')) return AppConstants.sportPickleball;
     if (slug.contains('cầu lông') ||
         slug.contains('cau long') ||
-        slug.contains('badminton'))
+        slug.contains('badminton')) {
       return AppConstants.sportBadminton;
+    }
     if (slug.contains('tennis') ||
         slug.contains('quần vợt') ||
-        slug.contains('quan vot'))
+        slug.contains('quan vot')) {
       return AppConstants.sportTennis;
+    }
     if (slug.contains('bóng bàn') ||
         slug.contains('bong ban') ||
-        slug.contains('table'))
+        slug.contains('table')) {
       return AppConstants.sportTableTennis;
+    }
     if (slug.contains('bóng đá') ||
         slug.contains('bong da') ||
-        slug.contains('football'))
+        slug.contains('football')) {
       return AppConstants.sportFootball;
+    }
     return null;
   }
 
@@ -747,8 +752,9 @@ class _CreateClubTournamentScreenState
                 keyboardType: TextInputType.number,
                 validator: (v) {
                   final n = int.tryParse(v ?? '');
-                  if (n == null || n < 2 || n > 128)
+                  if (n == null || n < 2 || n > 128) {
                     return l10n.createClubTournament_maxTeamsInvalid;
+                  }
                   return null;
                 },
                 style: TextStyle(color: colors.textPrimary),
@@ -907,65 +913,27 @@ class _CreateClubTournamentScreenState
         AppIcons.sportFootball,
       ),
     ];
+    final visibleSports = sports
+        .where((s) => lockedSport == null || lockedSport == s.$1)
+        .toList();
     return Row(
-      children: sports
-          .where((s) => lockedSport == null || lockedSport == s.$1)
-          .map((s) {
-            final selected = _selectedSport == s.$1;
-            return Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(right: s != sports.last ? 8 : 0),
-                child: GestureDetector(
-                  onTap: lockedSport == null
-                      ? () => setState(() {
-                          _selectedSport = s.$1;
-                          if (s.$1 == AppConstants.sportFootball) {
-                            _selectedFormat = AppConstants.formatDoubles;
-                          }
-                        })
-                      : null,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? AppTheme.primary.withValues(alpha: 0.1)
-                          : context.colors.bgSurface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: selected
-                            ? AppTheme.primary
-                            : context.colors.border,
-                        width: selected ? 1.5 : 1,
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          s.$3,
-                          size: 22,
-                          color: selected
-                              ? AppTheme.primary
-                              : context.colors.textSecondary,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          s.$2,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: selected
-                                ? AppTheme.primary
-                                : context.colors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          })
-          .toList(),
+      children: visibleSports.map((s) {
+        final selected = _selectedSport == s.$1;
+        return SportChoiceTile(
+          sportKey: s.$1,
+          label: s.$2,
+          selected: selected,
+          withTrailingGap: s != visibleSports.last,
+          onTap: lockedSport == null
+              ? () => setState(() {
+                  _selectedSport = s.$1;
+                  if (s.$1 == AppConstants.sportFootball) {
+                    _selectedFormat = AppConstants.formatDoubles;
+                  }
+                })
+              : null,
+        );
+      }).toList(),
     );
   }
 

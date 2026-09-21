@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 
 /// Bộ lọc môn thể thao dạng chip ngang, dùng chung cho mọi tab
@@ -62,13 +63,33 @@ class SportFilterChips extends ConsumerWidget {
                 ]
               : null,
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            color: isSelected ? Colors.white : context.colors.textSecondary,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (key != 'all') ...[
+              AppSportIcon(
+                sportKey: key,
+                size: 16,
+                color: isSelected ? Colors.white : context.colors.textSecondary,
+              ),
+              const SizedBox(width: 6),
+            ] else ...[
+              Icon(
+                AppIcons.trophy,
+                size: 15,
+                color: isSelected ? Colors.white : context.colors.textSecondary,
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected ? Colors.white : context.colors.textSecondary,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -36,11 +36,14 @@ class _CourtScheduleBoardState extends State<CourtScheduleBoard> {
             .where(
               (match) =>
                   match.scheduledTime != null &&
+                  match.hasAssignedCourt &&
                   _dateKey(match.scheduledTime!) == selectedDate,
             )
             .toList()
           ..sort((a, b) => a.scheduledTime!.compareTo(b.scheduledTime!));
-    final courts = _courtsFor(scheduled);
+    // Keep every known court visible even when the selected day has no match
+    // on one of them, matching the web/Reclub timeline layout.
+    final courts = _courtsFor(widget.matches);
     final timeRange = _timeRange(config);
     final stepMinutes = _positiveInt(
       config['stepMinutes'] ?? config['gridIncrementMinutes'],
@@ -61,19 +64,20 @@ class _CourtScheduleBoardState extends State<CourtScheduleBoard> {
         const SizedBox(height: 10),
         _buildBoardToolbar(context, scheduled.length, courts.length),
         const SizedBox(height: 8),
-        if (scheduled.isEmpty)
-          _buildEmptySchedule(context)
-        else
-          _buildGrid(
-            context,
-            scheduled,
-            courts,
-            timeRange,
-            stepMinutes,
-            cellHeight,
-            gridHeight,
-            minutesPerSet,
-          ),
+        // Keep the calendar grid visible even on an empty day. This mirrors
+        // the web timeline and makes the available courts/time window clear;
+        // unscheduled matches remain in the queue below.
+        _buildGrid(
+          context,
+          scheduled,
+          courts,
+          timeRange,
+          stepMinutes,
+          cellHeight,
+          gridHeight,
+          minutesPerSet,
+        ),
+        if (scheduled.isEmpty) _buildEmptySchedule(context),
         _buildUnscheduledQueue(context, selectedDate),
       ],
     );
@@ -100,6 +104,7 @@ class _CourtScheduleBoardState extends State<CourtScheduleBoard> {
               .where(
                 (match) =>
                     match.scheduledTime != null &&
+                    match.hasAssignedCourt &&
                     _dateKey(match.scheduledTime!) == date,
               )
               .length;
@@ -253,9 +258,7 @@ class _CourtScheduleBoardState extends State<CourtScheduleBoard> {
     int minutesPerSet,
   ) {
     const timeWidth = 54.0;
-    const courtWidth = 184.0;
     final colors = context.colors;
-    final contentWidth = timeWidth + courts.length * courtWidth;
     return Container(
       height: 560,
       decoration: BoxDecoration(
@@ -264,96 +267,116 @@ class _CourtScheduleBoardState extends State<CourtScheduleBoard> {
         border: Border.all(color: colors.border),
       ),
       clipBehavior: Clip.antiAlias,
-      child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: SizedBox(
-            width: contentWidth,
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 44,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: timeWidth,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: colors.bgSurface,
-                          border: Border(
-                            right: BorderSide(color: colors.border),
-                          ),
-                        ),
-                        child: Text(
-                          'Giờ',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colors.textMuted,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      ...courts.map(
-                        (court) => Container(
-                          width: courtWidth,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Fill wide phones while retaining a minimum column width that can
+          // still scroll horizontally on narrow phones.
+          final courtWidth = math.max(
+            184.0,
+            (constraints.maxWidth - timeWidth) / math.max(1, courts.length),
+          );
+          final contentWidth = timeWidth + courts.length * courtWidth;
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            primary: false,
+            physics: const BouncingScrollPhysics(),
+            child: SizedBox(
+              width: contentWidth,
+              child: Column(
+                children: [
+                  // The court header stays visible while only the time grid
+                  // scrolls vertically, matching the web timeline behavior.
+                  SizedBox(
+                    height: 44,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: timeWidth,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: AppTheme.primary.withValues(alpha: .06),
+                            color: colors.bgSurface,
                             border: Border(
                               right: BorderSide(color: colors.border),
                             ),
                           ),
                           child: Text(
-                            court,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            'Giờ',
                             style: TextStyle(
-                              fontSize: 12,
-                              color: colors.textPrimary,
-                              fontWeight: FontWeight.w800,
+                              fontSize: 11,
+                              color: colors.textMuted,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                        ...courts.map(
+                          (court) => Container(
+                            width: courtWidth,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary.withValues(alpha: .06),
+                              border: Border(
+                                right: BorderSide(color: colors.border),
+                              ),
+                            ),
+                            child: Text(
+                              court,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colors.textPrimary,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(
-                  height: gridHeight,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTimeColumn(
-                        context,
-                        timeRange,
-                        stepMinutes,
-                        cellHeight,
-                        gridHeight,
-                      ),
-                      ...courts.map(
-                        (court) => _buildCourtColumn(
-                          context,
-                          court,
-                          scheduled
-                              .where((match) => _courtName(match) == court)
-                              .toList(),
-                          timeRange,
-                          stepMinutes,
-                          cellHeight,
-                          gridHeight,
-                          minutesPerSet,
-                          courtWidth,
+                  SizedBox(
+                    height: 516,
+                    child: SingleChildScrollView(
+                      primary: false,
+                      physics: const BouncingScrollPhysics(),
+                      child: SizedBox(
+                        height: gridHeight,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildTimeColumn(
+                              context,
+                              timeRange,
+                              stepMinutes,
+                              cellHeight,
+                              gridHeight,
+                            ),
+                            ...courts.map(
+                              (court) => _buildCourtColumn(
+                                context,
+                                court,
+                                scheduled
+                                    .where(
+                                      (match) => _courtName(match) == court,
+                                    )
+                                    .toList(),
+                                timeRange,
+                                stepMinutes,
+                                cellHeight,
+                                gridHeight,
+                                minutesPerSet,
+                                courtWidth,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -497,7 +520,13 @@ class _CourtScheduleBoardState extends State<CourtScheduleBoard> {
                 right: BorderSide(color: colors.border),
               ),
             ),
-            child: _buildCardContent(context, match, accent, height),
+            child: _buildCardContent(
+              context,
+              match,
+              accent,
+              height,
+              minutesPerSet,
+            ),
           ),
         ),
       ),
@@ -509,6 +538,7 @@ class _CourtScheduleBoardState extends State<CourtScheduleBoard> {
     MatchModel match,
     Color accent,
     double height,
+    int minutesPerSet,
   ) {
     final colors = context.colors;
     final compact = height < 78;
@@ -547,7 +577,7 @@ class _CourtScheduleBoardState extends State<CourtScheduleBoard> {
         ),
         const SizedBox(height: 3),
         Text(
-          '${_formatTime(match.scheduledTime!)} · ${_durationMinutes(match, 15)} phút',
+          '${_formatTime(match.scheduledTime!)} · ${_durationMinutes(match, minutesPerSet)} phút',
           style: TextStyle(fontSize: 9, color: colors.textMuted),
         ),
         if (!compact) ...[
@@ -722,10 +752,24 @@ class _CourtScheduleBoardState extends State<CourtScheduleBoard> {
     Map<String, dynamic> config,
   ) {
     final dates = <String>{};
-    final configuredDate = config['scheduleDate']?.toString();
-    if (configuredDate != null && configuredDate.isNotEmpty) {
-      final parsed = DateTime.tryParse(configuredDate);
+    void addDate(dynamic value) {
+      if (value is DateTime) {
+        dates.add(_dateKey(value));
+        return;
+      }
+      final raw = value?.toString().trim() ?? '';
+      if (raw.isEmpty) return;
+      final parsed = DateTime.tryParse(raw);
       if (parsed != null) dates.add(_dateKey(parsed));
+    }
+
+    addDate(config['scheduleDate']);
+    addDate(config['startDate']);
+    final configuredDates = config['scheduleDates'];
+    if (configuredDates is Iterable) {
+      for (final value in configuredDates) {
+        addDate(value);
+      }
     }
     for (final match in matches) {
       if (match.scheduledTime != null) {
@@ -746,8 +790,13 @@ class _CourtScheduleBoardState extends State<CourtScheduleBoard> {
     return courts.isEmpty ? const ['Sân 1'] : courts.toList();
   }
 
-  String _courtName(MatchModel match) =>
-      match.hasAssignedCourt ? match.court.trim() : '';
+  String _courtName(MatchModel match) {
+    if (!match.hasAssignedCourt) return '';
+    final name = match.court.trim();
+    if (name.isNotEmpty) return name;
+    final id = match.courtId?.trim();
+    return id == null || id.isEmpty ? 'Sân chưa đặt tên' : id;
+  }
 
   (int, int) _timeRange(Map<String, dynamic> config) {
     final start = _parseTime(config['operatingStart']?.toString()) ?? 8 * 60;

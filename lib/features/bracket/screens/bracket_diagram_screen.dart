@@ -29,6 +29,8 @@ class BracketDiagramScreen extends ConsumerStatefulWidget {
   final bool isReadOnly;
   final bool canEditBracket;
   final bool isLite;
+  final bool isEmbedded;
+  final int configuredLegs;
 
   const BracketDiagramScreen({
     super.key,
@@ -40,6 +42,8 @@ class BracketDiagramScreen extends ConsumerStatefulWidget {
     this.isReadOnly = true,
     this.canEditBracket = false,
     this.isLite = false,
+    this.isEmbedded = false,
+    this.configuredLegs = 1,
   });
 
   @override
@@ -57,12 +61,14 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
     super.initState();
     _bracketMatches = widget.initialMatches;
     _loading = widget.initialMatches == null || widget.initialMatches!.isEmpty;
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    if (!widget.isEmbedded) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    }
     _fetchBracket();
   }
 
@@ -195,7 +201,9 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
 
   @override
   void dispose() {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    if (!widget.isEmbedded) {
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    }
     super.dispose();
   }
 
@@ -219,6 +227,16 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
     } else {
       title = l10n.bracketDiagramDefaultTitle;
     }
+
+    final bodyContent = _loading
+        ? const Center(child: CircularProgressIndicator())
+        : _error != null
+        ? _buildEmpty(colors, l10n)
+        : (_bracketMatches == null || _bracketMatches!.isEmpty)
+        ? _buildEmpty(colors, l10n)
+        : _buildDiagram(colors, isRoundRobin, isDouble, isGroupStageKnockout);
+
+    if (widget.isEmbedded) return bodyContent;
 
     return Scaffold(
       backgroundColor: colors.bgDark,
@@ -264,13 +282,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? _buildEmpty(colors, l10n)
-          : (_bracketMatches == null || _bracketMatches!.isEmpty)
-          ? _buildEmpty(colors, l10n)
-          : _buildDiagram(colors, isRoundRobin, isDouble, isGroupStageKnockout),
+      body: bodyContent,
     );
   }
 
@@ -289,6 +301,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
           matches: matches,
           tournamentId: widget.tournamentId,
           divisionId: widget.divisionId,
+          configuredLegs: widget.configuredLegs,
           onDoubleTapMatch: widget.canEditBracket
               ? _handleDoubleTapMatch
               : null,

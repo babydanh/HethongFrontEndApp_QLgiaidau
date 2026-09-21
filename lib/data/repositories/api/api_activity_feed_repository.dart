@@ -80,6 +80,41 @@ class ApiActivityFeedRepository implements IActivityFeedRepository {
   }
 
   @override
+  Future<void> createPersonalPickup({
+    required String categoryId,
+    required String title,
+    required String description,
+    required String playDate,
+    required String startTime,
+    required String endTime,
+    required String location,
+    int? feePerSlot,
+    required int maxSlots,
+  }) async {
+    await _dioClient.dio.post(
+      '/social/pickups',
+      data: {
+        'categoryId': categoryId,
+        'title': title,
+        if (description.trim().isNotEmpty) 'description': description.trim(),
+        'playDate': playDate,
+        'startTime': startTime,
+        'endTime': endTime,
+        'location': location,
+        ...?(feePerSlot == null ? null : {'feePerSlot': feePerSlot}),
+        'maxSlots': maxSlots,
+        'levelRequirement': 'Mọi trình độ',
+        'genderRequirement': 'ANY',
+      },
+      options: Options(
+        headers: {
+          'Idempotency-Key': 'pickup-${DateTime.now().microsecondsSinceEpoch}',
+        },
+      ),
+    );
+  }
+
+  @override
   Future<void> joinPersonalPickup(String id) async {
     await _dioClient.dio.post('/social/pickups/$id/participants/self');
   }

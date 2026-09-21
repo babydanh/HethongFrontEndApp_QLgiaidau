@@ -339,23 +339,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
               _buildGroupStageTabBar(l10n),
               const SizedBox(height: 8),
               if (widget.isEmbedded)
-                _buildGroupTabContent(
-                  matches,
-                  effectiveBracketType,
-                  auth,
-                  canActAsReferee: canActAsReferee,
-                  isReadOnly: isReadOnlyMode,
-                )
+                _buildGroupTabContent(matches)
               else
-                Expanded(
-                  child: _buildGroupTabContent(
-                    matches,
-                    effectiveBracketType,
-                    auth,
-                    canActAsReferee: canActAsReferee,
-                    isReadOnly: isReadOnlyMode,
-                  ),
-                ),
+                Expanded(child: _buildGroupTabContent(matches)),
             ],
           );
         } else {
@@ -438,7 +424,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         children: [
           _buildGroupTabItem(0, l10n.bracketView_crossTable),
           _buildGroupTabItem(1, l10n.bracketView_standings),
-          _buildGroupTabItem(2, l10n.bracketView_schedule),
         ],
       ),
     );
@@ -482,13 +467,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
     );
   }
 
-  Widget _buildGroupTabContent(
-    List<MatchModel> matches,
-    String bracketType,
-    AuthState auth, {
-    bool canActAsReferee = false,
-    bool isReadOnly = true,
-  }) {
+  Widget _buildGroupTabContent(List<MatchModel> matches) {
     switch (_selectedGroupTab) {
       case 0:
         return Padding(
@@ -508,13 +487,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           matches: matches,
           tournamentId: widget.tournamentId,
           divisionId: widget.divisionId,
-        );
-      case 2:
-        return _buildKnockoutMatchTable(
-          matches,
-          bracketType,
-          isReadOnly,
-          canActAsReferee,
         );
       default:
         return const SizedBox.shrink();

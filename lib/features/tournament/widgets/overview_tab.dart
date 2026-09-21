@@ -504,7 +504,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   },
                 ),
 
-                // Action Buttons (Chỉ giữ Lịch thi đấu trong suốt)
+                // Action button to the public bracket diagram.
                 if (!isClubLite) ...[
                   SizedBox(
                     width: double.infinity,
@@ -526,7 +526,7 @@ class _OverviewTabState extends State<OverviewTab> {
                           widget.onNavigateToMatches!();
                         }
                       },
-                      icon: const Icon(AppIcons.calendar, size: 16),
+                      icon: const Icon(AppIcons.layers, size: 16),
                       label: const Text(
                         'Lịch thi đấu',
                         style: TextStyle(

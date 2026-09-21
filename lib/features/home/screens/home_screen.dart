@@ -21,6 +21,7 @@ import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_ban
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/core/widgets/blurred_map_background.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
@@ -57,6 +58,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
   int _homeHeaderTab = 0; // 0: Khám phá, 1: Bản tin, 2: Của tôi
+  int _communitySubTab = 0; // 0: Câu lạc bộ, 1: Cộng đồng (Social)
   bool _isSearchExpanded = false;
   _HomeSearchCategory _searchCategory = _HomeSearchCategory.matches;
   // ─── Per-tab search state ───
@@ -136,6 +138,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _resetClubCursorPagination();
   }
 
+  bool _hasTournamentLogo(Tournament tournament) {
+    return tournament.logoUrl?.trim().isNotEmpty == true;
+  }
+
   Future<void> _fetchServerTournamentPage({bool isLoadMore = false}) async {
     if (isLoadMore) {
       if (_isTournamentLoadingMore ||
@@ -170,12 +176,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (isLoadMore) {
             final existingIds = _serverTournamentsList.map((t) => t.id).toSet();
             final uniqueNew = result.tournaments.where(
-              (t) => !existingIds.contains(t.id),
+              (t) => _hasTournamentLogo(t) && !existingIds.contains(t.id),
             );
             _serverTournamentsList.addAll(uniqueNew);
           } else {
             _serverTournamentsList.clear();
-            _serverTournamentsList.addAll(result.tournaments);
+            _serverTournamentsList.addAll(
+              result.tournaments.where(_hasTournamentLogo),
+            );
           }
           _serverTournamentNextCursor = result.nextCursor;
           _serverTournamentHasMore =
@@ -268,10 +276,65 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   List<(String, String)> _activeSportFilterItems(AppLocalizations l10n) {
     final categories =
         ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
-    return [
-      ('all', l10n.filterAll),
-      ...categories.map((category) => (category.slug, category.name)),
-    ];
+    return _sportFilterItemsFromCategories(l10n, categories);
+  }
+
+  List<(String, String)> _sportFilterItemsFromCategories(
+    AppLocalizations l10n,
+    List<CategoryModel> categories,
+  ) {
+    final sportItems = categories.isNotEmpty
+        ? categories.map((category) => (category.slug, category.name))
+        : AppConstants.sportNames.entries.map(
+            (entry) => (entry.key, entry.value),
+          );
+    return [('all', l10n.filterAll), ...sportItems];
+  }
+
+  Future<void> _showHeaderSportFilterMenu(BuildContext buttonContext) async {
+    final l10n = AppLocalizations.of(context)!;
+    List<CategoryModel> categories;
+    try {
+      // Wait for the API before constructing the route so the first tap
+      // cannot open a menu with only the fallback item.
+      categories = await ref.read(categoriesProvider.future);
+    } catch (_) {
+      categories = const <CategoryModel>[];
+    }
+    if (!mounted || !buttonContext.mounted) return;
+
+    final overlayBox =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final buttonBox = buttonContext.findRenderObject() as RenderBox;
+    final buttonRect = Rect.fromPoints(
+      buttonBox.localToGlobal(Offset.zero, ancestor: overlayBox),
+      buttonBox.localToGlobal(
+        buttonBox.size.bottomRight(Offset.zero),
+        ancestor: overlayBox,
+      ),
+    );
+    final position = RelativeRect.fromRect(
+      buttonRect,
+      Offset.zero & overlayBox.size,
+    ).shift(const Offset(0, 42));
+
+    final selected = await showMenu<String>(
+      context: context,
+      position: position,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      color: context.colors.bgSurface,
+      elevation: 6,
+      items: [
+        if (_currentIndex != 4) _buildPopupMenuItem(l10n.filterAll, 'all'),
+        ..._sportFilterItemsFromCategories(l10n, categories)
+            .where((item) => item.$1 != 'all')
+            .map((item) => _buildPopupMenuItem(item.$2, item.$1)),
+      ],
+    );
+
+    if (selected != null && mounted) {
+      _setActiveSportFilter(selected);
+    }
   }
 
   final ScrollController _scrollController = ScrollController();
@@ -541,14 +604,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Stack(
         children: [
           Scaffold(
-            backgroundColor: Colors.white,
+            backgroundColor: isDark
+                ? const Color(0xFF0B111E)
+                : const Color(0xFFF8FAFC),
             extendBody: true,
             // Header search lives at the top. Keeping the feed height stable
             // avoids relaying the full HomeScreen tree on every IME frame.
             resizeToAvoidBottomInset: false,
             body: Stack(
               children: [
-                // Body Content filling top to bottom
+                // 1. Hiệu ứng bản đồ mờ toàn trang (Vector Blurred Map Pattern)
+                const Positioned.fill(
+                  child: BlurredMapBackground(opacity: 0.90),
+                ),
+
+                // 2. Body Content filling top to bottom
                 Positioned.fill(
                   child: Center(
                     child: ConstrainedBox(
@@ -560,13 +630,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 ),
-                // Shared Modern Flat Top Header (Vibe Web: Nền trắng sạch, phẳng, 3 Tab bên trái, Nút tròn Search bên phải)
+
+                // 3. Shared Modern Flat Top Header (Kính mờ nhẹ nhàng tinh tế)
                 Positioned(
                   top: 0,
                   left: 0,
                   right: 0,
                   child: Container(
-                    decoration: const BoxDecoration(color: Colors.white),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF0F172A).withValues(alpha: 0.88)
+                          : Colors.white.withValues(alpha: 0.92),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : const Color(0xFFE2E8F0).withValues(alpha: 0.80),
+                          width: 1.0,
+                        ),
+                      ),
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -710,8 +793,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
       case 3:
         return KeyedSubtree(
-          key: const ValueKey('community_clubs'),
-          child: _buildCommunityTab(),
+          key: ValueKey('community_sub_$_communitySubTab'),
+          child: _communitySubTab == 0
+              ? _buildCommunityTab()
+              : SocialListView(topPadding: _pinnedHeaderHeight),
         );
       case 4:
       default:
@@ -785,6 +870,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     }
 
+    if (_currentIndex == 3) {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHeaderTabItem(
+              title: 'Câu lạc bộ',
+              isSelected: _communitySubTab == 0,
+              onTap: () {
+                if (_communitySubTab != 0) {
+                  setState(() => _communitySubTab = 0);
+                }
+              },
+            ),
+            const SizedBox(width: 14),
+            _buildHeaderTabItem(
+              title: 'Cộng đồng',
+              isSelected: _communitySubTab == 1,
+              onTap: () {
+                if (_communitySubTab != 1) {
+                  setState(() => _communitySubTab = 1);
+                }
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
     return Row(
       children: [
         if (_currentIndex == 1 || _currentIndex == 4) ...[
@@ -794,8 +910,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Text(
           _currentIndex == 1
               ? l10n.navTournaments
-              : _currentIndex == 3
-              ? 'Cộng đồng'
               : _currentIndex == 4
               ? l10n.homeRankingsTab
               : _currentIndex == 2
@@ -1040,26 +1154,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final activeSport = _activeSportFilter;
     final iconColor = isDark ? Colors.white : context.colors.textPrimary;
 
-    return PopupMenuButton<String>(
-      onSelected: _setActiveSportFilter,
-      offset: const Offset(0, 42),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      color: context.colors.bgSurface,
-      elevation: 6,
-      itemBuilder: (context) => [
-        if (_currentIndex != 4) _buildPopupMenuItem(l10n.filterAll, 'all'),
-        ..._activeSportFilterItems(l10n)
-            .where((item) => item.$1 != 'all')
-            .map((item) => _buildPopupMenuItem(item.$2, item.$1)),
-      ],
-      child: Container(
-        width: 34.0,
-        height: 34.0,
-        color: Colors.transparent,
-        alignment: Alignment.center,
-        child: activeSport == 'all'
-            ? Icon(AppIcons.trophy, size: 21, color: iconColor)
-            : AppSportIcon(sportKey: activeSport, size: 21, color: iconColor),
+    return Builder(
+      builder: (buttonContext) => InkWell(
+        onTap: () => _showHeaderSportFilterMenu(buttonContext),
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          width: 34.0,
+          height: 34.0,
+          color: Colors.transparent,
+          alignment: Alignment.center,
+          child: activeSport == 'all'
+              ? Icon(AppIcons.trophy, size: 21, color: iconColor)
+              : AppSportIcon(sportKey: activeSport, size: 21, color: iconColor),
+        ),
       ),
     );
   }
@@ -1401,6 +1508,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                               logoUrl: club.logoUrl,
                                               bannerUrl: club.bannerUrl,
                                               size: 56,
+                                              logoScale: 1.18,
                                               bannerFit: BoxFit.cover,
                                               backgroundColor: isDark
                                                   ? const Color(0xFF1E293B)

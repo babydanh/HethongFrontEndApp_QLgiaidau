@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
@@ -16,6 +15,29 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
+
+class _QuickTournamentContentDraft {
+  const _QuickTournamentContentDraft({
+    required this.id,
+    required this.formatKey,
+    required this.name,
+    this.maxParticipantsOverride,
+    this.bracketType,
+    this.eloEnabled = false,
+    this.minElo,
+    this.maxElo,
+  });
+
+  final String id;
+  final String formatKey;
+  final String name;
+  final int? maxParticipantsOverride;
+  final String? bracketType;
+  final bool eloEnabled;
+  final int? minElo;
+  final int? maxElo;
+}
 
 /// Tạo giải nhanh Public trên mobile app.
 /// Giải thuộc CLB phải được tạo từ trang chi tiết/quản lý CLB.
@@ -38,9 +60,13 @@ class _CreatePublicQuickTournamentScreenState
   final _locationAddressController = TextEditingController();
 
   String _sport = AppConstants.sportPickleball;
-  String _formatKey =
-      'MALE_DOUBLES'; // MALE_SINGLES, FEMALE_SINGLES, MALE_DOUBLES, FEMALE_DOUBLES, MIXED_DOUBLES, FOOTBALL_MALE, FOOTBALL_FEMALE, FOOTBALL_MIXED
-  final Set<String> _selectedFormatKeys = {'MALE_DOUBLES'};
+  List<_QuickTournamentContentDraft> _contentDrafts = const [
+    _QuickTournamentContentDraft(
+      id: 'MALE_DOUBLES',
+      formatKey: 'MALE_DOUBLES',
+      name: '',
+    ),
+  ];
   bool _isPublic = true;
   String _bracket = AppConstants.bracketSingleElimination;
   String _registrationMode = 'APPROVAL';
@@ -226,6 +252,9 @@ class _CreatePublicQuickTournamentScreenState
     return 'DOUBLES';
   }
 
+  int _globalMaxParticipants() =>
+      int.tryParse(_maxTeamsController.text.trim()) ?? 16;
+
   String? _divisionGender(String key) {
     if (key.contains('FEMALE')) return 'FEMALE';
     if (key.contains('MALE')) return 'MALE';
@@ -303,12 +332,12 @@ class _CreatePublicQuickTournamentScreenState
     }
 
     final name = _nameController.text.trim();
-    final maxTeams = int.tryParse(_maxTeamsController.text.trim()) ?? 16;
+    final maxTeams = _globalMaxParticipants();
     if (_startDate == null) {
       _showError('Vui lòng chọn ngày giờ bắt đầu giải');
       return;
     }
-    if (_selectedFormatKeys.isEmpty) {
+    if (_contentDrafts.isEmpty) {
       _showError('Vui lòng chọn ít nhất một nội dung thi đấu');
       return;
     }
@@ -342,31 +371,32 @@ class _CreatePublicQuickTournamentScreenState
 
     setState(() => _isSubmitting = true);
     try {
+      final primaryFormat = _contentDrafts.first.formatKey;
       String apiFormat = 'doubles';
       String? genderRestriction;
 
-      if (_formatKey == 'MALE_SINGLES') {
+      if (primaryFormat == 'MALE_SINGLES') {
         apiFormat = 'singles';
         genderRestriction = 'MALE';
-      } else if (_formatKey == 'FEMALE_SINGLES') {
+      } else if (primaryFormat == 'FEMALE_SINGLES') {
         apiFormat = 'singles';
         genderRestriction = 'FEMALE';
-      } else if (_formatKey == 'MALE_DOUBLES') {
+      } else if (primaryFormat == 'MALE_DOUBLES') {
         apiFormat = 'doubles';
         genderRestriction = 'MALE';
-      } else if (_formatKey == 'FEMALE_DOUBLES') {
+      } else if (primaryFormat == 'FEMALE_DOUBLES') {
         apiFormat = 'doubles';
         genderRestriction = 'FEMALE';
-      } else if (_formatKey == 'MIXED_DOUBLES') {
+      } else if (primaryFormat == 'MIXED_DOUBLES') {
         apiFormat = 'doubles';
         genderRestriction = 'MIXED';
-      } else if (_formatKey == 'FOOTBALL_MALE') {
+      } else if (primaryFormat == 'FOOTBALL_MALE') {
         apiFormat = 'doubles';
         genderRestriction = 'MALE';
-      } else if (_formatKey == 'FOOTBALL_FEMALE') {
+      } else if (primaryFormat == 'FOOTBALL_FEMALE') {
         apiFormat = 'doubles';
         genderRestriction = 'FEMALE';
-      } else if (_formatKey == 'FOOTBALL_MIXED') {
+      } else if (primaryFormat == 'FOOTBALL_MIXED') {
         apiFormat = 'doubles';
         genderRestriction = 'MIXED';
       }
@@ -391,15 +421,19 @@ class _CreatePublicQuickTournamentScreenState
           provinceCode: _provinceCode ?? '',
         ),
       );
-      final primaryFormat = _formatKey;
-      final divisions = _selectedFormatKeys.map((formatKey) {
+      final divisions = _contentDrafts.map((draft) {
+        final formatKey = draft.formatKey;
         return <String, dynamic>{
-          'name': _formatLabel(formatKey),
+          'name': draft.name.trim().isEmpty
+              ? _formatLabel(formatKey)
+              : draft.name.trim(),
           'matchType': _divisionMatchType(formatKey),
           if (_divisionGender(formatKey) != null)
             'genderRestriction': _divisionGender(formatKey),
-          'maxParticipants': maxTeams,
-          'bracketType': _bracket.toUpperCase(),
+          'maxParticipants': draft.maxParticipantsOverride ?? maxTeams,
+          'bracketType': (draft.bracketType ?? _bracket).toUpperCase(),
+          if (draft.eloEnabled && draft.minElo != null) 'minElo': draft.minElo,
+          if (draft.eloEnabled && draft.maxElo != null) 'maxElo': draft.maxElo,
           'startDate': startDateTime.toUtc().toIso8601String(),
           if (registrationEndDateTime != null)
             'registrationEndDate': registrationEndDateTime
@@ -629,63 +663,73 @@ class _CreatePublicQuickTournamentScreenState
             ),
             const SizedBox(height: 18),
 
-            // ─── Lịch trình giống form Quick trên web ───
-            _sectionLabel('Thời gian thi đấu & đăng ký', colors),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDateTimeField(
-                    label: 'Thời gian bắt đầu *',
+            // ─── Lịch trình thi đấu & đăng ký theo style danh sách ───
+            _sectionLabel('THỜI GIAN ĐĂNG KÝ & THI ĐẤU', colors),
+            const SizedBox(height: 10),
+            Container(
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.border.withValues(alpha: 0.6)),
+              ),
+              child: Column(
+                children: [
+                  _buildScheduleRow(
+                    avatarLetter: 'S',
+                    title: 'Thời gian bắt đầu *',
                     value: _startDate == null
                         ? null
                         : _withTime(_startDate!, _startTime),
-                    icon: AppIcons.calendar,
                     onTap: _pickStartDateTime,
                     colors: colors,
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _buildDateTimeField(
-                    label: 'Thời gian kết thúc',
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: colors.border.withValues(alpha: 0.4),
+                    indent: 56,
+                  ),
+                  _buildScheduleRow(
+                    avatarLetter: 'E',
+                    title: 'Thời gian kết thúc',
                     value: _endDate == null
                         ? null
                         : _withTime(_endDate!, _endTime),
-                    icon: AppIcons.calendarCheck,
                     onTap: _pickEndDateTime,
                     colors: colors,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDateTimeField(
-                    label: 'Mở đăng ký',
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: colors.border.withValues(alpha: 0.4),
+                    indent: 56,
+                  ),
+                  _buildScheduleRow(
+                    avatarLetter: 'R',
+                    title: 'Mở đăng ký',
                     value: _regStartDate == null
                         ? null
                         : _withTime(_regStartDate!, _regStartTime),
-                    icon: AppIcons.login,
                     onTap: _pickRegStartDateTime,
                     colors: colors,
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _buildDateTimeField(
-                    label: 'Đóng đăng ký',
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: colors.border.withValues(alpha: 0.4),
+                    indent: 56,
+                  ),
+                  _buildScheduleRow(
+                    avatarLetter: 'C',
+                    title: 'Hạn chót đăng ký (Đóng)',
                     value: _regEndDate == null
                         ? null
                         : _withTime(_regEndDate!, _regEndTime),
-                    icon: AppIcons.logout,
                     onTap: _pickRegEndDateTime,
                     colors: colors,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 18),
 
@@ -925,7 +969,7 @@ class _CreatePublicQuickTournamentScreenState
 
         final sportsMeta = {
           'pickleball': ('Pickleball', AppIcons.sportPickleball),
-          'badminton': ('Cầu lông', AppIcons.sportTennis),
+          'badminton': ('Cầu lông', AppIcons.sportBadminton),
           'tennis': ('Tennis', AppIcons.sportTennis),
           'table_tennis': ('Bóng bàn', AppIcons.sportTableTennis),
           'football': ('Bóng đá', AppIcons.sportFootball),
@@ -961,63 +1005,25 @@ class _CreatePublicQuickTournamentScreenState
         return Row(
           children: sports.map((s) {
             final selected = _sport == s.$1;
-            return Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(right: s != sports.last ? 8 : 0),
-                child: GestureDetector(
-                  onTap: () => setState(() {
-                    _sport = s.$1;
-                    _selectedFormatKeys
-                      ..clear()
-                      ..add(
-                        s.$1 == AppConstants.sportFootball
-                            ? 'FOOTBALL_MALE'
-                            : 'MALE_DOUBLES',
-                      );
-                    if (s.$1 == AppConstants.sportFootball) {
-                      _formatKey = 'FOOTBALL_MALE';
-                    } else if (_formatKey.startsWith('FOOTBALL_')) {
-                      _formatKey = 'MALE_DOUBLES';
-                    }
-                  }),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? AppTheme.primary.withValues(alpha: 0.12)
-                          : colors.bgSurface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: selected ? AppTheme.primary : colors.border,
-                        width: selected ? 1.8 : 1,
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          s.$3,
-                          size: 24,
-                          color: selected
-                              ? AppTheme.primary
-                              : colors.textSecondary,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          s.$2,
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            color: selected
-                                ? AppTheme.primary
-                                : colors.textSecondary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
+            return SportChoiceTile(
+              sportKey: s.$1,
+              label: s.$2,
+              selected: selected,
+              iconSize: 24,
+              withTrailingGap: s != sports.last,
+              onTap: () => setState(() {
+                _sport = s.$1;
+                final defaultFormat = s.$1 == AppConstants.sportFootball
+                    ? 'FOOTBALL_MALE'
+                    : 'MALE_DOUBLES';
+                _contentDrafts = [
+                  _QuickTournamentContentDraft(
+                    id: defaultFormat,
+                    formatKey: defaultFormat,
+                    name: '',
                   ),
-                ),
-              ),
+                ];
+              }),
             );
           }).toList(),
         );
@@ -1234,7 +1240,8 @@ class _CreatePublicQuickTournamentScreenState
             ],
           ),
           InkWell(
-            onTap: () => setState(() => _footballAllowDraw = !_footballAllowDraw),
+            onTap: () =>
+                setState(() => _footballAllowDraw = !_footballAllowDraw),
             borderRadius: BorderRadius.circular(8),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -1266,170 +1273,555 @@ class _CreatePublicQuickTournamentScreenState
   }
 
   Widget _buildFormatPills(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context)!;
-    final isFootball = _sport == AppConstants.sportFootball;
-    final allFormats = isFootball
-        ? [
-            ('FOOTBALL_MALE', l10n.tournamentCategoryFootballMen),
-            ('FOOTBALL_FEMALE', l10n.tournamentCategoryFootballWomen),
-            ('FOOTBALL_MIXED', l10n.tournamentCategoryFootballMixed),
-          ]
-        : [
-            ('MALE_DOUBLES', l10n.tournamentCategoryMenDoubles),
-            ('FEMALE_DOUBLES', l10n.tournamentCategoryWomenDoubles),
-            ('MIXED_DOUBLES', l10n.tournamentCategoryMixedDoubles),
-            ('MALE_SINGLES', l10n.tournamentCategoryMenSingles),
-            ('FEMALE_SINGLES', l10n.tournamentCategoryWomenSingles),
-          ];
-    final baseFormats = isFootball
-        ? allFormats
-        : allFormats
-              .where(
-                (format) =>
-                    format.$1 == 'MALE_DOUBLES' ||
-                    format.$1 == 'FEMALE_DOUBLES' ||
-                    format.$1 == 'MIXED_DOUBLES',
-              )
-              .toList();
-    final addedFormats = allFormats
-        .where(
-          (format) =>
-              _selectedFormatKeys.contains(format.$1) &&
-              !baseFormats.any((base) => base.$1 == format.$1),
-        )
-        .toList();
-    final formats = [...baseFormats, ...addedFormats];
-    final canAddMore = allFormats.any(
-      (format) => !formats.any((shown) => shown.$1 == format.$1),
-    );
-
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+    final maxParticipants = _globalMaxParticipants();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ...formats.map((f) {
-          final selected = _selectedFormatKeys.contains(f.$1);
-          return GestureDetector(
-            onTap: () => _toggleFormat(f.$1),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: selected
-                    ? AppTheme.primary.withValues(alpha: 0.12)
-                    : colors.bgSurface,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: selected ? AppTheme.primary : colors.border,
-                  width: selected ? 1.6 : 1,
-                ),
-              ),
-              child: Text(
-                f.$2,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                  color: selected ? AppTheme.primary : colors.textPrimary,
-                ),
-              ),
+        ..._contentDrafts.map(
+          (draft) => Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: colors.bgSurface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colors.border),
             ),
-          );
-        }),
-        if (canAddMore)
-          GestureDetector(
-            onTap: _showAdditionalFormats,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: colors.bgSurface,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: AppTheme.primary.withValues(alpha: 0.45),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(AppIcons.add, size: 16, color: AppTheme.primary),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Thêm nội dung',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.primary,
+            child: Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () => _editContentDraft(draft),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 30,
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              AppIcons.layers,
+                              size: 16,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 9),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  draft.name.trim().isEmpty
+                                      ? _formatLabel(draft.formatKey)
+                                      : draft.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: colors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${draft.maxParticipantsOverride ?? maxParticipants} người/đội tối đa',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: colors.textMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ],
-              ),
+                ),
+                IconButton(
+                  tooltip: 'Sửa nội dung',
+                  onPressed: () => _editContentDraft(draft),
+                  icon: const Icon(AppIcons.settings, size: 18),
+                  color: colors.textMuted,
+                ),
+                if (_contentDrafts.length > 1)
+                  IconButton(
+                    tooltip: 'Xóa nội dung',
+                    onPressed: () => _removeContentDraft(draft),
+                    icon: const Icon(AppIcons.delete, size: 18),
+                    color: colors.textMuted,
+                  ),
+              ],
             ),
           ),
+        ),
+        OutlinedButton.icon(
+          onPressed: () => _openContentDraftDialog(),
+          icon: const Icon(AppIcons.add, size: 17),
+          label: const Text('Thêm nội dung'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppTheme.primary,
+            side: BorderSide(color: AppTheme.primary.withValues(alpha: 0.45)),
+            padding: const EdgeInsets.symmetric(vertical: 11),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  void _toggleFormat(String key) {
+  Future<void> _editContentDraft(_QuickTournamentContentDraft draft) async {
+    await _openContentDraftDialog(existing: draft);
+  }
+
+  void _removeContentDraft(_QuickTournamentContentDraft draft) {
+    if (_contentDrafts.length <= 1) {
+      _showError('Giải phải có ít nhất một nội dung thi đấu');
+      return;
+    }
     setState(() {
-      if (_selectedFormatKeys.contains(key)) {
-        if (_selectedFormatKeys.length > 1) {
-          _selectedFormatKeys.remove(key);
-          if (_formatKey == key) _formatKey = _selectedFormatKeys.first;
-        }
-      } else {
-        _selectedFormatKeys.add(key);
-        _formatKey = key;
-      }
+      _contentDrafts = _contentDrafts
+          .where((item) => item.id != draft.id)
+          .toList();
     });
   }
 
-  Future<void> _showAdditionalFormats() async {
-    final l10n = AppLocalizations.of(context)!;
-    final isFootball = _sport == AppConstants.sportFootball;
-    final formats = isFootball
-        ? <(String, String)>[
-            ('FOOTBALL_MALE', l10n.tournamentCategoryFootballMen),
-            ('FOOTBALL_FEMALE', l10n.tournamentCategoryFootballWomen),
-            ('FOOTBALL_MIXED', l10n.tournamentCategoryFootballMixed),
-          ]
-        : <(String, String)>[
-            ('MALE_SINGLES', l10n.tournamentCategoryMenSingles),
-            ('FEMALE_SINGLES', l10n.tournamentCategoryWomenSingles),
-          ];
-    final available = formats
-        .where((format) => !_selectedFormatKeys.contains(format.$1))
-        .toList();
-    if (available.isEmpty || !mounted) return;
+  Future<void> _openContentDraftDialog({
+    _QuickTournamentContentDraft? existing,
+  }) async {
+    if (!mounted) return;
 
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Thêm nội dung thi đấu',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+    final isFootball = _sport == AppConstants.sportFootball;
+    final formatOptions = isFootball
+        ? <String>['FOOTBALL_MALE', 'FOOTBALL_FEMALE', 'FOOTBALL_MIXED']
+        : <String>[
+            'MALE_SINGLES',
+            'FEMALE_SINGLES',
+            'MALE_DOUBLES',
+            'FEMALE_DOUBLES',
+            'MIXED_DOUBLES',
+          ];
+    var formatKey = existing?.formatKey ?? formatOptions.first;
+    if (!formatOptions.contains(formatKey)) formatKey = formatOptions.first;
+    var nameTouched = existing != null && existing.name.trim().isNotEmpty;
+    var limitTouched = existing?.maxParticipantsOverride != null;
+    var bracketType = existing?.bracketType;
+    var advanced =
+        existing != null &&
+        (existing.bracketType != null || existing.eloEnabled);
+    var eloEnabled = existing?.eloEnabled ?? false;
+    var minElo = existing?.minElo;
+    var maxElo = existing?.maxElo;
+    String? nameError;
+    String? limitError;
+    String? eloError;
+
+    final nameController = TextEditingController(
+      text: existing?.name.trim().isNotEmpty == true
+          ? existing!.name
+          : _formatLabel(formatKey),
+    );
+    final limitController = TextEditingController(
+      text: '${existing?.maxParticipantsOverride ?? _globalMaxParticipants()}',
+    );
+    final minEloController = TextEditingController(
+      text: minElo?.toString() ?? '',
+    );
+    final maxEloController = TextEditingController(
+      text: maxElo?.toString() ?? '',
+    );
+
+    try {
+      final saved = await showDialog<_QuickTournamentContentDraft>(
+        context: context,
+        barrierDismissible: true,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            final dialogColors = dialogContext.colors;
+            final bracketOptions = [
+              (AppConstants.bracketSingleElimination, 'Loại trực tiếp'),
+              (
+                AppConstants.bracketDoubleElimination,
+                'Nhánh thắng / nhánh thua',
               ),
-              const SizedBox(height: 8),
-              ...available.map(
-                (format) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(AppIcons.add, color: AppTheme.primary),
-                  title: Text(format.$2),
-                  onTap: () {
-                    _toggleFormat(format.$1);
-                    Navigator.pop(sheetContext);
-                  },
+              (AppConstants.bracketRoundRobin, 'Vòng tròn tính điểm'),
+              (AppConstants.bracketGroupStageKnockout, 'Vòng bảng + Knockout'),
+            ];
+
+            void saveDraft() {
+              final name = nameController.text.trim();
+              final maxParticipants = int.tryParse(limitController.text.trim());
+              final parsedMinElo = int.tryParse(minEloController.text.trim());
+              final parsedMaxElo = int.tryParse(maxEloController.text.trim());
+              final usesRoundRobin =
+                  (bracketType ?? _bracket) == AppConstants.bracketRoundRobin;
+
+              setDialogState(() {
+                nameError = name.isEmpty ? 'Vui lòng nhập tên nội dung' : null;
+                limitError =
+                    maxParticipants == null ||
+                        maxParticipants < 2 ||
+                        maxParticipants > 128
+                    ? 'Số người/đội phải từ 2 đến 128'
+                    : usesRoundRobin && maxParticipants > 15
+                    ? 'Vòng tròn tối đa 15 người/đội'
+                    : null;
+                eloError =
+                    eloEnabled &&
+                        ((parsedMinElo != null && parsedMinElo < 0) ||
+                            (parsedMaxElo != null && parsedMaxElo < 0) ||
+                            (parsedMinElo != null &&
+                                parsedMaxElo != null &&
+                                parsedMinElo > parsedMaxElo))
+                    ? 'Khoảng ELO không hợp lệ'
+                    : null;
+              });
+
+              if (nameError != null || limitError != null || eloError != null) {
+                return;
+              }
+
+              Navigator.of(dialogContext).pop(
+                _QuickTournamentContentDraft(
+                  id:
+                      existing?.id ??
+                      'content-${DateTime.now().microsecondsSinceEpoch}',
+                  formatKey: formatKey,
+                  name: name,
+                  maxParticipantsOverride: limitTouched
+                      ? maxParticipants
+                      : null,
+                  bracketType: bracketType,
+                  eloEnabled: eloEnabled,
+                  minElo: eloEnabled ? parsedMinElo : null,
+                  maxElo: eloEnabled ? parsedMaxElo : null,
+                ),
+              );
+            }
+
+            return AlertDialog(
+              title: Text(
+                existing == null
+                    ? 'Thêm nội dung thi đấu mới'
+                    : 'Sửa nội dung thi đấu',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-            ],
-          ),
+              content: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 520,
+                  maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.68,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Mỗi nội dung có thể cấu hình riêng như trên web.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: dialogColors.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        'Loại nội dung',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: dialogColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      DropdownButtonFormField<String>(
+                        initialValue: formatKey,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: dialogColors.bgSurface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        items: formatOptions
+                            .map(
+                              (key) => DropdownMenuItem(
+                                value: key,
+                                child: Text(_formatLabel(key)),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setDialogState(() {
+                            formatKey = value;
+                            if (!nameTouched) {
+                              nameController.text = _formatLabel(value);
+                            }
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: nameController,
+                        onChanged: (_) => setDialogState(() {
+                          nameTouched = true;
+                          nameError = null;
+                        }),
+                        decoration: InputDecoration(
+                          labelText: 'Tên nội dung riêng',
+                          helperText:
+                              'Tên này hiển thị trong danh sách nội dung và bảng đấu.',
+                          errorText: nameError,
+                          filled: true,
+                          fillColor: dialogColors.bgSurface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: AppTheme.primary.withValues(alpha: 0.16),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Số lượng người/đội tham gia',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 7),
+                            SizedBox(
+                              width: 140,
+                              child: TextField(
+                                controller: limitController,
+                                keyboardType: TextInputType.number,
+                                onChanged: (_) => setDialogState(() {
+                                  limitTouched = true;
+                                  limitError = null;
+                                }),
+                                decoration: InputDecoration(
+                                  suffixText: 'người/đội',
+                                  errorText: limitError,
+                                  filled: true,
+                                  fillColor: dialogColors.bgSurface,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              limitTouched
+                                  ? 'Đã đặt giới hạn riêng cho nội dung này.'
+                                  : 'Mặc định theo quy mô chung của giải: ${_globalMaxParticipants()} người/đội.',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: dialogColors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      OutlinedButton(
+                        onPressed: () =>
+                            setDialogState(() => advanced = !advanced),
+                        style: OutlinedButton.styleFrom(
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                          side: BorderSide(color: dialogColors.border),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              AppIcons.tune,
+                              size: 17,
+                              color: AppTheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Tùy chọn nâng cao (thể thức, ELO)',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              advanced ? 'Thu gọn' : 'Mở rộng',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (advanced) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: dialogColors.bgSurface,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: dialogColors.border),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              DropdownButtonFormField<String>(
+                                initialValue: bracketType ?? '',
+                                isExpanded: true,
+                                decoration: const InputDecoration(
+                                  labelText: 'Thể thức riêng',
+                                ),
+                                items: [
+                                  const DropdownMenuItem(
+                                    value: '',
+                                    child: Text('Theo thể thức chung của giải'),
+                                  ),
+                                  ...bracketOptions.map(
+                                    (option) => DropdownMenuItem(
+                                      value: option.$1,
+                                      child: Text(option.$2),
+                                    ),
+                                  ),
+                                ],
+                                onChanged: (value) => setDialogState(
+                                  () => bracketType =
+                                      value == null || value.isEmpty
+                                      ? null
+                                      : value,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              CheckboxListTile(
+                                value: eloEnabled,
+                                onChanged: (value) => setDialogState(
+                                  () => eloEnabled = value ?? false,
+                                ),
+                                contentPadding: EdgeInsets.zero,
+                                dense: true,
+                                title: const Text(
+                                  'Giới hạn ELO',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
+                              ),
+                              if (eloEnabled) ...[
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextField(
+                                        controller: minEloController,
+                                        keyboardType: TextInputType.number,
+                                        onChanged: (_) => setDialogState(
+                                          () => eloError = null,
+                                        ),
+                                        decoration: const InputDecoration(
+                                          labelText: 'ELO tối thiểu',
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: TextField(
+                                        controller: maxEloController,
+                                        keyboardType: TextInputType.number,
+                                        onChanged: (_) => setDialogState(
+                                          () => eloError = null,
+                                        ),
+                                        decoration: const InputDecoration(
+                                          labelText: 'ELO tối đa',
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (eloError != null) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    eloError!,
+                                    style: TextStyle(
+                                      color: dialogColors.error,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Hủy'),
+                ),
+                FilledButton.icon(
+                  onPressed: saveDraft,
+                  icon: const Icon(AppIcons.add, size: 17),
+                  label: Text(
+                    existing == null ? 'Thêm nội dung' : 'Lưu thay đổi',
+                  ),
+                ),
+              ],
+            );
+          },
         ),
-      ),
-    );
+      );
+
+      if (!mounted || saved == null) return;
+      setState(() {
+        if (existing == null) {
+          _contentDrafts = [..._contentDrafts, saved];
+        } else {
+          _contentDrafts = _contentDrafts
+              .map((draft) => draft.id == saved.id ? saved : draft)
+              .toList();
+        }
+      });
+    } finally {
+      nameController.dispose();
+      limitController.dispose();
+      minEloController.dispose();
+      maxEloController.dispose();
+    }
   }
 
   Widget _buildBracketSelector(AppColorsExtension colors) {
@@ -1450,7 +1842,6 @@ class _CreatePublicQuickTournamentScreenState
             color: selected
                 ? AppTheme.primary.withValues(alpha: 0.08)
                 : colors.bgSurface,
-            borderRadius: BorderRadius.circular(12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
               side: BorderSide(
@@ -1628,64 +2019,111 @@ class _CreatePublicQuickTournamentScreenState
   // ignore: unused_element
   Future<void> _pickRegEndDate() => _pickRegEndDateTime();
 
-  Widget _buildDateTimeField({
-    required String label,
+  String _formatScheduleDisplay(DateTime dt) {
+    // e.g. T2 21 Tháng 9 0:00 or T3 28 Tháng 9 08:00
+    final weekdayStr = switch (dt.weekday) {
+      DateTime.monday => 'T2',
+      DateTime.tuesday => 'T3',
+      DateTime.wednesday => 'T4',
+      DateTime.thursday => 'T5',
+      DateTime.friday => 'T6',
+      DateTime.saturday => 'T7',
+      _ => 'CN',
+    };
+    final minuteStr = dt.minute.toString().padLeft(2, '0');
+    return '$weekdayStr ${dt.day} Tháng ${dt.month} ${dt.hour}:$minuteStr';
+  }
+
+  Widget _buildScheduleRow({
+    required String avatarLetter,
+    required String title,
     required DateTime? value,
-    required IconData icon,
     required VoidCallback onTap,
     required AppColorsExtension colors,
   }) {
-    final display = value == null
-        ? ''
-        : DateFormat('dd/MM/yyyy HH:mm').format(value);
-    return GestureDetector(
+    final hasValue = value != null;
+    final displayTime = hasValue ? _formatScheduleDisplay(value) : null;
+
+    return InkWell(
       onTap: onTap,
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(fontSize: 12, color: colors.textSecondary),
-          prefixIcon: Icon(icon, size: 18, color: colors.textSecondary),
-          suffixIcon: value == null
-              ? Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: Center(
-                    widthFactor: 1,
-                    child: Text(
-                      'Thêm',
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Circular Avatar Letter (like R, E, C, D in Image 2)
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: colors.textSecondary.withValues(alpha: 0.15),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                avatarLetter,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            // Middle Content: Title • action & Date Time text
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.textSecondary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '•',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colors.textSecondary.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        hasValue ? 'sửa' : 'thêm',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (displayTime != null) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      displayTime,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.primary,
+                        color: colors.textPrimary,
                       ),
                     ),
-                  ),
-                )
-              : null,
-          isDense: true,
-          filled: true,
-          fillColor: colors.bgSurface,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: colors.border),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: colors.border),
-          ),
-        ),
-        child: Text(
-          display,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: value == null ? FontWeight.normal : FontWeight.w700,
-            color: colors.textPrimary,
-          ),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

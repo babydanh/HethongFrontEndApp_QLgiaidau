@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -69,7 +70,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final safeAreaBottom = media.padding.bottom;
     final double popupBottom =
-        34.0 + safeAreaBottom + 48.0; // Ngay trên đỉnh nút tiện ích
+        34.0 + safeAreaBottom + 56.0; // Ngay trên đỉnh nút tiện ích (chiều cao 52 + 4px gap)
     const double popupRight = 16.0;
 
     setState(() => _isPopoverOpen = true);
@@ -142,9 +143,6 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
       case _UtilityActionType.createClub:
         context.push('/club/create');
         break;
-      case _UtilityActionType.exploreTournaments:
-        widget.onTabSelected(1);
-        break;
       case _UtilityActionType.scrollToTop:
         final primary = PrimaryScrollController.maybeOf(context);
         if (primary != null && primary.hasClients) {
@@ -182,16 +180,16 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
         : const Color(0xFF64748B); // Xám đồng bộ chuẩn
 
     final bgColor = isDark
-        ? const Color(0xFF131B2A).withValues(alpha: 0.96)
-        : Colors.white;
+        ? const Color(0xFF131B2A).withValues(alpha: 0.82)
+        : Colors.white.withValues(alpha: 0.88);
     final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : const Color(0xFFE2E8F0).withValues(alpha: 0.90);
+        ? Colors.white.withValues(alpha: 0.12)
+        : const Color(0xFFE2E8F0).withValues(alpha: 0.95);
 
-    // Kích thước thanh nav chính dẹt và gọn theo vibe web
-    const double barWidth = 252.0;
-    const double barHeight = 44.0;
-    const double slotWidth = barWidth / 4.0;
+    // Kích thước thanh nav chính phóng to vừa vặn, chuẩn tay bấm và thoáng đạt
+    const double barWidth = 276.0;
+    const double barHeight = 52.0;
+    const double slotWidth = barWidth / 4.0; // 69.0
 
     // Kích thước vạch indicator dẹt kiểu web hover full lọt lòng slot (1 khối nhạt, không viền)
     const double indicatorHorizontalPadding = 4.0;
@@ -223,31 +221,37 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // Khối thanh nav lơ lửng phẳng phiu, bo tròn đều
-                  Container(
-                    width: barWidth,
-                    height: barHeight,
-                    decoration: BoxDecoration(
-                      color: bgColor,
-                      borderRadius: BorderRadius.circular(barHeight / 2),
-                      border: Border.all(color: borderColor, width: 1.2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(
-                            alpha: isDark ? 0.35 : 0.08,
-                          ),
-                          blurRadius: 14,
-                          spreadRadius: 0.5,
-                          offset: const Offset(0, 3),
+                  // Khối thanh nav lơ lửng kính mờ (Glassmorphism), bo tròn đều
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(barHeight / 2),
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                      child: Container(
+                        width: barWidth,
+                        height: barHeight,
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          borderRadius: BorderRadius.circular(barHeight / 2),
+                          border: Border.all(color: borderColor, width: 1.2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(
+                                alpha: isDark ? 0.35 : 0.08,
+                              ),
+                              blurRadius: 16,
+                              spreadRadius: 0.5,
+                              offset: const Offset(0, 4),
+                            ),
+                            BoxShadow(
+                              color: Colors.black.withValues(
+                                alpha: isDark ? 0.08 : 0.03,
+                              ),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                        BoxShadow(
-                          color: Colors.black.withValues(
-                            alpha: isDark ? 0.08 : 0.03,
-                          ),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
 
@@ -365,7 +369,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
     required Color inactiveColor,
     required bool isActive,
   }) {
-    // Icon khi active là màu đen (dark: trắng), bình thường là xám
+    // Icon khi active là màu xanh Sport Blue, bình thường là xám
     final iconColor = isActive ? activeColor : inactiveColor;
 
     return GestureDetector(
@@ -378,28 +382,30 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
         scale: _isUtilityPressed ? 0.90 : 1.0,
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOutCubic,
-        child: Container(
-          width: 44.0,
-          height: 44.0,
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: borderColor, width: 1.2),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
-                blurRadius: 14,
-                spreadRadius: 0.5,
-                offset: const Offset(0, 3),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(26),
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              width: 52.0,
+              height: 52.0,
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(26),
+                border: Border.all(color: borderColor, width: 1.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                    blurRadius: 16,
+                    spreadRadius: 0.5,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Center(
-            child: Icon(
-                AppIcons.chevronsUpDown,
-                color: iconColor,
-                size: 20,
+              child: Center(
+                child: Icon(AppIcons.chevronsUpDown, color: iconColor, size: 23),
               ),
+            ),
           ),
         ),
       ),
@@ -428,7 +434,7 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
           child: Icon(
             isSelected ? activeIcon : icon,
             color: isSelected ? activeColor : inactiveColor,
-            size: 21,
+            size: 24,
           ),
         ),
       ),
@@ -441,7 +447,6 @@ enum _UtilityActionType {
   rankings,
   createTournament,
   createClub,
-  exploreTournaments,
   scrollToTop,
   refresh,
 }
@@ -536,13 +541,6 @@ class _QuickUtilityPopoverCard extends ConsumerWidget {
                   icon: AppIcons.shield,
                   title: 'Tạo câu lạc bộ',
                   onTap: () => onActionSelected(_UtilityActionType.createClub),
-                ),
-                _buildItem(
-                  icon: AppIcons.search,
-                  title: 'Tìm giải & CLB',
-                  isSelected: activeNavIndex == 1,
-                  onTap: () =>
-                      onActionSelected(_UtilityActionType.exploreTournaments),
                 ),
                 Divider(
                   height: 9,

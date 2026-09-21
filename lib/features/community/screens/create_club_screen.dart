@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 
 /// Tạo câu lạc bộ mới — form đơn giản
@@ -637,7 +638,11 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(AppIcons.close, size: 16, color: colors.textMuted),
+                    icon: Icon(
+                      AppIcons.close,
+                      size: 16,
+                      color: colors.textMuted,
+                    ),
                     onPressed: () =>
                         setState(() => _joinQuestions.removeAt(entry.key)),
                   ),
@@ -773,48 +778,13 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
     return Row(
       children: sports.map((s) {
         final selected = _selectedSport == s.$1;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: s != sports.last ? 8 : 0),
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedSport = s.$1),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? AppTheme.primary.withValues(alpha: 0.1)
-                      : context.colors.bgSurface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: selected ? AppTheme.primary : context.colors.border,
-                    width: selected ? 1.5 : 1,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      s.$3,
-                      size: 22,
-                      color: selected
-                          ? AppTheme.primary
-                          : context.colors.textSecondary,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      s.$2,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: selected
-                            ? AppTheme.primary
-                            : context.colors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+        return SportChoiceTile(
+          sportKey: s.$1,
+          label: s.$2,
+          selected: selected,
+          onTap: () => setState(() => _selectedSport = s.$1),
+          expanded: true,
+          withTrailingGap: s != sports.last,
         );
       }).toList(),
     );

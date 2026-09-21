@@ -24,7 +24,6 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_dialog.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_result_dialog.dart';
 import 'package:app_quanly_giaidau/features/social/models/social_session_model.dart';
-import 'package:app_quanly_giaidau/core/widgets/app_icons.dart';
 import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
 
 class ClubActivityTab extends ConsumerStatefulWidget {
@@ -773,16 +772,10 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     final visibleMatches = filteredMatches.take(_activityDisplayLimit).toList();
 
     // Dữ liệu Social của CLB (Ảnh 2 Reclub)
-    final clubSocials = ref.watch(
-      clubSocialSessionsProvider(widget.communityId),
-    );
+    final clubSocials = ref.watch(clubSocialSessionsProvider(widget.communityId));
     final openSocials = clubSocials.where((s) => s.status == 'OPEN').toList();
-    final completedSocials = clubSocials
-        .where((s) => s.status == 'COMPLETED')
-        .toList();
-    final displayedSocials = _socialStatusFilter == 'OPEN'
-        ? openSocials
-        : completedSocials;
+    final completedSocials = clubSocials.where((s) => s.status == 'COMPLETED').toList();
+    final displayedSocials = _socialStatusFilter == 'OPEN' ? openSocials : completedSocials;
 
     final content = NotificationListener<ScrollNotification>(
       onNotification: _onActivityScroll,
@@ -795,11 +788,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
           children: [
             // ─── 1. LỊCH CHƠI & HOẠT ĐỘNG SOCIAL CLB (Ảnh 2 Reclub) ───
             _buildWeeklyScheduleCard(colors),
-            _buildSocialFilterBar(
-              colors,
-              openSocials.length,
-              completedSocials.length,
-            ),
+            _buildSocialFilterBar(colors, openSocials.length, completedSocials.length),
             const SizedBox(height: 12),
             if (displayedSocials.isNotEmpty) ...[
               Padding(
@@ -822,16 +811,16 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
               const SizedBox(height: 12),
             ] else ...[
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 16,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 child: Center(
                   child: Text(
                     _socialStatusFilter == 'OPEN'
                         ? 'Chưa có hoạt động nào đang mở'
                         : 'Chưa có hoạt động nào đã kết thúc',
-                    style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colors.textSecondary,
+                    ),
                   ),
                 ),
               ),
@@ -853,10 +842,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 1,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                     decoration: BoxDecoration(
                       color: colors.bgSurface,
                       borderRadius: BorderRadius.circular(10),
@@ -901,7 +887,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                         padding: EdgeInsets.zero,
                         tooltip: l10n.club_createMatchStandalone,
                         icon: const Icon(
-                          AppIcons.add,
+                          Icons.add_rounded,
                           color: Colors.white,
                           size: 22,
                         ),
@@ -956,7 +942,11 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                   padding: const EdgeInsets.symmetric(vertical: 30),
                   child: Column(
                     children: [
-                      Icon(AppIcons.error, size: 36, color: colors.textMuted),
+                      Icon(
+                        Icons.error_outline_rounded,
+                        size: 36,
+                        color: colors.textMuted,
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         'Lỗi tải hoạt động CLB: $_errorMessage',
@@ -991,7 +981,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                   child: Column(
                     children: [
                       Icon(
-                        AppIcons.sportTennis,
+                        Icons.sports_tennis_rounded,
                         size: 40,
                         color: colors.textMuted,
                       ),
@@ -1060,7 +1050,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                   ),
                 );
               },
-              child: const Icon(AppIcons.add, color: Colors.white, size: 28),
+              child: const Icon(Icons.add, color: Colors.white, size: 28),
             ),
           ),
       ],
@@ -1241,7 +1231,11 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
             ),
           ),
           const Spacer(),
-          Icon(AppIcons.filter, color: colors.textSecondary, size: 22),
+          Icon(
+            Icons.filter_list_rounded,
+            color: colors.textSecondary,
+            size: 22,
+          ),
         ],
       ),
     );
@@ -1269,16 +1263,15 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
             children: [
               Container(
                 width: 92,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 6,
-                ),
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
                 decoration: BoxDecoration(
                   color: colors.bgSurface,
                   borderRadius: const BorderRadius.horizontal(
                     left: Radius.circular(AppTheme.radiusXL),
                   ),
-                  border: Border(right: BorderSide(color: colors.border)),
+                  border: Border(
+                    right: BorderSide(color: colors.border),
+                  ),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1308,9 +1301,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       ),
                       decoration: BoxDecoration(
                         color: colors.success.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(
-                          AppTheme.radiusSmall,
-                        ),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                       ),
                       child: Text(
                         'TỔ CHỨC',
@@ -1345,7 +1336,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       Row(
                         children: [
                           Icon(
-                            AppIcons.mapPin,
+                            Icons.location_on_outlined,
                             size: 14,
                             color: colors.textSecondary,
                           ),
@@ -1424,7 +1415,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
           child: Row(
             children: [
               if (isSelected)
-                Icon(AppIcons.check, size: 14, color: AppTheme.primary)
+                Icon(Icons.check_rounded, size: 14, color: AppTheme.primary)
               else
                 const SizedBox(width: 14),
               const SizedBox(width: 6),
@@ -1454,7 +1445,11 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
               ),
             ),
             const SizedBox(width: 3),
-            Icon(AppIcons.chevronDown, size: 16, color: colors.textSecondary),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 16,
+              color: colors.textSecondary,
+            ),
           ],
         ),
       ),
@@ -1615,7 +1610,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  AppIcons.circleDot,
+                                  Icons.fiber_manual_record_rounded,
                                   size: 8,
                                   color: Color(0xFFDC2626),
                                 ),
@@ -1630,7 +1625,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                                 ),
                               ],
                             ),
-                          ),
+                          )
                       ],
                     ),
                   ],
@@ -1897,8 +1892,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                             style: TextStyle(
                               fontSize: 13.5,
                               height: 1.15,
-                              fontWeight: teamNameWeight,
-                              color: teamNameColor,
+                               fontWeight: teamNameWeight,
+                               color: teamNameColor,
                             ),
                           )
                       else
@@ -1908,8 +1903,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 13.5,
-                            fontWeight: teamNameWeight,
-                            color: teamNameColor,
+                             fontWeight: teamNameWeight,
+                             color: teamNameColor,
                           ),
                         ),
                       if (eloDelta != null) ...[
@@ -1958,12 +1953,12 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
               const SizedBox(width: 8),
               // Neo cụm điểm vào mép phải; set mới xuất hiện bên phải và
               // tự đẩy các set trước đó sang trái.
-              () {
-                final displaySets = sets.length > 5
-                    ? sets.sublist(sets.length - 5)
-                    : sets;
-                final startIndex = sets.length - displaySets.length;
-                return Column(
+               () {
+                 final displaySets = sets.length > 5
+                     ? sets.sublist(sets.length - 5)
+                     : sets;
+                 final startIndex = sets.length - displaySets.length;
+                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     SingleChildScrollView(
@@ -1971,55 +1966,51 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       reverse: true,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (isWinner)
-                            const Padding(
-                              padding: EdgeInsets.only(right: 8),
-                              child: Icon(
-                                AppIcons.check,
-                                size: 24,
-                                color: Color(0xFF34A853),
-                              ),
-                            ),
-                          ...displaySets.asMap().entries.map((entry) {
-                            final setIndex = startIndex + entry.key;
-                            final score = entry.value;
-                            final opponentScore = setIndex < opponentSets.length
-                                ? opponentSets[setIndex]
-                                : null;
-                            final wonSet =
-                                isCompleted &&
-                                opponentScore != null &&
-                                score > opponentScore;
-                            final lostSet =
-                                isCompleted &&
-                                opponentScore != null &&
-                                score < opponentScore;
-                            return Container(
-                              width: 22,
-                              margin: const EdgeInsets.only(left: 5),
-                              alignment: Alignment.center,
-                              child: Text(
-                                '$score',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: wonSet
-                                      ? FontWeight.w800
-                                      : FontWeight.w400,
-                                  fontFeatures: const [
-                                    FontFeature.tabularFigures(),
-                                  ],
-                                  color: wonSet
-                                      ? colors.textPrimary
-                                      : lostSet
-                                      ? colors.textMuted
-                                      : colors.textSecondary,
-                                ),
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
+                         children: [
+                           if (isWinner)
+                             const Padding(
+                               padding: EdgeInsets.only(right: 8),
+                               child: Icon(
+                                 Icons.check_outlined,
+                                 size: 24,
+                                 color: Color(0xFF34A853),
+                               ),
+                             ),
+                           ...displaySets.asMap().entries.map((entry) {
+                             final setIndex = startIndex + entry.key;
+                             final score = entry.value;
+                             final opponentScore = setIndex < opponentSets.length
+                                 ? opponentSets[setIndex]
+                                 : null;
+                             final wonSet =
+                                 isCompleted && opponentScore != null && score > opponentScore;
+                             final lostSet =
+                                 isCompleted && opponentScore != null && score < opponentScore;
+                             return Container(
+                               width: 22,
+                               margin: const EdgeInsets.only(left: 5),
+                               alignment: Alignment.center,
+                               child: Text(
+                                 '$score',
+                                 style: TextStyle(
+                                   fontSize: 14,
+                                   fontWeight: wonSet
+                                       ? FontWeight.w800
+                                       : FontWeight.w400,
+                                   fontFeatures: const [
+                                     FontFeature.tabularFigures(),
+                                   ],
+                                   color: wonSet
+                                       ? colors.textPrimary
+                                       : lostSet
+                                       ? colors.textMuted
+                                       : colors.textSecondary,
+                                 ),
+                               ),
+                             );
+                           }),
+                         ],
+                       ),
                     ),
                     if (currentGamePoint != null)
                       Padding(
