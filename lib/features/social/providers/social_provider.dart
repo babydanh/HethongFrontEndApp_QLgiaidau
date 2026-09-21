@@ -140,6 +140,37 @@ class SocialSessionsNotifier extends Notifier<List<SocialSessionModel>> {
     state = updatedList;
   }
 
+  void addSharedSessionMessage(
+    String sessionId,
+    SocialSessionModel sharedSession, {
+    String senderName = 'Sơn Bảo',
+  }) {
+    final index = state.indexWhere((s) => s.id == sessionId);
+    if (index == -1) return;
+
+    final session = state[index];
+    final newCardMessage = SocialChatMessageModel(
+      id: 'msg_card_${DateTime.now().millisecondsSinceEpoch}',
+      senderName: senderName,
+      senderInitials: senderName.isNotEmpty
+          ? senderName.trim().split(' ').last.substring(0, 1).toUpperCase()
+          : 'SB',
+      message: sharedSession.title,
+      time: DateTime.now(),
+      isHost: true,
+      isMe: true,
+      sharedSession: sharedSession,
+    );
+
+    final updatedSession = session.copyWith(
+      chatMessages: [...session.chatMessages, newCardMessage],
+    );
+
+    final updatedList = List<SocialSessionModel>.from(state);
+    updatedList[index] = updatedSession;
+    state = updatedList;
+  }
+
   void togglePaymentStatus(String sessionId, String paymentId) {
     final index = state.indexWhere((s) => s.id == sessionId);
     if (index == -1) return;
