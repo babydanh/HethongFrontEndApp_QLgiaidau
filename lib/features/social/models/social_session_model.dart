@@ -73,6 +73,8 @@ class SocialChatMessageModel {
   final DateTime time;
   final bool isHost;
   final bool isMe;
+  final bool isSystem;
+  final SocialSessionModel? sharedSession;
 
   const SocialChatMessageModel({
     required this.id,
@@ -83,6 +85,8 @@ class SocialChatMessageModel {
     required this.time,
     this.isHost = false,
     this.isMe = false,
+    this.isSystem = false,
+    this.sharedSession,
   });
 }
 

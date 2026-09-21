@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -32,7 +33,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _isAdmin ? 5 : 4, vsync: this);
+    _tabController = TabController(length: _isAdmin ? 4 : 3, vsync: this);
   }
 
   @override
@@ -88,39 +89,53 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             ),
           ),
 
-          // Horizontal Tabs (5 tabs for Admin, 4 for Member)
-          Container(
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: colors.border,
-                  width: 1,
-                ),
+          // Horizontal Tabs (4 tabs for Admin, 3 for Member) - style from club_detail_tab_delegate
+          SizedBox(
+            height: 44.0,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: AnimatedBuilder(
+                animation: _tabController,
+                builder: (context, _) {
+                  final activeIndex = _tabController.index;
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildTabItem(
+                        index: 0,
+                        label: 'Chi tiết',
+                        isActive: activeIndex == 0,
+                        colors: colors,
+                      ),
+                      const SizedBox(width: 14),
+                      _buildTabItem(
+                        index: 1,
+                        label: 'Người tham gia',
+                        isActive: activeIndex == 1,
+                        colors: colors,
+                      ),
+                      if (_isAdmin) ...[
+                        const SizedBox(width: 14),
+                        _buildTabItem(
+                          index: 2,
+                          label: 'Thanh toán',
+                          isActive: activeIndex == 2,
+                          colors: colors,
+                        ),
+                      ],
+                      const SizedBox(width: 14),
+                      _buildTabItem(
+                        index: _isAdmin ? 3 : 2,
+                        label: 'Trò chuyện',
+                        isActive: activeIndex == (_isAdmin ? 3 : 2),
+                        colors: colors,
+                      ),
+                    ],
+                  );
+                },
               ),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              isScrollable: _isAdmin,
-              labelColor: AppTheme.primary,
-              unselectedLabelColor: colors.textSecondary,
-              labelStyle: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              indicatorColor: AppTheme.primary,
-              indicatorWeight: 3,
-              indicatorSize: TabBarIndicatorSize.tab,
-              tabs: [
-                const Tab(text: 'Chi tiết'),
-                const Tab(text: 'Người tham gia'),
-                if (_isAdmin) const Tab(text: 'Thanh toán'),
-                const Tab(text: 'Trận đấu'),
-                const Tab(text: 'Trò chuyện'),
-              ],
             ),
           ),
 
@@ -129,18 +144,62 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildDetailsTab(isDark, session),
+                _buildDetailsTab(isDark, session, colors),
                 _buildParticipantsTab(colors, session),
                 if (_isAdmin) _buildPaymentTab(colors, session),
-                _buildMatchesTab(isDark, session),
-                _buildChatTab(isDark, session),
+                _buildChatTab(isDark, session, colors),
               ],
             ),
           ),
 
           // Bottom Sticky Action Bar (IMG2 & IMG3)
-          _buildBottomActionBar(context, isDark, session),
+          _buildBottomActionBar(context, isDark, session, colors),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTabItem({
+    required int index,
+    required String label,
+    required bool isActive,
+    required AppColorsExtension colors,
+  }) {
+    return InkWell(
+      onTap: () => _tabController.animateTo(index),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      child: SizedBox(
+        height: 44.0,
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14.0,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                  color: isActive ? AppTheme.primary : colors.textMuted,
+                ),
+              ),
+            ),
+            const Spacer(),
+            Container(
+              height: 2.5,
+              width: 24.0,
+              decoration: BoxDecoration(
+                color: isActive ? AppTheme.primary : Colors.transparent,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(2),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -195,7 +254,11 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
   // ═══════════════════════════════════════════════════════
   //  TAB 1: CHI TIẾT (IMG2 Upper + IMG3 Lower)
   // ═══════════════════════════════════════════════════════
-  Widget _buildDetailsTab(bool isDark, SocialSessionModel session) {
+  Widget _buildDetailsTab(
+    bool isDark,
+    SocialSessionModel session,
+    AppColorsExtension colors,
+  ) {
     final currencyFormatter =
         NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
 
@@ -212,13 +275,11 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: isDark
-                  ? const Color(0xFF1E2922)
-                  : const Color(0xFFF0FDF4), // Mint/light-green
+                  ? colors.bgCard
+                  : colors.success.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isDark
-                    ? const Color(0xFF166534).withValues(alpha: 0.3)
-                    : const Color(0xFFDCFCE7),
+                color: colors.success.withValues(alpha: isDark ? 0.3 : 0.2),
               ),
             ),
             child: Row(
@@ -231,15 +292,15 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                     shape: BoxShape.circle,
                     color: isDark ? Colors.black26 : Colors.white,
                     border: Border.all(
-                      color: const Color(0xFF22C55E),
+                      color: colors.success,
                       width: 1.5,
                     ),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Icon(
                       Icons.sports_tennis_rounded,
                       size: 22,
-                      color: Color(0xFF16A34A),
+                      color: colors.success,
                     ),
                   ),
                 ),
@@ -261,9 +322,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                               style: TextStyle(
                                 fontSize: 14.5,
                                 fontWeight: FontWeight.w800,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF0F172A),
+                                color: colors.textPrimary,
                               ),
                             ),
                           ),
@@ -274,9 +333,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                         session.hostFrequency,
                         style: TextStyle(
                           fontSize: 12.5,
-                          color: isDark
-                              ? const Color(0xFF94A3B8)
-                              : const Color(0xFF64748B),
+                          color: colors.textSecondary,
                         ),
                       ),
                     ],
@@ -296,7 +353,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                     );
                   },
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF2563EB)),
+                    side: const BorderSide(color: AppTheme.primary),
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     minimumSize: Size.zero,
@@ -310,7 +367,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF2563EB),
+                      color: AppTheme.primary,
                     ),
                   ),
                 ),
@@ -326,17 +383,17 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
               Container(
                 width: 44,
                 height: 44,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Color(0xFF6EE7B7), // Mint green circle
+                  color: colors.success.withValues(alpha: 0.25),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     'MQ',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF064E3B),
+                      color: colors.textPrimary,
                     ),
                   ),
                 ),
@@ -351,7 +408,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                   margin: const EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+                    color: colors.bgSurface,
                   ),
                 ),
 
@@ -361,7 +418,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                 height: 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isDark ? Colors.white12 : const Color(0xFFCBD5E1),
+                  color: colors.borderLight,
                 ),
                 child: const Center(
                   child: Text(
@@ -369,7 +426,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF2563EB),
+                      color: AppTheme.primary,
                     ),
                   ),
                 ),
@@ -380,13 +437,13 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
 
           // 'Liên hệ BTC' link
           GestureDetector(
-            onTap: () => _handleContactHost(session),
+            onTap: () => _handleContactHost(session, colors),
             child: const Text(
               'Liên hệ BTC',
               style: TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF2563EB),
+                color: AppTheme.primary,
               ),
             ),
           ),
@@ -441,7 +498,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                         style: TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF2563EB),
+                          color: AppTheme.primary,
                         ),
                       ),
                     ),
@@ -471,7 +528,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       style: const TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF2563EB), // Blue location name
+                        color: AppTheme.primary, // Blue location name
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -479,9 +536,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       session.venueAddress,
                       style: TextStyle(
                         fontSize: 13.5,
-                        color: isDark
-                            ? const Color(0xFFCBD5E1)
-                            : const Color(0xFF334155),
+                        color: colors.textSecondary,
                         height: 1.35,
                       ),
                     ),
@@ -490,9 +545,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       '${session.distanceKm.toStringAsFixed(1)} km từ Nhà',
                       style: TextStyle(
                         fontSize: 13,
-                        color: isDark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF64748B),
+                        color: colors.textMuted,
                       ),
                     ),
                   ],
@@ -508,7 +561,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
               Icon(
                 Icons.sports_tennis_outlined,
                 size: 22,
-                color: isDark ? Colors.white70 : const Color(0xFF1E293B),
+                color: colors.textPrimary,
               ),
               const SizedBox(width: 14),
               Text(
@@ -516,7 +569,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  color: colors.textPrimary,
                 ),
               ),
             ],
@@ -529,7 +582,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
               Icon(
                 Icons.local_offer_outlined,
                 size: 22,
-                color: isDark ? Colors.white70 : const Color(0xFF1E293B),
+                color: colors.textPrimary,
               ),
               const SizedBox(width: 14),
               RichText(
@@ -539,7 +592,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       text: 'Mỗi người · ',
                       style: TextStyle(
                         fontSize: 15,
-                        color: isDark ? Colors.white70 : const Color(0xFF334155),
+                        color: colors.textSecondary,
                       ),
                     ),
                     TextSpan(
@@ -547,7 +600,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        color: colors.textPrimary,
                       ),
                     ),
                   ],
@@ -559,9 +612,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
 
           // Divider between upper details and lower notes
           Divider(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.1)
-                : const Color(0xFFE2E8F0),
+            color: colors.border,
             thickness: 1,
           ),
           const SizedBox(height: 16),
@@ -572,7 +623,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              color: colors.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
@@ -581,21 +632,48 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF8FAFC),
+              color: colors.bgSurface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+                color: colors.border,
               ),
             ),
             child: SelectableText(
               session.descriptionNotes,
               style: TextStyle(
                 fontSize: 14.5,
-                color: isDark ? Colors.white70 : const Color(0xFF1E293B),
+                color: colors.textPrimary,
                 height: 1.6,
               ),
             ),
           ),
+
+          if (_isAdmin) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: () =>
+                    _showFindPlayersModal(context, session, isDark, colors),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                  ),
+                ),
+                child: const Text(
+                  'Tìm thêm người chơi',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
 
           const SizedBox(height: 24),
         ],
@@ -729,45 +807,22 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
         ),
         const SizedBox(height: 10),
 
-        // Dropdowns row (Sort & Display options)
+        // Sort dropdown
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Sắp xếp: Xác nhận gần đây',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w500,
-                    color: colors.textSecondary,
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_drop_down_rounded,
-                  size: 18,
-                  color: colors.textSecondary,
-                ),
-              ],
+            Text(
+              'Sắp xếp: Xác nhận gần đây',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w500,
+                color: colors.textSecondary,
+              ),
             ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Hiển thị: Thẻ, Sân, Bạn bè,...',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w500,
-                    color: colors.textSecondary,
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_drop_down_rounded,
-                  size: 18,
-                  color: colors.textSecondary,
-                ),
-              ],
+            Icon(
+              Icons.arrow_drop_down_rounded,
+              size: 18,
+              color: colors.textSecondary,
             ),
           ],
         ),
@@ -1214,209 +1269,138 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
   }
 
   // ═══════════════════════════════════════════════════════
-  //  TAB 3: TRẬN ĐẤU
+  //  TAB 3: TRÒ CHUYỆN (IMG4)
   // ═══════════════════════════════════════════════════════
-  Widget _buildMatchesTab(bool isDark, SocialSessionModel session) {
-    if (session.matches.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.sports_tennis_rounded,
-                size: 48,
-                color: isDark ? Colors.white30 : Colors.black26,
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Trận đấu sẽ được cập nhật khi buổi Social diễn ra',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Host sẽ chia cặp giao lưu và xếp sân trực tiếp cho các bạn tham gia.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isDark ? Colors.white54 : Colors.black54,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: session.matches.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final match = session.matches[index];
-        return Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${match.courtName} · ${match.matchType}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF2563EB),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: match.status == 'Đã xong'
-                          ? const Color(0xFF16A34A).withValues(alpha: 0.15)
-                          : Colors.amber.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      match.status,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                        color: match.status == 'Đã xong'
-                            ? const Color(0xFF16A34A)
-                            : Colors.amber[800],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                '🎾 ${match.team1Name}',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '🎾 ${match.team2Name}',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              if (match.score != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  'Tỉ số: ${match.score}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF2563EB),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════
-  //  TAB 4: TRÒ CHUYỆN
-  // ═══════════════════════════════════════════════════════
-  Widget _buildChatTab(bool isDark, SocialSessionModel session) {
+  Widget _buildChatTab(
+    bool isDark,
+    SocialSessionModel session,
+    AppColorsExtension colors,
+  ) {
     return Column(
       children: [
         Expanded(
-          child: ListView.separated(
+          child: ListView(
             padding: const EdgeInsets.all(16),
-            itemCount: session.chatMessages.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final msg = session.chatMessages[index];
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: msg.isHost
-                        ? const Color(0xFF6EE7B7)
-                        : const Color(0xFF93C5FD),
-                    child: Text(
-                      msg.senderInitials,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
+            children: [
+              // System notification status matching IMG4
+              Center(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 8),
+                    Text(
+                      'Sơn Bảo đã tham gia cuộc trò chuyện.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colors.textMuted,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? const Color(0xFF262626)
-                            : const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(12),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Bạn đã cập nhật lệ phí tham dự.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colors.textMuted,
+                        fontWeight: FontWeight.w500,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    ),
+                    const SizedBox(height: 18),
+                  ],
+                ),
+              ),
+
+              // Chat messages
+              ...session.chatMessages.map((msg) {
+                if (msg.sharedSession != null) {
+                  return _buildSocialSessionChatCard(
+                    context,
+                    msg.sharedSession!,
+                    colors,
+                    isDark,
+                  );
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: msg.isHost
+                            ? colors.success.withValues(alpha: 0.25)
+                            : AppTheme.primaryLight.withValues(alpha: 0.35),
+                        child: Text(
+                          msg.senderInitials,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: colors.bgSurface,
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusLarge),
+                            border: Border.all(color: colors.border),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                msg.senderName,
-                                style: const TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    msg.senderName,
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: colors.textPrimary,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${msg.time.hour}:${msg.time.minute.toString().padLeft(2, '0')}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: colors.textMuted,
+                                    ),
+                                  ),
+                                ],
                               ),
+                              const SizedBox(height: 4),
                               Text(
-                                '${msg.time.hour}:${msg.time.minute.toString().padLeft(2, '0')}',
+                                msg.message,
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  color: isDark ? Colors.white38 : Colors.black38,
+                                  fontSize: 13.5,
+                                  color: colors.textPrimary,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            msg.message,
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              color: isDark ? Colors.white70 : const Color(0xFF1E293B),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              );
-            },
+                );
+              }),
+            ],
           ),
         ),
 
-        // Chat Input Row
+        // Chat Input Row (matching bottom of IMG4)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            color: colors.bgCard,
             border: Border(
               top: BorderSide(
-                color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+                color: colors.border,
               ),
             ),
           ),
@@ -1428,10 +1412,10 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                   child: TextField(
                     controller: _chatInputController,
                     decoration: InputDecoration(
-                      hintText: 'Nhập tin nhắn giao lưu...',
+                      hintText: 'Viết tin nhắn...',
                       hintStyle: TextStyle(
                         fontSize: 13.5,
-                        color: isDark ? Colors.white38 : Colors.black38,
+                        color: colors.textMuted,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 14,
@@ -1439,12 +1423,18 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
+                        borderSide: BorderSide(color: colors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: colors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: const BorderSide(color: AppTheme.primary),
                       ),
                       filled: true,
-                      fillColor: isDark
-                          ? const Color(0xFF262626)
-                          : const Color(0xFFF1F5F9),
+                      fillColor: colors.bgSurface,
                     ),
                   ),
                 ),
@@ -1452,7 +1442,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                 IconButton(
                   icon: const Icon(
                     Icons.send_rounded,
-                    color: Color(0xFF2563EB),
+                    color: AppTheme.primary,
                   ),
                   onPressed: () {
                     final text = _chatInputController.text.trim();
@@ -1472,6 +1462,204 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
     );
   }
 
+  // ── Card Social Session inside Chat (IMG4) ──
+  Widget _buildSocialSessionChatCard(
+    BuildContext context,
+    SocialSessionModel targetSession,
+    AppColorsExtension colors,
+    bool isDark,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        border: Border.all(color: colors.border),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Left Date/Time Box
+              Container(
+                width: 78,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+                color: colors.bgSurface,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.sports_tennis_rounded,
+                      size: 26,
+                      color: colors.textPrimary,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      targetSession.dayOfWeek,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      '${targetSession.dayOfMonth.toString().padLeft(2, '0')}/${targetSession.dateTime.month.toString().padLeft(2, '0')}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      targetSession.timeSlot,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: colors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Right Session Details
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Badge: Tổ chức + Club Name
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colors.success.withValues(alpha: 0.15),
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusSmall),
+                            ),
+                            child: Text(
+                              'Tổ chức',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: colors.success,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              targetSession.hostClubName.toUpperCase(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+
+                      // Title
+                      Text(
+                        targetSession.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                          height: 1.25,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+
+                      // Location
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: 14,
+                            color: colors.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              targetSession.venueName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+
+                      // Slot counter + Host avatar
+                      Row(
+                        children: [
+                          Text(
+                            '${targetSession.currentParticipants}/${targetSession.maxParticipants}',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: colors.success.withValues(alpha: 0.25),
+                              border: Border.all(
+                                color: colors.success.withValues(alpha: 0.6),
+                                width: 1,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                targetSession.participants.isNotEmpty
+                                    ? targetSession.participants.first.initials
+                                    : 'SB',
+                                style: TextStyle(
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // ═══════════════════════════════════════════════════════
   //  BOTTOM ACTION BAR (IMG2 & IMG3)
   // ═══════════════════════════════════════════════════════
@@ -1479,16 +1667,19 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
     BuildContext context,
     bool isDark,
     SocialSessionModel session,
+    AppColorsExtension colors,
   ) {
+    if (_isAdmin) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF18191A) : Colors.white,
+        color: colors.bgCard,
         border: Border(
           top: BorderSide(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : const Color(0xFFE2E8F0),
+            color: colors.border,
             width: 1,
           ),
         ),
@@ -1504,28 +1695,33 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
         top: false,
         child: Row(
           children: [
-            // Left Button: 'Chat với host' (Outlined button with blue border)
+            // Left Button: 'Chat với host'
             Expanded(
               child: SizedBox(
                 height: 48,
                 child: OutlinedButton(
-                  onPressed: () => _handleContactHost(session),
+                  onPressed: () => _handleContactHost(session, colors),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(
-                      color: Color(0xFF2563EB),
+                      color: AppTheme.primary,
                       width: 1.5,
                     ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.radiusMedium),
                     ),
-                    foregroundColor: const Color(0xFF2563EB),
+                    foregroundColor: AppTheme.primary,
                   ),
-                  child: const Text(
-                    'Chat với host',
-                    style: TextStyle(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF2563EB),
+                  child: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'Chat với host',
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -1533,25 +1729,30 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             ),
             const SizedBox(width: 12),
 
-            // Right Button: 'Yêu cầu tham gia' (Solid blue button)
+            // Right Button: 'Yêu cầu tham gia'
             Expanded(
               child: SizedBox(
                 height: 48,
                 child: ElevatedButton(
                   onPressed: () => _handleRequestJoin(context, session),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB), // Vibrant blue
+                    backgroundColor: AppTheme.primary,
                     foregroundColor: Colors.white,
                     elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.radiusMedium),
                     ),
                   ),
-                  child: const Text(
-                    'Yêu cầu tham gia',
-                    style: TextStyle(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
+                  child: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'Yêu cầu tham gia',
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
@@ -1563,7 +1764,237 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
     );
   }
 
-  void _handleContactHost(SocialSessionModel session) {
+  // ── Modal Tìm thêm người chơi (IMG3) ──
+  void _showFindPlayersModal(
+    BuildContext context,
+    SocialSessionModel session,
+    bool isDark,
+    AppColorsExtension colors,
+  ) {
+    final inviteMessage = '''${session.title}
+⏰ ${session.dayOfWeek}, ngày ${session.dayOfMonth.toString().padLeft(2, '0')} Th${session.dateTime.month.toString().padLeft(2, '0')} lúc ${session.timeSlot}
+📍 ${session.venueName}
+
+RSVP: https://sporto.vn/social/${session.id}''';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: colors.bgCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Drag handle
+                Center(
+                  child: Container(
+                    width: 38,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Title
+                Text(
+                  'Tìm thêm người chơi',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // Preview Card (IMG3)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: colors.bgSurface,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                    border: Border.all(color: colors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        session.title,
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Text('⏰ ', style: TextStyle(fontSize: 13)),
+                          Text(
+                            '${session.dayOfWeek}, ngày ${session.dayOfMonth.toString().padLeft(2, '0')} Th${session.dateTime.month.toString().padLeft(2, '0')} lúc ${session.timeSlot}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Text('📍 ', style: TextStyle(fontSize: 13)),
+                          Expanded(
+                            child: Text(
+                              session.venueName,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'RSVP: https://sporto.vn/social/${session.id}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Divider(color: colors.border, height: 1),
+                      const SizedBox(height: 8),
+
+                      // Button 'Sao chép tin nhắn' inside the card
+                      InkWell(
+                        onTap: () {
+                          Clipboard.setData(ClipboardData(text: inviteMessage));
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content:
+                                  const Text('Đã sao chép tin nhắn mời!'),
+                              backgroundColor: colors.success,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                        borderRadius:
+                            BorderRadius.circular(AppTheme.radiusSmall),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.copy_rounded,
+                                size: 16,
+                                color: AppTheme.primary,
+                              ),
+                              const SizedBox(width: 6),
+                              const Text(
+                                'Sao chép tin nhắn',
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Option 1: Sao chép tin nhắn
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.copy_rounded,
+                    color: colors.textPrimary,
+                    size: 22,
+                  ),
+                  title: Text(
+                    'Sao chép tin nhắn',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: inviteMessage));
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Đã sao chép tin nhắn mời!'),
+                        backgroundColor: colors.success,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                ),
+
+                // Option 2: Chia sẻ trong cuộc trò chuyện (IMG4)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    color: colors.textPrimary,
+                    size: 22,
+                  ),
+                  title: Text(
+                    'Chia sẻ trong cuộc trò chuyện',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    ref
+                        .read(socialSessionsProvider.notifier)
+                        .addSharedSessionMessage(session.id, session);
+                    _tabController.animateTo(_isAdmin ? 3 : 2);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text(
+                          'Đã chia sẻ buổi Social vào cuộc trò chuyện!',
+                        ),
+                        backgroundColor: colors.success,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _handleContactHost(
+    SocialSessionModel session, [
+    AppColorsExtension? colorsParam,
+  ]) {
+    final colors = colorsParam ?? context.colors;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -1586,7 +2017,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                 const SizedBox(height: 16),
                 if (session.hostPhone != null)
                   ListTile(
-                    leading: const Icon(Icons.phone, color: Color(0xFF16A34A)),
+                    leading: Icon(Icons.phone, color: colors.success),
                     title: Text('Gọi điện: ${session.hostPhone}'),
                     onTap: () {
                       Navigator.pop(ctx);
@@ -1595,7 +2026,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                   ),
                 if (session.zaloGroupUrl != null)
                   ListTile(
-                    leading: const Icon(Icons.group, color: Color(0xFF2563EB)),
+                    leading: const Icon(Icons.group, color: AppTheme.primary),
                     title: const Text('Tham gia nhóm Zalo'),
                     subtitle: Text(session.zaloGroupUrl!),
                     onTap: () {
@@ -1607,11 +2038,14 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                     },
                   ),
                 ListTile(
-                  leading: const Icon(Icons.chat_bubble_outline, color: AppTheme.primary),
+                  leading: const Icon(
+                    Icons.chat_bubble_outline,
+                    color: AppTheme.primary,
+                  ),
                   title: const Text('Gửi tin nhắn trong app'),
                   onTap: () {
                     Navigator.pop(ctx);
-                    _tabController.animateTo(3); // Switch to Chat tab
+                    _tabController.animateTo(_isAdmin ? 3 : 2); // Switch to Chat tab
                   },
                 ),
               ],
