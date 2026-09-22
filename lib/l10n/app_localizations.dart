@@ -4448,6 +4448,36 @@ abstract class AppLocalizations {
   /// **'Mời sau'**
   String get doublesRegInviteLater;
 
+  /// No description provided for @doublesRegPairingChoice.
+  ///
+  /// In vi, this message translates to:
+  /// **'CÁCH GHÉP ĐÔI'**
+  String get doublesRegPairingChoice;
+
+  /// No description provided for @doublesRegOrganizerPairing.
+  ///
+  /// In vi, this message translates to:
+  /// **'BTC ghép đôi'**
+  String get doublesRegOrganizerPairing;
+
+  /// No description provided for @doublesRegOrganizerPairingHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký cá nhân, BTC ghép với VĐV phù hợp.'**
+  String get doublesRegOrganizerPairingHint;
+
+  /// No description provided for @doublesRegSelfPairing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mời thẳng / QR'**
+  String get doublesRegSelfPairing;
+
+  /// No description provided for @doublesRegSelfPairingHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự chọn đồng đội hoặc gửi link, mã QR.'**
+  String get doublesRegSelfPairingHint;
+
   /// No description provided for @doublesRegPartnerHint.
   ///
   /// In vi, this message translates to:

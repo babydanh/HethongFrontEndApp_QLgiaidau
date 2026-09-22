@@ -44,6 +44,7 @@ class Tournament {
   final List<TournamentDivision> divisions;
   final bool isRanked;
   final String? registrationMode;
+  final String? doublesPairingMode;
   final bool hideFeaturedCardText;
   final String? inviteCode;
   final String? communityId;
@@ -103,6 +104,7 @@ class Tournament {
     this.divisions = const [],
     this.isRanked = false,
     this.registrationMode,
+    this.doublesPairingMode,
     this.hideFeaturedCardText = false,
     this.inviteCode,
     this.communityId,
@@ -387,6 +389,7 @@ class Tournament {
       divisions: parsedDivisions,
       isRanked: json['isRanked'] == true || json['is_ranked'] == true,
       registrationMode: config['registrationMode']?.toString(),
+      doublesPairingMode: config['doublesPairingMode']?.toString(),
       hideFeaturedCardText: config['hideFeaturedCardText'] == true,
       inviteCode: json['inviteCode']?.toString(),
       communityId:
@@ -454,6 +457,8 @@ class Tournament {
         if (minTeamSize != null) 'minTeamSize': minTeamSize,
         if (maxReserve != null) 'maxReserve': maxReserve,
         if (registrationMode != null) 'registrationMode': registrationMode,
+        if (doublesPairingMode != null)
+          'doublesPairingMode': doublesPairingMode,
         'hideFeaturedCardText': hideFeaturedCardText,
         if (locationConfig != null) 'location': locationConfig,
         // isLite = LOẠI GIẢI lite. KHÔNG ghi 'mode':'LITE' (đó là scoring mode).
@@ -507,6 +512,7 @@ class Tournament {
       'isRanked': isRanked,
       'isRegistrationLocked': isRegistrationLocked,
       if (registrationMode != null) 'registrationMode': registrationMode,
+      if (doublesPairingMode != null) 'doublesPairingMode': doublesPairingMode,
       if (inviteCode != null) 'inviteCode': inviteCode,
       if (communityId != null) 'communityId': communityId,
       if (sportRules != null) 'sportRules': sportRules,
@@ -551,6 +557,7 @@ class Tournament {
     List<TournamentDivision>? divisions,
     bool? isRanked,
     String? registrationMode,
+    String? doublesPairingMode,
     bool? hideFeaturedCardText,
     String? inviteCode,
     String? communityId,
@@ -607,6 +614,7 @@ class Tournament {
       divisions: divisions ?? this.divisions,
       isRanked: isRanked ?? this.isRanked,
       registrationMode: registrationMode ?? this.registrationMode,
+      doublesPairingMode: doublesPairingMode ?? this.doublesPairingMode,
       hideFeaturedCardText: hideFeaturedCardText ?? this.hideFeaturedCardText,
       inviteCode: inviteCode ?? this.inviteCode,
       communityId: communityId ?? this.communityId,

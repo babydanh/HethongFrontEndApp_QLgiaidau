@@ -48,7 +48,8 @@ class _DoublesRegistrationFlowState
   List<UserSearchResult> _searchResults = [];
   UserSearchResult? _selectedPartner;
   bool _searching = false;
-  bool _inviteLater = false;
+  bool _inviteLater = true;
+  String? _pairingMode;
   Timer? _searchDebounce;
   String? _genderError;
   String? _eloError;
@@ -294,6 +295,10 @@ class _DoublesRegistrationFlowState
             _teamNameCtrl.text = name;
           }
 
+          if (token != null || link != null) {
+            _pairingMode = 'SELF';
+          }
+
           if (status == 'PENDING_PARTNER') {
             setState(() {
               _participantId = pId;
@@ -499,7 +504,19 @@ class _DoublesRegistrationFlowState
 
   Future<void> _handleStep1Submit() async {
     final l10n = AppLocalizations.of(context)!;
-    if (_teamNameCtrl.text.trim().length < 3) {
+    final tournament = ref
+        .read(
+          registerTournamentProvider((
+            id: widget.tournamentId,
+            invite: widget.inviteCode,
+          )),
+        )
+        .asData
+        ?.value;
+    final pairingMode =
+        _pairingMode ?? 'ORGANIZER';
+    final organizerPairing = pairingMode == 'ORGANIZER';
+    if (!organizerPairing && _teamNameCtrl.text.trim().length < 3) {
       _showError(l10n.doublesRegTeamNameTooShort);
       return;
     }
@@ -511,16 +528,6 @@ class _DoublesRegistrationFlowState
     // Đồng ý ELO/ranking đã được thu thập ở màn đăng ký ngoài (checkbox bắt
     // buộc với giải có xếp hạng trước khi vào đây). Màn ghép đôi không hỏi
     // lại — chỉ truyền đúng trạng thái giải để backend ghi ELO hợp lệ.
-    final tournament = ref
-        .read(
-          registerTournamentProvider((
-            id: widget.tournamentId,
-            invite: widget.inviteCode,
-          )),
-        )
-        .asData
-        ?.value;
-
     if (tournament != null) {
       final customError = _validateCustomResponses(tournament);
       if (customError != null) {
@@ -531,9 +538,10 @@ class _DoublesRegistrationFlowState
 
     setState(() => _submitting = true);
     try {
-      _partnerContact =
-          _selectedPartner?.email ??
-          (_inviteLater ? null : _partnerSearchCtrl.text.trim());
+      _partnerContact = organizerPairing
+          ? null
+          : _selectedPartner?.email ??
+                (_inviteLater ? null : _partnerSearchCtrl.text.trim());
       final result = await ref
           .read(tournamentRepositoryProvider)
           .registerParticipant(
@@ -541,9 +549,11 @@ class _DoublesRegistrationFlowState
             teamName: _teamNameCtrl.text.trim(),
             divisionId: widget.division.id,
             inviteCode: widget.inviteCode,
-            partnerEmailOrPhone:
-                _selectedPartner?.email ??
-                (_inviteLater ? null : _partnerSearchCtrl.text.trim()),
+            partnerEmailOrPhone: organizerPairing
+                ? null
+                : _selectedPartner?.email ??
+                      (_inviteLater ? null : _partnerSearchCtrl.text.trim()),
+            doublesPairingMode: pairingMode,
             rankingConsent: tournament?.isRanked == true,
             customResponses: _customResponses.isNotEmpty
                 ? _customResponses
@@ -792,6 +802,9 @@ class _DoublesRegistrationFlowState
 
   Widget _buildStep1(Tournament t, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
+    final pairingMode =
+        _pairingMode ?? 'ORGANIZER';
+    final organizerPairing = pairingMode == 'ORGANIZER';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -815,6 +828,40 @@ class _DoublesRegistrationFlowState
         ),
         const SizedBox(height: 20),
         _buildCustomFields(t),
+        Text(
+          l10n.doublesRegPairingChoice,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            color: colors.textMuted,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _buildPairingChoice(
+                mode: 'ORGANIZER',
+                title: l10n.doublesRegOrganizerPairing,
+                description: l10n.doublesRegOrganizerPairingHint,
+                selected: organizerPairing,
+                colors: colors,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildPairingChoice(
+                mode: 'SELF',
+                title: l10n.doublesRegSelfPairing,
+                description: l10n.doublesRegSelfPairingHint,
+                selected: !organizerPairing,
+                colors: colors,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
         TextField(
           controller: _teamNameCtrl,
           style: TextStyle(color: colors.textPrimary),
@@ -827,6 +874,24 @@ class _DoublesRegistrationFlowState
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
+        if (organizerPairing) ...[
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: AppTheme.primary.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Text(
+              'Đăng ký cá nhân. Ban tổ chức sẽ tự ghép đôi cho bạn khi đủ người phù hợp.',
+              style: TextStyle(fontSize: 12, color: colors.textSecondary),
+            ),
+          ),
+        ],
         const SizedBox(height: 20),
         if (_genderError != null)
           Padding(
@@ -912,36 +977,38 @@ class _DoublesRegistrationFlowState
               ],
             ),
           ),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                l10n.doublesRegSearchPartner,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: colors.textMuted,
-                  letterSpacing: 1,
+        if (!organizerPairing) ...[
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.doublesRegSearchPartner,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textMuted,
+                    letterSpacing: 1,
+                  ),
                 ),
               ),
-            ),
-            TextButton.icon(
-              onPressed: () => setState(() => _inviteLater = !_inviteLater),
-              icon: Icon(
-                _inviteLater
-                    ? Icons.check_box_rounded
-                    : Icons.check_box_outline_blank_rounded,
-                size: 18,
+              TextButton.icon(
+                onPressed: () => setState(() => _inviteLater = !_inviteLater),
+                icon: Icon(
+                  _inviteLater
+                      ? Icons.check_box_rounded
+                      : Icons.check_box_outline_blank_rounded,
+                  size: 18,
+                ),
+                label: Text(
+                  l10n.doublesRegInviteLater,
+                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                ),
               ),
-              label: Text(
-                l10n.doublesRegInviteLater,
-                style: TextStyle(fontSize: 12, color: colors.textSecondary),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        if (!_inviteLater) ...[
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+        if (!organizerPairing && !_inviteLater) ...[
           TextField(
             controller: _partnerSearchCtrl,
             style: TextStyle(color: colors.textPrimary),
@@ -1054,8 +1121,59 @@ class _DoublesRegistrationFlowState
     ).animate().fadeIn(duration: 300.ms);
   }
 
+  Widget _buildPairingChoice({
+    required String mode,
+    required String title,
+    required String description,
+    required bool selected,
+    required AppColorsExtension colors,
+  }) {
+    return InkWell(
+      onTap: () => setState(() {
+        _pairingMode = mode;
+        _inviteLater = true;
+        _selectedPartner = null;
+        _searchResults = [];
+      }),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppTheme.primary.withValues(alpha: 0.08)
+              : colors.bgCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? AppTheme.primary : colors.border,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: selected ? AppTheme.primary : colors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              description,
+              style: TextStyle(fontSize: 10, color: colors.textSecondary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildStep2(Tournament t, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
+    final pairingMode =
+        _pairingMode ?? 'ORGANIZER';
+    final organizerPairing = pairingMode == 'ORGANIZER';
     final rawInviteLink =
         _teamInviteLink ??
         (_teamInviteToken != null
@@ -1067,7 +1185,10 @@ class _DoublesRegistrationFlowState
               rawInviteLink.startsWith('https://')
         ? rawInviteLink
         : 'https://sporto.asia${rawInviteLink.startsWith('/') ? '' : '/'}$rawInviteLink';
-    final showInvite = inviteLink != null || _teamInviteToken != null;
+    // A legacy participant can still carry an invite token. Organizer-paired
+    // doubles must never surface that token as a QR/link to invite a teammate.
+    final showInvite = !organizerPairing &&
+        (inviteLink != null || _teamInviteToken != null);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1083,7 +1204,9 @@ class _DoublesRegistrationFlowState
         ),
         const SizedBox(height: 4),
         Text(
-          l10n.doublesRegInviteTitle,
+          organizerPairing
+              ? 'Chờ ban tổ chức ghép đôi'
+              : l10n.doublesRegInviteTitle,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
@@ -1092,7 +1215,9 @@ class _DoublesRegistrationFlowState
         ),
         const SizedBox(height: 8),
         Text(
-          l10n.doublesRegInviteDesc,
+          organizerPairing
+              ? 'Bạn đã vào hàng chờ. Ban tổ chức sẽ ghép bạn với VĐV phù hợp.'
+              : l10n.doublesRegInviteDesc,
           style: TextStyle(fontSize: 13, color: colors.textSecondary),
         ),
         const SizedBox(height: 24),
@@ -1209,7 +1334,9 @@ class _DoublesRegistrationFlowState
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  l10n.doublesRegInviteSentTitle,
+                  organizerPairing
+                      ? 'Đã vào hàng chờ ghép đôi'
+                      : l10n.doublesRegInviteSentTitle,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
@@ -1218,7 +1345,9 @@ class _DoublesRegistrationFlowState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  l10n.doublesRegInviteSentDescription,
+                  organizerPairing
+                      ? 'Bạn không cần mời đồng đội. Hệ thống sẽ cập nhật khi BTC ghép cặp thành công.'
+                      : l10n.doublesRegInviteSentDescription,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 12,
@@ -1362,7 +1491,10 @@ class _DoublesRegistrationFlowState
               rawInviteLink.startsWith('https://')
         ? rawInviteLink
         : 'https://sporto.asia${rawInviteLink.startsWith('/') ? '' : '/'}$rawInviteLink';
-    final isComplete = _teamStatus == 'COMPLETE' || _teamStatus == 'CONFIRMED' || _teamStatus == 'APPROVED';
+    final isComplete =
+        _teamStatus == 'COMPLETE' ||
+        _teamStatus == 'CONFIRMED' ||
+        _teamStatus == 'APPROVED';
     final canPay =
         _entryFee != null &&
         _entryFee! > 0 &&
@@ -1410,7 +1542,11 @@ class _DoublesRegistrationFlowState
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 20),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  color: Colors.amber,
+                  size: 20,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(

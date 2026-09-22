@@ -2318,6 +2318,23 @@ class AppLocalizationsVi extends AppLocalizations {
   String get doublesRegInviteLater => 'Mời sau';
 
   @override
+  String get doublesRegPairingChoice => 'CÁCH GHÉP ĐÔI';
+
+  @override
+  String get doublesRegOrganizerPairing => 'BTC ghép đôi';
+
+  @override
+  String get doublesRegOrganizerPairingHint =>
+      'Đăng ký cá nhân, BTC ghép với VĐV phù hợp.';
+
+  @override
+  String get doublesRegSelfPairing => 'Mời thẳng / QR';
+
+  @override
+  String get doublesRegSelfPairingHint =>
+      'Tự chọn đồng đội hoặc gửi link, mã QR.';
+
+  @override
   String get doublesRegPartnerHint => 'Nhập email hoặc SĐT đồng đội';
 
   @override

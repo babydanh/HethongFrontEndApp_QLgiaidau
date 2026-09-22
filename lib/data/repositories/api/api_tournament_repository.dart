@@ -499,6 +499,7 @@ class ApiTournamentRepository implements ITournamentRepository {
     String? divisionId,
     String? inviteCode,
     String? partnerEmailOrPhone,
+    String? doublesPairingMode,
     String? footballTeamId,
     List<String>? memberIds,
     List<String>? reserveMemberIds,
@@ -525,6 +526,9 @@ class ApiTournamentRepository implements ITournamentRepository {
         if (partnerEmailOrPhone != null &&
             partnerEmailOrPhone.trim().isNotEmpty)
           'partnerEmailOrPhone': partnerEmailOrPhone.trim(),
+        ...?(doublesPairingMode == null
+            ? null
+            : {'doublesPairingMode': doublesPairingMode}),
         if (footballTeamId != null && footballTeamId.trim().isNotEmpty)
           'footballTeamId': footballTeamId.trim(),
         if (memberIds != null && memberIds.isNotEmpty) 'memberIds': memberIds,

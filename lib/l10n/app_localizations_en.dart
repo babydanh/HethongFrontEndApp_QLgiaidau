@@ -2327,6 +2327,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get doublesRegInviteLater => 'Invite later';
 
   @override
+  String get doublesRegPairingChoice => 'PAIRING METHOD';
+
+  @override
+  String get doublesRegOrganizerPairing => 'Organizer pairs';
+
+  @override
+  String get doublesRegOrganizerPairingHint =>
+      'Register individually; the organizer pairs you with a suitable athlete.';
+
+  @override
+  String get doublesRegSelfPairing => 'Invite directly / QR';
+
+  @override
+  String get doublesRegSelfPairingHint =>
+      'Choose your teammate or send an invite link/QR code.';
+
+  @override
   String get doublesRegPartnerHint => 'Enter partner\'s email or phone';
 
   @override
