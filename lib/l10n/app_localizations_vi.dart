@@ -6878,6 +6878,22 @@ class AppLocalizationsVi extends AppLocalizations {
   String get liveMatchTitle => 'Trực tiếp';
 
   @override
+  String get matchScoreEntryChooserTitle => 'Chọn thao tác cho trận đấu';
+
+  @override
+  String get matchScoreEntryChooserDescription =>
+      'Bạn có quyền BTC hoặc trọng tài của giải này. Chọn xem Live hoặc mở bàn nhập điểm.';
+
+  @override
+  String get matchScoreEntryChooserLive => 'Vào trang Live';
+
+  @override
+  String get matchScoreEntryChooserEnter => 'Tính điểm ngay';
+
+  @override
+  String get matchScoreEntryChooserCancel => 'Hủy';
+
+  @override
   String get liveMatchDetailsTitle => 'Chi Tiết Trận Đấu';
 
   @override

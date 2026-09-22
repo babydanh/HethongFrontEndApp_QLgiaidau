@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
 
 /// Clean, specs-driven schedule match card.
 /// Features:
@@ -19,6 +20,7 @@ class MatchTableRow extends StatelessWidget {
   final int totalRounds;
   final String tournamentId;
   final bool isReferee;
+  final bool canScoreMatch;
   final BracketSlotUnassignCallback? onUnassignSlot;
 
   const MatchTableRow({
@@ -28,6 +30,7 @@ class MatchTableRow extends StatelessWidget {
     required this.totalRounds,
     required this.tournamentId,
     this.isReferee = false,
+    this.canScoreMatch = false,
     this.onUnassignSlot,
   });
 
@@ -186,8 +189,14 @@ class MatchTableRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: () {
-            // Match cards always open the live page. Scoring/referee access is
-            // an explicit action, not the default card navigation.
+            if (canScoreMatch && match.hasTeams && !match.isBye) {
+              MatchScoreEntryChooser.show(
+                context,
+                match: match,
+                tournamentId: tournamentId,
+              );
+              return;
+            }
             context.push(
               NavigationHelper.getLiveMatchRoute(tournamentId, match.id),
             );

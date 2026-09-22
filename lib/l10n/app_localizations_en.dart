@@ -6888,6 +6888,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveMatchTitle => 'Live';
 
   @override
+  String get matchScoreEntryChooserTitle => 'Choose a match action';
+
+  @override
+  String get matchScoreEntryChooserDescription =>
+      'You are the tournament organizer or referee for this tournament. Choose the live page or open score entry.';
+
+  @override
+  String get matchScoreEntryChooserLive => 'Open live page';
+
+  @override
+  String get matchScoreEntryChooserEnter => 'Enter score now';
+
+  @override
+  String get matchScoreEntryChooserCancel => 'Cancel';
+
+  @override
   String get liveMatchDetailsTitle => 'Match Details';
 
   @override

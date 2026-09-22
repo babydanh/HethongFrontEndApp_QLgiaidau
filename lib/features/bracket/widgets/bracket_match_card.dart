@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/widgets/match_card/match_card_detail.dar
 import 'package:app_quanly_giaidau/features/bracket/widgets/team_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
 
 /// Unified bracket match card used in both single-elim and double-elim diagrams.
 /// Replaces the former _BracketMatchCard (single_elim_diagram) and _DeBracketMatchCard (double_elim_diagram).
@@ -16,6 +17,7 @@ class BracketMatchCard extends StatelessWidget {
   final bool isReferee;
   final bool isReadOnly;
   final bool isGrandFinal;
+  final bool canScoreMatch;
   final bool isSlotEditable;
   final BracketSlotDragData? selectedSlot;
   final ValueChanged<BracketSlotDragData>? onSlotTap;
@@ -29,6 +31,7 @@ class BracketMatchCard extends StatelessWidget {
     required this.tournamentId,
     required this.isReferee,
     required this.isReadOnly,
+    this.canScoreMatch = false,
     this.isGrandFinal = false,
     this.isSlotEditable = false,
     this.selectedSlot,
@@ -39,6 +42,14 @@ class BracketMatchCard extends StatelessWidget {
   });
 
   void _onTap(BuildContext context) {
+    if (canScoreMatch && match.hasTeams && !match.isBye) {
+      MatchScoreEntryChooser.show(
+        context,
+        match: match,
+        tournamentId: tournamentId,
+      );
+      return;
+    }
     // A match card is a public/viewing entry point. Open the live match for
     // every tournament type, including Super Lite. The referee desk remains
     // available from the explicit scoring action in the detail view.

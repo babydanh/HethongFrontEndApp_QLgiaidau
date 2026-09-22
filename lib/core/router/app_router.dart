@@ -402,6 +402,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 tournamentId: tournamentId,
                 divisionId: state.uri.queryParameters['divisionId'],
                 canEditBracket: true,
+                canScoreMatch: true,
               );
             },
           ),

@@ -12806,6 +12806,36 @@ abstract class AppLocalizations {
   /// **'Trực tiếp'**
   String get liveMatchTitle;
 
+  /// No description provided for @matchScoreEntryChooserTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn thao tác cho trận đấu'**
+  String get matchScoreEntryChooserTitle;
+
+  /// No description provided for @matchScoreEntryChooserDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có quyền BTC hoặc trọng tài của giải này. Chọn xem Live hoặc mở bàn nhập điểm.'**
+  String get matchScoreEntryChooserDescription;
+
+  /// No description provided for @matchScoreEntryChooserLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vào trang Live'**
+  String get matchScoreEntryChooserLive;
+
+  /// No description provided for @matchScoreEntryChooserEnter.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tính điểm ngay'**
+  String get matchScoreEntryChooserEnter;
+
+  /// No description provided for @matchScoreEntryChooserCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get matchScoreEntryChooserCancel;
+
   /// No description provided for @liveMatchDetailsTitle.
   ///
   /// In vi, this message translates to:
