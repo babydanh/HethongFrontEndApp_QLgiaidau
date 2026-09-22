@@ -103,6 +103,7 @@ class _CreatePublicQuickTournamentScreenState
   bool _isPublic = true;
   String _bracket = AppConstants.bracketSingleElimination;
   String _registrationMode = 'APPROVAL';
+  String _doublesPairingMode = 'ORGANIZER';
   DateTime? _startDate;
   TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
   DateTime? _endDate;
@@ -487,6 +488,9 @@ class _CreatePublicQuickTournamentScreenState
         'tournamentType': 'PUBLIC',
         'visibility': _isPublic ? 'PUBLIC' : 'PRIVATE',
         'registrationMode': _registrationMode,
+        if (_sport != AppConstants.sportFootball &&
+            _contentDrafts.any((draft) => draft.formatKey.contains('DOUBLES')))
+          'doublesPairingMode': _doublesPairingMode,
         'isRanked': false,
         if (_mapSportSlug() == 'football') ...{
           'teamSize': _teamSize,
@@ -656,6 +660,36 @@ class _CreatePublicQuickTournamentScreenState
             _sectionLabel('Nội dung thi đấu & Giới tính', colors),
             const SizedBox(height: 8),
             _buildFormatPills(colors),
+            if (_sport != AppConstants.sportFootball &&
+                _contentDrafts.any((draft) => draft.formatKey.contains('DOUBLES'))) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.07),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.primary.withValues(alpha: 0.18)),
+                ),
+                child: SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    l10n.quickCreateOrganizerPairingTitle,
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  ),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '${l10n.quickCreateOrganizerPairingDescription}\n${l10n.quickCreateOrganizerPairingEnabled}: ${_doublesPairingMode == 'ORGANIZER' ? l10n.quickCreateOrganizerPairingOn : l10n.quickCreateOrganizerPairingOff}',
+                      style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                    ),
+                  ),
+                  value: _doublesPairingMode == 'ORGANIZER',
+                  onChanged: (enabled) => setState(() {
+                    _doublesPairingMode = enabled ? 'ORGANIZER' : 'SELF';
+                  }),
+                ),
+              ),
+            ],
             if (_sport == AppConstants.sportFootball) ...[
               const SizedBox(height: 12),
               _buildFootballOptions(colors),

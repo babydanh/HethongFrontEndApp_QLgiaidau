@@ -513,8 +513,8 @@ class _DoublesRegistrationFlowState
         )
         .asData
         ?.value;
-    final pairingMode =
-        _pairingMode ?? 'ORGANIZER';
+    final pairingMode = _pairingMode ??
+        (tournament?.doublesPairingMode == 'SELF' ? 'SELF' : 'ORGANIZER');
     final organizerPairing = pairingMode == 'ORGANIZER';
     if (!organizerPairing && _teamNameCtrl.text.trim().length < 3) {
       _showError(l10n.doublesRegTeamNameTooShort);
@@ -802,8 +802,8 @@ class _DoublesRegistrationFlowState
 
   Widget _buildStep1(Tournament t, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
-    final pairingMode =
-        _pairingMode ?? 'ORGANIZER';
+    final pairingMode = _pairingMode ??
+        (t.doublesPairingMode == 'SELF' ? 'SELF' : 'ORGANIZER');
     final organizerPairing = pairingMode == 'ORGANIZER';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -840,16 +840,18 @@ class _DoublesRegistrationFlowState
         const SizedBox(height: 8),
         Row(
           children: [
-            Expanded(
-              child: _buildPairingChoice(
-                mode: 'ORGANIZER',
-                title: l10n.doublesRegOrganizerPairing,
-                description: l10n.doublesRegOrganizerPairingHint,
-                selected: organizerPairing,
-                colors: colors,
+            if (t.doublesPairingMode != 'SELF') ...[
+              Expanded(
+                child: _buildPairingChoice(
+                  mode: 'ORGANIZER',
+                  title: l10n.doublesRegOrganizerPairing,
+                  description: l10n.doublesRegOrganizerPairingHint,
+                  selected: organizerPairing,
+                  colors: colors,
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
+              const SizedBox(width: 8),
+            ],
             Expanded(
               child: _buildPairingChoice(
                 mode: 'SELF',
@@ -1171,8 +1173,8 @@ class _DoublesRegistrationFlowState
 
   Widget _buildStep2(Tournament t, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
-    final pairingMode =
-        _pairingMode ?? 'ORGANIZER';
+    final pairingMode = _pairingMode ??
+        (t.doublesPairingMode == 'SELF' ? 'SELF' : 'ORGANIZER');
     final organizerPairing = pairingMode == 'ORGANIZER';
     final rawInviteLink =
         _teamInviteLink ??

@@ -4478,6 +4478,36 @@ abstract class AppLocalizations {
   /// **'Tự chọn đồng đội hoặc gửi link, mã QR.'**
   String get doublesRegSelfPairingHint;
 
+  /// No description provided for @quickCreateOrganizerPairingTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'BTC ghép đôi cho nội dung đôi'**
+  String get quickCreateOrganizerPairingTitle;
+
+  /// No description provided for @quickCreateOrganizerPairingDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bật để người chơi đăng ký cá nhân và chờ BTC ghép với VĐV phù hợp. Khi tắt, chỉ dùng Mời thẳng / QR.'**
+  String get quickCreateOrganizerPairingDescription;
+
+  /// No description provided for @quickCreateOrganizerPairingEnabled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép BTC ghép đôi'**
+  String get quickCreateOrganizerPairingEnabled;
+
+  /// No description provided for @quickCreateOrganizerPairingOn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bật'**
+  String get quickCreateOrganizerPairingOn;
+
+  /// No description provided for @quickCreateOrganizerPairingOff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tắt'**
+  String get quickCreateOrganizerPairingOff;
+
   /// No description provided for @doublesRegPartnerHint.
   ///
   /// In vi, this message translates to:

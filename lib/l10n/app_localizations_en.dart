@@ -2344,6 +2344,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose your teammate or send an invite link/QR code.';
 
   @override
+  String get quickCreateOrganizerPairingTitle =>
+      'Organizer pairing for doubles';
+
+  @override
+  String get quickCreateOrganizerPairingDescription =>
+      'Enable individual registration with organizer pairing. When off, only direct invite / QR is available.';
+
+  @override
+  String get quickCreateOrganizerPairingEnabled => 'Allow organizer pairing';
+
+  @override
+  String get quickCreateOrganizerPairingOn => 'On';
+
+  @override
+  String get quickCreateOrganizerPairingOff => 'Off';
+
+  @override
   String get doublesRegPartnerHint => 'Enter partner\'s email or phone';
 
   @override

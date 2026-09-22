@@ -2335,6 +2335,23 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tự chọn đồng đội hoặc gửi link, mã QR.';
 
   @override
+  String get quickCreateOrganizerPairingTitle =>
+      'BTC ghép đôi cho nội dung đôi';
+
+  @override
+  String get quickCreateOrganizerPairingDescription =>
+      'Bật để người chơi đăng ký cá nhân và chờ BTC ghép với VĐV phù hợp. Khi tắt, chỉ dùng Mời thẳng / QR.';
+
+  @override
+  String get quickCreateOrganizerPairingEnabled => 'Cho phép BTC ghép đôi';
+
+  @override
+  String get quickCreateOrganizerPairingOn => 'Bật';
+
+  @override
+  String get quickCreateOrganizerPairingOff => 'Tắt';
+
+  @override
   String get doublesRegPartnerHint => 'Nhập email hoặc SĐT đồng đội';
 
   @override
