@@ -570,7 +570,8 @@ class _OverviewTabState extends State<OverviewTab> {
                 ],
 
                 // ─── 3. DANH SÁCH NỘI DUNG / PHÂN HẠNG THI ĐẤU (CHUẨN WEB & TASTE SKILL) ───
-                if (!isClubLite && t.divisions.isNotEmpty) ...[
+                // Chỉ hiển thị khi giải có từ 2 nội dung thi đấu trở lên (ví dụ: Đôi Nam, Đôi Nữ...). Nếu chỉ có 1 nội dung thì đã thể hiện ở badge header trên cùng.
+                if (!isClubLite && t.divisions.length > 1) ...[
                   _buildSectionHeader(
                     'NỘI DUNG THI ĐẤU (${t.divisions.length})',
                   ),
