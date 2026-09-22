@@ -2327,6 +2327,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get doublesRegInviteLater => 'Invite later';
 
   @override
+  String get doublesRegPairingChoice => 'PAIRING METHOD';
+
+  @override
+  String get doublesRegOrganizerPairing => 'Organizer pairs';
+
+  @override
+  String get doublesRegOrganizerPairingHint =>
+      'Register individually; the organizer pairs you with a suitable athlete.';
+
+  @override
+  String get doublesRegSelfPairing => 'Invite directly / QR';
+
+  @override
+  String get doublesRegSelfPairingHint =>
+      'Choose your teammate or send an invite link/QR code.';
+
+  @override
+  String get quickCreateOrganizerPairingTitle =>
+      'Organizer pairing for doubles';
+
+  @override
+  String get quickCreateOrganizerPairingDescription =>
+      'Enable individual registration with organizer pairing. When off, only direct invite / QR is available.';
+
+  @override
+  String get quickCreateOrganizerPairingEnabled => 'Allow organizer pairing';
+
+  @override
+  String get quickCreateOrganizerPairingOn => 'On';
+
+  @override
+  String get quickCreateOrganizerPairingOff => 'Off';
+
+  @override
   String get doublesRegPartnerHint => 'Enter partner\'s email or phone';
 
   @override
@@ -6852,6 +6886,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveMatchTitle => 'Live';
+
+  @override
+  String get matchScoreEntryChooserTitle => 'Choose a match action';
+
+  @override
+  String get matchScoreEntryChooserDescription =>
+      'You are the tournament organizer or referee for this tournament. Choose the live page or open score entry.';
+
+  @override
+  String get matchScoreEntryChooserLive => 'Open live page';
+
+  @override
+  String get matchScoreEntryChooserEnter => 'Enter score now';
+
+  @override
+  String get matchScoreEntryChooserCancel => 'Cancel';
 
   @override
   String get liveMatchDetailsTitle => 'Match Details';

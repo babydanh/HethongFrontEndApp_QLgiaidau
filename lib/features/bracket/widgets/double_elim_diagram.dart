@@ -27,6 +27,7 @@ class DoubleElimDiagram extends StatefulWidget {
   final bool isReferee;
   final bool isReadOnly;
   final bool isEditable;
+  final bool canScoreMatch;
   final BracketSlotDropCallback? onSlotDrop;
   final BracketSlotUnassignCallback? onUnassignSlot;
   final ValueChanged<MatchModel>? onDoubleTapMatch;
@@ -38,6 +39,7 @@ class DoubleElimDiagram extends StatefulWidget {
     this.isReferee = false,
     this.isReadOnly = true,
     this.isEditable = false,
+    this.canScoreMatch = false,
     this.onSlotDrop,
     this.onUnassignSlot,
     this.onDoubleTapMatch,
@@ -323,6 +325,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                           tournamentId: widget.tournamentId,
                           isReferee: widget.isReferee,
                           isReadOnly: widget.isReadOnly,
+                          canScoreMatch: widget.canScoreMatch,
                           isGrandFinal: match.nextMatchId.isEmpty,
                           isSlotEditable: widget.isEditable && !_isUpdating,
                           selectedSlot: _selectedSlot,

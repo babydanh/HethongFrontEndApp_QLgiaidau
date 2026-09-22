@@ -4448,6 +4448,66 @@ abstract class AppLocalizations {
   /// **'Mời sau'**
   String get doublesRegInviteLater;
 
+  /// No description provided for @doublesRegPairingChoice.
+  ///
+  /// In vi, this message translates to:
+  /// **'CÁCH GHÉP ĐÔI'**
+  String get doublesRegPairingChoice;
+
+  /// No description provided for @doublesRegOrganizerPairing.
+  ///
+  /// In vi, this message translates to:
+  /// **'BTC ghép đôi'**
+  String get doublesRegOrganizerPairing;
+
+  /// No description provided for @doublesRegOrganizerPairingHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký cá nhân, BTC ghép với VĐV phù hợp.'**
+  String get doublesRegOrganizerPairingHint;
+
+  /// No description provided for @doublesRegSelfPairing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mời thẳng / QR'**
+  String get doublesRegSelfPairing;
+
+  /// No description provided for @doublesRegSelfPairingHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự chọn đồng đội hoặc gửi link, mã QR.'**
+  String get doublesRegSelfPairingHint;
+
+  /// No description provided for @quickCreateOrganizerPairingTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'BTC ghép đôi cho nội dung đôi'**
+  String get quickCreateOrganizerPairingTitle;
+
+  /// No description provided for @quickCreateOrganizerPairingDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bật để người chơi đăng ký cá nhân và chờ BTC ghép với VĐV phù hợp. Khi tắt, chỉ dùng Mời thẳng / QR.'**
+  String get quickCreateOrganizerPairingDescription;
+
+  /// No description provided for @quickCreateOrganizerPairingEnabled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép BTC ghép đôi'**
+  String get quickCreateOrganizerPairingEnabled;
+
+  /// No description provided for @quickCreateOrganizerPairingOn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bật'**
+  String get quickCreateOrganizerPairingOn;
+
+  /// No description provided for @quickCreateOrganizerPairingOff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tắt'**
+  String get quickCreateOrganizerPairingOff;
+
   /// No description provided for @doublesRegPartnerHint.
   ///
   /// In vi, this message translates to:
@@ -12745,6 +12805,36 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Trực tiếp'**
   String get liveMatchTitle;
+
+  /// No description provided for @matchScoreEntryChooserTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn thao tác cho trận đấu'**
+  String get matchScoreEntryChooserTitle;
+
+  /// No description provided for @matchScoreEntryChooserDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có quyền BTC hoặc trọng tài của giải này. Chọn xem Live hoặc mở bàn nhập điểm.'**
+  String get matchScoreEntryChooserDescription;
+
+  /// No description provided for @matchScoreEntryChooserLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vào trang Live'**
+  String get matchScoreEntryChooserLive;
+
+  /// No description provided for @matchScoreEntryChooserEnter.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tính điểm ngay'**
+  String get matchScoreEntryChooserEnter;
+
+  /// No description provided for @matchScoreEntryChooserCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get matchScoreEntryChooserCancel;
 
   /// No description provided for @liveMatchDetailsTitle.
   ///

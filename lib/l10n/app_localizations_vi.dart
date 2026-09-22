@@ -2318,6 +2318,40 @@ class AppLocalizationsVi extends AppLocalizations {
   String get doublesRegInviteLater => 'Mời sau';
 
   @override
+  String get doublesRegPairingChoice => 'CÁCH GHÉP ĐÔI';
+
+  @override
+  String get doublesRegOrganizerPairing => 'BTC ghép đôi';
+
+  @override
+  String get doublesRegOrganizerPairingHint =>
+      'Đăng ký cá nhân, BTC ghép với VĐV phù hợp.';
+
+  @override
+  String get doublesRegSelfPairing => 'Mời thẳng / QR';
+
+  @override
+  String get doublesRegSelfPairingHint =>
+      'Tự chọn đồng đội hoặc gửi link, mã QR.';
+
+  @override
+  String get quickCreateOrganizerPairingTitle =>
+      'BTC ghép đôi cho nội dung đôi';
+
+  @override
+  String get quickCreateOrganizerPairingDescription =>
+      'Bật để người chơi đăng ký cá nhân và chờ BTC ghép với VĐV phù hợp. Khi tắt, chỉ dùng Mời thẳng / QR.';
+
+  @override
+  String get quickCreateOrganizerPairingEnabled => 'Cho phép BTC ghép đôi';
+
+  @override
+  String get quickCreateOrganizerPairingOn => 'Bật';
+
+  @override
+  String get quickCreateOrganizerPairingOff => 'Tắt';
+
+  @override
   String get doublesRegPartnerHint => 'Nhập email hoặc SĐT đồng đội';
 
   @override
@@ -6842,6 +6876,22 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get liveMatchTitle => 'Trực tiếp';
+
+  @override
+  String get matchScoreEntryChooserTitle => 'Chọn thao tác cho trận đấu';
+
+  @override
+  String get matchScoreEntryChooserDescription =>
+      'Bạn có quyền BTC hoặc trọng tài của giải này. Chọn xem Live hoặc mở bàn nhập điểm.';
+
+  @override
+  String get matchScoreEntryChooserLive => 'Vào trang Live';
+
+  @override
+  String get matchScoreEntryChooserEnter => 'Tính điểm ngay';
+
+  @override
+  String get matchScoreEntryChooserCancel => 'Hủy';
 
   @override
   String get liveMatchDetailsTitle => 'Chi Tiết Trận Đấu';

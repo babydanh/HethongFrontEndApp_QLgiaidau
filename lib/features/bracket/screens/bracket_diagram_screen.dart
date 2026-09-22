@@ -27,6 +27,7 @@ class BracketDiagramScreen extends ConsumerStatefulWidget {
   final bool isReferee;
   final bool isReadOnly;
   final bool canEditBracket;
+  final bool canScoreMatch;
   final bool isLite;
 
   const BracketDiagramScreen({
@@ -38,6 +39,7 @@ class BracketDiagramScreen extends ConsumerStatefulWidget {
     this.isReferee = false,
     this.isReadOnly = true,
     this.canEditBracket = false,
+    this.canScoreMatch = false,
     this.isLite = false,
   });
 
@@ -302,6 +304,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         isReferee: widget.isReferee,
         isReadOnly: widget.isReadOnly,
         isEditable: widget.canEditBracket,
+        canScoreMatch: widget.canScoreMatch,
         onSlotDrop: _updateBracketSlots,
         onUnassignSlot: _unassignBracketSlot,
         onDoubleTapMatch: widget.canEditBracket ? _handleDoubleTapMatch : null,
@@ -322,6 +325,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
           isReferee: widget.isReferee,
           isReadOnly: widget.isReadOnly,
           isEditable: widget.canEditBracket,
+          canScoreMatch: widget.canScoreMatch,
           onSlotDrop: _updateBracketSlots,
           onUnassignSlot: _unassignBracketSlot,
           onDoubleTapMatch: widget.canEditBracket
@@ -335,6 +339,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         isReferee: widget.isReferee,
         isReadOnly: widget.isReadOnly,
         isEditable: widget.canEditBracket,
+        canScoreMatch: widget.canScoreMatch,
         onSlotDrop: _updateBracketSlots,
         onUnassignSlot: _unassignBracketSlot,
         onDoubleTapMatch: widget.canEditBracket ? _handleDoubleTapMatch : null,
@@ -348,6 +353,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
       isReferee: widget.isReferee,
       isReadOnly: widget.isReadOnly,
       isEditable: widget.canEditBracket,
+      canScoreMatch: widget.canScoreMatch,
       onSlotDrop: _updateBracketSlots,
       onUnassignSlot: _unassignBracketSlot,
       onDoubleTapMatch: widget.canEditBracket ? _handleDoubleTapMatch : null,

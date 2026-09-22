@@ -46,15 +46,19 @@ class MatchCardDetail extends StatelessWidget {
     final isLiteMatch =
         match.tournamentConfig?['isLite'] == true ||
         match.tournamentConfig?['mode']?.toString().toUpperCase() == 'LITE';
-    final canScoreMatch = isReferee || !isReadOnly || isLiteMatch;
+    final canEnterScore = isReferee || !isReadOnly || isLiteMatch;
 
     return GestureDetector(
       onTap: match.hasTeams
           ? () {
-              if (isReferee && tournamentId.isNotEmpty) {
-                context.push(
-                  '/organizer/tournaments/$tournamentId/ops/match/${match.id}',
+              if (canEnterScore && tournamentId.isNotEmpty) {
+                final liveUri = Uri.parse(
+                  NavigationHelper.getLiveMatchRoute(tournamentId, match.id),
                 );
+                context.push(liveUri.replace(queryParameters: {
+                  ...liveUri.queryParameters,
+                  'viewer': 'false',
+                }).toString());
               } else {
                 context.push(
                   NavigationHelper.getLiveMatchRoute(tournamentId, match.id),
@@ -225,10 +229,14 @@ class MatchCardDetail extends StatelessWidget {
                           if (Navigator.canPop(context)) {
                             Navigator.of(context).pop();
                           }
-                          if (canScoreMatch && tournamentId.isNotEmpty) {
-                            context.push(
-                              '/organizer/tournaments/$tournamentId/ops/match/${match.id}',
+                          if (canEnterScore && tournamentId.isNotEmpty) {
+                            final liveUri = Uri.parse(
+                              NavigationHelper.getLiveMatchRoute(tournamentId, match.id),
                             );
+                            context.push(liveUri.replace(queryParameters: {
+                              ...liveUri.queryParameters,
+                              'viewer': 'false',
+                            }).toString());
                           } else {
                             context.push(
                               NavigationHelper.getLiveMatchRoute(
@@ -241,7 +249,7 @@ class MatchCardDetail extends StatelessWidget {
                         icon: Icon(
                           isLive
                               ? Icons.live_tv_rounded
-                              : (canScoreMatch
+                              : (canEnterScore
                                     ? Icons.edit_note_rounded
                                     : Icons.sports_score_rounded),
                           size: 18,
@@ -249,7 +257,7 @@ class MatchCardDetail extends StatelessWidget {
                         label: Text(
                           isLive
                               ? l10n.liveOpenScoreboardShort
-                              : (canScoreMatch
+                              : (canEnterScore
                                     ? l10n.officialScoreScoringTab
                                     : l10n.liveOpenScoreboardShort),
                           style: const TextStyle(

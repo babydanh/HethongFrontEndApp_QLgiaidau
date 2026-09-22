@@ -17,6 +17,7 @@ class SingleElimDiagram extends StatefulWidget {
   final bool isReferee;
   final bool isReadOnly;
   final bool isEditable;
+  final bool canScoreMatch;
   final Future<void> Function(
     BracketSlotDragData source,
     BracketSlotDragData target,
@@ -32,6 +33,7 @@ class SingleElimDiagram extends StatefulWidget {
     this.isReferee = false,
     this.isReadOnly = true,
     this.isEditable = false,
+    this.canScoreMatch = false,
     this.onSlotDrop,
     this.onUnassignSlot,
     this.onDoubleTapMatch,
@@ -294,6 +296,7 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
                           tournamentId: widget.tournamentId,
                           isReferee: widget.isReferee,
                           isReadOnly: widget.isReadOnly,
+                          canScoreMatch: widget.canScoreMatch,
                           isGrandFinal: match.id == finalMatchId,
                           isSlotEditable: widget.isEditable && !_isUpdating,
                           selectedSlot: _selectedSlot,

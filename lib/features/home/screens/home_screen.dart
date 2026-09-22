@@ -71,8 +71,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   // ─── Per-tab filter state ───
   String _exploreSport = 'all';
   String _exploreStatus = 'live';
+  bool _initialLiveProbeCompleted = false;
   bool _hasAutoSwitchedLiveTab = false;
   bool _userManuallySelectedLiveTab = false;
+
+  /// Resolve the first Explore tab from the public live feed instead of
+  /// waiting for every tournament card to open its own match stream. The
+  /// per-tournament fallback below is still kept for realtime/cache drift.
+  Future<void> _resolveInitialExploreStatus() async {
+    try {
+      final liveMatches = await ref.read(liveMatchesProvider.future);
+      if (!mounted || _initialLiveProbeCompleted) return;
+
+      _initialLiveProbeCompleted = true;
+      if (_userManuallySelectedLiveTab || _exploreStatus != 'live') return;
+
+      final hasLiveMatch = liveMatches.any((match) => match.isLive);
+      if (!hasLiveMatch) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted &&
+              !_userManuallySelectedLiveTab &&
+              _exploreStatus == 'live') {
+            setState(() => _exploreStatus = 'scheduled');
+          }
+        });
+      }
+    } catch (_) {
+      // The existing per-tournament streams remain the source of truth when
+      // the advisory startup probe is unavailable.
+      if (mounted) _initialLiveProbeCompleted = true;
+    }
+  }
 
   void _handleNoLiveMatches() {
     if (!_hasAutoSwitchedLiveTab &&
@@ -322,6 +351,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _fetchServerTournamentPage(isLoadMore: false);
     _fetchServerClubPage(isLoadMore: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.invalidate(liveMatchesProvider);
+      unawaited(_resolveInitialExploreStatus());
       ref.read(authProvider.notifier).init();
     });
 

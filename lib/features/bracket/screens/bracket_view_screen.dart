@@ -327,6 +327,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         final effectiveIsLite = widget.isLite || tournament?.isLite == true;
         final canActAsReferee =
             effectiveIsLite || auth.role == UserRole.admin || widget.isReferee;
+        final canScoreMatch =
+            auth.role == UserRole.admin ||
+            widget.canEditBracket ||
+            widget.isReferee;
         final isReadOnlyMode = !effectiveIsLite && auth.role == UserRole.viewer;
 
         if (hasGroupStage) {
@@ -343,6 +347,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                   effectiveBracketType,
                   auth,
                   canActAsReferee: canActAsReferee,
+                  canScoreMatch: canScoreMatch,
                   isReadOnly: isReadOnlyMode,
                 )
               else
@@ -352,6 +357,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                     effectiveBracketType,
                     auth,
                     canActAsReferee: canActAsReferee,
+                    canScoreMatch: canScoreMatch,
                     isReadOnly: isReadOnlyMode,
                   ),
                 ),
@@ -363,6 +369,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             effectiveBracketType,
             isReadOnlyMode,
             canActAsReferee,
+            canScoreMatch,
           );
         }
       },
@@ -486,6 +493,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
     String bracketType,
     AuthState auth, {
     bool canActAsReferee = false,
+    bool canScoreMatch = false,
     bool isReadOnly = true,
   }) {
     switch (_selectedGroupTab) {
@@ -514,6 +522,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           bracketType,
           isReadOnly,
           canActAsReferee,
+          canScoreMatch,
         );
       default:
         return const SizedBox.shrink();
@@ -525,6 +534,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
     String bracketType,
     bool isReadOnly,
     bool isReferee,
+    bool canScoreMatch,
   ) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
@@ -782,6 +792,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                         isReferee: isReferee,
                         isReadOnly: isReadOnly,
                         canEditBracket: widget.canEditBracket,
+                        canScoreMatch: canScoreMatch,
                         isLite: widget.isLite || tournament?.isLite == true,
                       ),
                     ),
@@ -1082,6 +1093,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             totalRounds: effectiveTotalRounds,
             tournamentId: widget.tournamentId,
             isReferee: isReferee,
+            canScoreMatch: canScoreMatch,
             onUnassignSlot: widget.canEditBracket ? _unassignBracketSlot : null,
           ),
         ],

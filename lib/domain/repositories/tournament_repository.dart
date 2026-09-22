@@ -42,6 +42,7 @@ abstract class ITournamentRepository {
     String? divisionId,
     String? inviteCode,
     String? partnerEmailOrPhone,
+    String? doublesPairingMode,
     String? footballTeamId,
     List<String>? memberIds,
     List<String>? reserveMemberIds,
