@@ -26,7 +26,7 @@ class SocialDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _chatInputController = TextEditingController();
 
@@ -596,14 +596,14 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                         height: 1.35,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${session.distanceKm.toStringAsFixed(1)} km từ Nhà',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colors.textMuted,
-                      ),
-                    ),
+                    // const SizedBox(height: 4),
+                    // Text(
+                    //   '${session.distanceKm.toStringAsFixed(1)} km từ Nhà',
+                    //   style: TextStyle(
+                    //     fontSize: 13,
+                    //     color: colors.textMuted,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
