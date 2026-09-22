@@ -23,8 +23,8 @@ import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.da
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_dialog.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_result_dialog.dart';
-import 'package:app_quanly_giaidau/features/social/models/social_session_model.dart';
-import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.dart';
 
 class ClubActivityTab extends ConsumerStatefulWidget {
@@ -1257,7 +1257,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
       onTap: () {
         final currentUserId = ref.read(userProfileProvider).asData?.value.id;
         final currentUserName = ref.read(userProfileProvider).asData?.value.fullName;
-        final isCreator = (session.creatorId != null && session.creatorId == currentUserId) ||
+        final isCreator = session.isHost ||
+                          (session.creatorId.isNotEmpty && session.creatorId == currentUserId) ||
                           (session.creatorId == 'me') ||
                           (session.participants.any((p) =>
                               p.isHost &&

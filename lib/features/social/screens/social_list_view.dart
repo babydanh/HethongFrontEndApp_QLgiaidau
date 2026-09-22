@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:app_quanly_giaidau/features/social/models/social_session_model.dart';
-import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_date_selector.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_session_card.dart';
 
@@ -15,19 +16,11 @@ class SocialListView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final filterState = ref.watch(socialFilterProvider);
-    final filteredSessions = ref.watch(filteredSocialSessionsProvider);
-
-    // Group filtered sessions by timeSlot
-    final Map<String, List<SocialSessionModel>> groupedSessions = {};
-    for (final session in filteredSessions) {
-      groupedSessions.putIfAbsent(session.timeSlot, () => []).add(session);
-    }
-    final sortedTimeSlots = groupedSessions.keys.toList()..sort();
+    final sessionsAsync = ref.watch(filteredSocialSessionsProvider);
 
     return RefreshIndicator(
       onRefresh: () async {
-        // Re-fetch or reset mock filter
-        await Future.delayed(const Duration(milliseconds: 300));
+        await ref.read(socialSessionsProvider.notifier).refresh();
       },
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(
@@ -39,60 +32,125 @@ class SocialListView extends ConsumerWidget {
             child: SizedBox(height: topPadding),
           ),
 
-          // Horizontal Date Selector (IMG1)
+          // Horizontal Date Selector
           const SliverToBoxAdapter(
             child: SocialDateSelector(),
           ),
 
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 6),
-              ),
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 6),
+          ),
 
-              // Empty State or Grouped Sessions
-              if (filteredSessions.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
+          // Content according to AsyncValue
+          ...sessionsAsync.when(
+            loading: () => [
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ],
+            error: (error, _) => [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.white10
-                                : Colors.black.withValues(alpha: 0.04),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.sports_tennis_rounded,
-                            size: 32,
-                            color: isDark ? Colors.white38 : Colors.black38,
-                          ),
+                        Icon(
+                          Icons.error_outline_rounded,
+                          size: 40,
+                          color: Colors.red.shade400,
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Không có buổi Social nào trong ngày ${filterState.selectedDayOfMonth}',
+                          error.toString(),
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: 14.5,
                             fontWeight: FontWeight.w600,
                             color: isDark ? Colors.white70 : const Color(0xFF64748B),
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Thử chọn ngày khác hoặc mở rộng bán kính tìm kiếm',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                        const SizedBox(height: 14),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            ref.read(socialSessionsProvider.notifier).refresh();
+                          },
+                          icon: const Icon(Icons.refresh, size: 18),
+                          label: const Text('Thử lại'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            foregroundColor: Colors.white,
                           ),
                         ),
                       ],
                     ),
                   ),
-                )
-              else
+                ),
+              ),
+            ],
+            data: (sessions) {
+              if (sessions.isEmpty) {
+                return [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.white10
+                                  : Colors.black.withValues(alpha: 0.04),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.sports_tennis_rounded,
+                              size: 32,
+                              color: isDark ? Colors.white38 : Colors.black38,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Không có buổi Social nào trong ngày ${filterState.selectedDate.day}',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Thử chọn ngày khác hoặc tìm kiếm môn thể thao khác',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ];
+              }
+
+              // Group filtered sessions by timeSlot
+              final Map<String, List<SocialSessionModel>> groupedSessions = {};
+              for (final session in sessions) {
+                groupedSessions
+                    .putIfAbsent(session.timeSlot, () => [])
+                    .add(session);
+              }
+              final sortedTimeSlots = groupedSessions.keys.toList()..sort();
+
+              return [
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
@@ -104,7 +162,7 @@ class SocialListView extends ConsumerWidget {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Time Slot Group Header (e.g. 14:45 | 1 gặp gỡ ∨)
+                          // Time Slot Group Header
                           _buildTimeSlotHeader(
                             timeSlot: timeSlot,
                             count: sessionsInSlot.length,
@@ -132,16 +190,18 @@ class SocialListView extends ConsumerWidget {
                     childCount: sortedTimeSlots.length,
                   ),
                 ),
-
-              // Bottom spacing for bottom nav
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 80),
-              ),
-            ],
+              ];
+            },
           ),
-        );
-      }
 
+          // Bottom spacing for bottom nav
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 80),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildTimeSlotHeader({
     required String timeSlot,

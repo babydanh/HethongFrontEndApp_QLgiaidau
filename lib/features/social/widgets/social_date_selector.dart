@@ -1,16 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/features/social/data/social_mock_data.dart';
-import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/providers/social_provider.dart';
+
+class SocialDateOption {
+  final String dayOfWeek;
+  final int dayOfMonth;
+  final DateTime date;
+
+  const SocialDateOption({
+    required this.dayOfWeek,
+    required this.dayOfMonth,
+    required this.date,
+  });
+}
 
 class SocialDateSelector extends ConsumerWidget {
   const SocialDateSelector({super.key});
+
+  static const List<String> _dayOfWeekLabels = [
+    '',
+    'T2',
+    'T3',
+    'T4',
+    'T5',
+    'T6',
+    'T7',
+    'CN',
+  ];
+
+  static List<SocialDateOption> get dateOptions {
+    final today = DateTime.now();
+    final firstDay = DateTime(today.year, today.month, today.day);
+    return List.generate(14, (index) {
+      final date =
+          DateTime(firstDay.year, firstDay.month, firstDay.day + index);
+      return SocialDateOption(
+        dayOfWeek: _dayOfWeekLabels[date.weekday],
+        dayOfMonth: date.day,
+        date: date,
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filterState = ref.watch(socialFilterProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final options = dateOptions;
 
     return Container(
       height: 68,
@@ -18,17 +55,17 @@ class SocialDateSelector extends ConsumerWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
-        itemCount: SocialMockData.dateOptions.length,
+        itemCount: options.length,
         separatorBuilder: (context, index) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
-          final item = SocialMockData.dateOptions[index];
-          final isSelected = filterState.selectedDayOfMonth == item.dayOfMonth;
+          final item = options[index];
+          final isSelected = filterState.isSameDate(item.date);
 
           return GestureDetector(
             onTap: () {
               ref
                   .read(socialFilterProvider.notifier)
-                  .setDayOfMonth(item.dayOfMonth);
+                  .setSelectedDate(item.date);
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),

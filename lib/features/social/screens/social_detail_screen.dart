@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/features/social/models/social_session_model.dart';
-import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_join_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 
@@ -31,10 +31,11 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
 
   bool get _isHost {
     if (widget.isHost != null) return widget.isHost!;
-    final session = ref.read(socialSessionDetailProvider(widget.sessionId));
+    final session = ref.read(socialSessionDetailProvider(widget.sessionId)).asData?.value;
     if (session != null) {
+      if (session.isHost) return true;
       final currentUser = ref.read(userProfileProvider).asData?.value;
-      if (session.creatorId != null && currentUser != null && session.creatorId == currentUser.id) {
+      if (session.creatorId.isNotEmpty && currentUser != null && session.creatorId == currentUser.id) {
         return true;
       }
       if (session.creatorId == 'me') return true;
@@ -65,10 +66,21 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
   Widget build(BuildContext context) {
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final session = ref.watch(socialSessionDetailProvider(widget.sessionId));
+    final sessionAsync = ref.watch(socialSessionDetailProvider(widget.sessionId));
 
-    if (session == null) {
-      return Scaffold(
+    return sessionAsync.when(
+      loading: () => Scaffold(
+        backgroundColor: colors.bgDark,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: colors.textPrimary),
+            onPressed: () => context.pop(),
+          ),
+          title: Text('Chi tiết Social', style: TextStyle(color: colors.textPrimary)),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => Scaffold(
         backgroundColor: colors.bgDark,
         appBar: AppBar(
           leading: IconButton(
@@ -78,20 +90,41 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
           title: Text('Chi tiết Social', style: TextStyle(color: colors.textPrimary)),
         ),
         body: Center(
-          child: Text(
-            'Không tìm thấy thông tin buổi Social',
-            style: TextStyle(color: colors.textSecondary),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline_rounded, size: 40, color: Colors.red.shade400),
+                const SizedBox(height: 12),
+                Text(
+                  error.toString(),
+                  style: TextStyle(color: colors.textSecondary),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => ref.read(socialSessionDetailProvider(widget.sessionId).notifier).refresh(),
+                  child: const Text('Thử lại'),
+                ),
+              ],
+            ),
           ),
         ),
-      );
-    }
+      ),
+      data: (session) {
+        final host = widget.isHost ?? session.isHost;
+        if (_tabController.length != (host ? 4 : 3)) {
+          _tabController.dispose();
+          _tabController = TabController(length: host ? 4 : 3, vsync: this);
+        }
 
-    return Scaffold(
-      backgroundColor: colors.bgDark,
-      appBar: _buildAppBar(context, colors, session),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        return Scaffold(
+          backgroundColor: colors.bgDark,
+          appBar: _buildAppBar(context, colors, session),
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
           // Session Title Headline (IMG2 & IMG3)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
@@ -174,6 +207,8 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
           _buildBottomActionBar(context, isDark, session, colors),
         ],
       ),
+    );
+      },
     );
   }
 
@@ -263,7 +298,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             color: colors.textPrimary,
             size: 22,
           ),
-          onPressed: () => _showMoreOptions(context, session),
+          onPressed: () => _showMoreOptions(session),
         ),
       ],
     );
@@ -1176,11 +1211,25 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       ),
                       const SizedBox(height: 4),
                       InkWell(
-                        onTap: () {
-                          ref.read(socialSessionsProvider.notifier).togglePaymentStatus(
-                                session.id,
-                                payment.id,
+                        onTap: () async {
+                          final nextStatus = isPaid ? 'UNPAID' : 'PAID';
+                          try {
+                            await ref
+                                .read(socialSessionDetailProvider(session.id).notifier)
+                                .updatePaymentStatus(
+                                  payment.participantId,
+                                  nextStatus,
+                                );
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(e.toString()),
+                                  backgroundColor: Colors.redAccent,
+                                ),
                               );
+                            }
+                          }
                         },
                         borderRadius: BorderRadius.circular(6),
                         child: Container(
@@ -1262,21 +1311,37 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
               backgroundColor: AppTheme.primary,
               foregroundColor: Colors.white,
             ),
-            onPressed: () {
+            onPressed: () async {
               final name = textController.text.trim();
               if (name.isNotEmpty) {
-                ref.read(socialSessionsProvider.notifier).addParticipantToSlot(
-                      sessionId: session.id,
-                      participantName: name,
+                try {
+                  await ref
+                      .read(socialSessionDetailProvider(session.id).notifier)
+                      .addParticipant(
+                        userId: name,
+                        ticketCount: 1,
+                      );
+                  if (context.mounted) {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Đã thêm $name vào slot $slotNumber thành công!'),
+                        backgroundColor: colors.success,
+                        behavior: SnackBarBehavior.floating,
+                      ),
                     );
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Đã thêm $name vào slot $slotNumber thành công!'),
-                    backgroundColor: colors.success,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(e.toString()),
+                        backgroundColor: Colors.redAccent,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
               }
             },
             child: const Text('Thêm slot'),
@@ -1465,6 +1530,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                   onPressed: () {
                     final text = _chatInputController.text.trim();
                     if (text.isNotEmpty) {
+                      ref
+                          .read(socialSessionDetailProvider(session.id).notifier)
+                          .addChatMessage(text);
                       ref
                           .read(socialSessionsProvider.notifier)
                           .addChatMessage(session.id, text);
@@ -2087,7 +2155,7 @@ RSVP: https://sporto.vn/social/${session.id}''';
     );
   }
 
-  void _showMoreOptions(BuildContext context, SocialSessionModel session) {
+  void _showMoreOptions(SocialSessionModel session) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -2118,6 +2186,70 @@ RSVP: https://sporto.vn/social/${session.id}''';
                   Navigator.pop(ctx);
                 },
               ),
+              if (_isHost)
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: Colors.red),
+                  title: const Text(
+                    'Hủy buổi Social này',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (dCtx) => AlertDialog(
+                        title: const Text('Xác nhận hủy kèo'),
+                        content: const Text(
+                          'Bạn có chắc muốn hủy buổi Social này không?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dCtx, false),
+                            child: const Text('Không'),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                            ),
+                            onPressed: () => Navigator.pop(dCtx, true),
+                            child: const Text(
+                              'Hủy kèo',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm == true && mounted) {
+                      try {
+                        await ref
+                            .read(
+                              socialSessionDetailProvider(widget.sessionId)
+                                  .notifier,
+                            )
+                            .cancelSession();
+                        if (mounted) {
+                          context.pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content:
+                                  Text('Đã hủy buổi Social thành công!'),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(e.toString()),
+                              backgroundColor: Colors.redAccent,
+                            ),
+                          );
+                        }
+                      }
+                    }
+                  },
+                ),
             ],
           ),
         );

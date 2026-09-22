@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/features/social/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 
 class SocialSessionCard extends StatelessWidget {
   final SocialSessionModel session;
@@ -150,7 +150,7 @@ class SocialSessionCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
 
-            // Right column: Sport outline icon + Slots ratio + Distance
+            // Right column: Sport outline icon + Slots ratio
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -167,19 +167,19 @@ class SocialSessionCard extends StatelessWidget {
                     color: isDark ? Colors.white : const Color(0xFF1E293B),
                   ),
                 ),
-                const SizedBox(height: 2),
-
-                // Distance (e.g. 7.0km)
-                Text(
-                  '${session.distanceKm.toStringAsFixed(1)}km',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: isDark
-                        ? const Color(0xFF94A3B8)
-                        : const Color(0xFF64748B),
+                if (session.distanceKm > 0) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    '${session.distanceKm.toStringAsFixed(1)}km',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ],

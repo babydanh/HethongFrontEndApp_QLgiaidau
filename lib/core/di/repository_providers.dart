@@ -22,6 +22,8 @@ import 'package:app_quanly_giaidau/domain/repositories/report_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/team_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/token_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_social_session_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/social_session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/user_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -82,4 +84,8 @@ final sessionRepositoryProvider = Provider<ISessionRepository>((ref) {
 
 final paymentRepositoryProvider = Provider<PaymentRepository>((ref) {
   return PaymentRepository(ref.watch(dioClientProvider));
+});
+
+final socialSessionRepositoryProvider = Provider<ISocialSessionRepository>((ref) {
+  return ApiSocialSessionRepository(ref.watch(dioClientProvider));
 });

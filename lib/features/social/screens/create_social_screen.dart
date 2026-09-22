@@ -3,8 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/features/social/models/social_session_model.dart';
-import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 
 class CreateSocialScreen extends ConsumerStatefulWidget {
@@ -62,6 +63,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
 
   final _formKey = GlobalKey<FormState>();
   bool _isClubAttached = true;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -100,15 +102,6 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     return 'Host';
   }
 
-  String _getHostFullName() {
-    final user = ref.read(userProfileProvider).asData?.value;
-    final fullName = user?.fullName?.trim();
-    if (fullName != null && fullName.isNotEmpty) {
-      return fullName;
-    }
-    return 'Host';
-  }
-
   String _getComputedDefaultTitle() {
     final hostName = _getHostName();
     return '$_selectedSportName $_selectedFormat với $hostName';
@@ -134,27 +127,6 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     final timeStr = DateFormat('HH:mm').format(dt);
     final dateStr = DateFormat('dd/MM/yyyy').format(dt);
     return '$timeStr $weekdayName, $dateStr';
-  }
-
-  String _getDayOfWeek(DateTime dt) {
-    switch (dt.weekday) {
-      case 1:
-        return 'T2';
-      case 2:
-        return 'T3';
-      case 3:
-        return 'T4';
-      case 4:
-        return 'T5';
-      case 5:
-        return 'T6';
-      case 6:
-        return 'T7';
-      case 7:
-        return 'CN';
-      default:
-        return 'T2';
-    }
   }
 
   Future<void> _pickDateTime() async {
@@ -419,7 +391,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     );
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -436,109 +408,69 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     }
 
     final user = ref.read(userProfileProvider).asData?.value;
-    final hostFullName = _getHostFullName();
-    final initials = hostFullName.isNotEmpty
-        ? hostFullName.trim().split(' ').last.substring(0, 1).toUpperCase()
-        : 'H';
-
     final customTitle = _titleController.text.trim();
     final resolvedTitle = customTitle.isNotEmpty
         ? customTitle
         : _getComputedDefaultTitle();
 
-    final timeSlot = DateFormat('HH:mm').format(_selectedDateTime);
-    final dayOfWeek = _getDayOfWeek(_selectedDateTime);
-    final dayOfMonth = _selectedDateTime.day;
-    final dateDisplay = '$timeSlot ${_formatDateTimeDisplay(_selectedDateTime).split(' ')[1]}, $dayOfMonth/${_selectedDateTime.month}';
-    final fullDateTimeDisplay = _formatDateTimeDisplay(_selectedDateTime);
-
-    final sessionId = 'social_${DateTime.now().millisecondsSinceEpoch}';
     final notes = _notesController.text.trim().isNotEmpty
         ? _notesController.text.trim()
-        : 'Buổi giao lưu môn $_selectedSportName câu lạc bộ ${widget.clubName}.';
+        : null;
 
-    final newSession = SocialSessionModel(
-      id: sessionId,
-      clubId: _isClubAttached ? widget.clubId : null,
-      creatorId: user?.id ?? 'me',
-      title: resolvedTitle,
-      status: 'OPEN',
+    final request = CreateSocialSessionRequest(
       sport: _selectedSportKey,
-      sportName: _selectedSportName,
-      hostClubName: _isClubAttached ? widget.clubName : hostFullName,
-      hostClubAvatar: _isClubAttached ? widget.clubLogoUrl : user?.avatarUrl,
-      hostFrequency: 'Hàng tuần',
-      hostPhone: user?.phoneNumber ?? '0901234567',
-      hostZalo: user?.phoneNumber ?? '0901234567',
+      title: resolvedTitle.length > 100
+          ? resolvedTitle.substring(0, 100)
+          : resolvedTitle,
+      description: notes,
       playFormat: _selectedFormat,
-      venueName: venueText.length > 50 ? venueText.substring(0, 50) : venueText,
+      startAt: _selectedDateTime,
+      durationMinutes: (_durationHours * 60).round(),
+      venueName:
+          venueText.length > 50 ? venueText.substring(0, 50) : venueText,
       venueAddress: venueText,
-      distanceKm: 1.5,
-      dateTime: _selectedDateTime,
-      durationHours: _durationHours.round(),
-      timeSlot: timeSlot,
-      dateDisplay: dateDisplay,
-      fullDateTimeDisplay: fullDateTimeDisplay,
-      dayOfWeek: dayOfWeek,
-      dayOfMonth: dayOfMonth,
-      currentParticipants: 1,
-      maxParticipants: _maxParticipants,
-      pricePerSlot: _price,
-      skillLevel: 'Tất cả trình độ',
-      notes: notes,
-      participants: [
-        SocialParticipantModel(
-          id: user?.id ?? 'part_host_${DateTime.now().millisecondsSinceEpoch}',
-          name: hostFullName,
-          avatarUrl: user?.avatarUrl,
-          initials: initials,
-          skillLevel: 'Tất cả trình độ',
-          isHost: true,
-          status: 'Host · Đã tham gia',
-          joinedAt: DateTime.now(),
-        ),
-      ],
-      matches: const [],
-      chatMessages: [
-        SocialChatMessageModel(
-          id: 'msg_welcome_${DateTime.now().millisecondsSinceEpoch}',
-          senderName: hostFullName,
-          senderAvatar: user?.avatarUrl,
-          senderInitials: initials,
-          isHost: true,
-          isMe: true,
-          message: 'Chào mừng các bạn đến với buổi giao lưu $resolvedTitle!',
-          time: DateTime.now(),
-        ),
-      ],
-      payments: [
-        SocialPaymentModel(
-          id: 'pay_host_${DateTime.now().millisecondsSinceEpoch}',
-          participantId: user?.id ?? 'part_host',
-          participantName: hostFullName,
-          participantAvatar: user?.avatarUrl,
-          ticketCount: 1,
-          totalAmount: _price,
-          status: 'PAID',
-          paymentMethod: 'CASH',
-          paidAt: DateTime.now(),
-        ),
-      ],
+      maxSlots: _maxParticipants,
+      feePerSlot: _price,
+      levelRequirement: 'ALL',
+      visibility: _privacy == 'Nội bộ CLB' ? 'CLUB_ONLY' : 'PUBLIC',
+      contactPhone: user?.phoneNumber,
+      communityId: _isClubAttached ? widget.clubId : null,
     );
 
-    // Save to Riverpod state
-    ref.read(socialSessionsProvider.notifier).addSession(newSession);
-    ref.read(socialFilterProvider.notifier).setDayOfMonth(dayOfMonth);
+    setState(() => _isSubmitting = true);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Tạo Social "$resolvedTitle" thành công!'),
-        backgroundColor: context.colors.success,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    try {
+      final repo = ref.read(socialSessionRepositoryProvider);
+      final createdSession = await repo.create(request);
 
-    Navigator.of(context).pop(newSession);
+      ref.read(socialSessionsProvider.notifier).refresh();
+      ref.read(socialFilterProvider.notifier).setSelectedDate(_selectedDateTime);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Tạo Social "$resolvedTitle" thành công!'),
+            backgroundColor: context.colors.success,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        Navigator.of(context).pop(createdSession);
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.toString()),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   @override
@@ -1242,7 +1174,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: _submit,
+                    onPressed: _isSubmitting ? null : _submit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isDark
                           ? colors.bgElevated
@@ -1253,13 +1185,22 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text(
-                      'Tạo kèo',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Text(
+                            'Tạo kèo',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                   ),
                 ),
               ),

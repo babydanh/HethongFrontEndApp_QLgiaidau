@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:app_quanly_giaidau/features/social/models/social_session_model.dart';
-import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/providers/social_provider.dart';
 
 class SocialJoinBottomSheet extends ConsumerStatefulWidget {
   final SocialSessionModel session;
@@ -27,6 +27,7 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
   int _ticketCount = 1;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  bool _isSubmitting = false;
 
   int get _remainingSlots =>
       widget.session.maxParticipants - widget.session.currentParticipants;
@@ -120,63 +121,104 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                     Text(
                       widget.session.title,
                       style: TextStyle(
-                        fontSize: 14.5,
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: isDark ? Colors.white : const Color(0xFF0F172A),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '📍 ${widget.session.venueName}',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: isDark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF64748B),
-                      ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.schedule_rounded,
+                          size: 14,
+                          color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          widget.session.fullDateTimeDisplay,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '🕒 ${widget.session.fullDateTimeDisplay}',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: isDark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF64748B),
-                      ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            widget.session.venueAddress,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Slot Counter Row
+              // Remaining slots tag
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Số lượng vé',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
+                  const Text(
+                    'Số lượng slot muốn đăng ký:',
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _remainingSlots > 0
+                          ? const Color(0xFF16A34A).withValues(alpha: 0.12)
+                          : Colors.red.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _remainingSlots > 0
+                          ? 'Còn $_remainingSlots slot trống'
+                          : 'Hết slot',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _remainingSlots > 0
+                            ? const Color(0xFF16A34A)
+                            : Colors.red,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Còn lại $_remainingSlots chỗ',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _remainingSlots <= 3
-                              ? Colors.redAccent
-                              : (isDark
-                                  ? const Color(0xFF94A3B8)
-                                  : const Color(0xFF64748B)),
-                        ),
-                      ),
-                    ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Ticket Count Selector
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    widget.session.pricePerSlot == 0
+                        ? 'Miễn phí'
+                        : '${currencyFormatter.format(widget.session.pricePerSlot)} / vé',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.white70 : const Color(0xFF475569),
+                    ),
                   ),
                   Row(
                     children: [
@@ -187,15 +229,12 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                             : null,
                         isDark: isDark,
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 6,
-                        ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           '$_ticketCount',
                           style: const TextStyle(
-                            fontSize: 18,
+                            fontSize: 17,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
@@ -250,22 +289,33 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _remainingSlots > 0 ? _handleConfirmJoin : null,
+                  onPressed: (_remainingSlots > 0 && !_isSubmitting)
+                      ? _handleConfirmJoin
+                      : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB), // Vibrant blue
+                    backgroundColor: const Color(0xFF2563EB),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     elevation: 0,
                   ),
-                  child: Text(
-                    _remainingSlots > 0 ? 'Xác nhận tham gia' : 'Đã hết chỗ',
-                    style: const TextStyle(
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : Text(
+                          _remainingSlots > 0 ? 'Xác nhận tham gia' : 'Đã hết chỗ',
+                          style: const TextStyle(
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                 ),
               ),
             ],
@@ -303,24 +353,40 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
     );
   }
 
-  void _handleConfirmJoin() {
-    final success = ref.read(socialSessionsProvider.notifier).joinSession(
-          sessionId: widget.session.id,
-          ticketCount: _ticketCount,
-          userName: 'Bạn',
-        );
+  Future<void> _handleConfirmJoin() async {
+    setState(() => _isSubmitting = true);
+    try {
+      await ref.read(socialSessionsProvider.notifier).joinSession(
+            sessionId: widget.session.id,
+            ticketCount: _ticketCount,
+          );
 
-    if (success) {
-      Navigator.pop(context, true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '🎉 Đăng ký thành công $_ticketCount vé buổi ${widget.session.title}!',
+      if (mounted) {
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '🎉 Đăng ký thành công $_ticketCount vé buổi ${widget.session.title}!',
+            ),
+            backgroundColor: const Color(0xFF16A34A),
+            behavior: SnackBarBehavior.floating,
           ),
-          backgroundColor: const Color(0xFF16A34A),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.toString()),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 }

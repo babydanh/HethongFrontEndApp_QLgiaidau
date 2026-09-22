@@ -26,7 +26,6 @@ import 'package:app_quanly_giaidau/features/rankings/screens/province_selection_
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/social/screens/social_list_view.dart';
-import 'package:app_quanly_giaidau/features/social/providers/social_provider.dart';
 
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
