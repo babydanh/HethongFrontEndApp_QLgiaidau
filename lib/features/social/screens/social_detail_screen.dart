@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_join_bottom_sheet.dart';
@@ -114,9 +115,11 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
       ),
       data: (session) {
         final host = widget.isHost ?? session.isHost;
-        if (_tabController.length != (host ? 4 : 3)) {
+        final showPayment = host && session.feePerSlot > 0;
+        final tabLength = 3 + (showPayment ? 1 : 0);
+        if (_tabController.length != tabLength) {
           _tabController.dispose();
-          _tabController = TabController(length: host ? 4 : 3, vsync: this);
+          _tabController = TabController(length: tabLength, vsync: this);
         }
 
         return Scaffold(
@@ -167,7 +170,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                         isActive: activeIndex == 1,
                         colors: colors,
                       ),
-                      if (_isHost) ...[
+                      if (showPayment) ...[
                         const SizedBox(width: 14),
                         _buildTabItem(
                           index: 2,
@@ -178,9 +181,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       ],
                       const SizedBox(width: 14),
                       _buildTabItem(
-                        index: _isHost ? 3 : 2,
+                        index: showPayment ? 3 : 2,
                         label: 'Trò chuyện',
-                        isActive: activeIndex == (_isHost ? 3 : 2),
+                        isActive: activeIndex == (showPayment ? 3 : 2),
                         colors: colors,
                       ),
                     ],
@@ -197,7 +200,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
               children: [
                 _buildDetailsTab(isDark, session, colors),
                 _buildParticipantsTab(colors, session),
-                if (_isHost) _buildPaymentTab(colors, session),
+                if (showPayment) _buildPaymentTab(colors, session),
                 _buildChatTab(isDark, session, colors),
               ],
             ),
@@ -663,43 +666,44 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
           ),
           const SizedBox(height: 20),
 
-          // Divider between upper details and lower notes
-          Divider(
-            color: colors.border,
-            thickness: 1,
-          ),
-          const SizedBox(height: 16),
-
           // ─── LOWER PART: LƯU Ý / GHI CHÚ (IMG3) ───
-          Text(
-            'Lưu ý',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: colors.textPrimary,
+          if (session.notes.trim().isNotEmpty) ...[
+            Divider(
+              color: colors.border,
+              thickness: 1,
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: colors.bgSurface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: colors.border,
-              ),
-            ),
-            child: SelectableText(
-              session.notes,
+            Text(
+              'Lưu ý',
               style: TextStyle(
-                fontSize: 14.5,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
                 color: colors.textPrimary,
-                height: 1.6,
               ),
             ),
-          ),
+            const SizedBox(height: 12),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: colors.border,
+                ),
+              ),
+              child: SelectableText(
+                session.notes,
+                style: TextStyle(
+                  fontSize: 14.5,
+                  color: colors.textPrimary,
+                  height: 1.6,
+                ),
+              ),
+            ),
+          ],
 
           if (_isHost) ...[
             const SizedBox(height: 16),
@@ -2053,19 +2057,7 @@ RSVP: https://sporto.vn/social/${session.id}''';
                   ),
                   onTap: () {
                     Navigator.pop(ctx);
-                    ref
-                        .read(socialSessionsProvider.notifier)
-                        .addSharedSessionMessage(session.id, session);
-                    _tabController.animateTo(_isHost ? 3 : 2);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text(
-                          'Đã chia sẻ buổi Social vào cuộc trò chuyện!',
-                        ),
-                        backgroundColor: colors.success,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
+                    _shareToClubChat(session);
                   },
                 ),
               ],
@@ -2074,6 +2066,74 @@ RSVP: https://sporto.vn/social/${session.id}''';
         );
       },
     );
+  }
+
+  // ── Chia sẻ vào cuộc trò chuyện Câu lạc bộ ──
+  String _buildClubChatShareMessage(SocialSessionModel session) {
+    final currencyFormatter =
+        NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+    final feeLine = session.pricePerSlot > 0
+        ? '💵 Phí: ${currencyFormatter.format(session.pricePerSlot)} / người'
+        : '💵 Phí: Miễn phí';
+    final timeLine =
+        '⏰ ${session.dayOfWeek}, ngày ${session.dayOfMonth.toString().padLeft(2, '0')} Th${session.dateTime.month.toString().padLeft(2, '0')} lúc ${session.timeSlot}';
+    return '''${session.title.toUpperCase()}
+$timeLine
+📍 ${session.venueName}
+$feeLine
+👥 ${session.currentParticipants}/${session.maxParticipants}
+
+RSVP: https://sporto.vn/social/${session.id}''';
+  }
+
+  Future<void> _shareToClubChat(SocialSessionModel session) async {
+    final communityId = session.communityId ?? session.clubId;
+    if (communityId == null || communityId.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Buổi Social này không thuộc Câu lạc bộ nào.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    final message = _buildClubChatShareMessage(session);
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      final res = await dio.get(
+        '/chat/rooms',
+        queryParameters: {'type': 'CLUB', 'communityId': communityId},
+      );
+      final raw = res.data is Map ? (res.data['data'] ?? res.data) : res.data;
+      final room = raw is List
+          ? (raw.isEmpty ? null : raw.first as Map<String, dynamic>)
+          : (raw as Map<String, dynamic>?);
+      final roomId = room?['id']?.toString();
+      if (roomId == null || roomId.isEmpty) {
+        throw Exception('Không tìm thấy phòng chat CLB');
+      }
+      await dio.post(
+        '/chat/messages',
+        data: {'roomId': roomId, 'messageText': message},
+      );
+      if (!mounted) return;
+      context.push(
+        '/club/$communityId/chat?name=${Uri.encodeComponent(session.hostClubName)}',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Không thể chia sẻ vào cuộc trò chuyện CLB'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   void _handleContactHost(
@@ -2131,7 +2191,9 @@ RSVP: https://sporto.vn/social/${session.id}''';
                   title: const Text('Gửi tin nhắn trong app'),
                   onTap: () {
                     Navigator.pop(ctx);
-                    _tabController.animateTo(_isHost ? 3 : 2); // Switch to Chat tab
+                    _tabController.animateTo(
+                      (_isHost && session.feePerSlot > 0) ? 3 : 2,
+                    ); // Switch to Chat tab
                   },
                 ),
               ],
