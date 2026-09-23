@@ -12,12 +12,14 @@ class CreateSocialScreen extends ConsumerStatefulWidget {
   final String clubId;
   final String clubName;
   final String? clubLogoUrl;
+  final SocialSessionModel? initialSession;
 
   const CreateSocialScreen({
     super.key,
     required this.clubId,
     required this.clubName,
     this.clubLogoUrl,
+    this.initialSession,
   });
 
   @override
@@ -48,8 +50,9 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   late DateTime _selectedDateTime;
   double _durationHours = 1.0;
 
-  // Venue / Location (NVARCHAR(500))
-  final TextEditingController _venueController = TextEditingController();
+  // Venue / Location (Tách 2 trường theo Yêu cầu 5)
+  final TextEditingController _venueNameController = TextEditingController();
+  final TextEditingController _venueAddressController = TextEditingController();
 
   // Configurations
   int _maxParticipants = 6;
@@ -68,24 +71,43 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedSportKey = _sports.first.key;
-    _selectedSportName = _sports.first.name;
-    _selectedFormat = _formats.first;
+    final init = widget.initialSession;
+    if (init != null) {
+      _selectedSportKey = init.sport;
+      _selectedSportName = init.sportName;
+      _selectedFormat = init.playFormat;
+      _selectedDateTime = init.startAt;
+      _durationHours = init.durationMinutes / 60.0;
+      _maxParticipants = init.maxSlots;
+      _privacy = init.visibility == 'CLUB_ONLY' ? 'Nội bộ CLB' : 'Công khai';
+      _price = init.feePerSlot;
+      _venueNameController.text = init.venueName;
+      _venueAddressController.text = init.venueAddress;
+      if (_price > 0) _priceController.text = _price.toString();
+      _titleController.text = init.title;
+      _notesController.text = init.description ?? '';
+      _isClubAttached = (init.communityId != null && init.communityId!.isNotEmpty);
+    } else {
+      _selectedSportKey = _sports.first.key;
+      _selectedSportName = _sports.first.name;
+      _selectedFormat = _formats.first;
 
-    // Default time: next hour or 14:45
-    final now = DateTime.now();
-    _selectedDateTime = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      now.hour + 1,
-      0,
-    );
+      // Default time: next hour or 14:45
+      final now = DateTime.now();
+      _selectedDateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        now.hour + 1,
+        0,
+      );
+    }
   }
 
   @override
   void dispose() {
-    _venueController.dispose();
+    _venueNameController.dispose();
+    _venueAddressController.dispose();
     _priceController.dispose();
     _titleController.dispose();
     _notesController.dispose();
@@ -391,16 +413,46 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     );
   }
 
+  /// Invalidate cache Social theo CLB để tab Hoạt động cập nhật ngay.
+  /// [session] là kèo vừa tạo/sửa (lấy communityId thực tế từ server).
+  void _invalidateClubSocialProviders(
+    WidgetRef ref,
+    SocialSessionModel session,
+  ) {
+    final attachedId = session.communityId ?? session.community?.id;
+    final initialAttachedId = widget.initialSession?.communityId;
+    final ids = <String>{
+      if (widget.clubId.isNotEmpty) widget.clubId,
+      if (attachedId != null && attachedId.isNotEmpty) attachedId,
+      if (initialAttachedId != null && initialAttachedId.isNotEmpty)
+        initialAttachedId,
+    };
+    for (final id in ids) {
+      ref.invalidate(clubSocialSessionsQueryProvider(id));
+      ref.invalidate(communitySocialSessionsQueryProvider(id));
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    final venueText = _venueController.text.trim();
-    if (venueText.isEmpty) {
+    final venueNameText = _venueNameController.text.trim();
+    final venueAddressText = _venueAddressController.text.trim();
+    if (venueNameText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Vui lòng nhập địa điểm tổ chức kèo.'),
+          content: Text('Vui lòng nhập tên sân.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (venueAddressText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng nhập địa điểm.'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -417,44 +469,89 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
         ? _notesController.text.trim()
         : null;
 
-    final request = CreateSocialSessionRequest(
-      sport: _selectedSportKey,
-      title: resolvedTitle.length > 100
-          ? resolvedTitle.substring(0, 100)
-          : resolvedTitle,
-      description: notes,
-      playFormat: _selectedFormat,
-      startAt: _selectedDateTime,
-      durationMinutes: (_durationHours * 60).round(),
-      venueName:
-          venueText.length > 50 ? venueText.substring(0, 50) : venueText,
-      venueAddress: venueText,
-      maxSlots: _maxParticipants,
-      feePerSlot: _price,
-      levelRequirement: 'ALL',
-      visibility: _privacy == 'Nội bộ CLB' ? 'CLUB_ONLY' : 'PUBLIC',
-      contactPhone: user?.phoneNumber,
-      communityId: _isClubAttached ? widget.clubId : null,
-    );
-
     setState(() => _isSubmitting = true);
 
     try {
       final repo = ref.read(socialSessionRepositoryProvider);
-      final createdSession = await repo.create(request);
 
-      ref.read(socialSessionsProvider.notifier).refresh();
-      ref.read(socialFilterProvider.notifier).setSelectedDate(_selectedDateTime);
+      if (widget.initialSession != null) {
+        final sessionId = widget.initialSession!.id;
+        final updateFields = <String, dynamic>{
+          'sport': _selectedSportKey,
+          'title': resolvedTitle.length > 100
+              ? resolvedTitle.substring(0, 100)
+              : resolvedTitle,
+          if (notes != null && notes.isNotEmpty) 'description': notes,
+          'playFormat': _selectedFormat,
+          'startAt': _selectedDateTime.toIso8601String(),
+          'durationMinutes': (_durationHours * 60).round(),
+          'venueName': venueNameText,
+          'venueAddress': venueAddressText,
+          'maxSlots': _maxParticipants,
+          'feePerSlot': _price,
+          'levelRequirement': 'ALL',
+          'visibility': _privacy == 'Nội bộ CLB' ? 'CLUB_ONLY' : 'PUBLIC',
+          if (_isClubAttached && widget.clubId.isNotEmpty)
+            'communityId': widget.clubId,
+        };
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Tạo Social "$resolvedTitle" thành công!'),
-            backgroundColor: context.colors.success,
-            behavior: SnackBarBehavior.floating,
-          ),
+        final updatedSession = await repo.update(sessionId, updateFields);
+
+        ref.read(socialSessionsProvider.notifier).refresh();
+        ref.read(socialSessionDetailProvider(sessionId).notifier).refresh();
+        // Tab Hoạt động CLB dùng provider riêng theo communityId —
+        // phải invalidate để kèo mới/sửa hiện ngay ở filter "Mở".
+        _invalidateClubSocialProviders(ref, updatedSession);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Cập nhật kèo "$resolvedTitle" thành công!'),
+              backgroundColor: context.colors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          Navigator.of(context).pop(updatedSession);
+        }
+      } else {
+        final request = CreateSocialSessionRequest(
+          sport: _selectedSportKey,
+          title: resolvedTitle.length > 100
+              ? resolvedTitle.substring(0, 100)
+              : resolvedTitle,
+          description: notes,
+          playFormat: _selectedFormat,
+          startAt: _selectedDateTime,
+          durationMinutes: (_durationHours * 60).round(),
+          venueName: venueNameText,
+          venueAddress: venueAddressText,
+          maxSlots: _maxParticipants,
+          feePerSlot: _price,
+          levelRequirement: 'ALL',
+          visibility: _privacy == 'Nội bộ CLB' ? 'CLUB_ONLY' : 'PUBLIC',
+          contactPhone: user?.phoneNumber,
+          communityId:
+              _isClubAttached && widget.clubId.isNotEmpty ? widget.clubId : null,
         );
-        Navigator.of(context).pop(createdSession);
+
+        final createdSession = await repo.create(request);
+
+        ref.read(socialSessionsProvider.notifier).refresh();
+        ref.read(socialFilterProvider.notifier).setSelectedDate(_selectedDateTime);
+        // Tab Hoạt động CLB dùng provider riêng theo communityId —
+        // phải invalidate để kèo mới hiện ngay ở filter "Mở".
+        _invalidateClubSocialProviders(ref, createdSession);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Tạo Social "$resolvedTitle" thành công!'),
+              backgroundColor: context.colors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          Navigator.of(context).pop(createdSession);
+        }
       }
     } catch (error) {
       if (mounted) {
@@ -476,7 +573,6 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       decoration: BoxDecoration(
@@ -514,7 +610,9 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                     Text(
-                      'TẠO KÈO',
+                      widget.initialSession != null
+                          ? 'CẬP NHẬT KÈO'
+                          : 'TẠO KÈO',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -522,10 +620,12 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                         letterSpacing: 0.5,
                       ),
                     ),
-                    Icon(
-                      Icons.swap_horiz_rounded,
-                      color: colors.textPrimary,
-                    ),
+                    widget.initialSession != null
+                        ? const SizedBox(width: 48)
+                        : Icon(
+                            Icons.swap_horiz_rounded,
+                            color: colors.textPrimary,
+                          ),
                   ],
                 ),
               ),
@@ -880,7 +980,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                       ),
                       const SizedBox(height: 10),
 
-                      // Chọn địa điểm (NVARCHAR(500))
+                      // Tách venueName và venueAddress thành 2 input field (Yêu cầu 5)
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -894,30 +994,64 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                           ),
                           const SizedBox(width: 14),
                           Expanded(
-                            child: TextFormField(
-                              controller: _venueController,
-                              maxLength: 500,
-                              maxLines: 2,
-                              minLines: 1,
-                              style: TextStyle(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w500,
-                                color: colors.textPrimary,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: 'Nhập địa điểm thi đấu...',
-                                counterText: '',
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 12,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextFormField(
+                                  controller: _venueNameController,
+                                  maxLength: 100,
+                                  style: TextStyle(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: colors.textPrimary,
+                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: 'Tên sân',
+                                    hintText:
+                                        'Nhập tên sân (VD: 22 Cộng Hòa)...',
+                                    counterText: '',
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                  validator: (val) {
+                                    if (val == null || val.trim().isEmpty) {
+                                      return 'Tên sân không được để trống';
+                                    }
+                                    return null;
+                                  },
                                 ),
-                              ),
-                              validator: (val) {
-                                if (val == null || val.trim().isEmpty) {
-                                  return 'Địa điểm không được để trống';
-                                }
-                                return null;
-                              },
+                                const SizedBox(height: 10),
+                                TextFormField(
+                                  controller: _venueAddressController,
+                                  maxLength: 500,
+                                  maxLines: 2,
+                                  minLines: 1,
+                                  style: TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w400,
+                                    color: colors.textPrimary,
+                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: 'Địa điểm',
+                                    hintText: 'Nhập địa chỉ cụ thể...',
+                                    counterText: '',
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                  validator: (val) {
+                                    if (val == null || val.trim().isEmpty) {
+                                      return 'Địa điểm không được để trống';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -1176,9 +1310,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                   child: ElevatedButton(
                     onPressed: _isSubmitting ? null : _submit,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark
-                          ? colors.bgElevated
-                          : const Color(0xFF334155),
+                      backgroundColor: AppTheme.primary,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -1194,9 +1326,11 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                               strokeWidth: 2.5,
                             ),
                           )
-                        : const Text(
-                            'Tạo kèo',
-                            style: TextStyle(
+                        : Text(
+                            widget.initialSession != null
+                                ? 'Cập nhật kèo'
+                                : 'Tạo kèo',
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                             ),

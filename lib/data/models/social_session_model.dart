@@ -212,6 +212,66 @@ class SocialChatMessageModel {
     this.isSystem = false,
     this.sharedSession,
   });
+
+  factory SocialChatMessageModel.fromJson(Map<String, dynamic> json) {
+    DateTime parsedTime;
+    final rawTime = json['time'] ?? json['createdAt'] ?? json['timestamp'];
+    if (rawTime is String) {
+      parsedTime = DateTime.tryParse(rawTime) ?? DateTime.now();
+    } else if (rawTime is DateTime) {
+      parsedTime = rawTime;
+    } else {
+      parsedTime = DateTime.now();
+    }
+
+    final sName = json['senderName']?.toString() ??
+        json['sender']?['fullName']?.toString() ??
+        'Thành viên';
+    String initials = json['senderInitials']?.toString() ?? '';
+    if (initials.isEmpty) {
+      final parts =
+          sName.trim().split(' ').where((s) => s.isNotEmpty).toList();
+      if (parts.length >= 2) {
+        initials = '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+      } else if (parts.isNotEmpty) {
+        initials = parts.first.substring(0, 1).toUpperCase();
+      } else {
+        initials = 'TV';
+      }
+    }
+
+    return SocialChatMessageModel(
+      id: json['id']?.toString() ?? '',
+      senderName: sName,
+      senderAvatar: json['senderAvatar']?.toString() ??
+          json['sender']?['avatarUrl']?.toString(),
+      senderInitials: initials,
+      message:
+          json['message']?.toString() ?? json['content']?.toString() ?? '',
+      time: parsedTime,
+      isHost: json['isHost'] == true,
+      isMe: json['isMe'] == true,
+      isSystem: json['isSystem'] == true,
+      sharedSession: json['sharedSession'] is Map
+          ? SocialSessionModel.fromJson(
+              (json['sharedSession'] as Map)
+                  .map((k, v) => MapEntry(k.toString(), v)))
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'senderName': senderName,
+        if (senderAvatar != null) 'senderAvatar': senderAvatar,
+        'senderInitials': senderInitials,
+        'message': message,
+        'time': time.toIso8601String(),
+        'isHost': isHost,
+        'isMe': isMe,
+        'isSystem': isSystem,
+        if (sharedSession != null) 'sharedSession': sharedSession!.toJson(),
+      };
 }
 
 class SocialPaymentModel {
@@ -293,6 +353,7 @@ class SocialSessionModel {
   final List<SocialParticipantModel> participants;
   final bool isJoined;
   final bool isHost;
+  final String? chatRoomId;
 
   // Local phase 2 fields (matches & chat)
   final List<SocialMatchModel> matches;
@@ -329,6 +390,7 @@ class SocialSessionModel {
     this.participants = const [],
     this.isJoined = false,
     this.isHost = false,
+    this.chatRoomId,
     this.matches = const [],
     this.chatMessages = const [],
   });
@@ -518,6 +580,15 @@ class SocialSessionModel {
       participants: participantsList,
       isJoined: json['isJoined'] == true,
       isHost: json['isHost'] == true,
+      chatRoomId: json['chatRoomId']?.toString(),
+      chatMessages: (json['chatMessages'] ?? json['messages']) is List
+          ? ((json['chatMessages'] ?? json['messages']) as List)
+              .whereType<Map>()
+              .map((m) => SocialChatMessageModel.fromJson(
+                    m.map((k, v) => MapEntry(k.toString(), v)),
+                  ))
+              .toList()
+          : const [],
     );
   }
 
@@ -549,6 +620,9 @@ class SocialSessionModel {
     'participants': participants.map((p) => p.toJson()).toList(),
     'isJoined': isJoined,
     'isHost': isHost,
+    if (chatRoomId != null) 'chatRoomId': chatRoomId,
+    if (chatMessages.isNotEmpty)
+      'chatMessages': chatMessages.map((m) => m.toJson()).toList(),
   };
 
   SocialSessionModel copyWith({
@@ -582,6 +656,7 @@ class SocialSessionModel {
     List<SocialParticipantModel>? participants,
     bool? isJoined,
     bool? isHost,
+    String? chatRoomId,
     List<SocialMatchModel>? matches,
     List<SocialChatMessageModel>? chatMessages,
   }) {
@@ -616,6 +691,7 @@ class SocialSessionModel {
       participants: participants ?? this.participants,
       isJoined: isJoined ?? this.isJoined,
       isHost: isHost ?? this.isHost,
+      chatRoomId: chatRoomId ?? this.chatRoomId,
       matches: matches ?? this.matches,
       chatMessages: chatMessages ?? this.chatMessages,
     );

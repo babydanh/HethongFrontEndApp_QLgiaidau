@@ -773,25 +773,87 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     final visibleMatches = filteredMatches.take(_activityDisplayLimit).toList();
 
     // Dữ liệu Social của CLB (Ảnh 2 Reclub)
-    final clubSocials = ref.watch(clubSocialSessionsProvider(widget.communityId));
-    final openSocials = clubSocials.where((s) => s.status == 'OPEN').toList();
-    final completedSocials = clubSocials.where((s) => s.status == 'COMPLETED').toList();
+    // Backend trả về status OPEN,FULL,COMPLETED cho GET /by-community/:id.
+    // Watch AsyncValue trực tiếp để phân biệt loading/error với rỗng thật.
+    final clubSocialsAsync =
+        ref.watch(clubSocialSessionsQueryProvider(widget.communityId));
+    final clubSocials =
+        clubSocialsAsync.asData?.value ?? const <SocialSessionModel>[];
+    final isLoadingSocials =
+        clubSocialsAsync.isLoading && clubSocials.isEmpty;
+    final socialsError =
+        clubSocialsAsync.hasError ? clubSocialsAsync.error : null;
+    final openSocials = clubSocials
+        .where((s) =>
+            s.status.toUpperCase() == 'OPEN' ||
+            s.status.toUpperCase() == 'FULL')
+        .toList();
+    final completedSocials = clubSocials
+        .where((s) => s.status.toUpperCase() == 'COMPLETED')
+        .toList();
     final displayedSocials = _socialStatusFilter == 'OPEN' ? openSocials : completedSocials;
+
+    Future<void> refreshSocials() async {
+      ref.invalidate(clubSocialSessionsQueryProvider(widget.communityId));
+      // Chờ provider fetch lại để RefreshIndicator tắt đúng lúc.
+      try {
+        await ref.read(
+          clubSocialSessionsQueryProvider(widget.communityId).future,
+        );
+      } catch (_) {}
+    }
 
     final content = NotificationListener<ScrollNotification>(
       onNotification: _onActivityScroll,
       child: RefreshIndicator(
-        onRefresh: () => _fetchMatches(),
+        onRefresh: () async {
+          await Future.wait([_fetchMatches(), refreshSocials()]);
+        },
         child: ListView(
           primary: true,
           padding: const EdgeInsets.only(top: 12, bottom: 132),
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             // ─── 1. LỊCH CHƠI & HOẠT ĐỘNG SOCIAL CLB (Ảnh 2 Reclub) ───
-            _buildWeeklyScheduleCard(colors),
+            // _buildWeeklyScheduleCard(colors),
             _buildSocialFilterBar(colors, openSocials.length, completedSocials.length),
             const SizedBox(height: 12),
-            if (displayedSocials.isNotEmpty) ...[
+            if (isLoadingSocials) ...[
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+            ] else if (socialsError != null && clubSocials.isEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        'Không tải được hoạt động Social',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton(
+                        onPressed: () => ref.invalidate(
+                          clubSocialSessionsQueryProvider(widget.communityId),
+                        ),
+                        child: const Text('Thử lại'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ] else if (displayedSocials.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
@@ -1053,8 +1115,25 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                     clubLogoUrl: widget.club?.logoUrl,
                   ),
                 );
+                // CreateSocialScreen đã invalidate provider khi tạo/sửa,
+                // nhưng invalidate thêm ở đây để chắc chắn tab refresh
+                // ngay cả khi sheet bị dismiss mà không qua _submit.
+                if (createdSession != null) {
+                  ref.invalidate(
+                    clubSocialSessionsQueryProvider(widget.communityId),
+                  );
+                }
                 if (createdSession != null && context.mounted) {
-                  context.push('/social/${createdSession.id}?isHost=true');
+                  await context.push(
+                    '/social/${createdSession.id}?isHost=true',
+                  );
+                  // Quay lại từ detail (join/hủy/sửa trong detail) —
+                  // load lại để filter "Mở"/"Đã xong" đúng trạng thái mới.
+                  if (mounted) {
+                    ref.invalidate(
+                      clubSocialSessionsQueryProvider(widget.communityId),
+                    );
+                  }
                 }
               },
               child: const Icon(Icons.add, color: Colors.white, size: 28),
@@ -1064,106 +1143,106 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     );
   }
 
-  Widget _buildWeeklyScheduleCard(AppColorsExtension colors) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 14),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'LỊCH CHƠI HÀNG TUẦN',
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                    color: colors.textPrimary,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'CLB này chưa có hoạt động được tạo tự động hàng tuần.',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: colors.textSecondary,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: colors.bgSurface,
-              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-              border: Border.all(color: colors.border, width: 1.5),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  height: 14,
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.refereeColor,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(AppTheme.radiusSmall),
-                    ),
-                  ),
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Container(
-                          width: 3,
-                          height: 3,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        Container(
-                          width: 3,
-                          height: 3,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const Expanded(
-                  child: Center(
-                    child: Text(
-                      '1',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: AppTheme.primary,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildWeeklyScheduleCard(AppColorsExtension colors) {
+  //   return Container(
+  //     margin: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+  //     padding: const EdgeInsets.all(16),
+  //     decoration: BoxDecoration(
+  //       color: colors.bgCard,
+  //       borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+  //       border: Border.all(color: colors.border),
+  //     ),
+  //     child: Row(
+  //       children: [
+  //         Expanded(
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text(
+  //                 'LỊCH CHƠI HÀNG TUẦN',
+  //                 style: TextStyle(
+  //                   fontSize: 14.5,
+  //                   fontWeight: FontWeight.w800,
+  //                   color: colors.textPrimary,
+  //                   letterSpacing: 0.2,
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 6),
+  //               Text(
+  //                 'CLB này chưa có hoạt động được tạo tự động hàng tuần.',
+  //                 style: TextStyle(
+  //                   fontSize: 12.5,
+  //                   color: colors.textSecondary,
+  //                   height: 1.35,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //         const SizedBox(width: 16),
+  //         Container(
+  //           width: 56,
+  //           height: 56,
+  //           decoration: BoxDecoration(
+  //             color: colors.bgSurface,
+  //             borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+  //             border: Border.all(color: colors.border, width: 1.5),
+  //           ),
+  //           child: Column(
+  //             mainAxisAlignment: MainAxisAlignment.center,
+  //             children: [
+  //               Container(
+  //                 height: 14,
+  //                 width: double.infinity,
+  //                 decoration: const BoxDecoration(
+  //                   color: AppTheme.refereeColor,
+  //                   borderRadius: BorderRadius.vertical(
+  //                     top: Radius.circular(AppTheme.radiusSmall),
+  //                   ),
+  //                 ),
+  //                 child: Center(
+  //                   child: Row(
+  //                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //                     children: [
+  //                       Container(
+  //                         width: 3,
+  //                         height: 3,
+  //                         decoration: const BoxDecoration(
+  //                           color: Colors.white,
+  //                           shape: BoxShape.circle,
+  //                         ),
+  //                       ),
+  //                       Container(
+  //                         width: 3,
+  //                         height: 3,
+  //                         decoration: const BoxDecoration(
+  //                           color: Colors.white,
+  //                           shape: BoxShape.circle,
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ),
+  //               ),
+  //               const Expanded(
+  //                 child: Center(
+  //                   child: Text(
+  //                     '1',
+  //                     style: TextStyle(
+  //                       fontSize: 22,
+  //                       fontWeight: FontWeight.w900,
+  //                       color: AppTheme.primary,
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildSocialFilterBar(
     AppColorsExtension colors,

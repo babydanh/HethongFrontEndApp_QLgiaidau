@@ -17,11 +17,34 @@ abstract class ISocialSessionRepository {
   /// 4.1 - Tạo kèo (POST /social-sessions)
   Future<SocialSessionModel> create(CreateSocialSessionRequest request);
 
+  /// 4.2b - Danh sách theo CLB (GET /social-sessions/by-community/:communityId)
+  /// Backend: QuerySocialByCommunityDto { status, from, to, sport, search, page, limit }
+  Future<SocialSessionListResponse> listByCommunity({
+    required String communityId,
+    String? status,
+    String? sport,
+    String? search,
+    String? from,
+    String? to,
+    int page = 1,
+    int limit = 20,
+  });
+
   /// 4.6 - Sửa kèo (PATCH /social-sessions/:id)
   Future<SocialSessionModel> update(String sessionId, Map<String, dynamic> fields);
 
-  /// 4.8 - Hủy kèo (DELETE /social-sessions/:id)
+  /// 4.8 - Hủy kèo (PATCH /social-sessions/:id/cancel)
   Future<void> cancel(String sessionId);
+
+  /// 4.8b - Xóa kèo vĩnh viễn (DELETE /social-sessions/:id)
+  Future<void> delete(String sessionId);
+
+  /// 4.9 - Lấy tin nhắn chat (GET /social-sessions/:id/messages)
+  Future<List<SocialChatMessageModel>> getMessages(
+    String sessionId, {
+    int page = 1,
+    int limit = 50,
+  });
 
   /// 4.4 - Member tự join (POST /social-sessions/:id/join)
   Future<JoinSessionResponse> join(String sessionId, {int ticketCount = 1});

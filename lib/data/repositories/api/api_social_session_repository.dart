@@ -74,6 +74,10 @@ class SocialApiException implements Exception {
         default:
           if (statusCode == 401) {
             message = 'Phiên đăng nhập đã hết hạn, vui lòng thử lại';
+          } else if (statusCode != null && statusCode >= 500) {
+            message = (serverMsg != null && serverMsg.isNotEmpty)
+                ? serverMsg
+                : 'Hệ thống đang bận, vui lòng thử lại sau';
           } else if (serverMsg != null && serverMsg.isNotEmpty) {
             message = serverMsg;
           } else {
@@ -231,14 +235,127 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
   }
 
   @override
+  Future<SocialSessionListResponse> listByCommunity({
+    required String communityId,
+    String? status,
+    String? sport,
+    String? search,
+    String? from,
+    String? to,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'limit': limit,
+        if (status != null && status.trim().isNotEmpty)
+          'status': status.trim(),
+        if (sport != null && sport.isNotEmpty && sport.toLowerCase() != 'all')
+          'sport': sport,
+        if (search != null && search.trim().isNotEmpty)
+          'search': search.trim(),
+        if (from != null && from.isNotEmpty) 'from': from,
+        if (to != null && to.isNotEmpty) 'to': to,
+      };
+
+      final response = await _dioClient.dio.get(
+        '/social-sessions/by-community/$communityId',
+        queryParameters: queryParams,
+        options: Options(extra: {'noCache': true}),
+      );
+
+      final body = _asMap(response.data);
+      final rawData = body['data'];
+      final rawMeta = body['meta'];
+
+      Map<String, dynamic> combined = {};
+      if (rawData is Map) {
+        combined = _asMap(rawData);
+        if (rawMeta is Map && !combined.containsKey('meta')) {
+          combined['meta'] = rawMeta;
+        }
+      } else if (rawData is List) {
+        combined = {
+          'items': rawData,
+          if (rawMeta is Map) 'meta': rawMeta,
+        };
+      } else {
+        combined = body;
+      }
+
+      return SocialSessionListResponse.fromJson(combined);
+    } on DioException catch (error, stack) {
+      _log.error(
+        'listByCommunity error for community: $communityId',
+        error,
+        stack,
+      );
+      throw SocialApiException.fromDioException(error);
+    } catch (error, stack) {
+      _log.error('listByCommunity unexpected error', error, stack);
+      rethrow;
+    }
+  }
+
+  @override
   Future<void> cancel(String sessionId) async {
     try {
-      await _dioClient.dio.delete('/social-sessions/$sessionId');
+      await _dioClient.dio.patch('/social-sessions/$sessionId/cancel');
     } on DioException catch (error, stack) {
       _log.error('cancel session error for: $sessionId', error, stack);
       throw SocialApiException.fromDioException(error);
     } catch (error, stack) {
       _log.error('cancel session unexpected error', error, stack);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> delete(String sessionId) async {
+    try {
+      await _dioClient.dio.delete('/social-sessions/$sessionId');
+    } on DioException catch (error, stack) {
+      _log.error('delete session error for: $sessionId', error, stack);
+      throw SocialApiException.fromDioException(error);
+    } catch (error, stack) {
+      _log.error('delete session unexpected error', error, stack);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<SocialChatMessageModel>> getMessages(
+    String sessionId, {
+    int page = 1,
+    int limit = 50,
+  }) async {
+    try {
+      final response = await _dioClient.dio.get(
+        '/social-sessions/$sessionId/messages',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+        options: Options(extra: {'noCache': true}),
+      );
+
+      final body = _asMap(response.data);
+      final rawData = body['data'] ?? body['items'] ?? body['messages'];
+      if (rawData is List) {
+        return rawData
+            .whereType<Map>()
+            .map((m) => SocialChatMessageModel.fromJson(
+                  m.map((k, v) => MapEntry(k.toString(), v)),
+                ))
+            .toList();
+      }
+      return const [];
+    } on DioException catch (error, stack) {
+      _log.error('getMessages error for: $sessionId', error, stack);
+      throw SocialApiException.fromDioException(error);
+    } catch (error, stack) {
+      _log.error('getMessages unexpected error', error, stack);
       rethrow;
     }
   }

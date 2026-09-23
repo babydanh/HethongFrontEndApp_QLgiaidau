@@ -10,6 +10,8 @@ import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_join_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.dart';
 
 class SocialDetailScreen extends ConsumerStatefulWidget {
   final String sessionId;
@@ -362,68 +364,16 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                 ),
                 const SizedBox(width: 12),
 
-                // Host Name & Frequency
+                // Host Club Name only
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Text('🇻🇳 ', style: TextStyle(fontSize: 13)),
-                          Expanded(
-                            child: Text(
-                              session.hostClubName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w800,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        session.hostFrequency,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          color: colors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // 'Xem lịch' outlined button
-                OutlinedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Xem lịch sinh hoạt của ${session.hostClubName}',
-                        ),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppTheme.primary),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  child: const Text(
-                    'Xem lịch',
+                  child: Text(
+                    session.hostClubName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.primary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: colors.textPrimary,
                     ),
                   ),
                 ),
@@ -535,27 +485,6 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                         color: isDark
                             ? const Color(0xFF94A3B8)
                             : const Color(0xFF64748B),
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    GestureDetector(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Đã lưu buổi Social vào lịch điện thoại!',
-                            ),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        'Thêm vào lịch',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.primary,
-                        ),
                       ),
                     ),
                   ],
@@ -1281,77 +1210,519 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
     int slotNumber,
   ) {
     final colors = context.colors;
-    final textController = TextEditingController();
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: colors.bgCard,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        ),
-        title: Text(
-          'Thêm người tham gia (Slot $slotNumber)',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: colors.textPrimary,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: colors.bgCard,
+      builder: (bCtx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header: Back arrow + "Thêm vãng lai" (Hình 1)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back, color: colors.textPrimary),
+                      onPressed: () => Navigator.pop(bCtx),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Thêm người tham gia',
+                      style: TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Option 1: Thêm thành viên CLB
+              ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                title: Text(
+                  'Thêm thành viên CLB',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: colors.textSecondary,
+                  size: 24,
+                ),
+                onTap: () {
+                  Navigator.pop(bCtx);
+                  _showClubMembersModal(context, session, slotNumber);
+                },
+              ),
+
+              // Option 2: Thêm người ngoài CLB
+              ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                title: Text(
+                  'Thêm người ngoài CLB',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: colors.textSecondary,
+                  size: 24,
+                ),
+                onTap: () {
+                  Navigator.pop(bCtx);
+                  _showExternalParticipantModal(context, session, slotNumber);
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
           ),
-        ),
-        content: TextField(
-          controller: textController,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Nhập họ tên thành viên...',
+        );
+      },
+    );
+  }
+
+  void _showClubMembersModal(
+    BuildContext context,
+    SocialSessionModel session,
+    int slotNumber,
+  ) {
+    final colors = context.colors;
+    final clubTitle = session.hostClubName.isNotEmpty
+        ? '${session.hostClubName} thành viên'
+        : 'Thành viên CLB';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: colors.bgCard,
+      builder: (mCtx) {
+        final screenHeight = MediaQuery.of(context).size.height;
+        return Container(
+          height: screenHeight * 0.75,
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(20)),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Hủy', style: TextStyle(color: colors.textSecondary)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primary,
-              foregroundColor: Colors.white,
+          child: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header: Back arrow + Title (Hình 2)
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon:
+                            Icon(Icons.arrow_back, color: colors.textPrimary),
+                        onPressed: () => Navigator.pop(mCtx),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          clubTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(height: 1, color: colors.border),
+
+                // Body: Danh sách thành viên CLB
+                Expanded(
+                  child: session.communityId == null ||
+                          session.communityId!.isEmpty
+                      ? _buildEmptyClubMembersView(colors)
+                      : Consumer(
+                          builder: (consumerCtx, ref, _) {
+                            final membersAsync = ref.watch(
+                              communityMembersProvider(session.communityId!),
+                            );
+
+                            return membersAsync.when(
+                              loading: () => const Center(
+                                child: CircularProgressIndicator(
+                                  color: AppTheme.primary,
+                                ),
+                              ),
+                              error: (err, _) => Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Text(
+                                    err.toString(),
+                                    style: TextStyle(color: colors.error),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              data: (members) {
+                                if (members.isEmpty) {
+                                  return _buildEmptyClubMembersView(colors);
+                                }
+
+                                return ListView.separated(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  itemCount: members.length,
+                                  separatorBuilder: (_, index) =>
+                                      Divider(height: 1, color: colors.border),
+                                  itemBuilder: (lCtx, idx) {
+                                    final member = members[idx];
+                                    final memberName =
+                                        member.userFullName?.trim().isNotEmpty ==
+                                                true
+                                            ? member.userFullName!.trim()
+                                            : 'Thành viên CLB';
+
+                                    return ListTile(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                        vertical: 4,
+                                      ),
+                                      leading: Container(
+                                        width: 44,
+                                        height: 44,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: AppTheme.primaryLight
+                                              .withValues(alpha: 0.35),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            memberName.isNotEmpty
+                                                ? memberName
+                                                    .substring(0, 1)
+                                                    .toUpperCase()
+                                                : 'M',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w800,
+                                              color: AppTheme.primary,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      title: Text(
+                                        memberName,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: colors.textPrimary,
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        member.role,
+                                        style: TextStyle(
+                                          fontSize: 12.5,
+                                          color: colors.textSecondary,
+                                        ),
+                                      ),
+                                      trailing: TextButton(
+                                        onPressed: () async {
+                                          try {
+                                            await ref
+                                                .read(
+                                                  socialSessionDetailProvider(
+                                                    session.id,
+                                                  ).notifier,
+                                                )
+                                                .addParticipant(
+                                                  userId:
+                                                      member.userId.isNotEmpty
+                                                          ? member.userId
+                                                          : member.id,
+                                                  ticketCount: 1,
+                                                );
+                                            if (context.mounted) {
+                                              Navigator.pop(mCtx);
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    'Đã thêm $memberName vào slot $slotNumber thành công!',
+                                                  ),
+                                                  backgroundColor:
+                                                      colors.success,
+                                                  behavior:
+                                                      SnackBarBehavior.floating,
+                                                ),
+                                              );
+                                            }
+                                          } catch (e) {
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(e.toString()),
+                                                  backgroundColor:
+                                                      colors.error,
+                                                  behavior:
+                                                      SnackBarBehavior.floating,
+                                                ),
+                                              );
+                                            }
+                                          }
+                                        },
+                                        child: const Text(
+                                          'Chọn',
+                                          style: TextStyle(
+                                            color: AppTheme.primary,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            );
+                          },
+                        ),
+                ),
+              ],
             ),
-            onPressed: () async {
-              final name = textController.text.trim();
-              if (name.isNotEmpty) {
-                try {
-                  await ref
-                      .read(socialSessionDetailProvider(session.id).notifier)
-                      .addParticipant(
-                        userId: name,
-                        ticketCount: 1,
-                      );
-                  if (context.mounted) {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Đã thêm $name vào slot $slotNumber thành công!'),
-                        backgroundColor: colors.success,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(e.toString()),
-                        backgroundColor: Colors.redAccent,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-                }
-              }
-            },
-            child: const Text('Thêm slot'),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyClubMembersView(AppColorsExtension colors) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 88,
+            height: 88,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: colors.borderLight,
+            ),
+            child: Icon(
+              Icons.people_alt_rounded,
+              size: 42,
+              color: colors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'CLB của bạn chưa có thành viên.',
+            style: TextStyle(
+              fontSize: 15.5,
+              fontWeight: FontWeight.w600,
+              color: colors.textPrimary,
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  void _showExternalParticipantModal(
+    BuildContext context,
+    SocialSessionModel session,
+    int slotNumber,
+  ) {
+    final colors = context.colors;
+    final nameController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: colors.bgCard,
+      builder: (eCtx) {
+        return StatefulBuilder(
+          builder: (stCtx, setState) {
+            final hasName = nameController.text.trim().isNotEmpty;
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(eCtx).viewInsets.bottom,
+              ),
+              child: SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header bar: Back arrow + "Thêm người ngoài CLB" + Nút "Thêm" (Hình 3)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              Icons.arrow_back,
+                              color: colors.textPrimary,
+                            ),
+                            onPressed: () => Navigator.pop(eCtx),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              'Thêm người ngoài CLB',
+                              style: TextStyle(
+                                fontSize: 16.5,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: hasName
+                                ? () async {
+                                    final name = nameController.text.trim();
+                                    try {
+                                      await ref
+                                          .read(
+                                            socialSessionDetailProvider(
+                                              session.id,
+                                            ).notifier,
+                                          )
+                                          .addParticipant(
+                                            userId: name,
+                                            ticketCount: 1,
+                                          );
+                                      if (context.mounted) {
+                                        Navigator.pop(eCtx);
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Đã thêm $name vào slot $slotNumber thành công!',
+                                            ),
+                                            backgroundColor: colors.success,
+                                            behavior:
+                                                SnackBarBehavior.floating,
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(e.toString()),
+                                            backgroundColor: colors.error,
+                                            behavior:
+                                                SnackBarBehavior.floating,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  }
+                                : null,
+                            child: Text(
+                              'Thêm',
+                              style: TextStyle(
+                                fontSize: 15.5,
+                                fontWeight: FontWeight.w700,
+                                color: hasName
+                                    ? AppTheme.primary
+                                    : colors.textMuted,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Divider(height: 1, color: colors.border),
+                    const SizedBox(height: 20),
+
+                    // Body: Avatar icon + TextField Tên (bỏ Trình độ kỹ năng)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppTheme.primaryLight
+                                  .withValues(alpha: 0.35),
+                            ),
+                            child: Icon(
+                              Icons.person_outline_rounded,
+                              size: 28,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: TextField(
+                              controller: nameController,
+                              autofocus: true,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: colors.textPrimary,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Tên',
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 12,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide:
+                                      BorderSide(color: colors.border),
+                                ),
+                              ),
+                              onChanged: (_) => setState(() {}),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -2218,66 +2589,134 @@ RSVP: https://sporto.vn/social/${session.id}''';
   }
 
   void _showMoreOptions(SocialSessionModel session) {
+    final colors = context.colors;
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      backgroundColor: colors.bgCard,
       builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.report_problem_outlined),
-                title: const Text('Báo cáo buổi Social này'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Cảm ơn bạn đã gửi báo cáo.'),
-                      behavior: SnackBarBehavior.floating,
+        if (_isHost) {
+          return SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header: Tên kèo (Hình 4)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                  child: Text(
+                    session.title,
+                    style: TextStyle(
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w800,
+                      color: colors.textPrimary,
                     ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.block_outlined),
-                title: const Text('Ẩn các buổi của Host này'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                },
-              ),
-              if (_isHost)
+                  ),
+                ),
+                Divider(height: 1, color: colors.border),
+
+                // 1. Lặp lại kèo
                 ListTile(
-                  leading: const Icon(Icons.delete_outline, color: Colors.red),
-                  title: const Text(
-                    'Hủy buổi Social này',
-                    style: TextStyle(color: Colors.red),
+                  title: Text(
+                    'Lặp lại kèo',
+                    style: TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Tính năng đang phát triển'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                ),
+                Divider(height: 1, color: colors.border),
+
+                // 2. Chỉnh sửa kèo (Yêu cầu 2)
+                ListTile(
+                  title: Text(
+                    'Chỉnh sửa kèo',
+                    style: TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (sheetCtx) => CreateSocialScreen(
+                        clubId: session.communityId ?? '',
+                        clubName: session.hostClubName,
+                        clubLogoUrl: session.hostClubAvatar,
+                        initialSession: session,
+                      ),
+                    );
+                  },
+                ),
+                Divider(height: 1, color: colors.border),
+
+                // 3. Hủy kèo
+                ListTile(
+                  title: Text(
+                    'Hủy kèo',
+                    style: TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w600,
+                      color: colors.error,
+                    ),
                   ),
                   onTap: () async {
                     Navigator.pop(ctx);
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (dCtx) => AlertDialog(
-                        title: const Text('Xác nhận hủy kèo'),
-                        content: const Text(
+                        backgroundColor: colors.bgCard,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusXL),
+                        ),
+                        title: Text(
+                          'Xác nhận hủy kèo',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                        content: Text(
                           'Bạn có chắc muốn hủy buổi Social này không?',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: colors.textSecondary,
+                          ),
                         ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(dCtx, false),
-                            child: const Text('Không'),
+                            child: Text(
+                              'Không',
+                              style: TextStyle(color: colors.textSecondary),
+                            ),
                           ),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
+                              backgroundColor: colors.error,
+                              foregroundColor: Colors.white,
                             ),
                             onPressed: () => Navigator.pop(dCtx, true),
-                            child: const Text(
-                              'Hủy kèo',
-                              style: TextStyle(color: Colors.white),
-                            ),
+                            child: const Text('Hủy kèo'),
                           ),
                         ],
                       ),
@@ -2293,9 +2732,11 @@ RSVP: https://sporto.vn/social/${session.id}''';
                         if (mounted) {
                           context.pop();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content:
-                                  Text('Đã hủy buổi Social thành công!'),
+                                  const Text('Đã hủy buổi Social thành công!'),
+                              backgroundColor: colors.success,
+                              behavior: SnackBarBehavior.floating,
                             ),
                           );
                         }
@@ -2304,7 +2745,8 @@ RSVP: https://sporto.vn/social/${session.id}''';
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(e.toString()),
-                              backgroundColor: Colors.redAccent,
+                              backgroundColor: colors.error,
+                              behavior: SnackBarBehavior.floating,
                             ),
                           );
                         }
@@ -2312,6 +2754,78 @@ RSVP: https://sporto.vn/social/${session.id}''';
                     }
                   },
                 ),
+                Divider(height: 1, color: colors.border),
+
+                // 4. Tắt thông báo cuộc trò chuyện
+                ListTile(
+                  title: Text(
+                    'Tắt thông báo cuộc trò chuyện',
+                    style: TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Tính năng đang phát triển'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          );
+        }
+
+        // Non-host: chỉ có 2 option báo cáo và ẩn host
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(
+                  Icons.report_problem_outlined,
+                  color: colors.textPrimary,
+                ),
+                title: Text(
+                  'Báo cáo buổi Social này',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Cảm ơn bạn đã gửi báo cáo.'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.block_outlined,
+                  color: colors.textPrimary,
+                ),
+                title: Text(
+                  'Ẩn các buổi của Host này',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                },
+              ),
+              const SizedBox(height: 8),
             ],
           ),
         );

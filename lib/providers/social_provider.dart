@@ -1,7 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+
+final _socialClubLog = AppLogger('ClubSocialSessions');
 
 class SocialFilterState {
   final DateTime selectedDate;
@@ -319,16 +322,24 @@ final clubSocialSessionsQueryProvider =
     FutureProvider.family<List<SocialSessionModel>, String>(
   (ref, communityId) async {
     final repo = ref.watch(socialSessionRepositoryProvider);
-    final today = DateTime.now();
-    final dateStr = DateFormat('yyyy-MM-dd').format(today);
     try {
-      final res = await repo.listByDate(
-        date: dateStr,
+      // Backend: GET /social-sessions/by-community/:communityId
+      // Lấy toàn bộ Social của CLB (không giới hạn theo ngày hôm nay).
+      final res = await repo.listByCommunity(
         communityId: communityId,
+        status: 'OPEN,FULL,COMPLETED',
+        limit: 20,
       );
       return res.items;
-    } catch (_) {
-      return const <SocialSessionModel>[];
+    } catch (error, stack) {
+      // Đừng nuốt lỗi: log để debug vì sao tab "Mở" trống
+      // trong khi tab "Đã xong" vẫn có dữ liệu.
+      _socialClubLog.error(
+        'listByCommunity failed for $communityId',
+        error,
+        stack,
+      );
+      rethrow;
     }
   },
 );
@@ -338,6 +349,28 @@ final clubSocialSessionsProvider =
   return ref.watch(clubSocialSessionsQueryProvider(communityId)).asData?.value ??
       const <SocialSessionModel>[];
 });
+
+final communitySocialSessionsQueryProvider =
+    FutureProvider.family<List<SocialSessionModel>, String>(
+  (ref, communityId) async {
+    final repo = ref.watch(socialSessionRepositoryProvider);
+    try {
+      final res = await repo.listByCommunity(
+        communityId: communityId,
+        status: 'OPEN,FULL,COMPLETED',
+        limit: 20,
+      );
+      return res.items;
+    } catch (error, stack) {
+      _socialClubLog.error(
+        'listByCommunity failed for $communityId',
+        error,
+        stack,
+      );
+      rethrow;
+    }
+  },
+);
 
 final filteredSocialSessionsProvider =
     Provider<AsyncValue<List<SocialSessionModel>>>((ref) {
