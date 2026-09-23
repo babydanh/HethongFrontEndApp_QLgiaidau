@@ -45,6 +45,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   String? _selectedDivisionId;
   String? _customInviteCode;
   bool _hasUserSwitchedTab = false;
+  bool _isHeaderVisible = true;
+  double _lastScrollOffset = 0;
 
   void _updateTabController(int count, {int? defaultIndex}) {
     if (_tabController != null && _currentTabCount == count) return;
@@ -731,27 +733,67 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       );
     }
 
-    return Column(
-      children: [
-        // ─── Clean Minimalist TopBar (Bỏ hoàn toàn dropdown trên đầu) ───
-        _buildTopBar(tournament, colors, isFollowing),
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification is ScrollUpdateNotification) {
+          final currentOffset = notification.metrics.pixels;
+          final delta = currentOffset - _lastScrollOffset;
 
-        // ─── Dynamic Tab Bar Navigation (Đang diễn ra, Kết quả, Tổng quan, Đội, Bảng đấu, Lịch...) ───
-        _buildStickyTabBar(controller, tabHeaders, colors),
-
-        // ─── Tab Views Content ───
-        Expanded(
-          child: teamsAsync.when(
-            data: (_) => TabBarView(controller: controller, children: tabViews),
-            loading: () => const Center(
-              child: CircularProgressIndicator(color: AppTheme.primary),
-            ),
-            error: (err, st) => Center(
-              child: Text('$err', style: TextStyle(color: colors.error)),
+          // Only trigger on vertical scrolls with valid scroll extent
+          if (notification.metrics.axis == Axis.vertical) {
+            if (currentOffset <= 20) {
+              if (!_isHeaderVisible) {
+                setState(() => _isHeaderVisible = true);
+              }
+            } else if (delta > 8 && currentOffset > 60) {
+              // Lướt xuống (scroll down) -> Ẩn header
+              if (_isHeaderVisible) {
+                setState(() => _isHeaderVisible = false);
+              }
+            } else if (delta < -8) {
+              // Lướt lên (scroll up) -> Hiện lại header
+              if (!_isHeaderVisible) {
+                setState(() => _isHeaderVisible = true);
+              }
+            }
+          }
+          _lastScrollOffset = currentOffset;
+        }
+        return false;
+      },
+      child: Column(
+        children: [
+          // ─── Clean Minimalist TopBar with Slide & Fade Animation ───
+          AnimatedSize(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeInOutCubic,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              opacity: _isHeaderVisible ? 1.0 : 0.0,
+              child: _isHeaderVisible
+                  ? _buildTopBar(tournament, colors, isFollowing)
+                  : const SizedBox.shrink(),
             ),
           ),
-        ),
-      ],
+
+          // ─── Dynamic Tab Bar Navigation (Đang diễn ra, Kết quả, Tổng quan, Đội, Bảng đấu, Lịch...) ───
+          _buildStickyTabBar(controller, tabHeaders, colors),
+
+          // ─── Tab Views Content ───
+          Expanded(
+            child: teamsAsync.when(
+              data: (_) => TabBarView(controller: controller, children: tabViews),
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppTheme.primary),
+              ),
+              error: (err, st) => Center(
+                child: Text('$err', style: TextStyle(color: colors.error)),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
