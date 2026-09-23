@@ -957,9 +957,21 @@ class _OverviewTabState extends State<OverviewTab> {
     }
     if (images.isEmpty) {
       return Container(
-        color: context.colors.bgSurface,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF1A1A2E),
+              const Color(0xFF16213E),
+              const Color(0xFF0F3460),
+            ],
+          ),
+        ),
         child: const SportoBrandFallback(
           withTagline: true,
+          padding: EdgeInsets.all(32),
           semanticsLabel: 'SportO tournament fallback banner',
         ),
       );
@@ -972,9 +984,21 @@ class _OverviewTabState extends State<OverviewTab> {
           firstUrl,
           fit: BoxFit.cover,
           errorBuilder: (ctx, err, stack) => Container(
-            color: context.colors.bgSurface,
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF1A1A2E),
+                  Color(0xFF16213E),
+                  Color(0xFF0F3460),
+                ],
+              ),
+            ),
             child: const SportoBrandFallback(
               withTagline: true,
+              padding: EdgeInsets.all(32),
               semanticsLabel: 'SportO tournament fallback banner',
             ),
           ),
