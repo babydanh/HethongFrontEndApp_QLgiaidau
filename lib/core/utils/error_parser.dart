@@ -70,6 +70,10 @@ class ErrorParser {
 
         if (msg != null) {
           final lower = msg.toLowerCase();
+          if (lower.contains('thông tin tài khoản ngân hàng') &&
+              lower.contains('hoàn lệ phí')) {
+            return strings.errorParserRefundBankRequired;
+          }
           if (lower.contains('divisionid must be a uuid') ||
               lower.contains('division id must be a uuid')) {
             return strings.errorParserInvalidDivision;
