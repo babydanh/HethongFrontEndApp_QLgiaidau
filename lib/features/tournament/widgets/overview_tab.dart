@@ -13,7 +13,6 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
 
 class OverviewTab extends StatefulWidget {
@@ -21,7 +20,6 @@ class OverviewTab extends StatefulWidget {
   final int teamCount;
   final String Function(String? url) resolveImageUrl;
   final VoidCallback? onNavigateToMatches;
-  final void Function(TournamentDivision division)? onSelectDivision;
   final bool isFollowing;
   final VoidCallback? onToggleFollow;
   final String? inviteCode;
@@ -32,7 +30,6 @@ class OverviewTab extends StatefulWidget {
     required this.teamCount,
     required this.resolveImageUrl,
     this.onNavigateToMatches,
-    this.onSelectDivision,
     this.isFollowing = false,
     this.onToggleFollow,
     this.inviteCode,
@@ -46,7 +43,6 @@ class _OverviewTabState extends State<OverviewTab> {
   Timer? _countdownTimer;
   Duration _remainingTime = Duration.zero;
   String _countdownLabel = '';
-  String? _expandedDivisionId;
 
   @override
   void initState() {
@@ -137,17 +133,6 @@ class _OverviewTabState extends State<OverviewTab> {
   String _formatDate(DateTime? date) {
     if (date == null) return 'Chưa cập nhật';
     return DateFormat('dd/MM/yyyy').format(date);
-  }
-
-  String _getBracketFormatLabel(
-    String? bracketType, [
-    String? fallbackBracketType,
-  ]) {
-    return BracketFormatIcons.getFormatLabel(
-      context,
-      bracketType,
-      fallbackBracketType,
-    );
   }
 
   String _formatCurrency(double? amount) {
@@ -484,7 +469,7 @@ class _OverviewTabState extends State<OverviewTab> {
                                 context.push('/lite-manage/${t.id}');
                               } else {
                                 context.push(
-                                  '/organizer/tournaments/${t.id}/ops',
+                                  '/organizer/tournaments/${t.id}/manage',
                                 );
                               }
                             },
@@ -528,10 +513,7 @@ class _OverviewTabState extends State<OverviewTab> {
                           widget.onNavigateToMatches!();
                         }
                       },
-                      icon: const Icon(
-                        Icons.calendar_month_rounded,
-                        size: 16,
-                      ),
+                      icon: const Icon(Icons.calendar_month_rounded, size: 16),
                       label: const Text(
                         'Lịch thi đấu',
                         style: TextStyle(
@@ -569,23 +551,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   const SizedBox(height: 12),
                 ],
 
-                // ─── 3. DANH SÁCH NỘI DUNG / PHÂN HẠNG THI ĐẤU (CHUẨN WEB & TASTE SKILL) ───
-                // Chỉ hiển thị khi giải có từ 2 nội dung thi đấu trở lên (ví dụ: Đôi Nam, Đôi Nữ...). Nếu chỉ có 1 nội dung thì đã thể hiện ở badge header trên cùng.
-                if (!isClubLite && t.divisions.length > 1) ...[
-                  _buildSectionHeader(
-                    'NỘI DUNG THI ĐẤU (${t.divisions.length})',
-                  ),
-                  const SizedBox(height: 10),
-                  ...t.divisions.map((div) => _buildDivisionItem(div, colors)),
-                  const SizedBox(height: 20),
-                  Divider(
-                    color: colors.border.withValues(alpha: 0.6),
-                    height: 1,
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
-                // ─── 4. THÔNG TIN ĐĂNG KÝ & LỆ PHÍ ───
+                // ─── 3. THÔNG TIN ĐĂNG KÝ & LỆ PHÍ ───
                 if (!isClubLite) ...[
                   _buildSectionHeader('THỜI GIAN ĐĂNG KÝ & LỆ PHÍ'),
                   const SizedBox(height: 10),
@@ -606,7 +572,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   ),
                 ],
 
-                // ─── 5. GIỚI THIỆU CHI TIẾT ───
+                // ─── 4. GIỚI THIỆU CHI TIẾT ───
                 if (desc.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   Divider(
@@ -619,7 +585,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   _buildDescriptionContent(desc),
                 ],
 
-                // ─── 6. CƠ CẤU GIẢI THƯỞNG ───
+                // ─── 5. CƠ CẤU GIẢI THƯỞNG ───
                 if (!isClubLite &&
                     t.prizeDescription != null &&
                     t.prizeDescription!.isNotEmpty) ...[
@@ -634,7 +600,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   _buildDescriptionContent(t.prizeDescription!),
                 ],
 
-                // ─── 7. NGƯỜI SÁNG LẬP GIẢI ĐẤU (ĐẶT Ở CUỐI KHI GIẢI CÓ LOGO) ───
+                // ─── 6. NGƯỜI SÁNG LẬP GIẢI ĐẤU (ĐẶT Ở CUỐI KHI GIẢI CÓ LOGO) ───
                 if (hasCustomLogo &&
                     (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty)) ...[
                   const SizedBox(height: 20),
@@ -708,238 +674,6 @@ class _OverviewTabState extends State<OverviewTab> {
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDivisionItem(TournamentDivision div, AppColorsExtension colors) {
-    final displayName = widget.tournament.isClubLite
-        ? (div.matchType == 'DOUBLES' ? 'Đôi' : 'Đơn')
-        : div.name;
-    final maxP = div.maxParticipants ?? 0;
-    final curP = div.participantCount;
-    final isFull = maxP > 0 && curP >= maxP;
-    final isExpanded = _expandedDivisionId == div.id;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isExpanded
-              ? AppTheme.primary
-              : colors.border.withValues(alpha: 0.7),
-          width: isExpanded ? 1.5 : 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: () {
-              setState(() {
-                _expandedDivisionId = isExpanded ? null : div.id;
-              });
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Row(
-                children: [
-                  // Ô icon thể thức thi đấu (chuẩn Web getBracketFormatIcon)
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: isExpanded
-                          ? AppTheme.primary
-                          : AppTheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isExpanded
-                            ? AppTheme.primary
-                            : AppTheme.primary.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Center(
-                      child: BracketFormatIcons.getIcon(
-                        div.bracketType,
-                        fallbackBracketType: widget.tournament.bracketType,
-                        size: 18,
-                        color: isExpanded ? Colors.white : AppTheme.primary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          displayName,
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w700,
-                            color: isExpanded
-                                ? AppTheme.primary
-                                : colors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _getBracketFormatLabel(
-                            div.bracketType,
-                            widget.tournament.bracketType,
-                          ),
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: colors.textMuted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  if (isFull) ...[
-                    // Badge Đã kết thúc / Đã đủ theo style Muted Web
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colors.bgSurface,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: colors.border.withValues(alpha: 0.8),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.check_circle_rounded,
-                            size: 11,
-                            color: colors.textMuted,
-                          ),
-                          const SizedBox(width: 3.5),
-                          Text(
-                            'Đã kết thúc',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.people_alt_outlined,
-                        size: 14,
-                        color: colors.textMuted,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        maxP > 0 ? '$curP/$maxP' : '$curP VĐV',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    isExpanded
-                        ? Icons.expand_less_rounded
-                        : Icons.expand_more_rounded,
-                    size: 18,
-                    color: isExpanded ? AppTheme.primary : colors.textMuted,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (isExpanded) ...[
-            Divider(color: colors.border.withValues(alpha: 0.5), height: 1),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildInlineInfo(
-                    icon: Icons.sports_score_rounded,
-                    label: 'Thể thức:',
-                    value: _getBracketFormatLabel(
-                      div.bracketType,
-                      widget.tournament.bracketType,
-                    ),
-                    colors: colors,
-                  ),
-                  const SizedBox(height: 6),
-                  _buildInlineInfo(
-                    icon: Icons.people_outline_rounded,
-                    label: 'Định dạng:',
-                    value: div.matchType == 'DOUBLES' ? 'Đánh Đôi' : 'Đánh Đơn',
-                    colors: colors,
-                  ),
-                  if (div.genderRestriction != null &&
-                      div.genderRestriction!.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    _buildInlineInfo(
-                      icon: Icons.wc_rounded,
-                      label: 'Giới tính:',
-                      value: div.genderRestriction!,
-                      colors: colors,
-                    ),
-                  ],
-                  const SizedBox(height: 6),
-                  _buildInlineInfo(
-                    icon: Icons.group_outlined,
-                    label: 'Quy mô:',
-                    value: maxP > 0 ? '$curP / $maxP VĐV (đội)' : '$curP VĐV',
-                    colors: colors,
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: () {
-                        if (widget.onSelectDivision != null) {
-                          widget.onSelectDivision!(div);
-                        }
-                      },
-                      icon: const Icon(Icons.account_tree_outlined, size: 16),
-                      label: const Text(
-                        'Xem Bảng đấu phân hạng này',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );

@@ -27,6 +27,7 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/tag_assign_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/community_social_settings_sheet.dart';
@@ -427,7 +428,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final clubAsync = ref.watch(communityDetailProvider(widget.clubId));
@@ -500,7 +500,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         onTabSelected: (index) {
           if (index != 3) context.go('/home?tab=$index');
         },
-        onProfileTap: () => context.go('/profile'),
+        onMenuTap: () => AppMenuSheet.show(context),
       ),
     );
   }
@@ -550,10 +550,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         isCreator || club.myRole == 'OWNER' || _myMembership?.role == 'OWNER';
     final isClubAdmin =
         isOwner ||
-            club.myRole == 'ADMIN' ||
-            club.myRole == 'MODERATOR' ||
-            _myMembership?.role == 'ADMIN' ||
-            _myMembership?.role == 'MODERATOR';
+        club.myRole == 'ADMIN' ||
+        club.myRole == 'MODERATOR' ||
+        _myMembership?.role == 'ADMIN' ||
+        _myMembership?.role == 'MODERATOR';
 
     final topPadding = MediaQuery.of(context).padding.top;
     final logoUrl = _resolveImageUrl(club.logoUrl);
@@ -674,8 +674,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     await _pickFromPhone(club: club, isLogo: isLogo);
   }
 
-
-
   Future<void> _pickFromPhone({
     required Community club,
     required bool isLogo,
@@ -759,10 +757,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       final url = await ref
           .read(communitySocialRepositoryProvider)
           .uploadImage(uploadBytes, isLogo ? 'club_logo.png' : picked.name);
-      await ref.read(communityRepositoryProvider).updateCommunity(
-        club.id,
-        {isLogo ? 'logoUrl' : 'bannerUrl': url},
-      );
+      await ref.read(communityRepositoryProvider).updateCommunity(club.id, {
+        isLogo ? 'logoUrl' : 'bannerUrl': url,
+      });
       ref.invalidate(communityDetailProvider(club.id));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

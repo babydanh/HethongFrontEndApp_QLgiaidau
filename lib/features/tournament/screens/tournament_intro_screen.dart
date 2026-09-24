@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_state_views.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/live_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_tab.dart';
@@ -21,6 +22,7 @@ import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dar
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -53,13 +55,16 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final prev = _tabController;
     final prevIndex = prev?.index;
     _currentTabCount = count;
-    
+
     // If the user hasn't actively switched tabs yet, always default to defaultIndex (overview tab)
-    final targetIndex = (!_hasUserSwitchedTab && defaultIndex != null && defaultIndex < count)
+    final targetIndex =
+        (!_hasUserSwitchedTab && defaultIndex != null && defaultIndex < count)
         ? defaultIndex
         : (prevIndex != null && prevIndex < count
-            ? prevIndex
-            : (defaultIndex != null && defaultIndex < count ? defaultIndex : 0));
+              ? prevIndex
+              : (defaultIndex != null && defaultIndex < count
+                    ? defaultIndex
+                    : 0));
 
     final newController = TabController(
       length: count,
@@ -223,16 +228,104 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         ),
       ),
       extendBody: true,
-      bottomNavigationBar: FloatingBottomNav(
-        currentIndex: 1,
-        onTabSelected: (index) {
-          if (index == 2) {
-            context.go('/profile');
-          } else {
-            context.go('/home');
-          }
-        },
-        onProfileTap: () => context.go('/profile'),
+      bottomNavigationBar: _buildBottomBar(
+        context,
+        tournamentAsync.asData?.value,
+        activeInvite,
+        currentUserId,
+        isAdmin,
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(
+    BuildContext context,
+    Tournament? tournament,
+    String? activeInvite,
+    String? currentUserId,
+    bool isAdmin,
+  ) {
+    final defaultNavigation = FloatingBottomNav(
+      currentIndex: 1,
+      onTabSelected: (_) => context.go('/home'),
+      onMenuTap: () => AppMenuSheet.show(context),
+    );
+
+    if (tournament == null ||
+        !StatusHelper.isTournamentRegistration(tournament.status)) {
+      return defaultNavigation;
+    }
+
+    final isCreator = tournament.creatorId == currentUserId;
+    final hasInvite = activeInvite?.trim().isNotEmpty == true;
+    final isClubRestricted =
+        tournament.isClubTournament ||
+        tournament.isClubLite ||
+        (tournament.communityId?.isNotEmpty ?? false) ||
+        tournament.visibility == 'PRIVATE';
+
+    var hasTournamentAccess =
+        !isClubRestricted || isCreator || isAdmin || hasInvite;
+    if (!hasTournamentAccess &&
+        tournament.communityId != null &&
+        tournament.communityId!.isNotEmpty) {
+      final membership = ref
+          .watch(myCommunityMembershipProvider(tournament.communityId!))
+          .value;
+      final membershipStatus = membership?.status.toUpperCase();
+      hasTournamentAccess =
+          membershipStatus == 'JOINED' ||
+          membershipStatus == 'ADMIN' ||
+          membershipStatus == 'OWNER' ||
+          membershipStatus == 'APPROVED';
+    }
+
+    if (!hasTournamentAccess || isCreator) return defaultNavigation;
+
+    final now = DateTime.now();
+    final isRegistrationNotStarted =
+        tournament.registrationStartDate != null &&
+        now.isBefore(tournament.registrationStartDate!);
+    final isRegistrationExpired =
+        tournament.registrationEndDate != null &&
+        now.isAfter(tournament.registrationEndDate!);
+    final canRegister =
+        !tournament.isRegistrationLocked &&
+        !isRegistrationNotStarted &&
+        !isRegistrationExpired;
+    final l10n = AppLocalizations.of(context)!;
+    final label = isRegistrationNotStarted
+        ? l10n.lite_registrationNotOpen
+        : canRegister
+        ? l10n.registerNow
+        : l10n.registerRegClosed;
+    final queryParameters = <String, String>{
+      if (hasInvite) 'invite': activeInvite!.trim(),
+      if (_selectedDivisionId?.isNotEmpty == true)
+        'divisionId': _selectedDivisionId!,
+    };
+    final registrationUri = Uri(
+      pathSegments: ['register', tournament.id],
+      queryParameters: queryParameters.isEmpty ? null : queryParameters,
+    ).toString();
+
+    return SafeArea(
+      top: false,
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.colors.bgCard,
+          border: Border(top: BorderSide(color: context.colors.border)),
+        ),
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+        child: SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: FilledButton.icon(
+            onPressed: canRegister ? () => context.push(registrationUri) : null,
+            icon: const Icon(Icons.how_to_reg_rounded),
+            label: Text(label),
+          ),
+        ),
       ),
     );
   }
@@ -542,7 +635,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               ),
               const SizedBox(width: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4.5, vertical: 0.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 4.5,
+                  vertical: 0.5,
+                ),
                 decoration: BoxDecoration(
                   color: colors.error,
                   borderRadius: BorderRadius.circular(10),
@@ -643,13 +739,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         teamCount: teamsAsync.value?.length ?? 0,
         resolveImageUrl: _resolveImageUrl,
         onNavigateToMatches: () {
-          controller.animateTo(bracketIndex);
-        },
-        onSelectDivision: (div) {
-          setState(() {
-            _selectedDivisionId = div.id;
-            _selectedDivision = div.name;
-          });
           controller.animateTo(bracketIndex);
         },
         isFollowing: isFollowing,
@@ -783,7 +872,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           // ─── Tab Views Content ───
           Expanded(
             child: teamsAsync.when(
-              data: (_) => TabBarView(controller: controller, children: tabViews),
+              data: (_) =>
+                  TabBarView(controller: controller, children: tabViews),
               loading: () => const Center(
                 child: CircularProgressIndicator(color: AppTheme.primary),
               ),
@@ -1067,10 +1157,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         labelPadding: const EdgeInsets.symmetric(horizontal: 12),
         indicatorSize: TabBarIndicatorSize.label,
         indicator: const UnderlineTabIndicator(
-          borderSide: BorderSide(
-            color: AppTheme.primary,
-            width: 2.5,
-          ),
+          borderSide: BorderSide(color: AppTheme.primary, width: 2.5),
           insets: EdgeInsets.only(bottom: 0),
         ),
         dividerColor: Colors.transparent,

@@ -234,6 +234,99 @@ class _BannerCarousel extends StatelessWidget {
   }
 }
 
+class TournamentManagementBanner extends StatefulWidget {
+  final Tournament tournament;
+  final AppColorsExtension colors;
+
+  const TournamentManagementBanner({
+    super.key,
+    required this.tournament,
+    required this.colors,
+  });
+
+  @override
+  State<TournamentManagementBanner> createState() =>
+      _TournamentManagementBannerState();
+}
+
+class _TournamentManagementBannerState
+    extends State<TournamentManagementBanner> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tournament = widget.tournament;
+    final colors = widget.colors;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.bgDark,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        border: Border.all(color: colors.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 132,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _BannerCarousel(
+                  images: _collectImages(tournament),
+                  pageController: _pageController,
+                  currentPage: _currentPage,
+                  onPageChanged: (index) => setState(() {
+                    _currentPage = index;
+                  }),
+                  showOverlay: true,
+                  tournament: tournament,
+                ),
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SportPill(sportKey: tournament.sport),
+                      const SizedBox(width: 6),
+                      StatusBadge(statusKey: tournament.status),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+            child: Text(
+              tournament.name.trim().isEmpty
+                  ? AppLocalizations.of(context)!.unnamed
+                  : tournament.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                height: 1.2,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _FallbackBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
