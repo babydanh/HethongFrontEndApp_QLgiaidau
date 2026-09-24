@@ -3542,8 +3542,8 @@
   "communitySocial_emptyFeed": "Chưa có bài đăng nào. Hãy chia sẻ điều đầu tiên!",
   "communitySocial_retry": "Thử lại",
   "withdraw_title": "Rút lui",
-  "withdraw_refundProfileDescription": "Tiền hoàn sẽ được chuyển vào tài khoản ngân hàng trong hồ sơ của bạn.",
-  "withdraw_refundInputDescription": "Bạn đã đóng phí. Vui lòng nhập thông tin ngân hàng để nhận hoàn tiền (sẽ được lưu vào hồ sơ).",
+  "withdraw_refundProfileDescription": "Tài khoản nhận hoàn lấy từ hồ sơ. Rút trong vòng 3 giờ kể từ lúc đăng ký được hoàn toàn bộ khoản đã thanh toán; sau 3 giờ hoàn khoản đã thanh toán trừ phí SportO đã lưu trên giao dịch.",
+  "withdraw_refundInputDescription": "Nếu có khoản hoàn, cần thông tin ngân hàng đầy đủ. Rút trong vòng 3 giờ kể từ lúc đăng ký được hoàn toàn bộ khoản đã thanh toán; sau 3 giờ hoàn khoản đã thanh toán trừ phí SportO đã lưu trên giao dịch.",
   "withdraw_freeDescription": "Bạn có chắc muốn rút lui khỏi giải đấu này?",
   "withdraw_bankNameLabel": "Tên ngân hàng",
   "withdraw_bankNameHint": "VD: Vietcombank, Techcombank",
@@ -3557,9 +3557,23 @@
   "withdraw_irreversibleWarning": "Hành động này không thể hoàn tác.",
   "withdraw_processing": "Đang xử lý...",
   "withdraw_confirm": "Xác nhận rút lui",
-  "withdraw_refundSuccess": "Đã rút lui. Tiền hoàn sẽ được xử lý trong 3–5 ngày.",
-  "withdraw_success": "Đã rút lui khỏi giải đấu",
+  "withdraw_refundRequested": "Yêu cầu hoàn {amount} VND đã được gửi; phí trừ {fee} VND. Tiền đang chờ Ban tổ chức xác nhận.",
+  "@withdraw_refundRequested": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "fee": { "type": "String" }
+    }
+  },
   "withdraw_error": "Không thể rút lui khỏi giải đấu. Vui lòng thử lại.",
+  "withdraw_refundZero": "Bạn đã rút lui; sau khi trừ phí {fee} VND, không còn khoản tiền được hoàn.",
+  "@withdraw_refundZero": {
+    "placeholders": {
+      "fee": { "type": "String" }
+    }
+  },
+  "withdraw_noRefund": "Bạn đã rút lui. Không có khoản thanh toán đã hoàn tất còn đủ điều kiện để tạo yêu cầu hoàn mới.",
+  "withdraw_existingRefundPending": "Yêu cầu hoàn trước đó đang chờ Ban tổ chức xử lý.",
+  "withdraw_refundPolicy": "Máy chủ tính 3 giờ từ thời điểm đăng ký. Yêu cầu hoàn còn chờ Ban tổ chức xác nhận; gửi yêu cầu không có nghĩa tiền đã được chuyển.",
   "withdraw_bankInfoTitle": "Ngân hàng hoàn tiền",
   "withdraw_change": "Đổi",
   "withdraw_bankLabel": "Ngân hàng",
@@ -4498,6 +4512,7 @@
   "errorParserConnectionTimeout": "Kết nối tới máy chủ quá hạn. Vui lòng kiểm tra lại đường truyền và thử lại.",
   "errorParserConnectionFailed": "Không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối mạng hoặc server.",
   "errorParserBadRequest": "Yêu cầu gửi đi không hợp lệ (Lỗi 400).",
+  "errorParserRefundBankRequired": "Vui lòng nhập đầy đủ thông tin tài khoản ngân hàng để nhận lại tiền hoàn.",
   "errorParserInvalidCredentials": "Email hoặc mật khẩu không chính xác.",
   "errorParserForbidden": "Bạn không có quyền thực hiện hành động này.",
   "errorParserNotFound": "Không tìm thấy tài nguyên được yêu cầu (Lỗi 404).",

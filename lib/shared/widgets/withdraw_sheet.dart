@@ -4,12 +4,11 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 
 /// Bottom sheet xác nhận rút lui khỏi giải đấu.
-/// - Giải miễn phí: xác nhận đơn giản, rút luôn.
-/// - Giải có phí và đã đóng tiền: lấy ngân hàng từ profile.
-///   • Nếu profile đã có đủ → hiển thị thông tin, cho phép xác nhận ngay.
-///   • Nếu chưa có → yêu cầu nhập, lưu vào profile đồng thời khi rút lui.
+/// - Giải có phí: hiển thị quy tắc hoàn; ngân hàng chỉ cần khi có khoản hoàn.
+///   Máy chủ tính số tiền từ thời điểm đăng ký và giao dịch đã thu.
 class WithdrawSheet extends ConsumerStatefulWidget {
   final String tournamentId;
   final String? divisionId;
@@ -80,7 +79,8 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
       // chưa resolve → .asData?.value == null → bỏ sót bank trong profile.
       final profile = await ref.read(userProfileProvider.future);
       if (!mounted) return;
-      final hasBank = (profile.bankName?.isNotEmpty ?? false) &&
+      final hasBank =
+          (profile.bankName?.isNotEmpty ?? false) &&
           (profile.bankAccountNumber?.isNotEmpty ?? false) &&
           (profile.bankAccountName?.isNotEmpty ?? false);
       if (hasBank) {
@@ -108,10 +108,7 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
 
   Future<void> _handleWithdraw() async {
     final l10n = AppLocalizations.of(context)!;
-    // Validate form bank nếu user cần nhập thủ công
-    if (_needsBankInput) {
-      if (!_formKey.currentState!.validate()) return;
-    }
+    // The server requires bank details only when a positive refund is due.
 
     setState(() => _submitting = true);
     try {
@@ -143,30 +140,45 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
         }
       }
 
-      await ref.read(tournamentRepositoryProvider).withdraw(
-        tournamentId: widget.tournamentId,
-        divisionId: widget.divisionId,
-        // Chỉ gửi bank khi giải có phí (backend cũng fallback từ profile nếu null)
-        bankName: widget.hasPaid ? bankName : null,
-        bankAccountNumber: widget.hasPaid ? bankAccountNumber : null,
-        bankAccountName: widget.hasPaid ? bankAccountName : null,
-      );
+      final result = await ref
+          .read(tournamentRepositoryProvider)
+          .withdraw(
+            tournamentId: widget.tournamentId,
+            divisionId: widget.divisionId,
+            bankName: widget.hasPaid ? bankName : null,
+            bankAccountNumber: widget.hasPaid ? bankAccountNumber : null,
+            bankAccountName: widget.hasPaid ? bankAccountName : null,
+          );
+      final refundAmount = result['refundAmount']?.toString();
+      final feeDeducted = result['feeDeducted']?.toString() ?? '0.00';
+      final refundStatus = result['refundStatus']?.toString();
+      final refundValue = refundAmount == null
+          ? null
+          : double.tryParse(refundAmount);
+      final successMessage = refundValue == null
+          ? refundStatus == 'PENDING_REFUND'
+                ? l10n.withdraw_existingRefundPending
+                : l10n.withdraw_noRefund
+          : refundValue > 0
+          ? l10n.withdraw_refundRequested(refundAmount ?? '0.00', feeDeducted)
+          : l10n.withdraw_refundZero(feeDeducted);
 
       if (mounted) {
-        Navigator.pop(context, true); // trả về true → caller biết rút lui thành công
+        Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.hasPaid
-                ? l10n.withdraw_refundSuccess
-                : l10n.withdraw_success),
+            content: Text(successMessage),
             backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.withdraw_error)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorParser.parse(e, l10n.withdraw_error, l10n)),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -179,200 +191,230 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
     final colors = context.colors;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return Container(
-      padding: EdgeInsets.fromLTRB(24, 16, 24, 16 + bottomInset),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
+    return SingleChildScrollView(
+      child: Container(
+        padding: EdgeInsets.fromLTRB(24, 16, 24, 16 + bottomInset),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
         ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: colors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Title + close
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                l10n.withdraw_title,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: colors.textPrimary,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Drag handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colors.border,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: Icon(Icons.close, color: colors.textSecondary),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Mô tả
-          Text(
-            widget.hasPaid
-                ? (_usingProfileBank
-                    ? l10n.withdraw_refundProfileDescription
-                    : l10n.withdraw_refundInputDescription)
-                : l10n.withdraw_freeDescription,
-            style: TextStyle(
-              fontSize: 13,
-              color: colors.textSecondary,
-              height: 1.4,
             ),
-          ),
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          // Bank section: chỉ khi giải có phí
-          if (widget.hasPaid) ...[
-            if (!_profileBankLoaded)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(12),
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            else if (_usingProfileBank)
-              _BankInfoCard(
-                colors: colors,
-                bankName: _bankNameCtrl.text,
-                accountNumber: _accountNumberCtrl.text,
-                accountName: _accountNameCtrl.text,
-                onChangePressed: () => setState(() {
-                  _usingProfileBank = false;
-                  _bankNameCtrl.clear();
-                  _accountNumberCtrl.clear();
-                  _accountNameCtrl.clear();
-                }),
-              )
-            else
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: _bankNameCtrl,
-                      style: TextStyle(color: colors.textPrimary),
-                      decoration: InputDecoration(
-                        labelText: l10n.withdraw_bankNameLabel,
-                        hintText: l10n.withdraw_bankNameHint,
-                        filled: true,
-                        fillColor: colors.bgDark,
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty)
-                              ? l10n.withdraw_bankNameRequired
-                              : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _accountNumberCtrl,
-                      style: TextStyle(color: colors.textPrimary),
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: l10n.withdraw_accountNumberLabel,
-                        hintText: l10n.withdraw_accountNumberHint,
-                        filled: true,
-                        fillColor: colors.bgDark,
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      validator: (v) =>
-                          (v == null || v.trim().length < 6)
-                              ? l10n.withdraw_accountNumberInvalid
-                              : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _accountNameCtrl,
-                      style: TextStyle(color: colors.textPrimary),
-                      textCapitalization: TextCapitalization.characters,
-                      decoration: InputDecoration(
-                        labelText: l10n.withdraw_accountNameLabel,
-                        hintText: l10n.withdraw_accountNameHint,
-                        filled: true,
-                        fillColor: colors.bgDark,
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty)
-                              ? l10n.withdraw_accountNameRequired
-                              : null,
-                    ),
-                  ],
-                ),
-              ),
-            const SizedBox(height: 16),
-          ],
-
-          // Warning box — luôn hiển thị trước nút xác nhận
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: colors.error.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colors.error.withValues(alpha: 0.15)),
-            ),
-            child: Row(
+            // Title + close
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(Icons.warning_rounded, size: 20, color: colors.error),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    l10n.withdraw_irreversibleWarning,
-                    style: TextStyle(fontSize: 13, color: colors.error),
+                Text(
+                  l10n.withdraw_title,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
                   ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(Icons.close, color: colors.textSecondary),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 8),
 
-          const SizedBox(height: 20),
-
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: FilledButton.icon(
-              onPressed: _submitting ? null : _handleWithdraw,
-              icon: _submitting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Icon(Icons.exit_to_app_rounded),
-              label:
-                  Text(_submitting ? l10n.withdraw_processing : l10n.withdraw_confirm),
-              style: FilledButton.styleFrom(
-                backgroundColor: colors.error,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+            // Mô tả
+            Text(
+              widget.hasPaid
+                  ? (_usingProfileBank
+                        ? l10n.withdraw_refundProfileDescription
+                        : l10n.withdraw_refundInputDescription)
+                  : l10n.withdraw_freeDescription,
+              style: TextStyle(
+                fontSize: 13,
+                color: colors.textSecondary,
+                height: 1.4,
               ),
             ),
-          ),
-        ],
+            if (widget.hasPaid) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppTheme.primary.withValues(alpha: 0.18),
+                  ),
+                ),
+                child: Text(
+                  l10n.withdraw_refundPolicy,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+
+            // Bank section: chỉ khi giải có phí
+            if (widget.hasPaid) ...[
+              if (!_profileBankLoaded)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              else if (_usingProfileBank)
+                _BankInfoCard(
+                  colors: colors,
+                  bankName: _bankNameCtrl.text,
+                  accountNumber: _accountNumberCtrl.text,
+                  accountName: _accountNameCtrl.text,
+                  onChangePressed: () => setState(() {
+                    _usingProfileBank = false;
+                    _bankNameCtrl.clear();
+                    _accountNumberCtrl.clear();
+                    _accountNameCtrl.clear();
+                  }),
+                )
+              else
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _bankNameCtrl,
+                        style: TextStyle(color: colors.textPrimary),
+                        decoration: InputDecoration(
+                          labelText: l10n.withdraw_bankNameLabel,
+                          hintText: l10n.withdraw_bankNameHint,
+                          filled: true,
+                          fillColor: colors.bgDark,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? l10n.withdraw_bankNameRequired
+                            : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _accountNumberCtrl,
+                        style: TextStyle(color: colors.textPrimary),
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: l10n.withdraw_accountNumberLabel,
+                          hintText: l10n.withdraw_accountNumberHint,
+                          filled: true,
+                          fillColor: colors.bgDark,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: (v) => (v == null || v.trim().length < 6)
+                            ? l10n.withdraw_accountNumberInvalid
+                            : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _accountNameCtrl,
+                        style: TextStyle(color: colors.textPrimary),
+                        textCapitalization: TextCapitalization.characters,
+                        decoration: InputDecoration(
+                          labelText: l10n.withdraw_accountNameLabel,
+                          hintText: l10n.withdraw_accountNameHint,
+                          filled: true,
+                          fillColor: colors.bgDark,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? l10n.withdraw_accountNameRequired
+                            : null,
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 16),
+            ],
+
+            // Warning box — luôn hiển thị trước nút xác nhận
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colors.error.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.error.withValues(alpha: 0.15)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.warning_rounded, size: 20, color: colors.error),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l10n.withdraw_irreversibleWarning,
+                      style: TextStyle(fontSize: 13, color: colors.error),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: FilledButton.icon(
+                onPressed: _submitting ? null : _handleWithdraw,
+                icon: _submitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.exit_to_app_rounded),
+                label: Text(
+                  _submitting
+                      ? l10n.withdraw_processing
+                      : l10n.withdraw_confirm,
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: colors.error,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -411,19 +453,24 @@ class _BankInfoCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(children: [
-                Icon(Icons.account_balance_rounded,
-                    size: 16, color: colors.textSecondary),
-                const SizedBox(width: 6),
-                Text(
-                  l10n.withdraw_bankInfoTitle,
-                  style: TextStyle(
-                    fontSize: 12,
+              Row(
+                children: [
+                  Icon(
+                    Icons.account_balance_rounded,
+                    size: 16,
                     color: colors.textSecondary,
-                    fontWeight: FontWeight.w600,
                   ),
-                ),
-              ]),
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.withdraw_bankInfoTitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
               GestureDetector(
                 onTap: onChangePressed,
                 child: Text(
@@ -438,11 +485,23 @@ class _BankInfoCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          _BankRow(label: l10n.withdraw_bankLabel, value: bankName, colors: colors),
+          _BankRow(
+            label: l10n.withdraw_bankLabel,
+            value: bankName,
+            colors: colors,
+          ),
           const SizedBox(height: 4),
-          _BankRow(label: l10n.withdraw_accountNumberShort, value: accountNumber, colors: colors),
+          _BankRow(
+            label: l10n.withdraw_accountNumberShort,
+            value: accountNumber,
+            colors: colors,
+          ),
           const SizedBox(height: 4),
-          _BankRow(label: l10n.withdraw_accountNameShort, value: accountName, colors: colors),
+          _BankRow(
+            label: l10n.withdraw_accountNameShort,
+            value: accountName,
+            colors: colors,
+          ),
         ],
       ),
     );

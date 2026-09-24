@@ -9317,11 +9317,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get withdraw_refundProfileDescription =>
-      'The refund will be sent to the bank account in your profile.';
+      'The refund account comes from your profile. Withdraw within 3 hours of registration for a full captured-amount refund; after 3 hours, the captured fee on that payment is deducted.';
 
   @override
   String get withdraw_refundInputDescription =>
-      'You paid the entry fee. Enter bank details to receive your refund (they will be saved to your profile).';
+      'Complete bank details are needed if a refund is due. Withdraw within 3 hours of registration for a full captured-amount refund; after 3 hours, the captured fee on that payment is deducted.';
 
   @override
   String get withdraw_freeDescription =>
@@ -9364,15 +9364,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get withdraw_confirm => 'Confirm withdrawal';
 
   @override
-  String get withdraw_refundSuccess =>
-      'Withdrawn. The refund will be processed within 3–5 days.';
-
-  @override
-  String get withdraw_success => 'Withdrawn from the tournament';
+  String withdraw_refundRequested(String amount, String fee) {
+    return 'A refund request for $amount VND was sent; fee deducted: $fee VND. It is pending organizer confirmation.';
+  }
 
   @override
   String get withdraw_error =>
       'Unable to withdraw from the tournament. Please try again.';
+
+  @override
+  String withdraw_refundZero(String fee) {
+    return 'You withdrew; after deducting the $fee VND fee, no refund amount remains.';
+  }
+
+  @override
+  String get withdraw_noRefund =>
+      'You withdrew. No completed payment remains eligible for a new refund request.';
+
+  @override
+  String get withdraw_existingRefundPending =>
+      'An earlier refund request is waiting for the organizer to process it.';
+
+  @override
+  String get withdraw_refundPolicy =>
+      'The server measures the 3-hour window from registration. The refund stays pending until the organizer confirms it; submitting a request does not mean money has been transferred.';
 
   @override
   String get withdraw_bankInfoTitle => 'Refund bank account';
@@ -11032,6 +11047,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorParserBadRequest => 'Invalid request (Error 400).';
+
+  @override
+  String get errorParserRefundBankRequired =>
+      'Enter complete bank account details to receive the refund.';
 
   @override
   String get errorParserInvalidCredentials => 'Incorrect email or password.';

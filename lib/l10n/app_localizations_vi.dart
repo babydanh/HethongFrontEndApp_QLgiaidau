@@ -9293,11 +9293,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get withdraw_refundProfileDescription =>
-      'Tiền hoàn sẽ được chuyển vào tài khoản ngân hàng trong hồ sơ của bạn.';
+      'Tài khoản nhận hoàn lấy từ hồ sơ. Rút trong vòng 3 giờ kể từ lúc đăng ký được hoàn toàn bộ khoản đã thanh toán; sau 3 giờ hoàn khoản đã thanh toán trừ phí SportO đã lưu trên giao dịch.';
 
   @override
   String get withdraw_refundInputDescription =>
-      'Bạn đã đóng phí. Vui lòng nhập thông tin ngân hàng để nhận hoàn tiền (sẽ được lưu vào hồ sơ).';
+      'Nếu có khoản hoàn, cần thông tin ngân hàng đầy đủ. Rút trong vòng 3 giờ kể từ lúc đăng ký được hoàn toàn bộ khoản đã thanh toán; sau 3 giờ hoàn khoản đã thanh toán trừ phí SportO đã lưu trên giao dịch.';
 
   @override
   String get withdraw_freeDescription =>
@@ -9341,15 +9341,30 @@ class AppLocalizationsVi extends AppLocalizations {
   String get withdraw_confirm => 'Xác nhận rút lui';
 
   @override
-  String get withdraw_refundSuccess =>
-      'Đã rút lui. Tiền hoàn sẽ được xử lý trong 3–5 ngày.';
-
-  @override
-  String get withdraw_success => 'Đã rút lui khỏi giải đấu';
+  String withdraw_refundRequested(String amount, String fee) {
+    return 'Yêu cầu hoàn $amount VND đã được gửi; phí trừ $fee VND. Tiền đang chờ Ban tổ chức xác nhận.';
+  }
 
   @override
   String get withdraw_error =>
       'Không thể rút lui khỏi giải đấu. Vui lòng thử lại.';
+
+  @override
+  String withdraw_refundZero(String fee) {
+    return 'Bạn đã rút lui; sau khi trừ phí $fee VND, không còn khoản tiền được hoàn.';
+  }
+
+  @override
+  String get withdraw_noRefund =>
+      'Bạn đã rút lui. Không có khoản thanh toán đã hoàn tất còn đủ điều kiện để tạo yêu cầu hoàn mới.';
+
+  @override
+  String get withdraw_existingRefundPending =>
+      'Yêu cầu hoàn trước đó đang chờ Ban tổ chức xử lý.';
+
+  @override
+  String get withdraw_refundPolicy =>
+      'Máy chủ tính 3 giờ từ thời điểm đăng ký. Yêu cầu hoàn còn chờ Ban tổ chức xác nhận; gửi yêu cầu không có nghĩa tiền đã được chuyển.';
 
   @override
   String get withdraw_bankInfoTitle => 'Ngân hàng hoàn tiền';
@@ -10999,6 +11014,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get errorParserBadRequest => 'Yêu cầu gửi đi không hợp lệ (Lỗi 400).';
+
+  @override
+  String get errorParserRefundBankRequired =>
+      'Vui lòng nhập đầy đủ thông tin tài khoản ngân hàng để nhận lại tiền hoàn.';
 
   @override
   String get errorParserInvalidCredentials =>

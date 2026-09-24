@@ -3542,8 +3542,8 @@
   "communitySocial_emptyFeed": "No posts yet. Share the first one!",
   "communitySocial_retry": "Retry",
   "withdraw_title": "Withdraw",
-  "withdraw_refundProfileDescription": "The refund will be sent to the bank account in your profile.",
-  "withdraw_refundInputDescription": "You paid the entry fee. Enter bank details to receive your refund (they will be saved to your profile).",
+  "withdraw_refundProfileDescription": "The refund account comes from your profile. Withdraw within 3 hours of registration for a full captured-amount refund; after 3 hours, the captured fee on that payment is deducted.",
+  "withdraw_refundInputDescription": "Complete bank details are needed if a refund is due. Withdraw within 3 hours of registration for a full captured-amount refund; after 3 hours, the captured fee on that payment is deducted.",
   "withdraw_freeDescription": "Are you sure you want to withdraw from this tournament?",
   "withdraw_bankNameLabel": "Bank name",
   "withdraw_bankNameHint": "E.g. Vietcombank, Techcombank",
@@ -3557,9 +3557,23 @@
   "withdraw_irreversibleWarning": "This action cannot be undone.",
   "withdraw_processing": "Processing...",
   "withdraw_confirm": "Confirm withdrawal",
-  "withdraw_refundSuccess": "Withdrawn. The refund will be processed within 3–5 days.",
-  "withdraw_success": "Withdrawn from the tournament",
+  "withdraw_refundRequested": "A refund request for {amount} VND was sent; fee deducted: {fee} VND. It is pending organizer confirmation.",
+  "@withdraw_refundRequested": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "fee": { "type": "String" }
+    }
+  },
   "withdraw_error": "Unable to withdraw from the tournament. Please try again.",
+  "withdraw_refundZero": "You withdrew; after deducting the {fee} VND fee, no refund amount remains.",
+  "@withdraw_refundZero": {
+    "placeholders": {
+      "fee": { "type": "String" }
+    }
+  },
+  "withdraw_noRefund": "You withdrew. No completed payment remains eligible for a new refund request.",
+  "withdraw_existingRefundPending": "An earlier refund request is waiting for the organizer to process it.",
+  "withdraw_refundPolicy": "The server measures the 3-hour window from registration. The refund stays pending until the organizer confirms it; submitting a request does not mean money has been transferred.",
   "withdraw_bankInfoTitle": "Refund bank account",
   "withdraw_change": "Change",
   "withdraw_bankLabel": "Bank",
@@ -4498,6 +4512,7 @@
   "errorParserConnectionTimeout": "The connection to the server timed out. Check your connection and try again.",
   "errorParserConnectionFailed": "Unable to connect to the server. Check your network connection or server.",
   "errorParserBadRequest": "Invalid request (Error 400).",
+  "errorParserRefundBankRequired": "Enter complete bank account details to receive the refund.",
   "errorParserInvalidCredentials": "Incorrect email or password.",
   "errorParserForbidden": "You do not have permission to perform this action.",
   "errorParserNotFound": "The requested resource was not found (Error 404).",

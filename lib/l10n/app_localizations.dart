@@ -17129,13 +17129,13 @@ abstract class AppLocalizations {
   /// No description provided for @withdraw_refundProfileDescription.
   ///
   /// In vi, this message translates to:
-  /// **'Tiền hoàn sẽ được chuyển vào tài khoản ngân hàng trong hồ sơ của bạn.'**
+  /// **'Tài khoản nhận hoàn lấy từ hồ sơ. Rút trong vòng 3 giờ kể từ lúc đăng ký được hoàn toàn bộ khoản đã thanh toán; sau 3 giờ hoàn khoản đã thanh toán trừ phí SportO đã lưu trên giao dịch.'**
   String get withdraw_refundProfileDescription;
 
   /// No description provided for @withdraw_refundInputDescription.
   ///
   /// In vi, this message translates to:
-  /// **'Bạn đã đóng phí. Vui lòng nhập thông tin ngân hàng để nhận hoàn tiền (sẽ được lưu vào hồ sơ).'**
+  /// **'Nếu có khoản hoàn, cần thông tin ngân hàng đầy đủ. Rút trong vòng 3 giờ kể từ lúc đăng ký được hoàn toàn bộ khoản đã thanh toán; sau 3 giờ hoàn khoản đã thanh toán trừ phí SportO đã lưu trên giao dịch.'**
   String get withdraw_refundInputDescription;
 
   /// No description provided for @withdraw_freeDescription.
@@ -17216,23 +17216,41 @@ abstract class AppLocalizations {
   /// **'Xác nhận rút lui'**
   String get withdraw_confirm;
 
-  /// No description provided for @withdraw_refundSuccess.
+  /// No description provided for @withdraw_refundRequested.
   ///
   /// In vi, this message translates to:
-  /// **'Đã rút lui. Tiền hoàn sẽ được xử lý trong 3–5 ngày.'**
-  String get withdraw_refundSuccess;
-
-  /// No description provided for @withdraw_success.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đã rút lui khỏi giải đấu'**
-  String get withdraw_success;
+  /// **'Yêu cầu hoàn {amount} VND đã được gửi; phí trừ {fee} VND. Tiền đang chờ Ban tổ chức xác nhận.'**
+  String withdraw_refundRequested(String amount, String fee);
 
   /// No description provided for @withdraw_error.
   ///
   /// In vi, this message translates to:
   /// **'Không thể rút lui khỏi giải đấu. Vui lòng thử lại.'**
   String get withdraw_error;
+
+  /// No description provided for @withdraw_refundZero.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn đã rút lui; sau khi trừ phí {fee} VND, không còn khoản tiền được hoàn.'**
+  String withdraw_refundZero(String fee);
+
+  /// No description provided for @withdraw_noRefund.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn đã rút lui. Không có khoản thanh toán đã hoàn tất còn đủ điều kiện để tạo yêu cầu hoàn mới.'**
+  String get withdraw_noRefund;
+
+  /// No description provided for @withdraw_existingRefundPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Yêu cầu hoàn trước đó đang chờ Ban tổ chức xử lý.'**
+  String get withdraw_existingRefundPending;
+
+  /// No description provided for @withdraw_refundPolicy.
+  ///
+  /// In vi, this message translates to:
+  /// **'Máy chủ tính 3 giờ từ thời điểm đăng ký. Yêu cầu hoàn còn chờ Ban tổ chức xác nhận; gửi yêu cầu không có nghĩa tiền đã được chuyển.'**
+  String get withdraw_refundPolicy;
 
   /// No description provided for @withdraw_bankInfoTitle.
   ///
@@ -20061,6 +20079,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Yêu cầu gửi đi không hợp lệ (Lỗi 400).'**
   String get errorParserBadRequest;
+
+  /// No description provided for @errorParserRefundBankRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập đầy đủ thông tin tài khoản ngân hàng để nhận lại tiền hoàn.'**
+  String get errorParserRefundBankRequired;
 
   /// No description provided for @errorParserInvalidCredentials.
   ///
