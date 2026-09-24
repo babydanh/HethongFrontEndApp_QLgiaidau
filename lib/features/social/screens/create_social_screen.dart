@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -7,6 +6,11 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_duration_sheet.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_price_dialog.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_privacy_sheet.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_setting_tile.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_participant_counter.dart';
 
 class CreateSocialScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -57,7 +61,6 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   // Configurations
   int _maxParticipants = 6;
   String _privacy = 'Công khai';
-  final TextEditingController _priceController = TextEditingController();
   int _price = 0;
 
   // Title and Notes
@@ -83,10 +86,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       _price = init.feePerSlot;
       _venueNameController.text = init.venueName;
       _venueAddressController.text = init.venueAddress;
-      if (_price > 0) _priceController.text = _price.toString();
       _titleController.text = init.title;
       _notesController.text = init.description ?? '';
-      _isClubAttached = (init.communityId != null && init.communityId!.isNotEmpty);
+      _isClubAttached =
+          (init.communityId != null && init.communityId!.isNotEmpty);
     } else {
       _selectedSportKey = _sports.first.key;
       _selectedSportName = _sports.first.name;
@@ -108,7 +111,6 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   void dispose() {
     _venueNameController.dispose();
     _venueAddressController.dispose();
-    _priceController.dispose();
     _titleController.dispose();
     _notesController.dispose();
     super.dispose();
@@ -206,211 +208,19 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     });
   }
 
-  void _showDurationPicker() {
-    final colors = context.colors;
-    final options = [1.0, 1.5, 2.0, 2.5, 3.0, 4.0];
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: colors.bgCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Text(
-                    'Chọn thời lượng kèo',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                ),
-                const Divider(),
-                ...options.map(
-                  (d) => ListTile(
-                    title: Text(
-                      '${d == d.toInt() ? d.toInt() : d} giờ',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: _durationHours == d
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        color: _durationHours == d
-                            ? AppTheme.primary
-                            : colors.textPrimary,
-                      ),
-                    ),
-                    trailing: _durationHours == d
-                        ? const Icon(Icons.check, color: AppTheme.primary)
-                        : null,
-                    onTap: () {
-                      setState(() => _durationHours = d);
-                      Navigator.pop(ctx);
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+  Future<void> _showDurationPicker() async {
+    final hours = await SocialDurationSheet.show(context, _durationHours);
+    if (hours != null && mounted) setState(() => _durationHours = hours);
   }
 
-  void _showPriceInputDialog() {
-    final colors = context.colors;
-    final tempController = TextEditingController(
-      text: _price > 0 ? _price.toString() : '',
-    );
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: colors.bgCard,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-          ),
-          title: Text(
-            'Phí tham gia kèo (VNĐ)',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: colors.textPrimary,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Để trống hoặc nhập 0 nếu là kèo miễn phí.',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: colors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: tempController,
-                autofocus: true,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: colors.textPrimary,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'VD: 50000',
-                  suffixText: 'VNĐ',
-                  suffixStyle: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: colors.textSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _price = 0;
-                  _priceController.clear();
-                });
-                Navigator.pop(ctx);
-              },
-              child: Text('Miễn phí', style: TextStyle(color: colors.textMuted)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final parsed = int.tryParse(tempController.text.trim()) ?? 0;
-                setState(() {
-                  _price = parsed;
-                  _priceController.text = parsed > 0 ? parsed.toString() : '';
-                });
-                Navigator.pop(ctx);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Xác nhận'),
-            ),
-          ],
-        );
-      },
-    );
+  Future<void> _showPriceInputDialog() async {
+    final price = await SocialPriceDialog.show(context, _price);
+    if (price != null && mounted) setState(() => _price = price);
   }
 
-  void _showPrivacyPicker() {
-    final colors = context.colors;
-    final options = ['Công khai', 'Nội bộ CLB'];
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: colors.bgCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Text(
-                    'Quyền riêng tư',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                ),
-                const Divider(),
-                ...options.map(
-                  (p) => ListTile(
-                    title: Text(
-                      p,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: _privacy == p
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        color: _privacy == p
-                            ? AppTheme.primary
-                            : colors.textPrimary,
-                      ),
-                    ),
-                    trailing: _privacy == p
-                        ? const Icon(Icons.check, color: AppTheme.primary)
-                        : null,
-                    onTap: () {
-                      setState(() => _privacy = p);
-                      Navigator.pop(ctx);
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+  Future<void> _showPrivacyPicker() async {
+    final privacy = await SocialPrivacySheet.show(context, _privacy);
+    if (privacy != null && mounted) setState(() => _privacy = privacy);
   }
 
   /// Invalidate cache Social theo CLB để tab Hoạt động cập nhật ngay.
@@ -530,14 +340,17 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           levelRequirement: 'ALL',
           visibility: _privacy == 'Nội bộ CLB' ? 'CLUB_ONLY' : 'PUBLIC',
           contactPhone: user?.phoneNumber,
-          communityId:
-              _isClubAttached && widget.clubId.isNotEmpty ? widget.clubId : null,
+          communityId: _isClubAttached && widget.clubId.isNotEmpty
+              ? widget.clubId
+              : null,
         );
 
         final createdSession = await repo.create(request);
 
         ref.read(socialSessionsProvider.notifier).refresh();
-        ref.read(socialFilterProvider.notifier).setSelectedDate(_selectedDateTime);
+        ref
+            .read(socialFilterProvider.notifier)
+            .setSelectedDate(_selectedDateTime);
         // Tab Hoạt động CLB dùng provider riêng theo communityId —
         // phải invalidate để kèo mới hiện ngay ở filter "Mở".
         _invalidateClubSocialProviders(ref, createdSession);
@@ -601,7 +414,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
 
               // Header bar
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -693,7 +509,9 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                       width: 44,
                                       height: 44,
                                       decoration: BoxDecoration(
-                                        color: colors.success.withValues(alpha: 0.2),
+                                        color: colors.success.withValues(
+                                          alpha: 0.2,
+                                        ),
                                         shape: BoxShape.circle,
                                       ),
                                       child: Icon(
@@ -808,7 +626,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                             ),
                                             decoration: BoxDecoration(
                                               color: AppTheme.refereeColor,
-                                              borderRadius: BorderRadius.circular(4),
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
                                             ),
                                             child: const Text(
                                               'CLB',
@@ -912,71 +731,18 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Chọn ngày và giờ
-                      InkWell(
+                      SocialSettingTile(
+                        icon: Icons.calendar_month_outlined,
+                        label: _formatDateTimeDisplay(_selectedDateTime),
                         onTap: _pickDateTime,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_month_outlined,
-                                color: AppTheme.primary,
-                                size: 22,
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Text(
-                                  _formatDateTimeDisplay(_selectedDateTime),
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: colors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              Icon(
-                                Icons.chevron_right,
-                                color: colors.textMuted,
-                                size: 20,
-                              ),
-                            ],
-                          ),
-                        ),
                       ),
                       const SizedBox(height: 10),
 
-                      // Thời lượng
-                      InkWell(
+                      SocialSettingTile(
+                        icon: Icons.access_time_rounded,
+                        label:
+                            '${_durationHours == _durationHours.toInt() ? _durationHours.toInt() : _durationHours} giờ',
                         onTap: _showDurationPicker,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.access_time_rounded,
-                                color: AppTheme.primary,
-                                size: 22,
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Text(
-                                  '${_durationHours == _durationHours.toInt() ? _durationHours.toInt() : _durationHours} giờ',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: colors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              Icon(
-                                Icons.chevron_right,
-                                color: colors.textMuted,
-                                size: 20,
-                              ),
-                            ],
-                          ),
-                        ),
                       ),
                       const SizedBox(height: 10),
 
@@ -1010,8 +776,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                     hintText:
                                         'Nhập tên sân (VD: 22 Cộng Hòa)...',
                                     counterText: '',
-                                    contentPadding:
-                                        const EdgeInsets.symmetric(
+                                    contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 14,
                                       vertical: 12,
                                     ),
@@ -1038,8 +803,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                     labelText: 'Địa điểm',
                                     hintText: 'Nhập địa chỉ cụ thể...',
                                     counterText: '',
-                                    contentPadding:
-                                        const EdgeInsets.symmetric(
+                                    contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 14,
                                       vertical: 12,
                                     ),
@@ -1061,165 +825,28 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                       const SizedBox(height: 16),
 
                       // ─── 4. CẤU HÌNH NGƯỜI CHƠI, QUYỀN RIÊNG TƯ, PHÍ (Hình 2) ───
-                      // Số người chơi
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.person_outline_rounded,
-                            color: AppTheme.primary,
-                            size: 22,
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Text(
-                              'Số người chơi',
-                              style: TextStyle(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w600,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                          ),
-                          InkWell(
-                            onTap: () {
-                              if (_maxParticipants > 2) {
-                                setState(() => _maxParticipants--);
-                              }
-                            },
-                            child: Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: colors.border),
-                              ),
-                              child: Icon(
-                                Icons.remove,
-                                size: 18,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            child: Text(
-                              '$_maxParticipants',
-                              style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w800,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                          ),
-                          InkWell(
-                            onTap: () {
-                              if (_maxParticipants < 64) {
-                                setState(() => _maxParticipants++);
-                              }
-                            },
-                            child: Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: colors.border),
-                              ),
-                              child: Icon(
-                                Icons.add,
-                                size: 18,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                          ),
-                        ],
+                      SocialParticipantCounter(
+                        initialValue: _maxParticipants,
+                        onChanged: (value) => _maxParticipants = value,
                       ),
                       const SizedBox(height: 14),
 
-                      // Quyền riêng tư
-                      InkWell(
+                      SocialSettingTile(
+                        icon: Icons.lock_outline_rounded,
+                        label: 'Quyền riêng tư',
+                        value: _privacy,
+                        verticalPadding: 6,
                         onTap: _showPrivacyPicker,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.lock_outline_rounded,
-                                color: AppTheme.primary,
-                                size: 22,
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Text(
-                                  'Quyền riêng tư',
-                                  style: TextStyle(
-                                    fontSize: 14.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: colors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                _privacy,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: colors.textSecondary,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                Icons.chevron_right,
-                                color: colors.textMuted,
-                                size: 20,
-                              ),
-                            ],
-                          ),
-                        ),
                       ),
                       const SizedBox(height: 14),
 
-                      // Phí tham gia kèo
-                      InkWell(
+                      SocialSettingTile(
+                        icon: Icons.local_offer_outlined,
+                        label: 'Phí tham gia kèo',
+                        value: _formatCurrency(_price),
+                        valueColor: _price > 0 ? colors.success : null,
+                        verticalPadding: 6,
                         onTap: _showPriceInputDialog,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.local_offer_outlined,
-                                color: AppTheme.primary,
-                                size: 22,
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Text(
-                                  'Phí tham gia kèo',
-                                  style: TextStyle(
-                                    fontSize: 14.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: colors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                _formatCurrency(_price),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: _price > 0
-                                      ? colors.success
-                                      : colors.textSecondary,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                Icons.chevron_right,
-                                color: colors.textMuted,
-                                size: 20,
-                              ),
-                            ],
-                          ),
-                        ),
                       ),
                       const SizedBox(height: 16),
                       Divider(height: 1, color: colors.border),

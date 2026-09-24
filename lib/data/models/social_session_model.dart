@@ -30,6 +30,7 @@ class SocialParticipantModel {
   final String id;
   final String? sessionId;
   final String userId;
+  final String? guestName;
   final String role; // 'HOST' | 'PLAYER'
   final String status; // 'JOINED'
   final String paymentStatus; // 'UNPAID' | 'PAID' | 'PENDING'
@@ -43,6 +44,7 @@ class SocialParticipantModel {
     required this.id,
     this.sessionId,
     String? userId,
+    this.guestName,
     String role = 'PLAYER',
     this.status = 'JOINED',
     this.paymentStatus = 'UNPAID',
@@ -60,9 +62,21 @@ class SocialParticipantModel {
         fullName = fullName ?? name,
         customSkillLevel = customSkillLevel ?? skillLevel;
 
-  String get name => fullName?.trim().isNotEmpty == true
-      ? fullName!.trim()
-      : 'Thành viên';
+  /// Khách ngoài CLB: không có tài khoản, userId NULL ở backend,
+  /// chỉ có guestName để đánh dấu slot đã có người.
+  bool get isGuest =>
+      guestName?.trim().isNotEmpty == true;
+
+  String get name {
+    if (fullName?.trim().isNotEmpty == true) return fullName!.trim();
+    if (guestName?.trim().isNotEmpty == true) return guestName!.trim();
+    return 'Thành viên';
+  }
+
+  /// Identifier dùng cho API xóa / cập nhật thanh toán:
+  /// user thật -> userId, guest -> id của row participant
+  /// (backend hỗ trợ cả 2 vì guest có userId NULL).
+  String get apiIdentifier => isGuest ? id : userId;
 
   bool get isHost => role.toUpperCase() == 'HOST';
 
@@ -94,10 +108,18 @@ class SocialParticipantModel {
     final participantRole = json['role']?.toString().toUpperCase() ??
         (json['isHost'] == true ? 'HOST' : 'PLAYER');
 
+    final rawUserId = json['userId']?.toString();
+    final rawGuestName =
+        json['guestName']?.toString() ?? json['guest_name']?.toString();
     return SocialParticipantModel(
       id: json['id']?.toString() ?? '',
       sessionId: json['sessionId']?.toString(),
-      userId: json['userId']?.toString() ?? json['id']?.toString() ?? '',
+      userId: (rawUserId != null && rawUserId.isNotEmpty)
+          ? rawUserId
+          : json['id']?.toString() ?? '',
+      guestName: (rawGuestName != null && rawGuestName.trim().isNotEmpty)
+          ? rawGuestName.trim()
+          : null,
       role: participantRole,
       status: json['status']?.toString() ?? 'JOINED',
       paymentStatus: json['paymentStatus']?.toString().toUpperCase() ?? 'UNPAID',
@@ -115,6 +137,7 @@ class SocialParticipantModel {
     'id': id,
     if (sessionId != null) 'sessionId': sessionId,
     'userId': userId,
+    if (guestName != null) 'guestName': guestName,
     'role': role,
     'status': status,
     'paymentStatus': paymentStatus,
@@ -128,6 +151,7 @@ class SocialParticipantModel {
     String? id,
     String? sessionId,
     String? userId,
+    String? guestName,
     String? role,
     String? status,
     String? paymentStatus,
@@ -141,6 +165,7 @@ class SocialParticipantModel {
       id: id ?? this.id,
       sessionId: sessionId ?? this.sessionId,
       userId: userId ?? this.userId,
+      guestName: guestName ?? this.guestName,
       role: role ?? this.role,
       status: status ?? this.status,
       paymentStatus: paymentStatus ?? this.paymentStatus,
@@ -434,7 +459,7 @@ class SocialSessionModel {
     return participants.map((p) {
       return SocialPaymentModel(
         id: 'pay_${p.id}',
-        participantId: p.userId,
+        participantId: p.apiIdentifier,
         participantName: p.name,
         participantAvatar: p.avatarUrl,
         ticketCount: p.ticketCount,
@@ -825,6 +850,44 @@ class SocialSessionListResponse {
       page: (meta['page'] is num) ? (meta['page'] as num).toInt() : 1,
       limit: (meta['limit'] is num) ? (meta['limit'] as num).toInt() : 20,
       total: (meta['total'] is num) ? (meta['total'] as num).toInt() : itemsList.length,
+    );
+  }
+}
+
+class BatchAddParticipantsResponse {
+  final List<SocialParticipantModel> added;
+  final List<String> skipped;
+  final int currentSlots;
+  final String status;
+
+  const BatchAddParticipantsResponse({
+    this.added = const [],
+    this.skipped = const [],
+    required this.currentSlots,
+    required this.status,
+  });
+
+  factory BatchAddParticipantsResponse.fromJson(Map<String, dynamic> json) {
+    final rawAdded = json['added'];
+    final addedList = (rawAdded is List)
+        ? rawAdded
+            .whereType<Map>()
+            .map((p) => SocialParticipantModel.fromJson(
+                  p.map((k, v) => MapEntry(k.toString(), v)),
+                ))
+            .toList()
+        : <SocialParticipantModel>[];
+    final rawSkipped = json['skipped'];
+    final skippedList = (rawSkipped is List)
+        ? rawSkipped.map((e) => e.toString()).toList()
+        : <String>[];
+    return BatchAddParticipantsResponse(
+      added: addedList,
+      skipped: skippedList,
+      currentSlots: (json['currentSlots'] is num)
+          ? (json['currentSlots'] as num).toInt()
+          : addedList.length,
+      status: json['status']?.toString() ?? 'OPEN',
     );
   }
 }

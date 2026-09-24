@@ -28,27 +28,19 @@ class SocialListView extends ConsumerWidget {
         ),
         slivers: [
           // Offset for top header
-          SliverToBoxAdapter(
-            child: SizedBox(height: topPadding),
-          ),
+          SliverToBoxAdapter(child: SizedBox(height: topPadding)),
 
           // Horizontal Date Selector
-          const SliverToBoxAdapter(
-            child: SocialDateSelector(),
-          ),
+          const SliverToBoxAdapter(child: SocialDateSelector()),
 
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 6),
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 6)),
 
           // Content according to AsyncValue
           ...sessionsAsync.when(
             loading: () => [
               const SliverFillRemaining(
                 hasScrollBody: false,
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
+                child: Center(child: CircularProgressIndicator()),
               ),
             ],
             error: (error, _) => [
@@ -72,7 +64,9 @@ class SocialListView extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 14.5,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                            color: isDark
+                                ? Colors.white70
+                                : const Color(0xFF64748B),
                           ),
                         ),
                         const SizedBox(height: 14),
@@ -123,7 +117,9 @@ class SocialListView extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                              color: isDark
+                                  ? Colors.white70
+                                  : const Color(0xFF64748B),
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -131,7 +127,9 @@ class SocialListView extends ConsumerWidget {
                             'Thử chọn ngày khác hoặc tìm kiếm môn thể thao khác',
                             style: TextStyle(
                               fontSize: 13,
-                              color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                              color: isDark
+                                  ? Colors.white38
+                                  : const Color(0xFF94A3B8),
                             ),
                           ),
                         ],
@@ -152,52 +150,48 @@ class SocialListView extends ConsumerWidget {
 
               return [
                 SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final timeSlot = sortedTimeSlots[index];
-                      final sessionsInSlot = groupedSessions[timeSlot]!;
-                      final isCollapsed =
-                          filterState.collapsedTimeSlots.contains(timeSlot);
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final timeSlot = sortedTimeSlots[index];
+                    final sessionsInSlot = groupedSessions[timeSlot]!;
+                    final isCollapsed = filterState.collapsedTimeSlots.contains(
+                      timeSlot,
+                    );
 
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Time Slot Group Header
-                          _buildTimeSlotHeader(
-                            timeSlot: timeSlot,
-                            count: sessionsInSlot.length,
-                            isCollapsed: isCollapsed,
-                            isDark: isDark,
-                            onToggle: () {
-                              ref
-                                  .read(socialFilterProvider.notifier)
-                                  .toggleTimeSlotCollapse(timeSlot);
-                            },
-                          ),
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Time Slot Group Header
+                        _buildTimeSlotHeader(
+                          timeSlot: timeSlot,
+                          count: sessionsInSlot.length,
+                          isCollapsed: isCollapsed,
+                          isDark: isDark,
+                          onToggle: () {
+                            ref
+                                .read(socialFilterProvider.notifier)
+                                .toggleTimeSlotCollapse(timeSlot);
+                          },
+                        ),
 
-                          // Cards in this slot
-                          if (!isCollapsed)
-                            ...sessionsInSlot.map(
-                              (session) => SocialSessionCard(
-                                session: session,
-                                onTap: () =>
-                                    _openSessionDetail(context, session.id),
-                              ),
+                        // Cards in this slot
+                        if (!isCollapsed)
+                          ...sessionsInSlot.map(
+                            (session) => SocialSessionCard(
+                              session: session,
+                              onTap: () =>
+                                  _openSessionDetail(context, session.id),
                             ),
-                        ],
-                      );
-                    },
-                    childCount: sortedTimeSlots.length,
-                  ),
+                          ),
+                      ],
+                    );
+                  }, childCount: sortedTimeSlots.length),
                 ),
               ];
             },
           ),
 
           // Bottom spacing for bottom nav
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 80),
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 80)),
         ],
       ),
     );

@@ -271,6 +271,39 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     });
   }
 
+  DateTime _resolveSocialPlayDate(SocialSessionModel session) {
+    if (session.playDate != null && session.playDate!.trim().isNotEmpty) {
+      final parsed = DateTime.tryParse(session.playDate!.trim());
+      if (parsed != null) {
+        return DateTime(parsed.year, parsed.month, parsed.day);
+      }
+    }
+    final local = session.startAt.toLocal();
+    return DateTime(local.year, local.month, local.day);
+  }
+
+  int _compareSocialsDesc(SocialSessionModel a, SocialSessionModel b) {
+    final dateA = _resolveSocialPlayDate(a);
+    final dateB = _resolveSocialPlayDate(b);
+    final dateComp = dateB.compareTo(dateA); // Sắp xếp playDate mới nhất lên đầu (DESC)
+    if (dateComp != 0) return dateComp;
+    return b.startAt.compareTo(a.startAt); // Cùng ngày thì giờ muộn hơn xếp trước
+  }
+
+  String _formatSocialDateHeader(DateTime date) {
+    final weekday = switch (date.weekday) {
+      DateTime.monday => 'Thứ Hai',
+      DateTime.tuesday => 'Thứ Ba',
+      DateTime.wednesday => 'Thứ Tư',
+      DateTime.thursday => 'Thứ Năm',
+      DateTime.friday => 'Thứ Sáu',
+      DateTime.saturday => 'Thứ Bảy',
+      DateTime.sunday => 'Chủ Nhật',
+      _ => '',
+    };
+    return '$weekday, Ngày ${date.day} Tháng ${date.month}';
+  }
+
   void _mergeActivityMatches(
     List<MatchModel> incoming, {
     required bool replace,
@@ -790,11 +823,23 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
         .where((s) =>
             s.status.toUpperCase() == 'OPEN' ||
             s.status.toUpperCase() == 'FULL')
-        .toList();
+        .toList()
+      ..sort(_compareSocialsDesc);
     final completedSocials = clubSocials
         .where((s) => s.status.toUpperCase() == 'COMPLETED')
-        .toList();
+        .toList()
+      ..sort(_compareSocialsDesc);
     final displayedSocials = _socialStatusFilter == 'OPEN' ? openSocials : completedSocials;
+
+    final Map<String, List<SocialSessionModel>> groupedSocials = {};
+    final Map<String, DateTime> groupDateMap = {};
+    for (final session in displayedSocials) {
+      final dt = _resolveSocialPlayDate(session);
+      final dateKey =
+          '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+      groupedSocials.putIfAbsent(dateKey, () => []).add(session);
+      groupDateMap.putIfAbsent(dateKey, () => dt);
+    }
 
     Future<void> refreshSocials() async {
       ref.invalidate(clubSocialSessionsQueryProvider(widget.communityId));
@@ -856,25 +901,30 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                   ),
                 ),
               ),
-            ] else if (displayedSocials.isNotEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  displayedSocials.first.dateDisplay.contains('Thứ')
-                      ? 'Thứ Năm, Ngày 17 Tháng 9'
-                      : 'Hôm nay',
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
+            ] else if (groupedSocials.isNotEmpty) ...[
+              for (final entry in groupedSocials.entries) ...[
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    entry.key == groupedSocials.keys.first ? 4 : 14,
+                    16,
+                    6,
+                  ),
+                  child: Text(
+                    _formatSocialDateHeader(groupDateMap[entry.key]!),
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.primary,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              ...displayedSocials.map(
-                (s) => _buildClubSocialSessionCard(s, colors, isClubManager),
-              ),
-              const SizedBox(height: 12),
+                ...entry.value.map(
+                  (s) => _buildClubSocialSessionCard(s, colors, isClubManager),
+                ),
+                const SizedBox(height: 6),
+              ],
+              const SizedBox(height: 6),
             ] else ...[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -1335,19 +1385,21 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     AppColorsExtension colors,
     bool isClubManager,
   ) {
+    final isCompleted = session.status.toUpperCase() == 'COMPLETED';
+    final currentUserId = ref.read(userProfileProvider).asData?.value.id;
+    final currentUserName = ref.read(userProfileProvider).asData?.value.fullName;
+    final isCreator = session.isHost ||
+                      (session.creatorId.isNotEmpty && session.creatorId == currentUserId) ||
+                      (session.creatorId == 'me') ||
+                      (session.participants.any((p) =>
+                          p.isHost &&
+                          (p.id == currentUserId ||
+                              (currentUserName != null && p.name == currentUserName))));
+    final isHost = isCreator;
+    final isAdmin = isClubManager;
     return InkWell(
       onTap: () {
-        final currentUserId = ref.read(userProfileProvider).asData?.value.id;
-        final currentUserName = ref.read(userProfileProvider).asData?.value.fullName;
-        final isCreator = session.isHost ||
-                          (session.creatorId.isNotEmpty && session.creatorId == currentUserId) ||
-                          (session.creatorId == 'me') ||
-                          (session.participants.any((p) =>
-                              p.isHost &&
-                              (p.id == currentUserId ||
-                                  (currentUserName != null && p.name == currentUserName))));
-        final isHost = isCreator || isClubManager;
-        context.push('/social/${session.id}?isHost=$isHost');
+        context.push('/social/${session.id}?isHost=${isHost || isAdmin}');
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
@@ -1389,28 +1441,30 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        color: colors.textSecondary,
+                        color: colors.textMuted,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colors.success.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-                      ),
-                      child: Text(
-                        'TỔ CHỨC',
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w800,
-                          color: colors.success,
+                    if (isHost || isAdmin) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.success.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                        ),
+                        child: Text(
+                          isCompleted ? 'ĐÃ TỔ CHỨC' : 'TỔ CHỨC',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            color: colors.success,
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -1455,7 +1509,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${session.currentParticipants} Tham gia',
+                        '${session.currentParticipants} ${isCompleted ? 'Đã tham gia' : 'Tham gia'}',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,

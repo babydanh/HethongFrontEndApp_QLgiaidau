@@ -71,6 +71,12 @@ class SocialApiException implements Exception {
         case 'ALREADY_JOINED':
           message = 'Bạn đã tham gia kèo này';
           break;
+        case 'USER_OR_GUEST_REQUIRED':
+          message = 'Vui lòng nhập tên khách hoặc chọn thành viên';
+          break;
+        case 'INVALID_GUEST_NAME':
+          message = 'Tên khách không hợp lệ (tối đa 100 ký tự)';
+          break;
         default:
           if (statusCode == 401) {
             message = 'Phiên đăng nhập đã hết hạn, vui lòng thử lại';
@@ -402,6 +408,56 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
       throw SocialApiException.fromDioException(error);
     } catch (error, stack) {
       _log.error('addParticipant unexpected error', error, stack);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> addGuestParticipant(
+    String sessionId, {
+    required String guestName,
+    int ticketCount = 1,
+  }) async {
+    try {
+      await _dioClient.dio.post(
+        '/social-sessions/$sessionId/participants',
+        data: {
+          'guestName': guestName.trim(),
+          'ticketCount': ticketCount,
+        },
+      );
+    } on DioException catch (error, stack) {
+      _log.error('addGuestParticipant error for: $sessionId', error, stack);
+      throw SocialApiException.fromDioException(error);
+    } catch (error, stack) {
+      _log.error('addGuestParticipant unexpected error', error, stack);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<BatchAddParticipantsResponse> addParticipantsBatch(
+    String sessionId, {
+    required List<String> userIds,
+    int ticketCount = 1,
+  }) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/social-sessions/$sessionId/participants/batch',
+        data: {
+          'userIds': userIds,
+          'ticketCount': ticketCount,
+        },
+      );
+      final body = _asMap(response.data);
+      final rawData = body['data'];
+      final dataMap = rawData is Map ? _asMap(rawData) : body;
+      return BatchAddParticipantsResponse.fromJson(dataMap);
+    } on DioException catch (error, stack) {
+      _log.error('addParticipantsBatch error for: $sessionId', error, stack);
+      throw SocialApiException.fromDioException(error);
+    } catch (error, stack) {
+      _log.error('addParticipantsBatch unexpected error', error, stack);
       rethrow;
     }
   }

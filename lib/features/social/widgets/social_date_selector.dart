@@ -33,8 +33,11 @@ class SocialDateSelector extends ConsumerWidget {
     final today = DateTime.now();
     final firstDay = DateTime(today.year, today.month, today.day);
     return List.generate(14, (index) {
-      final date =
-          DateTime(firstDay.year, firstDay.month, firstDay.day + index);
+      final date = DateTime(
+        firstDay.year,
+        firstDay.month,
+        firstDay.day + index,
+      );
       return SocialDateOption(
         dayOfWeek: _dayOfWeekLabels[date.weekday],
         dayOfMonth: date.day,

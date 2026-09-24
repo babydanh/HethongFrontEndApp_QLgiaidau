@@ -46,10 +46,7 @@ class SocialSessionCard extends StatelessWidget {
                   // Subtitle / Host tag with flag
                   Row(
                     children: [
-                      const Text(
-                        '🇻🇳',
-                        style: TextStyle(fontSize: 12),
-                      ),
+                      const Text('🇻🇳', style: TextStyle(fontSize: 12)),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -210,16 +207,16 @@ class SocialSessionCard extends StatelessWidget {
                 color: Color(0xFF15803D),
               )
             : session.sport == 'pickleball'
-                ? const Icon(
-                    Icons.sports_handball_rounded,
-                    size: 22,
-                    color: Color(0xFFD97706),
-                  )
-                : const Icon(
-                    Icons.sports_score_rounded,
-                    size: 22,
-                    color: AppTheme.primary,
-                  ),
+            ? const Icon(
+                Icons.sports_handball_rounded,
+                size: 22,
+                color: Color(0xFFD97706),
+              )
+            : const Icon(
+                Icons.sports_score_rounded,
+                size: 22,
+                color: AppTheme.primary,
+              ),
       ),
     );
   }

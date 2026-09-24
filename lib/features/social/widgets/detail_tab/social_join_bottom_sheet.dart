@@ -42,7 +42,10 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: 'đ',
+    );
     final totalPrice = _ticketCount * widget.session.pricePerSlot;
 
     return Padding(
@@ -132,14 +135,18 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                         Icon(
                           Icons.schedule_rounded,
                           size: 14,
-                          color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                          color: isDark
+                              ? Colors.white60
+                              : const Color(0xFF64748B),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           widget.session.fullDateTimeDisplay,
                           style: TextStyle(
                             fontSize: 12.5,
-                            color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                            color: isDark
+                                ? Colors.white60
+                                : const Color(0xFF64748B),
                           ),
                         ),
                       ],
@@ -150,7 +157,9 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                         Icon(
                           Icons.location_on_outlined,
                           size: 14,
-                          color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                          color: isDark
+                              ? Colors.white60
+                              : const Color(0xFF64748B),
                         ),
                         const SizedBox(width: 4),
                         Expanded(
@@ -160,7 +169,9 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 12.5,
-                              color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                              color: isDark
+                                  ? Colors.white60
+                                  : const Color(0xFF64748B),
                             ),
                           ),
                         ),
@@ -183,7 +194,10 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: _remainingSlots > 0
                           ? const Color(0xFF16A34A).withValues(alpha: 0.12)
@@ -254,7 +268,10 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
 
               // Total Price Row
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: isDark
                       ? const Color(0xFF2C2C2E)
@@ -310,7 +327,9 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                           ),
                         )
                       : Text(
-                          _remainingSlots > 0 ? 'Xác nhận tham gia' : 'Đã hết chỗ',
+                          _remainingSlots > 0
+                              ? 'Xác nhận tham gia'
+                              : 'Đã hết chỗ',
                           style: const TextStyle(
                             fontSize: 15.5,
                             fontWeight: FontWeight.w700,
@@ -339,7 +358,9 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
         decoration: BoxDecoration(
           color: isEnabled
               ? (isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE2E8F0))
-              : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04)),
+              : (isDark
+                    ? Colors.white10
+                    : Colors.black.withValues(alpha: 0.04)),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
@@ -356,10 +377,9 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
   Future<void> _handleConfirmJoin() async {
     setState(() => _isSubmitting = true);
     try {
-      await ref.read(socialSessionsProvider.notifier).joinSession(
-            sessionId: widget.session.id,
-            ticketCount: _ticketCount,
-          );
+      await ref
+          .read(socialSessionsProvider.notifier)
+          .joinSession(sessionId: widget.session.id, ticketCount: _ticketCount);
 
       if (mounted) {
         Navigator.pop(context, true);

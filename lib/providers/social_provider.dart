@@ -140,6 +140,21 @@ class SocialSessionsNotifier
     await refresh();
   }
 
+  Future<BatchAddParticipantsResponse> addParticipantsBatchToSlot({
+    required String sessionId,
+    required List<String> userIds,
+    int ticketCount = 1,
+  }) async {
+    final repo = ref.read(socialSessionRepositoryProvider);
+    final res = await repo.addParticipantsBatch(
+      sessionId,
+      userIds: userIds,
+      ticketCount: ticketCount,
+    );
+    await refresh();
+    return res;
+  }
+
   Future<void> togglePaymentStatus(
     String sessionId,
     String userId,
@@ -281,6 +296,35 @@ class SocialSessionDetailNotifier
     await repo.addParticipant(sessionId, userId: userId, ticketCount: ticketCount);
     await refresh();
     ref.read(socialSessionsProvider.notifier).refresh();
+  }
+
+  Future<void> addGuestParticipant({
+    required String guestName,
+    int ticketCount = 1,
+  }) async {
+    final repo = ref.read(socialSessionRepositoryProvider);
+    await repo.addGuestParticipant(
+      sessionId,
+      guestName: guestName,
+      ticketCount: ticketCount,
+    );
+    await refresh();
+    ref.read(socialSessionsProvider.notifier).refresh();
+  }
+
+  Future<BatchAddParticipantsResponse> addParticipantsBatch({
+    required List<String> userIds,
+    int ticketCount = 1,
+  }) async {
+    final repo = ref.read(socialSessionRepositoryProvider);
+    final res = await repo.addParticipantsBatch(
+      sessionId,
+      userIds: userIds,
+      ticketCount: ticketCount,
+    );
+    await refresh();
+    ref.read(socialSessionsProvider.notifier).refresh();
+    return res;
   }
 
   Future<void> cancelSession() async {

@@ -56,6 +56,21 @@ abstract class ISocialSessionRepository {
     int ticketCount = 1,
   });
 
+  /// Thêm khách ngoài CLB (POST /social-sessions/:id/participants với guestName).
+  /// Không cần tài khoản, không tạo user mới, chỉ đánh dấu slot đã có người.
+  Future<void> addGuestParticipant(
+    String sessionId, {
+    required String guestName,
+    int ticketCount = 1,
+  });
+
+  /// Thêm hàng loạt thành viên CLB (POST /social-sessions/:id/participants/batch).
+  Future<BatchAddParticipantsResponse> addParticipantsBatch(
+    String sessionId, {
+    required List<String> userIds,
+    int ticketCount = 1,
+  });
+
   /// 4.8 - Xóa người khỏi kèo (DELETE /social-sessions/:id/participants/:userId)
   Future<void> removeParticipant(String sessionId, String userId);
 
