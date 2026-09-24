@@ -43,85 +43,90 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
     });
 
     try {
-      final dio = ref.read(dioClientProvider).dio;
-      final matchRepo = ref.read(matchRepositoryProvider);
+      // TEMP-DISABLE-MATCHES-N+1 (Yêu cầu 1): tạm ẩn fan-out matches Giải đấu
+      // trong community để tránh N+1 queries. Giữ lại trận đấu riêng (standalone).
+      // Muốn bật lại: bỏ comment khối tourFetchFuture và sessionFetchFuture bên dưới.
+      // final dio = ref.read(dioClientProvider).dio;
+      // final matchRepo = ref.read(matchRepositoryProvider);
       final sessionRepo = ref.read(clubMatchSessionRepositoryProvider);
 
       final matchesList = <MatchModel>[];
 
-      final tourFetchFuture = () async {
-        try {
-          final tourRes = await dio.get('/communities/${widget.communityId}/tournaments');
-          final rawTours = tourRes.data is Map ? (tourRes.data['data'] ?? tourRes.data) : tourRes.data;
-          final tours = (rawTours is List ? rawTours : const <dynamic>[])
-              .whereType<Map>()
-              .map((t) => Map<String, dynamic>.from(t))
-              .take(6)
-              .toList(growable: false);
+      // final tourFetchFuture = () async {
+      //   try {
+      //     final tourRes = await dio.get('/communities/${widget.communityId}/tournaments');
+      //     final rawTours = tourRes.data is Map ? (tourRes.data['data'] ?? tourRes.data) : tourRes.data;
+      //     final tours = (rawTours is List ? rawTours : const <dynamic>[])
+      //         .whereType<Map>()
+      //         .map((t) => Map<String, dynamic>.from(t))
+      //         .take(6)
+      //         .toList(growable: false);
+      //
+      //     final tourMatches = await Future.wait(
+      //       tours.map((tour) async {
+      //         final tourId = tour['id']?.toString();
+      //         final tourName = tour['name']?.toString() ?? 'Giải đấu';
+      //         if (tourId == null || tourId.isEmpty) return <MatchModel>[];
+      //         try {
+      //           final page = await matchRepo.getTournamentMatchesPaged(
+      //             tournamentId: tourId,
+      //             limit: 50,
+      //           );
+      //           return page.matches
+      //               .where(isRenderablePublicMatch)
+      //               .map((m) => m.copyWith(tournamentName: tourName))
+      //               .toList(growable: false);
+      //         } catch (_) {
+      //           return <MatchModel>[];
+      //         }
+      //       }),
+      //     );
+      //     for (final list in tourMatches) {
+      //       matchesList.addAll(list);
+      //     }
+      //   } catch (_) {}
+      // }();
+      final tourFetchFuture = Future.value();
 
-          final tourMatches = await Future.wait(
-            tours.map((tour) async {
-              final tourId = tour['id']?.toString();
-              final tourName = tour['name']?.toString() ?? 'Giải đấu';
-              if (tourId == null || tourId.isEmpty) return <MatchModel>[];
-              try {
-                final page = await matchRepo.getTournamentMatchesPaged(
-                  tournamentId: tourId,
-                  limit: 50,
-                );
-                return page.matches
-                    .where(isRenderablePublicMatch)
-                    .map((m) => m.copyWith(tournamentName: tourName))
-                    .toList(growable: false);
-              } catch (_) {
-                return <MatchModel>[];
-              }
-            }),
-          );
-          for (final list in tourMatches) {
-            matchesList.addAll(list);
-          }
-        } catch (_) {}
-      }();
-
-      // 2. Tải danh sách buổi giao lưu
-      final sessionFetchFuture = () async {
-        try {
-          final sessionPage = await sessionRepo.listPage(
-            widget.communityId,
-            limit: 20,
-          );
-
-          final sessionMatches = await Future.wait(
-            sessionPage.data.map((session) async {
-              if (session.id.isEmpty) return <MatchModel>[];
-              try {
-                final matchPage = await sessionRepo.matchesPage(
-                  session.id,
-                  limit: 50,
-                );
-                return matchPage.data
-                    .map(
-                      (m) => _mapSessionMatchToModel(
-                        m,
-                        tournamentName: session.resolvedName.isNotEmpty
-                            ? session.resolvedName
-                            : 'Giao lưu CLB',
-                        sessionId: session.id,
-                        fallbackTime: session.startAt,
-                      ),
-                    )
-                    .toList(growable: false);
-              } catch (_) {
-                return <MatchModel>[];
-              }
-            }),
-          );
-          for (final list in sessionMatches) {
-            matchesList.addAll(list);
-          }
-        } catch (_) {}
-      }();
+      // // 2. Tải danh sách buổi giao lưu
+      // final sessionFetchFuture = () async {
+      //   try {
+      //     final sessionPage = await sessionRepo.listPage(
+      //       widget.communityId,
+      //       limit: 20,
+      //     );
+      //
+      //     final sessionMatches = await Future.wait(
+      //       sessionPage.data.map((session) async {
+      //         if (session.id.isEmpty) return <MatchModel>[];
+      //         try {
+      //           final matchPage = await sessionRepo.matchesPage(
+      //             session.id,
+      //             limit: 50,
+      //           );
+      //           return matchPage.data
+      //               .map(
+      //                 (m) => _mapSessionMatchToModel(
+      //                   m,
+      //                   tournamentName: session.resolvedName.isNotEmpty
+      //                       ? session.resolvedName
+      //                       : 'Giao lưu CLB',
+      //                   sessionId: session.id,
+      //                   fallbackTime: session.startAt,
+      //                 ),
+      //               )
+      //               .toList(growable: false);
+      //         } catch (_) {
+      //           return <MatchModel>[];
+      //         }
+      //       }),
+      //     );
+      //     for (final list in sessionMatches) {
+      //       matchesList.addAll(list);
+      //     }
+      //   } catch (_) {}
+      // }();
+      final sessionFetchFuture = Future.value();
 
       // 3. Tải danh sách trận riêng (standalone)
       final standaloneFetchFuture = () async {

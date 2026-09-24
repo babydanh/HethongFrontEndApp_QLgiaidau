@@ -4,7 +4,7 @@ import 'dart:math' as math;
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/token_manager.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -56,9 +56,11 @@ class DioClient {
         if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         }
+        if (kDebugMode) _logRequest(options);
         handler.next(options);
       },
       onResponse: (response, handler) {
+        if (kDebugMode) _logResponse(response);
         // Dữ liệu realtime (thông báo...) không nên bị cache — luôn lấy mới.
         final noCache = response.requestOptions.extra['noCache'] == true;
         if (!noCache &&
@@ -83,6 +85,7 @@ class DioClient {
         handler.next(response);
       },
       onError: (DioException error, handler) async {
+        if (kDebugMode) _logError(error);
         final statusCode = error.response?.statusCode;
         if (statusCode == 401 &&
             error.requestOptions.extra[_authRetryKey] != true &&
@@ -256,6 +259,58 @@ class DioClient {
   }
 
   Dio get dio => _dio;
+
+  // ── Logging gọn như file mẫu (chỉ chạy ở debug mode) ─────────────────────
+  // Dùng AppLogger (dart:developer log) để lọc theo tag DioClient trong DevTools.
+
+  void _logRequest(RequestOptions options) {
+    _log.debug('');
+    _log.debug('============= REQUEST =============');
+    _log.debug('${options.method} ${options.uri}');
+
+    if (options.queryParameters.isNotEmpty) {
+      _log.debug('Query Params:');
+      _log.debug(options.queryParameters.toString());
+    }
+
+    if (options.data != null) {
+      if (options.data is FormData) {
+        final formData = options.data as FormData;
+        _log.debug('FormData Fields:');
+        for (final field in formData.fields) {
+          _log.debug('${field.key}: ${field.value}');
+        }
+        if (formData.files.isNotEmpty) {
+          _log.debug('FormData Files:');
+          for (final file in formData.files) {
+            _log.debug('${file.key}: ${file.value.filename}');
+          }
+        }
+      } else {
+        _log.debug('Body:');
+        _log.debug(options.data.toString());
+      }
+    }
+
+    _log.debug('===================================');
+  }
+
+  void _logResponse(Response response) {
+    _log.debug(
+      '[RESPONSE] ${response.statusCode} ${response.requestOptions.uri}',
+    );
+    _log.debug(response.data.toString());
+  }
+
+  void _logError(DioException err) {
+    _log.debug(
+      '[ERROR] ${err.response?.statusCode} ${err.requestOptions.uri}',
+    );
+    _log.debug(err.message ?? 'Unknown error');
+    if (err.response?.data != null) {
+      _log.debug(err.response!.data.toString());
+    }
+  }
 }
 
 class _TokenPair {
@@ -278,4 +333,83 @@ class _CachedGetResponse {
     required this.headers,
     required this.savedAt,
   });
+}
+
+// ── Friendly Error Message (tham khảo từ dio_client_EXAMPLE) ───────────────
+
+/// Trả về thông báo lỗi thân thiện bằng tiếng Việt dựa trên loại [DioException].
+///
+/// Dùng chung cho tất cả repository để đảm bảo thông báo nhất quán.
+String friendlyDioErrorMessage(DioException e) {
+  switch (e.type) {
+    case DioExceptionType.connectionTimeout:
+    case DioExceptionType.sendTimeout:
+    case DioExceptionType.receiveTimeout:
+      return 'Kết nối quá hạn. Vui lòng kiểm tra mạng và thử lại.';
+    case DioExceptionType.connectionError:
+      return 'Không thể kết nối máy chủ. Vui lòng kiểm tra mạng.';
+    case DioExceptionType.badCertificate:
+      return 'Chứng chỉ bảo mật không hợp lệ.';
+    case DioExceptionType.badResponse:
+      return 'Máy chủ phản hồi lỗi (${e.response?.statusCode}).';
+    case DioExceptionType.cancel:
+      return 'Yêu cầu đã bị hủy.';
+    case DioExceptionType.unknown:
+      return _mapUnknownError(e);
+    // ignore: unreachable_switch_default
+    default:
+      return e.message ?? 'Lỗi kết nối không xác định. Vui lòng thử lại.';
+  }
+}
+
+/// Phân tích chi tiết lỗi `DioExceptionType.unknown` để trả thông báo chính xác.
+String _mapUnknownError(DioException e) {
+  final inner = e.error?.toString() ?? '';
+
+  // HandshakeException → lỗi TLS/SSL trên thiết bị cũ
+  if (inner.contains('HandshakeException') ||
+      inner.contains('CERTIFICATE_VERIFY_FAILED')) {
+    return 'Chứng chỉ bảo mật không phù hợp với thiết bị. Vui lòng liên hệ hỗ trợ.';
+  }
+
+  // SocketException → mất mạng hoặc DNS fail
+  if (inner.contains('SocketException') ||
+      inner.contains('HOST_UNREACHABLE') ||
+      inner.contains('Connection refused')) {
+    return 'Không thể kết nối máy chủ. Vui lòng kiểm tra mạng.';
+  }
+
+  return e.message ?? 'Lỗi kết nối không xác định. Vui lòng thử lại.';
+}
+
+// ── Parse response chuẩn {status: OK/ER} (tham khảo từ dio_client_EXAMPLE) ──
+
+/// Parse response theo format chuẩn:
+/// { "status": "OK"/"ER", "message": "...", "data": ... }
+///
+/// Ném [ApiException] nếu status là "ER".
+/// Trả về `data` nếu status là "OK".
+T parseApiResponse<T>(Response response, T Function(dynamic data) fromData) {
+  final body = response.data as Map<String, dynamic>;
+  final status = body['status'] as String?;
+
+  if (status != 'OK') {
+    throw ApiException(
+      message: body['message'] as String? ?? 'Lỗi không xác định',
+      statusCode: response.statusCode,
+    );
+  }
+
+  return fromData(body['data']);
+}
+
+/// Exception khi API trả về status "ER".
+class ApiException implements Exception {
+  final String message;
+  final int? statusCode;
+
+  const ApiException({required this.message, this.statusCode});
+
+  @override
+  String toString() => 'ApiException: $message (HTTP $statusCode)';
 }

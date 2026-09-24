@@ -9,7 +9,7 @@ import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final tournamentsProvider = StreamProvider<List<Tournament>>((ref) {
+final tournamentsProvider = StreamProvider.autoDispose<List<Tournament>>((ref) {
   return ref.watch(tournamentRepositoryProvider).watchAll().map((list) {
     return list
         .where(
@@ -19,7 +19,7 @@ final tournamentsProvider = StreamProvider<List<Tournament>>((ref) {
   });
 });
 
-final myTournamentsProvider = Provider<AsyncValue<List<Tournament>>>((ref) {
+final myTournamentsProvider = Provider.autoDispose<AsyncValue<List<Tournament>>>((ref) {
   final allTournamentsAsync = ref.watch(tournamentsProvider);
 
   return allTournamentsAsync.when(
@@ -126,7 +126,7 @@ final introTeamsProvider = FutureProvider.family<List<Team>, String>((
       .timeout(const Duration(seconds: 8));
 });
 
-final matchesProvider = StreamProvider.family<List<MatchModel>, String>((
+final matchesProvider = StreamProvider.autoDispose.family<List<MatchModel>, String>((
   ref,
   tournamentId,
 ) {

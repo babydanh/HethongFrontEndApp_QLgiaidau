@@ -69,6 +69,10 @@ Map<String, dynamic>? _readSportRules(Map<String, dynamic> json) {
   return carryOpenScoringMarker(tournamentRules, config);
 }
 
+class _PublicMatchesSnapshotTooLarge implements Exception {
+  const _PublicMatchesSnapshotTooLarge();
+}
+
 class ApiMatchRepository implements IMatchRepository {
   static const _log = AppLogger('ApiMatchRepo');
   final DioClient _dioClient;
@@ -136,9 +140,22 @@ class ApiMatchRepository implements IMatchRepository {
     return data is Map ? _extractNextCursor(data) : null;
   }
 
+  int? _extractTotal(dynamic payload) {
+    if (payload is! Map) return null;
+    final meta = payload['meta'];
+    if (meta is Map) {
+      final total = meta['total'];
+      if (total is int) return total;
+      return int.tryParse(total?.toString() ?? '');
+    }
+    final data = payload['data'];
+    return data is Map ? _extractTotal(data) : null;
+  }
+
   Future<List<MatchModel>> _getMatchPages(
-    Map<String, dynamic> baseQuery,
-  ) async {
+    Map<String, dynamic> baseQuery, {
+    bool requireComplete = false,
+  }) async {
     const pageSize = 100;
     const maxPages = 50;
     final result = <MatchModel>[];
@@ -156,12 +173,19 @@ class ApiMatchRepository implements IMatchRepository {
         );
       }
       final payload = response.data;
+      if (requireComplete &&
+          (_extractTotal(payload) ?? 0) > pageSize * maxPages) {
+        throw const _PublicMatchesSnapshotTooLarge();
+      }
       final list = _extractList(payload);
       result.addAll(
         list.map((json) => _parseMatch(Map<String, dynamic>.from(json))),
       );
       final nextCursor = _extractNextCursor(payload);
       if (nextCursor == null || nextCursor == cursor || list.isEmpty) break;
+      if (requireComplete && page == maxPages - 1) {
+        throw const _PublicMatchesSnapshotTooLarge();
+      }
       cursor = nextCursor;
     }
     return result;
@@ -181,7 +205,9 @@ class ApiMatchRepository implements IMatchRepository {
     final inflight = _inflightPublicMatches;
     if (inflight != null) return inflight;
 
-    final request = _getMatchPages(const <String, dynamic>{'publicOnly': true});
+    final request = _getMatchPages(const <String, dynamic>{
+      'publicOnly': true,
+    }, requireComplete: true);
     _inflightPublicMatches = request;
     return request
         .then((matches) {
@@ -217,7 +243,7 @@ class ApiMatchRepository implements IMatchRepository {
           tournamentId,
           divisionId: divisionId,
           forceRefresh: forceRefresh,
-          usePublicSnapshot: false,
+          usePublicSnapshot: true,
         );
         _matchesCache[cacheKey] = updated;
         if (!controller.isClosed) controller.add(updated);
@@ -1134,14 +1160,20 @@ class ApiMatchRepository implements IMatchRepository {
     // views keep their scoped query because the MatchModel intentionally does
     // not infer division membership from display data.
     if (divisionId == null && usePublicSnapshot) {
-      final snapshot = await _getPublicMatchesSnapshot(
-        forceRefresh: forceRefresh,
-      );
-      final matches = snapshot
-          .where((match) => match.tournamentId == tournamentId)
-          .toList(growable: false);
-      _matchesCache['$tournamentId-all'] = matches;
-      return matches;
+      try {
+        final snapshot = await _getPublicMatchesSnapshot(
+          forceRefresh: forceRefresh,
+        );
+        final matches = snapshot
+            .where((match) => match.tournamentId == tournamentId)
+            .toList(growable: false);
+        _matchesCache['$tournamentId-all'] = matches;
+        return matches;
+      } on _PublicMatchesSnapshotTooLarge {
+        // A global snapshot must be complete before filtering by tournament.
+        // If it exceeds the bounded page window, preserve the old per-tournament
+        // pagination instead of silently hiding older matches.
+      }
     }
     final queryParameters = <String, dynamic>{
       'tournamentId': tournamentId,

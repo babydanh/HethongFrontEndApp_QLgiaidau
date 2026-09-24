@@ -72,6 +72,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   String _exploreSport = 'all';
   String _exploreStatus = 'live';
   bool _initialLiveProbeCompleted = false;
+  bool _initialLiveProbeStarted = false;
   bool _hasAutoSwitchedLiveTab = false;
   bool _userManuallySelectedLiveTab = false;
 
@@ -101,6 +102,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       // the advisory startup probe is unavailable.
       if (mounted) _initialLiveProbeCompleted = true;
     }
+  }
+
+  void _startInitialExploreStatusProbe() {
+    if (_initialLiveProbeStarted || _initialLiveProbeCompleted) return;
+    _initialLiveProbeStarted = true;
+    ref.invalidate(liveMatchesProvider);
+    unawaited(_resolveInitialExploreStatus());
   }
 
   void _handleNoLiveMatches() {
@@ -145,6 +153,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _isTournamentInitialLoading = true;
   bool _isTournamentLoadingMore = false;
   bool _serverTournamentHasMore = false;
+  int _tournamentRequestVersion = 0;
 
   // ─── Server-side Cursor Pagination states (Tab 3: Câu lạc bộ) ───
   final List<Community> _serverClubsList = [];
@@ -182,9 +191,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _tournamentSport = key;
       _clubSport = key;
       _rankingsSport = key == 'all' ? 'pickleball' : key;
+      if (_currentIndex != 1) {
+        ++_tournamentRequestVersion;
+        _serverTournamentsList.clear();
+        _serverTournamentNextCursor = null;
+        _serverTournamentHasMore = false;
+        _isTournamentInitialLoading = true;
+      }
+      if (_currentIndex != 3) {
+        ++_clubRequestVersion;
+        _serverClubsList.clear();
+        _serverClubNextCursor = null;
+        _serverClubHasMore = false;
+        _isClubInitialLoading = true;
+      }
     });
-    _resetTournamentCursorPagination();
-    _resetClubCursorPagination();
+    if (_currentIndex == 1) _resetTournamentCursorPagination();
+    if (_currentIndex == 3) _resetClubCursorPagination();
   }
 
   Future<void> _fetchServerTournamentPage({bool isLoadMore = false}) async {
@@ -198,6 +221,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } else {
       setState(() => _isTournamentInitialLoading = true);
     }
+    final requestVersion = ++_tournamentRequestVersion;
 
     try {
       final repo = ref.read(tournamentRepositoryProvider);
@@ -216,7 +240,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         endDate: _tournamentEndDate,
       );
 
-      if (mounted) {
+      if (mounted && requestVersion == _tournamentRequestVersion) {
         setState(() {
           if (isLoadMore) {
             final existingIds = _serverTournamentsList.map((t) => t.id).toSet();
@@ -236,7 +260,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         });
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && requestVersion == _tournamentRequestVersion) {
         setState(() {
           _isTournamentInitialLoading = false;
           _isTournamentLoadingMore = false;
@@ -348,12 +372,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     _currentIndex = widget.initialTab;
     _carouselController = PageController(viewportFraction: 1.0);
-    _fetchServerTournamentPage(isLoadMore: false);
-    _fetchServerClubPage(isLoadMore: false);
+    if (_currentIndex == 1) _fetchServerTournamentPage(isLoadMore: false);
+    if (_currentIndex == 3) _fetchServerClubPage(isLoadMore: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.invalidate(liveMatchesProvider);
-      unawaited(_resolveInitialExploreStatus());
+      if (_currentIndex == 0) _startInitialExploreStatusProbe();
       ref.read(authProvider.notifier).init();
     });
 
@@ -406,6 +429,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       _currentIndex = index;
     });
+    if (index == 0) _startInitialExploreStatusProbe();
     if (index == 1 && _serverTournamentsList.isEmpty) {
       _fetchServerTournamentPage(isLoadMore: false);
     } else if (index == 3 && _serverClubsList.isEmpty) {
@@ -425,7 +449,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final tournamentsAsync = ref.watch(tournamentsProvider);
+    final tournamentsAsync =
+        _currentIndex == 0 ? ref.watch(tournamentsProvider) : null;
     final screenSize = MediaQuery.of(context).size;
     final double safeAreaTop = _safeAreaTop;
     final isHomeTab = _currentIndex == 0;
@@ -657,14 +682,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildCurrentTabContent(
-    AsyncValue<List<Tournament>> tournamentsAsync,
+    AsyncValue<List<Tournament>>? tournamentsAsync,
     double headerHeight,
   ) {
     switch (_currentIndex) {
       case 0:
         return KeyedSubtree(
           key: const ValueKey('explore'),
-          child: _buildExploreTab(tournamentsAsync),
+          child: _buildExploreTab(tournamentsAsync!),
         );
       case 1:
         return KeyedSubtree(
@@ -2619,7 +2644,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return NotificationListener<ScrollNotification>(
       onNotification: (ScrollNotification scrollInfo) {
-        if (!_isClubLoadingMore &&
+        if (scrollInfo.depth == 0 &&
+            scrollInfo is ScrollUpdateNotification &&
+            (scrollInfo.scrollDelta ?? 0) > 0 &&
+            !_isClubLoadingMore &&
             _serverClubHasMore &&
             scrollInfo.metrics.pixels >=
                 scrollInfo.metrics.maxScrollExtent - 400) {

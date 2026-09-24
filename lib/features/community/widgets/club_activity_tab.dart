@@ -340,131 +340,134 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
 
     final pageMatches = <MatchModel>[];
     try {
-      final dio = ref.read(dioClientProvider).dio;
-      final matchRepository = ref.read(matchRepositoryProvider);
+      // TEMP-DISABLE-MATCHES-N+1 (Yêu cầu 1): tạm ẩn fan-out matches Giải đấu
+      // trong community để tránh N+1 queries. Giữ lại trận đấu riêng (standalone).
+      // Muốn bật lại: bỏ comment khối (1) và (2) bên dưới.
+      // final dio = ref.read(dioClientProvider).dio;
+      // final matchRepository = ref.read(matchRepositoryProvider);
       final sessionRepo = ref.read(clubMatchSessionRepositoryProvider);
 
-      // 1. Giải đấu: mỗi giải là một stream cursor độc lập.
-      var tournamentRows = _activityTournaments;
-      if (isFirstPage || isHeadRefresh || tournamentRows.isEmpty) {
-        try {
-          final tourRes = await dio.get(
-            '/communities/${widget.communityId}/tournaments',
-          );
-          final rawTours = tourRes.data is Map
-              ? (tourRes.data['data'] ?? tourRes.data)
-              : tourRes.data;
-          final parsedTours = (rawTours is List ? rawTours : const <dynamic>[])
-              .whereType<Map>()
-              .map((tour) => Map<String, dynamic>.from(tour))
-              .take(5)
-              .toList(growable: false);
-          _activityTournaments
-            ..clear()
-            ..addAll(parsedTours);
-          tournamentRows = _activityTournaments;
-        } catch (_) {}
-      }
+      // // 1. Giải đấu: mỗi giải là một stream cursor độc lập.
+      // var tournamentRows = _activityTournaments;
+      // if (isFirstPage || isHeadRefresh || tournamentRows.isEmpty) {
+      //   try {
+      //     final tourRes = await dio.get(
+      //       '/communities/${widget.communityId}/tournaments',
+      //     );
+      //     final rawTours = tourRes.data is Map
+      //         ? (tourRes.data['data'] ?? tourRes.data)
+      //         : tourRes.data;
+      //     final parsedTours = (rawTours is List ? rawTours : const <dynamic>[])
+      //         .whereType<Map>()
+      //         .map((tour) => Map<String, dynamic>.from(tour))
+      //         .take(5)
+      //         .toList(growable: false);
+      //     _activityTournaments
+      //       ..clear()
+      //       ..addAll(parsedTours);
+      //     tournamentRows = _activityTournaments;
+      //   } catch (_) {}
+      // }
+      //
+      // for (final tour in tournamentRows) {
+      //   final tourId = tour['id']?.toString();
+      //   final tourName = tour['name']?.toString() ?? 'Giải đấu';
+      //   if (tourId == null || tourId.isEmpty) continue;
+      //
+      //   final previousCursor = _tournamentMatchCursors[tourId];
+      //   final isNewStream = !_tournamentMatchCursors.containsKey(tourId);
+      //   final cursor = loadMore ? previousCursor : null;
+      //   try {
+      //     final page = await matchRepository.getTournamentMatchesPaged(
+      //       tournamentId: tourId,
+      //       cursor: cursor,
+      //       limit: _activityMatchPageSize,
+      //     );
+      //     if (!isHeadRefresh || isNewStream) {
+      //       final next = _safeNextCursor(cursor, page.nextCursor, page.hasMore);
+      //       _tournamentMatchCursors[tourId] = next;
+      //       _tournamentMatchHasMore[tourId] = next != null;
+      //     }
+      //     pageMatches.addAll(
+      //       page.matches
+      //           .where(isRenderablePublicMatch)
+      //           .map((match) => match.copyWith(tournamentName: tourName)),
+      //     );
+      //   } catch (_) {}
+      // }
 
-      for (final tour in tournamentRows) {
-        final tourId = tour['id']?.toString();
-        final tourName = tour['name']?.toString() ?? 'Giải đấu';
-        if (tourId == null || tourId.isEmpty) continue;
-
-        final previousCursor = _tournamentMatchCursors[tourId];
-        final isNewStream = !_tournamentMatchCursors.containsKey(tourId);
-        final cursor = loadMore ? previousCursor : null;
-        try {
-          final page = await matchRepository.getTournamentMatchesPaged(
-            tournamentId: tourId,
-            cursor: cursor,
-            limit: _activityMatchPageSize,
-          );
-          if (!isHeadRefresh || isNewStream) {
-            final next = _safeNextCursor(cursor, page.nextCursor, page.hasMore);
-            _tournamentMatchCursors[tourId] = next;
-            _tournamentMatchHasMore[tourId] = next != null;
-          }
-          pageMatches.addAll(
-            page.matches
-                .where(isRenderablePublicMatch)
-                .map((match) => match.copyWith(tournamentName: tourName)),
-          );
-        } catch (_) {}
-      }
-
-      // 2. Buổi giao lưu: phân trang danh sách buổi và từng stream trận.
-      try {
-        var currentSessionPage = const <ClubMatchSessionModel>[];
-        if (!loadMore || _sessionListHasMore) {
-          final sessionCursor = loadMore ? _sessionListCursor : null;
-          final sessionPage = await sessionRepo.listPage(
-            widget.communityId,
-            cursor: sessionCursor,
-            limit: _activitySessionPageSize,
-          );
-          currentSessionPage = sessionPage.data;
-          if (!isHeadRefresh) {
-            final next = _safeNextCursor(
-              sessionCursor,
-              sessionPage.nextCursor,
-              sessionPage.hasMore,
-            );
-            _sessionListCursor = next;
-            _sessionListHasMore = next != null;
-          }
-        }
-
-        for (final session in currentSessionPage) {
-          if (session.id.isNotEmpty) _activitySessions[session.id] = session;
-        }
-        final sessionsToFetch = loadMore
-            ? _activitySessions.values.toList(growable: false)
-            : currentSessionPage;
-        for (final session in sessionsToFetch) {
-          final sessionId = session.id;
-          if (sessionId.isEmpty) continue;
-          final isNewSession = !_sessionMatchCursors.containsKey(sessionId);
-          final existingMatchCursor = _sessionMatchCursors[sessionId];
-          final shouldFetchMatches =
-              !loadMore ||
-              isNewSession ||
-              (_sessionMatchHasMore[sessionId] ?? false);
-          if (!shouldFetchMatches) continue;
-
-          final matchCursor = loadMore && !isNewSession
-              ? existingMatchCursor
-              : null;
-          try {
-            final matchPage = await sessionRepo.matchesPage(
-              sessionId,
-              cursor: matchCursor,
-              limit: _activityMatchPageSize,
-            );
-            if (!isHeadRefresh || isNewSession) {
-              final next = _safeNextCursor(
-                matchCursor,
-                matchPage.nextCursor,
-                matchPage.hasMore,
-              );
-              _sessionMatchCursors[sessionId] = next;
-              _sessionMatchHasMore[sessionId] = next != null;
-            }
-            pageMatches.addAll(
-              matchPage.data.map(
-                (match) => _mapClubMatch(
-                  match,
-                  tournamentName: session.resolvedName.isNotEmpty
-                      ? session.resolvedName
-                      : 'Giao lưu CLB',
-                  sessionId: sessionId,
-                  updatedAt: session.startAt,
-                ),
-              ),
-            );
-          } catch (_) {}
-        }
-      } catch (_) {}
+      // // 2. Buổi giao lưu: phân trang danh sách buổi và từng stream trận.
+      // try {
+      //   var currentSessionPage = const <ClubMatchSessionModel>[];
+      //   if (!loadMore || _sessionListHasMore) {
+      //     final sessionCursor = loadMore ? _sessionListCursor : null;
+      //     final sessionPage = await sessionRepo.listPage(
+      //       widget.communityId,
+      //       cursor: sessionCursor,
+      //       limit: _activitySessionPageSize,
+      //     );
+      //     currentSessionPage = sessionPage.data;
+      //     if (!isHeadRefresh) {
+      //       final next = _safeNextCursor(
+      //         sessionCursor,
+      //         sessionPage.nextCursor,
+      //         sessionPage.hasMore,
+      //       );
+      //       _sessionListCursor = next;
+      //       _sessionListHasMore = next != null;
+      //     }
+      //   }
+      //
+      //   for (final session in currentSessionPage) {
+      //     if (session.id.isNotEmpty) _activitySessions[session.id] = session;
+      //   }
+      //   final sessionsToFetch = loadMore
+      //       ? _activitySessions.values.toList(growable: false)
+      //       : currentSessionPage;
+      //   for (final session in sessionsToFetch) {
+      //     final sessionId = session.id;
+      //     if (sessionId.isEmpty) continue;
+      //     final isNewSession = !_sessionMatchCursors.containsKey(sessionId);
+      //     final existingMatchCursor = _sessionMatchCursors[sessionId];
+      //     final shouldFetchMatches =
+      //         !loadMore ||
+      //         isNewSession ||
+      //         (_sessionMatchHasMore[sessionId] ?? false);
+      //     if (!shouldFetchMatches) continue;
+      //
+      //     final matchCursor = loadMore && !isNewSession
+      //         ? existingMatchCursor
+      //         : null;
+      //     try {
+      //       final matchPage = await sessionRepo.matchesPage(
+      //         sessionId,
+      //         cursor: matchCursor,
+      //         limit: _activityMatchPageSize,
+      //       );
+      //       if (!isHeadRefresh || isNewSession) {
+      //         final next = _safeNextCursor(
+      //           matchCursor,
+      //           matchPage.nextCursor,
+      //           matchPage.hasMore,
+      //         );
+      //         _sessionMatchCursors[sessionId] = next;
+      //         _sessionMatchHasMore[sessionId] = next != null;
+      //       }
+      //       pageMatches.addAll(
+      //         matchPage.data.map(
+      //           (match) => _mapClubMatch(
+      //             match,
+      //             tournamentName: session.resolvedName.isNotEmpty
+      //                 ? session.resolvedName
+      //                 : 'Giao lưu CLB',
+      //             sessionId: sessionId,
+      //             updatedAt: session.startAt,
+      //           ),
+      //         ),
+      //       );
+      //     } catch (_) {}
+      //   }
+      // } catch (_) {}
 
       // 3. Trận riêng: stream cursor độc lập, không gán tournament/session giả.
       try {
