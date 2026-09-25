@@ -76,7 +76,7 @@ class GlobalSearchScreen extends ConsumerStatefulWidget {
 }
 
 class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
-  static const _scopes = [0, 1, 3, 4, 5];
+  static const _scopes = [1, 0, 3, 4, 5];
 
   late final TextEditingController _queryController;
   late final TextEditingController _matchLocationController;
@@ -271,79 +271,103 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   List<MatchModel> get _visibleMatches {
     final query = _queryController.text.trim().toLowerCase();
     final location = _matchLocationController.text.trim().toLowerCase();
-    return _matches
-        .where((match) {
-          if (_matchSport != 'all' && match.sportKey != _matchSport) {
-            return false;
-          }
-          if (_matchStatus != 'all' &&
-              match.status.toLowerCase() != _matchStatus) {
-            return false;
-          }
-          final searchable = _scope == 5
-              ? [match.court, match.courtAddress]
-              : [
-                  match.team1Name,
-                  match.team2Name,
-                  match.tournamentName ?? '',
-                  match.court,
-                  match.courtAddress,
-                  ...(match.team1Members ?? const <String>[]),
-                  ...(match.team2Members ?? const <String>[]),
-                ];
-          if (query.isNotEmpty &&
-              !searchable.any((value) => value.toLowerCase().contains(query))) {
-            return false;
-          }
-          if (location.isNotEmpty &&
-              !match.court.toLowerCase().contains(location) &&
-              !match.courtAddress.toLowerCase().contains(location)) {
-            return false;
-          }
-          final scheduled = match.scheduledTime;
-          if (_matchDateRange != null &&
-              (scheduled == null ||
-                  scheduled.isBefore(_startOfDay(_matchDateRange!.start)) ||
-                  scheduled.isAfter(_endOfDay(_matchDateRange!.end)))) {
-            return false;
-          }
-          return true;
-        })
-        .toList(growable: false);
+    final matches = _matches.where((match) {
+      if (_matchSport != 'all' && match.sportKey != _matchSport) return false;
+      if (_matchStatus != 'all' && match.status.toLowerCase() != _matchStatus) {
+        return false;
+      }
+      final searchable = _scope == 5
+          ? [match.court, match.courtAddress]
+          : [
+              match.team1Name,
+              match.team2Name,
+              match.tournamentName ?? '',
+              match.court,
+              match.courtAddress,
+              ...(match.team1Members ?? const <String>[]),
+              ...(match.team2Members ?? const <String>[]),
+            ];
+      if (query.isNotEmpty &&
+          !searchable.any((value) => value.toLowerCase().contains(query))) {
+        return false;
+      }
+      if (location.isNotEmpty &&
+          !match.court.toLowerCase().contains(location) &&
+          !match.courtAddress.toLowerCase().contains(location)) {
+        return false;
+      }
+      final scheduled = match.scheduledTime;
+      if (_matchDateRange != null &&
+          (scheduled == null ||
+              scheduled.isBefore(_startOfDay(_matchDateRange!.start)) ||
+              scheduled.isAfter(_endOfDay(_matchDateRange!.end)))) {
+        return false;
+      }
+      return true;
+    }).toList();
+    matches.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    return matches;
   }
 
   List<Tournament> get _visibleTournaments {
     final query = _queryController.text.trim().toLowerCase();
-    return _tournaments
-        .where((tournament) {
-          return query.isEmpty ||
-              tournament.name.toLowerCase().contains(query) ||
-              tournament.venueName?.toLowerCase().contains(query) == true;
-        })
-        .toList(growable: false);
+    final tournaments = _tournaments.where((tournament) {
+      return query.isEmpty ||
+          tournament.name.toLowerCase().contains(query) ||
+          tournament.venueName?.toLowerCase().contains(query) == true;
+    }).toList();
+    tournaments.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return tournaments;
   }
 
   List<Community> get _visibleClubs {
     final query = _queryController.text.trim().toLowerCase();
-    return _clubs
-        .where((club) {
-          return query.isEmpty ||
-              club.name.toLowerCase().contains(query) ||
-              (club.description ?? '').toLowerCase().contains(query);
-        })
-        .toList(growable: false);
+    final clubs = _clubs.where((club) {
+      return query.isEmpty ||
+          club.name.toLowerCase().contains(query) ||
+          (club.description ?? '').toLowerCase().contains(query);
+    }).toList();
+    clubs.sort(
+      (a, b) => _newestFirst(
+        DateTime.tryParse(a.createdAt),
+        DateTime.tryParse(b.createdAt),
+      ),
+    );
+    return clubs;
   }
 
   List<PlayerRanking> get _visibleAthletes {
     final query = _queryController.text.trim().toLowerCase();
-    return _athletes
+    final athletes = _athletes
         .where(
           (player) =>
               query.isEmpty || player.fullName.toLowerCase().contains(query),
         )
-        .toList(growable: false);
+        .toList();
+    athletes.sort((a, b) {
+      final byUpdated = _newestFirst(
+        DateTime.tryParse(a.updatedAt ?? ''),
+        DateTime.tryParse(b.updatedAt ?? ''),
+      );
+      return byUpdated != 0 ? byUpdated : a.rank.compareTo(b.rank);
+    });
+    return athletes;
   }
 
+  int _newestFirst(DateTime? a, DateTime? b) {
+    if (a == null) return b == null ? 0 : 1;
+    if (b == null) return -1;
+    return b.compareTo(a);
+  }
+
+  int get _visibleResultCount => switch (_scope) {
+    0 => _visibleMatches.length,
+    1 => _visibleTournaments.length,
+    3 => _visibleClubs.length,
+    4 => _visibleAthletes.length,
+    5 => _venueEntries(_visibleMatches).length,
+    _ => 0,
+  };
   DateTime _startOfDay(DateTime date) =>
       DateTime(date.year, date.month, date.day);
   DateTime _endOfDay(DateTime date) =>
@@ -411,7 +435,6 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
           child: Column(
             children: [
               _buildHeader(l10n, colors),
-              _buildSearchField(l10n, colors),
               _buildScopeSelector(l10n, colors),
               _buildFilterToolbar(l10n, colors),
               AnimatedSize(
@@ -445,41 +468,80 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   }
 
   Widget _buildHeader(AppLocalizations l10n, AppColorsExtension colors) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-      child: Row(
-        children: [
-          IconButton(
-            tooltip: l10n.homeGlobalSearchClose,
-            onPressed: _closeSearch,
-            icon: const Icon(Icons.arrow_back_rounded),
-            color: colors.textPrimary,
-            constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.homeGlobalSearchTitle,
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3,
+    return Material(
+      color: colors.bgSurface,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 16, 8),
+        child: Row(
+          children: [
+            IconButton(
+              tooltip: l10n.homeGlobalSearchClose,
+              onPressed: _closeSearch,
+              icon: const Icon(Icons.arrow_back_rounded),
+              color: colors.textPrimary,
+              constraints: const BoxConstraints.tightFor(width: 44, height: 48),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Container(
+                height: 60,
+                decoration: BoxDecoration(
+                  color: colors.bgCard,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: colors.border.withValues(alpha: .7),
                   ),
                 ),
-                Text(
-                  l10n.homeGlobalSearchSubtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: colors.textMuted, fontSize: 12),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 14),
+                    Icon(Icons.search_rounded, color: colors.textMuted),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Semantics(
+                        label: l10n.homeGlobalSearchInputLabel,
+                        textField: true,
+                        child: TextField(
+                          controller: _queryController,
+                          textInputAction: TextInputAction.search,
+                          onSubmitted: (_) => _loadScope(),
+                          onTap: () {
+                            if (_filtersExpanded) {
+                              setState(() => _filtersExpanded = false);
+                            }
+                          },
+                          style: TextStyle(
+                            color: colors.textPrimary,
+                            fontSize: 16,
+                          ),
+                          cursorColor: AppTheme.primary,
+                          decoration: InputDecoration(
+                            hintText: _scopeHint(l10n),
+                            isDense: true,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 14,
+                            ),
+                            suffixIcon: _queryController.text.isEmpty
+                                ? null
+                                : IconButton(
+                                    tooltip: l10n.homeGlobalSearchClear,
+                                    onPressed: _queryController.clear,
+                                    icon: const Icon(Icons.close_rounded),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    _buildFilterButton(colors, l10n),
+                    const SizedBox(width: 4),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -545,20 +607,80 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     );
   }
 
+  Widget _buildFilterButton(AppColorsExtension colors, AppLocalizations l10n) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton.filled(
+          tooltip: _activeFilterCount == 0
+              ? l10n.homeGlobalSearchAdvancedFilters
+              : '${l10n.homeGlobalSearchAdvancedFilters} ($_activeFilterCount)',
+          onPressed: () {
+            FocusScope.of(context).unfocus();
+            setState(() => _filtersExpanded = !_filtersExpanded);
+          },
+          icon: const Icon(Icons.tune_rounded),
+          style: IconButton.styleFrom(
+            minimumSize: const Size(52, 52),
+            backgroundColor: AppTheme.primary,
+            foregroundColor: Colors.white,
+          ),
+        ),
+        if (_activeFilterCount > 0)
+          Positioned(
+            top: -3,
+            right: -3,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                border: Border.all(color: AppTheme.primary),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '$_activeFilterCount',
+                style: const TextStyle(
+                  color: AppTheme.primary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildFilterToolbar(AppLocalizations l10n, AppColorsExtension colors) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
       child: Row(
         children: [
           Expanded(
             child: Text(
-              _scopeLabel(l10n, _scope),
+              '${_scopeLabel(l10n, _scope).toUpperCase()} '
+              '${l10n.homeGlobalSearchSuggested.toUpperCase()} '
+              '($_visibleResultCount)',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: colors.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
+                color: colors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1,
               ),
             ),
+          ),
+          const SizedBox(width: 8),
+          Icon(Icons.swap_vert_rounded, size: 17, color: colors.textMuted),
+          const SizedBox(width: 3),
+          Text(
+            '${l10n.homeGlobalSearchSort}: ${l10n.homeGlobalSearchSortNewest}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: colors.textMuted, fontSize: 11),
           ),
         ],
       ),
@@ -838,14 +960,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     final tournaments = _visibleTournaments;
     final clubs = _visibleClubs;
     final athletes = _visibleAthletes;
-    final count = switch (_scope) {
-      0 => matches.length,
-      1 => tournaments.length,
-      3 => clubs.length,
-      4 => athletes.length,
-      5 => venues.length,
-      _ => 0,
-    };
+    final count = _visibleResultCount;
     if (count == 0) {
       if (_scope == 4 && _loading) {
         return const Center(child: CircularProgressIndicator());
@@ -926,9 +1041,8 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       colors: colors,
       icon: Icons.place_rounded,
       title: title,
-      subtitle: address.isEmpty
-          ? l10n.matchesCount(entry.value.length)
-          : '$address · ${l10n.matchesCount(entry.value.length)}',
+      tags: [l10n.matchesCount(entry.value.length)],
+      subtitle: address,
       onTap: () {
         setState(() {
           _scope = 0;
@@ -956,16 +1070,28 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     final status = match.isLive
         ? l10n.matchesStatusLive
         : StatusHelper.getStatusDisplayName(match.status, l10n: l10n);
+    final team1Avatar = match.team1MemberInfos.isEmpty
+        ? null
+        : match.team1MemberInfos.first.avatarUrl;
+    final team2Avatar = match.team2MemberInfos.isEmpty
+        ? null
+        : match.team2MemberInfos.first.avatarUrl;
     return _resultCard(
       colors: colors,
-      icon: match.isLive ? Icons.sensors_rounded : Icons.sports_tennis_rounded,
+      icon: Icons.sports_tennis_rounded,
       title: '${match.team1Name} · ${match.team2Name}',
-      subtitle: '${details.join(' · ')}\n$status',
+      tags: [if (match.sportKey?.isNotEmpty == true) match.sportKey!, status],
+      subtitle: details.join(' · '),
       onTap: match.tournamentId == null
           ? null
           : () => context.push(
               NavigationHelper.getLiveMatchRoute(match.tournamentId!, match.id),
             ),
+      leadingWidget: _matchLogos(
+        match.team1LogoUrl ?? team1Avatar,
+        match.team2LogoUrl ?? team2Avatar,
+        colors,
+      ),
     );
   }
 
@@ -978,13 +1104,16 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       colors: colors,
       icon: Icons.emoji_events_rounded,
       title: tournament.name,
-      subtitle: [
-        tournament.sport,
+      tags: [
+        if (tournament.sport.isNotEmpty) tournament.sport,
         StatusHelper.getTournamentStatusLabel(tournament.status, l10n: l10n),
+      ],
+      subtitle: [
         if (tournament.venueName?.isNotEmpty == true) tournament.venueName!,
         if (tournament.city?.isNotEmpty == true) tournament.city!,
-      ].where((part) => part.isNotEmpty).join(' · '),
+      ].join(' · '),
       onTap: () => context.push('/intro/${tournament.id}'),
+      imageUrl: tournament.logoUrl ?? tournament.communityLogoUrl,
     );
   }
 
@@ -993,11 +1122,10 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       colors: colors,
       icon: Icons.groups_2_rounded,
       title: club.name,
-      subtitle: [
-        if (club.sports.isNotEmpty) club.sports.join(', '),
-        if (club.locationAddress?.isNotEmpty == true) club.locationAddress!,
-      ].join(' · '),
+      tags: club.sports,
+      subtitle: club.locationAddress ?? '',
       onTap: () => context.push('/club/${club.id}'),
+      imageUrl: club.logoUrl,
     );
   }
 
@@ -1006,12 +1134,50 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       colors: colors,
       icon: Icons.person_rounded,
       title: player.fullName,
-      subtitle:
-          '${player.categoryName ?? ''} · ELO ${player.eloPoints} · #${player.rank}',
+      tags: [
+        if (player.categoryName?.isNotEmpty == true) player.categoryName!,
+        if (player.eloPoints > 0) 'ELO ${player.eloPoints}',
+        if (player.rank > 0) '#${player.rank}',
+      ],
+      subtitle: player.tierName,
       onTap: player.userId.isEmpty
           ? null
           : () => context.push('/user/${player.userId}'),
-      leading: player.avatarUrl,
+      imageUrl: player.avatarUrl,
+    );
+  }
+
+  Widget _matchLogos(
+    String? team1Image,
+    String? team2Image,
+    AppColorsExtension colors,
+  ) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          top: 0,
+          left: 0,
+          child: _imageBadge(
+            team1Image,
+            Icons.person_rounded,
+            colors,
+            size: 46,
+            radius: 23,
+          ),
+        ),
+        Positioned(
+          right: 0,
+          bottom: 0,
+          child: _imageBadge(
+            team2Image,
+            Icons.person_rounded,
+            colors,
+            size: 46,
+            radius: 23,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1021,49 +1187,134 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     required String title,
     required String subtitle,
     required VoidCallback? onTap,
-    String? leading,
+    List<String> tags = const [],
+    String? imageUrl,
+    Widget? leadingWidget,
   }) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 12),
       color: colors.bgCard,
       elevation: 0,
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: colors.border.withValues(alpha: 0.8)),
       ),
-      child: ListTile(
-        minVerticalPadding: 12,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-        leading: CircleAvatar(
-          backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
-          foregroundColor: AppTheme.primary,
-          backgroundImage: leading == null || leading.isEmpty
-              ? null
-              : NetworkImage(leading),
-          child: leading == null || leading.isEmpty
-              ? Icon(icon, size: 20)
-              : null,
-        ),
-        title: Text(
-          title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: colors.textPrimary,
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 72,
+                height: 72,
+                child:
+                    leadingWidget ??
+                    _imageBadge(imageUrl, icon, colors, size: 72, radius: 14),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                    if (tags.any((tag) => tag.trim().isNotEmpty)) ...[
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        children: [
+                          for (final tag in tags)
+                            if (tag.trim().isNotEmpty)
+                              _metadataBadge(tag, colors),
+                        ],
+                      ),
+                    ],
+                    if (subtitle.trim().isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        '• $subtitle',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colors.textMuted,
+                          fontSize: 13,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (onTap != null) ...[
+                const SizedBox(width: 8),
+                Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+              ],
+            ],
           ),
         ),
-        subtitle: Text(
-          subtitle,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: colors.textMuted, fontSize: 12, height: 1.35),
-        ),
-        trailing: onTap == null
-            ? null
-            : Icon(Icons.chevron_right_rounded, color: colors.textMuted),
-        onTap: onTap,
+      ),
+    );
+  }
+
+  Widget _imageBadge(
+    String? imageUrl,
+    IconData fallback,
+    AppColorsExtension colors, {
+    double size = 72,
+    double radius = 14,
+  }) {
+    final url = imageUrl?.trim() ?? '';
+    return Container(
+      width: size,
+      height: size,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(radius),
+      ),
+      alignment: Alignment.center,
+      child: url.isEmpty
+          ? Icon(fallback, size: 28, color: AppTheme.primary)
+          : Image.network(
+              url,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              excludeFromSemantics: true,
+              frameBuilder: (context, child, frame, wasSynchronouslyLoaded) =>
+                  frame == null
+                  ? Icon(fallback, size: 24, color: AppTheme.primary)
+                  : child,
+              errorBuilder: (context, error, stackTrace) =>
+                  Icon(fallback, size: 24, color: AppTheme.primary),
+            ),
+    );
+  }
+
+  Widget _metadataBadge(String label, AppColorsExtension colors) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: colors.bgDark,
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(color: colors.textSecondary, fontSize: 12),
       ),
     );
   }
@@ -1094,116 +1345,47 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     );
   }
 
-  Widget _emptyState(AppLocalizations l10n, AppColorsExtension colors) =>
-      _messageState(
+  Widget _emptyState(AppLocalizations l10n, AppColorsExtension colors) {
+    if (_scope != 1) {
+      return _messageState(
         icon: Icons.search_off_rounded,
         text: l10n.homeGlobalSearchEmpty,
         colors: colors,
       );
+    }
 
-  Widget _buildSearchField(AppLocalizations l10n, AppColorsExtension colors) {
-    return Material(
-      color: colors.bgSurface,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-        child: Row(
-          children: [
-            Expanded(
-              child: Semantics(
-                label: l10n.homeGlobalSearchInputLabel,
-                textField: true,
-                child: TextField(
-                  controller: _queryController,
-                  textInputAction: TextInputAction.search,
-                  onSubmitted: (_) => _loadScope(),
-                  onTap: () {
-                    if (_filtersExpanded) {
-                      setState(() => _filtersExpanded = false);
-                    }
-                  },
-                  style: TextStyle(color: colors.textPrimary, fontSize: 15),
-                  cursorColor: AppTheme.primary,
-                  decoration: InputDecoration(
-                    hintText: _scopeHint(l10n),
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    suffixIcon: _queryController.text.isEmpty
-                        ? null
-                        : IconButton(
-                            tooltip: l10n.homeGlobalSearchClear,
-                            onPressed: _queryController.clear,
-                            icon: const Icon(Icons.close_rounded),
-                          ),
-                    filled: true,
-                    fillColor: colors.bgCard,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: colors.border),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: colors.border),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(
-                        color: AppTheme.primary,
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+    return _messageState(
+      icon: Icons.search_off_rounded,
+      text: l10n.homeGlobalSearchNoResultsQuestion,
+      colors: colors,
+      action: Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 4,
+        children: [
+          TextButton(
+            onPressed: () => context.push('/tournaments/create'),
+            child: Text(l10n.homeGlobalSearchCreateTournament),
+          ),
+          Text(
+            l10n.homeGlobalSearchOr,
+            style: TextStyle(color: colors.textMuted),
+          ),
+          TextButton(
+            onPressed: () {
+              if (_activeFilterCount > 0) {
+                _resetFilters();
+              } else {
+                setState(() => _filtersExpanded = true);
+              }
+            },
+            child: Text(
+              _activeFilterCount > 0
+                  ? l10n.homeGlobalSearchClearFilters
+                  : l10n.homeGlobalSearchExpandFilters,
             ),
-            const SizedBox(width: 8),
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                IconButton.filled(
-                  tooltip: _activeFilterCount == 0
-                      ? l10n.homeGlobalSearchAdvancedFilters
-                      : '${l10n.homeGlobalSearchAdvancedFilters} ($_activeFilterCount)',
-                  onPressed: () {
-                    FocusScope.of(context).unfocus();
-                    setState(() => _filtersExpanded = !_filtersExpanded);
-                  },
-                  icon: const Icon(Icons.tune_rounded),
-                  style: IconButton.styleFrom(
-                    minimumSize: const Size(52, 52),
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-                if (_activeFilterCount > 0)
-                  Positioned(
-                    top: -3,
-                    right: -3,
-                    child: Container(
-                      constraints: const BoxConstraints(
-                        minWidth: 20,
-                        minHeight: 20,
-                      ),
-                      alignment: Alignment.center,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        color: colors.bgSurface,
-                        border: Border.all(color: AppTheme.primary),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '$_activeFilterCount',
-                        style: const TextStyle(
-                          color: AppTheme.primary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

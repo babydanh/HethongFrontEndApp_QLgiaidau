@@ -5544,5 +5544,12 @@
   "homeGlobalSearchProvince": "Tỉnh/thành",
   "homeGlobalSearchDate": "Khoảng ngày",
   "homeGlobalSearchLocation": "Sân/địa chỉ",
-  "homeGlobalSearchClearFilters": "Xóa bộ lọc"
+  "homeGlobalSearchClearFilters": "Xóa bộ lọc",
+  "homeGlobalSearchSuggested": "đề xuất",
+  "homeGlobalSearchSort": "Sắp xếp",
+  "homeGlobalSearchSortNewest": "Mới nhất",
+  "homeGlobalSearchNoResultsQuestion": "Không tìm thấy kết quả mong muốn?",
+  "homeGlobalSearchCreateTournament": "Tạo giải đấu mới",
+  "homeGlobalSearchOr": "hoặc",
+  "homeGlobalSearchExpandFilters": "Mở rộng bộ lọc"
 }

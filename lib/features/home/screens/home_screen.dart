@@ -407,7 +407,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _showGlobalSearchScreen() async {
     await GlobalSearchScreen.show(
       context: context,
-      initialTabIndex: _currentIndex,
+      initialTabIndex: _currentIndex == 0 ? 1 : _currentIndex,
       initialQuery: _searchQueries[_currentIndex] ?? '',
     );
   }

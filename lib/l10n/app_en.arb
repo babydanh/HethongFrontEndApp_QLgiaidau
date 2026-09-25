@@ -5544,5 +5544,12 @@
   "homeGlobalSearchProvince": "Province/city",
   "homeGlobalSearchDate": "Date range",
   "homeGlobalSearchLocation": "Venue/address",
-  "homeGlobalSearchClearFilters": "Clear filters"
+  "homeGlobalSearchClearFilters": "Clear filters",
+  "homeGlobalSearchSuggested": "suggested",
+  "homeGlobalSearchSort": "Sort",
+  "homeGlobalSearchSortNewest": "Newest",
+  "homeGlobalSearchNoResultsQuestion": "Can't find the result you want?",
+  "homeGlobalSearchCreateTournament": "Create a tournament",
+  "homeGlobalSearchOr": "or",
+  "homeGlobalSearchExpandFilters": "Expand filters"
 }

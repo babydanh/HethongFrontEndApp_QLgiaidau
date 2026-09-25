@@ -25017,6 +25017,48 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Xóa bộ lọc'**
   String get homeGlobalSearchClearFilters;
+
+  /// No description provided for @homeGlobalSearchSuggested.
+  ///
+  /// In vi, this message translates to:
+  /// **'đề xuất'**
+  String get homeGlobalSearchSuggested;
+
+  /// No description provided for @homeGlobalSearchSort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sắp xếp'**
+  String get homeGlobalSearchSort;
+
+  /// No description provided for @homeGlobalSearchSortNewest.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mới nhất'**
+  String get homeGlobalSearchSortNewest;
+
+  /// No description provided for @homeGlobalSearchNoResultsQuestion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy kết quả mong muốn?'**
+  String get homeGlobalSearchNoResultsQuestion;
+
+  /// No description provided for @homeGlobalSearchCreateTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo giải đấu mới'**
+  String get homeGlobalSearchCreateTournament;
+
+  /// No description provided for @homeGlobalSearchOr.
+  ///
+  /// In vi, this message translates to:
+  /// **'hoặc'**
+  String get homeGlobalSearchOr;
+
+  /// No description provided for @homeGlobalSearchExpandFilters.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở rộng bộ lọc'**
+  String get homeGlobalSearchExpandFilters;
 }
 
 class _AppLocalizationsDelegate

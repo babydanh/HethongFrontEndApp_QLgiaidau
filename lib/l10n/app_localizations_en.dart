@@ -13780,4 +13780,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeGlobalSearchClearFilters => 'Clear filters';
+
+  @override
+  String get homeGlobalSearchSuggested => 'suggested';
+
+  @override
+  String get homeGlobalSearchSort => 'Sort';
+
+  @override
+  String get homeGlobalSearchSortNewest => 'Newest';
+
+  @override
+  String get homeGlobalSearchNoResultsQuestion =>
+      'Can\'t find the result you want?';
+
+  @override
+  String get homeGlobalSearchCreateTournament => 'Create a tournament';
+
+  @override
+  String get homeGlobalSearchOr => 'or';
+
+  @override
+  String get homeGlobalSearchExpandFilters => 'Expand filters';
 }

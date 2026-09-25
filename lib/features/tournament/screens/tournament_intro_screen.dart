@@ -10,8 +10,6 @@ import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_state_views.dart';
-import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
-import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/live_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_tab.dart';
@@ -44,6 +42,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     with TickerProviderStateMixin {
   TabController? _tabController;
   int _currentTabCount = 0;
+  int _scheduleTabIndex = 0;
   String _selectedDivision = "";
   String? _selectedDivisionId;
   String? _customInviteCode;
@@ -246,15 +245,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     String? currentUserId,
     bool isAdmin,
   ) {
-    final defaultNavigation = FloatingBottomNav(
-      currentIndex: 1,
-      onTabSelected: (_) => context.go('/home'),
-      onMenuTap: () => AppMenuSheet.show(context),
-    );
-
-    if (tournament == null ||
-        !StatusHelper.isTournamentRegistration(tournament.status)) {
-      return defaultNavigation;
+    if (tournament == null) {
+      return const SizedBox.shrink();
     }
 
     final isCreator = tournament.creatorId == currentUserId;
@@ -281,7 +273,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           membershipStatus == 'APPROVED';
     }
 
-    if (!hasTournamentAccess || isCreator) return defaultNavigation;
+    if (!hasTournamentAccess) return const SizedBox.shrink();
 
     final now = DateTime.now();
     final isRegistrationNotStarted =
@@ -290,7 +282,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final isRegistrationExpired =
         tournament.registrationEndDate != null &&
         now.isAfter(tournament.registrationEndDate!);
+    final isRegOpen = StatusHelper.isTournamentRegistration(tournament.status);
     final canRegister =
+        isRegOpen &&
         !tournament.isRegistrationLocked &&
         !isRegistrationNotStarted &&
         !isRegistrationExpired;
@@ -316,16 +310,73 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         decoration: BoxDecoration(
           color: context.colors.bgCard,
           border: Border(top: BorderSide(color: context.colors.border)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
         ),
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-        child: SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: FilledButton.icon(
-            onPressed: canRegister ? () => context.push(registrationUri) : null,
-            icon: const Icon(Icons.how_to_reg_rounded),
-            label: Text(label),
-          ),
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+        child: Row(
+          children: [
+            // Nút Lịch thi đấu
+            Expanded(
+              flex: 2,
+              child: SizedBox(
+                height: 48,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    if (_tabController != null && _scheduleTabIndex >= 0) {
+                      _tabController!.animateTo(_scheduleTabIndex);
+                    }
+                  },
+                  icon: const Icon(Icons.calendar_month_rounded, size: 18),
+                  label: Text(
+                    l10n.tabSchedule,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: context.colors.textPrimary,
+                    side: BorderSide(color: context.colors.border),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Nút Đăng ký
+            Expanded(
+              flex: 3,
+              child: SizedBox(
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: canRegister ? () => context.push(registrationUri) : null,
+                  icon: const Icon(Icons.how_to_reg_rounded, size: 18),
+                  label: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: context.colors.bgSurface,
+                    disabledForegroundColor: context.colors.textMuted,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -722,6 +773,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
     // 5. Lịch thi đấu
     final int scheduleIndex = tabHeaders.length;
+    _scheduleTabIndex = scheduleIndex;
     tabHeaders.add(Tab(height: 28, text: l10n.tabSchedule));
 
     // 6. Tab [Bảng đấu]

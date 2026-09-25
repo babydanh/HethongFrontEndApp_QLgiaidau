@@ -13731,4 +13731,26 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeGlobalSearchClearFilters => 'Xóa bộ lọc';
+
+  @override
+  String get homeGlobalSearchSuggested => 'đề xuất';
+
+  @override
+  String get homeGlobalSearchSort => 'Sắp xếp';
+
+  @override
+  String get homeGlobalSearchSortNewest => 'Mới nhất';
+
+  @override
+  String get homeGlobalSearchNoResultsQuestion =>
+      'Không tìm thấy kết quả mong muốn?';
+
+  @override
+  String get homeGlobalSearchCreateTournament => 'Tạo giải đấu mới';
+
+  @override
+  String get homeGlobalSearchOr => 'hoặc';
+
+  @override
+  String get homeGlobalSearchExpandFilters => 'Mở rộng bộ lọc';
 }
