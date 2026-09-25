@@ -42,7 +42,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     with TickerProviderStateMixin {
   TabController? _tabController;
   int _currentTabCount = 0;
-  int _scheduleTabIndex = 0;
+  int _overviewTabIndex = 0;
   String _selectedDivision = "";
   String? _selectedDivisionId;
   String? _customInviteCode;
@@ -289,10 +289,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         !isRegistrationNotStarted &&
         !isRegistrationExpired;
     final l10n = AppLocalizations.of(context)!;
-    final label = isRegistrationNotStarted
+    final registerLabel = isRegistrationNotStarted
         ? l10n.lite_registrationNotOpen
         : canRegister
-        ? l10n.registerNow
+        ? 'Đăng ký'
         : l10n.registerRegClosed;
     final queryParameters = <String, String>{
       if (hasInvite) 'invite': activeInvite!.trim(),
@@ -307,72 +307,65 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     return SafeArea(
       top: false,
       child: Container(
-        decoration: BoxDecoration(
-          color: context.colors.bgCard,
-          border: Border(top: BorderSide(color: context.colors.border)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+        color: Colors.transparent,
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
         child: Row(
           children: [
-            // Nút Lịch thi đấu
+            // Nút Tổng quan
             Expanded(
               flex: 2,
               child: SizedBox(
-                height: 48,
-                child: OutlinedButton.icon(
+                height: 40,
+                child: FilledButton.tonalIcon(
                   onPressed: () {
-                    if (_tabController != null && _scheduleTabIndex >= 0) {
-                      _tabController!.animateTo(_scheduleTabIndex);
+                    if (_tabController != null && _overviewTabIndex >= 0) {
+                      _tabController!.animateTo(_overviewTabIndex);
                     }
                   },
-                  icon: const Icon(Icons.calendar_month_rounded, size: 18),
-                  label: Text(
-                    l10n.tabSchedule,
+                  icon: const Icon(Icons.info_outline_rounded, size: 16),
+                  label: const Text(
+                    'Tổng quan',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                   ),
-                  style: OutlinedButton.styleFrom(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: context.colors.bgSurface,
                     foregroundColor: context.colors.textPrimary,
-                    side: BorderSide(color: context.colors.border),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(color: context.colors.border, width: 0.8),
                     ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             // Nút Đăng ký
             Expanded(
               flex: 3,
               child: SizedBox(
-                height: 48,
+                height: 40,
                 child: FilledButton.icon(
                   onPressed: canRegister
                       ? () => context.push(registrationUri)
                       : null,
-                  icon: const Icon(Icons.how_to_reg_rounded, size: 18),
+                  icon: const Icon(Icons.how_to_reg_rounded, size: 16),
                   label: Text(
-                    label,
+                    registerLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: context.colors.bgSurface,
                     disabledForegroundColor: context.colors.textMuted,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                 ),
@@ -768,6 +761,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
     // 3. Tab [Tổng quan] (Mặc định khi vào màn hình)
     final int overviewIndex = tabHeaders.length;
+    _overviewTabIndex = overviewIndex;
     tabHeaders.add(const Tab(height: 28, text: 'Tổng quan'));
 
     // 4. Tab [Đội tham gia]
@@ -775,7 +769,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
     // 5. Lịch thi đấu
     final int scheduleIndex = tabHeaders.length;
-    _scheduleTabIndex = scheduleIndex;
     tabHeaders.add(Tab(height: 28, text: l10n.tabSchedule));
 
     // 6. Tab [Bảng đấu]
