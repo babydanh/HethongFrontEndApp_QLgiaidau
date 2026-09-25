@@ -394,42 +394,45 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     final categories =
         ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
 
-    return CallbackShortcuts(
-      bindings: <ShortcutActivator, VoidCallback>{
-        const SingleActivator(LogicalKeyboardKey.escape): _closeSearch,
+    return Focus(
+      autofocus: true,
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent &&
+            event.logicalKey == LogicalKeyboardKey.escape) {
+          _closeSearch();
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
       },
-      child: Focus(
-        autofocus: true,
-        child: Scaffold(
-          backgroundColor: colors.bgDark,
-          resizeToAvoidBottomInset: true,
-          body: SafeArea(
-            child: Column(
-              children: [
-                _buildHeader(l10n, colors),
-                _buildSearchField(l10n, colors),
-                _buildScopeSelector(l10n, colors),
-                _buildFilterToolbar(l10n, colors),
-                AnimatedSize(
-                  duration: MediaQuery.of(context).disableAnimations
-                      ? Duration.zero
-                      : const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                  child: _filtersExpanded
-                      ? _buildFilters(l10n, colors, categories)
-                      : const SizedBox.shrink(),
-                ),
-                if (_scope == 5)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: Text(
-                      l10n.homeGlobalSearchVenueNote,
-                      style: TextStyle(fontSize: 12, color: colors.textMuted),
-                    ),
+      child: Scaffold(
+        backgroundColor: colors.bgDark,
+        resizeToAvoidBottomInset: true,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(l10n, colors),
+              _buildSearchField(l10n, colors),
+              _buildScopeSelector(l10n, colors),
+              _buildFilterToolbar(l10n, colors),
+              AnimatedSize(
+                duration: MediaQuery.of(context).disableAnimations
+                    ? Duration.zero
+                    : const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                child: _filtersExpanded
+                    ? _buildFilters(l10n, colors, categories)
+                    : const SizedBox.shrink(),
+              ),
+              if (_scope == 5)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Text(
+                    l10n.homeGlobalSearchVenueNote,
+                    style: TextStyle(fontSize: 12, color: colors.textMuted),
                   ),
-                Expanded(child: _buildResults(l10n, colors)),
-              ],
-            ),
+                ),
+              Expanded(child: _buildResults(l10n, colors)),
+            ],
           ),
         ),
       ),
@@ -448,7 +451,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         children: [
           IconButton(
             tooltip: l10n.homeGlobalSearchClose,
-            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+            onPressed: _closeSearch,
             icon: const Icon(Icons.arrow_back_rounded),
             color: colors.textPrimary,
             constraints: const BoxConstraints.tightFor(width: 48, height: 48),
