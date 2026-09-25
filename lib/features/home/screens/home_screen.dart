@@ -53,18 +53,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
   int _exploreSubTabIndex = 0; // 0: CLB (default), 1: Social
-  // ─── Per-tab search state ───
+  // Home query state feeds existing per-tab result filters.
   final Map<int, String> _searchQueries = {0: '', 1: '', 3: '', 4: ''};
-  final Map<int, TextEditingController> _searchControllers = {
-    0: TextEditingController(),
-    1: TextEditingController(),
-    3: TextEditingController(),
-    4: TextEditingController(),
-  };
-  final FocusNode _searchFocusNode = FocusNode();
-
-  TextEditingController get _activeSearchController =>
-      _searchControllers[_currentIndex] ?? _searchControllers[0]!;
 
   // ─── Per-tab filter state ───
   String _exploreSport = 'all';
@@ -152,9 +142,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _clubRequestVersion = 0;
   static const int _clubsPageSize = 6;
 
-  // Khám phá (tab 0) CÓ thanh search — nhưng gõ tìm sẽ lọc tại chỗ trong tab,
-  // KHÔNG tự nhảy sang tab Giải đấu nữa.
-  bool get _shouldShowSearchBar =>
+  // Show the global search action only on searchable public tabs.
+  bool get _shouldShowGlobalSearchButton =>
       _currentIndex == 0 ||
       _currentIndex == 1 ||
       _currentIndex == 3 ||
@@ -397,11 +386,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     double h = _headerHeight;
     if (_currentIndex == 3) {
       h += 44.0; // Explore sub-tabs (CLB / Social)
-      if (_shouldShowSearchBar) {
-        h += 52.0; // Search bar
+      if (_exploreSubTabIndex == 0) {
+        h += 52.0; // Create-club action below the CLB sub-tab
       }
-    } else if (_shouldShowSearchBar) {
-      h += 52.0;
     }
     return h;
   }
@@ -445,10 +432,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _carouselTimer?.cancel();
     _carouselController?.dispose();
     _scrollController.dispose();
-    for (final controller in _searchControllers.values) {
-      controller.dispose();
-    }
-    _searchFocusNode.dispose();
 
     super.dispose();
   }
@@ -479,15 +462,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  Future<void> _showGlobalSearchScreen({
-    bool showFiltersInitially = false,
-  }) async {
-    _searchFocusNode.unfocus();
+  Future<void> _showGlobalSearchScreen() async {
     await GlobalSearchScreen.show(
       context: context,
       initialTabIndex: _currentIndex,
       initialQuery: _searchQueries[_currentIndex] ?? '',
-      showFiltersInitially: showFiltersInitially,
     );
   }
 
@@ -638,10 +617,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ),
                                   ),
 
-                                // Right: Notification Bell & Chat
+                                // Search action and notification bell.
                                 Align(
                                   alignment: Alignment.centerRight,
-                                  child: _buildNotificationBellHeader(),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (_shouldShowGlobalSearchButton) ...[
+                                        IconButton(
+                                          tooltip: l10n.homeGlobalSearchTitle,
+                                          onPressed: _showGlobalSearchScreen,
+                                          style: IconButton.styleFrom(
+                                            backgroundColor: Colors.white
+                                                .withValues(alpha: 0.16),
+                                            foregroundColor: Colors.white,
+                                            fixedSize: const Size(40, 40),
+                                            padding: EdgeInsets.zero,
+                                            shape: const CircleBorder(),
+                                          ),
+                                          icon: const Icon(
+                                            Icons.search_rounded,
+                                            size: 20,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                      ],
+                                      _buildNotificationBellHeader(),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -697,7 +700,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ],
                         ),
                       ),
-                    if (_shouldShowSearchBar)
+                    if (_currentIndex == 3 && _exploreSubTabIndex == 0)
                       Container(
                         color: context.colors.bgDark,
                         padding: const EdgeInsets.fromLTRB(
@@ -706,21 +709,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           16.0,
                           8.0,
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _currentIndex == 3 && _exploreSubTabIndex == 0
-                                ? Row(
-                                    children: [
-                                      Expanded(child: _buildSearchBar()),
-                                      const SizedBox(width: 10),
-                                      _buildCreateClubButton(),
-                                    ],
-                                  )
-                                : _buildSearchBar(),
-                          ],
-                        ),
+                        alignment: Alignment.centerRight,
+                        child: _buildCreateClubButton(),
                       ),
                   ],
                 ),
@@ -1132,39 +1122,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  String _searchHintForTab() {
-    final l10n = AppLocalizations.of(context)!;
-    return switch (_currentIndex) {
-      0 => l10n.homeSearchMatchesHint,
-      1 => l10n.homeSearchTournamentsHint,
-      3 => l10n.homeSearchClubsHint,
-      4 => l10n.homeSearchAthletesHint,
-      _ => l10n.homeSearchGenericHint,
-    };
-  }
-
-  Widget _buildSearchBar() {
-    final l10n = AppLocalizations.of(context)!;
-    return SportoSearchBar(
-      controller: _activeSearchController,
-      focusNode: _searchFocusNode,
-      hintText: _searchHintForTab(),
-      clearTooltip: l10n.homeGlobalSearchClear,
-      filterTooltip: l10n.homeGlobalSearchAdvancedFilters,
-      readOnly: true,
-      onTap: () => _showGlobalSearchScreen(),
-      onClear: () {
-        setState(() => _searchQueries[_currentIndex] = '');
-        if (_currentIndex == 1) {
-          _resetTournamentCursorPagination();
-        } else if (_currentIndex == 3) {
-          _resetClubCursorPagination();
-        }
-      },
-      onFilterTap: () => _showGlobalSearchScreen(showFiltersInitially: true),
     );
   }
 
