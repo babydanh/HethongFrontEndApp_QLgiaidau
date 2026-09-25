@@ -115,12 +115,18 @@ extension AppThemeContext on BuildContext {
 class AppTheme {
   // ─── Brand Colors ───
   // Keep Flutter aligned with the web design tokens.
-  static const Color primary = Color(0xFF1D8EF8); // Web Primary rgb(29, 142, 248) #1D8EF8
+  static const Color primary = Color(
+    0xFF1D8EF8,
+  ); // Web Primary rgb(29, 142, 248) #1D8EF8
   static const Color primaryHover = Color(0xFF0B76D8); // Primary Hover
-  static const Color primaryLight = Color(0xFFB2CFFD); // Primary Light / Tint #B2CFFD
+  static const Color primaryLight = Color(
+    0xFFB2CFFD,
+  ); // Primary Light / Tint #B2CFFD
   static const Color primaryDark = Color(0xFF0F5AA6); // Primary Dark Blue
 
-  static const Color secondary = Color(0xFF3AB5F6); // SportO Cyan Accent #3AB5F6
+  static const Color secondary = Color(
+    0xFF3AB5F6,
+  ); // SportO Cyan Accent #3AB5F6
   static const Color secondaryLight = Color(0xFFE0F2FE);
   static const Color secondaryDark = Color(0xFF0284C7);
 
@@ -148,14 +154,16 @@ class AppTheme {
   // ─── Extensions ───
   // Facebook Dark Mode Palette: Off-black charcoal (#18191A), Card (#242526), Elevated/Hover (#3A3B3C)
   static const AppColorsExtension _darkColors = AppColorsExtension(
-    bgDark: Color(0xFF18191A),      // Facebook App Background (Charcoal)
-    bgCard: Color(0xFF242526),      // Facebook Card / Post Background
-    bgSurface: Color(0xFF242526),   // Surface Elevation
-    bgElevated: Color(0xFF3A3B3C),  // Facebook Secondary Button / Popover Background
+    bgDark: Color(0xFF18191A), // Facebook App Background (Charcoal)
+    bgCard: Color(0xFF242526), // Facebook Card / Post Background
+    bgSurface: Color(0xFF242526), // Surface Elevation
+    bgElevated: Color(
+      0xFF3A3B3C,
+    ), // Facebook Secondary Button / Popover Background
     textPrimary: Color(0xFFE4E6EB), // Facebook Primary Text (Soft White)
     textSecondary: Color(0xFFB0B3B8), // Facebook Secondary Text (Subtle Grey)
-    textMuted: Color(0xFF8A8D91),   // Facebook Muted Caption / Placeholder
-    border: Color(0xFF393A3B),      // Facebook Divider / Border
+    textMuted: Color(0xFF8A8D91), // Facebook Muted Caption / Placeholder
+    border: Color(0xFF393A3B), // Facebook Divider / Border
     borderLight: Color(0xFF2F3031),
     success: Color(0xFF22C55E),
     warning: Color(0xFFF59E0B),
@@ -185,6 +193,7 @@ class AppTheme {
     Brightness brightness,
     AppColorsExtension colors,
   ) {
+
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,

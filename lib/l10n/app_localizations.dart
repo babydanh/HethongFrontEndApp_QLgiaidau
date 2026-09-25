@@ -350,6 +350,42 @@ abstract class AppLocalizations {
   /// **'Tôi'**
   String get navProfile;
 
+  /// No description provided for @menuTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Menu'**
+  String get menuTitle;
+
+  /// No description provided for @menuSectionExplore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khám phá'**
+  String get menuSectionExplore;
+
+  /// No description provided for @menuSectionCommunity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết nối'**
+  String get menuSectionCommunity;
+
+  /// No description provided for @menuSectionAccount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài khoản'**
+  String get menuSectionAccount;
+
+  /// No description provided for @menuProfile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hồ sơ của tôi'**
+  String get menuProfile;
+
+  /// No description provided for @menuMessages.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tin nhắn'**
+  String get menuMessages;
+
   /// No description provided for @loginTitle.
   ///
   /// In vi, this message translates to:
@@ -2149,6 +2185,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Danh sách đội'**
   String get tabTeams;
+
+  /// No description provided for @tabSchedule.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch thi đấu'**
+  String get tabSchedule;
 
   /// No description provided for @tabBracket.
   ///
@@ -23331,6 +23373,1650 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thử lại'**
   String get communitySearchRetry;
+
+  /// No description provided for @tournamentManagementActionError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể hoàn tất thao tác. Vui lòng thử lại.'**
+  String get tournamentManagementActionError;
+
+  /// No description provided for @tournamentManagementAddCourt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm sân'**
+  String get tournamentManagementAddCourt;
+
+  /// No description provided for @tournamentManagementAddDivision.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm nội dung'**
+  String get tournamentManagementAddDivision;
+
+  /// No description provided for @tournamentManagementAddImage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm ảnh'**
+  String get tournamentManagementAddImage;
+
+  /// No description provided for @tournamentManagementAddSponsor.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm nhà tài trợ'**
+  String get tournamentManagementAddSponsor;
+
+  /// No description provided for @tournamentManagementAddStaff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm nhân sự'**
+  String get tournamentManagementAddStaff;
+
+  /// No description provided for @tournamentManagementAddVenue.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm địa điểm'**
+  String get tournamentManagementAddVenue;
+
+  /// No description provided for @tournamentManagementAmountRequested.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số tiền yêu cầu'**
+  String get tournamentManagementAmountRequested;
+
+  /// No description provided for @tournamentManagementApplications.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký'**
+  String get tournamentManagementApplications;
+
+  /// No description provided for @tournamentManagementApplicationsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có đăng ký'**
+  String get tournamentManagementApplicationsEmpty;
+
+  /// No description provided for @tournamentManagementApplicationsEmptyDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký mới của người tham gia sẽ xuất hiện ở đây.'**
+  String get tournamentManagementApplicationsEmptyDescription;
+
+  /// No description provided for @tournamentManagementApprove.
+  ///
+  /// In vi, this message translates to:
+  /// **'Duyệt'**
+  String get tournamentManagementApprove;
+
+  /// No description provided for @tournamentManagementArchive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu trữ'**
+  String get tournamentManagementArchive;
+
+  /// No description provided for @tournamentManagementArchiveSponsor.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu trữ nhà tài trợ'**
+  String get tournamentManagementArchiveSponsor;
+
+  /// No description provided for @tournamentManagementArchiveSponsorConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu trữ {name}?'**
+  String tournamentManagementArchiveSponsorConfirm(String name);
+
+  /// No description provided for @tournamentManagementAutoSeed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự động xếp hạt giống'**
+  String get tournamentManagementAutoSeed;
+
+  /// No description provided for @tournamentManagementAutoSeedConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự động xếp hạt giống cho nội dung này? Các hạt giống hiện tại sẽ được thay thế.'**
+  String get tournamentManagementAutoSeedConfirm;
+
+  /// No description provided for @tournamentManagementBankAccountName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên chủ tài khoản'**
+  String get tournamentManagementBankAccountName;
+
+  /// No description provided for @tournamentManagementBankAccountNumber.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số tài khoản ngân hàng'**
+  String get tournamentManagementBankAccountNumber;
+
+  /// No description provided for @tournamentManagementBankName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngân hàng'**
+  String get tournamentManagementBankName;
+
+  /// No description provided for @tournamentManagementBack.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quay lại'**
+  String get tournamentManagementBack;
+
+  /// No description provided for @tournamentManagementBanner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh bìa giải đấu'**
+  String get tournamentManagementBanner;
+
+  /// No description provided for @tournamentManagementBannerSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật ảnh bìa giải đấu.'**
+  String get tournamentManagementBannerSaved;
+
+  /// No description provided for @tournamentManagementBracketDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem sơ đồ thi đấu trong không gian hiện có.'**
+  String get tournamentManagementBracketDescription;
+
+  /// No description provided for @tournamentManagementBracketDoubleElimination.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại kép'**
+  String get tournamentManagementBracketDoubleElimination;
+
+  /// No description provided for @tournamentManagementBracketGroupThenKnockout.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng bảng rồi loại trực tiếp'**
+  String get tournamentManagementBracketGroupThenKnockout;
+
+  /// No description provided for @tournamentManagementBracketRoundRobin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng tròn'**
+  String get tournamentManagementBracketRoundRobin;
+
+  /// No description provided for @tournamentManagementBracketSingleElimination.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại trực tiếp'**
+  String get tournamentManagementBracketSingleElimination;
+
+  /// No description provided for @tournamentManagementBracketType.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thể thức sơ đồ'**
+  String get tournamentManagementBracketType;
+
+  /// No description provided for @tournamentManagementBrandAssets.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận diện giải đấu'**
+  String get tournamentManagementBrandAssets;
+
+  /// No description provided for @tournamentManagementBrandAssetsDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải lên logo hoặc ảnh bìa, hoặc quản lý thư viện ảnh giải đấu.'**
+  String get tournamentManagementBrandAssetsDescription;
+
+  /// No description provided for @tournamentManagementBranding.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận diện & thư viện ảnh'**
+  String get tournamentManagementBranding;
+
+  /// No description provided for @tournamentManagementBrandingDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải ảnh nhận diện và quản lý thư viện ảnh của giải đấu.'**
+  String get tournamentManagementBrandingDescription;
+
+  /// No description provided for @tournamentManagementCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get tournamentManagementCancel;
+
+  /// No description provided for @tournamentManagementConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận'**
+  String get tournamentManagementConfirm;
+
+  /// No description provided for @tournamentManagementConfirmTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận thao tác'**
+  String get tournamentManagementConfirmTitle;
+
+  /// No description provided for @tournamentManagementCourt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sân'**
+  String get tournamentManagementCourt;
+
+  /// No description provided for @tournamentManagementCourtName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên sân'**
+  String get tournamentManagementCourtName;
+
+  /// No description provided for @tournamentManagementCourtPrefix.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiền tố tên sân'**
+  String get tournamentManagementCourtPrefix;
+
+  /// No description provided for @tournamentManagementCourtsCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count, plural, one{{count} sân} other{{count} sân}}'**
+  String tournamentManagementCourtsCount(int count);
+
+  /// No description provided for @tournamentManagementChooseDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ngày'**
+  String get tournamentManagementChooseDate;
+
+  /// No description provided for @tournamentManagementDefaultVenue.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mặc định'**
+  String get tournamentManagementDefaultVenue;
+
+  /// No description provided for @tournamentManagementDelete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa'**
+  String get tournamentManagementDelete;
+
+  /// No description provided for @tournamentManagementDeleteDivision.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa nội dung'**
+  String get tournamentManagementDeleteDivision;
+
+  /// No description provided for @tournamentManagementDeleteDivisionConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa nội dung {name}?'**
+  String tournamentManagementDeleteDivisionConfirm(String name);
+
+  /// No description provided for @tournamentManagementDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mô tả'**
+  String get tournamentManagementDescription;
+
+  /// No description provided for @tournamentManagementDisplayOrder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ tự hiển thị'**
+  String get tournamentManagementDisplayOrder;
+
+  /// No description provided for @tournamentManagementDivision.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung'**
+  String get tournamentManagementDivision;
+
+  /// No description provided for @tournamentManagementDivisionConfiguration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu hình thể thức'**
+  String get tournamentManagementDivisionConfiguration;
+
+  /// No description provided for @tournamentManagementDivisionName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên nội dung'**
+  String get tournamentManagementDivisionName;
+
+  /// No description provided for @tournamentManagementDivisions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung thi đấu'**
+  String get tournamentManagementDivisions;
+
+  /// No description provided for @tournamentManagementDivisionsDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo và cấu hình nội dung, sau đó xếp hạt giống cho người tham gia.'**
+  String get tournamentManagementDivisionsDescription;
+
+  /// No description provided for @tournamentManagementDivisionsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có nội dung thi đấu'**
+  String get tournamentManagementDivisionsEmpty;
+
+  /// No description provided for @tournamentManagementDivisionsEmptyDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm nội dung để cấu hình thể thức thi đấu.'**
+  String get tournamentManagementDivisionsEmptyDescription;
+
+  /// No description provided for @tournamentManagementDrawDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo và quản lý bốc thăm giải đấu.'**
+  String get tournamentManagementDrawDescription;
+
+  /// No description provided for @tournamentManagementEdit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉnh sửa'**
+  String get tournamentManagementEdit;
+
+  /// No description provided for @tournamentManagementEditSponsor.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa nhà tài trợ'**
+  String get tournamentManagementEditSponsor;
+
+  /// No description provided for @tournamentManagementEditVenue.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa địa điểm'**
+  String get tournamentManagementEditVenue;
+
+  /// No description provided for @tournamentManagementEndAfterStart.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày kết thúc giải đấu phải sau ngày bắt đầu.'**
+  String get tournamentManagementEndAfterStart;
+
+  /// No description provided for @tournamentManagementEndDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày kết thúc'**
+  String get tournamentManagementEndDate;
+
+  /// No description provided for @tournamentManagementEntryFee.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lệ phí tham gia'**
+  String get tournamentManagementEntryFee;
+
+  /// No description provided for @tournamentManagementEntryFeesAllowed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép thu lệ phí'**
+  String get tournamentManagementEntryFeesAllowed;
+
+  /// No description provided for @tournamentManagementEntryFeeDisabled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lệ phí tham gia đang bị tắt hoặc không thể thay đổi với trạng thái hiện tại của giải đấu.'**
+  String get tournamentManagementEntryFeeDisabled;
+
+  /// No description provided for @tournamentManagementEntryFeeUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật lệ phí tham gia.'**
+  String get tournamentManagementEntryFeeUpdated;
+
+  /// No description provided for @tournamentManagementExportError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể xuất dữ liệu giải đấu.'**
+  String get tournamentManagementExportError;
+
+  /// No description provided for @tournamentManagementFinalizeRegistrationUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ứng dụng di động chưa hỗ trợ kết thúc đăng ký vì thao tác phía máy chủ chưa được xác nhận. Vui lòng liên hệ bộ phận hỗ trợ trước khi thực hiện chuyển trạng thái này.'**
+  String get tournamentManagementFinalizeRegistrationUnavailable;
+
+  /// No description provided for @tournamentManagementFinance.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài chính & thanh toán'**
+  String get tournamentManagementFinance;
+
+  /// No description provided for @tournamentManagementFinanceDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem cấu hình phí từ máy chủ và gửi yêu cầu thanh toán sau khi giải đấu hoàn tất.'**
+  String get tournamentManagementFinanceDescription;
+
+  /// No description provided for @tournamentManagementGallery.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thư viện ảnh'**
+  String get tournamentManagementGallery;
+
+  /// No description provided for @tournamentManagementGalleryDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải tệp ảnh lên dịch vụ hiện có trước khi thêm ảnh vào thư viện giải đấu.'**
+  String get tournamentManagementGalleryDescription;
+
+  /// No description provided for @tournamentManagementGalleryEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có ảnh trong thư viện'**
+  String get tournamentManagementGalleryEmpty;
+
+  /// No description provided for @tournamentManagementGalleryEmptyDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm ảnh đã tải lên để xây dựng thư viện giải đấu.'**
+  String get tournamentManagementGalleryEmptyDescription;
+
+  /// No description provided for @tournamentManagementGalleryImageAdded.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm ảnh vào thư viện.'**
+  String get tournamentManagementGalleryImageAdded;
+
+  /// No description provided for @tournamentManagementGalleryImageRemoved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa ảnh khỏi thư viện.'**
+  String get tournamentManagementGalleryImageRemoved;
+
+  /// No description provided for @tournamentManagementGeneral.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cài đặt chung'**
+  String get tournamentManagementGeneral;
+
+  /// No description provided for @tournamentManagementGeneralDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật tên, mô tả, chế độ hiển thị và các mốc thời gian chính của giải đấu.'**
+  String get tournamentManagementGeneralDescription;
+
+  /// No description provided for @tournamentManagementInitialCourtCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số sân ban đầu'**
+  String get tournamentManagementInitialCourtCount;
+
+  /// No description provided for @tournamentManagementLifecycle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng đời giải đấu'**
+  String get tournamentManagementLifecycle;
+
+  /// No description provided for @tournamentManagementLifecycleDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng các chuyển trạng thái được máy chủ hỗ trợ. Máy chủ chịu trách nhiệm phân quyền.'**
+  String get tournamentManagementLifecycleDescription;
+
+  /// No description provided for @tournamentManagementLiveOperations.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vận hành trực tiếp'**
+  String get tournamentManagementLiveOperations;
+
+  /// No description provided for @tournamentManagementLiveOperationsDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở không gian hiện có để vận hành các trận đấu trực tiếp.'**
+  String get tournamentManagementLiveOperationsDescription;
+
+  /// No description provided for @tournamentManagementLivestream.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát trực tiếp'**
+  String get tournamentManagementLivestream;
+
+  /// No description provided for @tournamentManagementLivestreamDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở không gian trận đấu trực tiếp được hỗ trợ.'**
+  String get tournamentManagementLivestreamDescription;
+
+  /// No description provided for @tournamentManagementLivestreamRouteDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'API di động đã được duyệt chưa cung cấp cấu hình phát trực tiếp. Mở không gian vận hành hiện có để dùng các điều khiển trận đấu được hỗ trợ.'**
+  String get tournamentManagementLivestreamRouteDescription;
+
+  /// No description provided for @tournamentManagementLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải mục này.'**
+  String get tournamentManagementLoadError;
+
+  /// No description provided for @tournamentManagementLockConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khóa đăng ký giải đấu ngay bây giờ?'**
+  String get tournamentManagementLockConfirm;
+
+  /// No description provided for @tournamentManagementLockTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khóa đăng ký'**
+  String get tournamentManagementLockTournament;
+
+  /// No description provided for @tournamentManagementLogo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Logo giải đấu'**
+  String get tournamentManagementLogo;
+
+  /// No description provided for @tournamentManagementLogoSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật logo giải đấu.'**
+  String get tournamentManagementLogoSaved;
+
+  /// No description provided for @tournamentManagementMatchDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi'**
+  String get tournamentManagementMatchDoubles;
+
+  /// No description provided for @tournamentManagementMatchMixedDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi nam nữ'**
+  String get tournamentManagementMatchMixedDoubles;
+
+  /// No description provided for @tournamentManagementMatchSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn'**
+  String get tournamentManagementMatchSingles;
+
+  /// No description provided for @tournamentManagementMatchType.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hình thức thi đấu'**
+  String get tournamentManagementMatchType;
+
+  /// No description provided for @tournamentManagementMaxParticipants.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số người tham gia tối đa'**
+  String get tournamentManagementMaxParticipants;
+
+  /// No description provided for @tournamentManagementName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên giải đấu'**
+  String get tournamentManagementName;
+
+  /// No description provided for @tournamentManagementNoClientBalanceCalculation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số tiền có thể thanh toán do máy chủ xác định. Màn hình này không tự tính số dư.'**
+  String get tournamentManagementNoClientBalanceCalculation;
+
+  /// No description provided for @tournamentManagementNoCourts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thêm sân.'**
+  String get tournamentManagementNoCourts;
+
+  /// No description provided for @tournamentManagementNotSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thiết lập'**
+  String get tournamentManagementNotSet;
+
+  /// No description provided for @tournamentManagementOpenDestination.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở không gian'**
+  String get tournamentManagementOpenDestination;
+
+  /// No description provided for @tournamentManagementOpenOperations.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở vận hành'**
+  String get tournamentManagementOpenOperations;
+
+  /// No description provided for @tournamentManagementOperationsGroup.
+  ///
+  /// In vi, this message translates to:
+  /// **'VẬN HÀNH'**
+  String get tournamentManagementOperationsGroup;
+
+  /// No description provided for @tournamentManagementOpsRouteDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở không gian vận hành hiện có để xem lịch và điều khiển trận đấu trực tiếp.'**
+  String get tournamentManagementOpsRouteDescription;
+
+  /// No description provided for @tournamentManagementOverview.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổng quan'**
+  String get tournamentManagementOverview;
+
+  /// No description provided for @tournamentManagementOverviewDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái giải đấu, lịch và cấu hình chính.'**
+  String get tournamentManagementOverviewDescription;
+
+  /// No description provided for @tournamentManagementOverviewHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn mục để chỉnh sửa cài đặt được hỗ trợ hoặc mở không gian vận hành hiện có.'**
+  String get tournamentManagementOverviewHint;
+
+  /// No description provided for @tournamentManagementParticipantApproved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã duyệt'**
+  String get tournamentManagementParticipantApproved;
+
+  /// No description provided for @tournamentManagementParticipantCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count, plural, one{{count} người tham gia} other{{count} người tham gia}}'**
+  String tournamentManagementParticipantCount(int count);
+
+  /// No description provided for @tournamentManagementParticipantPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ duyệt'**
+  String get tournamentManagementParticipantPending;
+
+  /// No description provided for @tournamentManagementParticipantRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã từ chối'**
+  String get tournamentManagementParticipantRejected;
+
+  /// No description provided for @tournamentManagementParticipantRemoved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa'**
+  String get tournamentManagementParticipantRemoved;
+
+  /// No description provided for @tournamentManagementParticipantsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có người tham gia trong nội dung này.'**
+  String get tournamentManagementParticipantsEmpty;
+
+  /// No description provided for @tournamentManagementPayoutAuthorizationNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Máy chủ kiểm tra quyền của người tạo và điều kiện thanh toán. Thông tin ngân hàng sẽ được xóa sau khi gửi thành công và không xuất hiện trong lịch sử.'**
+  String get tournamentManagementPayoutAuthorizationNote;
+
+  /// No description provided for @tournamentManagementPayoutCreatorOnly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ người tạo giải đấu được gửi yêu cầu thanh toán. Máy chủ vẫn là nơi quyết định quyền cuối cùng.'**
+  String get tournamentManagementPayoutCreatorOnly;
+
+  /// No description provided for @tournamentManagementPayoutAccessUnverified.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ẩn chức năng thanh toán cho đến khi xác minh được quyền của người tạo giải.'**
+  String get tournamentManagementPayoutAccessUnverified;
+
+  /// No description provided for @tournamentManagementPayoutDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi yêu cầu thanh toán đến máy chủ. Không hiển thị ước tính số dư có thể rút.'**
+  String get tournamentManagementPayoutDescription;
+
+  /// No description provided for @tournamentManagementPayoutHistory.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch sử thanh toán'**
+  String get tournamentManagementPayoutHistory;
+
+  /// No description provided for @tournamentManagementPayoutHistoryDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch sử chỉ hiển thị trạng thái và số tiền yêu cầu; không hiển thị thông tin ngân hàng.'**
+  String get tournamentManagementPayoutHistoryDescription;
+
+  /// No description provided for @tournamentManagementPayoutHistoryEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có yêu cầu thanh toán.'**
+  String get tournamentManagementPayoutHistoryEmpty;
+
+  /// No description provided for @tournamentManagementPayoutMinimum.
+  ///
+  /// In vi, this message translates to:
+  /// **'Yêu cầu tối thiểu: {amount} VND'**
+  String tournamentManagementPayoutMinimum(int amount);
+
+  /// No description provided for @tournamentManagementPayoutRequest.
+  ///
+  /// In vi, this message translates to:
+  /// **'Yêu cầu thanh toán'**
+  String get tournamentManagementPayoutRequest;
+
+  /// No description provided for @tournamentManagementPayoutRequestError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Máy chủ không thể hoàn tất yêu cầu. Thông tin đã nhập được giữ lại.'**
+  String get tournamentManagementPayoutRequestError;
+
+  /// No description provided for @tournamentManagementPayoutRequested.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi yêu cầu thanh toán.'**
+  String get tournamentManagementPayoutRequested;
+
+  /// No description provided for @tournamentManagementPayoutRequiresCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ có thể gửi yêu cầu thanh toán sau khi giải đấu hoàn tất.'**
+  String get tournamentManagementPayoutRequiresCompleted;
+
+  /// No description provided for @tournamentManagementPayoutStatusApproved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã duyệt'**
+  String get tournamentManagementPayoutStatusApproved;
+
+  /// No description provided for @tournamentManagementPayoutStatusPaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thanh toán'**
+  String get tournamentManagementPayoutStatusPaid;
+
+  /// No description provided for @tournamentManagementPayoutStatusPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chờ'**
+  String get tournamentManagementPayoutStatusPending;
+
+  /// No description provided for @tournamentManagementPayoutStatusProcessing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang xử lý'**
+  String get tournamentManagementPayoutStatusProcessing;
+
+  /// No description provided for @tournamentManagementPayoutStatusRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bị từ chối'**
+  String get tournamentManagementPayoutStatusRejected;
+
+  /// No description provided for @tournamentManagementPayoutValidationError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập đủ thông tin ngân hàng và số tiền tối thiểu 10.000 VND.'**
+  String get tournamentManagementPayoutValidationError;
+
+  /// No description provided for @tournamentManagementPendingApplications.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ duyệt'**
+  String get tournamentManagementPendingApplications;
+
+  /// No description provided for @tournamentManagementPermissions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phân quyền & trọng tài'**
+  String get tournamentManagementPermissions;
+
+  /// No description provided for @tournamentManagementPermissionsDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý nhân sự giải đấu và lời mời trọng tài.'**
+  String get tournamentManagementPermissionsDescription;
+
+  /// No description provided for @tournamentManagementPlatformFeeRate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỷ lệ phí nền tảng'**
+  String get tournamentManagementPlatformFeeRate;
+
+  /// No description provided for @tournamentManagementPrivate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Riêng tư'**
+  String get tournamentManagementPrivate;
+
+  /// No description provided for @tournamentManagementPublic.
+  ///
+  /// In vi, this message translates to:
+  /// **'Công khai'**
+  String get tournamentManagementPublic;
+
+  /// No description provided for @tournamentManagementPublish.
+  ///
+  /// In vi, this message translates to:
+  /// **'Công bố giải đấu'**
+  String get tournamentManagementPublish;
+
+  /// No description provided for @tournamentManagementPublishConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Công bố giải đấu này?'**
+  String get tournamentManagementPublishConfirm;
+
+  /// No description provided for @tournamentManagementPublishFee.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phí công bố'**
+  String get tournamentManagementPublishFee;
+
+  /// No description provided for @tournamentManagementReferee.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trọng tài'**
+  String get tournamentManagementReferee;
+
+  /// No description provided for @tournamentManagementRefereeAccepted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chấp nhận'**
+  String get tournamentManagementRefereeAccepted;
+
+  /// No description provided for @tournamentManagementRefereeDeclined.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã từ chối'**
+  String get tournamentManagementRefereeDeclined;
+
+  /// No description provided for @tournamentManagementRefereeEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email trọng tài'**
+  String get tournamentManagementRefereeEmail;
+
+  /// No description provided for @tournamentManagementRefereeInviteSent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi lời mời trọng tài.'**
+  String get tournamentManagementRefereeInviteSent;
+
+  /// No description provided for @tournamentManagementRefereeInvited.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã mời'**
+  String get tournamentManagementRefereeInvited;
+
+  /// No description provided for @tournamentManagementRefereeRemoved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa trọng tài.'**
+  String get tournamentManagementRefereeRemoved;
+
+  /// No description provided for @tournamentManagementReferees.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trọng tài'**
+  String get tournamentManagementReferees;
+
+  /// No description provided for @tournamentManagementRefereesDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mời trọng tài bằng email và quản lý phân công trong giải đấu.'**
+  String get tournamentManagementRefereesDescription;
+
+  /// No description provided for @tournamentManagementRefereesEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trọng tài.'**
+  String get tournamentManagementRefereesEmpty;
+
+  /// No description provided for @tournamentManagementRegenerateInvite.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo lại mã mời'**
+  String get tournamentManagementRegenerateInvite;
+
+  /// No description provided for @tournamentManagementRegenerateInviteConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo lại mã mời? Liên kết mời hiện tại sẽ không còn hoạt động.'**
+  String get tournamentManagementRegenerateInviteConfirm;
+
+  /// No description provided for @tournamentManagementRegistration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký'**
+  String get tournamentManagementRegistration;
+
+  /// No description provided for @tournamentManagementRegistrationApproved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã duyệt đăng ký.'**
+  String get tournamentManagementRegistrationApproved;
+
+  /// No description provided for @tournamentManagementRegistrationDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem đăng ký người tham gia và duyệt hoặc từ chối hồ sơ đang chờ.'**
+  String get tournamentManagementRegistrationDescription;
+
+  /// No description provided for @tournamentManagementRegistrationEndAfterStart.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời gian kết thúc đăng ký phải sau thời gian bắt đầu.'**
+  String get tournamentManagementRegistrationEndAfterStart;
+
+  /// No description provided for @tournamentManagementRegistrationEnds.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết thúc đăng ký'**
+  String get tournamentManagementRegistrationEnds;
+
+  /// No description provided for @tournamentManagementRegistrationLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã khóa đăng ký'**
+  String get tournamentManagementRegistrationLocked;
+
+  /// No description provided for @tournamentManagementRegistrationOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mở đăng ký'**
+  String get tournamentManagementRegistrationOpen;
+
+  /// No description provided for @tournamentManagementRegistrationRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã từ chối đăng ký.'**
+  String get tournamentManagementRegistrationRejected;
+
+  /// No description provided for @tournamentManagementRegistrationStarts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu đăng ký'**
+  String get tournamentManagementRegistrationStarts;
+
+  /// No description provided for @tournamentManagementRegistrationWindow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời gian đăng ký'**
+  String get tournamentManagementRegistrationWindow;
+
+  /// No description provided for @tournamentManagementReject.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get tournamentManagementReject;
+
+  /// No description provided for @tournamentManagementRejectRegistration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối đăng ký'**
+  String get tournamentManagementRejectRegistration;
+
+  /// No description provided for @tournamentManagementRejectRegistrationConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối đăng ký của {name}?'**
+  String tournamentManagementRejectRegistrationConfirm(String name);
+
+  /// No description provided for @tournamentManagementRemove.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa'**
+  String get tournamentManagementRemove;
+
+  /// No description provided for @tournamentManagementRemoveCourt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa sân'**
+  String get tournamentManagementRemoveCourt;
+
+  /// No description provided for @tournamentManagementRemoveCourtConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa sân {name}?'**
+  String tournamentManagementRemoveCourtConfirm(String name);
+
+  /// No description provided for @tournamentManagementRemoveImage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa ảnh'**
+  String get tournamentManagementRemoveImage;
+
+  /// No description provided for @tournamentManagementRemoveImageConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa ảnh này khỏi thư viện giải đấu?'**
+  String get tournamentManagementRemoveImageConfirm;
+
+  /// No description provided for @tournamentManagementRemoveReferee.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa trọng tài'**
+  String get tournamentManagementRemoveReferee;
+
+  /// No description provided for @tournamentManagementRemoveRefereeConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa {name} khỏi giải đấu này?'**
+  String tournamentManagementRemoveRefereeConfirm(String name);
+
+  /// No description provided for @tournamentManagementRemoveStaff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa nhân sự'**
+  String get tournamentManagementRemoveStaff;
+
+  /// No description provided for @tournamentManagementRemoveStaffConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa {name} khỏi nhân sự giải đấu?'**
+  String tournamentManagementRemoveStaffConfirm(String name);
+
+  /// No description provided for @tournamentManagementRemoveVenue.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa địa điểm'**
+  String get tournamentManagementRemoveVenue;
+
+  /// No description provided for @tournamentManagementRemoveVenueConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa địa điểm {name}?'**
+  String tournamentManagementRemoveVenueConfirm(String name);
+
+  /// No description provided for @tournamentManagementRenameDivision.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi tên nội dung'**
+  String get tournamentManagementRenameDivision;
+
+  /// No description provided for @tournamentManagementReopenConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở lại đăng ký giải đấu?'**
+  String get tournamentManagementReopenConfirm;
+
+  /// No description provided for @tournamentManagementReopenRegistration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở lại đăng ký'**
+  String get tournamentManagementReopenRegistration;
+
+  /// No description provided for @tournamentManagementRequestPayout.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi yêu cầu thanh toán'**
+  String get tournamentManagementRequestPayout;
+
+  /// No description provided for @tournamentManagementRequiredFields.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng điền đầy đủ thông tin bắt buộc.'**
+  String get tournamentManagementRequiredFields;
+
+  /// No description provided for @tournamentManagementRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get tournamentManagementRetry;
+
+  /// No description provided for @tournamentManagementRoleCoOrganizer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đồng tổ chức'**
+  String get tournamentManagementRoleCoOrganizer;
+
+  /// No description provided for @tournamentManagementRoleOther.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vai trò khác'**
+  String get tournamentManagementRoleOther;
+
+  /// No description provided for @tournamentManagementRoleSpectator.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người xem'**
+  String get tournamentManagementRoleSpectator;
+
+  /// No description provided for @tournamentManagementSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu'**
+  String get tournamentManagementSave;
+
+  /// No description provided for @tournamentManagementSaveError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể lưu thay đổi. Kiểm tra thông tin rồi thử lại.'**
+  String get tournamentManagementSaveError;
+
+  /// No description provided for @tournamentManagementSaveSeeds.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu hạt giống'**
+  String get tournamentManagementSaveSeeds;
+
+  /// No description provided for @tournamentManagementSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu thay đổi.'**
+  String get tournamentManagementSaved;
+
+  /// No description provided for @tournamentManagementSaving.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang lưu…'**
+  String get tournamentManagementSaving;
+
+  /// No description provided for @tournamentManagementSchedule.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch thi đấu'**
+  String get tournamentManagementSchedule;
+
+  /// No description provided for @tournamentManagementScheduleDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở không gian vận hành hiện có để xem lịch thi đấu.'**
+  String get tournamentManagementScheduleDescription;
+
+  /// No description provided for @tournamentManagementSeed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạt giống'**
+  String get tournamentManagementSeed;
+
+  /// No description provided for @tournamentManagementSeedValidationError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạt giống phải là số dương và không trùng nhau. Không thể xóa hạt giống hiện có tại đây.'**
+  String get tournamentManagementSeedValidationError;
+
+  /// No description provided for @tournamentManagementSeeding.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạt giống người tham gia'**
+  String get tournamentManagementSeeding;
+
+  /// No description provided for @tournamentManagementSeedingDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự động xếp hoặc lưu thủ công số hạt giống riêng cho nội dung đã chọn.'**
+  String get tournamentManagementSeedingDescription;
+
+  /// No description provided for @tournamentManagementSeedsSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật hạt giống.'**
+  String get tournamentManagementSeedsSaved;
+
+  /// No description provided for @tournamentManagementSendInvite.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi lời mời'**
+  String get tournamentManagementSendInvite;
+
+  /// No description provided for @tournamentManagementServerAuthorizationNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các điều khiển này gửi yêu cầu đến máy chủ. Máy chủ chịu trách nhiệm phân quyền và xác thực.'**
+  String get tournamentManagementServerAuthorizationNote;
+
+  /// No description provided for @tournamentManagementSetAsDefault.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt làm địa điểm mặc định'**
+  String get tournamentManagementSetAsDefault;
+
+  /// No description provided for @tournamentManagementSetupGroup.
+  ///
+  /// In vi, this message translates to:
+  /// **'THIẾT LẬP'**
+  String get tournamentManagementSetupGroup;
+
+  /// No description provided for @tournamentManagementSponsorDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mô tả ngắn'**
+  String get tournamentManagementSponsorDescription;
+
+  /// No description provided for @tournamentManagementSponsorLogo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Logo nhà tài trợ'**
+  String get tournamentManagementSponsorLogo;
+
+  /// No description provided for @tournamentManagementSponsorName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên nhà tài trợ'**
+  String get tournamentManagementSponsorName;
+
+  /// No description provided for @tournamentManagementSponsorPublic.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiển thị công khai'**
+  String get tournamentManagementSponsorPublic;
+
+  /// No description provided for @tournamentManagementSponsorSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu nhà tài trợ.'**
+  String get tournamentManagementSponsorSaved;
+
+  /// No description provided for @tournamentManagementSponsorTier.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng tài trợ'**
+  String get tournamentManagementSponsorTier;
+
+  /// No description provided for @tournamentManagementSponsorTierBronze.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đồng'**
+  String get tournamentManagementSponsorTierBronze;
+
+  /// No description provided for @tournamentManagementSponsorTierDiamond.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kim cương'**
+  String get tournamentManagementSponsorTierDiamond;
+
+  /// No description provided for @tournamentManagementSponsorTierGold.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vàng'**
+  String get tournamentManagementSponsorTierGold;
+
+  /// No description provided for @tournamentManagementSponsorTierInKind.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện vật'**
+  String get tournamentManagementSponsorTierInKind;
+
+  /// No description provided for @tournamentManagementSponsorTierSilver.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạc'**
+  String get tournamentManagementSponsorTierSilver;
+
+  /// No description provided for @tournamentManagementSponsorTierTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà tài trợ danh xưng'**
+  String get tournamentManagementSponsorTierTitle;
+
+  /// No description provided for @tournamentManagementSponsorWebsite.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang web'**
+  String get tournamentManagementSponsorWebsite;
+
+  /// No description provided for @tournamentManagementSponsors.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà tài trợ'**
+  String get tournamentManagementSponsors;
+
+  /// No description provided for @tournamentManagementSponsorsDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm, chỉnh sửa hoặc lưu trữ nhà tài trợ giải đấu.'**
+  String get tournamentManagementSponsorsDescription;
+
+  /// No description provided for @tournamentManagementSponsorsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có nhà tài trợ'**
+  String get tournamentManagementSponsorsEmpty;
+
+  /// No description provided for @tournamentManagementSponsorsEmptyDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm nhà tài trợ để giới thiệu đối tác của giải đấu.'**
+  String get tournamentManagementSponsorsEmptyDescription;
+
+  /// No description provided for @tournamentManagementStaff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhân sự'**
+  String get tournamentManagementStaff;
+
+  /// No description provided for @tournamentManagementStaffAdded.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm nhân sự.'**
+  String get tournamentManagementStaffAdded;
+
+  /// No description provided for @tournamentManagementStaffDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm đồng tổ chức hoặc người xem. Email không được hiển thị sau khi gửi.'**
+  String get tournamentManagementStaffDescription;
+
+  /// No description provided for @tournamentManagementStaffEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email nhân sự'**
+  String get tournamentManagementStaffEmail;
+
+  /// No description provided for @tournamentManagementStaffEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thêm nhân sự.'**
+  String get tournamentManagementStaffEmpty;
+
+  /// No description provided for @tournamentManagementStaffMember.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhân sự'**
+  String get tournamentManagementStaffMember;
+
+  /// No description provided for @tournamentManagementStaffRemoved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa nhân sự.'**
+  String get tournamentManagementStaffRemoved;
+
+  /// No description provided for @tournamentManagementStaffRole.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vai trò'**
+  String get tournamentManagementStaffRole;
+
+  /// No description provided for @tournamentManagementStartAfterRegistration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu phải bắt đầu vào hoặc sau khi kết thúc đăng ký.'**
+  String get tournamentManagementStartAfterRegistration;
+
+  /// No description provided for @tournamentManagementStartDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày bắt đầu'**
+  String get tournamentManagementStartDate;
+
+  /// No description provided for @tournamentManagementStatusCancelled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hủy'**
+  String get tournamentManagementStatusCancelled;
+
+  /// No description provided for @tournamentManagementStatusCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn tất'**
+  String get tournamentManagementStatusCompleted;
+
+  /// No description provided for @tournamentManagementStatusDraft.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bản nháp'**
+  String get tournamentManagementStatusDraft;
+
+  /// No description provided for @tournamentManagementStatusInProgress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get tournamentManagementStatusInProgress;
+
+  /// No description provided for @tournamentManagementStatusOther.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái khác'**
+  String get tournamentManagementStatusOther;
+
+  /// No description provided for @tournamentManagementStatusRegistrationClosed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đóng đăng ký'**
+  String get tournamentManagementStatusRegistrationClosed;
+
+  /// No description provided for @tournamentManagementStatusRegistrationOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mở đăng ký'**
+  String get tournamentManagementStatusRegistrationOpen;
+
+  /// No description provided for @tournamentManagementStatusUpcoming.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sắp diễn ra'**
+  String get tournamentManagementStatusUpcoming;
+
+  /// No description provided for @tournamentManagementSubmitting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang gửi…'**
+  String get tournamentManagementSubmitting;
+
+  /// No description provided for @tournamentManagementSystemGroup.
+  ///
+  /// In vi, this message translates to:
+  /// **'HỆ THỐNG'**
+  String get tournamentManagementSystemGroup;
+
+  /// No description provided for @tournamentManagementTeamsDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý người tham gia và thông tin đội trong giải đấu.'**
+  String get tournamentManagementTeamsDescription;
+
+  /// No description provided for @tournamentManagementTokensDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý mã truy cập dành cho quản trị viên, trọng tài và người xem.'**
+  String get tournamentManagementTokensDescription;
+
+  /// No description provided for @tournamentManagementUploadBanner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải ảnh bìa'**
+  String get tournamentManagementUploadBanner;
+
+  /// No description provided for @tournamentManagementUploadLogo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải logo'**
+  String get tournamentManagementUploadLogo;
+
+  /// No description provided for @tournamentManagementVenue.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa điểm'**
+  String get tournamentManagementVenue;
+
+  /// No description provided for @tournamentManagementVenueAddress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ địa điểm'**
+  String get tournamentManagementVenueAddress;
+
+  /// No description provided for @tournamentManagementVenueName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên địa điểm'**
+  String get tournamentManagementVenueName;
+
+  /// No description provided for @tournamentManagementVenues.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa điểm & sân'**
+  String get tournamentManagementVenues;
+
+  /// No description provided for @tournamentManagementVenuesDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo và cập nhật địa điểm, đặt địa điểm mặc định và quản lý sân.'**
+  String get tournamentManagementVenuesDescription;
+
+  /// No description provided for @tournamentManagementVenuesEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa cấu hình địa điểm'**
+  String get tournamentManagementVenuesEmpty;
+
+  /// No description provided for @tournamentManagementVenuesEmptyDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm địa điểm và sân cho giải đấu này.'**
+  String get tournamentManagementVenuesEmptyDescription;
+
+  /// No description provided for @tournamentManagementVisibility.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chế độ hiển thị'**
+  String get tournamentManagementVisibility;
+
+  /// No description provided for @tournamentManagementYes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có'**
+  String get tournamentManagementYes;
+
+  /// No description provided for @tournamentManagementNo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không'**
+  String get tournamentManagementNo;
+
+  /// No description provided for @homeGlobalSearchTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm thể thao'**
+  String get homeGlobalSearchTitle;
+
+  /// No description provided for @homeGlobalSearchSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn danh mục rồi tinh chỉnh kết quả bạn cần.'**
+  String get homeGlobalSearchSubtitle;
+
+  /// No description provided for @homeGlobalSearchChooseType.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn muốn tìm gì?'**
+  String get homeGlobalSearchChooseType;
+
+  /// No description provided for @homeSearchScopeMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đấu'**
+  String get homeSearchScopeMatches;
+
+  /// No description provided for @homeSearchScopeTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu'**
+  String get homeSearchScopeTournaments;
+
+  /// No description provided for @homeSearchScopeClubs.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu lạc bộ'**
+  String get homeSearchScopeClubs;
+
+  /// No description provided for @homeSearchScopeAthletes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vận động viên'**
+  String get homeSearchScopeAthletes;
+
+  /// No description provided for @homeGlobalSearchAdvancedFilters.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bộ lọc nâng cao'**
+  String get homeGlobalSearchAdvancedFilters;
+
+  /// No description provided for @homeGlobalSearchApply.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm'**
+  String get homeGlobalSearchApply;
+
+  /// No description provided for @homeGlobalSearchClose.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng tìm kiếm'**
+  String get homeGlobalSearchClose;
+
+  /// No description provided for @homeGlobalSearchInputLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ khóa tìm kiếm'**
+  String get homeGlobalSearchInputLabel;
+
+  /// No description provided for @homeGlobalSearchClear.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa từ khóa'**
+  String get homeGlobalSearchClear;
+
+  /// No description provided for @homeSearchScopeVenues.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa điểm'**
+  String get homeSearchScopeVenues;
+
+  /// No description provided for @homeGlobalSearchEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy kết quả phù hợp'**
+  String get homeGlobalSearchEmpty;
+
+  /// No description provided for @homeGlobalSearchLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải kết quả. Vui lòng thử lại.'**
+  String get homeGlobalSearchLoadFailed;
+
+  /// No description provided for @homeGlobalSearchRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get homeGlobalSearchRetry;
+
+  /// No description provided for @homeGlobalSearchVenueNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa điểm được tổng hợp từ các trận đấu công khai; chưa hỗ trợ tìm quanh đây.'**
+  String get homeGlobalSearchVenueNote;
+
+  /// No description provided for @homeGlobalSearchSport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Môn thể thao'**
+  String get homeGlobalSearchSport;
+
+  /// No description provided for @homeGlobalSearchStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái'**
+  String get homeGlobalSearchStatus;
+
+  /// No description provided for @homeGlobalSearchGender.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới tính'**
+  String get homeGlobalSearchGender;
+
+  /// No description provided for @homeGlobalSearchProvince.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉnh/thành'**
+  String get homeGlobalSearchProvince;
+
+  /// No description provided for @homeGlobalSearchDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khoảng ngày'**
+  String get homeGlobalSearchDate;
+
+  /// No description provided for @homeGlobalSearchLocation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sân/địa chỉ'**
+  String get homeGlobalSearchLocation;
+
+  /// No description provided for @homeGlobalSearchClearFilters.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa bộ lọc'**
+  String get homeGlobalSearchClearFilters;
 }
 
 class _AppLocalizationsDelegate

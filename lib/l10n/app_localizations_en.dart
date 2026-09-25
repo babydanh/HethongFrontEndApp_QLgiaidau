@@ -141,6 +141,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navProfile => 'Profile';
 
   @override
+  String get menuTitle => 'Menu';
+
+  @override
+  String get menuSectionExplore => 'Explore';
+
+  @override
+  String get menuSectionCommunity => 'Community';
+
+  @override
+  String get menuSectionAccount => 'Account';
+
+  @override
+  String get menuProfile => 'My profile';
+
+  @override
+  String get menuMessages => 'Messages';
+
+  @override
   String get loginTitle => 'Account Login';
 
   @override
@@ -1091,6 +1109,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tabTeams => 'Teams';
+
+  @override
+  String get tabSchedule => 'Schedule';
 
   @override
   String get tabBracket => 'Bracket';
@@ -12835,4 +12856,928 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get communitySearchRetry => 'Retry';
+
+  @override
+  String get tournamentManagementActionError =>
+      'Could not complete that action. Try again.';
+
+  @override
+  String get tournamentManagementAddCourt => 'Add court';
+
+  @override
+  String get tournamentManagementAddDivision => 'Add division';
+
+  @override
+  String get tournamentManagementAddImage => 'Add image';
+
+  @override
+  String get tournamentManagementAddSponsor => 'Add sponsor';
+
+  @override
+  String get tournamentManagementAddStaff => 'Add staff';
+
+  @override
+  String get tournamentManagementAddVenue => 'Add venue';
+
+  @override
+  String get tournamentManagementAmountRequested => 'Requested amount';
+
+  @override
+  String get tournamentManagementApplications => 'Registrations';
+
+  @override
+  String get tournamentManagementApplicationsEmpty => 'No registrations yet';
+
+  @override
+  String get tournamentManagementApplicationsEmptyDescription =>
+      'New participant registrations will appear here.';
+
+  @override
+  String get tournamentManagementApprove => 'Approve';
+
+  @override
+  String get tournamentManagementArchive => 'Archive';
+
+  @override
+  String get tournamentManagementArchiveSponsor => 'Archive sponsor';
+
+  @override
+  String tournamentManagementArchiveSponsorConfirm(String name) {
+    return 'Archive $name?';
+  }
+
+  @override
+  String get tournamentManagementAutoSeed => 'Auto-seed';
+
+  @override
+  String get tournamentManagementAutoSeedConfirm =>
+      'Automatically assign seeds for this division? Existing seeds will be replaced.';
+
+  @override
+  String get tournamentManagementBankAccountName => 'Account holder name';
+
+  @override
+  String get tournamentManagementBankAccountNumber => 'Bank account number';
+
+  @override
+  String get tournamentManagementBankName => 'Bank';
+
+  @override
+  String get tournamentManagementBack => 'Back';
+
+  @override
+  String get tournamentManagementBanner => 'Tournament banner';
+
+  @override
+  String get tournamentManagementBannerSaved => 'Tournament banner updated.';
+
+  @override
+  String get tournamentManagementBracketDescription =>
+      'Review the existing bracket workspace.';
+
+  @override
+  String get tournamentManagementBracketDoubleElimination =>
+      'Double elimination';
+
+  @override
+  String get tournamentManagementBracketGroupThenKnockout =>
+      'Group stage then knockout';
+
+  @override
+  String get tournamentManagementBracketRoundRobin => 'Round robin';
+
+  @override
+  String get tournamentManagementBracketSingleElimination =>
+      'Single elimination';
+
+  @override
+  String get tournamentManagementBracketType => 'Bracket format';
+
+  @override
+  String get tournamentManagementBrandAssets => 'Tournament identity';
+
+  @override
+  String get tournamentManagementBrandAssetsDescription =>
+      'Upload a logo or banner, or manage tournament gallery images.';
+
+  @override
+  String get tournamentManagementBranding => 'Branding & gallery';
+
+  @override
+  String get tournamentManagementBrandingDescription =>
+      'Upload tournament identity images and manage the photo gallery.';
+
+  @override
+  String get tournamentManagementCancel => 'Cancel';
+
+  @override
+  String get tournamentManagementConfirm => 'Confirm';
+
+  @override
+  String get tournamentManagementConfirmTitle => 'Confirm action';
+
+  @override
+  String get tournamentManagementCourt => 'Court';
+
+  @override
+  String get tournamentManagementCourtName => 'Court name';
+
+  @override
+  String get tournamentManagementCourtPrefix => 'Court name prefix';
+
+  @override
+  String tournamentManagementCourtsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count courts',
+      one: '$count court',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tournamentManagementChooseDate => 'Choose date';
+
+  @override
+  String get tournamentManagementDefaultVenue => 'Default';
+
+  @override
+  String get tournamentManagementDelete => 'Delete';
+
+  @override
+  String get tournamentManagementDeleteDivision => 'Delete division';
+
+  @override
+  String tournamentManagementDeleteDivisionConfirm(String name) {
+    return 'Delete division $name?';
+  }
+
+  @override
+  String get tournamentManagementDescription => 'Description';
+
+  @override
+  String get tournamentManagementDisplayOrder => 'Display order';
+
+  @override
+  String get tournamentManagementDivision => 'Division';
+
+  @override
+  String get tournamentManagementDivisionConfiguration => 'Format settings';
+
+  @override
+  String get tournamentManagementDivisionName => 'Division name';
+
+  @override
+  String get tournamentManagementDivisions => 'Divisions';
+
+  @override
+  String get tournamentManagementDivisionsDescription =>
+      'Create and configure divisions, then assign participant seeds.';
+
+  @override
+  String get tournamentManagementDivisionsEmpty => 'No divisions yet';
+
+  @override
+  String get tournamentManagementDivisionsEmptyDescription =>
+      'Add a division to configure its competition format.';
+
+  @override
+  String get tournamentManagementDrawDescription =>
+      'Generate and manage the tournament draw.';
+
+  @override
+  String get tournamentManagementEdit => 'Edit';
+
+  @override
+  String get tournamentManagementEditSponsor => 'Edit sponsor';
+
+  @override
+  String get tournamentManagementEditVenue => 'Edit venue';
+
+  @override
+  String get tournamentManagementEndAfterStart =>
+      'The tournament end date must be after its start date.';
+
+  @override
+  String get tournamentManagementEndDate => 'End date';
+
+  @override
+  String get tournamentManagementEntryFee => 'Entry fee';
+
+  @override
+  String get tournamentManagementEntryFeesAllowed => 'Entry fees allowed';
+
+  @override
+  String get tournamentManagementEntryFeeDisabled =>
+      'Entry fees are disabled for this tournament or its current status prevents changes.';
+
+  @override
+  String get tournamentManagementEntryFeeUpdated =>
+      'The entry fee was updated.';
+
+  @override
+  String get tournamentManagementExportError =>
+      'Could not export tournament data.';
+
+  @override
+  String get tournamentManagementFinalizeRegistrationUnavailable =>
+      'Finalizing registration is unavailable in this mobile app because the server operation is not confirmed. Contact support before using this transition.';
+
+  @override
+  String get tournamentManagementFinance => 'Finance & payout';
+
+  @override
+  String get tournamentManagementFinanceDescription =>
+      'Review server-provided fee settings and request a payout after the tournament is completed.';
+
+  @override
+  String get tournamentManagementGallery => 'Gallery';
+
+  @override
+  String get tournamentManagementGalleryDescription =>
+      'Upload image files to the existing media service before adding them to the tournament gallery.';
+
+  @override
+  String get tournamentManagementGalleryEmpty => 'No gallery images';
+
+  @override
+  String get tournamentManagementGalleryEmptyDescription =>
+      'Add uploaded images to build the tournament gallery.';
+
+  @override
+  String get tournamentManagementGalleryImageAdded =>
+      'Image added to the gallery.';
+
+  @override
+  String get tournamentManagementGalleryImageRemoved =>
+      'Gallery image removed.';
+
+  @override
+  String get tournamentManagementGeneral => 'General settings';
+
+  @override
+  String get tournamentManagementGeneralDescription =>
+      'Update the tournament name, description, visibility and key dates.';
+
+  @override
+  String get tournamentManagementInitialCourtCount => 'Initial court count';
+
+  @override
+  String get tournamentManagementLifecycle => 'Tournament lifecycle';
+
+  @override
+  String get tournamentManagementLifecycleDescription =>
+      'Use the server-supported tournament transitions. Authorization is enforced by the server.';
+
+  @override
+  String get tournamentManagementLiveOperations => 'Live operations';
+
+  @override
+  String get tournamentManagementLiveOperationsDescription =>
+      'Open the existing workspace for live match operations.';
+
+  @override
+  String get tournamentManagementLivestream => 'Livestream';
+
+  @override
+  String get tournamentManagementLivestreamDescription =>
+      'Open the supported live-match workspace.';
+
+  @override
+  String get tournamentManagementLivestreamRouteDescription =>
+      'Livestream setup is not exposed by the approved mobile API. Open the existing operations workspace for supported live-match controls.';
+
+  @override
+  String get tournamentManagementLoadError => 'Could not load this section.';
+
+  @override
+  String get tournamentManagementLockConfirm =>
+      'Lock tournament registration now?';
+
+  @override
+  String get tournamentManagementLockTournament => 'Lock registration';
+
+  @override
+  String get tournamentManagementLogo => 'Tournament logo';
+
+  @override
+  String get tournamentManagementLogoSaved => 'Tournament logo updated.';
+
+  @override
+  String get tournamentManagementMatchDoubles => 'Doubles';
+
+  @override
+  String get tournamentManagementMatchMixedDoubles => 'Mixed doubles';
+
+  @override
+  String get tournamentManagementMatchSingles => 'Singles';
+
+  @override
+  String get tournamentManagementMatchType => 'Match type';
+
+  @override
+  String get tournamentManagementMaxParticipants => 'Maximum participants';
+
+  @override
+  String get tournamentManagementName => 'Tournament name';
+
+  @override
+  String get tournamentManagementNoClientBalanceCalculation =>
+      'Payout availability is determined by the server. This screen does not calculate a balance.';
+
+  @override
+  String get tournamentManagementNoCourts => 'No courts added yet.';
+
+  @override
+  String get tournamentManagementNotSet => 'Not set';
+
+  @override
+  String get tournamentManagementOpenDestination => 'Open workspace';
+
+  @override
+  String get tournamentManagementOpenOperations => 'Open operations';
+
+  @override
+  String get tournamentManagementOperationsGroup => 'OPERATIONS';
+
+  @override
+  String get tournamentManagementOpsRouteDescription =>
+      'Open the existing operations workspace for schedule and live match controls.';
+
+  @override
+  String get tournamentManagementOverview => 'Overview';
+
+  @override
+  String get tournamentManagementOverviewDescription =>
+      'Tournament status, schedule and key configuration.';
+
+  @override
+  String get tournamentManagementOverviewHint =>
+      'Choose a section to edit supported tournament settings or open an existing organizer workspace.';
+
+  @override
+  String get tournamentManagementParticipantApproved => 'Approved';
+
+  @override
+  String tournamentManagementParticipantCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count participants',
+      one: '$count participant',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tournamentManagementParticipantPending => 'Pending approval';
+
+  @override
+  String get tournamentManagementParticipantRejected => 'Rejected';
+
+  @override
+  String get tournamentManagementParticipantRemoved => 'Removed';
+
+  @override
+  String get tournamentManagementParticipantsEmpty =>
+      'No participants in this division.';
+
+  @override
+  String get tournamentManagementPayoutAuthorizationNote =>
+      'The server validates creator authorization and payout eligibility. Bank details are cleared after a successful request and are not shown in history.';
+
+  @override
+  String get tournamentManagementPayoutCreatorOnly =>
+      'Payout requests are available only to the tournament creator. The server remains the final authorization authority.';
+
+  @override
+  String get tournamentManagementPayoutAccessUnverified =>
+      'Payout controls are hidden until creator access is verified.';
+
+  @override
+  String get tournamentManagementPayoutDescription =>
+      'Submit a payout request to the server. No available-balance estimate is shown.';
+
+  @override
+  String get tournamentManagementPayoutHistory => 'Payout history';
+
+  @override
+  String get tournamentManagementPayoutHistoryDescription =>
+      'History shows request status and amount only; bank details are never displayed.';
+
+  @override
+  String get tournamentManagementPayoutHistoryEmpty =>
+      'No payout requests yet.';
+
+  @override
+  String tournamentManagementPayoutMinimum(int amount) {
+    return 'Minimum request: $amount VND';
+  }
+
+  @override
+  String get tournamentManagementPayoutRequest => 'Request payout';
+
+  @override
+  String get tournamentManagementPayoutRequestError =>
+      'The server could not complete the payout request. Your entries have been kept.';
+
+  @override
+  String get tournamentManagementPayoutRequested => 'Payout request submitted.';
+
+  @override
+  String get tournamentManagementPayoutRequiresCompleted =>
+      'Payout requests are available only after the tournament is completed.';
+
+  @override
+  String get tournamentManagementPayoutStatusApproved => 'Approved';
+
+  @override
+  String get tournamentManagementPayoutStatusPaid => 'Paid';
+
+  @override
+  String get tournamentManagementPayoutStatusPending => 'Pending';
+
+  @override
+  String get tournamentManagementPayoutStatusProcessing => 'Processing';
+
+  @override
+  String get tournamentManagementPayoutStatusRejected => 'Rejected';
+
+  @override
+  String get tournamentManagementPayoutValidationError =>
+      'Enter all required bank details and an amount of at least 10,000 VND.';
+
+  @override
+  String get tournamentManagementPendingApplications => 'Pending approval';
+
+  @override
+  String get tournamentManagementPermissions => 'Permissions & referees';
+
+  @override
+  String get tournamentManagementPermissionsDescription =>
+      'Manage tournament staff and referee invitations.';
+
+  @override
+  String get tournamentManagementPlatformFeeRate => 'Platform fee rate';
+
+  @override
+  String get tournamentManagementPrivate => 'Private';
+
+  @override
+  String get tournamentManagementPublic => 'Public';
+
+  @override
+  String get tournamentManagementPublish => 'Publish tournament';
+
+  @override
+  String get tournamentManagementPublishConfirm => 'Publish this tournament?';
+
+  @override
+  String get tournamentManagementPublishFee => 'Publish fee';
+
+  @override
+  String get tournamentManagementReferee => 'Referee';
+
+  @override
+  String get tournamentManagementRefereeAccepted => 'Accepted';
+
+  @override
+  String get tournamentManagementRefereeDeclined => 'Declined';
+
+  @override
+  String get tournamentManagementRefereeEmail => 'Referee email';
+
+  @override
+  String get tournamentManagementRefereeInviteSent =>
+      'Referee invitation sent.';
+
+  @override
+  String get tournamentManagementRefereeInvited => 'Invited';
+
+  @override
+  String get tournamentManagementRefereeRemoved => 'Referee removed.';
+
+  @override
+  String get tournamentManagementReferees => 'Referees';
+
+  @override
+  String get tournamentManagementRefereesDescription =>
+      'Invite referees by email and manage their tournament assignment.';
+
+  @override
+  String get tournamentManagementRefereesEmpty => 'No referees assigned.';
+
+  @override
+  String get tournamentManagementRegenerateInvite => 'Regenerate invite code';
+
+  @override
+  String get tournamentManagementRegenerateInviteConfirm =>
+      'Regenerate the invite code? Existing invite links will no longer work.';
+
+  @override
+  String get tournamentManagementRegistration => 'Registration';
+
+  @override
+  String get tournamentManagementRegistrationApproved =>
+      'Registration approved.';
+
+  @override
+  String get tournamentManagementRegistrationDescription =>
+      'Review participant registrations and approve or reject pending applications.';
+
+  @override
+  String get tournamentManagementRegistrationEndAfterStart =>
+      'Registration must end after it starts.';
+
+  @override
+  String get tournamentManagementRegistrationEnds => 'Registration ends';
+
+  @override
+  String get tournamentManagementRegistrationLocked => 'Registration locked';
+
+  @override
+  String get tournamentManagementRegistrationOpen => 'Registration open';
+
+  @override
+  String get tournamentManagementRegistrationRejected =>
+      'Registration rejected.';
+
+  @override
+  String get tournamentManagementRegistrationStarts => 'Registration starts';
+
+  @override
+  String get tournamentManagementRegistrationWindow => 'Registration window';
+
+  @override
+  String get tournamentManagementReject => 'Reject';
+
+  @override
+  String get tournamentManagementRejectRegistration => 'Reject registration';
+
+  @override
+  String tournamentManagementRejectRegistrationConfirm(String name) {
+    return 'Reject the registration for $name?';
+  }
+
+  @override
+  String get tournamentManagementRemove => 'Remove';
+
+  @override
+  String get tournamentManagementRemoveCourt => 'Remove court';
+
+  @override
+  String tournamentManagementRemoveCourtConfirm(String name) {
+    return 'Remove court $name?';
+  }
+
+  @override
+  String get tournamentManagementRemoveImage => 'Remove image';
+
+  @override
+  String get tournamentManagementRemoveImageConfirm =>
+      'Remove this image from the tournament gallery?';
+
+  @override
+  String get tournamentManagementRemoveReferee => 'Remove referee';
+
+  @override
+  String tournamentManagementRemoveRefereeConfirm(String name) {
+    return 'Remove $name from this tournament?';
+  }
+
+  @override
+  String get tournamentManagementRemoveStaff => 'Remove staff member';
+
+  @override
+  String tournamentManagementRemoveStaffConfirm(String name) {
+    return 'Remove $name from tournament staff?';
+  }
+
+  @override
+  String get tournamentManagementRemoveVenue => 'Remove venue';
+
+  @override
+  String tournamentManagementRemoveVenueConfirm(String name) {
+    return 'Remove venue $name?';
+  }
+
+  @override
+  String get tournamentManagementRenameDivision => 'Rename division';
+
+  @override
+  String get tournamentManagementReopenConfirm =>
+      'Reopen tournament registration?';
+
+  @override
+  String get tournamentManagementReopenRegistration => 'Reopen registration';
+
+  @override
+  String get tournamentManagementRequestPayout => 'Submit payout request';
+
+  @override
+  String get tournamentManagementRequiredFields =>
+      'Complete the required fields.';
+
+  @override
+  String get tournamentManagementRetry => 'Retry';
+
+  @override
+  String get tournamentManagementRoleCoOrganizer => 'Co-organizer';
+
+  @override
+  String get tournamentManagementRoleOther => 'Other role';
+
+  @override
+  String get tournamentManagementRoleSpectator => 'Viewer';
+
+  @override
+  String get tournamentManagementSave => 'Save';
+
+  @override
+  String get tournamentManagementSaveError =>
+      'Could not save changes. Review the fields and try again.';
+
+  @override
+  String get tournamentManagementSaveSeeds => 'Save seeds';
+
+  @override
+  String get tournamentManagementSaved => 'Changes saved.';
+
+  @override
+  String get tournamentManagementSaving => 'Saving…';
+
+  @override
+  String get tournamentManagementSchedule => 'Schedule';
+
+  @override
+  String get tournamentManagementScheduleDescription =>
+      'Open the existing operations workspace to review the schedule.';
+
+  @override
+  String get tournamentManagementSeed => 'Seed';
+
+  @override
+  String get tournamentManagementSeedValidationError =>
+      'Seeds must be unique positive numbers. Existing seeds cannot be cleared here.';
+
+  @override
+  String get tournamentManagementSeeding => 'Participant seeds';
+
+  @override
+  String get tournamentManagementSeedingDescription =>
+      'Auto-assign or manually save unique seed numbers for the selected division.';
+
+  @override
+  String get tournamentManagementSeedsSaved => 'Participant seeds updated.';
+
+  @override
+  String get tournamentManagementSendInvite => 'Send invitation';
+
+  @override
+  String get tournamentManagementServerAuthorizationNote =>
+      'These controls request server-side actions. The server remains responsible for authorization and validation.';
+
+  @override
+  String get tournamentManagementSetAsDefault => 'Set as default venue';
+
+  @override
+  String get tournamentManagementSetupGroup => 'SETUP';
+
+  @override
+  String get tournamentManagementSponsorDescription => 'Short description';
+
+  @override
+  String get tournamentManagementSponsorLogo => 'Sponsor logo';
+
+  @override
+  String get tournamentManagementSponsorName => 'Sponsor name';
+
+  @override
+  String get tournamentManagementSponsorPublic => 'Show publicly';
+
+  @override
+  String get tournamentManagementSponsorSaved => 'Sponsor saved.';
+
+  @override
+  String get tournamentManagementSponsorTier => 'Sponsor tier';
+
+  @override
+  String get tournamentManagementSponsorTierBronze => 'Bronze';
+
+  @override
+  String get tournamentManagementSponsorTierDiamond => 'Diamond';
+
+  @override
+  String get tournamentManagementSponsorTierGold => 'Gold';
+
+  @override
+  String get tournamentManagementSponsorTierInKind => 'In kind';
+
+  @override
+  String get tournamentManagementSponsorTierSilver => 'Silver';
+
+  @override
+  String get tournamentManagementSponsorTierTitle => 'Title';
+
+  @override
+  String get tournamentManagementSponsorWebsite => 'Website';
+
+  @override
+  String get tournamentManagementSponsors => 'Sponsors';
+
+  @override
+  String get tournamentManagementSponsorsDescription =>
+      'Add, edit or archive tournament sponsors.';
+
+  @override
+  String get tournamentManagementSponsorsEmpty => 'No sponsors yet';
+
+  @override
+  String get tournamentManagementSponsorsEmptyDescription =>
+      'Add a sponsor to show tournament partners.';
+
+  @override
+  String get tournamentManagementStaff => 'Staff';
+
+  @override
+  String get tournamentManagementStaffAdded => 'Staff member added.';
+
+  @override
+  String get tournamentManagementStaffDescription =>
+      'Add co-organizers or viewers. Email addresses are not shown after submission.';
+
+  @override
+  String get tournamentManagementStaffEmail => 'Staff email';
+
+  @override
+  String get tournamentManagementStaffEmpty => 'No staff members added.';
+
+  @override
+  String get tournamentManagementStaffMember => 'Staff member';
+
+  @override
+  String get tournamentManagementStaffRemoved => 'Staff member removed.';
+
+  @override
+  String get tournamentManagementStaffRole => 'Role';
+
+  @override
+  String get tournamentManagementStartAfterRegistration =>
+      'The tournament must start on or after registration closes.';
+
+  @override
+  String get tournamentManagementStartDate => 'Start date';
+
+  @override
+  String get tournamentManagementStatusCancelled => 'Cancelled';
+
+  @override
+  String get tournamentManagementStatusCompleted => 'Completed';
+
+  @override
+  String get tournamentManagementStatusDraft => 'Draft';
+
+  @override
+  String get tournamentManagementStatusInProgress => 'In progress';
+
+  @override
+  String get tournamentManagementStatusOther => 'Other status';
+
+  @override
+  String get tournamentManagementStatusRegistrationClosed =>
+      'Registration closed';
+
+  @override
+  String get tournamentManagementStatusRegistrationOpen => 'Registration open';
+
+  @override
+  String get tournamentManagementStatusUpcoming => 'Upcoming';
+
+  @override
+  String get tournamentManagementSubmitting => 'Submitting…';
+
+  @override
+  String get tournamentManagementSystemGroup => 'SYSTEM';
+
+  @override
+  String get tournamentManagementTeamsDescription =>
+      'Manage tournament participants and team details.';
+
+  @override
+  String get tournamentManagementTokensDescription =>
+      'Manage administrator, referee and viewer access tokens.';
+
+  @override
+  String get tournamentManagementUploadBanner => 'Upload banner';
+
+  @override
+  String get tournamentManagementUploadLogo => 'Upload logo';
+
+  @override
+  String get tournamentManagementVenue => 'Venue';
+
+  @override
+  String get tournamentManagementVenueAddress => 'Venue address';
+
+  @override
+  String get tournamentManagementVenueName => 'Venue name';
+
+  @override
+  String get tournamentManagementVenues => 'Venues & courts';
+
+  @override
+  String get tournamentManagementVenuesDescription =>
+      'Create and update venues, set the default location, and manage courts.';
+
+  @override
+  String get tournamentManagementVenuesEmpty => 'No venues configured';
+
+  @override
+  String get tournamentManagementVenuesEmptyDescription =>
+      'Add a venue and its courts for this tournament.';
+
+  @override
+  String get tournamentManagementVisibility => 'Visibility';
+
+  @override
+  String get tournamentManagementYes => 'Yes';
+
+  @override
+  String get tournamentManagementNo => 'No';
+
+  @override
+  String get homeGlobalSearchTitle => 'Sports search';
+
+  @override
+  String get homeGlobalSearchSubtitle =>
+      'Choose a category, then refine your results.';
+
+  @override
+  String get homeGlobalSearchChooseType => 'What are you looking for?';
+
+  @override
+  String get homeSearchScopeMatches => 'Matches';
+
+  @override
+  String get homeSearchScopeTournaments => 'Tournaments';
+
+  @override
+  String get homeSearchScopeClubs => 'Clubs';
+
+  @override
+  String get homeSearchScopeAthletes => 'Athletes';
+
+  @override
+  String get homeGlobalSearchAdvancedFilters => 'Advanced filters';
+
+  @override
+  String get homeGlobalSearchApply => 'Search';
+
+  @override
+  String get homeGlobalSearchClose => 'Close search';
+
+  @override
+  String get homeGlobalSearchInputLabel => 'Search keywords';
+
+  @override
+  String get homeGlobalSearchClear => 'Clear search';
+
+  @override
+  String get homeSearchScopeVenues => 'Venues';
+
+  @override
+  String get homeGlobalSearchEmpty => 'No matching results';
+
+  @override
+  String get homeGlobalSearchLoadFailed =>
+      'Could not load results. Please try again.';
+
+  @override
+  String get homeGlobalSearchRetry => 'Try again';
+
+  @override
+  String get homeGlobalSearchVenueNote =>
+      'Venues are derived from public matches; nearby search is not available.';
+
+  @override
+  String get homeGlobalSearchSport => 'Sport';
+
+  @override
+  String get homeGlobalSearchStatus => 'Status';
+
+  @override
+  String get homeGlobalSearchGender => 'Gender';
+
+  @override
+  String get homeGlobalSearchProvince => 'Province/city';
+
+  @override
+  String get homeGlobalSearchDate => 'Date range';
+
+  @override
+  String get homeGlobalSearchLocation => 'Venue/address';
+
+  @override
+  String get homeGlobalSearchClearFilters => 'Clear filters';
 }

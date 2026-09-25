@@ -400,7 +400,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded),
           onPressed: () {
-            if (auth.role == UserRole.admin) {
+            if (context.canPop()) {
+              context.pop();
+            } else if (auth.role == UserRole.admin) {
               context.go('/admin/tournament/${widget.tournamentId}');
             } else {
               context.go('/home');
@@ -798,14 +800,18 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                     ),
                   );
                   ref.invalidate(bracketMatchesProvider(widget.tournamentId));
-                  ref.invalidate(liteBracketMatchesProvider(widget.tournamentId));
+                  ref.invalidate(
+                    liteBracketMatchesProvider(widget.tournamentId),
+                  );
                   ref.invalidate(matchesProvider(widget.tournamentId));
                   final params = (
                     tournamentId: widget.tournamentId,
                     divisionId: widget.divisionId,
                   );
                   ref.invalidate(bracketMatchesWithDivisionProvider(params));
-                  ref.invalidate(liteBracketMatchesWithDivisionProvider(params));
+                  ref.invalidate(
+                    liteBracketMatchesWithDivisionProvider(params),
+                  );
                   ref.invalidate(matchesWithDivisionProvider(params));
                   if (mounted) setState(() {});
                 },

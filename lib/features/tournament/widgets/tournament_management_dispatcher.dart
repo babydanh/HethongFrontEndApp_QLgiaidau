@@ -6,14 +6,24 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_management_screen.dart';
-import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
 
-/// Keeps the legacy admin deep link stable while routing to the current
-/// management workspace for the tournament's actual product type.
+/// Preserves club Super Lite management and routes other tournament types to the shared hub.
 class TournamentManagementDispatcher extends ConsumerWidget {
-  const TournamentManagementDispatcher({super.key, required this.tournamentId});
+  const TournamentManagementDispatcher({
+    super.key,
+    required this.tournamentId,
+    required this.actionRouteBase,
+    required this.opsWorkspaceRoute,
+    this.liteWorkspaceRoute,
+    this.showLiteWorkspace = false,
+  });
 
   final String tournamentId;
+  final String actionRouteBase;
+  final String opsWorkspaceRoute;
+  final String? liteWorkspaceRoute;
+  final bool showLiteWorkspace;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,12 +52,17 @@ class TournamentManagementDispatcher extends ConsumerWidget {
             ),
           );
         }
-
-        if (tournament.isSuperLite) {
+        if (tournament.isClubLite ||
+            (showLiteWorkspace && tournament.isSuperLite)) {
           return LiteManagementScreen(tournamentId: tournamentId);
         }
 
-        return OrganizerOpsScreen(tournamentId: tournamentId);
+        return TournamentManagementHubScreen(
+          tournament: tournament,
+          actionRouteBase: actionRouteBase,
+          opsWorkspaceRoute: opsWorkspaceRoute,
+          liteWorkspaceRoute: liteWorkspaceRoute,
+        );
       },
     );
   }

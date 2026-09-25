@@ -14,11 +14,13 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 class TokenManagementScreen extends ConsumerWidget {
   final String tournamentId;
   final bool isEmbedded;
+  final String? managementRouteBase;
 
   const TokenManagementScreen({
     super.key,
     required this.tournamentId,
     this.isEmbedded = false,
+    this.managementRouteBase,
   });
 
   @override
@@ -33,7 +35,15 @@ class TokenManagementScreen extends ConsumerWidget {
             ? const SizedBox.shrink()
             : IconButton(
                 icon: const Icon(Icons.arrow_back_ios_rounded),
-                onPressed: () => context.go('/admin/tournament/$tournamentId'),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go(
+                      managementRouteBase ?? '/admin/tournament/$tournamentId',
+                    );
+                  }
+                },
               ),
         title: Text(l10n.tokenManagement),
       ),
@@ -94,8 +104,11 @@ class _TokenCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 Text(
                   token.role.toRoleDisplayName(l10n),
@@ -159,16 +172,22 @@ class _TokenCard extends ConsumerWidget {
                 border: Border.all(color: context.colors.border),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    token.code,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 2,
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SelectableText(
+                        token.code,
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 2,
+                        ),
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   IconButton(
                     icon: const Icon(Icons.qr_code, color: AppTheme.primary),
                     onPressed: () => _showQrDialog(context, token.code),
