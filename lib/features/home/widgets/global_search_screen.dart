@@ -400,6 +400,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         child: Column(
           children: [
             _buildHeader(l10n, colors),
+            _buildSearchField(l10n, colors),
             _buildScopeSelector(l10n, colors),
             _buildFilterToolbar(l10n, colors),
             AnimatedSize(
@@ -420,7 +421,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                 ),
               ),
             Expanded(child: _buildResults(l10n, colors)),
-            _buildSearchField(l10n, colors),
+            const SizedBox.shrink(),
           ],
         ),
       ),
@@ -1106,76 +1107,72 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   Widget _buildSearchField(AppLocalizations l10n, AppColorsExtension colors) {
     return Material(
       color: colors.bgSurface,
-      elevation: 8,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-          child: Row(
-            children: [
-              Expanded(
-                child: Semantics(
-                  label: l10n.homeGlobalSearchInputLabel,
-                  textField: true,
-                  child: TextField(
-                    controller: _queryController,
-                    textInputAction: TextInputAction.search,
-                    onSubmitted: (_) => _loadScope(),
-                    onTap: () {
-                      if (_filtersExpanded) {
-                        setState(() => _filtersExpanded = false);
-                      }
-                    },
-                    style: TextStyle(color: colors.textPrimary, fontSize: 15),
-                    cursorColor: AppTheme.primary,
-                    decoration: InputDecoration(
-                      hintText: _scopeHint(l10n),
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: _queryController.text.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: l10n.homeGlobalSearchClear,
-                              onPressed: _queryController.clear,
-                              icon: const Icon(Icons.close_rounded),
-                            ),
-                      filled: true,
-                      fillColor: colors.bgCard,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: colors.border),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: colors.border),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: AppTheme.primary,
-                          width: 1.5,
-                        ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: Semantics(
+                label: l10n.homeGlobalSearchInputLabel,
+                textField: true,
+                child: TextField(
+                  controller: _queryController,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (_) => _loadScope(),
+                  onTap: () {
+                    if (_filtersExpanded) {
+                      setState(() => _filtersExpanded = false);
+                    }
+                  },
+                  style: TextStyle(color: colors.textPrimary, fontSize: 15),
+                  cursorColor: AppTheme.primary,
+                  decoration: InputDecoration(
+                    hintText: _scopeHint(l10n),
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    suffixIcon: _queryController.text.isEmpty
+                        ? null
+                        : IconButton(
+                            tooltip: l10n.homeGlobalSearchClear,
+                            onPressed: _queryController.clear,
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                    filled: true,
+                    fillColor: colors.bgCard,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: colors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: colors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                        color: AppTheme.primary,
+                        width: 1.5,
                       ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              IconButton.filled(
-                tooltip: l10n.homeGlobalSearchAdvancedFilters,
-                onPressed: () {
-                  FocusScope.of(context).unfocus();
-                  setState(() => _filtersExpanded = !_filtersExpanded);
-                },
-                icon: const Icon(Icons.tune_rounded),
-                style: IconButton.styleFrom(
-                  minimumSize: const Size(52, 52),
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                ),
+            ),
+            const SizedBox(width: 8),
+            IconButton.filled(
+              tooltip: l10n.homeGlobalSearchAdvancedFilters,
+              onPressed: () {
+                FocusScope.of(context).unfocus();
+                setState(() => _filtersExpanded = !_filtersExpanded);
+              },
+              icon: const Icon(Icons.tune_rounded),
+              style: IconButton.styleFrom(
+                minimumSize: const Size(52, 52),
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
