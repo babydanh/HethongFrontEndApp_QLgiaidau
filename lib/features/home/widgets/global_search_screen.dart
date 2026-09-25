@@ -421,7 +421,6 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                 ),
               ),
             Expanded(child: _buildResults(l10n, colors)),
-            const SizedBox.shrink(),
           ],
         ),
       ),
@@ -542,25 +541,6 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),
-            ),
-          ),
-          TextButton.icon(
-            onPressed: () =>
-                setState(() => _filtersExpanded = !_filtersExpanded),
-            icon: Icon(
-              _filtersExpanded ? Icons.tune_rounded : Icons.filter_list_rounded,
-              size: 18,
-            ),
-            label: Text(
-              _activeFilterCount == 0
-                  ? l10n.homeGlobalSearchAdvancedFilters
-                  : '${l10n.homeGlobalSearchAdvancedFilters} ($_activeFilterCount)',
-            ),
-            style: TextButton.styleFrom(
-              foregroundColor: _activeFilterCount > 0
-                  ? AppTheme.primary
-                  : colors.textSecondary,
-              minimumSize: const Size(48, 48),
             ),
           ),
         ],
