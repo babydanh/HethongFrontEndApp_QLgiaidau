@@ -12,6 +12,8 @@ class TeamsTab extends StatefulWidget {
   final String? selectedDivisionId;
   final bool isTeamSport;
   final ScrollController? scrollController;
+  final bool shrinkWrap;
+  final bool showDivisionHeading;
 
   const TeamsTab({
     super.key,
@@ -20,6 +22,8 @@ class TeamsTab extends StatefulWidget {
     this.selectedDivisionId,
     this.isTeamSport = false,
     this.scrollController,
+    this.shrinkWrap = false,
+    this.showDivisionHeading = true,
   });
 
   @override
@@ -106,7 +110,11 @@ class _TeamsTabState extends State<TeamsTab> {
     final sortedDivisions = grouped.keys.toList()..sort();
 
     return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
+      shrinkWrap: widget.shrinkWrap,
+      primary: widget.shrinkWrap ? false : null,
+      physics: widget.shrinkWrap
+          ? const NeverScrollableScrollPhysics()
+          : const BouncingScrollPhysics(),
       slivers: [
         // Search Bar
         SliverToBoxAdapter(
@@ -185,7 +193,12 @@ class _TeamsTabState extends State<TeamsTab> {
           )
         else
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              0,
+              16,
+              widget.shrinkWrap ? 16 : 100,
+            ),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, i) {
@@ -200,51 +213,53 @@ class _TeamsTabState extends State<TeamsTab> {
                         : isMale
                         ? const Color(0xFF2196F3)
                         : AppTheme.primary;
-                    items.add(
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: themeColor,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              division,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.bgSurface,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                '${teamsInDiv.length}',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: colors.textSecondary,
+                    if (widget.showDivisionHeading) {
+                      items.add(
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 4,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  color: themeColor,
+                                  borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              Text(
+                                division,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.bgSurface,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '${teamsInDiv.length}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: colors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    }
                     for (final team in teamsInDiv) {
                       items.add(
                         Padding(
@@ -255,8 +270,8 @@ class _TeamsTabState extends State<TeamsTab> {
                             onMemberTap: (userId, memberName) {
                               final targetId =
                                   (userId != null && userId.isNotEmpty)
-                                      ? userId
-                                      : team.userId;
+                                  ? userId
+                                  : team.userId;
                               if (targetId != null && targetId.isNotEmpty) {
                                 context.push('/user/$targetId');
                               } else {
@@ -279,7 +294,10 @@ class _TeamsTabState extends State<TeamsTab> {
                 },
                 childCount: sortedDivisions.fold<int>(
                   0,
-                  (sum, div) => sum + 1 + (grouped[div]?.length ?? 0),
+                  (sum, div) =>
+                      sum +
+                      (widget.showDivisionHeading ? 1 : 0) +
+                      (grouped[div]?.length ?? 0),
                 ),
               ),
             ),

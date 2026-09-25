@@ -356,7 +356,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               child: SizedBox(
                 height: 48,
                 child: FilledButton.icon(
-                  onPressed: canRegister ? () => context.push(registrationUri) : null,
+                  onPressed: canRegister
+                      ? () => context.push(registrationUri)
+                      : null,
                   icon: const Icon(Icons.how_to_reg_rounded, size: 18),
                   label: Text(
                     label,
@@ -811,19 +813,22 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               child: _buildLiteTeamList(teamsAsync.value ?? const []),
             )
           : (tournament.divisions.length > 1
-                ? Column(
-                    children: [
-                      _buildDivisionsSelectorList(tournament, colors),
-                      Expanded(
-                        child: TeamsTab(
-                          key: ValueKey('teams-$_selectedDivisionId'),
-                          teams: teamsAsync.value ?? const [],
-                          selectedDivision: _selectedDivision,
-                          selectedDivisionId: _selectedDivisionId,
-                          isTeamSport: isTeamSport,
-                        ),
+                ? SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 160),
+                    child: _buildDivisionsSelectorList(
+                      tournament,
+                      colors,
+                      selectedContentBuilder: (division) => TeamsTab(
+                        key: ValueKey('teams-inline-${division.id}'),
+                        teams: teamsAsync.value ?? const [],
+                        selectedDivision: division.name,
+                        selectedDivisionId: division.id,
+                        isTeamSport: isTeamSport,
+                        shrinkWrap: true,
+                        showDivisionHeading: false,
                       ),
-                    ],
+                    ),
                   )
                 : TeamsTab(
                     key: ValueKey('teams-$_selectedDivisionId'),
@@ -968,196 +973,135 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-  String _getBracketFormatLabel(
-    String? bracketType, [
-    String? fallbackBracketType,
-  ]) {
-    return BracketFormatIcons.getFormatLabel(
-      context,
-      bracketType,
-      fallbackBracketType,
-    );
-  }
-
-  /// Danh sách Phân hạng trực quan chuẩn Web & Taste Skill
+  /// Compact division rows with optional row-local content.
   Widget _buildDivisionsSelectorList(
     Tournament tournament,
-    AppColorsExtension colors,
-  ) {
-    final divCount = tournament.divisions.length;
+    AppColorsExtension colors, {
+    Widget Function(TournamentDivision division)? selectedContentBuilder,
+  }) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header NỘI DUNG THI ĐẤU
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Row(
-              children: [
-                Text(
-                  'NỘI DUNG THI ĐẤU',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: colors.textMuted,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.bgSurface,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: colors.border),
-                  ),
-                  child: Text(
-                    '$divCount',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textSecondary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ...tournament.divisions.map((div) {
+          ...List.generate(tournament.divisions.length, (index) {
+            final div = tournament.divisions[index];
             final isSelected = div.id == _selectedDivisionId;
             final maxP = div.maxParticipants ?? 0;
             final curP = div.participantCount;
+            final countLabel = maxP > 0 ? '$curP/$maxP' : '$curP';
             final isFull =
                 (maxP > 0 && curP >= maxP) ||
                 tournament.status.toLowerCase() == 'completed';
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 6),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppTheme.primary.withValues(alpha: 0.10)
-                    : colors.bgSurface,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: InkWell(
-                onTap: () {
-                  setState(() {
-                    _selectedDivisionId = div.id;
-                    _selectedDivision = div.name;
-                  });
-                },
-                borderRadius: BorderRadius.circular(10),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    children: [
-                      // Ô icon thể thức thi đấu (chuẩn Web)
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppTheme.primary
-                              : AppTheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isSelected
-                                ? AppTheme.primary
-                                : AppTheme.primary.withValues(alpha: 0.2),
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                MergeSemantics(
+                  child: Semantics(
+                    button: true,
+                    selected: isSelected,
+                    label: '${div.name}, $countLabel',
+                    child: InkWell(
+                      onTap: () {
+                        if (_selectedDivisionId == div.id) return;
+                        setState(() {
+                          _selectedDivisionId = div.id;
+                          _selectedDivision = div.name;
+                        });
+                      },
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 44),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 2,
+                            vertical: 4,
                           ),
-                        ),
-                        child: Center(
-                          child: BracketFormatIcons.getIcon(
-                            div.bracketType,
-                            fallbackBracketType: tournament.bracketType,
-                            size: 17,
-                            color: isSelected ? Colors.white : AppTheme.primary,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 3,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppTheme.primary
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              const SizedBox(width: 7),
+                              Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppTheme.primary.withValues(alpha: 0.12)
+                                      : colors.bgSurface,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Center(
+                                  child: BracketFormatIcons.getIcon(
+                                    div.bracketType,
+                                    fallbackBracketType: tournament.bracketType,
+                                    size: 15,
+                                    color: isSelected
+                                        ? AppTheme.primary
+                                        : colors.textMuted,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  div.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w800
+                                        : FontWeight.w600,
+                                    color: isSelected
+                                        ? AppTheme.primary
+                                        : colors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              if (isFull) ...[
+                                Icon(
+                                  Icons.check_circle_rounded,
+                                  size: 13,
+                                  color: colors.textMuted,
+                                ),
+                                const SizedBox(width: 7),
+                              ],
+                              Icon(
+                                Icons.people_alt_outlined,
+                                size: 13,
+                                color: colors.textMuted,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                countLabel,
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              div.name,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: isSelected
-                                    ? FontWeight.w800
-                                    : FontWeight.w600,
-                                color: isSelected
-                                    ? AppTheme.primary
-                                    : colors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              _getBracketFormatLabel(
-                                div.bracketType,
-                                tournament.bracketType,
-                              ),
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: isSelected
-                                    ? AppTheme.primary.withValues(alpha: 0.8)
-                                    : colors.textMuted,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      if (isFull) ...[
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: colors.bgSurface,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: colors.border.withValues(alpha: 0.8),
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.check_circle_rounded,
-                            size: 13,
-                            color: colors.textMuted,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.people_alt_outlined,
-                            size: 13,
-                            color: colors.textMuted,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            maxP > 0 ? '$curP/$maxP' : '$curP',
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+                if (isSelected && selectedContentBuilder != null)
+                  selectedContentBuilder(div),
+                if (index < tournament.divisions.length - 1)
+                  Divider(height: 1, thickness: 1, color: colors.border),
+              ],
             );
           }),
         ],
