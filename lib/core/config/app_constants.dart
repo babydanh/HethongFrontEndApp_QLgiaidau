@@ -30,11 +30,11 @@ class AppConstants {
   };
 
   static const Map<String, String> sportIcons = {
-    sportFootball: '⚽',
-    sportPickleball: 'assets/icons/pickleball.png',
-    sportBadminton: '🏸',
-    sportTennis: '🎾',
-    sportTableTennis: '🏓',
+    sportFootball: 'assets/icons/football.svg',
+    sportPickleball: 'assets/icons/pickleball.svg',
+    sportBadminton: 'assets/icons/badminton.svg',
+    sportTennis: 'assets/icons/tennis.svg',
+    sportTableTennis: 'assets/icons/ping-pong.svg',
   };
 
   // ─── Tag BQT (P2C.4/P2C.5) ───
