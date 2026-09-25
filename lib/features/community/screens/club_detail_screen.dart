@@ -26,8 +26,6 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
-import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
-import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/tag_assign_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/community_social_settings_sheet.dart';
@@ -494,13 +492,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             ),
           );
         },
-      ),
-      bottomNavigationBar: FloatingBottomNav(
-        currentIndex: 3,
-        onTabSelected: (index) {
-          if (index != 3) context.go('/home?tab=$index&returnToClub=1');
-        },
-        onMenuTap: () => AppMenuSheet.show(context),
       ),
     );
   }

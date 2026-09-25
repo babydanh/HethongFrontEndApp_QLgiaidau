@@ -646,9 +646,32 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ─── Club Detail (Both /club/:id and /communities/:id and /clubs/:id) ───
       GoRoute(
         path: '/club/:id',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
-          return ClubDetailScreen(clubId: id);
+          return CustomTransitionPage<void>(
+            key: state.pageKey,
+            fullscreenDialog: true,
+            opaque: false,
+            transitionDuration: const Duration(milliseconds: 350),
+            reverseTransitionDuration: const Duration(milliseconds: 260),
+            child: ClubDetailScreen(clubId: id),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 1),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                    reverseCurve: Curves.easeInCubic,
+                  ),
+                ),
+                child: RepaintBoundary(child: child),
+              );
+            },
+          );
         },
         routes: [
           GoRoute(

@@ -386,9 +386,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     double h = _headerHeight;
     if (_currentIndex == 3) {
       h += 44.0; // Explore sub-tabs (CLB / Social)
-      if (_exploreSubTabIndex == 0) {
-        h += 52.0; // Create-club action below the CLB sub-tab
-      }
     }
     return h;
   }
@@ -700,24 +697,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ],
                         ),
                       ),
-                    if (_currentIndex == 3 && _exploreSubTabIndex == 0)
-                      Container(
-                        color: context.colors.bgDark,
-                        padding: const EdgeInsets.fromLTRB(
-                          16.0,
-                          6.0,
-                          16.0,
-                          8.0,
-                        ),
-                        alignment: Alignment.centerRight,
-                        child: _buildCreateClubButton(),
-                      ),
                   ],
                 ),
               ),
             ),
           ],
         ),
+        floatingActionButton:
+        _currentIndex == 3 && _exploreSubTabIndex == 0
+            ? _buildCreateClubButton()
+            : null,
+
+        floatingActionButtonLocation:
+        FloatingActionButtonLocation.endFloat,
+
         bottomNavigationBar: FloatingBottomNav(
           currentIndex: _currentIndex,
           onTabSelected: _switchTab,
@@ -1126,38 +1119,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildCreateClubButton() {
-    return GestureDetector(
-      onTap: () {
+    return FloatingActionButton(
+      heroTag: 'create-club-fab',
+      mini: false,
+      tooltip: 'Tạo câu lạc bộ',
+      backgroundColor: AppTheme.primary,
+      foregroundColor: Colors.white,
+      elevation: 6,
+      shape: const CircleBorder(
+        side: BorderSide(
+          color: Colors.transparent,
+        ),
+      ),
+      onPressed: () {
         final auth = ref.read(authProvider);
+
         if (!auth.isAuthenticated) {
           context.push('/login');
         } else {
           context.push('/club-create');
         }
       },
-      child: Tooltip(
-        message: 'Tạo câu lạc bộ',
-        child: Container(
-          width: 38.0,
-          height: 38.0,
-          decoration: BoxDecoration(
-            color: const Color(0xFF60A5FA), // Vòng tròn màu xanh dương nhạt
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0xFFBFDBFE), // Border circle bên ngoài
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF3B82F6).withValues(alpha: 0.25),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          alignment: Alignment.center,
-          child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
-        ),
+      child: const Icon(
+        Icons.add_rounded,
+        size: 36,
       ),
     );
   }
@@ -1782,6 +1767,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ? ClubNetworkImage(
                           logoUrl,
                           fit: BoxFit.cover,
+                          cacheWidth:
+                              (44 * MediaQuery.devicePixelRatioOf(context))
+                                  .ceil(),
                           errorBuilder: (_, _, _) => Image.asset(
                             AppConstants.appIconPng,
                             fit: BoxFit.cover,

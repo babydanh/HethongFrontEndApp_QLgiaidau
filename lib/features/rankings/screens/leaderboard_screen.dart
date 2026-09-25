@@ -123,7 +123,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                   SizedBox(
                     height: widget.standalone
                         ? 20
-                        : (145 + (widget.isFilterExpanded ? 46 : 0)),
+                        : (100 + (widget.isFilterExpanded ? 46 : 0)),
                   ),
                   if (!isFootball) _buildGenderFilter(colors),
                   const SizedBox(height: 12),
