@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -17,6 +19,7 @@ import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_fin
 import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_add_participant_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_more_options_sheet.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.dart';
 
 class SocialDetailScreen extends ConsumerStatefulWidget {
@@ -425,6 +428,19 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
     if (_isHost) {
       return const SizedBox.shrink();
     }
+    final canJoin =
+        session.status == 'OPEN' &&
+        session.currentSlots < session.maxSlots &&
+        !session.isJoined;
+    final joinLabel = session.isJoined
+        ? 'Đã tham gia'
+        : session.status == 'CANCELLED'
+        ? 'Đã hủy'
+        : session.status == 'COMPLETED'
+        ? 'Đã kết thúc'
+        : canJoin
+        ? 'Yêu cầu tham gia'
+        : 'Đã đủ người';
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -480,7 +496,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
               child: SizedBox(
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: () => _handleRequestJoin(context, session),
+                  onPressed: canJoin
+                      ? () => _handleRequestJoin(context, session)
+                      : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     foregroundColor: Colors.white,
@@ -492,11 +510,11 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       ),
                     ),
                   ),
-                  child: const FittedBox(
+                  child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      'Yêu cầu tham gia',
-                      style: TextStyle(
+                      joinLabel,
+                      style: const TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w700,
                       ),
@@ -530,7 +548,7 @@ $timeLine
 $feeLine
 👥 ${session.currentParticipants}/${session.maxParticipants}
 
-RSVP: https://sporto.vn/social/${session.id}''';
+Link: ${session.shareUrl}''';
   }
 
   Future<void> _shareToClubChat(SocialSessionModel session) async {
@@ -593,16 +611,30 @@ RSVP: https://sporto.vn/social/${session.id}''';
   }
 
   void _handleRequestJoin(BuildContext context, SocialSessionModel session) {
+    if (ref.read(authProvider).status != AuthStatus.authenticated) {
+      context.push(
+        '/login?redirect=${Uri.encodeComponent('/social/${session.id}')}',
+      );
+      return;
+    }
     SocialJoinBottomSheet.show(context, session);
   }
 
-  void _handleShare(SocialSessionModel session) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Đã sao chép link chia sẻ buổi ${session.title}!'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+  Future<void> _handleShare(SocialSessionModel session) async {
+    try {
+      await SharePlus.instance.share(
+        ShareParams(text: session.shareUrl, subject: session.title),
+      );
+    } catch (_) {
+      await Clipboard.setData(ClipboardData(text: session.shareUrl));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã sao chép link chia sẻ buổi ${session.title}!'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _showMoreOptions(SocialSessionModel session) {

@@ -57,15 +57,14 @@ class SocialParticipantModel {
     String? skillLevel,
     bool? isHost,
     String? initials,
-  })  : userId = userId ?? id,
-        role = (isHost == true) ? 'HOST' : role,
-        fullName = fullName ?? name,
-        customSkillLevel = customSkillLevel ?? skillLevel;
+  }) : userId = userId ?? id,
+       role = (isHost == true) ? 'HOST' : role,
+       fullName = fullName ?? name,
+       customSkillLevel = customSkillLevel ?? skillLevel;
 
   /// Khách ngoài CLB: không có tài khoản, userId NULL ở backend,
   /// chỉ có guestName để đánh dấu slot đã có người.
-  bool get isGuest =>
-      guestName?.trim().isNotEmpty == true;
+  bool get isGuest => guestName?.trim().isNotEmpty == true;
 
   String get name {
     if (fullName?.trim().isNotEmpty == true) return fullName!.trim();
@@ -105,7 +104,8 @@ class SocialParticipantModel {
       parsedJoinedAt = DateTime.now();
     }
 
-    final participantRole = json['role']?.toString().toUpperCase() ??
+    final participantRole =
+        json['role']?.toString().toUpperCase() ??
         (json['isHost'] == true ? 'HOST' : 'PLAYER');
 
     final rawUserId = json['userId']?.toString();
@@ -122,7 +122,8 @@ class SocialParticipantModel {
           : null,
       role: participantRole,
       status: json['status']?.toString() ?? 'JOINED',
-      paymentStatus: json['paymentStatus']?.toString().toUpperCase() ?? 'UNPAID',
+      paymentStatus:
+          json['paymentStatus']?.toString().toUpperCase() ?? 'UNPAID',
       ticketCount: (json['ticketCount'] is num)
           ? (json['ticketCount'] as num).toInt()
           : 1,
@@ -249,13 +250,13 @@ class SocialChatMessageModel {
       parsedTime = DateTime.now();
     }
 
-    final sName = json['senderName']?.toString() ??
+    final sName =
+        json['senderName']?.toString() ??
         json['sender']?['fullName']?.toString() ??
         'Thành viên';
     String initials = json['senderInitials']?.toString() ?? '';
     if (initials.isEmpty) {
-      final parts =
-          sName.trim().split(' ').where((s) => s.isNotEmpty).toList();
+      final parts = sName.trim().split(' ').where((s) => s.isNotEmpty).toList();
       if (parts.length >= 2) {
         initials = '${parts.first[0]}${parts.last[0]}'.toUpperCase();
       } else if (parts.isNotEmpty) {
@@ -268,35 +269,37 @@ class SocialChatMessageModel {
     return SocialChatMessageModel(
       id: json['id']?.toString() ?? '',
       senderName: sName,
-      senderAvatar: json['senderAvatar']?.toString() ??
+      senderAvatar:
+          json['senderAvatar']?.toString() ??
           json['sender']?['avatarUrl']?.toString(),
       senderInitials: initials,
-      message:
-          json['message']?.toString() ?? json['content']?.toString() ?? '',
+      message: json['message']?.toString() ?? json['content']?.toString() ?? '',
       time: parsedTime,
       isHost: json['isHost'] == true,
       isMe: json['isMe'] == true,
       isSystem: json['isSystem'] == true,
       sharedSession: json['sharedSession'] is Map
           ? SocialSessionModel.fromJson(
-              (json['sharedSession'] as Map)
-                  .map((k, v) => MapEntry(k.toString(), v)))
+              (json['sharedSession'] as Map).map(
+                (k, v) => MapEntry(k.toString(), v),
+              ),
+            )
           : null,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'senderName': senderName,
-        if (senderAvatar != null) 'senderAvatar': senderAvatar,
-        'senderInitials': senderInitials,
-        'message': message,
-        'time': time.toIso8601String(),
-        'isHost': isHost,
-        'isMe': isMe,
-        'isSystem': isSystem,
-        if (sharedSession != null) 'sharedSession': sharedSession!.toJson(),
-      };
+    'id': id,
+    'senderName': senderName,
+    if (senderAvatar != null) 'senderAvatar': senderAvatar,
+    'senderInitials': senderInitials,
+    'message': message,
+    'time': time.toIso8601String(),
+    'isHost': isHost,
+    'isMe': isMe,
+    'isSystem': isSystem,
+    if (sharedSession != null) 'sharedSession': sharedSession!.toJson(),
+  };
 }
 
 class SocialPaymentModel {
@@ -349,6 +352,7 @@ class SocialPaymentModel {
 
 class SocialSessionModel {
   final String id;
+  final String? shortCode;
   final String? communityId;
   final String hostUserId;
   final String? categoryId;
@@ -386,6 +390,7 @@ class SocialSessionModel {
 
   const SocialSessionModel({
     required this.id,
+    this.shortCode,
     this.communityId,
     required this.hostUserId,
     this.categoryId,
@@ -422,6 +427,9 @@ class SocialSessionModel {
 
   // Backward compatibility getters for UI
   String? get clubId => communityId ?? community?.id;
+  String get shareUrl => shortCode != null && shortCode!.isNotEmpty
+      ? 'https://sporto.asia/s/$shortCode'
+      : 'https://sporto.asia/social/$id';
   String get creatorId => hostUserId;
   double get distanceKm => 0.0; // Ignored as per user instruction
   String get hostClubName =>
@@ -509,11 +517,13 @@ class SocialSessionModel {
     final rawParticipants = json['participants'];
     final participantsList = (rawParticipants is List)
         ? rawParticipants
-            .whereType<Map>()
-            .map((p) => SocialParticipantModel.fromJson(
+              .whereType<Map>()
+              .map(
+                (p) => SocialParticipantModel.fromJson(
                   p.map((k, v) => MapEntry(k.toString(), v)),
-                ))
-            .toList()
+                ),
+              )
+              .toList()
         : <SocialParticipantModel>[];
 
     final rawCommunity = json['community'];
@@ -544,16 +554,17 @@ class SocialSessionModel {
     final durationMin = (json['durationMinutes'] is num)
         ? (json['durationMinutes'] as num).toInt()
         : ((json['durationHours'] is num)
-            ? ((json['durationHours'] as num) * 60).toInt()
-            : 120);
+              ? ((json['durationHours'] as num) * 60).toInt()
+              : 120);
 
     return SocialSessionModel(
       id: json['id']?.toString() ?? '',
-      communityId: json['communityId']?.toString() ??
+      shortCode: json['shortCode']?.toString(),
+      communityId:
+          json['communityId']?.toString() ??
           (rawCommunity is Map ? rawCommunity['id']?.toString() : null),
-      hostUserId: json['hostUserId']?.toString() ??
-          json['creatorId']?.toString() ??
-          '',
+      hostUserId:
+          json['hostUserId']?.toString() ?? json['creatorId']?.toString() ?? '',
       categoryId: json['categoryId']?.toString(),
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? json['notes']?.toString(),
@@ -566,23 +577,25 @@ class SocialSessionModel {
       maxSlots: (json['maxSlots'] is num)
           ? (json['maxSlots'] as num).toInt()
           : ((json['maxParticipants'] is num)
-              ? (json['maxParticipants'] as num).toInt()
-              : 6),
+                ? (json['maxParticipants'] as num).toInt()
+                : 6),
       currentSlots: (json['currentSlots'] is num)
           ? (json['currentSlots'] as num).toInt()
           : ((json['currentParticipants'] is num)
-              ? (json['currentParticipants'] as num).toInt()
-              : participantsList.length),
+                ? (json['currentParticipants'] as num).toInt()
+                : participantsList.length),
       feePerSlot: (json['feePerSlot'] is num)
           ? (json['feePerSlot'] as num).toInt()
           : ((json['pricePerSlot'] is num)
-              ? (json['pricePerSlot'] as num).toInt()
-              : 0),
-      levelRequirement: json['levelRequirement']?.toString() ??
+                ? (json['pricePerSlot'] as num).toInt()
+                : 0),
+      levelRequirement:
+          json['levelRequirement']?.toString() ??
           json['skillLevel']?.toString() ??
           'ALL',
       visibility: json['visibility']?.toString() ?? 'PUBLIC',
-      contactPhone: json['contactPhone']?.toString() ??
+      contactPhone:
+          json['contactPhone']?.toString() ??
           json['hostPhone']?.toString() ??
           json['hostZalo']?.toString(),
       zaloGroupUrl: json['zaloGroupUrl']?.toString(),
@@ -608,17 +621,20 @@ class SocialSessionModel {
       chatRoomId: json['chatRoomId']?.toString(),
       chatMessages: (json['chatMessages'] ?? json['messages']) is List
           ? ((json['chatMessages'] ?? json['messages']) as List)
-              .whereType<Map>()
-              .map((m) => SocialChatMessageModel.fromJson(
+                .whereType<Map>()
+                .map(
+                  (m) => SocialChatMessageModel.fromJson(
                     m.map((k, v) => MapEntry(k.toString(), v)),
-                  ))
-              .toList()
+                  ),
+                )
+                .toList()
           : const [],
     );
   }
 
   Map<String, dynamic> toJson() => {
     'id': id,
+    if (shortCode != null) 'shortCode': shortCode,
     if (communityId != null) 'communityId': communityId,
     'hostUserId': hostUserId,
     if (categoryId != null) 'categoryId': categoryId,
@@ -652,6 +668,7 @@ class SocialSessionModel {
 
   SocialSessionModel copyWith({
     String? id,
+    String? shortCode,
     String? communityId,
     String? hostUserId,
     String? categoryId,
@@ -687,6 +704,7 @@ class SocialSessionModel {
   }) {
     return SocialSessionModel(
       id: id ?? this.id,
+      shortCode: shortCode ?? this.shortCode,
       communityId: communityId ?? this.communityId,
       hostUserId: hostUserId ?? this.hostUserId,
       categoryId: categoryId ?? this.categoryId,
@@ -837,11 +855,13 @@ class SocialSessionListResponse {
     final rawItems = json['items'] ?? json['data'];
     final itemsList = (rawItems is List)
         ? rawItems
-            .whereType<Map>()
-            .map((item) => SocialSessionModel.fromJson(
+              .whereType<Map>()
+              .map(
+                (item) => SocialSessionModel.fromJson(
                   item.map((k, v) => MapEntry(k.toString(), v)),
-                ))
-            .toList()
+                ),
+              )
+              .toList()
         : <SocialSessionModel>[];
 
     final meta = json['meta'] is Map ? json['meta'] as Map : {};
@@ -849,7 +869,9 @@ class SocialSessionListResponse {
       items: itemsList,
       page: (meta['page'] is num) ? (meta['page'] as num).toInt() : 1,
       limit: (meta['limit'] is num) ? (meta['limit'] as num).toInt() : 20,
-      total: (meta['total'] is num) ? (meta['total'] as num).toInt() : itemsList.length,
+      total: (meta['total'] is num)
+          ? (meta['total'] as num).toInt()
+          : itemsList.length,
     );
   }
 }
@@ -871,11 +893,13 @@ class BatchAddParticipantsResponse {
     final rawAdded = json['added'];
     final addedList = (rawAdded is List)
         ? rawAdded
-            .whereType<Map>()
-            .map((p) => SocialParticipantModel.fromJson(
+              .whereType<Map>()
+              .map(
+                (p) => SocialParticipantModel.fromJson(
                   p.map((k, v) => MapEntry(k.toString(), v)),
-                ))
-            .toList()
+                ),
+              )
+              .toList()
         : <SocialParticipantModel>[];
     final rawSkipped = json['skipped'];
     final skippedList = (rawSkipped is List)

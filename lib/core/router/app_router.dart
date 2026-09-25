@@ -130,6 +130,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           !currentPath.startsWith('/chat') &&
           !currentPath.startsWith('/user') &&
           !currentPath.startsWith('/series') &&
+          !currentPath.startsWith('/social/') &&
           !currentPath.startsWith('/rankings') &&
           !isPublicRegistrationRoute) {
         return '/home';
@@ -1163,14 +1164,14 @@ CustomTransitionPage<void> _fbClubDetailPage({
     fullscreenDialog: false,
     child: child,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final slide =
-          Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(
-        CurvedAnimation(
-          parent: animation,
-          curve: _fbCurve,
-          reverseCurve: _fbCurve,
-        ),
-      );
+      final slide = Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+          .animate(
+            CurvedAnimation(
+              parent: animation,
+              curve: _fbCurve,
+              reverseCurve: _fbCurve,
+            ),
+          );
       return SlideTransition(
         position: slide,
         child: DecoratedBox(

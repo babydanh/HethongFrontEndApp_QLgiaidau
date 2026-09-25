@@ -43,7 +43,7 @@ class SocialFindPlayersSheet extends StatelessWidget {
 ⏰ ${session.dayOfWeek}, ngày ${session.dayOfMonth.toString().padLeft(2, '0')} Th${session.dateTime.month.toString().padLeft(2, '0')} lúc ${session.timeSlot}
 📍 ${session.venueName}
 
-RSVP: https://sporto.vn/social/${session.id}''';
+Link: ${session.shareUrl}''';
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -127,7 +127,7 @@ RSVP: https://sporto.vn/social/${session.id}''';
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'RSVP: https://sporto.vn/social/${session.id}',
+                      'Link: ${session.shareUrl}',
                       style: TextStyle(
                         fontSize: 13,
                         color: colors.textSecondary,

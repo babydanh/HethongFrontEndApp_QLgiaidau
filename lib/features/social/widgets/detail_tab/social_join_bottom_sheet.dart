@@ -306,7 +306,11 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: (_remainingSlots > 0 && !_isSubmitting)
+                  onPressed:
+                      (_remainingSlots > 0 &&
+                          widget.session.status == 'OPEN' &&
+                          !widget.session.isJoined &&
+                          !_isSubmitting)
                       ? _handleConfirmJoin
                       : null,
                   style: ElevatedButton.styleFrom(
