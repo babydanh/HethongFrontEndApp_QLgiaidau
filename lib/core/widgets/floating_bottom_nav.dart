@@ -5,16 +5,16 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 class FloatingBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTabSelected;
-  final VoidCallback onProfileTap;
+  final VoidCallback onMenuTap;
 
   const FloatingBottomNav({
     super.key,
     required this.currentIndex,
     required this.onTabSelected,
-    required this.onProfileTap,
+    required this.onMenuTap,
   });
 
-  static const int _profileIndex = 2;
+  static const int _menuIndex = 2;
 
   @override
   Widget build(BuildContext context) {
@@ -58,10 +58,10 @@ class FloatingBottomNav extends StatelessWidget {
         label: l10n.navRankings,
       ),
       _NavTabData(
-        internalIndex: _profileIndex,
-        icon: Icons.person_outline_rounded,
-        activeIcon: Icons.person_rounded,
-        label: l10n.navProfile,
+        internalIndex: _menuIndex,
+        icon: Icons.menu_rounded,
+        activeIcon: Icons.menu_open_rounded,
+        label: l10n.menuTitle,
       ),
     ];
 
@@ -91,8 +91,8 @@ class FloatingBottomNav extends StatelessWidget {
                     isSelected: currentIndex == tab.internalIndex,
                     activeColor: activeColor,
                     inactiveColor: inactiveColor,
-                    onTap: () => tab.internalIndex == _profileIndex
-                        ? onProfileTap()
+                    onTap: () => tab.internalIndex == _menuIndex
+                        ? onMenuTap()
                         : onTabSelected(tab.internalIndex),
                   ),
                 ),

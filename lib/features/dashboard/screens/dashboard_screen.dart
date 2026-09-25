@@ -1513,7 +1513,7 @@ class _TournamentTile extends StatelessWidget {
           if (isClubLite) {
             context.push('/lite-manage/${tournament.id}');
           } else {
-            context.push('/organizer/tournaments/${tournament.id}/ops');
+            context.push('/organizer/tournaments/${tournament.id}/manage');
           }
         } else {
           context.push('/intro/${tournament.id}');

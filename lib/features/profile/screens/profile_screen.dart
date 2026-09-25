@@ -23,6 +23,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 
@@ -314,8 +315,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
       bottomNavigationBar: FloatingBottomNav(
         currentIndex: 2,
-        onTabSelected: _selectBottomTab,
-        onProfileTap: () {},
+        onTabSelected: (index) {
+          if (index != 2) context.go('/home?tab=$index');
+        },
+        onMenuTap: () => AppMenuSheet.show(context),
       ),
     );
   }
@@ -412,8 +415,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
       bottomNavigationBar: FloatingBottomNav(
         currentIndex: 2,
-        onTabSelected: _selectBottomTab,
-        onProfileTap: () {},
+        onTabSelected: (index) {
+          if (index != 2) context.go('/home?tab=$index');
+        },
+        onMenuTap: () => AppMenuSheet.show(context),
       ),
     );
   }
@@ -1986,10 +1991,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             if (t.isClubLite) {
               context.push('/lite-manage/${t.id}');
             } else {
-              // The dispatcher resolves configured Lite/Quick and Advanced
-              // from the server instead of assuming every non-Super-Lite
-              // tournament is unsupported in the app.
-              context.push('/organizer/tournaments/${t.id}/ops');
+              context.push('/organizer/tournaments/${t.id}/manage');
             }
           } else {
             context.push('/intro/${t.id}');

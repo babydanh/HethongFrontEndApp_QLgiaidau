@@ -276,7 +276,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'tournament/:id',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
-              return TournamentManagementDispatcher(tournamentId: id);
+              return TournamentManagementDispatcher(
+                tournamentId: id,
+                actionRouteBase: '/admin/tournament/$id',
+                opsWorkspaceRoute: '/organizer/tournaments/$id/ops',
+                liteWorkspaceRoute: '/lite-manage/$id?workspace=1',
+              );
             },
             routes: [
               GoRoute(
@@ -416,6 +421,75 @@ final routerProvider = Provider<GoRouter>((ref) {
               return LiveScoreScreen(
                 tournamentId: tournamentId,
                 matchId: matchId,
+              );
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/organizer/tournaments/:id/manage',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return TournamentManagementDispatcher(
+            tournamentId: id,
+            actionRouteBase: '/organizer/tournaments/$id/manage',
+            opsWorkspaceRoute: '/organizer/tournaments/$id/ops',
+            liteWorkspaceRoute: '/lite-manage/$id?workspace=1',
+          );
+        },
+        routes: [
+          GoRoute(
+            path: 'teams',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return TeamListScreen(
+                tournamentId: id,
+                managementRouteBase: '/organizer/tournaments/$id/manage',
+              );
+            },
+            routes: [
+              GoRoute(
+                path: 'add',
+                builder: (context, state) =>
+                    AddTeamScreen(tournamentId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: 'edit',
+                builder: (context, state) => AddTeamScreen(
+                  tournamentId: state.pathParameters['id']!,
+                  teamToEdit: state.extra as Team?,
+                ),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: 'tokens',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return TokenManagementScreen(
+                tournamentId: id,
+                managementRouteBase: '/organizer/tournaments/$id/manage',
+              );
+            },
+          ),
+          GoRoute(
+            path: 'draw',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return AutoDrawScreen(
+                tournamentId: id,
+                managementRouteBase: '/organizer/tournaments/$id/manage',
+              );
+            },
+          ),
+          GoRoute(
+            path: 'bracket',
+            builder: (context, state) {
+              final tournamentId = state.pathParameters['id']!;
+              return BracketViewScreen(
+                tournamentId: tournamentId,
+                divisionId: state.uri.queryParameters['divisionId'],
+                canEditBracket: true,
               );
             },
           ),
@@ -938,14 +1012,26 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/lite-manage/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return TournamentManagementDispatcher(tournamentId: id);
+          return TournamentManagementDispatcher(
+            tournamentId: id,
+            actionRouteBase: '/organizer/tournaments/$id/manage',
+            opsWorkspaceRoute: '/organizer/tournaments/$id/ops',
+            liteWorkspaceRoute: '/lite-manage/$id?workspace=1',
+            showLiteWorkspace: state.uri.queryParameters['workspace'] == '1',
+          );
         },
       ),
       GoRoute(
         path: '/lite/tournaments/:id/manage',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return TournamentManagementDispatcher(tournamentId: id);
+          return TournamentManagementDispatcher(
+            tournamentId: id,
+            actionRouteBase: '/organizer/tournaments/$id/manage',
+            opsWorkspaceRoute: '/organizer/tournaments/$id/ops',
+            liteWorkspaceRoute: '/lite/tournaments/$id/manage?workspace=1',
+            showLiteWorkspace: state.uri.queryParameters['workspace'] == '1',
+          );
         },
       ),
 

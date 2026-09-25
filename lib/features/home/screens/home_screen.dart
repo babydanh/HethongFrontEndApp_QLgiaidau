@@ -11,7 +11,6 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/notification_provider.dart';
-import 'package:app_quanly_giaidau/providers/regions_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
@@ -20,19 +19,18 @@ import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_ban
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
-import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
-import 'package:app_quanly_giaidau/features/rankings/screens/province_selection_screen.dart';
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/social/screens/social_list_view.dart';
 
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/home/widgets/global_search_screen.dart';
 
 // ═══════════════════════════════════════════════════════
 //  WAVE HEADER PAINTER
@@ -64,7 +62,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     4: TextEditingController(),
   };
   final FocusNode _searchFocusNode = FocusNode();
-  Timer? _searchDebounceTimer;
 
   TextEditingController get _activeSearchController =>
       _searchControllers[_currentIndex] ?? _searchControllers[0]!;
@@ -129,24 +126,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  String _exploreContent = 'all';
-  String _exploreBracket = 'all';
-  String _exploreRanked = 'all';
+  final String _exploreContent = 'all';
+  final String _exploreBracket = 'all';
+  final String _exploreRanked = 'all';
   String _tournamentSport = 'all';
   String _tournamentStatus = 'all';
   String _clubSport = 'all';
   String? _clubProvinceCode;
   String _rankingsSport = 'all';
-  String? _rankingsProvince;
-  bool _isRankingsFilterExpanded = false;
-  String _tournamentContent = 'all';
-  String _tournamentBracket = 'all';
-  String _tournamentRanked = 'all';
-  String _tournamentProvince = ''; // tên tỉnh — để so khớp locationAddress
-  String _tournamentProvinceCode = ''; // mã tỉnh — để tải phường/xã
-  String _tournamentWard = ''; // tên phường/xã
-  DateTime? _tournamentStartDate;
-  DateTime? _tournamentEndDate;
 
   // ─── Server-side Cursor Pagination states (Tab 1: Giải đấu) ───
   final List<Tournament> _serverTournamentsList = [];
@@ -232,13 +219,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         sport: _tournamentSport,
         status: _tournamentStatus,
         search: _searchQueries[1]?.trim(),
-        content: _tournamentContent,
-        bracket: _tournamentBracket,
-        ranked: _tournamentRanked,
-        province: _tournamentProvince.isNotEmpty ? _tournamentProvince : null,
-        ward: _tournamentWard.isNotEmpty ? _tournamentWard : null,
-        startDate: _tournamentStartDate,
-        endDate: _tournamentEndDate,
+        content: 'all',
+        bracket: 'all',
+        ranked: 'all',
       );
 
       if (mounted && requestVersion == _tournamentRequestVersion) {
@@ -459,7 +442,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   void dispose() {
-    _searchDebounceTimer?.cancel();
     _carouselTimer?.cancel();
     _carouselController?.dispose();
     _scrollController.dispose();
@@ -497,19 +479,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  void _submitSearch() {
+  Future<void> _showGlobalSearchScreen({
+    bool showFiltersInitially = false,
+  }) async {
     _searchFocusNode.unfocus();
-    if (_currentIndex == 1) {
-      _resetTournamentCursorPagination();
-    } else if (_currentIndex == 3) {
-      _resetClubCursorPagination();
-    }
+    await GlobalSearchScreen.show(
+      context: context,
+      initialTabIndex: _currentIndex,
+      initialQuery: _searchQueries[_currentIndex] ?? '',
+      showFiltersInitially: showFiltersInitially,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    ref.watch(categoriesProvider);
     final tournamentsAsync = _currentIndex == 0
         ? ref.watch(tournamentsProvider)
         : null;
@@ -573,46 +557,62 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 // Left: Sport filter dropdown
                                 Align(
                                   alignment: Alignment.centerLeft,
-                                  child: Builder(
-                                    builder: (anchorContext) => GestureDetector(
-                                      onTap: () =>
-                                          _openSportMenu(anchorContext, l10n),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
+                                  child: PopupMenuButton<String>(
+                                    onSelected: _setActiveSportFilter,
+                                    offset: const Offset(0, 40),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    color: context.colors.bgSurface,
+                                    elevation: 8,
+                                    itemBuilder: (context) => [
+                                      if (_currentIndex != 4)
+                                        _buildPopupMenuItem(
+                                          l10n.filterAll,
+                                          'all',
                                         ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.16,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              _activeSportFilter == 'all'
-                                                  ? l10n.filterAll
-                                                  : AppConstants
-                                                            .sportNames[_activeSportFilter] ??
-                                                        _activeSportFilter,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: 14,
-                                              ),
+                                      ..._activeSportFilterItems(l10n)
+                                          .where((item) => item.$1 != 'all')
+                                          .map(
+                                            (item) => _buildPopupMenuItem(
+                                              item.$2,
+                                              item.$1,
                                             ),
-                                            const SizedBox(width: 4),
-                                            const Icon(
-                                              Icons.keyboard_arrow_down_rounded,
+                                          ),
+                                    ],
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.16,
+                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            _activeSportFilter == 'all'
+                                                ? l10n.filterAll
+                                                : AppConstants
+                                                          .sportNames[_activeSportFilter] ??
+                                                      _activeSportFilter,
+                                            style: const TextStyle(
                                               color: Colors.white,
-                                              size: 18,
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 14,
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          const Icon(
+                                            Icons.keyboard_arrow_down_rounded,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
@@ -719,11 +719,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ],
                                   )
                                 : _buildSearchBar(),
-                            if (_currentIndex == 4 &&
-                                _isRankingsFilterExpanded) ...[
-                              const SizedBox(height: 8),
-                              _buildRankingsProvinceFilterChip(context),
-                            ],
                           ],
                         ),
                       ),
@@ -736,9 +731,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         bottomNavigationBar: FloatingBottomNav(
           currentIndex: _currentIndex,
           onTabSelected: _switchTab,
-          onProfileTap: () => widget.returnToClub
-              ? context.push('/profile?returnToClub=2')
-              : context.go('/profile'),
+          onMenuTap: () => AppMenuSheet.show(context),
         ),
       ),
     );
@@ -773,8 +766,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: LeaderboardScreen(
             selectedSport: _rankingsSport,
             searchQuery: _searchQueries[4] ?? '',
-            provinceCode: _rankingsProvince,
-            isFilterExpanded: _isRankingsFilterExpanded,
+            provinceCode: null,
+            isFilterExpanded: false,
           ),
         );
     }
@@ -979,31 +972,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         GestureDetector(
-          onTap: () {
-            final auth = ref.read(authProvider);
-            if (!auth.isAuthenticated) {
-              context.push('/login');
-            } else {
-              context.push('/chat');
-            }
-          },
-          child: Container(
-            width: 36.0,
-            height: 36.0,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.16),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: const Icon(
-              Icons.forum_outlined,
-              color: Colors.white,
-              size: 19,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        GestureDetector(
           onTap: () => context.push("/notifications"),
           child: Container(
             width: 36.0,
@@ -1178,57 +1146,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     };
   }
 
-  int _activeFilterCountForTab() {
-    switch (_currentIndex) {
-      case 0:
-        return (_exploreSport != 'all' ? 1 : 0) +
-            (_exploreStatus != 'all' ? 1 : 0) +
-            (_exploreContent != 'all' ? 1 : 0) +
-            (_exploreBracket != 'all' ? 1 : 0) +
-            (_exploreRanked != 'all' ? 1 : 0);
-      case 1:
-        return (_tournamentSport != 'all' ? 1 : 0) +
-            (_tournamentStatus != 'all' ? 1 : 0) +
-            (_tournamentContent != 'all' ? 1 : 0) +
-            (_tournamentBracket != 'all' ? 1 : 0) +
-            (_tournamentRanked != 'all' ? 1 : 0) +
-            (_tournamentProvinceCode.isNotEmpty ? 1 : 0) +
-            (_tournamentStartDate != null ? 1 : 0) +
-            (_tournamentEndDate != null ? 1 : 0);
-      case 3:
-        return (_clubSport != 'all' ? 1 : 0) +
-            (_clubProvinceCode != null ? 1 : 0);
-      case 4:
-        return (_rankingsSport != 'all' ? 1 : 0) +
-            (_rankingsProvince != null ? 1 : 0);
-      default:
-        return 0;
-    }
-  }
-
   Widget _buildSearchBar() {
-    final filterCount = _activeFilterCountForTab();
+    final l10n = AppLocalizations.of(context)!;
     return SportoSearchBar(
       controller: _activeSearchController,
       focusNode: _searchFocusNode,
       hintText: _searchHintForTab(),
-      filterCount: filterCount,
-      onChanged: (v) {
-        _searchDebounceTimer?.cancel();
-        _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
-          if (mounted) {
-            setState(() => _searchQueries[_currentIndex] = v);
-            if (_currentIndex == 1) {
-              _resetTournamentCursorPagination();
-            } else if (_currentIndex == 3) {
-              _resetClubCursorPagination();
-            }
-          }
-        });
-      },
-      onSubmitted: (_) => _submitSearch(),
+      clearTooltip: l10n.homeGlobalSearchClear,
+      filterTooltip: l10n.homeGlobalSearchAdvancedFilters,
+      readOnly: true,
+      onTap: () => _showGlobalSearchScreen(),
       onClear: () {
-        _searchDebounceTimer?.cancel();
         setState(() => _searchQueries[_currentIndex] = '');
         if (_currentIndex == 1) {
           _resetTournamentCursorPagination();
@@ -1236,7 +1164,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           _resetClubCursorPagination();
         }
       },
-      onFilterTap: _showActiveFilterSheet,
+      onFilterTap: () => _showGlobalSearchScreen(showFiltersInitially: true),
     );
   }
 
@@ -1274,968 +1202,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
         ),
       ),
-    );
-  }
-
-  Future<void> _showActiveFilterSheet() async {
-    if (_currentIndex != 4 && !await _ensureSportCategories()) return;
-    switch (_currentIndex) {
-      case 0:
-        _showExploreFilterSheet();
-        break;
-      case 1:
-        _showTournamentFilterSheet();
-        break;
-      case 3:
-        _showClubFilterSheet();
-        break;
-      case 4:
-        setState(() {
-          _isRankingsFilterExpanded = !_isRankingsFilterExpanded;
-        });
-        break;
-    }
-  }
-
-  void _showExploreFilterSheet() {
-    final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: context.colors.bgSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        String localSport = _exploreSport;
-        String localStatus = _exploreStatus;
-        String localContent = _exploreContent;
-        String localBracket = _exploreBracket;
-        String localRanked = _exploreRanked;
-        return StatefulBuilder(
-          builder: (ctx, setSheetState) => Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(ctx).size.height * 0.86,
-            ),
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 20,
-                bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.homeExploreFilterTitle,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: context.colors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    l10n.filterSport,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildFilterChips(
-                    items: _activeSportFilterItems(l10n),
-                    selected: localSport,
-                    onSelected: (v) => setSheetState(() => localSport = v),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.filterStatus,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildFilterChips(
-                    items: [
-                      ('all', l10n.filterAll),
-                      ('live', l10n.homeLiveStatus),
-                      ('scheduled', l10n.matchesFilterScheduled),
-                      ('completed', l10n.homeCompletedStatus),
-                    ],
-                    selected: localStatus,
-                    onSelected: (v) => setSheetState(() => localStatus = v),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildExploreFilterGroup(
-                    context,
-                    title: l10n.filterContent,
-                    items: [
-                      ('all', l10n.filterAll),
-                      ('SINGLE_MALE', l10n.singlesMale),
-                      ('SINGLE_FEMALE', l10n.singlesFemale),
-                      ('DOUBLE_MALE', l10n.doublesMale),
-                      ('DOUBLE_FEMALE', l10n.doublesFemale),
-                      ('DOUBLE_MIXED', l10n.doublesMixed),
-                    ],
-                    selected: localContent,
-                    onSelected: (v) => setSheetState(() => localContent = v),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildExploreFilterGroup(
-                    context,
-                    title: l10n.filterFormat,
-                    items: [
-                      ('all', l10n.filterAll),
-                      ('SINGLE_ELIMINATION', l10n.eliminationSingle),
-                      ('DOUBLE_ELIMINATION', l10n.eliminationDouble),
-                      ('ROUND_ROBIN', l10n.roundRobin),
-                      ('GROUP_STAGE_KNOCKOUT', l10n.groupStage),
-                    ],
-                    selected: localBracket,
-                    onSelected: (v) => setSheetState(() => localBracket = v),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildExploreFilterGroup(
-                    context,
-                    title: l10n.homeRankingFilter,
-                    items: [
-                      ('all', l10n.filterAll),
-                      ('ranked', l10n.homeRankedYes),
-                      ('unranked', l10n.homeRankedNo),
-                    ],
-                    selected: localRanked,
-                    onSelected: (v) => setSheetState(() => localRanked = v),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            setSheetState(() {
-                              localSport = 'all';
-                              localStatus = 'all';
-                              localContent = 'all';
-                              localBracket = 'all';
-                              localRanked = 'all';
-                            });
-                          },
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: context.colors.textSecondary,
-                            side: BorderSide(color: context.colors.border),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: Text(
-                            l10n.filterReset,
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: () {
-                            setState(() {
-                              _exploreSport = localSport;
-                              _exploreStatus = localStatus;
-                              _exploreContent = localContent;
-                              _exploreBracket = localBracket;
-                              _exploreRanked = localRanked;
-                            });
-                            Navigator.pop(ctx);
-                          },
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppTheme.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: Text(
-                            l10n.filterApply,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildExploreFilterGroup(
-    BuildContext context, {
-    required String title,
-    required List<(String, String)> items,
-    required String selected,
-    required ValueChanged<String> onSelected,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: context.colors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        _buildFilterChips(
-          items: items,
-          selected: selected,
-          onSelected: onSelected,
-        ),
-      ],
-    );
-  }
-
-  void _showTournamentFilterSheet() {
-    final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: context.colors.bgSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        String localSport = _tournamentSport;
-        String localStatus = _tournamentStatus;
-        String localContent = _tournamentContent;
-        String localBracket = _tournamentBracket;
-        String localRanked = _tournamentRanked;
-        String localProvince = _tournamentProvince;
-        String localProvinceCode = _tournamentProvinceCode;
-        String localWard = _tournamentWard;
-        DateTime? localStartDate = _tournamentStartDate;
-        DateTime? localEndDate = _tournamentEndDate;
-        return StatefulBuilder(
-          builder: (ctx, setSheetState) => Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(ctx).size.height * 0.85,
-            ),
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 20,
-                bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.homeTournamentFilterTitle,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: context.colors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    l10n.filterSport,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildFilterChips(
-                    items: _activeSportFilterItems(l10n),
-                    selected: localSport,
-                    onSelected: (v) => setSheetState(() => localSport = v),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.filterStatus,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildFilterChips(
-                    items: [
-                      ('all', l10n.filterAll),
-                      ('registration', l10n.matchesFilterRegistration),
-                      ('upcoming', l10n.matchesFilterScheduled),
-                      ('in_progress', l10n.homeInProgressStatus),
-                      ('completed', l10n.matchesStatusCompleted),
-                    ],
-                    selected: localStatus,
-                    onSelected: (v) => setSheetState(() => localStatus = v),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.homeCompetitionContent,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildFilterChips(
-                    items: [
-                      ('all', l10n.filterAll),
-                      ('SINGLE_MALE', l10n.singlesMale),
-                      ('SINGLE_FEMALE', l10n.singlesFemale),
-                      ('DOUBLE_MALE', l10n.doublesMale),
-                      ('DOUBLE_FEMALE', l10n.doublesFemale),
-                      ('DOUBLE_MIXED', l10n.doublesMixed),
-                    ],
-                    selected: localContent,
-                    onSelected: (v) => setSheetState(() => localContent = v),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.filterFormat,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildFilterChips(
-                    items: [
-                      ('all', l10n.filterAll),
-                      ('single_elimination', l10n.eliminationSingle),
-                      ('double_elimination', l10n.homeFormatDoubleElimination),
-                      ('round_robin', l10n.roundRobin),
-                      (
-                        'group_stage_knockout',
-                        l10n.homeFormatGroupStagePlayoff,
-                      ),
-                    ],
-                    selected: localBracket,
-                    onSelected: (v) => setSheetState(() => localBracket = v),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.filterScoring,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildFilterChips(
-                    items: [
-                      ('all', l10n.filterAll),
-                      ('ranked', l10n.rankedELO),
-                      ('unranked', l10n.unranked),
-                    ],
-                    selected: localRanked,
-                    onSelected: (v) => setSheetState(() => localRanked = v),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.filterLocation,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.homeLocationProvince,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textMuted,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: context.colors.bgCard,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: context.colors.border),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: localProvinceCode.isEmpty
-                            ? null
-                            : localProvinceCode,
-                        isExpanded: true,
-                        hint: Text(
-                          l10n.filterAll,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: context.colors.textSecondary,
-                          ),
-                        ),
-                        icon: Icon(
-                          Icons.arrow_drop_down_rounded,
-                          color: context.colors.textMuted,
-                        ),
-                        dropdownColor: context.colors.bgCard,
-                        items: [
-                          DropdownMenuItem<String>(
-                            value: '',
-                            child: Text(
-                              l10n.filterAll,
-                              style: TextStyle(
-                                color: context.colors.textSecondary,
-                              ),
-                            ),
-                          ),
-                          ...ProvinceData.all.map(
-                            (p) => DropdownMenuItem<String>(
-                              value: p.code,
-                              child: Text(
-                                p.name,
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                            ),
-                          ),
-                        ],
-                        onChanged: (v) => setSheetState(() {
-                          localProvinceCode = v ?? '';
-                          localProvince = ProvinceData.all
-                              .firstWhere(
-                                (p) => p.code == localProvinceCode,
-                                orElse: () => ProvinceData(
-                                  code: localProvinceCode,
-                                  name: '',
-                                ),
-                              )
-                              .name;
-                          localWard = '';
-                        }),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.homeLocationWard,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textMuted,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final wards = ref.watch(wardsProvider(localProvinceCode));
-                      final wardsList = wards.value ?? const [];
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: context.colors.bgCard,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: context.colors.border),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: localWard.isEmpty ? null : localWard,
-                            isExpanded: true,
-                            hint: Text(
-                              localProvinceCode.isEmpty
-                                  ? l10n.homeSelectProvinceFirst
-                                  : l10n.filterAll,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: context.colors.textSecondary,
-                              ),
-                            ),
-                            icon: Icon(
-                              Icons.arrow_drop_down_rounded,
-                              color: context.colors.textMuted,
-                            ),
-                            dropdownColor: context.colors.bgCard,
-                            items: [
-                              DropdownMenuItem<String>(
-                                value: '',
-                                child: Text(
-                                  l10n.filterAll,
-                                  style: TextStyle(
-                                    color: context.colors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                              ...wardsList.map(
-                                (ward) => DropdownMenuItem<String>(
-                                  value: ward.name,
-                                  child: Text(
-                                    ward.name,
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                ),
-                              ),
-                            ],
-                            onChanged: localProvinceCode.isEmpty
-                                ? null
-                                : (v) =>
-                                      setSheetState(() => localWard = v ?? ''),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.filterDate,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () async {
-                            final picked = await showDatePicker(
-                              context: ctx,
-                              initialDate: localStartDate ?? DateTime.now(),
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime(2035),
-                            );
-                            if (picked != null) {
-                              setSheetState(() => localStartDate = picked);
-                            }
-                          },
-                          icon: const Icon(
-                            Icons.calendar_today_rounded,
-                            size: 16,
-                          ),
-                          label: Text(
-                            localStartDate == null
-                                ? l10n.homeFromDate
-                                : DateFormat(
-                                    'dd/MM/yyyy',
-                                  ).format(localStartDate!),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () async {
-                            final picked = await showDatePicker(
-                              context: ctx,
-                              initialDate:
-                                  localEndDate ??
-                                  localStartDate ??
-                                  DateTime.now(),
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime(2035),
-                            );
-                            if (picked != null) {
-                              setSheetState(() => localEndDate = picked);
-                            }
-                          },
-                          icon: const Icon(
-                            Icons.event_available_rounded,
-                            size: 16,
-                          ),
-                          label: Text(
-                            localEndDate == null
-                                ? l10n.homeToDate
-                                : DateFormat(
-                                    'dd/MM/yyyy',
-                                  ).format(localEndDate!),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            setSheetState(() {
-                              localSport = 'all';
-                              localStatus = 'all';
-                              localContent = 'all';
-                              localBracket = 'all';
-                              localRanked = 'all';
-                              localProvince = '';
-                              localProvinceCode = '';
-                              localWard = '';
-                              localStartDate = null;
-                              localEndDate = null;
-                            });
-                          },
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: context.colors.textSecondary,
-                            side: BorderSide(color: context.colors.border),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: Text(
-                            l10n.filterReset,
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: () {
-                            setState(() {
-                              _tournamentSport = localSport;
-                              _tournamentStatus = localStatus;
-                              _tournamentContent = localContent;
-                              _tournamentBracket = localBracket;
-                              _tournamentRanked = localRanked;
-                              _tournamentProvince = localProvince;
-                              _tournamentProvinceCode = localProvinceCode;
-                              _tournamentWard = localWard;
-                              _tournamentStartDate = localStartDate;
-                              _tournamentEndDate = localEndDate;
-                            });
-                            _resetTournamentCursorPagination();
-                            Navigator.pop(ctx);
-                          },
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppTheme.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: Text(
-                            l10n.filterApply,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showClubFilterSheet() {
-    final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: context.colors.bgSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        String localSport = _clubSport;
-        String? localProvinceCode = _clubProvinceCode;
-        return StatefulBuilder(
-          builder: (ctx, setSheetState) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.homeClubFilterTitle,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    color: context.colors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  l10n.filterSport,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: context.colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _buildFilterChips(
-                  items: _activeSportFilterItems(l10n),
-                  selected: localSport,
-                  onSelected: (v) => setSheetState(() => localSport = v),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.homeLocationProvince,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: context.colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: context.colors.bgCard,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: context.colors.border),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String?>(
-                      value: localProvinceCode,
-                      isExpanded: true,
-                      hint: Text(
-                        l10n.filterAll,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: context.colors.textSecondary,
-                        ),
-                      ),
-                      icon: Icon(
-                        Icons.arrow_drop_down_rounded,
-                        color: context.colors.textMuted,
-                      ),
-                      dropdownColor: context.colors.bgCard,
-                      items: [
-                        DropdownMenuItem<String?>(
-                          value: null,
-                          child: Text(
-                            l10n.filterAll,
-                            style: TextStyle(
-                              color: context.colors.textSecondary,
-                            ),
-                          ),
-                        ),
-                        ...ProvinceData.all.map(
-                          (p) => DropdownMenuItem<String?>(
-                            value: p.code,
-                            child: Text(
-                              p.name,
-                              style: const TextStyle(fontSize: 13),
-                            ),
-                          ),
-                        ),
-                      ],
-                      onChanged: (v) =>
-                          setSheetState(() => localProvinceCode = v),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          setSheetState(() {
-                            localSport = 'all';
-                            localProvinceCode = null;
-                          });
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: context.colors.textSecondary,
-                          side: BorderSide(color: context.colors.border),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        child: Text(
-                          l10n.filterReset,
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () {
-                          setState(() {
-                            _clubSport = localSport;
-                            _clubProvinceCode = localProvinceCode;
-                          });
-                          _resetClubCursorPagination();
-                          Navigator.pop(ctx);
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        child: Text(
-                          l10n.filterApply,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildRankingsProvinceFilterChip(BuildContext context) {
-    final colors = context.colors;
-    final provinceName =
-        ProvinceData.fromCode(_rankingsProvince ?? '')?.name ?? 'Tỉnh / T.Phố';
-    final hasFilter = _rankingsProvince != null;
-
-    return GestureDetector(
-      onTap: _showProvinceFullScreenModal,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: hasFilter ? AppTheme.primary : colors.border,
-            width: 1.0,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.location_on_outlined,
-              size: 18,
-              color: hasFilter ? AppTheme.primary : colors.textSecondary,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              provinceName,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: hasFilter ? FontWeight.w600 : FontWeight.w500,
-                color: hasFilter ? AppTheme.primary : colors.textPrimary,
-              ),
-            ),
-            if (hasFilter) ...[
-              const SizedBox(width: 6),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _rankingsProvince = null;
-                  });
-                },
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 16,
-                  color: colors.textMuted,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showProvinceFullScreenModal() async {
-    final result = await Navigator.of(context).push<Map<String, dynamic>>(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            ProvinceSelectionScreen(selectedProvinceCode: _rankingsProvince),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(0.0, 1.0);
-          const end = Offset.zero;
-          const curve = Curves.easeOutCubic;
-          final tween = Tween(
-            begin: begin,
-            end: end,
-          ).chain(CurveTween(curve: curve));
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-        fullscreenDialog: true,
-      ),
-    );
-
-    if (result != null && mounted) {
-      if (result['action'] == 'clear') {
-        setState(() {
-          _rankingsProvince = null;
-        });
-      } else if (result['action'] == 'select') {
-        setState(() {
-          _rankingsProvince = result['code'] as String?;
-        });
-      }
-    }
-  }
-
-  Widget _buildFilterChips({
-    required List<(String key, String label)> items,
-    required String selected,
-    required ValueChanged<String> onSelected,
-  }) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: items.map((item) {
-        final isSel = item.$1 == selected;
-        return GestureDetector(
-          onTap: () => onSelected(item.$1),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-            decoration: BoxDecoration(
-              color: isSel ? AppTheme.primary : context.colors.bgCard,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isSel ? AppTheme.primary : context.colors.border,
-              ),
-            ),
-            child: Text(
-              item.$2,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
-                color: isSel ? Colors.white : context.colors.textPrimary,
-              ),
-            ),
-          ),
-        );
-      }).toList(),
     );
   }
 

@@ -15,7 +15,17 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 class TeamListScreen extends ConsumerWidget {
   final String tournamentId;
   final bool isEmbedded;
-  const TeamListScreen({super.key, required this.tournamentId, this.isEmbedded = false});
+  final String? managementRouteBase;
+
+  const TeamListScreen({
+    super.key,
+    required this.tournamentId,
+    this.isEmbedded = false,
+    this.managementRouteBase,
+  });
+
+  String get _managementRouteBase =>
+      managementRouteBase ?? '/admin/tournament/$tournamentId';
 
   Future<void> _importExcel(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
@@ -54,21 +64,26 @@ class TeamListScreen extends ConsumerWidget {
           }
 
           final id = const Uuid().v4();
-          teams.add(Team(
-            id: id,
-            name: teamNameCell,
-            members: members,
-            qrCode: 'VDV_${id.substring(0, 6).toUpperCase()}',
-            createdAt: DateTime.now(),
-          ));
+          teams.add(
+            Team(
+              id: id,
+              name: teamNameCell,
+              members: members,
+              qrCode: 'VDV_${id.substring(0, 6).toUpperCase()}',
+              createdAt: DateTime.now(),
+            ),
+          );
         }
       }
 
       if (teams.isEmpty) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
               content: Text(l10n.teamList_invalidImport),
-              backgroundColor: context.colors.warning));
+              backgroundColor: context.colors.warning,
+            ),
+          );
         }
         return;
       }
@@ -76,15 +91,21 @@ class TeamListScreen extends ConsumerWidget {
       await ref.read(teamServiceProvider(tournamentId)).importTeams(teams);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
             content: Text(l10n.teamList_importSuccess(teams.length)),
-            backgroundColor: context.colors.success));
+            backgroundColor: context.colors.success,
+          ),
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
             content: Text(l10n.teamList_importError(e.toString())),
-            backgroundColor: context.colors.error));
+            backgroundColor: context.colors.error,
+          ),
+        );
       }
     }
   }
@@ -102,38 +123,53 @@ class TeamListScreen extends ConsumerWidget {
       try {
         await ref.read(teamServiceProvider(tournamentId)).deleteAllTeams();
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
               content: Text(l10n.teamList_deleteAllDone),
-              backgroundColor: context.colors.success));
+              backgroundColor: context.colors.success,
+            ),
+          );
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
               content: Text(l10n.teamList_error(e.toString())),
-              backgroundColor: context.colors.error));
+              backgroundColor: context.colors.error,
+            ),
+          );
         }
       }
     }
   }
 
   @override
-    Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final teamsAsync = ref.watch(teamsProvider(tournamentId));
     final tournamentAsync = ref.watch(tournamentProvider(tournamentId));
     final tournament = tournamentAsync.value;
-    
-    final isLocked = tournament?.status == AppConstants.statusInProgress || 
-                     tournament?.status == AppConstants.statusCompleted;
+
+    final isLocked =
+        tournament?.status == AppConstants.statusInProgress ||
+        tournament?.status == AppConstants.statusCompleted;
 
     return Scaffold(
       backgroundColor: context.colors.bgDark,
       appBar: AppBar(
         backgroundColor: context.colors.bgDark,
-        leading: isEmbedded ? const SizedBox.shrink() : IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded),
-          onPressed: () => context.go('/admin/tournament/$tournamentId'),
-        ),
+        leading: isEmbedded
+            ? const SizedBox.shrink()
+            : IconButton(
+                icon: const Icon(Icons.arrow_back_ios_rounded),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go(_managementRouteBase);
+                  }
+                },
+              ),
         title: Text(l10n.teamList_title),
         actions: [
           if (!isLocked) ...[
@@ -153,11 +189,14 @@ class TeamListScreen extends ConsumerWidget {
               itemBuilder: (context) => [
                 PopupMenuItem(
                   value: 'delete_all',
-                  child: Text(l10n.teamList_deleteAll, style: TextStyle(color: context.colors.error)),
+                  child: Text(
+                    l10n.teamList_deleteAll,
+                    style: TextStyle(color: context.colors.error),
+                  ),
                 ),
               ],
             ),
-          ]
+          ],
         ],
       ),
       body: teamsAsync.when(
@@ -167,38 +206,57 @@ class TeamListScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.people_outline, size: 64,
-                      color: context.colors.textMuted.withValues(alpha: 0.4)),
+                  Icon(
+                    Icons.people_outline,
+                    size: 64,
+                    color: context.colors.textMuted.withValues(alpha: 0.4),
+                  ),
                   const SizedBox(height: 16),
-                  Text(l10n.teamList_empty,
-                      style: TextStyle(fontSize: 16, color: context.colors.textSecondary)),
+                  Text(
+                    l10n.teamList_empty,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
                   const SizedBox(height: 24),
                   if (!isLocked)
                     ElevatedButton.icon(
-                      onPressed: () => context.go(
-                          '/admin/tournament/$tournamentId/teams/add'),
+                      onPressed: () =>
+                          context.push('$_managementRouteBase/teams/add'),
                       icon: const Icon(Icons.add),
                       label: Text(l10n.teamList_addNew),
                     ),
                   if (isLocked)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Text(l10n.teamList_locked,
+                      child: Text(
+                        l10n.teamList_locked,
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: context.colors.error, fontSize: 13)),
-                    )
+                        style: TextStyle(
+                          color: context.colors.error,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             );
           }
           return ListView.builder(
-            padding: const EdgeInsets.only(left: 16, top: 16, right: 16, bottom: 88),
+            padding: const EdgeInsets.only(
+              left: 16,
+              top: 16,
+              right: 16,
+              bottom: 88,
+            ),
             itemCount: teams.length,
             itemBuilder: (context, index) => TeamListTile(
               team: teams[index],
               index: index + 1,
               isLocked: isLocked,
               tournamentId: tournamentId,
+              managementRouteBase: _managementRouteBase,
             ),
           );
         },
@@ -207,14 +265,20 @@ class TeamListScreen extends ConsumerWidget {
         ),
         error: (e, _) => Center(child: Text(l10n.teamList_error(e.toString))),
       ),
-      floatingActionButton: isLocked ? null : FloatingActionButton.extended(
-        onPressed: () =>
-            context.go('/admin/tournament/$tournamentId/teams/add'),
-        backgroundColor: AppTheme.primary,
-        icon: const Icon(Icons.person_add, color: Colors.white),
-        label: Text(l10n.teamList_add,
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-      ),
+      floatingActionButton: isLocked
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => context.push('$_managementRouteBase/teams/add'),
+              backgroundColor: AppTheme.primary,
+              icon: const Icon(Icons.person_add, color: Colors.white),
+              label: Text(
+                l10n.teamList_add,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
     );
   }
 }
@@ -224,6 +288,7 @@ class TeamListTile extends ConsumerWidget {
   final int index;
   final bool isLocked;
   final String tournamentId;
+  final String? managementRouteBase;
 
   const TeamListTile({
     super.key,
@@ -231,8 +296,8 @@ class TeamListTile extends ConsumerWidget {
     required this.index,
     required this.isLocked,
     required this.tournamentId,
+    this.managementRouteBase,
   });
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
@@ -288,7 +353,7 @@ class TeamListTile extends ConsumerWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                ]
+                ],
               ],
             ),
           ),
@@ -299,20 +364,35 @@ class TeamListTile extends ConsumerWidget {
                 color: context.colors.success.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(l10n.teamList_approved,
-                  style: TextStyle(fontSize: 10, color: context.colors.success, fontWeight: FontWeight.w600)),
+              child: Text(
+                l10n.teamList_approved,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: context.colors.success,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           if (!isLocked) ...[
             IconButton(
-              icon: Icon(Icons.edit_outlined,
-                  size: 20, color: context.colors.textMuted),
+              icon: Icon(
+                Icons.edit_outlined,
+                size: 20,
+                color: context.colors.textMuted,
+              ),
               onPressed: () {
-                context.go('/admin/tournament/$tournamentId/teams/edit', extra: team);
+                context.push(
+                  '${managementRouteBase ?? '/admin/tournament/$tournamentId'}/teams/edit',
+                  extra: team,
+                );
               },
             ),
             IconButton(
-              icon: Icon(Icons.delete_outline,
-                  size: 20, color: context.colors.error),
+              icon: Icon(
+                Icons.delete_outline,
+                size: 20,
+                color: context.colors.error,
+              ),
               onPressed: () async {
                 final confirm = await showConfirmDialog(
                   context: context,
@@ -322,11 +402,18 @@ class TeamListTile extends ConsumerWidget {
                 );
                 if (confirm == true) {
                   try {
-                    await ref.read(teamServiceProvider(tournamentId)).deleteTeam(team.id);
+                    await ref
+                        .read(teamServiceProvider(tournamentId))
+                        .deleteTeam(team.id);
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.teamList_deleteError(e.toString())), backgroundColor: context.colors.error)
+                        SnackBar(
+                          content: Text(
+                            l10n.teamList_deleteError(e.toString()),
+                          ),
+                          backgroundColor: context.colors.error,
+                        ),
                       );
                     }
                   }

@@ -11,7 +11,7 @@ class SportoHeader extends StatelessWidget {
   final int notificationsCount;
   final VoidCallback onLoginTap;
   final VoidCallback onNotificationTap;
-  final VoidCallback? onChatTap;
+  final VoidCallback? onSearchTap;
 
   const SportoHeader({
     super.key,
@@ -22,7 +22,7 @@ class SportoHeader extends StatelessWidget {
     this.notificationsCount = 0,
     required this.onLoginTap,
     required this.onNotificationTap,
-    this.onChatTap,
+    this.onSearchTap,
   });
 
   @override
@@ -62,9 +62,9 @@ class SportoHeader extends StatelessWidget {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (onChatTap != null) ...[
+                        if (onSearchTap != null) ...[
                           GestureDetector(
-                            onTap: onChatTap,
+                            onTap: onSearchTap,
                             child: Container(
                               width: 36,
                               height: 36,
@@ -74,7 +74,7 @@ class SportoHeader extends StatelessWidget {
                               ),
                               alignment: Alignment.center,
                               child: const Icon(
-                                Icons.forum_outlined,
+                                Icons.search_rounded,
                                 color: Colors.white,
                                 size: 20,
                               ),
@@ -346,7 +346,9 @@ class SportoHeaderPainter extends CustomPainter {
 
   SportoHeaderPainter({required this.isLoggedIn, required this.colors});
 
-  bool get _isDark => colors.bgDark == const Color(0xFF18191A) || colors.bgDark == const Color(0xFF000000);
+  bool get _isDark =>
+      colors.bgDark == const Color(0xFF18191A) ||
+      colors.bgDark == const Color(0xFF000000);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -458,9 +460,13 @@ class SportoSearchBar extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final VoidCallback? onClear;
+  final String? clearTooltip;
   final VoidCallback? onFilterTap;
+  final String? filterTooltip;
+  final VoidCallback? onTap;
   final int filterCount;
   final bool showFilter;
+  final bool readOnly;
   final double height;
   final bool autofocus;
 
@@ -472,9 +478,13 @@ class SportoSearchBar extends StatelessWidget {
     this.onChanged,
     this.onSubmitted,
     this.onClear,
+    this.clearTooltip,
     this.onFilterTap,
+    this.filterTooltip,
+    this.onTap,
     this.filterCount = 0,
     this.showFilter = true,
+    this.readOnly = false,
     this.height = 38.0,
     this.autofocus = false,
   });
@@ -500,6 +510,8 @@ class SportoSearchBar extends StatelessWidget {
         controller: controller,
         focusNode: focusNode,
         autofocus: autofocus,
+        readOnly: readOnly,
+        onTap: onTap,
         textInputAction: TextInputAction.search,
         onChanged: onChanged,
         onSubmitted: onSubmitted,
@@ -526,6 +538,7 @@ class SportoSearchBar extends StatelessWidget {
                 builder: (context, value, _) {
                   if (value.text.isEmpty) return const SizedBox.shrink();
                   return IconButton(
+                    tooltip: clearTooltip,
                     icon: Icon(
                       Icons.clear,
                       color: colors.textSecondary,
@@ -542,6 +555,7 @@ class SportoSearchBar extends StatelessWidget {
                 Stack(
                   children: [
                     IconButton(
+                      tooltip: filterTooltip,
                       icon: Icon(
                         Icons.tune_rounded,
                         color: filterCount > 0

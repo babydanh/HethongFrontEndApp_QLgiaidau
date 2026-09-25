@@ -141,6 +141,24 @@ class AppLocalizationsVi extends AppLocalizations {
   String get navProfile => 'Tôi';
 
   @override
+  String get menuTitle => 'Menu';
+
+  @override
+  String get menuSectionExplore => 'Khám phá';
+
+  @override
+  String get menuSectionCommunity => 'Kết nối';
+
+  @override
+  String get menuSectionAccount => 'Tài khoản';
+
+  @override
+  String get menuProfile => 'Hồ sơ của tôi';
+
+  @override
+  String get menuMessages => 'Tin nhắn';
+
+  @override
   String get loginTitle => 'Đăng nhập tài khoản';
 
   @override
@@ -1086,6 +1104,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tabTeams => 'Danh sách đội';
+
+  @override
+  String get tabSchedule => 'Lịch thi đấu';
 
   @override
   String get tabBracket => 'Bảng thi đấu';
@@ -12791,4 +12812,923 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get communitySearchRetry => 'Thử lại';
+
+  @override
+  String get tournamentManagementActionError =>
+      'Không thể hoàn tất thao tác. Vui lòng thử lại.';
+
+  @override
+  String get tournamentManagementAddCourt => 'Thêm sân';
+
+  @override
+  String get tournamentManagementAddDivision => 'Thêm nội dung';
+
+  @override
+  String get tournamentManagementAddImage => 'Thêm ảnh';
+
+  @override
+  String get tournamentManagementAddSponsor => 'Thêm nhà tài trợ';
+
+  @override
+  String get tournamentManagementAddStaff => 'Thêm nhân sự';
+
+  @override
+  String get tournamentManagementAddVenue => 'Thêm địa điểm';
+
+  @override
+  String get tournamentManagementAmountRequested => 'Số tiền yêu cầu';
+
+  @override
+  String get tournamentManagementApplications => 'Đăng ký';
+
+  @override
+  String get tournamentManagementApplicationsEmpty => 'Chưa có đăng ký';
+
+  @override
+  String get tournamentManagementApplicationsEmptyDescription =>
+      'Đăng ký mới của người tham gia sẽ xuất hiện ở đây.';
+
+  @override
+  String get tournamentManagementApprove => 'Duyệt';
+
+  @override
+  String get tournamentManagementArchive => 'Lưu trữ';
+
+  @override
+  String get tournamentManagementArchiveSponsor => 'Lưu trữ nhà tài trợ';
+
+  @override
+  String tournamentManagementArchiveSponsorConfirm(String name) {
+    return 'Lưu trữ $name?';
+  }
+
+  @override
+  String get tournamentManagementAutoSeed => 'Tự động xếp hạt giống';
+
+  @override
+  String get tournamentManagementAutoSeedConfirm =>
+      'Tự động xếp hạt giống cho nội dung này? Các hạt giống hiện tại sẽ được thay thế.';
+
+  @override
+  String get tournamentManagementBankAccountName => 'Tên chủ tài khoản';
+
+  @override
+  String get tournamentManagementBankAccountNumber => 'Số tài khoản ngân hàng';
+
+  @override
+  String get tournamentManagementBankName => 'Ngân hàng';
+
+  @override
+  String get tournamentManagementBack => 'Quay lại';
+
+  @override
+  String get tournamentManagementBanner => 'Ảnh bìa giải đấu';
+
+  @override
+  String get tournamentManagementBannerSaved => 'Đã cập nhật ảnh bìa giải đấu.';
+
+  @override
+  String get tournamentManagementBracketDescription =>
+      'Xem sơ đồ thi đấu trong không gian hiện có.';
+
+  @override
+  String get tournamentManagementBracketDoubleElimination => 'Loại kép';
+
+  @override
+  String get tournamentManagementBracketGroupThenKnockout =>
+      'Vòng bảng rồi loại trực tiếp';
+
+  @override
+  String get tournamentManagementBracketRoundRobin => 'Vòng tròn';
+
+  @override
+  String get tournamentManagementBracketSingleElimination => 'Loại trực tiếp';
+
+  @override
+  String get tournamentManagementBracketType => 'Thể thức sơ đồ';
+
+  @override
+  String get tournamentManagementBrandAssets => 'Nhận diện giải đấu';
+
+  @override
+  String get tournamentManagementBrandAssetsDescription =>
+      'Tải lên logo hoặc ảnh bìa, hoặc quản lý thư viện ảnh giải đấu.';
+
+  @override
+  String get tournamentManagementBranding => 'Nhận diện & thư viện ảnh';
+
+  @override
+  String get tournamentManagementBrandingDescription =>
+      'Tải ảnh nhận diện và quản lý thư viện ảnh của giải đấu.';
+
+  @override
+  String get tournamentManagementCancel => 'Hủy';
+
+  @override
+  String get tournamentManagementConfirm => 'Xác nhận';
+
+  @override
+  String get tournamentManagementConfirmTitle => 'Xác nhận thao tác';
+
+  @override
+  String get tournamentManagementCourt => 'Sân';
+
+  @override
+  String get tournamentManagementCourtName => 'Tên sân';
+
+  @override
+  String get tournamentManagementCourtPrefix => 'Tiền tố tên sân';
+
+  @override
+  String tournamentManagementCourtsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sân',
+      one: '$count sân',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tournamentManagementChooseDate => 'Chọn ngày';
+
+  @override
+  String get tournamentManagementDefaultVenue => 'Mặc định';
+
+  @override
+  String get tournamentManagementDelete => 'Xóa';
+
+  @override
+  String get tournamentManagementDeleteDivision => 'Xóa nội dung';
+
+  @override
+  String tournamentManagementDeleteDivisionConfirm(String name) {
+    return 'Xóa nội dung $name?';
+  }
+
+  @override
+  String get tournamentManagementDescription => 'Mô tả';
+
+  @override
+  String get tournamentManagementDisplayOrder => 'Thứ tự hiển thị';
+
+  @override
+  String get tournamentManagementDivision => 'Nội dung';
+
+  @override
+  String get tournamentManagementDivisionConfiguration => 'Cấu hình thể thức';
+
+  @override
+  String get tournamentManagementDivisionName => 'Tên nội dung';
+
+  @override
+  String get tournamentManagementDivisions => 'Nội dung thi đấu';
+
+  @override
+  String get tournamentManagementDivisionsDescription =>
+      'Tạo và cấu hình nội dung, sau đó xếp hạt giống cho người tham gia.';
+
+  @override
+  String get tournamentManagementDivisionsEmpty => 'Chưa có nội dung thi đấu';
+
+  @override
+  String get tournamentManagementDivisionsEmptyDescription =>
+      'Thêm nội dung để cấu hình thể thức thi đấu.';
+
+  @override
+  String get tournamentManagementDrawDescription =>
+      'Tạo và quản lý bốc thăm giải đấu.';
+
+  @override
+  String get tournamentManagementEdit => 'Chỉnh sửa';
+
+  @override
+  String get tournamentManagementEditSponsor => 'Sửa nhà tài trợ';
+
+  @override
+  String get tournamentManagementEditVenue => 'Sửa địa điểm';
+
+  @override
+  String get tournamentManagementEndAfterStart =>
+      'Ngày kết thúc giải đấu phải sau ngày bắt đầu.';
+
+  @override
+  String get tournamentManagementEndDate => 'Ngày kết thúc';
+
+  @override
+  String get tournamentManagementEntryFee => 'Lệ phí tham gia';
+
+  @override
+  String get tournamentManagementEntryFeesAllowed => 'Cho phép thu lệ phí';
+
+  @override
+  String get tournamentManagementEntryFeeDisabled =>
+      'Lệ phí tham gia đang bị tắt hoặc không thể thay đổi với trạng thái hiện tại của giải đấu.';
+
+  @override
+  String get tournamentManagementEntryFeeUpdated =>
+      'Đã cập nhật lệ phí tham gia.';
+
+  @override
+  String get tournamentManagementExportError =>
+      'Không thể xuất dữ liệu giải đấu.';
+
+  @override
+  String get tournamentManagementFinalizeRegistrationUnavailable =>
+      'Ứng dụng di động chưa hỗ trợ kết thúc đăng ký vì thao tác phía máy chủ chưa được xác nhận. Vui lòng liên hệ bộ phận hỗ trợ trước khi thực hiện chuyển trạng thái này.';
+
+  @override
+  String get tournamentManagementFinance => 'Tài chính & thanh toán';
+
+  @override
+  String get tournamentManagementFinanceDescription =>
+      'Xem cấu hình phí từ máy chủ và gửi yêu cầu thanh toán sau khi giải đấu hoàn tất.';
+
+  @override
+  String get tournamentManagementGallery => 'Thư viện ảnh';
+
+  @override
+  String get tournamentManagementGalleryDescription =>
+      'Tải tệp ảnh lên dịch vụ hiện có trước khi thêm ảnh vào thư viện giải đấu.';
+
+  @override
+  String get tournamentManagementGalleryEmpty => 'Chưa có ảnh trong thư viện';
+
+  @override
+  String get tournamentManagementGalleryEmptyDescription =>
+      'Thêm ảnh đã tải lên để xây dựng thư viện giải đấu.';
+
+  @override
+  String get tournamentManagementGalleryImageAdded =>
+      'Đã thêm ảnh vào thư viện.';
+
+  @override
+  String get tournamentManagementGalleryImageRemoved =>
+      'Đã xóa ảnh khỏi thư viện.';
+
+  @override
+  String get tournamentManagementGeneral => 'Cài đặt chung';
+
+  @override
+  String get tournamentManagementGeneralDescription =>
+      'Cập nhật tên, mô tả, chế độ hiển thị và các mốc thời gian chính của giải đấu.';
+
+  @override
+  String get tournamentManagementInitialCourtCount => 'Số sân ban đầu';
+
+  @override
+  String get tournamentManagementLifecycle => 'Vòng đời giải đấu';
+
+  @override
+  String get tournamentManagementLifecycleDescription =>
+      'Dùng các chuyển trạng thái được máy chủ hỗ trợ. Máy chủ chịu trách nhiệm phân quyền.';
+
+  @override
+  String get tournamentManagementLiveOperations => 'Vận hành trực tiếp';
+
+  @override
+  String get tournamentManagementLiveOperationsDescription =>
+      'Mở không gian hiện có để vận hành các trận đấu trực tiếp.';
+
+  @override
+  String get tournamentManagementLivestream => 'Phát trực tiếp';
+
+  @override
+  String get tournamentManagementLivestreamDescription =>
+      'Mở không gian trận đấu trực tiếp được hỗ trợ.';
+
+  @override
+  String get tournamentManagementLivestreamRouteDescription =>
+      'API di động đã được duyệt chưa cung cấp cấu hình phát trực tiếp. Mở không gian vận hành hiện có để dùng các điều khiển trận đấu được hỗ trợ.';
+
+  @override
+  String get tournamentManagementLoadError => 'Không thể tải mục này.';
+
+  @override
+  String get tournamentManagementLockConfirm =>
+      'Khóa đăng ký giải đấu ngay bây giờ?';
+
+  @override
+  String get tournamentManagementLockTournament => 'Khóa đăng ký';
+
+  @override
+  String get tournamentManagementLogo => 'Logo giải đấu';
+
+  @override
+  String get tournamentManagementLogoSaved => 'Đã cập nhật logo giải đấu.';
+
+  @override
+  String get tournamentManagementMatchDoubles => 'Đôi';
+
+  @override
+  String get tournamentManagementMatchMixedDoubles => 'Đôi nam nữ';
+
+  @override
+  String get tournamentManagementMatchSingles => 'Đơn';
+
+  @override
+  String get tournamentManagementMatchType => 'Hình thức thi đấu';
+
+  @override
+  String get tournamentManagementMaxParticipants => 'Số người tham gia tối đa';
+
+  @override
+  String get tournamentManagementName => 'Tên giải đấu';
+
+  @override
+  String get tournamentManagementNoClientBalanceCalculation =>
+      'Số tiền có thể thanh toán do máy chủ xác định. Màn hình này không tự tính số dư.';
+
+  @override
+  String get tournamentManagementNoCourts => 'Chưa thêm sân.';
+
+  @override
+  String get tournamentManagementNotSet => 'Chưa thiết lập';
+
+  @override
+  String get tournamentManagementOpenDestination => 'Mở không gian';
+
+  @override
+  String get tournamentManagementOpenOperations => 'Mở vận hành';
+
+  @override
+  String get tournamentManagementOperationsGroup => 'VẬN HÀNH';
+
+  @override
+  String get tournamentManagementOpsRouteDescription =>
+      'Mở không gian vận hành hiện có để xem lịch và điều khiển trận đấu trực tiếp.';
+
+  @override
+  String get tournamentManagementOverview => 'Tổng quan';
+
+  @override
+  String get tournamentManagementOverviewDescription =>
+      'Trạng thái giải đấu, lịch và cấu hình chính.';
+
+  @override
+  String get tournamentManagementOverviewHint =>
+      'Chọn mục để chỉnh sửa cài đặt được hỗ trợ hoặc mở không gian vận hành hiện có.';
+
+  @override
+  String get tournamentManagementParticipantApproved => 'Đã duyệt';
+
+  @override
+  String tournamentManagementParticipantCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count người tham gia',
+      one: '$count người tham gia',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tournamentManagementParticipantPending => 'Chờ duyệt';
+
+  @override
+  String get tournamentManagementParticipantRejected => 'Đã từ chối';
+
+  @override
+  String get tournamentManagementParticipantRemoved => 'Đã xóa';
+
+  @override
+  String get tournamentManagementParticipantsEmpty =>
+      'Chưa có người tham gia trong nội dung này.';
+
+  @override
+  String get tournamentManagementPayoutAuthorizationNote =>
+      'Máy chủ kiểm tra quyền của người tạo và điều kiện thanh toán. Thông tin ngân hàng sẽ được xóa sau khi gửi thành công và không xuất hiện trong lịch sử.';
+
+  @override
+  String get tournamentManagementPayoutCreatorOnly =>
+      'Chỉ người tạo giải đấu được gửi yêu cầu thanh toán. Máy chủ vẫn là nơi quyết định quyền cuối cùng.';
+
+  @override
+  String get tournamentManagementPayoutAccessUnverified =>
+      'Ẩn chức năng thanh toán cho đến khi xác minh được quyền của người tạo giải.';
+
+  @override
+  String get tournamentManagementPayoutDescription =>
+      'Gửi yêu cầu thanh toán đến máy chủ. Không hiển thị ước tính số dư có thể rút.';
+
+  @override
+  String get tournamentManagementPayoutHistory => 'Lịch sử thanh toán';
+
+  @override
+  String get tournamentManagementPayoutHistoryDescription =>
+      'Lịch sử chỉ hiển thị trạng thái và số tiền yêu cầu; không hiển thị thông tin ngân hàng.';
+
+  @override
+  String get tournamentManagementPayoutHistoryEmpty =>
+      'Chưa có yêu cầu thanh toán.';
+
+  @override
+  String tournamentManagementPayoutMinimum(int amount) {
+    return 'Yêu cầu tối thiểu: $amount VND';
+  }
+
+  @override
+  String get tournamentManagementPayoutRequest => 'Yêu cầu thanh toán';
+
+  @override
+  String get tournamentManagementPayoutRequestError =>
+      'Máy chủ không thể hoàn tất yêu cầu. Thông tin đã nhập được giữ lại.';
+
+  @override
+  String get tournamentManagementPayoutRequested =>
+      'Đã gửi yêu cầu thanh toán.';
+
+  @override
+  String get tournamentManagementPayoutRequiresCompleted =>
+      'Chỉ có thể gửi yêu cầu thanh toán sau khi giải đấu hoàn tất.';
+
+  @override
+  String get tournamentManagementPayoutStatusApproved => 'Đã duyệt';
+
+  @override
+  String get tournamentManagementPayoutStatusPaid => 'Đã thanh toán';
+
+  @override
+  String get tournamentManagementPayoutStatusPending => 'Đang chờ';
+
+  @override
+  String get tournamentManagementPayoutStatusProcessing => 'Đang xử lý';
+
+  @override
+  String get tournamentManagementPayoutStatusRejected => 'Bị từ chối';
+
+  @override
+  String get tournamentManagementPayoutValidationError =>
+      'Nhập đủ thông tin ngân hàng và số tiền tối thiểu 10.000 VND.';
+
+  @override
+  String get tournamentManagementPendingApplications => 'Chờ duyệt';
+
+  @override
+  String get tournamentManagementPermissions => 'Phân quyền & trọng tài';
+
+  @override
+  String get tournamentManagementPermissionsDescription =>
+      'Quản lý nhân sự giải đấu và lời mời trọng tài.';
+
+  @override
+  String get tournamentManagementPlatformFeeRate => 'Tỷ lệ phí nền tảng';
+
+  @override
+  String get tournamentManagementPrivate => 'Riêng tư';
+
+  @override
+  String get tournamentManagementPublic => 'Công khai';
+
+  @override
+  String get tournamentManagementPublish => 'Công bố giải đấu';
+
+  @override
+  String get tournamentManagementPublishConfirm => 'Công bố giải đấu này?';
+
+  @override
+  String get tournamentManagementPublishFee => 'Phí công bố';
+
+  @override
+  String get tournamentManagementReferee => 'Trọng tài';
+
+  @override
+  String get tournamentManagementRefereeAccepted => 'Đã chấp nhận';
+
+  @override
+  String get tournamentManagementRefereeDeclined => 'Đã từ chối';
+
+  @override
+  String get tournamentManagementRefereeEmail => 'Email trọng tài';
+
+  @override
+  String get tournamentManagementRefereeInviteSent =>
+      'Đã gửi lời mời trọng tài.';
+
+  @override
+  String get tournamentManagementRefereeInvited => 'Đã mời';
+
+  @override
+  String get tournamentManagementRefereeRemoved => 'Đã xóa trọng tài.';
+
+  @override
+  String get tournamentManagementReferees => 'Trọng tài';
+
+  @override
+  String get tournamentManagementRefereesDescription =>
+      'Mời trọng tài bằng email và quản lý phân công trong giải đấu.';
+
+  @override
+  String get tournamentManagementRefereesEmpty => 'Chưa có trọng tài.';
+
+  @override
+  String get tournamentManagementRegenerateInvite => 'Tạo lại mã mời';
+
+  @override
+  String get tournamentManagementRegenerateInviteConfirm =>
+      'Tạo lại mã mời? Liên kết mời hiện tại sẽ không còn hoạt động.';
+
+  @override
+  String get tournamentManagementRegistration => 'Đăng ký';
+
+  @override
+  String get tournamentManagementRegistrationApproved => 'Đã duyệt đăng ký.';
+
+  @override
+  String get tournamentManagementRegistrationDescription =>
+      'Xem đăng ký người tham gia và duyệt hoặc từ chối hồ sơ đang chờ.';
+
+  @override
+  String get tournamentManagementRegistrationEndAfterStart =>
+      'Thời gian kết thúc đăng ký phải sau thời gian bắt đầu.';
+
+  @override
+  String get tournamentManagementRegistrationEnds => 'Kết thúc đăng ký';
+
+  @override
+  String get tournamentManagementRegistrationLocked => 'Đã khóa đăng ký';
+
+  @override
+  String get tournamentManagementRegistrationOpen => 'Đang mở đăng ký';
+
+  @override
+  String get tournamentManagementRegistrationRejected => 'Đã từ chối đăng ký.';
+
+  @override
+  String get tournamentManagementRegistrationStarts => 'Bắt đầu đăng ký';
+
+  @override
+  String get tournamentManagementRegistrationWindow => 'Thời gian đăng ký';
+
+  @override
+  String get tournamentManagementReject => 'Từ chối';
+
+  @override
+  String get tournamentManagementRejectRegistration => 'Từ chối đăng ký';
+
+  @override
+  String tournamentManagementRejectRegistrationConfirm(String name) {
+    return 'Từ chối đăng ký của $name?';
+  }
+
+  @override
+  String get tournamentManagementRemove => 'Xóa';
+
+  @override
+  String get tournamentManagementRemoveCourt => 'Xóa sân';
+
+  @override
+  String tournamentManagementRemoveCourtConfirm(String name) {
+    return 'Xóa sân $name?';
+  }
+
+  @override
+  String get tournamentManagementRemoveImage => 'Xóa ảnh';
+
+  @override
+  String get tournamentManagementRemoveImageConfirm =>
+      'Xóa ảnh này khỏi thư viện giải đấu?';
+
+  @override
+  String get tournamentManagementRemoveReferee => 'Xóa trọng tài';
+
+  @override
+  String tournamentManagementRemoveRefereeConfirm(String name) {
+    return 'Xóa $name khỏi giải đấu này?';
+  }
+
+  @override
+  String get tournamentManagementRemoveStaff => 'Xóa nhân sự';
+
+  @override
+  String tournamentManagementRemoveStaffConfirm(String name) {
+    return 'Xóa $name khỏi nhân sự giải đấu?';
+  }
+
+  @override
+  String get tournamentManagementRemoveVenue => 'Xóa địa điểm';
+
+  @override
+  String tournamentManagementRemoveVenueConfirm(String name) {
+    return 'Xóa địa điểm $name?';
+  }
+
+  @override
+  String get tournamentManagementRenameDivision => 'Đổi tên nội dung';
+
+  @override
+  String get tournamentManagementReopenConfirm => 'Mở lại đăng ký giải đấu?';
+
+  @override
+  String get tournamentManagementReopenRegistration => 'Mở lại đăng ký';
+
+  @override
+  String get tournamentManagementRequestPayout => 'Gửi yêu cầu thanh toán';
+
+  @override
+  String get tournamentManagementRequiredFields =>
+      'Vui lòng điền đầy đủ thông tin bắt buộc.';
+
+  @override
+  String get tournamentManagementRetry => 'Thử lại';
+
+  @override
+  String get tournamentManagementRoleCoOrganizer => 'Đồng tổ chức';
+
+  @override
+  String get tournamentManagementRoleOther => 'Vai trò khác';
+
+  @override
+  String get tournamentManagementRoleSpectator => 'Người xem';
+
+  @override
+  String get tournamentManagementSave => 'Lưu';
+
+  @override
+  String get tournamentManagementSaveError =>
+      'Không thể lưu thay đổi. Kiểm tra thông tin rồi thử lại.';
+
+  @override
+  String get tournamentManagementSaveSeeds => 'Lưu hạt giống';
+
+  @override
+  String get tournamentManagementSaved => 'Đã lưu thay đổi.';
+
+  @override
+  String get tournamentManagementSaving => 'Đang lưu…';
+
+  @override
+  String get tournamentManagementSchedule => 'Lịch thi đấu';
+
+  @override
+  String get tournamentManagementScheduleDescription =>
+      'Mở không gian vận hành hiện có để xem lịch thi đấu.';
+
+  @override
+  String get tournamentManagementSeed => 'Hạt giống';
+
+  @override
+  String get tournamentManagementSeedValidationError =>
+      'Hạt giống phải là số dương và không trùng nhau. Không thể xóa hạt giống hiện có tại đây.';
+
+  @override
+  String get tournamentManagementSeeding => 'Hạt giống người tham gia';
+
+  @override
+  String get tournamentManagementSeedingDescription =>
+      'Tự động xếp hoặc lưu thủ công số hạt giống riêng cho nội dung đã chọn.';
+
+  @override
+  String get tournamentManagementSeedsSaved => 'Đã cập nhật hạt giống.';
+
+  @override
+  String get tournamentManagementSendInvite => 'Gửi lời mời';
+
+  @override
+  String get tournamentManagementServerAuthorizationNote =>
+      'Các điều khiển này gửi yêu cầu đến máy chủ. Máy chủ chịu trách nhiệm phân quyền và xác thực.';
+
+  @override
+  String get tournamentManagementSetAsDefault => 'Đặt làm địa điểm mặc định';
+
+  @override
+  String get tournamentManagementSetupGroup => 'THIẾT LẬP';
+
+  @override
+  String get tournamentManagementSponsorDescription => 'Mô tả ngắn';
+
+  @override
+  String get tournamentManagementSponsorLogo => 'Logo nhà tài trợ';
+
+  @override
+  String get tournamentManagementSponsorName => 'Tên nhà tài trợ';
+
+  @override
+  String get tournamentManagementSponsorPublic => 'Hiển thị công khai';
+
+  @override
+  String get tournamentManagementSponsorSaved => 'Đã lưu nhà tài trợ.';
+
+  @override
+  String get tournamentManagementSponsorTier => 'Hạng tài trợ';
+
+  @override
+  String get tournamentManagementSponsorTierBronze => 'Đồng';
+
+  @override
+  String get tournamentManagementSponsorTierDiamond => 'Kim cương';
+
+  @override
+  String get tournamentManagementSponsorTierGold => 'Vàng';
+
+  @override
+  String get tournamentManagementSponsorTierInKind => 'Hiện vật';
+
+  @override
+  String get tournamentManagementSponsorTierSilver => 'Bạc';
+
+  @override
+  String get tournamentManagementSponsorTierTitle => 'Nhà tài trợ danh xưng';
+
+  @override
+  String get tournamentManagementSponsorWebsite => 'Trang web';
+
+  @override
+  String get tournamentManagementSponsors => 'Nhà tài trợ';
+
+  @override
+  String get tournamentManagementSponsorsDescription =>
+      'Thêm, chỉnh sửa hoặc lưu trữ nhà tài trợ giải đấu.';
+
+  @override
+  String get tournamentManagementSponsorsEmpty => 'Chưa có nhà tài trợ';
+
+  @override
+  String get tournamentManagementSponsorsEmptyDescription =>
+      'Thêm nhà tài trợ để giới thiệu đối tác của giải đấu.';
+
+  @override
+  String get tournamentManagementStaff => 'Nhân sự';
+
+  @override
+  String get tournamentManagementStaffAdded => 'Đã thêm nhân sự.';
+
+  @override
+  String get tournamentManagementStaffDescription =>
+      'Thêm đồng tổ chức hoặc người xem. Email không được hiển thị sau khi gửi.';
+
+  @override
+  String get tournamentManagementStaffEmail => 'Email nhân sự';
+
+  @override
+  String get tournamentManagementStaffEmpty => 'Chưa thêm nhân sự.';
+
+  @override
+  String get tournamentManagementStaffMember => 'Nhân sự';
+
+  @override
+  String get tournamentManagementStaffRemoved => 'Đã xóa nhân sự.';
+
+  @override
+  String get tournamentManagementStaffRole => 'Vai trò';
+
+  @override
+  String get tournamentManagementStartAfterRegistration =>
+      'Giải đấu phải bắt đầu vào hoặc sau khi kết thúc đăng ký.';
+
+  @override
+  String get tournamentManagementStartDate => 'Ngày bắt đầu';
+
+  @override
+  String get tournamentManagementStatusCancelled => 'Đã hủy';
+
+  @override
+  String get tournamentManagementStatusCompleted => 'Hoàn tất';
+
+  @override
+  String get tournamentManagementStatusDraft => 'Bản nháp';
+
+  @override
+  String get tournamentManagementStatusInProgress => 'Đang diễn ra';
+
+  @override
+  String get tournamentManagementStatusOther => 'Trạng thái khác';
+
+  @override
+  String get tournamentManagementStatusRegistrationClosed => 'Đã đóng đăng ký';
+
+  @override
+  String get tournamentManagementStatusRegistrationOpen => 'Đang mở đăng ký';
+
+  @override
+  String get tournamentManagementStatusUpcoming => 'Sắp diễn ra';
+
+  @override
+  String get tournamentManagementSubmitting => 'Đang gửi…';
+
+  @override
+  String get tournamentManagementSystemGroup => 'HỆ THỐNG';
+
+  @override
+  String get tournamentManagementTeamsDescription =>
+      'Quản lý người tham gia và thông tin đội trong giải đấu.';
+
+  @override
+  String get tournamentManagementTokensDescription =>
+      'Quản lý mã truy cập dành cho quản trị viên, trọng tài và người xem.';
+
+  @override
+  String get tournamentManagementUploadBanner => 'Tải ảnh bìa';
+
+  @override
+  String get tournamentManagementUploadLogo => 'Tải logo';
+
+  @override
+  String get tournamentManagementVenue => 'Địa điểm';
+
+  @override
+  String get tournamentManagementVenueAddress => 'Địa chỉ địa điểm';
+
+  @override
+  String get tournamentManagementVenueName => 'Tên địa điểm';
+
+  @override
+  String get tournamentManagementVenues => 'Địa điểm & sân';
+
+  @override
+  String get tournamentManagementVenuesDescription =>
+      'Tạo và cập nhật địa điểm, đặt địa điểm mặc định và quản lý sân.';
+
+  @override
+  String get tournamentManagementVenuesEmpty => 'Chưa cấu hình địa điểm';
+
+  @override
+  String get tournamentManagementVenuesEmptyDescription =>
+      'Thêm địa điểm và sân cho giải đấu này.';
+
+  @override
+  String get tournamentManagementVisibility => 'Chế độ hiển thị';
+
+  @override
+  String get tournamentManagementYes => 'Có';
+
+  @override
+  String get tournamentManagementNo => 'Không';
+
+  @override
+  String get homeGlobalSearchTitle => 'Tìm kiếm thể thao';
+
+  @override
+  String get homeGlobalSearchSubtitle =>
+      'Chọn danh mục rồi tinh chỉnh kết quả bạn cần.';
+
+  @override
+  String get homeGlobalSearchChooseType => 'Bạn muốn tìm gì?';
+
+  @override
+  String get homeSearchScopeMatches => 'Trận đấu';
+
+  @override
+  String get homeSearchScopeTournaments => 'Giải đấu';
+
+  @override
+  String get homeSearchScopeClubs => 'Câu lạc bộ';
+
+  @override
+  String get homeSearchScopeAthletes => 'Vận động viên';
+
+  @override
+  String get homeGlobalSearchAdvancedFilters => 'Bộ lọc nâng cao';
+
+  @override
+  String get homeGlobalSearchApply => 'Tìm kiếm';
+
+  @override
+  String get homeGlobalSearchClose => 'Đóng tìm kiếm';
+
+  @override
+  String get homeGlobalSearchInputLabel => 'Từ khóa tìm kiếm';
+
+  @override
+  String get homeGlobalSearchClear => 'Xóa từ khóa';
+
+  @override
+  String get homeSearchScopeVenues => 'Địa điểm';
+
+  @override
+  String get homeGlobalSearchEmpty => 'Không tìm thấy kết quả phù hợp';
+
+  @override
+  String get homeGlobalSearchLoadFailed =>
+      'Không thể tải kết quả. Vui lòng thử lại.';
+
+  @override
+  String get homeGlobalSearchRetry => 'Thử lại';
+
+  @override
+  String get homeGlobalSearchVenueNote =>
+      'Địa điểm được tổng hợp từ các trận đấu công khai; chưa hỗ trợ tìm quanh đây.';
+
+  @override
+  String get homeGlobalSearchSport => 'Môn thể thao';
+
+  @override
+  String get homeGlobalSearchStatus => 'Trạng thái';
+
+  @override
+  String get homeGlobalSearchGender => 'Giới tính';
+
+  @override
+  String get homeGlobalSearchProvince => 'Tỉnh/thành';
+
+  @override
+  String get homeGlobalSearchDate => 'Khoảng ngày';
+
+  @override
+  String get homeGlobalSearchLocation => 'Sân/địa chỉ';
+
+  @override
+  String get homeGlobalSearchClearFilters => 'Xóa bộ lọc';
 }

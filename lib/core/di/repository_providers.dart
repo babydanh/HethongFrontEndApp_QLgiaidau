@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/data/repositories/api/api_payment_repository.
 import 'package:app_quanly_giaidau/data/repositories/api/api_report_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_region_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_tournament_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_user_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/local/app_session_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/local/shared_prefs_local_session_repository.dart';
@@ -26,6 +27,7 @@ import 'package:app_quanly_giaidau/data/repositories/api/api_social_session_repo
 import 'package:app_quanly_giaidau/domain/repositories/social_session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/user_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final tournamentRepositoryProvider = Provider<ITournamentRepository>((ref) {
@@ -34,6 +36,11 @@ final tournamentRepositoryProvider = Provider<ITournamentRepository>((ref) {
     ref.watch(matchSocketServiceProvider),
   );
 });
+
+final tournamentManagementRepositoryProvider =
+    Provider<TournamentManagementRepository>((ref) {
+      return ApiTournamentManagementRepository(ref.watch(dioClientProvider));
+    });
 
 final teamRepositoryProvider = Provider<ITeamRepository>((ref) {
   return ApiTeamRepository(ref.watch(dioClientProvider));
@@ -86,6 +93,8 @@ final paymentRepositoryProvider = Provider<PaymentRepository>((ref) {
   return PaymentRepository(ref.watch(dioClientProvider));
 });
 
-final socialSessionRepositoryProvider = Provider<ISocialSessionRepository>((ref) {
+final socialSessionRepositoryProvider = Provider<ISocialSessionRepository>((
+  ref,
+) {
   return ApiSocialSessionRepository(ref.watch(dioClientProvider));
 });
