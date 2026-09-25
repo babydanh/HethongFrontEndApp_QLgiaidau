@@ -45,7 +45,8 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 // ═══════════════════════════════════════════════════════
 class HomeScreen extends ConsumerStatefulWidget {
   final int initialTab;
-  const HomeScreen({super.key, this.initialTab = 0});
+  final bool returnToClub;
+  const HomeScreen({super.key, this.initialTab = 0, this.returnToClub = false});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -311,8 +312,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           _serverClubsList.sort((a, b) {
             final aRole = a.myRole?.toUpperCase();
             final bRole = b.myRole?.toUpperCase();
-            final aIsAdmin = aRole == 'OWNER' || aRole == 'ADMIN' || aRole == 'MODERATOR';
-            final bIsAdmin = bRole == 'OWNER' || bRole == 'ADMIN' || bRole == 'MODERATOR';
+            final aIsAdmin =
+                aRole == 'OWNER' || aRole == 'ADMIN' || aRole == 'MODERATOR';
+            final bIsAdmin =
+                bRole == 'OWNER' || bRole == 'ADMIN' || bRole == 'MODERATOR';
             if (aIsAdmin && !bIsAdmin) return -1;
             if (!aIsAdmin && bIsAdmin) return 1;
             return 0;
@@ -340,11 +343,64 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   List<(String, String)> _activeSportFilterItems(AppLocalizations l10n) {
     final categories =
-        ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
+        ref.read(categoriesProvider).asData?.value ?? const <CategoryModel>[];
     return [
       ('all', l10n.filterAll),
       ...categories.map((category) => (category.slug, category.name)),
     ];
+  }
+
+  Future<bool> _ensureSportCategories() async {
+    try {
+      await ref.read(categoriesProvider.future);
+      return mounted;
+    } catch (_) {
+      if (mounted) {
+        ref.invalidate(categoriesProvider);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Không thể tải danh sách môn thể thao. Vui lòng thử lại.',
+            ),
+          ),
+        );
+      }
+      return false;
+    }
+  }
+
+  Future<void> _openSportMenu(
+    BuildContext anchorContext,
+    AppLocalizations l10n,
+  ) async {
+    if (!await _ensureSportCategories()) return;
+    if (!mounted || !anchorContext.mounted) return;
+    final box = anchorContext.findRenderObject() as RenderBox;
+    final overlay =
+        Overlay.of(anchorContext).context.findRenderObject() as RenderBox;
+    final topLeft = box.localToGlobal(Offset.zero, ancestor: overlay);
+    final selected = await showMenu<String>(
+      context: anchorContext,
+      position: RelativeRect.fromRect(
+        Rect.fromLTWH(
+          topLeft.dx,
+          topLeft.dy + box.size.height,
+          box.size.width,
+          0,
+        ),
+        Offset.zero & overlay.size,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: context.colors.bgSurface,
+      elevation: 8,
+      items: [
+        if (_currentIndex != 4) _buildPopupMenuItem(l10n.filterAll, 'all'),
+        ..._activeSportFilterItems(l10n)
+            .where((item) => item.$1 != 'all')
+            .map((item) => _buildPopupMenuItem(item.$2, item.$1)),
+      ],
+    );
+    if (mounted && selected != null) _setActiveSportFilter(selected);
   }
 
   final ScrollController _scrollController = ScrollController();
@@ -416,6 +472,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _switchTab(int index) {
+    if (index == 3 && widget.returnToClub && context.canPop()) {
+      context.pop();
+      return;
+    }
     if (_currentIndex == index) return;
     HapticFeedback.selectionClick();
     setState(() {
@@ -449,8 +509,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final tournamentsAsync =
-        _currentIndex == 0 ? ref.watch(tournamentsProvider) : null;
+    ref.watch(categoriesProvider);
+    final tournamentsAsync = _currentIndex == 0
+        ? ref.watch(tournamentsProvider)
+        : null;
     final screenSize = MediaQuery.of(context).size;
     final double safeAreaTop = _safeAreaTop;
     final isHomeTab = _currentIndex == 0;
@@ -511,55 +573,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 // Left: Sport filter dropdown
                                 Align(
                                   alignment: Alignment.centerLeft,
-                                  child: PopupMenuButton<String>(
-                                    onSelected: _setActiveSportFilter,
-                                    offset: const Offset(0, 40),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    color: context.colors.bgSurface,
-                                    elevation: 8,
-                                    itemBuilder: (context) => [
-                                      if (_currentIndex != 4)
-                                        _buildPopupMenuItem(l10n.filterAll, 'all'),
-                                      ..._activeSportFilterItems(l10n)
-                                          .where((item) => item.$1 != 'all')
-                                          .map(
-                                            (item) =>
-                                                _buildPopupMenuItem(item.$2, item.$1),
+                                  child: Builder(
+                                    builder: (anchorContext) => GestureDetector(
+                                      onTap: () =>
+                                          _openSportMenu(anchorContext, l10n),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.16,
                                           ),
-                                    ],
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.16),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            _activeSportFilter == 'all'
-                                                ? l10n.filterAll
-                                                : AppConstants
-                                                          .sportNames[_activeSportFilter] ??
-                                                      _activeSportFilter,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: 14,
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              _activeSportFilter == 'all'
+                                                  ? l10n.filterAll
+                                                  : AppConstants
+                                                            .sportNames[_activeSportFilter] ??
+                                                        _activeSportFilter,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w800,
+                                                fontSize: 14,
+                                              ),
                                             ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          const Icon(
-                                            Icons.keyboard_arrow_down_rounded,
-                                            color: Colors.white,
-                                            size: 18,
-                                          ),
-                                        ],
+                                            const SizedBox(width: 4),
+                                            const Icon(
+                                              Icons.keyboard_arrow_down_rounded,
+                                              color: Colors.white,
+                                              size: 18,
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -603,7 +656,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           color: context.colors.bgDark,
                           border: Border(
                             bottom: BorderSide(
-                              color: context.colors.border.withValues(alpha: 0.5),
+                              color: context.colors.border.withValues(
+                                alpha: 0.5,
+                              ),
                               width: 1,
                             ),
                           ),
@@ -645,7 +700,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     if (_shouldShowSearchBar)
                       Container(
                         color: context.colors.bgDark,
-                        padding: const EdgeInsets.fromLTRB(16.0, 6.0, 16.0, 8.0),
+                        padding: const EdgeInsets.fromLTRB(
+                          16.0,
+                          6.0,
+                          16.0,
+                          8.0,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
@@ -659,7 +719,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ],
                                   )
                                 : _buildSearchBar(),
-                            if (_currentIndex == 4 && _isRankingsFilterExpanded) ...[
+                            if (_currentIndex == 4 &&
+                                _isRankingsFilterExpanded) ...[
                               const SizedBox(height: 8),
                               _buildRankingsProvinceFilterChip(context),
                             ],
@@ -675,7 +736,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         bottomNavigationBar: FloatingBottomNav(
           currentIndex: _currentIndex,
           onTabSelected: _switchTab,
-          onProfileTap: () => context.go('/profile'),
+          onProfileTap: () => widget.returnToClub
+              ? context.push('/profile?returnToClub=2')
+              : context.go('/profile'),
         ),
       ),
     );
@@ -1208,17 +1271,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
           alignment: Alignment.center,
-          child: const Icon(
-            Icons.add_rounded,
-            color: Colors.white,
-            size: 22,
-          ),
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
         ),
       ),
     );
   }
 
-  void _showActiveFilterSheet() {
+  Future<void> _showActiveFilterSheet() async {
+    if (_currentIndex != 4 && !await _ensureSportCategories()) return;
     switch (_currentIndex) {
       case 0:
         _showExploreFilterSheet();
@@ -2055,8 +2115,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildRankingsProvinceFilterChip(BuildContext context) {
     final colors = context.colors;
-    final provinceName = ProvinceData.fromCode(_rankingsProvince ?? '')?.name ??
-        'Tỉnh / T.Phố';
+    final provinceName =
+        ProvinceData.fromCode(_rankingsProvince ?? '')?.name ?? 'Tỉnh / T.Phố';
     final hasFilter = _rankingsProvince != null;
 
     return GestureDetector(
@@ -2113,15 +2173,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final result = await Navigator.of(context).push<Map<String, dynamic>>(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            ProvinceSelectionScreen(
-          selectedProvinceCode: _rankingsProvince,
-        ),
+            ProvinceSelectionScreen(selectedProvinceCode: _rankingsProvince),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(0.0, 1.0);
           const end = Offset.zero;
           const curve = Curves.easeOutCubic;
-          final tween = Tween(begin: begin, end: end)
-              .chain(CurveTween(curve: curve));
+          final tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
           return SlideTransition(
             position: animation.drive(tween),
             child: child,
@@ -2273,7 +2333,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         decoration: BoxDecoration(
           color: isDark ? colors.bgSurface : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: colors.border.withValues(alpha: isDark ? 1.0 : 0.6), width: 1),
+          border: Border.all(
+            color: colors.border.withValues(alpha: isDark ? 1.0 : 0.6),
+            width: 1,
+          ),
         ),
         child: Row(
           children: [
@@ -2801,10 +2864,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             fit: BoxFit.cover,
                           ),
                         )
-                      : Image.asset(
-                          AppConstants.appIconPng,
-                          fit: BoxFit.cover,
-                        ),
+                      : Image.asset(AppConstants.appIconPng, fit: BoxFit.cover),
                 ),
               ),
               const SizedBox(width: 14.0),
@@ -2837,8 +2897,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryLight.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                              color: AppTheme.primaryLight.withValues(
+                                alpha: 0.2,
+                              ),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusSmall,
+                              ),
                               border: Border.all(
                                 color: AppTheme.primary.withValues(alpha: 0.4),
                                 width: 0.8,

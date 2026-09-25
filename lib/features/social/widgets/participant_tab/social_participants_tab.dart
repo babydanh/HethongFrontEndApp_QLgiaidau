@@ -8,10 +8,14 @@ class SocialParticipantsTab extends StatelessWidget {
     required this.session,
     required this.isHost,
     required this.onAddParticipant,
+    required this.onRemoveParticipant,
+    this.removingParticipantId,
   });
   final SocialSessionModel session;
   final bool isHost;
   final ValueChanged<int> onAddParticipant;
+  final ValueChanged<SocialParticipantModel> onRemoveParticipant;
+  final String? removingParticipantId;
 
   @override
   Widget build(BuildContext context) {
@@ -175,47 +179,84 @@ class SocialParticipantsTab extends StatelessWidget {
           itemBuilder: (context, index) {
             if (index < session.participants.length) {
               final p = session.participants[index];
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 54,
-                    height: 54,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: p.isHost
-                          ? colors.success.withValues(alpha: 0.25)
-                          : AppTheme.primaryLight.withValues(alpha: 0.35),
-                      border: Border.all(
-                        color: p.isHost
-                            ? colors.success.withValues(alpha: 0.6)
-                            : AppTheme.primary.withValues(alpha: 0.4),
-                        width: 1.2,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        p.initials,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: colors.textPrimary,
+              final canRemove =
+                  isHost && !p.isHost && p.apiIdentifier.isNotEmpty;
+              return InkWell(
+                onTap: canRemove && removingParticipantId == null
+                    ? () => onRemoveParticipant(p)
+                    : null,
+                borderRadius: BorderRadius.circular(12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Stack(
+                      children: [
+                        Container(
+                          width: 54,
+                          height: 54,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: p.isHost
+                                ? colors.success.withValues(alpha: 0.25)
+                                : AppTheme.primaryLight.withValues(alpha: 0.35),
+                            border: Border.all(
+                              color: p.isHost
+                                  ? colors.success.withValues(alpha: 0.6)
+                                  : AppTheme.primary.withValues(alpha: 0.4),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              p.initials,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                          ),
                         ),
+                        if (canRemove)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: colors.bgCard,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: colors.border),
+                              ),
+                              child: removingParticipantId == p.apiIdentifier
+                                  ? const SizedBox(
+                                      width: 17,
+                                      height: 17,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Icon(
+                                      Icons.close_rounded,
+                                      size: 17,
+                                      color: colors.error,
+                                    ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      p.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    p.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               );
             } else {
               // Empty slot with '+' icon

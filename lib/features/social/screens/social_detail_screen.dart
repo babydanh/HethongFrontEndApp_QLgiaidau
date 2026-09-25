@@ -32,6 +32,53 @@ class SocialDetailScreen extends ConsumerStatefulWidget {
 class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
+  String? _removingParticipantId;
+
+  Future<void> _removeParticipant(SocialParticipantModel participant) async {
+    if (_removingParticipantId != null || participant.isHost) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Xóa người tham gia?'),
+        content: Text('Xóa ${participant.name} khỏi buổi Social này?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Xóa'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _removingParticipantId = participant.apiIdentifier);
+    try {
+      await ref
+          .read(socialSessionDetailProvider(widget.sessionId).notifier)
+          .removeParticipant(participant.apiIdentifier);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đã xóa ${participant.name} khỏi buổi Social.'),
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.toString()),
+            backgroundColor: context.colors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _removingParticipantId = null);
+    }
+  }
 
   bool get _isHost {
     if (widget.isHost != null) return widget.isHost!;
@@ -236,6 +283,8 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                     SocialParticipantsTab(
                       session: session,
                       isHost: host,
+                      onRemoveParticipant: _removeParticipant,
+                      removingParticipantId: _removingParticipantId,
                       onAddParticipant: (slot) =>
                           SocialAddParticipantSheet.show(
                             context,

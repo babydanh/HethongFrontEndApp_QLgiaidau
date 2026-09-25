@@ -51,6 +51,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   String _followedFilter = 'all';
   late final Future<PackageInfo> _packageInfoFuture;
 
+  void _selectBottomTab(int index) {
+    if (index == 2) return;
+    final returnDepth =
+        int.tryParse(
+          GoRouterState.of(context).uri.queryParameters['returnToClub'] ?? '',
+        ) ??
+        0;
+    if (returnDepth > 0) {
+      final router = GoRouter.of(context);
+      for (var i = 0; i < returnDepth && router.canPop(); i++) {
+        router.pop();
+      }
+      if (index != 3) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          router.push('/home?tab=$index&returnToClub=1');
+        });
+      }
+      return;
+    }
+    context.go('/home?tab=$index');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -292,9 +314,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
       bottomNavigationBar: FloatingBottomNav(
         currentIndex: 2,
-        onTabSelected: (index) {
-          if (index != 2) context.go('/home?tab=$index');
-        },
+        onTabSelected: _selectBottomTab,
         onProfileTap: () {},
       ),
     );
@@ -392,9 +412,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
       bottomNavigationBar: FloatingBottomNav(
         currentIndex: 2,
-        onTabSelected: (index) {
-          if (index != 2) context.go('/home?tab=$index');
-        },
+        onTabSelected: _selectBottomTab,
         onProfileTap: () {},
       ),
     );

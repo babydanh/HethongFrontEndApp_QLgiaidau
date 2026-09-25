@@ -427,7 +427,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final clubAsync = ref.watch(communityDetailProvider(widget.clubId));
@@ -498,9 +497,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       bottomNavigationBar: FloatingBottomNav(
         currentIndex: 3,
         onTabSelected: (index) {
-          if (index != 3) context.go('/home?tab=$index');
+          if (index != 3) context.push('/home?tab=$index&returnToClub=1');
         },
-        onProfileTap: () => context.go('/profile'),
+        onProfileTap: () => context.push('/profile?returnToClub=1'),
       ),
     );
   }
@@ -550,10 +549,10 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         isCreator || club.myRole == 'OWNER' || _myMembership?.role == 'OWNER';
     final isClubAdmin =
         isOwner ||
-            club.myRole == 'ADMIN' ||
-            club.myRole == 'MODERATOR' ||
-            _myMembership?.role == 'ADMIN' ||
-            _myMembership?.role == 'MODERATOR';
+        club.myRole == 'ADMIN' ||
+        club.myRole == 'MODERATOR' ||
+        _myMembership?.role == 'ADMIN' ||
+        _myMembership?.role == 'MODERATOR';
 
     final topPadding = MediaQuery.of(context).padding.top;
     final logoUrl = _resolveImageUrl(club.logoUrl);
@@ -674,8 +673,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     await _pickFromPhone(club: club, isLogo: isLogo);
   }
 
-
-
   Future<void> _pickFromPhone({
     required Community club,
     required bool isLogo,
@@ -759,10 +756,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       final url = await ref
           .read(communitySocialRepositoryProvider)
           .uploadImage(uploadBytes, isLogo ? 'club_logo.png' : picked.name);
-      await ref.read(communityRepositoryProvider).updateCommunity(
-        club.id,
-        {isLogo ? 'logoUrl' : 'bannerUrl': url},
-      );
+      await ref.read(communityRepositoryProvider).updateCommunity(club.id, {
+        isLogo ? 'logoUrl' : 'bannerUrl': url,
+      });
       ref.invalidate(communityDetailProvider(club.id));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

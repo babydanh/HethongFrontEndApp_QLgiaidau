@@ -199,7 +199,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final tabStr = state.uri.queryParameters['tab'];
           final initialTab = int.tryParse(tabStr ?? '') ?? 0;
-          return HomeScreen(initialTab: initialTab);
+          return HomeScreen(
+            initialTab: initialTab,
+            returnToClub: state.uri.queryParameters['returnToClub'] == '1',
+          );
         },
       ),
 
