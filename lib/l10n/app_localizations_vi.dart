@@ -10243,8 +10243,29 @@ class AppLocalizationsVi extends AppLocalizations {
   String get doublesRegShareToPartner => 'Chia sẻ tới đồng đội';
 
   @override
-  String get doublesRegStatusPendingApproval =>
-      'Đã ghép đội, đang chờ BTC duyệt';
+  String get doublesRegStatusPendingApproval => 'Đăng ký đang chờ BTC duyệt';
+
+  @override
+  String get doublesRegStatusPendingPartner =>
+      'Đang chờ đồng đội hoặc BTC ghép đôi';
+
+  @override
+  String get doublesRegCheckStatus => 'Kiểm tra trạng thái duyệt';
+
+  @override
+  String get doublesRegTeamRoster => 'Thành viên đội';
+
+  @override
+  String get doublesRegApprovalPendingPairing =>
+      'Đăng ký đang chờ BTC duyệt. BTC chỉ ghép đôi sau khi hồ sơ được duyệt.';
+
+  @override
+  String get doublesRegApprovalPendingInvite =>
+      'Đăng ký đang chờ BTC duyệt. Bạn chỉ có thể gửi lời mời đồng đội sau khi hồ sơ được duyệt.';
+
+  @override
+  String get doublesRegApprovalPendingTeam =>
+      'Đội đã đủ thành viên và đang chờ BTC duyệt.';
 
   @override
   String get doublesRegStatusComplete => 'Đã ghép đội và được duyệt';
@@ -13186,6 +13207,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementParticipantPending => 'Chờ duyệt';
+
+  @override
+  String get tournamentManagementParticipantPendingPartner =>
+      'Đang chờ ghép đồng đội';
 
   @override
   String get tournamentManagementParticipantRejected => 'Đã từ chối';

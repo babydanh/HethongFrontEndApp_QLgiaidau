@@ -6,69 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-
-/// Lightweight model for a Lite participant from the pairing API.
-class _LiteParticipant {
-  final String id;
-  final String status;
-  final String teamName;
-  final List<_LiteMember> members;
-
-  const _LiteParticipant({
-    required this.id,
-    required this.status,
-    this.teamName = '',
-    this.members = const [],
-  });
-
-  factory _LiteParticipant.fromJson(Map<String, dynamic> json) {
-    final membersList =
-        (json['rosters'] as List<dynamic>?)
-            ?.map(
-              (m) => _LiteMember.fromRosterJson(
-                Map<String, dynamic>.from(m as Map),
-              ),
-            )
-            .toList() ??
-        [];
-    return _LiteParticipant(
-      id: json['id']?.toString() ?? '',
-      status: (json['teamStatus']?.toString() ?? '').toUpperCase(),
-      teamName: json['teamName']?.toString() ?? '',
-      members: membersList,
-    );
-  }
-
-  bool get isPending => status == 'PENDING_PARTNER';
-  bool get isComplete => status == 'COMPLETE' || status == 'PENDING_APPROVAL';
-
-  String get displayName => teamName.isNotEmpty
-      ? teamName
-      : members.map((m) => m.fullName).join(' & ');
-}
-
-class _LiteMember {
-  final String id;
-  final String fullName;
-  final String avatarUrl;
-
-  const _LiteMember({
-    required this.id,
-    this.fullName = '',
-    this.avatarUrl = '',
-  });
-
-  factory _LiteMember.fromRosterJson(Map<String, dynamic> json) {
-    final profile = json['profile'] is Map
-        ? Map<String, dynamic>.from(json['profile'] as Map)
-        : const <String, dynamic>{};
-    return _LiteMember(
-      id: json['userId']?.toString() ?? '',
-      fullName: profile['fullName']?.toString() ?? '',
-      avatarUrl: profile['avatarUrl']?.toString() ?? '',
-    );
-  }
-}
+import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 
 /// Compact organizer screen for Lite tournament pairing.
 /// Supports manual pair, RANDOM/ELO_BALANCED generate, and unpair.
@@ -89,8 +27,8 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
   String? _matchType;
   bool _isFootball = false;
   String? _tournamentName;
-  List<_LiteParticipant> _participants = [];
-  List<_LiteParticipant> _pairedParticipants = [];
+  List<LiteParticipant> _participants = [];
+  List<LiteParticipant> _pairedParticipants = [];
   final Set<String> _selectedIds = {};
   bool _pairing = false;
   bool _generating = false;
@@ -173,7 +111,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
         setState(() {
           _participants = rawParticipants
               .map(
-                (e) => _LiteParticipant.fromJson(
+                (e) => LiteParticipant.fromJson(
                   Map<String, dynamic>.from(e as Map),
                 ),
               )
@@ -710,7 +648,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
     );
   }
 
-  Widget _pendingTile(_LiteParticipant participant, AppColorsExtension colors) {
+  Widget _pendingTile(LiteParticipant participant, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     final selected = _selectedIds.contains(participant.id);
     return Container(
@@ -793,7 +731,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
     );
   }
 
-  Widget _singlesTile(_LiteParticipant participant, AppColorsExtension colors) {
+  Widget _singlesTile(LiteParticipant participant, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -857,7 +795,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
     );
   }
 
-  Widget _pairedTile(_LiteParticipant participant, AppColorsExtension colors) {
+  Widget _pairedTile(LiteParticipant participant, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),

@@ -57,8 +57,14 @@ class SportChoiceTile extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              buildSportIcon(sportKey, iconSize, foreground),
-              const SizedBox(height: 4),
+              SizedBox(
+                width: iconSize,
+                height: iconSize,
+                child: Center(
+                  child: buildSportIcon(sportKey, iconSize, foreground),
+                ),
+              ),
+              const SizedBox(height: 5),
               Text(
                 label,
                 maxLines: 1,

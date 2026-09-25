@@ -10269,7 +10269,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get doublesRegStatusPendingApproval =>
-      'Team formed, awaiting organizer approval';
+      'Registration awaiting organizer approval';
+
+  @override
+  String get doublesRegStatusPendingPartner =>
+      'Waiting for a teammate or organizer pairing';
+
+  @override
+  String get doublesRegCheckStatus => 'Check approval status';
+
+  @override
+  String get doublesRegTeamRoster => 'Team members';
+
+  @override
+  String get doublesRegApprovalPendingPairing =>
+      'Your registration is waiting for organizer approval. BTC pairing starts after approval.';
+
+  @override
+  String get doublesRegApprovalPendingInvite =>
+      'Your registration is waiting for organizer approval. The teammate invitation becomes available after approval.';
+
+  @override
+  String get doublesRegApprovalPendingTeam =>
+      'Your team is formed and waiting for organizer approval.';
 
   @override
   String get doublesRegStatusComplete => 'Team formed and approved';
@@ -13232,6 +13254,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementParticipantPending => 'Pending approval';
+
+  @override
+  String get tournamentManagementParticipantPendingPartner =>
+      'Waiting for partner pairing';
 
   @override
   String get tournamentManagementParticipantRejected => 'Rejected';

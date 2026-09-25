@@ -17,6 +17,7 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/shared/widgets/withdraw_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
+import 'package:app_quanly_giaidau/features/register/doubles_registration_member.dart';
 
 class DoublesRegistrationFlow extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -252,6 +253,7 @@ class _DoublesRegistrationFlowState
   bool _paymentEligible = false;
   String _teamStatus = '';
   String? _registeredDivisionId;
+  List<DoublesRegistrationMember> _registeredMembers = const [];
 
   String? _partnerContact;
 
@@ -280,6 +282,9 @@ class _DoublesRegistrationFlowState
       if (mounted && regData != null) {
         if (regData['registered'] == true && regData['participant'] is Map) {
           final participant = regData['participant'] as Map;
+          final members = DoublesRegistrationMember.fromParticipantJson(
+            participant,
+          );
           final status = participant['teamStatus']?.toString() ?? '';
           final token = participant['teamInviteToken']?.toString();
           final link = participant['teamInviteLink']?.toString();
@@ -309,6 +314,7 @@ class _DoublesRegistrationFlowState
               _isPaid = participant['isPaid'] == true;
               _paymentEligible = regData['paymentEligible'] == true;
               _teamStatus = status;
+              _registeredMembers = members;
               _step = 2;
             });
             _startPolling();
@@ -324,6 +330,7 @@ class _DoublesRegistrationFlowState
               _isPaid = participant['isPaid'] == true;
               _paymentEligible = regData['paymentEligible'] == true;
               _teamStatus = status;
+              _registeredMembers = members;
               _step = 3;
             });
           }
@@ -474,6 +481,13 @@ class _DoublesRegistrationFlowState
       }
 
       final participant = raw['participant'] as Map;
+      _registeredMembers = DoublesRegistrationMember.fromParticipantJson(
+        participant,
+      );
+      final teamName = participant['teamName']?.toString();
+      if (teamName != null && teamName.isNotEmpty) {
+        _teamNameCtrl.text = teamName;
+      }
       final status = participant['teamStatus']?.toString() ?? '';
       final participantId = participant['id']?.toString();
       if (participantId == null || participantId.isEmpty) return false;
@@ -513,7 +527,8 @@ class _DoublesRegistrationFlowState
         )
         .asData
         ?.value;
-    final pairingMode = _pairingMode ??
+    final pairingMode =
+        _pairingMode ??
         (tournament?.doublesPairingMode == 'SELF' ? 'SELF' : 'ORGANIZER');
     final organizerPairing = pairingMode == 'ORGANIZER';
     if (!organizerPairing && _teamNameCtrl.text.trim().length < 3) {
@@ -580,6 +595,13 @@ class _DoublesRegistrationFlowState
           final regData = regResp.data['data'] as Map;
           final participant = regData['participant'];
           if (participant is Map) {
+            _registeredMembers = DoublesRegistrationMember.fromParticipantJson(
+              participant,
+            );
+            final teamName = participant['teamName']?.toString();
+            if (teamName != null && teamName.isNotEmpty) {
+              _teamNameCtrl.text = teamName;
+            }
             _teamInviteToken = participant['teamInviteToken']?.toString();
             _teamInviteLink = participant['teamInviteLink']?.toString();
             final expires = participant['partnerInviteExpiresAt']?.toString();
@@ -623,6 +645,16 @@ class _DoublesRegistrationFlowState
 
   void _startPolling() {
     _pollTimer?.cancel();
+    if (_teamInviteToken == null) {
+      // Organizer pairing has no invite expiry; keep polling until the pair is formed.
+      _partnerInviteExpiresAt = null;
+      _pollElapsed = 0;
+      _pollTimer = Timer.periodic(
+        const Duration(seconds: 5),
+        (_) => _checkPartnerJoined(),
+      );
+      return;
+    }
     _partnerInviteExpiresAt ??= DateTime.now().add(const Duration(minutes: 60));
     _pollElapsed = 0;
     _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -665,6 +697,10 @@ class _DoublesRegistrationFlowState
       final participant = regData['participant'];
       if (participant is! Map) return;
       final teamStatus = participant['teamStatus']?.toString() ?? '';
+      final members = DoublesRegistrationMember.fromParticipantJson(
+        participant,
+      );
+      final teamName = participant['teamName']?.toString();
       if (teamStatus == 'COMPLETE' ||
           teamStatus == 'PENDING_APPROVAL' ||
           teamStatus == 'WAITLISTED') {
@@ -675,6 +711,10 @@ class _DoublesRegistrationFlowState
           ref.invalidate(myTournamentWorkspaceProvider);
           setState(() {
             _teamStatus = teamStatus;
+            _registeredMembers = members;
+            if (teamName != null && teamName.isNotEmpty) {
+              _teamNameCtrl.text = teamName;
+            }
             _step = 3;
           });
         }
@@ -802,8 +842,8 @@ class _DoublesRegistrationFlowState
 
   Widget _buildStep1(Tournament t, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
-    final pairingMode = _pairingMode ??
-        (t.doublesPairingMode == 'SELF' ? 'SELF' : 'ORGANIZER');
+    final pairingMode =
+        _pairingMode ?? (t.doublesPairingMode == 'SELF' ? 'SELF' : 'ORGANIZER');
     final organizerPairing = pairingMode == 'ORGANIZER';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1173,8 +1213,8 @@ class _DoublesRegistrationFlowState
 
   Widget _buildStep2(Tournament t, AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
-    final pairingMode = _pairingMode ??
-        (t.doublesPairingMode == 'SELF' ? 'SELF' : 'ORGANIZER');
+    final pairingMode =
+        _pairingMode ?? (t.doublesPairingMode == 'SELF' ? 'SELF' : 'ORGANIZER');
     final organizerPairing = pairingMode == 'ORGANIZER';
     final rawInviteLink =
         _teamInviteLink ??
@@ -1189,8 +1229,8 @@ class _DoublesRegistrationFlowState
         : 'https://sporto.asia${rawInviteLink.startsWith('/') ? '' : '/'}$rawInviteLink';
     // A legacy participant can still carry an invite token. Organizer-paired
     // doubles must never surface that token as a QR/link to invite a teammate.
-    final showInvite = !organizerPairing &&
-        (inviteLink != null || _teamInviteToken != null);
+    final showInvite =
+        !organizerPairing && (inviteLink != null || _teamInviteToken != null);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1503,9 +1543,14 @@ class _DoublesRegistrationFlowState
         !_isPaid &&
         _participantId != null &&
         (_paymentEligible || isComplete) &&
-        _teamStatus != 'WAITLISTED' &&
-        _teamStatus != 'PENDING_APPROVAL';
+        _teamStatus != 'WAITLISTED';
     final isWaitlisted = _teamStatus == 'WAITLISTED';
+    final isApprovalPending = _teamStatus == 'PENDING_APPROVAL';
+    final approvalDescription = _registeredMembers.length > 1
+        ? l10n.doublesRegApprovalPendingTeam
+        : _teamInviteToken != null
+        ? l10n.doublesRegApprovalPendingInvite
+        : l10n.doublesRegApprovalPendingPairing;
     final statusLabel = switch (_teamStatus) {
       'PENDING_APPROVAL' => l10n.doublesRegStatusPendingApproval,
       'COMPLETE' => l10n.doublesRegStatusComplete,
@@ -1552,7 +1597,7 @@ class _DoublesRegistrationFlowState
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Đơn đăng ký đang chờ Ban Tổ Chức xét duyệt. Nút thanh toán sẽ hiển thị sau khi BTC phê duyệt.',
+                    approvalDescription,
                     style: TextStyle(
                       fontSize: 12.5,
                       color: colors.textPrimary,
@@ -1603,9 +1648,13 @@ class _DoublesRegistrationFlowState
               Icon(
                 isWaitlisted
                     ? Icons.hourglass_top_rounded
+                    : isApprovalPending
+                    ? Icons.pending_actions_rounded
                     : Icons.check_circle_rounded,
                 size: 48,
-                color: isWaitlisted ? colors.warning : colors.success,
+                color: isWaitlisted || isApprovalPending
+                    ? colors.warning
+                    : colors.success,
               ),
               const SizedBox(height: 16),
               Text(
@@ -1617,12 +1666,53 @@ class _DoublesRegistrationFlowState
                 ),
               ),
               const SizedBox(height: 8),
-              if (_selectedPartner != null)
+              if (_registeredMembers.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.doublesRegTeamRoster,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                ..._registeredMembers.map(
+                  (member) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.person_outline_rounded,
+                          size: 18,
+                          color: colors.textSecondary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            member.fullName,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: colors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ] else if (_selectedPartner != null)
                 Text(
                   l10n.doublesRegWithPartner(_selectedPartner!.fullName),
                   style: TextStyle(fontSize: 14, color: colors.textSecondary),
                 ),
-              if (_entryFee != null && _entryFee! > 0) ...[
+              if (_entryFee != null &&
+                  _entryFee! > 0 &&
+                  (canPay || _isPaid)) ...[
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -1644,7 +1734,10 @@ class _DoublesRegistrationFlowState
                   ),
                 ),
               ],
-              if (_entryFee != null && _entryFee! > 0 && !isWaitlisted) ...[
+              if (_entryFee != null &&
+                  _entryFee! > 0 &&
+                  (canPay || _isPaid) &&
+                  !isWaitlisted) ...[
                 const SizedBox(height: 8),
                 Text(
                   l10n.doublesRegPaymentStatus(
@@ -1668,35 +1761,43 @@ class _DoublesRegistrationFlowState
         SizedBox(
           width: double.infinity,
           height: 50,
-          child: FilledButton.icon(
-            onPressed: () {
-              if (canPay) {
-                context.push(
-                  '/payment/checkout',
-                  extra: {
-                    'tournamentId': widget.tournamentId,
-                    'participantId': _participantId,
-                    'divisionId': widget.division.id,
-                    'amount': _entryFee,
-                    'tournamentName': t.name,
+          child: isApprovalPending && !canPay
+              ? OutlinedButton.icon(
+                  onPressed: _checkExistingRegistration,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: Text(l10n.doublesRegCheckStatus),
+                )
+              : FilledButton.icon(
+                  onPressed: () {
+                    if (canPay) {
+                      context.push(
+                        '/payment/checkout',
+                        extra: {
+                          'tournamentId': widget.tournamentId,
+                          'participantId': _participantId,
+                          'divisionId': widget.division.id,
+                          'amount': _entryFee,
+                          'tournamentName': t.name,
+                        },
+                      );
+                    } else {
+                      setState(() => _success = true);
+                    }
                   },
-                );
-              } else {
-                setState(() => _success = true);
-              }
-            },
-            icon: canPay
-                ? const Icon(Icons.payment_rounded)
-                : const Icon(Icons.check_rounded),
-            label: Text(
-              canPay ? l10n.doublesRegProceedPayment : l10n.doublesRegComplete,
-            ),
-            style: FilledButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-          ),
+                  icon: canPay
+                      ? const Icon(Icons.payment_rounded)
+                      : const Icon(Icons.check_rounded),
+                  label: Text(
+                    canPay
+                        ? l10n.doublesRegProceedPayment
+                        : l10n.doublesRegComplete,
+                  ),
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
         ),
         const SizedBox(height: 12),
         SizedBox(

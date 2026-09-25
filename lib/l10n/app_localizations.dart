@@ -18789,8 +18789,44 @@ abstract class AppLocalizations {
   /// No description provided for @doublesRegStatusPendingApproval.
   ///
   /// In vi, this message translates to:
-  /// **'Đã ghép đội, đang chờ BTC duyệt'**
+  /// **'Đăng ký đang chờ BTC duyệt'**
   String get doublesRegStatusPendingApproval;
+
+  /// No description provided for @doublesRegStatusPendingPartner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chờ đồng đội hoặc BTC ghép đôi'**
+  String get doublesRegStatusPendingPartner;
+
+  /// No description provided for @doublesRegCheckStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kiểm tra trạng thái duyệt'**
+  String get doublesRegCheckStatus;
+
+  /// No description provided for @doublesRegTeamRoster.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên đội'**
+  String get doublesRegTeamRoster;
+
+  /// No description provided for @doublesRegApprovalPendingPairing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký đang chờ BTC duyệt. BTC chỉ ghép đôi sau khi hồ sơ được duyệt.'**
+  String get doublesRegApprovalPendingPairing;
+
+  /// No description provided for @doublesRegApprovalPendingInvite.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký đang chờ BTC duyệt. Bạn chỉ có thể gửi lời mời đồng đội sau khi hồ sơ được duyệt.'**
+  String get doublesRegApprovalPendingInvite;
+
+  /// No description provided for @doublesRegApprovalPendingTeam.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội đã đủ thành viên và đang chờ BTC duyệt.'**
+  String get doublesRegApprovalPendingTeam;
 
   /// No description provided for @doublesRegStatusComplete.
   ///
@@ -24021,6 +24057,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chờ duyệt'**
   String get tournamentManagementParticipantPending;
+
+  /// No description provided for @tournamentManagementParticipantPendingPartner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chờ ghép đồng đội'**
+  String get tournamentManagementParticipantPendingPartner;
 
   /// No description provided for @tournamentManagementParticipantRejected.
   ///

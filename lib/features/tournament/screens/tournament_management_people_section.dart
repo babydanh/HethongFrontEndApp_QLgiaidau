@@ -605,6 +605,7 @@ class _ParticipantCard extends StatelessWidget {
     final localizedStatus = switch (status) {
       'PENDING' ||
       'PENDING_APPROVAL' => l10n.tournamentManagementParticipantPending,
+      'PENDING_PARTNER' => l10n.tournamentManagementParticipantPendingPartner,
       'COMPLETE' => l10n.tournamentManagementParticipantApproved,
       'REJECTED' => l10n.tournamentManagementParticipantRejected,
       'KICKED' => l10n.tournamentManagementParticipantRemoved,
