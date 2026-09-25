@@ -959,7 +959,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final activeSport = _activeSportFilter;
     final isSelected =
         activeSport == key || (key == '' && activeSport == 'all');
-    final iconColor = isSelected ? AppTheme.primary : context.colors.textSecondary;
+    final iconColor = isSelected
+        ? AppTheme.primary
+        : context.colors.textSecondary;
     return PopupMenuItem<String>(
       value: key,
       child: Row(
