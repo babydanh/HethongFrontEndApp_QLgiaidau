@@ -48,7 +48,6 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _uploading = false;
   bool _uploadingCover = false;
-  int _activeTab = 0;
   String _followedFilter = 'all';
   late final Future<PackageInfo> _packageInfoFuture;
 
@@ -280,6 +279,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ),
           ),
+          IconButton(
+            tooltip: l10n.profileTabSettings,
+            onPressed: () => context.go('/profile/settings'),
+            icon: Icon(
+              Icons.settings_outlined,
+              size: 20,
+              color: context.colors.textPrimary,
+            ),
+          ),
           const SizedBox(width: 4),
         ],
       ),
@@ -417,96 +425,49 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _buildUserInfo(context, profile),
           const SizedBox(height: 20),
 
-          // Tab bar selector (3 Tabs: Thông tin | Theo dõi | Thành tích)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              height: 46,
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colors.border),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildTabButton(
-                      0,
-                      l10n.profileTabInfo,
-                      Icons.person_outline_rounded,
-                    ),
-                  ),
-                  Expanded(
-                    child: _buildTabButton(
-                      1,
-                      l10n.profileTabSettings,
-                      Icons.settings_rounded,
-                    ),
-                  ),
-                ],
-              ),
+          // My Tournaments Section
+          _buildSectionTitle(
+            colors,
+            l10n.infoMyTournaments,
+            trailing: IconButton(
+              onPressed: () => showPublicTournamentTypeSheet(context),
+              icon: const Icon(Icons.add_circle_outline_rounded, size: 22),
+              color: AppTheme.primary,
+              tooltip: 'Tạo giải đấu',
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              padding: EdgeInsets.zero,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildMyTournamentsSection(context),
+          ),
+          const SizedBox(height: 24),
 
-          // Tab Content
-          if (_activeTab == 0) ...[
-            // My Tournaments Section
-            _buildSectionTitle(
-              colors,
-              l10n.infoMyTournaments,
-              trailing: IconButton(
-                onPressed: () => showPublicTournamentTypeSheet(context),
-                icon: const Icon(Icons.add_circle_outline_rounded, size: 22),
-                color: AppTheme.primary,
-                tooltip: 'Tạo giải đấu',
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                padding: EdgeInsets.zero,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildMyTournamentsSection(context),
-            ),
-            const SizedBox(height: 24),
+          // My Communities Section
+          _buildSectionTitle(colors, l10n.infoMyClubs),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildMyCommunitiesSection(context),
+          ),
+          const SizedBox(height: 24),
 
-            // My Communities Section
-            _buildSectionTitle(colors, l10n.infoMyClubs),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildMyCommunitiesSection(context),
-            ),
-            const SizedBox(height: 24),
+          // Followed Tournaments Section
+          _buildSectionTitle(colors, l10n.infoFollowedTournaments),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildFollowedTournamentsSection(context),
+          ),
+          const SizedBox(height: 24),
 
-            // Followed Tournaments Section
-            _buildSectionTitle(colors, l10n.infoFollowedTournaments),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildFollowedTournamentsSection(context),
-            ),
-            const SizedBox(height: 24),
-
-            // Personal Info Section
-            _buildSectionTitle(colors, l10n.infoPersonalInfo),
-            const SizedBox(height: 10),
-            _buildInfoCard(context, profile),
-            const SizedBox(height: 32),
-          ] else ...[
-            // Tab 1: Cài đặt (Menu buttons)
-            _buildSectionTitle(colors, l10n.settingsAccountTitle),
-            const SizedBox(height: 10),
-            _buildAccountMenu(context),
-            const SizedBox(height: 24),
-
-            _buildSectionTitle(colors, l10n.settingsSystemTitle),
-            const SizedBox(height: 10),
-            _buildOtherMenu(context, isDark),
-            const SizedBox(height: 32),
-          ],
+          // Personal Info Section
+          _buildSectionTitle(colors, l10n.infoPersonalInfo),
+          const SizedBox(height: 10),
+          _buildInfoCard(context, profile),
+          const SizedBox(height: 32),
           FutureBuilder<PackageInfo>(
             future: _packageInfoFuture,
             builder: (context, snapshot) {
@@ -525,46 +486,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             },
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTabButton(int index, String label, IconData icon) {
-    final colors = context.colors;
-    final isSelected = _activeTab == index;
-    return GestureDetector(
-      onTap: () => setState(() => _activeTab = index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 15,
-              color: isSelected ? Colors.white : colors.textSecondary,
-            ),
-            const SizedBox(width: 5),
-            Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : colors.textSecondary,
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

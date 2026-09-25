@@ -12,14 +12,64 @@ import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
-import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/providers/regions_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+
+class _SearchFilterDraft {
+  _SearchFilterDraft.fromState(_GlobalSearchScreenState state)
+    : matchSport = state._matchSport,
+      matchStatus = state._matchStatus,
+      matchDateRange = state._matchDateRange,
+      matchLocation = state._matchLocationController.text,
+      tournamentSport = state._tournamentSport,
+      tournamentStatus = state._tournamentStatus,
+      tournamentDateRange = state._tournamentDateRange,
+      tournamentProvinceCode = state._tournamentProvinceCode,
+      clubSport = state._clubSport,
+      clubProvince = state._clubProvince,
+      athleteSport = state._athleteSport,
+      athleteGender = state._athleteGender,
+      athleteProvince = state._athleteProvince;
+
+  String matchSport;
+  String matchStatus;
+  DateTimeRange? matchDateRange;
+  String matchLocation;
+  String tournamentSport;
+  String tournamentStatus;
+  DateTimeRange? tournamentDateRange;
+  String tournamentProvinceCode;
+  String clubSport;
+  String? clubProvince;
+  String athleteSport;
+  String athleteGender;
+  String? athleteProvince;
+
+  void reset() {
+    matchSport = 'all';
+    matchStatus = 'all';
+    matchDateRange = null;
+    matchLocation = '';
+    tournamentSport = 'all';
+    tournamentStatus = 'all';
+    tournamentDateRange = null;
+    tournamentProvinceCode = '';
+    clubSport = 'all';
+    clubProvince = null;
+    athleteSport = 'all';
+    athleteGender = 'all';
+    athleteProvince = null;
+  }
+}
 
 class GlobalSearchScreen extends ConsumerStatefulWidget {
   final int initialTabIndex;
@@ -45,7 +95,9 @@ class GlobalSearchScreen extends ConsumerStatefulWidget {
       barrierDismissible: true,
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 360),
+      transitionDuration: MediaQuery.of(context).disableAnimations
+          ? Duration.zero
+          : const Duration(milliseconds: 360),
       pageBuilder: (context, animation, secondaryAnimation) =>
           GlobalSearchScreen(
             initialTabIndex: initialTabIndex,
@@ -82,12 +134,337 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   late final TextEditingController _queryController;
   late final TextEditingController _matchLocationController;
   late int _scope;
-  late bool _filtersExpanded;
+  int _unrenderableMatchCount = 0;
+  Widget _buildFilterButton(AppColorsExtension colors, AppLocalizations l10n) {
+    final isActive = _activeFilterCount > 0;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          tooltip: _activeFilterCount == 0
+              ? l10n.homeGlobalSearchAdvancedFilters
+              : '${l10n.homeGlobalSearchAdvancedFilters} ($_activeFilterCount)',
+          onPressed: _showFilterSheet,
+          constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+          padding: EdgeInsets.zero,
+          style: IconButton.styleFrom(
+            backgroundColor: isActive ? AppTheme.primary : colors.bgDark,
+            foregroundColor: isActive ? Colors.white : colors.textSecondary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(13),
+            ),
+          ),
+          icon: const Icon(Icons.tune_rounded, size: 20),
+        ),
+        if (_activeFilterCount > 0)
+          Positioned(
+            top: -4,
+            right: -3,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 3),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                border: Border.all(color: AppTheme.primary),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$_activeFilterCount',
+                style: const TextStyle(
+                  color: AppTheme.primary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _showFilterSheet() async {
+    FocusScope.of(context).unfocus();
+    final draft = _SearchFilterDraft.fromState(this);
+    final locationController = TextEditingController(text: draft.matchLocation);
+    final colors = context.colors;
+    final screenHeight = MediaQuery.sizeOf(context).height;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+          ? AnimationStyle.noAnimation
+          : null,
+      useSafeArea: true,
+      backgroundColor: colors.bgDark,
+      constraints: BoxConstraints(maxHeight: screenHeight * 0.9),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => Consumer(
+        builder: (context, ref, _) {
+          final l10n = AppLocalizations.of(context)!;
+          final sheetColors = context.colors;
+          final categories =
+              ref.watch(categoriesProvider).asData?.value ??
+              const <CategoryModel>[];
+
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.72,
+            minChildSize: 0.46,
+            maxChildSize: 1,
+            builder: (context, scrollController) => StatefulBuilder(
+              builder: (context, setSheetState) => Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10, bottom: 6),
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: sheetColors.border,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 2, 8, 8),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.tune_rounded,
+                          size: 20,
+                          color: AppTheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            l10n.homeGlobalSearchAdvancedFilters,
+                            style: TextStyle(
+                              color: sheetColors.textPrimary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: MaterialLocalizations.of(
+                            context,
+                          ).closeButtonTooltip,
+                          onPressed: () => Navigator.of(sheetContext).pop(),
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(height: 1, color: sheetColors.border),
+                  Expanded(
+                    child: ListView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                      children: _buildFilterFields(
+                        l10n,
+                        sheetColors,
+                        categories,
+                        draft,
+                        locationController,
+                        setSheetState,
+                      ),
+                    ),
+                  ),
+                  SafeArea(
+                    top: false,
+                    minimum: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: Container(
+                      padding: const EdgeInsets.only(top: 8),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(color: sheetColors.border),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              setSheetState(draft.reset);
+                              locationController.clear();
+                            },
+                            child: Text(l10n.homeGlobalSearchClearFilters),
+                          ),
+                          const Spacer(),
+                          FilledButton.icon(
+                            onPressed: () {
+                              draft.matchLocation = locationController.text;
+                              _applyFilterDraft(draft);
+                              Navigator.of(sheetContext).pop();
+                            },
+                            icon: const Icon(Icons.check_rounded, size: 18),
+                            label: Text(l10n.filterApply),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    locationController.dispose();
+  }
+
+  void _applyFilterDraft(_SearchFilterDraft draft) {
+    setState(() {
+      _matchSport = draft.matchSport;
+      _matchStatus = draft.matchStatus;
+      _matchDateRange = draft.matchDateRange;
+      _tournamentSport = draft.tournamentSport;
+      _tournamentStatus = draft.tournamentStatus;
+      _tournamentDateRange = draft.tournamentDateRange;
+      _tournamentProvinceCode = draft.tournamentProvinceCode;
+      _clubSport = draft.clubSport;
+      _clubProvince = draft.clubProvince;
+      _athleteSport = draft.athleteSport;
+      _athleteGender = draft.athleteGender;
+      _athleteProvince = draft.athleteProvince;
+    });
+    _matchLocationController.text = draft.matchLocation;
+    _loadScope();
+  }
+
+  List<Widget> _buildFilterFields(
+    AppLocalizations l10n,
+    AppColorsExtension colors,
+    List<CategoryModel> categories,
+    _SearchFilterDraft draft,
+    TextEditingController locationController,
+    StateSetter setSheetState,
+  ) {
+    final sportBySlug = <(String, String)>[
+      ('all', l10n.filterAll),
+      ...categories.map((category) => (category.slug, category.name)),
+    ];
+    final sportById = <(String, String)>[
+      ('all', l10n.filterAll),
+      ...categories.map((category) => (category.id, category.name)),
+    ];
+    final provinces = <(String, String)>[
+      ('', l10n.filterAll),
+      ...ProvinceData.all.map((province) => (province.code, province.name)),
+    ];
+    final children = <Widget>[];
+    void add(
+      String label,
+      String value,
+      List<(String, String)> options,
+      ValueChanged<String> onChanged,
+    ) {
+      children.add(
+        _dropdown(label, value, options, (next) {
+          if (next != null) setSheetState(() => onChanged(next));
+        }, colors),
+      );
+    }
+
+    if (_scope == 0 || _scope == 5) {
+      add(
+        l10n.homeGlobalSearchSport,
+        draft.matchSport,
+        sportBySlug,
+        (value) => draft.matchSport = value,
+      );
+      add(l10n.homeGlobalSearchStatus, draft.matchStatus, [
+        ('all', l10n.filterAll),
+        ('scheduled', l10n.matchesFilterScheduled),
+        ('live', l10n.matchesStatusLive),
+        ('completed', l10n.matchesStatusCompleted),
+      ], (value) => draft.matchStatus = value);
+      children.add(
+        _dateFilter(l10n, colors, draft.matchDateRange, (range) {
+          setSheetState(() => draft.matchDateRange = range);
+        }),
+      );
+      children.add(
+        _textFilter(
+          label: l10n.homeGlobalSearchLocation,
+          controller: locationController,
+          colors: colors,
+        ),
+      );
+    } else if (_scope == 1) {
+      add(
+        l10n.homeGlobalSearchSport,
+        draft.tournamentSport,
+        sportBySlug,
+        (value) => draft.tournamentSport = value,
+      );
+      add(l10n.homeGlobalSearchStatus, draft.tournamentStatus, [
+        ('all', l10n.filterAll),
+        ('registration', l10n.matchesFilterRegistration),
+        ('upcoming', l10n.matchesFilterScheduled),
+        ('in_progress', l10n.homeInProgressStatus),
+        ('completed', l10n.matchesStatusCompleted),
+      ], (value) => draft.tournamentStatus = value);
+      add(
+        l10n.homeGlobalSearchProvince,
+        draft.tournamentProvinceCode,
+        provinces,
+        (value) => draft.tournamentProvinceCode = value,
+      );
+      children.add(
+        _dateFilter(l10n, colors, draft.tournamentDateRange, (range) {
+          setSheetState(() => draft.tournamentDateRange = range);
+        }),
+      );
+    } else if (_scope == 3) {
+      add(
+        l10n.homeGlobalSearchSport,
+        draft.clubSport,
+        sportById,
+        (value) => draft.clubSport = value,
+      );
+      add(
+        l10n.homeGlobalSearchProvince,
+        draft.clubProvince ?? '',
+        provinces,
+        (value) => draft.clubProvince = value.isEmpty ? null : value,
+      );
+    } else if (_scope == 4) {
+      add(
+        l10n.homeGlobalSearchSport,
+        draft.athleteSport,
+        sportById,
+        (value) => draft.athleteSport = value,
+      );
+      add(l10n.homeGlobalSearchGender, draft.athleteGender, [
+        ('all', l10n.filterAll),
+        ('MALE', l10n.clubRankingMale),
+        ('FEMALE', l10n.clubRankingFemale),
+      ], (value) => draft.athleteGender = value);
+      add(
+        l10n.homeGlobalSearchProvince,
+        draft.athleteProvince ?? '',
+        provinces,
+        (value) => draft.athleteProvince = value.isEmpty ? null : value,
+      );
+    }
+
+    return [
+      for (var index = 0; index < children.length; index++) ...[
+        if (index > 0) const SizedBox(height: 12),
+        children[index],
+      ],
+    ];
+  }
+
   Timer? _debounce;
   int _requestVersion = 0;
   bool _loading = false;
   bool _loadingMore = false;
-  bool _matchesLoaded = false;
   bool _hasMore = false;
   String? _nextCursor;
   String? _error;
@@ -116,12 +493,13 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     _scope = _scopes.contains(widget.initialTabIndex)
         ? widget.initialTabIndex
         : 0;
-    _filtersExpanded = widget.showFiltersInitially;
     _queryController = TextEditingController(text: widget.initialQuery);
     _matchLocationController = TextEditingController();
     _queryController.addListener(_onQueryChanged);
-    _matchLocationController.addListener(_onQueryChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadScope());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadScope();
+      if (widget.showFiltersInitially) _showFilterSheet();
+    });
   }
 
   @override
@@ -130,9 +508,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     _queryController
       ..removeListener(_onQueryChanged)
       ..dispose();
-    _matchLocationController
-      ..removeListener(_onQueryChanged)
-      ..dispose();
+    _matchLocationController.dispose();
     super.dispose();
   }
 
@@ -160,6 +536,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         _error = null;
         _hasMore = false;
         _nextCursor = null;
+        _unrenderableMatchCount = 0;
       });
     } else {
       setState(() => _loadingMore = true);
@@ -169,21 +546,67 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       switch (_scope) {
         case 0:
         case 5:
-          if (!_matchesLoaded) {
-            final matches = await ref
-                .read(matchRepositoryProvider)
-                .getMatches(publicOnly: true);
-            if (!mounted || version != _requestVersion) return;
-            _matches = matches.where(isRenderablePublicMatch).toList();
-            _matchesLoaded = true;
+          final categories =
+              ref.read(categoriesProvider).asData?.value ??
+              const <CategoryModel>[];
+          CategoryModel? selectedCategory;
+          for (final category in categories) {
+            if (category.slug == _matchSport) {
+              selectedCategory = category;
+              break;
+            }
           }
+          var cursor = append ? _nextCursor : null;
+          var fetchMore = true;
+          final accumulated = <MatchModel>[];
+          var totalHidden = 0;
+          var lastHasMore = false;
+          String? lastNextCursor;
+
+          while (fetchMore && accumulated.length < 10) {
+            final result = await ref
+                .read(matchRepositoryProvider)
+                .getPublicMatchesPaged(
+                  cursor: cursor,
+                  limit: 20,
+                  search: _scope == 0 && query.isNotEmpty ? query : null,
+                  categoryId: selectedCategory?.id,
+                  status: _matchStatus == 'all' ? null : _matchStatus,
+                  startDate: _matchDateRange?.start,
+                  endDate: _matchDateRange?.end,
+                );
+            if (!mounted || version != _requestVersion) return;
+            
+            final pageMatches = result.matches
+                .where(isRenderablePublicMatch)
+                .toList(growable: false);
+            final hiddenCount = result.matches.length - pageMatches.length;
+            totalHidden += hiddenCount;
+            accumulated.addAll(pageMatches);
+
+            lastHasMore = result.hasMore && (result.nextCursor?.isNotEmpty ?? false);
+            lastNextCursor = result.nextCursor;
+            cursor = result.nextCursor;
+
+            // Stop looping if backend has no more or we got enough matches
+            if (!lastHasMore || cursor == null || accumulated.length >= 10) {
+              fetchMore = false;
+            }
+          }
+
+          _unrenderableMatchCount = append
+              ? _unrenderableMatchCount + totalHidden
+              : totalHidden;
+          _matches = append ? [..._matches, ...accumulated] : accumulated;
+          _nextCursor = lastNextCursor;
+          _hasMore = lastHasMore;
           break;
         case 1:
           final result = await ref
               .read(tournamentRepositoryProvider)
               .getPublicTournamentsPaged(
                 cursor: append ? _nextCursor : null,
-                limit: 20,
+                limit: 10,
                 sport: _tournamentSport == 'all' ? null : _tournamentSport,
                 status: _tournamentStatus == 'all' ? null : _tournamentStatus,
                 search: query.isEmpty ? null : query,
@@ -195,7 +618,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                           )
                           .name,
                 startDate: _tournamentDateRange?.start,
-                endDate: _tournamentDateRange?.end,
+                rethrowOnError: true,
               );
           if (!mounted || version != _requestVersion) return;
           _tournaments = append
@@ -209,10 +632,11 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
               .read(communityRepositoryProvider)
               .getCommunitiesPaged(
                 cursor: append ? _nextCursor : null,
-                limit: 20,
+                limit: 10,
                 search: query.isEmpty ? null : query,
                 provinceCode: _clubProvince,
                 categoryId: _clubSport == 'all' ? null : _clubSport,
+                rethrowOnError: true,
               );
           if (!mounted || version != _requestVersion) return;
           _clubs = append
@@ -226,6 +650,8 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
           if (!mounted || version != _requestVersion) return;
           if (categories.isEmpty) {
             _athletes = [];
+            _hasMore = false;
+            _nextCursor = null;
             break;
           }
           final category = _athleteSport == 'all'
@@ -235,17 +661,23 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                       item.id == _athleteSport || item.slug == _athleteSport,
                   orElse: () => categories.first,
                 );
-          _athletes = await ref.read(
-            rankingsProvider((
-              categoryId: category.id,
-              matchType: '',
-              genderRestriction: _athleteGender == 'all'
-                  ? null
-                  : _athleteGender,
-              provinceCode: _athleteProvince,
-            )).future,
-          );
+          final result = await ref
+              .read(rankingRepositoryProvider)
+              .getRankingsPaged(
+                categoryId: category.id,
+                cursor: append ? _nextCursor : null,
+                limit: 10,
+                genderRestriction: _athleteGender == 'all'
+                    ? null
+                    : _athleteGender,
+                provinceCode: _athleteProvince,
+              );
           if (!mounted || version != _requestVersion) return;
+          _athletes = append
+              ? [..._athletes, ...result.rankings]
+              : result.rankings;
+          _nextCursor = result.nextCursor;
+          _hasMore = result.hasMore && (result.nextCursor?.isNotEmpty ?? false);
           break;
       }
       if (mounted && version == _requestVersion) {
@@ -345,13 +777,6 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
               query.isEmpty || player.fullName.toLowerCase().contains(query),
         )
         .toList();
-    athletes.sort((a, b) {
-      final byUpdated = _newestFirst(
-        DateTime.tryParse(a.updatedAt ?? ''),
-        DateTime.tryParse(b.updatedAt ?? ''),
-      );
-      return byUpdated != 0 ? byUpdated : a.rank.compareTo(b.rank);
-    });
     return athletes;
   }
 
@@ -416,8 +841,6 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    final categories =
-        ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
 
     return Focus(
       autofocus: true,
@@ -437,16 +860,6 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
             children: [
               _buildHeader(l10n, colors),
               _buildScopeSelector(l10n, colors),
-              _buildFilterToolbar(l10n, colors),
-              AnimatedSize(
-                duration: MediaQuery.of(context).disableAnimations
-                    ? Duration.zero
-                    : const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                child: _filtersExpanded
-                    ? _buildFilters(l10n, colors, categories)
-                    : const SizedBox.shrink(),
-              ),
               if (_scope == 5)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -472,35 +885,27 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     return Material(
       color: colors.bgSurface,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+        padding: const EdgeInsets.fromLTRB(6, 2, 10, 2),
         child: Row(
           children: [
             IconButton(
               tooltip: l10n.homeGlobalSearchClose,
               onPressed: _closeSearch,
-              icon: const Icon(Icons.arrow_back_rounded),
+              icon: const Icon(Icons.arrow_back_rounded, size: 22),
               color: colors.textPrimary,
-              constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 36, height: 48),
             ),
             const SizedBox(width: 4),
             Expanded(
               child: Container(
-                height: 52,
+                height: 48,
                 decoration: BoxDecoration(
                   color: colors.bgCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: colors.border.withValues(alpha: .7),
-                  ),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
                   children: [
-                    const SizedBox(width: 14),
-                    Icon(
-                      Icons.search_rounded,
-                      color: colors.textMuted,
-                      size: 20,
-                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Semantics(
@@ -510,23 +915,21 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                           controller: _queryController,
                           textInputAction: TextInputAction.search,
                           onSubmitted: (_) => _loadScope(),
-                          onTap: () {
-                            if (_filtersExpanded) {
-                              setState(() => _filtersExpanded = false);
-                            }
-                          },
                           style: TextStyle(
                             color: colors.textPrimary,
-                            fontSize: 15,
+                            fontSize: 14,
                           ),
                           cursorColor: AppTheme.primary,
                           decoration: InputDecoration(
                             hintText: _scopeHint(l10n),
                             isDense: true,
-                            border: InputBorder.none,
+                            filled: false,
                             contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
+                              horizontal: 0,
+                              vertical: 6,
                             ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
                             suffixIconConstraints:
                                 const BoxConstraints.tightFor(
                                   width: 48,
@@ -625,260 +1028,6 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     );
   }
 
-  Widget _buildFilterButton(AppColorsExtension colors, AppLocalizations l10n) {
-    final isActive = _filtersExpanded || _activeFilterCount > 0;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        IconButton(
-          tooltip: _activeFilterCount == 0
-              ? l10n.homeGlobalSearchAdvancedFilters
-              : '${l10n.homeGlobalSearchAdvancedFilters} ($_activeFilterCount)',
-          onPressed: () {
-            FocusScope.of(context).unfocus();
-            setState(() => _filtersExpanded = !_filtersExpanded);
-          },
-          constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-          padding: EdgeInsets.zero,
-          style: IconButton.styleFrom(
-            backgroundColor: isActive ? AppTheme.primary : colors.bgDark,
-            foregroundColor: isActive ? Colors.white : colors.textSecondary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(13),
-            ),
-          ),
-          icon: const Icon(Icons.tune_rounded, size: 20),
-        ),
-        if (_activeFilterCount > 0)
-          Positioned(
-            top: -4,
-            right: -3,
-            child: Container(
-              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 3),
-              decoration: BoxDecoration(
-                color: colors.bgSurface,
-                border: Border.all(color: AppTheme.primary),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                '$_activeFilterCount',
-                style: const TextStyle(
-                  color: AppTheme.primary,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildFilterToolbar(AppLocalizations l10n, AppColorsExtension colors) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              '${_scopeLabel(l10n, _scope).toUpperCase()} '
-              '${l10n.homeGlobalSearchSuggested.toUpperCase()} '
-              '($_visibleResultCount)',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: colors.textSecondary,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Icon(Icons.swap_vert_rounded, size: 17, color: colors.textMuted),
-          const SizedBox(width: 3),
-          Text(
-            '${l10n.homeGlobalSearchSort}: ${l10n.homeGlobalSearchSortNewest}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: colors.textMuted, fontSize: 11),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilters(
-    AppLocalizations l10n,
-    AppColorsExtension colors,
-    List<CategoryModel> categories,
-  ) {
-    final sportBySlug = <(String, String)>[
-      ('all', l10n.filterAll),
-      ...categories.map((category) => (category.slug, category.name)),
-    ];
-    final sportById = <(String, String)>[
-      ('all', l10n.filterAll),
-      ...categories.map((category) => (category.id, category.name)),
-    ];
-    final provinces = <(String, String)>[
-      ('', l10n.filterAll),
-      ...ProvinceData.all.map((province) => (province.code, province.name)),
-    ];
-    final children = <Widget>[];
-    void add(
-      String label,
-      String value,
-      List<(String, String)> options,
-      ValueChanged<String?> onChanged,
-    ) {
-      children.add(_dropdown(label, value, options, onChanged, colors));
-    }
-
-    if (_scope == 0 || _scope == 5) {
-      add(l10n.homeGlobalSearchSport, _matchSport, sportBySlug, (value) {
-        if (value != null) setState(() => _matchSport = value);
-      });
-      add(
-        l10n.homeGlobalSearchStatus,
-        _matchStatus,
-        [
-          ('all', l10n.filterAll),
-          ('scheduled', l10n.matchesFilterScheduled),
-          ('live', l10n.matchesStatusLive),
-          ('completed', l10n.matchesStatusCompleted),
-        ],
-        (value) {
-          if (value != null) setState(() => _matchStatus = value);
-        },
-      );
-      children.add(
-        _dateFilter(
-          l10n,
-          colors,
-          _matchDateRange,
-          (range) => setState(() => _matchDateRange = range),
-        ),
-      );
-      children.add(
-        _textFilter(
-          label: l10n.homeGlobalSearchLocation,
-          controller: _matchLocationController,
-          colors: colors,
-        ),
-      );
-    } else if (_scope == 1) {
-      add(l10n.homeGlobalSearchSport, _tournamentSport, sportBySlug, (value) {
-        if (value == null) return;
-        setState(() => _tournamentSport = value);
-        _loadScope();
-      });
-      add(
-        l10n.homeGlobalSearchStatus,
-        _tournamentStatus,
-        [
-          ('all', l10n.filterAll),
-          ('registration', l10n.matchesFilterRegistration),
-          ('upcoming', l10n.matchesFilterScheduled),
-          ('in_progress', l10n.homeInProgressStatus),
-          ('completed', l10n.matchesStatusCompleted),
-        ],
-        (value) {
-          if (value == null) return;
-          setState(() => _tournamentStatus = value);
-          _loadScope();
-        },
-      );
-      add(l10n.homeGlobalSearchProvince, _tournamentProvinceCode, provinces, (
-        value,
-      ) {
-        setState(() => _tournamentProvinceCode = value ?? '');
-        _loadScope();
-      });
-      children.add(
-        _dateFilter(l10n, colors, _tournamentDateRange, (range) {
-          setState(() => _tournamentDateRange = range);
-          _loadScope();
-        }),
-      );
-    } else if (_scope == 3) {
-      add(l10n.homeGlobalSearchSport, _clubSport, sportById, (value) {
-        if (value == null) return;
-        setState(() => _clubSport = value);
-        _loadScope();
-      });
-      add(l10n.homeGlobalSearchProvince, _clubProvince ?? '', provinces, (
-        value,
-      ) {
-        setState(() => _clubProvince = value?.isEmpty == true ? null : value);
-        _loadScope();
-      });
-    } else if (_scope == 4) {
-      add(l10n.homeGlobalSearchSport, _athleteSport, sportById, (value) {
-        if (value == null) return;
-        setState(() => _athleteSport = value);
-        _loadScope();
-      });
-      add(
-        l10n.homeGlobalSearchGender,
-        _athleteGender,
-        [
-          ('all', l10n.filterAll),
-          ('MALE', l10n.clubRankingMale),
-          ('FEMALE', l10n.clubRankingFemale),
-        ],
-        (value) {
-          if (value == null) return;
-          setState(() => _athleteGender = value);
-          _loadScope();
-        },
-      );
-      add(l10n.homeGlobalSearchProvince, _athleteProvince ?? '', provinces, (
-        value,
-      ) {
-        setState(
-          () => _athleteProvince = value?.isEmpty == true ? null : value,
-        );
-        _loadScope();
-      });
-    }
-
-    final availableHeight =
-        MediaQuery.sizeOf(context).height -
-        MediaQuery.viewInsetsOf(context).bottom -
-        250;
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: availableHeight.clamp(100.0, 280.0),
-      ),
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border),
-      ),
-      child: ListView(
-        shrinkWrap: true,
-        children: [
-          for (var index = 0; index < children.length; index++) ...[
-            if (index > 0) const SizedBox(height: 8),
-            children[index],
-          ],
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: _resetFilters,
-              child: Text(l10n.homeGlobalSearchClearFilters),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _dropdown(
     String label,
     String value,
@@ -961,7 +1110,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   }
 
   Widget _buildResults(AppLocalizations l10n, AppColorsExtension colors) {
-    if (_loading && _scope != 4) {
+    if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_error != null) {
@@ -985,16 +1134,30 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     final athletes = _visibleAthletes;
     final count = _visibleResultCount;
     if (count == 0) {
-      if (_scope == 4 && _loading) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      return _emptyState(l10n, colors);
+      if (!_hasMore) return _emptyState(l10n, colors);
+      return Column(
+        children: [
+          Expanded(child: _emptyState(l10n, colors)),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: TextButton.icon(
+              onPressed: _loadingMore ? null : _loadMore,
+              icon: _loadingMore
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.expand_more_rounded),
+              label: Text(l10n.homeGlobalSearchLoadMore),
+            ),
+          ),
+        ],
+      );
     }
 
     return Column(
       children: [
-        if (_scope == 4 && _loading)
-          const LinearProgressIndicator(minHeight: 2),
         Expanded(
           child: RefreshIndicator(
             onRefresh: () => _loadScope(),
@@ -1010,22 +1173,40 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
               },
               child: ListView.separated(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                itemCount: count + (_loadingMore ? 1 : 0),
-                separatorBuilder: (context, index) => const SizedBox(height: 2),
+                padding: const EdgeInsets.only(top: 4, bottom: 16),
+                itemCount: count + (_hasMore || _loadingMore ? 1 : 0),
+                separatorBuilder: (context, index) => Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: colors.border.withValues(alpha: 0.75),
+                ),
                 itemBuilder: (context, index) {
                   if (index >= count) {
-                    return const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Center(child: CircularProgressIndicator()),
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: _loadingMore
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : TextButton.icon(
+                                onPressed: _hasMore ? _loadMore : null,
+                                icon: const Icon(Icons.expand_more_rounded),
+                                label: Text(l10n.homeGlobalSearchLoadMore),
+                              ),
+                      ),
                     );
                   }
                   return switch (_scope) {
                     0 => _matchCard(matches[index], l10n, colors),
                     1 => _tournamentCard(tournaments[index], l10n, colors),
-                    3 => _clubCard(clubs[index], colors),
+                    3 => _clubCard(clubs[index], l10n, colors),
                     4 => _athleteCard(athletes[index], colors),
-                    5 => _venueCard(venues[index], l10n, colors),
+                    5 => _venueCard(venues[index], colors),
                     _ => const SizedBox.shrink(),
                   };
                 },
@@ -1054,21 +1235,20 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
 
   Widget _venueCard(
     MapEntry<String, List<MatchModel>> entry,
-    AppLocalizations l10n,
     AppColorsExtension colors,
   ) {
     final parts = entry.key.split('\u0000');
     final title = parts[0].isEmpty ? parts[1] : parts[0];
-    final address = parts[0].isEmpty || parts[1].isEmpty ? '' : parts[1];
-    return _resultCard(
+    final location = entry.value.isEmpty
+        ? ''
+        : _matchWardAndCity(entry.value.first);
+    return _resultRow(
       colors: colors,
       title: title,
-      tags: [l10n.matchesCount(entry.value.length)],
-      subtitle: address,
+      details: [location],
       onTap: () {
         setState(() {
           _scope = 0;
-          _filtersExpanded = true;
         });
         _matchLocationController.text = title;
       },
@@ -1081,28 +1261,40 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     AppColorsExtension colors,
   ) {
     final scheduled = match.scheduledTime;
-    final details = [
-      if (match.tournamentName?.isNotEmpty == true) match.tournamentName!,
-      if (scheduled != null)
-        DateFormat.yMMMd(
-          Localizations.localeOf(context).toString(),
-        ).add_Hm().format(scheduled),
-      if (match.court.isNotEmpty) match.court,
-    ];
     final status = match.isLive
         ? l10n.matchesStatusLive
         : StatusHelper.getStatusDisplayName(match.status, l10n: l10n);
+    final showScore =
+        match.isLive ||
+        match.completedAt != null ||
+        match.sets.isNotEmpty ||
+        (match.scoreDetails?.isNotEmpty ?? false);
     final team1Avatar = match.team1MemberInfos.isEmpty
         ? null
         : match.team1MemberInfos.first.avatarUrl;
     final team2Avatar = match.team2MemberInfos.isEmpty
         ? null
         : match.team2MemberInfos.first.avatarUrl;
-    return _resultCard(
+    final details = [
+      if (match.sportKey?.isNotEmpty == true)
+        l10n.sportDisplayName(match.sportKey!),
+      status,
+      if (match.tournamentName?.isNotEmpty == true) match.tournamentName!,
+      if (scheduled != null)
+        DateFormat.yMMMd(
+          Localizations.localeOf(context).toString(),
+        ).add_Hm().format(scheduled),
+      if (match.court.isNotEmpty) match.court,
+      _matchWardAndCity(match),
+    ];
+    final setScores = match.sets
+        .map((set) => '${set.score1}–${set.score2}')
+        .join('  ');
+
+    return _resultRow(
       colors: colors,
-      title: '${match.team1Name} · ${match.team2Name}',
-      tags: [if (match.sportKey?.isNotEmpty == true) match.sportKey!, status],
-      subtitle: details.join(' · '),
+      title: match.team1Name,
+      details: details,
       onTap: match.tournamentId == null
           ? null
           : () => context.push(
@@ -1115,6 +1307,70 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         match.team2Name,
         match.sportKey,
       ),
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _matchTeamLine(match.team1Name, match.score1, showScore, colors),
+          _matchTeamLine(match.team2Name, match.score2, showScore, colors),
+          if (setScores.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                setScores,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: colors.textMuted, fontSize: 10.5),
+              ),
+            ),
+          Text(
+            details
+                .whereType<String>()
+                .where((value) => value.trim().isNotEmpty)
+                .join(' · '),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: colors.textMuted, fontSize: 10.5),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _matchTeamLine(
+    String teamName,
+    int score,
+    bool showScore,
+    AppColorsExtension colors,
+  ) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            teamName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: colors.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        if (showScore)
+          SizedBox(
+            width: 22,
+            child: Text(
+              '$score',
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -1123,47 +1379,112 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     AppLocalizations l10n,
     AppColorsExtension colors,
   ) {
-    return _resultCard(
+    return _resultRow(
       colors: colors,
       title: tournament.name,
-      tags: [
-        if (tournament.sport.isNotEmpty) tournament.sport,
+      details: [
+        if (tournament.sport.isNotEmpty)
+          l10n.sportDisplayName(tournament.sport),
         StatusHelper.getTournamentStatusLabel(tournament.status, l10n: l10n),
+        _tournamentWardAndCity(tournament),
       ],
-      subtitle: [
-        if (tournament.venueName?.isNotEmpty == true) tournament.venueName!,
-        if (tournament.city?.isNotEmpty == true) tournament.city!,
-      ].join(' · '),
       onTap: () => context.push('/intro/${tournament.id}'),
       imageUrl: _preferredImageUrl(
         tournament.logoUrl,
         _preferredImageUrl(tournament.bannerUrl, tournament.communityLogoUrl),
       ),
+      sport: tournament.sport,
     );
   }
 
-  Widget _clubCard(Community club, AppColorsExtension colors) {
-    return _resultCard(
+  Widget _clubCard(
+    Community club,
+    AppLocalizations l10n,
+    AppColorsExtension colors,
+  ) {
+    return _resultRow(
       colors: colors,
       title: club.name,
-      tags: club.sports,
-      subtitle: club.locationAddress ?? '',
+      details: [
+        ...club.sports.map(l10n.sportDisplayName),
+        _clubWardAndCity(club),
+      ],
       onTap: () => context.push('/club/${club.id}'),
       imageUrl: _preferredImageUrl(club.logoUrl, club.bannerUrl),
       sport: club.sports.isEmpty ? null : club.sports.first,
     );
   }
 
+  String _clubWardAndCity(Community club) {
+    final provinceCode = club.provinceCode?.trim() ?? '';
+    final provinceList =
+        ref.watch(provincesProvider).asData?.value ?? const <Province>[];
+    String? city;
+    for (final province in provinceList) {
+      if (province.code == provinceCode) {
+        city = province.name;
+        break;
+      }
+    }
+
+    String? ward;
+    final wardCode = club.wardCode?.trim() ?? '';
+    if (provinceCode.isNotEmpty && wardCode.isNotEmpty) {
+      final wards =
+          ref.watch(wardsProvider(provinceCode)).asData?.value ??
+          const <Ward>[];
+      for (final item in wards) {
+        if (item.code == wardCode) {
+          ward = item.name;
+          break;
+        }
+      }
+    }
+    return _joinLocation(ward, city);
+  }
+
+  String _tournamentWardAndCity(Tournament tournament) {
+    final config = tournament.locationConfig;
+    final nested = config?['location'];
+    final location = nested is Map ? Map<String, dynamic>.from(nested) : config;
+    return _wardAndCity(location, cityFallback: tournament.city);
+  }
+
+  String _matchWardAndCity(MatchModel match) {
+    final config = match.tournamentConfig;
+    final nested = config?['location'];
+    final location = nested is Map ? Map<String, dynamic>.from(nested) : config;
+    return _wardAndCity(location);
+  }
+
+  String _wardAndCity(Map<String, dynamic>? location, {String? cityFallback}) {
+    final ward = (location?['ward'] ?? location?['wardName'])?.toString();
+    final city = (location?['province'] ?? location?['city'] ?? cityFallback)
+        ?.toString();
+    return _joinLocation(ward, city);
+  }
+
+  String _joinLocation(String? ward, String? city) {
+    final parts = <String>[];
+    for (final value in [ward, city]) {
+      final clean = value?.trim() ?? '';
+      if (clean.isNotEmpty &&
+          !parts.any((part) => part.toLowerCase() == clean.toLowerCase())) {
+        parts.add(clean);
+      }
+    }
+    return parts.join(', ');
+  }
+
   Widget _athleteCard(PlayerRanking player, AppColorsExtension colors) {
-    return _resultCard(
+    return _resultRow(
       colors: colors,
       title: player.fullName,
-      tags: [
+      details: [
         if (player.categoryName?.isNotEmpty == true) player.categoryName!,
         if (player.eloPoints > 0) 'ELO ${player.eloPoints}',
-        if (player.rank > 0) '#${player.rank}',
+        player.tierName,
       ],
-      subtitle: player.tierName,
       onTap: player.userId.isEmpty
           ? null
           : () => context.push('/user/${player.userId}'),
@@ -1180,24 +1501,24 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     String? sport,
   ) {
     if (team1Image == null && team2Image == null) {
-      return _resultAvatar(null, '$team1Name · $team2Name', sport);
+      return _resultAvatar(null, '$team1Name · $team2Name', sport, size: 40);
     }
 
     return SizedBox(
-      width: 56,
-      height: 56,
+      width: 40,
+      height: 40,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           Positioned(
             top: 0,
             left: 0,
-            child: _resultAvatar(team1Image, team1Name, sport, size: 40),
+            child: _resultAvatar(team1Image, team1Name, sport, size: 27),
           ),
           Positioned(
             right: 0,
             bottom: 0,
-            child: _resultAvatar(team2Image, team2Name, sport, size: 40),
+            child: _resultAvatar(team2Image, team2Name, sport, size: 27),
           ),
         ],
       ),
@@ -1208,7 +1529,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     String? imageUrl,
     String label,
     String? sport, {
-    double size = 56,
+    double size = 40,
   }) {
     return TournamentAvatar(
       imageUrl: imageUrl,
@@ -1226,103 +1547,71 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     return second == null || second.isEmpty ? null : second;
   }
 
-  Widget _resultCard({
+  Widget _resultRow({
     required AppColorsExtension colors,
     required String title,
-    required String subtitle,
+    required List<String> details,
     required VoidCallback? onTap,
-    List<String> tags = const [],
     String? imageUrl,
     String? sport,
     Widget? leadingWidget,
+    Widget? content,
   }) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      color: colors.bgCard,
-      elevation: 0,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: colors.border.withValues(alpha: 0.8)),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 56,
-                height: 56,
-                child: leadingWidget ?? _resultAvatar(imageUrl, title, sport),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                      ),
-                    ),
-                    if (tags.any((tag) => tag.trim().isNotEmpty)) ...[
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: [
-                          for (final tag in tags)
-                            if (tag.trim().isNotEmpty)
-                              _metadataBadge(tag, colors),
-                        ],
-                      ),
-                    ],
-                    if (subtitle.trim().isNotEmpty) ...[
-                      const SizedBox(height: 6),
+    final visibleDetails = details
+        .map((detail) => detail.trim())
+        .where((detail) => detail.isNotEmpty)
+        .toList(growable: false);
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 40,
+              height: 40,
+              child:
+                  leadingWidget ??
+                  _resultAvatar(imageUrl, title, sport, size: 40),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child:
+                  content ??
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                       Text(
-                        '• $subtitle',
-                        maxLines: 2,
+                        title,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: colors.textMuted,
-                          fontSize: 12,
-                          height: 1.3,
+                          color: colors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
                         ),
                       ),
+                      if (visibleDetails.isNotEmpty)
+                        Text(
+                          visibleDetails.join(' · '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: colors.textMuted,
+                            fontSize: 11,
+                            height: 1.25,
+                          ),
+                        ),
                     ],
-                  ],
-                ),
-              ),
-              if (onTap != null) ...[
-                const SizedBox(width: 6),
-                Icon(Icons.chevron_right_rounded, color: colors.textMuted),
-              ],
+                  ),
+            ),
+            if (onTap != null) ...[
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right_rounded, color: colors.textMuted),
             ],
-          ),
+          ],
         ),
-      ),
-    );
-  }
-
-  Widget _metadataBadge(String label, AppColorsExtension colors) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: colors.bgDark,
-        borderRadius: BorderRadius.circular(9),
-      ),
-      child: Text(
-        label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: colors.textSecondary, fontSize: 12),
       ),
     );
   }
@@ -1354,6 +1643,16 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   }
 
   Widget _emptyState(AppLocalizations l10n, AppColorsExtension colors) {
+    if (_scope == 0 &&
+        _unrenderableMatchCount > 0 &&
+        _activeFilterCount == 0 &&
+        _queryController.text.trim().isEmpty) {
+      return _messageState(
+        icon: Icons.visibility_off_rounded,
+        text: l10n.homeGlobalSearchHiddenMatches,
+        colors: colors,
+      );
+    }
     if (_scope != 1) {
       return _messageState(
         icon: Icons.search_off_rounded,
@@ -1384,7 +1683,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
               if (_activeFilterCount > 0) {
                 _resetFilters();
               } else {
-                setState(() => _filtersExpanded = true);
+                _showFilterSheet();
               }
             },
             child: Text(

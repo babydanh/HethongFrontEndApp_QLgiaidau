@@ -24970,6 +24970,12 @@ abstract class AppLocalizations {
   /// **'Thử lại'**
   String get homeGlobalSearchRetry;
 
+  /// No description provided for @homeGlobalSearchLoadMore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải thêm kết quả'**
+  String get homeGlobalSearchLoadMore;
+
   /// No description provided for @homeGlobalSearchVenueNote.
   ///
   /// In vi, this message translates to:
@@ -25059,6 +25065,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Mở rộng bộ lọc'**
   String get homeGlobalSearchExpandFilters;
+
+  /// No description provided for @homeGlobalSearchHiddenMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận trong lượt tải này chưa đủ thông tin hai đội để hiển thị.'**
+  String get homeGlobalSearchHiddenMatches;
 }
 
 class _AppLocalizationsDelegate

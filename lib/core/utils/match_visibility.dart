@@ -6,17 +6,19 @@ import 'package:app_quanly_giaidau/domain/entities/match.dart';
 /// participants as a playable encounter. This is intentionally conservative:
 /// unresolved slots are hidden until the backend supplies real participants.
 bool isRenderablePublicMatch(MatchModel match) {
-  if (match.isBye || match.team1IsMock || match.team2IsMock) return false;
-  if (match.team1Id.trim().isEmpty || match.team2Id.trim().isEmpty) {
-    return false;
-  }
-  if (match.team1MemberInfos.any((member) => member.isMock) ||
-      match.team2MemberInfos.any((member) => member.isMock)) {
+  if (match.isBye || (match.team1IsMock && match.team2IsMock)) return false;
+  
+  final t1Unresolved = _isUnresolvedParticipantLabel(match.team1Name) &&
+      match.team1Id.trim().isEmpty;
+  final t2Unresolved = _isUnresolvedParticipantLabel(match.team2Name) &&
+      match.team2Id.trim().isEmpty;
+
+  // If both sides are completely unassigned/placeholders, hide the match
+  if (t1Unresolved && t2Unresolved) {
     return false;
   }
 
-  return !_isUnresolvedParticipantLabel(match.team1Name) &&
-      !_isUnresolvedParticipantLabel(match.team2Name);
+  return true;
 }
 
 bool _isUnresolvedParticipantLabel(String value) {

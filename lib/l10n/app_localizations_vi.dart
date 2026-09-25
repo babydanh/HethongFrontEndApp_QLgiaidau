@@ -13708,6 +13708,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeGlobalSearchRetry => 'Thử lại';
 
   @override
+  String get homeGlobalSearchLoadMore => 'Tải thêm kết quả';
+
+  @override
   String get homeGlobalSearchVenueNote =>
       'Địa điểm được tổng hợp từ các trận đấu công khai; chưa hỗ trợ tìm quanh đây.';
 
@@ -13753,4 +13756,8 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeGlobalSearchExpandFilters => 'Mở rộng bộ lọc';
+
+  @override
+  String get homeGlobalSearchHiddenMatches =>
+      'Trận trong lượt tải này chưa đủ thông tin hai đội để hiển thị.';
 }

@@ -243,12 +243,16 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
           ),
           if (roundName.isNotEmpty) ...[
             const SizedBox(width: 8),
-            Text(
-              roundName,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: context.colors.textSecondary,
+            Flexible(
+              child: Text(
+                roundName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: context.colors.textSecondary,
+                ),
               ),
             ),
           ],

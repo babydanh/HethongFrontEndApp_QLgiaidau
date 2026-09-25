@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../config/app_theme.dart';
 
@@ -56,7 +57,7 @@ class SportChoiceTile extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(_sportIconData(sportKey), size: iconSize, color: foreground),
+              buildSportIcon(sportKey, iconSize, foreground),
               const SizedBox(height: 4),
               Text(
                 label,
@@ -83,18 +84,39 @@ class SportChoiceTile extends StatelessWidget {
     );
   }
 
-  static IconData _sportIconData(String key) {
+  static Widget buildSportIcon(String key, double size, Color color) {
     final normalized = key.trim().toLowerCase();
     if (normalized.contains('football') || normalized.contains('bóng đá')) {
-      return Icons.sports_soccer;
+      return Icon(Icons.sports_soccer_rounded, size: size, color: color);
     }
     if (normalized.contains('badminton') || normalized.contains('cầu lông')) {
-      return Icons.sports_handball;
+      return SvgPicture.asset(
+        'assets/icons/badminton.svg',
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
     }
     if (normalized.contains('table_tennis') ||
-        normalized.contains('bóng bàn')) {
-      return Icons.sports_mma;
+        normalized.contains('bóng bàn') ||
+        normalized.contains('ping_pong') ||
+        normalized.contains('ping-pong')) {
+      return SvgPicture.asset(
+        'assets/icons/ping-pong.svg',
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
     }
-    return Icons.sports_tennis;
+    if (normalized.contains('pickleball')) {
+      return Image.asset(
+        'assets/icons/pickleball.png',
+        width: size,
+        height: size,
+        color: color,
+        colorBlendMode: BlendMode.srcIn,
+      );
+    }
+    return Icon(Icons.sports_tennis_rounded, size: size, color: color);
   }
 }

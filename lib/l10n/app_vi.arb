@@ -5537,6 +5537,7 @@
   "homeGlobalSearchEmpty": "Không tìm thấy kết quả phù hợp",
   "homeGlobalSearchLoadFailed": "Không thể tải kết quả. Vui lòng thử lại.",
   "homeGlobalSearchRetry": "Thử lại",
+  "homeGlobalSearchLoadMore": "Tải thêm kết quả",
   "homeGlobalSearchVenueNote": "Địa điểm được tổng hợp từ các trận đấu công khai; chưa hỗ trợ tìm quanh đây.",
   "homeGlobalSearchSport": "Môn thể thao",
   "homeGlobalSearchStatus": "Trạng thái",
@@ -5551,5 +5552,6 @@
   "homeGlobalSearchNoResultsQuestion": "Không tìm thấy kết quả mong muốn?",
   "homeGlobalSearchCreateTournament": "Tạo giải đấu mới",
   "homeGlobalSearchOr": "hoặc",
-  "homeGlobalSearchExpandFilters": "Mở rộng bộ lọc"
+  "homeGlobalSearchExpandFilters": "Mở rộng bộ lọc",
+  "homeGlobalSearchHiddenMatches": "Trận trong lượt tải này chưa đủ thông tin hai đội để hiển thị."
 }

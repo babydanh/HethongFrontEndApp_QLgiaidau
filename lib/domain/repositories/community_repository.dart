@@ -23,6 +23,7 @@ abstract class ICommunityRepository {
     String? search,
     String? provinceCode,
     String? categoryId,
+    bool rethrowOnError = false,
   });
   Future<List<Community>> getMyCommunities();
   Future<Community?> getCommunityById(String id);

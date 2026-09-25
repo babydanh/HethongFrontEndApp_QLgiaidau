@@ -22,7 +22,7 @@ class AppConstants {
   static const String sportFootball = 'football';
 
   static const Map<String, String> sportNames = {
-    sportFootball: 'Football',
+    sportFootball: 'Bóng đá',
     sportPickleball: 'Pickleball',
     sportBadminton: 'Cầu lông',
     sportTennis: 'Tennis',

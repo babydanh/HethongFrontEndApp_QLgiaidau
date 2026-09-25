@@ -5537,6 +5537,7 @@
   "homeGlobalSearchEmpty": "No matching results",
   "homeGlobalSearchLoadFailed": "Could not load results. Please try again.",
   "homeGlobalSearchRetry": "Try again",
+  "homeGlobalSearchLoadMore": "Load more results",
   "homeGlobalSearchVenueNote": "Venues are derived from public matches; nearby search is not available.",
   "homeGlobalSearchSport": "Sport",
   "homeGlobalSearchStatus": "Status",
@@ -5551,5 +5552,6 @@
   "homeGlobalSearchNoResultsQuestion": "Can't find the result you want?",
   "homeGlobalSearchCreateTournament": "Create a tournament",
   "homeGlobalSearchOr": "or",
-  "homeGlobalSearchExpandFilters": "Expand filters"
+  "homeGlobalSearchExpandFilters": "Expand filters",
+  "homeGlobalSearchHiddenMatches": "Matches on this page are hidden because team details are incomplete."
 }

@@ -855,6 +855,7 @@ class ApiTournamentRepository implements ITournamentRepository {
     String? ward,
     DateTime? startDate,
     DateTime? endDate,
+    bool rethrowOnError = false,
   }) async {
     _log.info(
       'getPublicTournamentsPaged: cursor=$cursor, limit=$limit, status=$status, sport=$sport',
@@ -898,6 +899,7 @@ class ApiTournamentRepository implements ITournamentRepository {
           queryParameters: qParams,
         );
       } catch (_) {
+        if (rethrowOnError) rethrow;
         response = await _dioClient.dio.get(
           '/tournaments',
           queryParameters: qParams,
@@ -920,9 +922,15 @@ class ApiTournamentRepository implements ITournamentRepository {
 
         return (tournaments: parsed, nextCursor: nextCursor, hasMore: hasMore);
       }
+      if (rethrowOnError) {
+        throw StateError(
+          'Public tournament search returned HTTP ${response.statusCode}',
+        );
+      }
       return (tournaments: <Tournament>[], nextCursor: null, hasMore: false);
     } catch (e, stack) {
       _log.error('getPublicTournamentsPaged error', e, stack);
+      if (rethrowOnError) rethrow;
       return (tournaments: <Tournament>[], nextCursor: null, hasMore: false);
     }
   }

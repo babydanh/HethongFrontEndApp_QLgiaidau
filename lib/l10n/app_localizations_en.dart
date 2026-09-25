@@ -13757,6 +13757,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGlobalSearchRetry => 'Try again';
 
   @override
+  String get homeGlobalSearchLoadMore => 'Load more results';
+
+  @override
   String get homeGlobalSearchVenueNote =>
       'Venues are derived from public matches; nearby search is not available.';
 
@@ -13802,4 +13805,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeGlobalSearchExpandFilters => 'Expand filters';
+
+  @override
+  String get homeGlobalSearchHiddenMatches =>
+      'Matches on this page are hidden because team details are incomplete.';
 }

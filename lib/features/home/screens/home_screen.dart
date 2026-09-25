@@ -19,6 +19,7 @@ import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_ban
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
@@ -407,7 +408,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _showGlobalSearchScreen() async {
     await GlobalSearchScreen.show(
       context: context,
-      initialTabIndex: _currentIndex == 0 ? 1 : _currentIndex,
+      initialTabIndex: _currentIndex == 0 ? 0 : _currentIndex,
       initialQuery: _searchQueries[_currentIndex] ?? '',
     );
   }
@@ -958,10 +959,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final activeSport = _activeSportFilter;
     final isSelected =
         activeSport == key || (key == '' && activeSport == 'all');
+    final iconColor = isSelected ? AppTheme.primary : context.colors.textSecondary;
     return PopupMenuItem<String>(
       value: key,
       child: Row(
         children: [
+          if (key == 'all' || key.isEmpty)
+            Icon(Icons.sports_rounded, size: 18, color: iconColor)
+          else
+            SportChoiceTile.buildSportIcon(key, 18, iconColor),
+          const SizedBox(width: 10),
           Text(
             label,
             style: TextStyle(

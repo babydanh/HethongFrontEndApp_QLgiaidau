@@ -91,7 +91,22 @@ abstract class IMatchRepository {
   Future<void> deleteAll(String tournamentId);
   Future<List<MatchModel>> getMatches({String? status, bool? publicOnly});
 
-  Future<({List<MatchModel> matches, String? nextCursor, bool hasMore, int total})>
+  Future<
+    ({List<MatchModel> matches, String? nextCursor, bool hasMore, int total})
+  >
+  getPublicMatchesPaged({
+    String? cursor,
+    int limit = 10,
+    String? search,
+    String? categoryId,
+    String? status,
+    DateTime? startDate,
+    DateTime? endDate,
+  });
+
+  Future<
+    ({List<MatchModel> matches, String? nextCursor, bool hasMore, int total})
+  >
   getTournamentMatchesPaged({
     required String tournamentId,
     String? status,

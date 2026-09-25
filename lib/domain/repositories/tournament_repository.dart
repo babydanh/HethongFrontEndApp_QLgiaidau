@@ -13,7 +13,9 @@ abstract class ITournamentRepository {
   Future<List<TournamentSponsor>> getPublicSponsors(String tournamentId);
 
   Future<void> joinLite(String inviteCode);
-  Future<List<OrganizerOpsParticipant>> getPublicParticipants(String tournamentId);
+  Future<List<OrganizerOpsParticipant>> getPublicParticipants(
+    String tournamentId,
+  );
   Future<TournamentWorkspace> getMyWorkspace();
   Future<void> respondToRefereeInvite({
     required String tournamentId,
@@ -66,11 +68,8 @@ abstract class ITournamentRepository {
   });
   Stream<Tournament?> watch(String id);
   Stream<List<Tournament>> watchAll();
-  Future<({
-    List<Tournament> tournaments,
-    String? nextCursor,
-    bool hasMore,
-  })> getPublicTournamentsPaged({
+  Future<({List<Tournament> tournaments, String? nextCursor, bool hasMore})>
+  getPublicTournamentsPaged({
     String? cursor,
     int limit = 6,
     String? sport,
@@ -83,6 +82,7 @@ abstract class ITournamentRepository {
     String? ward,
     DateTime? startDate,
     DateTime? endDate,
+    bool rethrowOnError = false,
   });
   Future<void> update(String id, Map<String, dynamic> data);
   Future<void> updateStatus(String id, String status);

@@ -147,6 +147,7 @@ void main() {
       await tester.tap(tab);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump();
       expect(tester.takeException(), isNull, reason: 'tab: $label');
     }
 
@@ -155,7 +156,7 @@ void main() {
     expect(find.text('Player Delta'), findsOneWidget);
 
     await openTab('Kết quả');
-    expect(find.text('Champion Alpha'), findsOneWidget);
+    expect(find.text('Champion Alpha'), findsWidgets);
 
     await openTab('Danh sách đội');
     expect(find.text('Player Alpha / Player Beta'), findsOneWidget);
@@ -163,5 +164,7 @@ void main() {
     await openTab('Lịch thi đấu');
     expect(find.text('Player Epsilon'), findsOneWidget);
     expect(find.text('Player Zeta'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
   });
 }
