@@ -393,38 +393,51 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     final categories =
         ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
 
-    return Scaffold(
-      backgroundColor: colors.bgDark,
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(l10n, colors),
-            _buildSearchField(l10n, colors),
-            _buildScopeSelector(l10n, colors),
-            _buildFilterToolbar(l10n, colors),
-            AnimatedSize(
-              duration: MediaQuery.of(context).disableAnimations
-                  ? Duration.zero
-                  : const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              child: _filtersExpanded
-                  ? _buildFilters(l10n, colors, categories)
-                  : const SizedBox.shrink(),
-            ),
-            if (_scope == 5)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: Text(
-                  l10n.homeGlobalSearchVenueNote,
-                  style: TextStyle(fontSize: 12, color: colors.textMuted),
+    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        const SingleActivator(LogicalKeyboardKey.escape): _closeSearch,
+      },
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
+          backgroundColor: colors.bgDark,
+          resizeToAvoidBottomInset: true,
+          body: SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(l10n, colors),
+                _buildSearchField(l10n, colors),
+                _buildScopeSelector(l10n, colors),
+                _buildFilterToolbar(l10n, colors),
+                AnimatedSize(
+                  duration: MediaQuery.of(context).disableAnimations
+                      ? Duration.zero
+                      : const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  child: _filtersExpanded
+                      ? _buildFilters(l10n, colors, categories)
+                      : const SizedBox.shrink(),
                 ),
-              ),
-            Expanded(child: _buildResults(l10n, colors)),
-          ],
+                if (_scope == 5)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: Text(
+                      l10n.homeGlobalSearchVenueNote,
+                      style: TextStyle(fontSize: 12, color: colors.textMuted),
+                    ),
+                  ),
+                Expanded(child: _buildResults(l10n, colors)),
+              ],
+            ),
+          ),
         ),
       ),
     );
+  }
+
+  void _closeSearch() {
+    FocusScope.of(context).unfocus();
+    Navigator.of(context, rootNavigator: true).maybePop();
   }
 
   Widget _buildHeader(AppLocalizations l10n, AppColorsExtension colors) {
@@ -1139,18 +1152,51 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            IconButton.filled(
-              tooltip: l10n.homeGlobalSearchAdvancedFilters,
-              onPressed: () {
-                FocusScope.of(context).unfocus();
-                setState(() => _filtersExpanded = !_filtersExpanded);
-              },
-              icon: const Icon(Icons.tune_rounded),
-              style: IconButton.styleFrom(
-                minimumSize: const Size(52, 52),
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
-              ),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                IconButton.filled(
+                  tooltip: _activeFilterCount == 0
+                      ? l10n.homeGlobalSearchAdvancedFilters
+                      : '${l10n.homeGlobalSearchAdvancedFilters} ($_activeFilterCount)',
+                  onPressed: () {
+                    FocusScope.of(context).unfocus();
+                    setState(() => _filtersExpanded = !_filtersExpanded);
+                  },
+                  icon: const Icon(Icons.tune_rounded),
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(52, 52),
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                if (_activeFilterCount > 0)
+                  Positioned(
+                    top: -3,
+                    right: -3,
+                    child: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 20,
+                        minHeight: 20,
+                      ),
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: colors.bgSurface,
+                        border: Border.all(color: AppTheme.primary),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$_activeFilterCount',
+                        style: const TextStyle(
+                          color: AppTheme.primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ],
         ),
