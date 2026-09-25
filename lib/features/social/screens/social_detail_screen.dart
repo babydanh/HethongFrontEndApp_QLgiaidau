@@ -532,7 +532,10 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
   // ── Modal Tìm thêm người chơi (IMG3) ──
 
   // ── Chia sẻ vào cuộc trò chuyện Câu lạc bộ ──
-  String _buildClubChatShareMessage(SocialSessionModel session) {
+  String _buildClubChatShareMessage(
+    SocialSessionModel session,
+    String shareUrl,
+  ) {
     final currencyFormatter = NumberFormat.currency(
       locale: 'vi_VN',
       symbol: 'đ',
@@ -548,10 +551,15 @@ $timeLine
 $feeLine
 👥 ${session.currentParticipants}/${session.maxParticipants}
 
-Link: ${session.shareUrl}''';
+Link: $shareUrl''';
   }
 
   Future<void> _shareToClubChat(SocialSessionModel session) async {
+    final shareUrl = session.shareUrl;
+    if (shareUrl == null) {
+      _showShortLinkUnavailable();
+      return;
+    }
     final communityId = session.communityId ?? session.clubId;
     if (communityId == null || communityId.isEmpty) {
       if (mounted) {
@@ -565,7 +573,7 @@ Link: ${session.shareUrl}''';
       return;
     }
 
-    final message = _buildClubChatShareMessage(session);
+    final message = _buildClubChatShareMessage(session, shareUrl);
     try {
       final dio = ref.read(dioClientProvider).dio;
       final res = await dio.get(
@@ -621,12 +629,17 @@ Link: ${session.shareUrl}''';
   }
 
   Future<void> _handleShare(SocialSessionModel session) async {
+    final shareUrl = session.shareUrl;
+    if (shareUrl == null) {
+      _showShortLinkUnavailable();
+      return;
+    }
     try {
       await SharePlus.instance.share(
-        ShareParams(text: session.shareUrl, subject: session.title),
+        ShareParams(text: shareUrl, subject: session.title),
       );
     } catch (_) {
-      await Clipboard.setData(ClipboardData(text: session.shareUrl));
+      await Clipboard.setData(ClipboardData(text: shareUrl));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -635,6 +648,16 @@ Link: ${session.shareUrl}''';
         ),
       );
     }
+  }
+
+  void _showShortLinkUnavailable() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Link rút gọn chưa sẵn sàng. Vui lòng thử lại sau.'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _showMoreOptions(SocialSessionModel session) {

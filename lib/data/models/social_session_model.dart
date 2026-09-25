@@ -427,9 +427,14 @@ class SocialSessionModel {
 
   // Backward compatibility getters for UI
   String? get clubId => communityId ?? community?.id;
-  String get shareUrl => shortCode != null && shortCode!.isNotEmpty
-      ? 'https://sporto.asia/s/$shortCode'
-      : 'https://sporto.asia/social/$id';
+  String? get shareUrl {
+    final code = shortCode?.trim();
+    if (code == null || !RegExp(r'^[A-Za-z0-9_-]{8,16}$').hasMatch(code)) {
+      return null;
+    }
+    return 'https://sporto.asia/s/$code';
+  }
+
   String get creatorId => hostUserId;
   double get distanceKm => 0.0; // Ignored as per user instruction
   String get hostClubName =>
