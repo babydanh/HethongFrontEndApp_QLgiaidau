@@ -648,29 +648,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/club/:id',
         pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
-          return CustomTransitionPage<void>(
+          return _fbClubDetailPage(
             key: state.pageKey,
-            fullscreenDialog: true,
-            opaque: false,
-            transitionDuration: const Duration(milliseconds: 350),
-            reverseTransitionDuration: const Duration(milliseconds: 260),
             child: ClubDetailScreen(clubId: id),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).animate(
-                  CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeOutCubic,
-                    reverseCurve: Curves.easeInCubic,
-                  ),
-                ),
-                child: RepaintBoundary(child: child),
-              );
-            },
           );
         },
         routes: [
@@ -751,9 +731,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/communities/:id',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
-          return ClubDetailScreen(clubId: id);
+          return _fbClubDetailPage(
+            key: state.pageKey,
+            child: ClubDetailScreen(clubId: id),
+          );
         },
         routes: [
           GoRoute(
@@ -801,9 +784,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/clubs/:id',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
-          return ClubDetailScreen(clubId: id);
+          return _fbClubDetailPage(
+            key: state.pageKey,
+            child: ClubDetailScreen(clubId: id),
+          );
         },
       ),
 
@@ -1156,6 +1142,54 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
   );
 });
+
+// ─── FB-like page transitions (mượt kiểu Facebook mobile) ───
+// * Push: trang mới trượt phải → trái.
+// * Pop: ngược lại trái → phải (reverse tự động).
+const _fbPushDuration = Duration(milliseconds: 380);
+const _fbPopDuration = Duration(milliseconds: 380);
+// Curve gần với iOS/Facebook: đi nhanh đầu rồi glide settles mềm cuối.
+const _fbCurve = Cubic(0.32, 0.72, 0, 1);
+
+CustomTransitionPage<void> _fbClubDetailPage({
+  required LocalKey key,
+  required Widget child,
+}) {
+  return CustomTransitionPage<void>(
+    key: key,
+    transitionDuration: _fbPushDuration,
+    reverseTransitionDuration: _fbPopDuration,
+    maintainState: true,
+    fullscreenDialog: false,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final slide =
+          Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(
+        CurvedAnimation(
+          parent: animation,
+          curve: _fbCurve,
+          reverseCurve: _fbCurve,
+        ),
+      );
+      return SlideTransition(
+        position: slide,
+        child: DecoratedBox(
+          // Bóng đổ cạnh trái tạo chiều sâu, giống Facebook/iOS.
+          decoration: const BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x2E000000),
+                blurRadius: 16,
+                offset: Offset(-6, 0),
+              ),
+            ],
+          ),
+          child: RepaintBoundary(child: child),
+        ),
+      );
+    },
+  );
+}
 
 class _ClubChatRouteWrapper extends ConsumerStatefulWidget {
   final String communityId;
