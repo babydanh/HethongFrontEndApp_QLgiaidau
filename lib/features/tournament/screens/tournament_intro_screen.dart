@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_state_views.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/intro_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/live_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
@@ -42,7 +43,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     with TickerProviderStateMixin {
   TabController? _tabController;
   int _currentTabCount = 0;
-  int _overviewTabIndex = 0;
+  int _introTabIndex = 0;
   String _selectedDivision = "";
   String? _selectedDivisionId;
   String? _customInviteCode;
@@ -311,20 +312,20 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
         child: Row(
           children: [
-            // Nút Tổng quan
+            // Nút Giới thiệu
             Expanded(
               flex: 2,
               child: SizedBox(
                 height: 40,
                 child: FilledButton.tonalIcon(
                   onPressed: () {
-                    if (_tabController != null && _overviewTabIndex >= 0) {
-                      _tabController!.animateTo(_overviewTabIndex);
+                    if (_tabController != null && _introTabIndex >= 0) {
+                      _tabController!.animateTo(_introTabIndex);
                     }
                   },
-                  icon: const Icon(Icons.info_outline_rounded, size: 16),
+                  icon: const Icon(Icons.article_outlined, size: 16),
                   label: const Text(
-                    'Tổng quan',
+                    'Giới thiệu',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
@@ -761,19 +762,23 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
     // 3. Tab [Tổng quan] (Mặc định khi vào màn hình)
     final int overviewIndex = tabHeaders.length;
-    _overviewTabIndex = overviewIndex;
     tabHeaders.add(const Tab(height: 28, text: 'Tổng quan'));
 
-    // 4. Tab [Đội tham gia]
+    // 4. Tab [Giới thiệu]
+    final int introIndex = tabHeaders.length;
+    _introTabIndex = introIndex;
+    tabHeaders.add(const Tab(height: 28, text: 'Giới thiệu'));
+
+    // 5. Tab [Đội tham gia]
     tabHeaders.add(Tab(height: 28, text: l10n.tabTeams));
 
-    // 5. Lịch thi đấu
+    // 6. Lịch thi đấu
     final int scheduleIndex = tabHeaders.length;
     tabHeaders.add(Tab(height: 28, text: l10n.tabSchedule));
 
-    // 6. Tab [Bảng đấu]
+    // 7. Tab [Bảng đấu]
     tabHeaders.add(const Tab(height: 28, text: 'Bảng đấu'));
-    // 7. Tab [Tài trợ] (nếu có)
+    // 8. Tab [Tài trợ] (nếu có)
     if (hasSponsors) {
       tabHeaders.add(Tab(height: 28, text: l10n.tabSponsors));
     }
@@ -794,6 +799,14 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         isFollowing: isFollowing,
         onToggleFollow: () => _toggleFollow(tournament, isFollowing),
         inviteCode: activeInvite,
+      ),
+    );
+
+    // Giới thiệu
+    tabViews.add(
+      IntroTab(
+        tournament: tournament,
+        resolveImageUrl: _resolveImageUrl,
       ),
     );
 

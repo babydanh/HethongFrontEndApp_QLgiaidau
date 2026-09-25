@@ -226,29 +226,26 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
               )
             else
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 6, 16, 100),
+                padding: const EdgeInsets.fromLTRB(12, 6, 12, 100),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final match = matches[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: LiveMatchCardV2(
-                        match: match,
-                        isLive: match.isLive,
-                        isCompleted:
-                            match.isCompleted ||
-                            match.status == AppConstants.matchCompleted,
-                        onTap: () {
-                          if (match.hasTeams) {
-                            context.push(
-                              NavigationHelper.getLiveMatchRoute(
-                                widget.tournamentId,
-                                match.id,
-                              ),
-                            );
-                          }
-                        },
-                      ),
+                    return LiveMatchCardV2(
+                      match: match,
+                      isLive: match.isLive,
+                      isCompleted:
+                          match.isCompleted ||
+                          match.status == AppConstants.matchCompleted,
+                      onTap: () {
+                        if (match.hasTeams) {
+                          context.push(
+                            NavigationHelper.getLiveMatchRoute(
+                              widget.tournamentId,
+                              match.id,
+                            ),
+                          );
+                        }
+                      },
                     );
                   }, childCount: matches.length),
                 ),

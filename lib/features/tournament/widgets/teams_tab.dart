@@ -119,7 +119,7 @@ class _TeamsTabState extends State<TeamsTab> {
         // Search Bar
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
             child: Container(
               height: 42,
               decoration: BoxDecoration(
@@ -194,15 +194,15 @@ class _TeamsTabState extends State<TeamsTab> {
         else
           SliverPadding(
             padding: EdgeInsets.fromLTRB(
-              16,
+              12,
               0,
-              16,
+              12,
               widget.shrinkWrap ? 16 : 100,
             ),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, i) {
-                  // Build division headers + team cards flat
+                  // Build division headings and compact team rows.
                   final items = <Widget>[];
                   for (final division in sortedDivisions) {
                     final teamsInDiv = grouped[division]!;
@@ -216,7 +216,7 @@ class _TeamsTabState extends State<TeamsTab> {
                     if (widget.showDivisionHeading) {
                       items.add(
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Row(
                             children: [
                               Container(
@@ -231,7 +231,7 @@ class _TeamsTabState extends State<TeamsTab> {
                               Text(
                                 division,
                                 style: TextStyle(
-                                  fontSize: 15,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   color: colors.textPrimary,
                                 ),
@@ -239,8 +239,8 @@ class _TeamsTabState extends State<TeamsTab> {
                               const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
+                                  horizontal: 6,
+                                  vertical: 1.5,
                                 ),
                                 decoration: BoxDecoration(
                                   color: colors.bgSurface,
@@ -262,30 +262,27 @@ class _TeamsTabState extends State<TeamsTab> {
                     }
                     for (final team in teamsInDiv) {
                       items.add(
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: TournamentTeamCard(
-                            team: team,
-                            isTeamSport: widget.isTeamSport,
-                            onMemberTap: (userId, memberName) {
-                              final targetId =
-                                  (userId != null && userId.isNotEmpty)
-                                  ? userId
-                                  : team.userId;
-                              if (targetId != null && targetId.isNotEmpty) {
-                                context.push('/user/$targetId');
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Hồ sơ của $memberName đang được cập nhật',
-                                    ),
-                                    duration: const Duration(seconds: 2),
+                        TournamentTeamCard(
+                          team: team,
+                          isTeamSport: widget.isTeamSport,
+                          onMemberTap: (userId, memberName) {
+                            final targetId =
+                                (userId != null && userId.isNotEmpty)
+                                ? userId
+                                : team.userId;
+                            if (targetId != null && targetId.isNotEmpty) {
+                              context.push('/user/$targetId');
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Hồ sơ của $memberName đang được cập nhật',
                                   ),
-                                );
-                              }
-                            },
-                          ),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          },
                         ),
                       );
                     }

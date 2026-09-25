@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
+import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
@@ -471,7 +472,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     return Material(
       color: colors.bgSurface,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 16, 8),
+        padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
         child: Row(
           children: [
             IconButton(
@@ -479,15 +480,15 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
               onPressed: _closeSearch,
               icon: const Icon(Icons.arrow_back_rounded),
               color: colors.textPrimary,
-              constraints: const BoxConstraints.tightFor(width: 44, height: 48),
+              constraints: const BoxConstraints.tightFor(width: 48, height: 48),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 4),
             Expanded(
               child: Container(
-                height: 60,
+                height: 52,
                 decoration: BoxDecoration(
                   color: colors.bgCard,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: colors.border.withValues(alpha: .7),
                   ),
@@ -495,8 +496,12 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                 child: Row(
                   children: [
                     const SizedBox(width: 14),
-                    Icon(Icons.search_rounded, color: colors.textMuted),
-                    const SizedBox(width: 10),
+                    Icon(
+                      Icons.search_rounded,
+                      color: colors.textMuted,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Semantics(
                         label: l10n.homeGlobalSearchInputLabel,
@@ -512,7 +517,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                           },
                           style: TextStyle(
                             color: colors.textPrimary,
-                            fontSize: 16,
+                            fontSize: 15,
                           ),
                           cursorColor: AppTheme.primary,
                           decoration: InputDecoration(
@@ -520,14 +525,27 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                             isDense: true,
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
-                              vertical: 14,
+                              vertical: 12,
                             ),
+                            suffixIconConstraints:
+                                const BoxConstraints.tightFor(
+                                  width: 48,
+                                  height: 48,
+                                ),
                             suffixIcon: _queryController.text.isEmpty
                                 ? null
                                 : IconButton(
                                     tooltip: l10n.homeGlobalSearchClear,
+                                    constraints: const BoxConstraints.tightFor(
+                                      width: 48,
+                                      height: 48,
+                                    ),
+                                    padding: EdgeInsets.zero,
                                     onPressed: _queryController.clear,
-                                    icon: const Icon(Icons.close_rounded),
+                                    icon: const Icon(
+                                      Icons.close_rounded,
+                                      size: 18,
+                                    ),
                                   ),
                           ),
                         ),
@@ -608,10 +626,11 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   }
 
   Widget _buildFilterButton(AppColorsExtension colors, AppLocalizations l10n) {
+    final isActive = _filtersExpanded || _activeFilterCount > 0;
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        IconButton.filled(
+        IconButton(
           tooltip: _activeFilterCount == 0
               ? l10n.homeGlobalSearchAdvancedFilters
               : '${l10n.homeGlobalSearchAdvancedFilters} ($_activeFilterCount)',
@@ -619,31 +638,35 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
             FocusScope.of(context).unfocus();
             setState(() => _filtersExpanded = !_filtersExpanded);
           },
-          icon: const Icon(Icons.tune_rounded),
+          constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+          padding: EdgeInsets.zero,
           style: IconButton.styleFrom(
-            minimumSize: const Size(52, 52),
-            backgroundColor: AppTheme.primary,
-            foregroundColor: Colors.white,
+            backgroundColor: isActive ? AppTheme.primary : colors.bgDark,
+            foregroundColor: isActive ? Colors.white : colors.textSecondary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(13),
+            ),
           ),
+          icon: const Icon(Icons.tune_rounded, size: 20),
         ),
         if (_activeFilterCount > 0)
           Positioned(
-            top: -3,
+            top: -4,
             right: -3,
             child: Container(
-              constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
               alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 3),
               decoration: BoxDecoration(
                 color: colors.bgSurface,
                 border: Border.all(color: AppTheme.primary),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 '$_activeFilterCount',
                 style: const TextStyle(
                   color: AppTheme.primary,
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -1039,7 +1062,6 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     final address = parts[0].isEmpty || parts[1].isEmpty ? '' : parts[1];
     return _resultCard(
       colors: colors,
-      icon: Icons.place_rounded,
       title: title,
       tags: [l10n.matchesCount(entry.value.length)],
       subtitle: address,
@@ -1078,7 +1100,6 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         : match.team2MemberInfos.first.avatarUrl;
     return _resultCard(
       colors: colors,
-      icon: Icons.sports_tennis_rounded,
       title: '${match.team1Name} · ${match.team2Name}',
       tags: [if (match.sportKey?.isNotEmpty == true) match.sportKey!, status],
       subtitle: details.join(' · '),
@@ -1088,9 +1109,11 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
               NavigationHelper.getLiveMatchRoute(match.tournamentId!, match.id),
             ),
       leadingWidget: _matchLogos(
-        match.team1LogoUrl ?? team1Avatar,
-        match.team2LogoUrl ?? team2Avatar,
-        colors,
+        _preferredImageUrl(match.team1LogoUrl, team1Avatar),
+        _preferredImageUrl(match.team2LogoUrl, team2Avatar),
+        match.team1Name,
+        match.team2Name,
+        match.sportKey,
       ),
     );
   }
@@ -1102,7 +1125,6 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   ) {
     return _resultCard(
       colors: colors,
-      icon: Icons.emoji_events_rounded,
       title: tournament.name,
       tags: [
         if (tournament.sport.isNotEmpty) tournament.sport,
@@ -1113,26 +1135,28 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         if (tournament.city?.isNotEmpty == true) tournament.city!,
       ].join(' · '),
       onTap: () => context.push('/intro/${tournament.id}'),
-      imageUrl: tournament.logoUrl ?? tournament.communityLogoUrl,
+      imageUrl: _preferredImageUrl(
+        tournament.logoUrl,
+        _preferredImageUrl(tournament.bannerUrl, tournament.communityLogoUrl),
+      ),
     );
   }
 
   Widget _clubCard(Community club, AppColorsExtension colors) {
     return _resultCard(
       colors: colors,
-      icon: Icons.groups_2_rounded,
       title: club.name,
       tags: club.sports,
       subtitle: club.locationAddress ?? '',
       onTap: () => context.push('/club/${club.id}'),
-      imageUrl: club.logoUrl,
+      imageUrl: _preferredImageUrl(club.logoUrl, club.bannerUrl),
+      sport: club.sports.isEmpty ? null : club.sports.first,
     );
   }
 
   Widget _athleteCard(PlayerRanking player, AppColorsExtension colors) {
     return _resultCard(
       colors: colors,
-      icon: Icons.person_rounded,
       title: player.fullName,
       tags: [
         if (player.categoryName?.isNotEmpty == true) player.categoryName!,
@@ -1144,76 +1168,95 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
           ? null
           : () => context.push('/user/${player.userId}'),
       imageUrl: player.avatarUrl,
+      sport: player.categoryName,
     );
   }
 
   Widget _matchLogos(
     String? team1Image,
     String? team2Image,
-    AppColorsExtension colors,
+    String team1Name,
+    String team2Name,
+    String? sport,
   ) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Positioned(
-          top: 0,
-          left: 0,
-          child: _imageBadge(
-            team1Image,
-            Icons.person_rounded,
-            colors,
-            size: 46,
-            radius: 23,
+    if (team1Image == null && team2Image == null) {
+      return _resultAvatar(null, '$team1Name · $team2Name', sport);
+    }
+
+    return SizedBox(
+      width: 56,
+      height: 56,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            child: _resultAvatar(team1Image, team1Name, sport, size: 40),
           ),
-        ),
-        Positioned(
-          right: 0,
-          bottom: 0,
-          child: _imageBadge(
-            team2Image,
-            Icons.person_rounded,
-            colors,
-            size: 46,
-            radius: 23,
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: _resultAvatar(team2Image, team2Name, sport, size: 40),
           ),
-        ),
-      ],
+        ],
+      ),
     );
+  }
+
+  Widget _resultAvatar(
+    String? imageUrl,
+    String label,
+    String? sport, {
+    double size = 56,
+  }) {
+    return TournamentAvatar(
+      imageUrl: imageUrl,
+      tournamentName: label,
+      sport: sport,
+      size: size,
+      borderColor: context.colors.border.withValues(alpha: .7),
+    );
+  }
+
+  String? _preferredImageUrl(String? primary, String? fallback) {
+    final first = primary?.split(',').first.trim();
+    if (first != null && first.isNotEmpty) return first;
+    final second = fallback?.split(',').first.trim();
+    return second == null || second.isEmpty ? null : second;
   }
 
   Widget _resultCard({
     required AppColorsExtension colors,
-    required IconData icon,
     required String title,
     required String subtitle,
     required VoidCallback? onTap,
     List<String> tags = const [],
     String? imageUrl,
+    String? sport,
     Widget? leadingWidget,
   }) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       color: colors.bgCard,
       elevation: 0,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         side: BorderSide(color: colors.border.withValues(alpha: 0.8)),
       ),
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Row(
             children: [
               SizedBox(
-                width: 72,
-                height: 72,
-                child:
-                    leadingWidget ??
-                    _imageBadge(imageUrl, icon, colors, size: 72, radius: 14),
+                width: 56,
+                height: 56,
+                child: leadingWidget ?? _resultAvatar(imageUrl, title, sport),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1226,14 +1269,14 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                       style: TextStyle(
                         color: colors.textPrimary,
                         fontWeight: FontWeight.w700,
-                        fontSize: 16,
+                        fontSize: 15,
                       ),
                     ),
                     if (tags.any((tag) => tag.trim().isNotEmpty)) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Wrap(
-                        spacing: 8,
-                        runSpacing: 6,
+                        spacing: 6,
+                        runSpacing: 4,
                         children: [
                           for (final tag in tags)
                             if (tag.trim().isNotEmpty)
@@ -1242,15 +1285,15 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                       ),
                     ],
                     if (subtitle.trim().isNotEmpty) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Text(
                         '• $subtitle',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: colors.textMuted,
-                          fontSize: 13,
-                          height: 1.35,
+                          fontSize: 12,
+                          height: 1.3,
                         ),
                       ),
                     ],
@@ -1258,48 +1301,13 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                 ),
               ),
               if (onTap != null) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Icon(Icons.chevron_right_rounded, color: colors.textMuted),
               ],
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _imageBadge(
-    String? imageUrl,
-    IconData fallback,
-    AppColorsExtension colors, {
-    double size = 72,
-    double radius = 14,
-  }) {
-    final url = imageUrl?.trim() ?? '';
-    return Container(
-      width: size,
-      height: size,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(radius),
-      ),
-      alignment: Alignment.center,
-      child: url.isEmpty
-          ? Icon(fallback, size: 28, color: AppTheme.primary)
-          : Image.network(
-              url,
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-              excludeFromSemantics: true,
-              frameBuilder: (context, child, frame, wasSynchronouslyLoaded) =>
-                  frame == null
-                  ? Icon(fallback, size: 24, color: AppTheme.primary)
-                  : child,
-              errorBuilder: (context, error, stackTrace) =>
-                  Icon(fallback, size: 24, color: AppTheme.primary),
-            ),
     );
   }
 

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
@@ -199,7 +198,6 @@ class _OverviewTabState extends State<OverviewTab> {
                 : 'Chưa cập nhật thời gian');
     }
     final locationStr = TournamentLocationFormatter.tournamentFullLocation(t);
-    final desc = t.description.trim();
     final hasCustomLogo = t.logoUrl != null && t.logoUrl!.trim().isNotEmpty;
 
     return SingleChildScrollView(
@@ -572,33 +570,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   ),
                 ],
 
-                // ─── 4. GIỚI THIỆU CHI TIẾT ───
-                if (desc.isNotEmpty) ...[
-                  const SizedBox(height: 20),
-                  Divider(
-                    color: colors.border.withValues(alpha: 0.6),
-                    height: 1,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSectionHeader('THÔNG TIN GIỚI THIỆU'),
-                  const SizedBox(height: 10),
-                  _buildDescriptionContent(desc),
-                ],
 
-                // ─── 5. CƠ CẤU GIẢI THƯỞNG ───
-                if (!isClubLite &&
-                    t.prizeDescription != null &&
-                    t.prizeDescription!.isNotEmpty) ...[
-                  const SizedBox(height: 20),
-                  Divider(
-                    color: colors.border.withValues(alpha: 0.6),
-                    height: 1,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSectionHeader('CƠ CẤU GIẢI THƯỞNG'),
-                  const SizedBox(height: 10),
-                  _buildDescriptionContent(t.prizeDescription!),
-                ],
 
                 // ─── 6. NGƯỜI SÁNG LẬP GIẢI ĐẤU (ĐẶT Ở CUỐI KHI GIẢI CÓ LOGO) ───
                 if (hasCustomLogo &&
@@ -800,28 +772,7 @@ class _OverviewTabState extends State<OverviewTab> {
     );
   }
 
-  Widget _buildDescriptionContent(String text) {
-    final colors = context.colors;
-    final isHtml = text.contains('<') && text.contains('>');
-    if (isHtml) {
-      return HtmlWidget(
-        text,
-        textStyle: TextStyle(
-          fontSize: 13.5,
-          color: colors.textSecondary,
-          height: 1.55,
-        ),
-      );
-    }
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 13.5,
-        color: colors.textSecondary,
-        height: 1.55,
-      ),
-    );
-  }
+
 
   Widget _buildMetaRow(String label, String value, {bool isFee = false}) {
     final colors = context.colors;

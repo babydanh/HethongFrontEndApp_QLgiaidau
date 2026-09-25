@@ -97,7 +97,7 @@ class _LiveTabState extends State<LiveTab> {
     if (widget.divisions.length > 1) {
       return ListView.builder(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 140),
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 140),
         itemCount: widget.divisions.length,
         itemBuilder: (context, index) {
           final div = widget.divisions[index];
@@ -116,7 +116,7 @@ class _LiveTabState extends State<LiveTab> {
           }).toList();
 
           return Container(
-            margin: const EdgeInsets.only(bottom: 8),
+            margin: const EdgeInsets.only(bottom: 4),
             decoration: BoxDecoration(
               color: colors.bgSurface,
               borderRadius: BorderRadius.circular(12),
@@ -142,7 +142,7 @@ class _LiveTabState extends State<LiveTab> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
-                      vertical: 10,
+                      vertical: 8,
                     ),
                     child: Row(
                       children: [
@@ -324,25 +324,22 @@ class _LiveTabState extends State<LiveTab> {
                           thickness: 0.5,
                           color: colors.border.withValues(alpha: 0.5),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 6),
                         if (divLiveMatches.isNotEmpty)
                           ...divLiveMatches.map((match) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: LiveMatchCardV2(
-                                match: match,
-                                isLive: true,
-                                onTap: () {
-                                  context.push(
-                                    NavigationHelper.getLiveMatchRoute(
-                                      widget.tournamentId ??
-                                          match.tournamentId ??
-                                          '',
-                                      match.id,
-                                    ),
-                                  );
-                                },
-                              ),
+                            return LiveMatchCardV2(
+                              match: match,
+                              isLive: true,
+                              onTap: () {
+                                context.push(
+                                  NavigationHelper.getLiveMatchRoute(
+                                    widget.tournamentId ??
+                                        match.tournamentId ??
+                                        '',
+                                    match.id,
+                                  ),
+                                );
+                              },
                             );
                           })
                         else
@@ -391,24 +388,21 @@ class _LiveTabState extends State<LiveTab> {
     // Khi chỉ có 1 division hoặc không có divisions
     return ListView.builder(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 140),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 140),
       itemCount: widget.liveMatches.length,
       itemBuilder: (context, index) {
         final match = widget.liveMatches[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: LiveMatchCardV2(
-            match: match,
-            isLive: true,
-            onTap: () {
-              context.push(
-                NavigationHelper.getLiveMatchRoute(
-                  widget.tournamentId ?? match.tournamentId ?? '',
-                  match.id,
-                ),
-              );
-            },
-          ),
+        return LiveMatchCardV2(
+          match: match,
+          isLive: true,
+          onTap: () {
+            context.push(
+              NavigationHelper.getLiveMatchRoute(
+                widget.tournamentId ?? match.tournamentId ?? '',
+                match.id,
+              ),
+            );
+          },
         );
       },
     );
