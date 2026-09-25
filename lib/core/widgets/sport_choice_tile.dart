@@ -84,16 +84,17 @@ class SportChoiceTile extends StatelessWidget {
     );
   }
 
-  static Widget buildSportIcon(String key, double size, Color color) {
+  static Widget buildSportIcon(String key, double size, [Color? color]) {
     final normalized = key.trim().toLowerCase();
-    final filter = ColorFilter.mode(color, BlendMode.srcIn);
 
-    if (normalized.contains('football') || normalized.contains('bóng đá')) {
+    if (normalized.contains('football') ||
+        normalized.contains('bóng đá') ||
+        normalized.contains('soccer')) {
       return SvgPicture.asset(
         'assets/icons/football.svg',
         width: size,
         height: size,
-        colorFilter: filter,
+        fit: BoxFit.contain,
       );
     }
     if (normalized.contains('badminton') || normalized.contains('cầu lông')) {
@@ -101,33 +102,34 @@ class SportChoiceTile extends StatelessWidget {
         'assets/icons/badminton.svg',
         width: size,
         height: size,
-        colorFilter: filter,
+        fit: BoxFit.contain,
       );
     }
     if (normalized.contains('table_tennis') ||
         normalized.contains('bóng bàn') ||
         normalized.contains('ping_pong') ||
-        normalized.contains('ping-pong')) {
+        normalized.contains('ping-pong') ||
+        normalized.contains('ping')) {
       return SvgPicture.asset(
         'assets/icons/ping-pong.svg',
         width: size,
         height: size,
-        colorFilter: filter,
+        fit: BoxFit.contain,
       );
     }
     if (normalized.contains('pickleball')) {
-      return SvgPicture.asset(
-        'assets/icons/pickleball.svg',
+      return Image.asset(
+        'assets/icons/pickleball.png',
         width: size,
         height: size,
-        colorFilter: filter,
+        fit: BoxFit.contain,
       );
     }
     return SvgPicture.asset(
       'assets/icons/tennis.svg',
       width: size,
       height: size,
-      colorFilter: filter,
+      fit: BoxFit.contain,
     );
   }
 }
