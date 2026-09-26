@@ -1,16 +1,23 @@
+import 'dart:async';
+import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/data/models/venue_suggestion.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_duration_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_price_dialog.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_privacy_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_setting_tile.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_participant_counter.dart';
+
+enum _VenueSearchField { name, address }
 
 class CreateSocialScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -58,6 +65,25 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   final TextEditingController _venueNameController = TextEditingController();
   final TextEditingController _venueAddressController = TextEditingController();
 
+  Timer? _venueSearchDebounce;
+  int _venueSearchVersion = 0;
+  _VenueSearchField? _activeVenueSearchField;
+  String _venueSearchQuery = '';
+  List<VenueSuggestion> _venueSuggestions = const [];
+  bool _isVenueSearchLoading = false;
+  bool _venueSearchFailed = false;
+  String? _selectedVenueId;
+  String? _selectedVenueName;
+  String? _selectedVenueAddress;
+  String? _selectedCourtId;
+  List<VenueCourtSuggestion> _availableVenueCourts = const [];
+  bool _isVenueDetailsLoading = false;
+  bool _venueDetailsFailed = false;
+  int _venueDetailsVersion = 0;
+  String _genderRequirement = 'ANY';
+  String? _submissionPayload;
+  String? _submissionIdempotencyKey;
+
   // Configurations
   int _maxParticipants = 6;
   String _privacy = 'Công khai';
@@ -85,15 +111,26 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       _privacy = init.visibility == 'CLUB_ONLY' ? 'Nội bộ CLB' : 'Công khai';
       _price = init.feePerSlot;
       _venueNameController.text = init.venueName;
+      _selectedVenueId = init.venueId;
+      _selectedCourtId = init.courtId;
+      _selectedVenueName = init.venueId == null ? null : init.venueName;
+      _selectedVenueAddress = init.venueId == null ? null : init.venueAddress;
+      _genderRequirement = init.genderRequirement;
       _venueAddressController.text = init.venueAddress;
       _titleController.text = init.title;
       _notesController.text = init.description ?? '';
       _isClubAttached =
           (init.communityId != null && init.communityId!.isNotEmpty);
+      if (init.venueId != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) unawaited(_loadVenueDetails(init.venueId!));
+        });
+      }
     } else {
       _selectedSportKey = _sports.first.key;
       _selectedSportName = _sports.first.name;
       _selectedFormat = _formats.first;
+      _isClubAttached = widget.clubId.isNotEmpty;
 
       // Default time: next hour or 14:45
       final now = DateTime.now();
@@ -109,11 +146,271 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
 
   @override
   void dispose() {
+    _venueSearchDebounce?.cancel();
     _venueNameController.dispose();
     _venueAddressController.dispose();
     _titleController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  void _onVenueQueryChanged(String rawQuery, _VenueSearchField field) {
+    _venueSearchDebounce?.cancel();
+    final version = ++_venueSearchVersion;
+    final query = rawQuery.trim();
+    final selectionChanged =
+        _selectedVenueId != null &&
+        ((field == _VenueSearchField.name && query != _selectedVenueName) ||
+            (field == _VenueSearchField.address &&
+                query != _selectedVenueAddress));
+    if (selectionChanged) _venueDetailsVersion++;
+    setState(() {
+      _activeVenueSearchField = field;
+      _venueSearchQuery = query;
+      _venueSuggestions = const [];
+      _isVenueSearchLoading = query.length >= 2;
+      _venueSearchFailed = false;
+      if (selectionChanged) {
+        _selectedVenueId = null;
+        _selectedVenueName = null;
+        _selectedVenueAddress = null;
+        _selectedCourtId = null;
+        _availableVenueCourts = const [];
+        _isVenueDetailsLoading = false;
+        _venueDetailsFailed = false;
+      }
+    });
+    if (query.length < 2) return;
+
+    _venueSearchDebounce = Timer(const Duration(milliseconds: 300), () async {
+      try {
+        final suggestions = await ref
+            .read(venueSearchRepositoryProvider)
+            .search(query, limit: 8);
+        if (!mounted || version != _venueSearchVersion) return;
+        setState(() {
+          _venueSuggestions = suggestions;
+          _isVenueSearchLoading = false;
+          _venueSearchFailed = false;
+        });
+      } catch (_) {
+        if (!mounted || version != _venueSearchVersion) return;
+        setState(() {
+          _venueSuggestions = const [];
+          _isVenueSearchLoading = false;
+          _venueSearchFailed = true;
+        });
+      }
+    });
+  }
+
+  void _selectVenueSuggestion(VenueSuggestion suggestion) {
+    _venueSearchDebounce?.cancel();
+    _venueSearchVersion++;
+    _venueDetailsVersion++;
+    _venueNameController.text = suggestion.name;
+    _venueAddressController.text = suggestion.locationAddress;
+    setState(() {
+      _activeVenueSearchField = null;
+      _venueSearchQuery = '';
+      _venueSuggestions = const [];
+      _isVenueSearchLoading = false;
+      _venueSearchFailed = false;
+      _selectedVenueId = suggestion.id;
+      _selectedVenueName = suggestion.id == null ? null : suggestion.name;
+      _selectedVenueAddress = suggestion.id == null
+          ? null
+          : suggestion.locationAddress;
+      _selectedCourtId = null;
+      _availableVenueCourts = const [];
+      _isVenueDetailsLoading = suggestion.id != null;
+      _venueDetailsFailed = false;
+    });
+    if (suggestion.id != null) {
+      unawaited(_loadVenueDetails(suggestion.id!));
+    }
+  }
+
+  Future<void> _loadVenueDetails(String venueId) async {
+    final version = ++_venueDetailsVersion;
+    try {
+      final details = await ref
+          .read(venueSearchRepositoryProvider)
+          .getById(venueId);
+      if (!mounted ||
+          version != _venueDetailsVersion ||
+          _selectedVenueId != venueId) {
+        return;
+      }
+      setState(() {
+        _venueNameController.text = details.venue.name;
+        _venueAddressController.text = details.venue.locationAddress;
+        _selectedVenueName = details.venue.name;
+        _selectedVenueAddress = details.venue.locationAddress;
+        _availableVenueCourts = details.courts;
+        if (!_availableVenueCourts.any(
+          (court) => court.id == _selectedCourtId,
+        )) {
+          _selectedCourtId = null;
+        }
+        _isVenueDetailsLoading = false;
+        _venueDetailsFailed = false;
+      });
+    } catch (_) {
+      if (!mounted ||
+          version != _venueDetailsVersion ||
+          _selectedVenueId != venueId) {
+        return;
+      }
+      setState(() {
+        _isVenueDetailsLoading = false;
+        _venueDetailsFailed = true;
+      });
+    }
+  }
+
+  void _dismissVenueSuggestions() {
+    _venueSearchDebounce?.cancel();
+    _venueSearchVersion++;
+    setState(() {
+      _activeVenueSearchField = null;
+      _venueSearchQuery = '';
+      _venueSuggestions = const [];
+      _isVenueSearchLoading = false;
+      _venueSearchFailed = false;
+    });
+  }
+
+  Widget _buildVenueSuggestions(BuildContext context) {
+    if (_venueSearchQuery.length < 2) return const SizedBox.shrink();
+
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    final Widget content;
+
+    if (_isVenueSearchLoading) {
+      content = Semantics(
+        liveRegion: true,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppTheme.primary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.socialVenueSuggestionsLoading,
+                  style: TextStyle(color: colors.textSecondary),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else if (_venueSearchFailed) {
+      content = Padding(
+        padding: const EdgeInsets.all(12),
+        child: Text(
+          l10n.socialVenueSuggestionsFailed,
+          style: TextStyle(color: colors.textSecondary),
+        ),
+      );
+    } else if (_venueSuggestions.isEmpty) {
+      content = Padding(
+        padding: const EdgeInsets.all(12),
+        child: Text(
+          l10n.socialVenueSuggestionsEmpty,
+          style: TextStyle(color: colors.textSecondary),
+        ),
+      );
+    } else {
+      content = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+            child: Text(
+              l10n.socialVenueSuggestionsLabel,
+              style: TextStyle(
+                color: colors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 220),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const ClampingScrollPhysics(),
+              itemCount: _venueSuggestions.length,
+              separatorBuilder: (context, index) =>
+                  Divider(height: 1, color: colors.border),
+              itemBuilder: (context, index) {
+                final suggestion = _venueSuggestions[index];
+                void select() => _selectVenueSuggestion(suggestion);
+                return Semantics(
+                  button: true,
+                  label: '${suggestion.name}, ${suggestion.locationAddress}',
+                  onTap: select,
+                  child: ExcludeSemantics(
+                    child: ListTile(
+                      dense: true,
+                      minVerticalPadding: 8,
+                      leading: Icon(
+                        Icons.location_on_outlined,
+                        color: AppTheme.primary,
+                      ),
+                      title: Text(
+                        suggestion.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Text(
+                        suggestion.locationAddress,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: colors.textSecondary),
+                      ),
+                      onTap: select,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.bgElevated,
+          border: Border.all(color: colors.border),
+          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+          clipBehavior: Clip.antiAlias,
+          child: content,
+        ),
+      ),
+    );
   }
 
   String _getHostName() {
@@ -294,9 +591,11 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           if (notes != null && notes.isNotEmpty) 'description': notes,
           'playFormat': _selectedFormat,
           'startAt': _selectedDateTime.toIso8601String(),
-          'durationMinutes': (_durationHours * 60).round(),
           'venueName': venueNameText,
           'venueAddress': venueAddressText,
+          'venueId': _selectedVenueId,
+          'courtId': _selectedCourtId,
+          'genderRequirement': _genderRequirement,
           'maxSlots': _maxParticipants,
           'feePerSlot': _price,
           'levelRequirement': 'ALL',
@@ -335,6 +634,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           durationMinutes: (_durationHours * 60).round(),
           venueName: venueNameText,
           venueAddress: venueAddressText,
+          venueId: _selectedVenueId,
+          courtId: _selectedCourtId,
           maxSlots: _maxParticipants,
           feePerSlot: _price,
           levelRequirement: 'ALL',
@@ -343,9 +644,18 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           communityId: _isClubAttached && widget.clubId.isNotEmpty
               ? widget.clubId
               : null,
+          genderRequirement: _genderRequirement,
         );
 
-        final createdSession = await repo.create(request);
+        final payload = request.toJson().toString();
+        if (_submissionPayload != payload) {
+          _submissionPayload = payload;
+          _submissionIdempotencyKey = const Uuid().v4();
+        }
+        final createdSession = await repo.create(
+          request,
+          idempotencyKey: _submissionIdempotencyKey!,
+        );
 
         ref.read(socialSessionsProvider.notifier).refresh();
         ref
@@ -365,6 +675,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           );
           Navigator.of(context).pop(createdSession);
         }
+        _submissionPayload = null;
+        _submissionIdempotencyKey = null;
       }
     } catch (error) {
       if (mounted) {
@@ -385,6 +697,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
 
     return Container(
@@ -747,78 +1060,155 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                       const SizedBox(height: 10),
 
                       // Tách venueName và venueAddress thành 2 input field (Yêu cầu 5)
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 14),
-                            child: Icon(
-                              Icons.location_on_outlined,
-                              color: AppTheme.primary,
-                              size: 22,
+                      Focus(
+                        onKeyEvent: (node, event) {
+                          if (event is KeyDownEvent &&
+                              event.logicalKey == LogicalKeyboardKey.escape &&
+                              _activeVenueSearchField != null) {
+                            _dismissVenueSuggestions();
+                            return KeyEventResult.handled;
+                          }
+                          return KeyEventResult.ignored;
+                        },
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 14),
+                              child: Icon(
+                                Icons.location_on_outlined,
+                                color: AppTheme.primary,
+                                size: 22,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                TextFormField(
-                                  controller: _venueNameController,
-                                  maxLength: 100,
-                                  style: TextStyle(
-                                    fontSize: 14.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: colors.textPrimary,
-                                  ),
-                                  decoration: InputDecoration(
-                                    labelText: 'Tên sân',
-                                    hintText:
-                                        'Nhập tên sân (VD: 22 Cộng Hòa)...',
-                                    counterText: '',
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 12,
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  TextFormField(
+                                    controller: _venueNameController,
+                                    onChanged: (value) => _onVenueQueryChanged(
+                                      value,
+                                      _VenueSearchField.name,
                                     ),
-                                  ),
-                                  validator: (val) {
-                                    if (val == null || val.trim().isEmpty) {
-                                      return 'Tên sân không được để trống';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 10),
-                                TextFormField(
-                                  controller: _venueAddressController,
-                                  maxLength: 500,
-                                  maxLines: 2,
-                                  minLines: 1,
-                                  style: TextStyle(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.w400,
-                                    color: colors.textPrimary,
-                                  ),
-                                  decoration: InputDecoration(
-                                    labelText: 'Địa điểm',
-                                    hintText: 'Nhập địa chỉ cụ thể...',
-                                    counterText: '',
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 12,
+                                    maxLength: 100,
+                                    style: TextStyle(
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: colors.textPrimary,
                                     ),
+                                    decoration: InputDecoration(
+                                      labelText: 'Tên sân',
+                                      hintText:
+                                          'Nhập tên sân (VD: 22 Cộng Hòa)...',
+                                      counterText: '',
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                            vertical: 12,
+                                          ),
+                                    ),
+                                    validator: (val) {
+                                      if (val == null || val.trim().isEmpty) {
+                                        return 'Tên sân không được để trống';
+                                      }
+                                      return null;
+                                    },
                                   ),
-                                  validator: (val) {
-                                    if (val == null || val.trim().isEmpty) {
-                                      return 'Địa điểm không được để trống';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ],
+                                  if (_activeVenueSearchField ==
+                                      _VenueSearchField.name)
+                                    _buildVenueSuggestions(context),
+                                  const SizedBox(height: 10),
+                                  TextFormField(
+                                    controller: _venueAddressController,
+                                    onChanged: (value) => _onVenueQueryChanged(
+                                      value,
+                                      _VenueSearchField.address,
+                                    ),
+                                    maxLength: 500,
+                                    maxLines: 2,
+                                    minLines: 1,
+                                    style: TextStyle(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w400,
+                                      color: colors.textPrimary,
+                                    ),
+                                    decoration: InputDecoration(
+                                      labelText: 'Địa điểm',
+                                      hintText: 'Nhập địa chỉ cụ thể...',
+                                      counterText: '',
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                            vertical: 12,
+                                          ),
+                                    ),
+                                    validator: (val) {
+                                      if (val == null || val.trim().isEmpty) {
+                                        return 'Địa điểm không được để trống';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  if (_activeVenueSearchField ==
+                                      _VenueSearchField.address)
+                                    _buildVenueSuggestions(context),
+                                  if (_selectedVenueId != null) ...[
+                                    const SizedBox(height: 10),
+                                    if (_isVenueDetailsLoading)
+                                      LinearProgressIndicator(
+                                        color: colors.textPrimary,
+                                        backgroundColor: colors.bgCard,
+                                      )
+                                    else if (_availableVenueCourts.isNotEmpty)
+                                      DropdownButtonFormField<String>(
+                                        isExpanded: true,
+                                        initialValue:
+                                            _availableVenueCourts.any(
+                                              (court) =>
+                                                  court.id == _selectedCourtId,
+                                            )
+                                            ? _selectedCourtId
+                                            : null,
+                                        decoration: InputDecoration(
+                                          labelText:
+                                              l10n.socialVenueCourtOptional,
+                                        ),
+                                        items: [
+                                          DropdownMenuItem<String>(
+                                            value: null,
+                                            child: Text(
+                                              l10n.socialVenueAnyCourt,
+                                            ),
+                                          ),
+                                          ..._availableVenueCourts.map(
+                                            (court) => DropdownMenuItem<String>(
+                                              value: court.id,
+                                              child: Text(court.name),
+                                            ),
+                                          ),
+                                        ],
+                                        onChanged: (value) => setState(
+                                          () => _selectedCourtId = value,
+                                        ),
+                                      )
+                                    else
+                                      Text(
+                                        _venueDetailsFailed
+                                            ? l10n.socialVenueCourtsUnavailable
+                                            : l10n.socialVenueNoCourts,
+                                        style: TextStyle(
+                                          color: colors.textSecondary,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                  ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Divider(height: 1, color: colors.border),
@@ -830,6 +1220,36 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                         onChanged: (value) => _maxParticipants = value,
                       ),
                       const SizedBox(height: 14),
+                      DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        initialValue: _genderRequirement,
+                        decoration: InputDecoration(
+                          labelText: l10n.socialGenderRequirement,
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: 'ANY',
+                            child: Text(l10n.socialGenderAny),
+                          ),
+                          DropdownMenuItem(
+                            value: 'MALE',
+                            child: Text(l10n.socialGenderMale),
+                          ),
+                          DropdownMenuItem(
+                            value: 'FEMALE',
+                            child: Text(l10n.socialGenderFemale),
+                          ),
+                          DropdownMenuItem(
+                            value: 'MIXED',
+                            child: Text(l10n.socialGenderMixed),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() => _genderRequirement = value);
+                          }
+                        },
+                      ),
 
                       SocialSettingTile(
                         icon: Icons.lock_outline_rounded,

@@ -13785,4 +13785,108 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get homeGlobalSearchHiddenMatches =>
       'Trận trong lượt tải này chưa đủ thông tin hai đội để hiển thị.';
+
+  @override
+  String get homeSocialCreateAction => 'Tạo kèo';
+
+  @override
+  String get socialVenueSuggestionsLabel => 'Địa điểm gợi ý';
+
+  @override
+  String get socialVenueSuggestionsLoading => 'Đang tìm địa điểm...';
+
+  @override
+  String get socialVenueSuggestionsEmpty => 'Không tìm thấy địa điểm phù hợp';
+
+  @override
+  String get socialVenueSuggestionsFailed =>
+      'Không tải được gợi ý. Bạn vẫn có thể nhập địa điểm.';
+
+  @override
+  String get socialVenueCourt => 'Sân';
+
+  @override
+  String get socialVenueCourtOptional => 'Chọn sân (không bắt buộc)';
+
+  @override
+  String get socialVenueAnyCourt => 'Không chọn sân cụ thể';
+
+  @override
+  String get socialVenueCourtsLoading => 'Đang tải danh sách sân…';
+
+  @override
+  String get socialVenueCourtsUnavailable =>
+      'Không tải được danh sách sân. Địa điểm vẫn được chọn.';
+
+  @override
+  String get socialVenueNoCourts => 'Địa điểm này chưa có sân được cấu hình.';
+
+  @override
+  String get socialGenderRequirement => 'Ai có thể tham gia';
+
+  @override
+  String get socialGenderAny => 'Mọi giới tính';
+
+  @override
+  String get socialGenderMale => 'Chỉ nam';
+
+  @override
+  String get socialGenderFemale => 'Chỉ nữ';
+
+  @override
+  String get socialGenderMixed => 'Nhóm kết hợp';
+
+  @override
+  String get socialRequestApproval => 'Yêu cầu duyệt tham gia';
+
+  @override
+  String get socialJoinDirectly => 'Tham gia trực tiếp';
+
+  @override
+  String get socialJoinRequestPending => 'Yêu cầu đang chờ duyệt';
+
+  @override
+  String get socialCancelJoinRequest => 'Hủy yêu cầu';
+
+  @override
+  String get socialJoinRequestSent => 'Đã gửi yêu cầu đến người tổ chức.';
+
+  @override
+  String get socialJoinRequestCancelled => 'Đã hủy yêu cầu tham gia.';
+
+  @override
+  String get socialPendingJoinRequests => 'Yêu cầu tham gia';
+
+  @override
+  String get socialNoPendingJoinRequests => 'Chưa có yêu cầu nào đang chờ.';
+
+  @override
+  String get socialApproveJoinRequest => 'Chấp nhận';
+
+  @override
+  String get socialRejectJoinRequest => 'Từ chối';
+
+  @override
+  String socialJoinRequestSlots(Object count) {
+    return 'Số chỗ: $count';
+  }
+
+  @override
+  String get socialJoinRequestNoName => 'Thành viên';
+
+  @override
+  String get socialJoinRequestDecisionFailed =>
+      'Không thể cập nhật yêu cầu. Vui lòng thử lại.';
+
+  @override
+  String get socialJoinOptions => 'Chọn cách tham gia';
+
+  @override
+  String get socialJoinRequestApproved => 'Đã chấp nhận yêu cầu tham gia.';
+
+  @override
+  String get socialJoinRequestRejected => 'Đã từ chối yêu cầu tham gia.';
+
+  @override
+  String get socialJoinRequestLoadMore => 'Xem thêm yêu cầu';
 }

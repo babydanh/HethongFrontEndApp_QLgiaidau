@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_joi
 import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_details_tab.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_participants_tab.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/payment_tab/social_payment_tab.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/chat_tab/social_chat_tab.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_cancel_session_dialog.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_contact_host_sheet.dart';
@@ -373,9 +374,8 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
     SocialSessionModel session,
     AppColorsExtension colors,
   ) {
-    if (_isHost) {
-      return const SizedBox.shrink();
-    }
+    final l10n = AppLocalizations.of(context)!;
+    if (_isHost || session.isJoined) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -431,7 +431,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
               child: SizedBox(
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: () => _handleRequestJoin(context, session),
+                  onPressed: session.joinRequestStatus == 'REQUESTED'
+                      ? _withdrawJoinRequest
+                      : () => _handleRequestJoin(context, session),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     foregroundColor: Colors.white,
@@ -443,11 +445,13 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       ),
                     ),
                   ),
-                  child: const FittedBox(
+                  child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      'Yêu cầu tham gia',
-                      style: TextStyle(
+                      session.joinRequestStatus == 'REQUESTED'
+                          ? l10n.socialCancelJoinRequest
+                          : l10n.socialJoinOptions,
+                      style: const TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w700,
                       ),
@@ -545,6 +549,34 @@ RSVP: https://sporto.vn/social/${session.id}''';
 
   void _handleRequestJoin(BuildContext context, SocialSessionModel session) {
     SocialJoinBottomSheet.show(context, session);
+  }
+
+  Future<void> _withdrawJoinRequest() async {
+    try {
+      await ref
+          .read(socialSessionDetailProvider(widget.sessionId).notifier)
+          .withdrawJoinRequest();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.socialJoinRequestCancelled,
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.socialJoinRequestDecisionFailed,
+          ),
+          backgroundColor: context.colors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _handleShare(SocialSessionModel session) {

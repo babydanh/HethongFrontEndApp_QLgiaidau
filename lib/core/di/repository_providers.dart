@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/data/repositories/api/api_region_repository.d
 import 'package:app_quanly_giaidau/data/repositories/api/api_tournament_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_user_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_venue_search_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/local/app_session_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/local/shared_prefs_local_session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/auth_repository.dart';
@@ -27,6 +28,7 @@ import 'package:app_quanly_giaidau/data/repositories/api/api_social_session_repo
 import 'package:app_quanly_giaidau/domain/repositories/social_session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/user_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/venue_search_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -97,4 +99,7 @@ final socialSessionRepositoryProvider = Provider<ISocialSessionRepository>((
   ref,
 ) {
   return ApiSocialSessionRepository(ref.watch(dioClientProvider));
+});
+final venueSearchRepositoryProvider = Provider<IVenueSearchRepository>((ref) {
+  return ApiVenueSearchRepository(ref.watch(dioClientProvider));
 });

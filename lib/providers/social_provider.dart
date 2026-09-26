@@ -77,11 +77,10 @@ class SocialFilterNotifier extends Notifier<SocialFilterState> {
 
 final socialFilterProvider =
     NotifierProvider<SocialFilterNotifier, SocialFilterState>(
-  SocialFilterNotifier.new,
-);
+      SocialFilterNotifier.new,
+    );
 
-class SocialSessionsNotifier
-    extends AsyncNotifier<List<SocialSessionModel>> {
+class SocialSessionsNotifier extends AsyncNotifier<List<SocialSessionModel>> {
   @override
   Future<List<SocialSessionModel>> build() async {
     final filter = ref.watch(socialFilterProvider);
@@ -161,11 +160,7 @@ class SocialSessionsNotifier
     String newStatus,
   ) async {
     final repo = ref.read(socialSessionRepositoryProvider);
-    await repo.updatePaymentStatus(
-      sessionId,
-      userId,
-      paymentStatus: newStatus,
-    );
+    await repo.updatePaymentStatus(sessionId, userId, paymentStatus: newStatus);
     await refresh();
   }
 
@@ -245,11 +240,10 @@ class SocialSessionsNotifier
 
 final socialSessionsProvider =
     AsyncNotifierProvider<SocialSessionsNotifier, List<SocialSessionModel>>(
-  SocialSessionsNotifier.new,
-);
+      SocialSessionsNotifier.new,
+    );
 
-class SocialSessionDetailNotifier
-    extends AsyncNotifier<SocialSessionModel> {
+class SocialSessionDetailNotifier extends AsyncNotifier<SocialSessionModel> {
   final String sessionId;
   SocialSessionDetailNotifier(this.sessionId);
 
@@ -262,7 +256,9 @@ class SocialSessionDetailNotifier
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      return await ref.read(socialSessionRepositoryProvider).getDetail(sessionId);
+      return await ref
+          .read(socialSessionRepositoryProvider)
+          .getDetail(sessionId);
     });
   }
 
@@ -274,9 +270,48 @@ class SocialSessionDetailNotifier
     return res;
   }
 
+  Future<void> requestToJoin({int ticketCount = 1}) async {
+    await ref
+        .read(socialSessionRepositoryProvider)
+        .requestToJoin(sessionId, ticketCount: ticketCount);
+    await refresh();
+    ref.read(socialSessionsProvider.notifier).refresh();
+  }
+
+  Future<void> withdrawJoinRequest() async {
+    await ref
+        .read(socialSessionRepositoryProvider)
+        .withdrawJoinRequest(sessionId);
+    ref.invalidate(socialJoinRequestsProvider(sessionId));
+    await refresh();
+    ref.read(socialSessionsProvider.notifier).refresh();
+  }
+
+  Future<void> approveJoinRequest(String participantId) async {
+    await ref
+        .read(socialSessionRepositoryProvider)
+        .approveJoinRequest(sessionId, participantId);
+    ref.invalidate(socialJoinRequestsProvider(sessionId));
+    await refresh();
+    ref.read(socialSessionsProvider.notifier).refresh();
+  }
+
+  Future<void> rejectJoinRequest(String participantId) async {
+    await ref
+        .read(socialSessionRepositoryProvider)
+        .rejectJoinRequest(sessionId, participantId);
+    ref.invalidate(socialJoinRequestsProvider(sessionId));
+    await refresh();
+    ref.read(socialSessionsProvider.notifier).refresh();
+  }
+
   Future<void> updatePaymentStatus(String userId, String paymentStatus) async {
     final repo = ref.read(socialSessionRepositoryProvider);
-    await repo.updatePaymentStatus(sessionId, userId, paymentStatus: paymentStatus);
+    await repo.updatePaymentStatus(
+      sessionId,
+      userId,
+      paymentStatus: paymentStatus,
+    );
     await refresh();
     ref.read(socialSessionsProvider.notifier).refresh();
   }
@@ -293,7 +328,11 @@ class SocialSessionDetailNotifier
     int ticketCount = 1,
   }) async {
     final repo = ref.read(socialSessionRepositoryProvider);
-    await repo.addParticipant(sessionId, userId: userId, ticketCount: ticketCount);
+    await repo.addParticipant(
+      sessionId,
+      userId: userId,
+      ticketCount: ticketCount,
+    );
     await refresh();
     ref.read(socialSessionsProvider.notifier).refresh();
   }
@@ -348,9 +387,7 @@ class SocialSessionDetailNotifier
       isMe: true,
     );
     state = AsyncData(
-      current.copyWith(
-        chatMessages: [...current.chatMessages, newMessage],
-      ),
+      current.copyWith(chatMessages: [...current.chatMessages, newMessage]),
     );
   }
 }
@@ -362,61 +399,127 @@ final socialSessionDetailProvider =
       String
     >(SocialSessionDetailNotifier.new);
 
-final clubSocialSessionsQueryProvider =
-    FutureProvider.family<List<SocialSessionModel>, String>(
-  (ref, communityId) async {
-    final repo = ref.watch(socialSessionRepositoryProvider);
-    try {
-      // Backend: GET /social-sessions/by-community/:communityId
-      // Lấy toàn bộ Social của CLB (không giới hạn theo ngày hôm nay).
-      final res = await repo.listByCommunity(
-        communityId: communityId,
-        status: 'OPEN,FULL,COMPLETED',
-        limit: 20,
-      );
-      return res.items;
-    } catch (error, stack) {
-      // Đừng nuốt lỗi: log để debug vì sao tab "Mở" trống
-      // trong khi tab "Đã xong" vẫn có dữ liệu.
-      _socialClubLog.error(
-        'listByCommunity failed for $communityId',
-        error,
-        stack,
-      );
-      rethrow;
+class SocialJoinRequestsNotifier
+    extends AsyncNotifier<SocialJoinRequestListResponse> {
+  final String sessionId;
+  int _page = 1;
+  bool _isLoadingMore = false;
+
+  SocialJoinRequestsNotifier(this.sessionId);
+
+  @override
+  Future<SocialJoinRequestListResponse> build() async {
+    _page = 1;
+    return ref
+        .watch(socialSessionRepositoryProvider)
+        .listJoinRequests(sessionId, limit: 50);
+  }
+
+  Future<void> loadMore() async {
+    final current = state.asData?.value;
+    if (_isLoadingMore ||
+        current == null ||
+        current.items.length >= current.total) {
+      return;
     }
-  },
-);
+    _isLoadingMore = true;
+    final nextPage = _page + 1;
+    try {
+      final next = await ref
+          .read(socialSessionRepositoryProvider)
+          .listJoinRequests(sessionId, page: nextPage, limit: 50);
+      _page = nextPage;
+      state = AsyncData(
+        SocialJoinRequestListResponse(
+          items: [...current.items, ...next.items],
+          page: next.page,
+          limit: next.limit,
+          total: next.total,
+        ),
+      );
+    } finally {
+      _isLoadingMore = false;
+    }
+  }
+
+  Future<void> refresh() async {
+    _page = 1;
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(
+      () => ref
+          .read(socialSessionRepositoryProvider)
+          .listJoinRequests(sessionId, limit: 50),
+    );
+  }
+}
+
+final socialJoinRequestsProvider =
+    AsyncNotifierProvider.family<
+      SocialJoinRequestsNotifier,
+      SocialJoinRequestListResponse,
+      String
+    >(SocialJoinRequestsNotifier.new);
+
+final clubSocialSessionsQueryProvider =
+    FutureProvider.family<List<SocialSessionModel>, String>((
+      ref,
+      communityId,
+    ) async {
+      final repo = ref.watch(socialSessionRepositoryProvider);
+      try {
+        // Backend: GET /social-sessions/by-community/:communityId
+        // Lấy toàn bộ Social của CLB (không giới hạn theo ngày hôm nay).
+        final res = await repo.listByCommunity(
+          communityId: communityId,
+          status: 'OPEN,FULL,COMPLETED',
+          limit: 20,
+        );
+        return res.items;
+      } catch (error, stack) {
+        // Đừng nuốt lỗi: log để debug vì sao tab "Mở" trống
+        // trong khi tab "Đã xong" vẫn có dữ liệu.
+        _socialClubLog.error(
+          'listByCommunity failed for $communityId',
+          error,
+          stack,
+        );
+        rethrow;
+      }
+    });
 
 final clubSocialSessionsProvider =
     Provider.family<List<SocialSessionModel>, String>((ref, communityId) {
-  return ref.watch(clubSocialSessionsQueryProvider(communityId)).asData?.value ??
-      const <SocialSessionModel>[];
-});
+      return ref
+              .watch(clubSocialSessionsQueryProvider(communityId))
+              .asData
+              ?.value ??
+          const <SocialSessionModel>[];
+    });
 
 final communitySocialSessionsQueryProvider =
-    FutureProvider.family<List<SocialSessionModel>, String>(
-  (ref, communityId) async {
-    final repo = ref.watch(socialSessionRepositoryProvider);
-    try {
-      final res = await repo.listByCommunity(
-        communityId: communityId,
-        status: 'OPEN,FULL,COMPLETED',
-        limit: 20,
-      );
-      return res.items;
-    } catch (error, stack) {
-      _socialClubLog.error(
-        'listByCommunity failed for $communityId',
-        error,
-        stack,
-      );
-      rethrow;
-    }
-  },
-);
+    FutureProvider.family<List<SocialSessionModel>, String>((
+      ref,
+      communityId,
+    ) async {
+      final repo = ref.watch(socialSessionRepositoryProvider);
+      try {
+        final res = await repo.listByCommunity(
+          communityId: communityId,
+          status: 'OPEN,FULL,COMPLETED',
+          limit: 20,
+        );
+        return res.items;
+      } catch (error, stack) {
+        _socialClubLog.error(
+          'listByCommunity failed for $communityId',
+          error,
+          stack,
+        );
+        rethrow;
+      }
+    });
 
 final filteredSocialSessionsProvider =
     Provider<AsyncValue<List<SocialSessionModel>>>((ref) {
-  return ref.watch(socialSessionsProvider);
-});
+      return ref.watch(socialSessionsProvider);
+    });

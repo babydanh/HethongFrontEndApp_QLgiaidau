@@ -25113,6 +25113,204 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Trận trong lượt tải này chưa đủ thông tin hai đội để hiển thị.'**
   String get homeGlobalSearchHiddenMatches;
+
+  /// No description provided for @homeSocialCreateAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo kèo'**
+  String get homeSocialCreateAction;
+
+  /// No description provided for @socialVenueSuggestionsLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa điểm gợi ý'**
+  String get socialVenueSuggestionsLabel;
+
+  /// No description provided for @socialVenueSuggestionsLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tìm địa điểm...'**
+  String get socialVenueSuggestionsLoading;
+
+  /// No description provided for @socialVenueSuggestionsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy địa điểm phù hợp'**
+  String get socialVenueSuggestionsEmpty;
+
+  /// No description provided for @socialVenueSuggestionsFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được gợi ý. Bạn vẫn có thể nhập địa điểm.'**
+  String get socialVenueSuggestionsFailed;
+
+  /// No description provided for @socialVenueCourt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sân'**
+  String get socialVenueCourt;
+
+  /// No description provided for @socialVenueCourtOptional.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn sân (không bắt buộc)'**
+  String get socialVenueCourtOptional;
+
+  /// No description provided for @socialVenueAnyCourt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không chọn sân cụ thể'**
+  String get socialVenueAnyCourt;
+
+  /// No description provided for @socialVenueCourtsLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải danh sách sân…'**
+  String get socialVenueCourtsLoading;
+
+  /// No description provided for @socialVenueCourtsUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách sân. Địa điểm vẫn được chọn.'**
+  String get socialVenueCourtsUnavailable;
+
+  /// No description provided for @socialVenueNoCourts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa điểm này chưa có sân được cấu hình.'**
+  String get socialVenueNoCourts;
+
+  /// No description provided for @socialGenderRequirement.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ai có thể tham gia'**
+  String get socialGenderRequirement;
+
+  /// No description provided for @socialGenderAny.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mọi giới tính'**
+  String get socialGenderAny;
+
+  /// No description provided for @socialGenderMale.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ nam'**
+  String get socialGenderMale;
+
+  /// No description provided for @socialGenderFemale.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ nữ'**
+  String get socialGenderFemale;
+
+  /// No description provided for @socialGenderMixed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhóm kết hợp'**
+  String get socialGenderMixed;
+
+  /// No description provided for @socialRequestApproval.
+  ///
+  /// In vi, this message translates to:
+  /// **'Yêu cầu duyệt tham gia'**
+  String get socialRequestApproval;
+
+  /// No description provided for @socialJoinDirectly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tham gia trực tiếp'**
+  String get socialJoinDirectly;
+
+  /// No description provided for @socialJoinRequestPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Yêu cầu đang chờ duyệt'**
+  String get socialJoinRequestPending;
+
+  /// No description provided for @socialCancelJoinRequest.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy yêu cầu'**
+  String get socialCancelJoinRequest;
+
+  /// No description provided for @socialJoinRequestSent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi yêu cầu đến người tổ chức.'**
+  String get socialJoinRequestSent;
+
+  /// No description provided for @socialJoinRequestCancelled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hủy yêu cầu tham gia.'**
+  String get socialJoinRequestCancelled;
+
+  /// No description provided for @socialPendingJoinRequests.
+  ///
+  /// In vi, this message translates to:
+  /// **'Yêu cầu tham gia'**
+  String get socialPendingJoinRequests;
+
+  /// No description provided for @socialNoPendingJoinRequests.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có yêu cầu nào đang chờ.'**
+  String get socialNoPendingJoinRequests;
+
+  /// No description provided for @socialApproveJoinRequest.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chấp nhận'**
+  String get socialApproveJoinRequest;
+
+  /// No description provided for @socialRejectJoinRequest.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get socialRejectJoinRequest;
+
+  /// No description provided for @socialJoinRequestSlots.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số chỗ: {count}'**
+  String socialJoinRequestSlots(Object count);
+
+  /// No description provided for @socialJoinRequestNoName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên'**
+  String get socialJoinRequestNoName;
+
+  /// No description provided for @socialJoinRequestDecisionFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật yêu cầu. Vui lòng thử lại.'**
+  String get socialJoinRequestDecisionFailed;
+
+  /// No description provided for @socialJoinOptions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn cách tham gia'**
+  String get socialJoinOptions;
+
+  /// No description provided for @socialJoinRequestApproved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chấp nhận yêu cầu tham gia.'**
+  String get socialJoinRequestApproved;
+
+  /// No description provided for @socialJoinRequestRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã từ chối yêu cầu tham gia.'**
+  String get socialJoinRequestRejected;
+
+  /// No description provided for @socialJoinRequestLoadMore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem thêm yêu cầu'**
+  String get socialJoinRequestLoadMore;
 }
 
 class _AppLocalizationsDelegate

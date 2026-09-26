@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 
 class SocialJoinBottomSheet extends ConsumerStatefulWidget {
@@ -41,6 +42,7 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currencyFormatter = NumberFormat.currency(
       locale: 'vi_VN',
@@ -90,7 +92,7 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Yêu cầu tham gia Social',
+                      l10n.socialJoinOptions,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -328,13 +330,25 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                         )
                       : Text(
                           _remainingSlots > 0
-                              ? 'Xác nhận tham gia'
+                              ? l10n.socialJoinDirectly
                               : 'Đã hết chỗ',
                           style: const TextStyle(
                             fontSize: 15.5,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton.icon(
+                  onPressed: (_remainingSlots > 0 && !_isSubmitting)
+                      ? _handleRequestApproval
+                      : null,
+                  icon: const Icon(Icons.mark_email_unread_outlined),
+                  label: Text(l10n.socialRequestApproval),
                 ),
               ),
             ],
@@ -407,6 +421,38 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
       if (mounted) {
         setState(() => _isSubmitting = false);
       }
+    }
+  }
+
+  Future<void> _handleRequestApproval() async {
+    setState(() => _isSubmitting = true);
+    try {
+      await ref
+          .read(socialSessionDetailProvider(widget.session.id).notifier)
+          .requestToJoin(ticketCount: _ticketCount);
+
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      Navigator.pop(context, true);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.socialJoinRequestSent),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.socialJoinRequestDecisionFailed,
+          ),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 }

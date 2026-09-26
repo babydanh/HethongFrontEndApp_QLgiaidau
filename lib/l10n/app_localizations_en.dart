@@ -13835,4 +13835,109 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get homeGlobalSearchHiddenMatches =>
       'Matches on this page are hidden because team details are incomplete.';
+
+  @override
+  String get homeSocialCreateAction => 'Create session';
+
+  @override
+  String get socialVenueSuggestionsLabel => 'Suggested venues';
+
+  @override
+  String get socialVenueSuggestionsLoading => 'Searching venues...';
+
+  @override
+  String get socialVenueSuggestionsEmpty => 'No matching venues';
+
+  @override
+  String get socialVenueSuggestionsFailed =>
+      'Suggestions are unavailable. You can still enter the venue.';
+
+  @override
+  String get socialVenueCourt => 'Court';
+
+  @override
+  String get socialVenueCourtOptional => 'Select a court (optional)';
+
+  @override
+  String get socialVenueAnyCourt => 'No specific court';
+
+  @override
+  String get socialVenueCourtsLoading => 'Loading courts…';
+
+  @override
+  String get socialVenueCourtsUnavailable =>
+      'Could not load courts. The venue is still selected.';
+
+  @override
+  String get socialVenueNoCourts => 'No courts are configured for this venue.';
+
+  @override
+  String get socialGenderRequirement => 'Who can join';
+
+  @override
+  String get socialGenderAny => 'Any gender';
+
+  @override
+  String get socialGenderMale => 'Men only';
+
+  @override
+  String get socialGenderFemale => 'Women only';
+
+  @override
+  String get socialGenderMixed => 'Mixed group';
+
+  @override
+  String get socialRequestApproval => 'Request host approval';
+
+  @override
+  String get socialJoinDirectly => 'Join directly';
+
+  @override
+  String get socialJoinRequestPending => 'Join request pending';
+
+  @override
+  String get socialCancelJoinRequest => 'Cancel request';
+
+  @override
+  String get socialJoinRequestSent => 'Your request was sent to the host.';
+
+  @override
+  String get socialJoinRequestCancelled => 'Join request cancelled.';
+
+  @override
+  String get socialPendingJoinRequests => 'Join requests';
+
+  @override
+  String get socialNoPendingJoinRequests =>
+      'There are no pending join requests.';
+
+  @override
+  String get socialApproveJoinRequest => 'Approve';
+
+  @override
+  String get socialRejectJoinRequest => 'Reject';
+
+  @override
+  String socialJoinRequestSlots(Object count) {
+    return 'Requested slots: $count';
+  }
+
+  @override
+  String get socialJoinRequestNoName => 'Member';
+
+  @override
+  String get socialJoinRequestDecisionFailed =>
+      'Could not update the request. Please try again.';
+
+  @override
+  String get socialJoinOptions => 'Choose how to join';
+
+  @override
+  String get socialJoinRequestApproved => 'Join request approved.';
+
+  @override
+  String get socialJoinRequestRejected => 'Join request rejected.';
+
+  @override
+  String get socialJoinRequestLoadMore => 'Load more requests';
 }

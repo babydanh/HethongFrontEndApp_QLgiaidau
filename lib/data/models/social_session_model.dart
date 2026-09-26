@@ -36,6 +36,7 @@ class SocialParticipantModel {
   final String paymentStatus; // 'UNPAID' | 'PAID' | 'PENDING'
   final int ticketCount;
   final DateTime joinedAt;
+  final DateTime? requestedAt;
   final String? fullName;
   final String? avatarUrl;
   final String? customSkillLevel;
@@ -49,6 +50,7 @@ class SocialParticipantModel {
     this.status = 'JOINED',
     this.paymentStatus = 'UNPAID',
     this.ticketCount = 1,
+    this.requestedAt,
     required this.joinedAt,
     String? fullName,
     String? name,
@@ -57,15 +59,14 @@ class SocialParticipantModel {
     String? skillLevel,
     bool? isHost,
     String? initials,
-  })  : userId = userId ?? id,
-        role = (isHost == true) ? 'HOST' : role,
-        fullName = fullName ?? name,
-        customSkillLevel = customSkillLevel ?? skillLevel;
+  }) : userId = userId ?? id,
+       role = (isHost == true) ? 'HOST' : role,
+       fullName = fullName ?? name,
+       customSkillLevel = customSkillLevel ?? skillLevel;
 
   /// Khách ngoài CLB: không có tài khoản, userId NULL ở backend,
   /// chỉ có guestName để đánh dấu slot đã có người.
-  bool get isGuest =>
-      guestName?.trim().isNotEmpty == true;
+  bool get isGuest => guestName?.trim().isNotEmpty == true;
 
   String get name {
     if (fullName?.trim().isNotEmpty == true) return fullName!.trim();
@@ -105,7 +106,8 @@ class SocialParticipantModel {
       parsedJoinedAt = DateTime.now();
     }
 
-    final participantRole = json['role']?.toString().toUpperCase() ??
+    final participantRole =
+        json['role']?.toString().toUpperCase() ??
         (json['isHost'] == true ? 'HOST' : 'PLAYER');
 
     final rawUserId = json['userId']?.toString();
@@ -122,10 +124,14 @@ class SocialParticipantModel {
           : null,
       role: participantRole,
       status: json['status']?.toString() ?? 'JOINED',
-      paymentStatus: json['paymentStatus']?.toString().toUpperCase() ?? 'UNPAID',
+      paymentStatus:
+          json['paymentStatus']?.toString().toUpperCase() ?? 'UNPAID',
       ticketCount: (json['ticketCount'] is num)
           ? (json['ticketCount'] as num).toInt()
           : 1,
+      requestedAt: json['requestedAt'] == null
+          ? null
+          : DateTime.tryParse(json['requestedAt'].toString()),
       joinedAt: parsedJoinedAt,
       fullName: json['fullName']?.toString() ?? json['name']?.toString(),
       avatarUrl: json['avatarUrl']?.toString(),
@@ -142,6 +148,7 @@ class SocialParticipantModel {
     'status': status,
     'paymentStatus': paymentStatus,
     'ticketCount': ticketCount,
+    if (requestedAt != null) 'requestedAt': requestedAt!.toIso8601String(),
     'joinedAt': joinedAt.toIso8601String(),
     if (fullName != null) 'fullName': fullName,
     if (avatarUrl != null) 'avatarUrl': avatarUrl,
@@ -157,6 +164,7 @@ class SocialParticipantModel {
     String? paymentStatus,
     int? ticketCount,
     DateTime? joinedAt,
+    DateTime? requestedAt,
     String? fullName,
     String? avatarUrl,
     String? customSkillLevel,
@@ -171,6 +179,7 @@ class SocialParticipantModel {
       paymentStatus: paymentStatus ?? this.paymentStatus,
       ticketCount: ticketCount ?? this.ticketCount,
       joinedAt: joinedAt ?? this.joinedAt,
+      requestedAt: requestedAt ?? this.requestedAt,
       fullName: fullName ?? this.fullName,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       customSkillLevel: customSkillLevel ?? this.customSkillLevel,
@@ -249,13 +258,13 @@ class SocialChatMessageModel {
       parsedTime = DateTime.now();
     }
 
-    final sName = json['senderName']?.toString() ??
+    final sName =
+        json['senderName']?.toString() ??
         json['sender']?['fullName']?.toString() ??
         'Thành viên';
     String initials = json['senderInitials']?.toString() ?? '';
     if (initials.isEmpty) {
-      final parts =
-          sName.trim().split(' ').where((s) => s.isNotEmpty).toList();
+      final parts = sName.trim().split(' ').where((s) => s.isNotEmpty).toList();
       if (parts.length >= 2) {
         initials = '${parts.first[0]}${parts.last[0]}'.toUpperCase();
       } else if (parts.isNotEmpty) {
@@ -268,35 +277,37 @@ class SocialChatMessageModel {
     return SocialChatMessageModel(
       id: json['id']?.toString() ?? '',
       senderName: sName,
-      senderAvatar: json['senderAvatar']?.toString() ??
+      senderAvatar:
+          json['senderAvatar']?.toString() ??
           json['sender']?['avatarUrl']?.toString(),
       senderInitials: initials,
-      message:
-          json['message']?.toString() ?? json['content']?.toString() ?? '',
+      message: json['message']?.toString() ?? json['content']?.toString() ?? '',
       time: parsedTime,
       isHost: json['isHost'] == true,
       isMe: json['isMe'] == true,
       isSystem: json['isSystem'] == true,
       sharedSession: json['sharedSession'] is Map
           ? SocialSessionModel.fromJson(
-              (json['sharedSession'] as Map)
-                  .map((k, v) => MapEntry(k.toString(), v)))
+              (json['sharedSession'] as Map).map(
+                (k, v) => MapEntry(k.toString(), v),
+              ),
+            )
           : null,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'senderName': senderName,
-        if (senderAvatar != null) 'senderAvatar': senderAvatar,
-        'senderInitials': senderInitials,
-        'message': message,
-        'time': time.toIso8601String(),
-        'isHost': isHost,
-        'isMe': isMe,
-        'isSystem': isSystem,
-        if (sharedSession != null) 'sharedSession': sharedSession!.toJson(),
-      };
+    'id': id,
+    'senderName': senderName,
+    if (senderAvatar != null) 'senderAvatar': senderAvatar,
+    'senderInitials': senderInitials,
+    'message': message,
+    'time': time.toIso8601String(),
+    'isHost': isHost,
+    'isMe': isMe,
+    'isSystem': isSystem,
+    if (sharedSession != null) 'sharedSession': sharedSession!.toJson(),
+  };
 }
 
 class SocialPaymentModel {
@@ -360,6 +371,10 @@ class SocialSessionModel {
   final int durationMinutes;
   final String venueName;
   final String venueAddress;
+  final String? venueId;
+  final String? courtId;
+  final String genderRequirement;
+  final String? joinRequestStatus;
   final int maxSlots;
   final int currentSlots;
   final int feePerSlot;
@@ -403,6 +418,10 @@ class SocialSessionModel {
     this.levelRequirement = 'ALL',
     this.visibility = 'PUBLIC',
     this.contactPhone,
+    this.venueId,
+    this.courtId,
+    this.genderRequirement = 'ANY',
+    this.joinRequestStatus,
     this.zaloGroupUrl,
     this.status = 'OPEN',
     this.metadata = const {},
@@ -509,11 +528,13 @@ class SocialSessionModel {
     final rawParticipants = json['participants'];
     final participantsList = (rawParticipants is List)
         ? rawParticipants
-            .whereType<Map>()
-            .map((p) => SocialParticipantModel.fromJson(
+              .whereType<Map>()
+              .map(
+                (p) => SocialParticipantModel.fromJson(
                   p.map((k, v) => MapEntry(k.toString(), v)),
-                ))
-            .toList()
+                ),
+              )
+              .toList()
         : <SocialParticipantModel>[];
 
     final rawCommunity = json['community'];
@@ -544,16 +565,16 @@ class SocialSessionModel {
     final durationMin = (json['durationMinutes'] is num)
         ? (json['durationMinutes'] as num).toInt()
         : ((json['durationHours'] is num)
-            ? ((json['durationHours'] as num) * 60).toInt()
-            : 120);
+              ? ((json['durationHours'] as num) * 60).toInt()
+              : 120);
 
     return SocialSessionModel(
       id: json['id']?.toString() ?? '',
-      communityId: json['communityId']?.toString() ??
+      communityId:
+          json['communityId']?.toString() ??
           (rawCommunity is Map ? rawCommunity['id']?.toString() : null),
-      hostUserId: json['hostUserId']?.toString() ??
-          json['creatorId']?.toString() ??
-          '',
+      hostUserId:
+          json['hostUserId']?.toString() ?? json['creatorId']?.toString() ?? '',
       categoryId: json['categoryId']?.toString(),
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? json['notes']?.toString(),
@@ -563,26 +584,32 @@ class SocialSessionModel {
       durationMinutes: durationMin,
       venueName: json['venueName']?.toString() ?? '',
       venueAddress: json['venueAddress']?.toString() ?? '',
+      venueId: json['venueId']?.toString(),
+      courtId: json['courtId']?.toString(),
+      genderRequirement: json['genderRequirement']?.toString() ?? 'ANY',
+      joinRequestStatus: json['joinRequestStatus']?.toString(),
       maxSlots: (json['maxSlots'] is num)
           ? (json['maxSlots'] as num).toInt()
           : ((json['maxParticipants'] is num)
-              ? (json['maxParticipants'] as num).toInt()
-              : 6),
+                ? (json['maxParticipants'] as num).toInt()
+                : 6),
       currentSlots: (json['currentSlots'] is num)
           ? (json['currentSlots'] as num).toInt()
           : ((json['currentParticipants'] is num)
-              ? (json['currentParticipants'] as num).toInt()
-              : participantsList.length),
+                ? (json['currentParticipants'] as num).toInt()
+                : participantsList.length),
       feePerSlot: (json['feePerSlot'] is num)
           ? (json['feePerSlot'] as num).toInt()
           : ((json['pricePerSlot'] is num)
-              ? (json['pricePerSlot'] as num).toInt()
-              : 0),
-      levelRequirement: json['levelRequirement']?.toString() ??
+                ? (json['pricePerSlot'] as num).toInt()
+                : 0),
+      levelRequirement:
+          json['levelRequirement']?.toString() ??
           json['skillLevel']?.toString() ??
           'ALL',
       visibility: json['visibility']?.toString() ?? 'PUBLIC',
-      contactPhone: json['contactPhone']?.toString() ??
+      contactPhone:
+          json['contactPhone']?.toString() ??
           json['hostPhone']?.toString() ??
           json['hostZalo']?.toString(),
       zaloGroupUrl: json['zaloGroupUrl']?.toString(),
@@ -608,11 +635,13 @@ class SocialSessionModel {
       chatRoomId: json['chatRoomId']?.toString(),
       chatMessages: (json['chatMessages'] ?? json['messages']) is List
           ? ((json['chatMessages'] ?? json['messages']) as List)
-              .whereType<Map>()
-              .map((m) => SocialChatMessageModel.fromJson(
+                .whereType<Map>()
+                .map(
+                  (m) => SocialChatMessageModel.fromJson(
                     m.map((k, v) => MapEntry(k.toString(), v)),
-                  ))
-              .toList()
+                  ),
+                )
+                .toList()
           : const [],
     );
   }
@@ -633,6 +662,10 @@ class SocialSessionModel {
     'maxSlots': maxSlots,
     'currentSlots': currentSlots,
     'feePerSlot': feePerSlot,
+    if (venueId != null) 'venueId': venueId,
+    if (courtId != null) 'courtId': courtId,
+    'genderRequirement': genderRequirement,
+    if (joinRequestStatus != null) 'joinRequestStatus': joinRequestStatus,
     'levelRequirement': levelRequirement,
     'visibility': visibility,
     if (contactPhone != null) 'contactPhone': contactPhone,
@@ -663,6 +696,10 @@ class SocialSessionModel {
     int? durationMinutes,
     String? venueName,
     String? venueAddress,
+    String? venueId,
+    String? courtId,
+    String? genderRequirement,
+    String? joinRequestStatus,
     int? maxSlots,
     int? currentSlots,
     int? feePerSlot,
@@ -698,6 +735,10 @@ class SocialSessionModel {
       durationMinutes: durationMinutes ?? this.durationMinutes,
       venueName: venueName ?? this.venueName,
       venueAddress: venueAddress ?? this.venueAddress,
+      venueId: venueId ?? this.venueId,
+      courtId: courtId ?? this.courtId,
+      genderRequirement: genderRequirement ?? this.genderRequirement,
+      joinRequestStatus: joinRequestStatus ?? this.joinRequestStatus,
       maxSlots: maxSlots ?? this.maxSlots,
       currentSlots: currentSlots ?? this.currentSlots,
       feePerSlot: feePerSlot ?? this.feePerSlot,
@@ -739,6 +780,9 @@ class CreateSocialSessionRequest {
   final String? contactPhone;
   final String? zaloGroupUrl;
   final String? communityId;
+  final String? venueId;
+  final String? courtId;
+  final String genderRequirement;
 
   const CreateSocialSessionRequest({
     required this.sport,
@@ -756,6 +800,9 @@ class CreateSocialSessionRequest {
     this.contactPhone,
     this.zaloGroupUrl,
     this.communityId,
+    this.venueId,
+    this.courtId,
+    this.genderRequirement = 'ANY',
   });
 
   Map<String, dynamic> toJson() {
@@ -777,6 +824,9 @@ class CreateSocialSessionRequest {
       'venueName': venueName,
       'venueAddress': venueAddress,
       'maxSlots': maxSlots,
+      if (venueId != null && venueId!.isNotEmpty) 'venueId': venueId,
+      if (courtId != null && courtId!.isNotEmpty) 'courtId': courtId,
+      'genderRequirement': genderRequirement,
       'feePerSlot': feePerSlot,
       'levelRequirement': levelRequirement,
       'visibility': visibility,
@@ -837,11 +887,13 @@ class SocialSessionListResponse {
     final rawItems = json['items'] ?? json['data'];
     final itemsList = (rawItems is List)
         ? rawItems
-            .whereType<Map>()
-            .map((item) => SocialSessionModel.fromJson(
+              .whereType<Map>()
+              .map(
+                (item) => SocialSessionModel.fromJson(
                   item.map((k, v) => MapEntry(k.toString(), v)),
-                ))
-            .toList()
+                ),
+              )
+              .toList()
         : <SocialSessionModel>[];
 
     final meta = json['meta'] is Map ? json['meta'] as Map : {};
@@ -849,7 +901,61 @@ class SocialSessionListResponse {
       items: itemsList,
       page: (meta['page'] is num) ? (meta['page'] as num).toInt() : 1,
       limit: (meta['limit'] is num) ? (meta['limit'] as num).toInt() : 20,
-      total: (meta['total'] is num) ? (meta['total'] as num).toInt() : itemsList.length,
+      total: (meta['total'] is num)
+          ? (meta['total'] as num).toInt()
+          : itemsList.length,
+    );
+  }
+}
+
+class SocialJoinRequestListResponse {
+  final List<SocialParticipantModel> items;
+  final int page;
+  final int limit;
+  final int total;
+
+  const SocialJoinRequestListResponse({
+    required this.items,
+    this.page = 1,
+    this.limit = 20,
+    this.total = 0,
+  });
+
+  factory SocialJoinRequestListResponse.fromJson(Map<String, dynamic> json) {
+    final rawItems = json['items'];
+    final items = <SocialParticipantModel>[];
+    if (rawItems is List) {
+      for (final rawItem in rawItems) {
+        if (rawItem is! Map) continue;
+        final item = rawItem.map(
+          (key, value) => MapEntry(key.toString(), value),
+        );
+        final rawParticipant = item['participant'];
+        final participant = rawParticipant is Map
+            ? rawParticipant.map(
+                (key, value) => MapEntry(key.toString(), value),
+              )
+            : item;
+        if (item['fullName'] != null) {
+          participant['fullName'] = item['fullName'];
+        }
+        if (item['avatarUrl'] != null) {
+          participant['avatarUrl'] = item['avatarUrl'];
+        }
+        items.add(SocialParticipantModel.fromJson(participant));
+      }
+    }
+    final rawMeta = json['meta'];
+    final meta = rawMeta is Map
+        ? rawMeta.map((key, value) => MapEntry(key.toString(), value))
+        : const <String, dynamic>{};
+    return SocialJoinRequestListResponse(
+      items: items,
+      page: (meta['page'] is num) ? (meta['page'] as num).toInt() : 1,
+      limit: (meta['limit'] is num) ? (meta['limit'] as num).toInt() : 20,
+      total: (meta['total'] is num)
+          ? (meta['total'] as num).toInt()
+          : items.length,
     );
   }
 }
@@ -871,11 +977,13 @@ class BatchAddParticipantsResponse {
     final rawAdded = json['added'];
     final addedList = (rawAdded is List)
         ? rawAdded
-            .whereType<Map>()
-            .map((p) => SocialParticipantModel.fromJson(
+              .whereType<Map>()
+              .map(
+                (p) => SocialParticipantModel.fromJson(
                   p.map((k, v) => MapEntry(k.toString(), v)),
-                ))
-            .toList()
+                ),
+              )
+              .toList()
         : <SocialParticipantModel>[];
     final rawSkipped = json['skipped'];
     final skippedList = (rawSkipped is List)
