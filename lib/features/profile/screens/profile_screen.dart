@@ -8,27 +8,18 @@ import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
 
-import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
-import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
-import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
-import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
-import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
-import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
-import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_type_sheet.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 
 // ─── PROFILE SCREEN ──────────────────────────────────────────────────────────
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -39,24 +30,11 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen>
-    with SingleTickerProviderStateMixin {
+    {
   bool _uploading = false;
   bool _uploadingCover = false;
-  late TabController _tabController;
-  late final Future<PackageInfo> _packageInfoFuture;
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-    _packageInfoFuture = PackageInfo.fromPlatform();
-  }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
 
   // ─── IMAGE PICKER ────────────────────────────────────────────────────
   Future<void> _pickImage(bool isCover) async {
@@ -261,10 +239,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
-  // ─── NESTED SCROLL BODY ──────────────────────────────────────────────
   Widget _buildNestedBody(BuildContext context, UserProfile profile) {
     final colors = context.colors;
-    final l10n = AppLocalizations.of(context)!;
     final rankings =
         ref.watch(userRankingsProvider).asData?.value ??
         const <PlayerRanking>[];
@@ -286,183 +262,388 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         ? eligibleRankings.first
         : (rankings.isNotEmpty ? rankings.first : null);
 
-    return NestedScrollView(
-      headerSliverBuilder: (context, innerBoxIsScrolled) => [
-        SliverAppBar(
-          pinned: true,
-          expandedHeight: 220,
-          elevation: 0,
-          backgroundColor: colors.bgDark,
-          leading: IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(7),
-              decoration: BoxDecoration(
-                color: colors.bgCard.withValues(alpha: 0.85),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.arrow_back_ios_rounded,
-                color: colors.textPrimary,
-                size: 18,
-              ),
-            ),
-            onPressed: () => context.go('/home'),
-          ),
-          actions: [
-            IconButton(
-              tooltip: 'Đổi ảnh bìa',
-              icon: Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: colors.bgCard.withValues(alpha: 0.85),
-                  shape: BoxShape.circle,
-                ),
-                child: _uploadingCover
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Icon(
-                        Icons.camera_alt_rounded,
-                        color: colors.textPrimary,
-                        size: 18,
-                      ),
-              ),
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                _pickAndUploadCover();
-              },
-            ),
-            IconButton(
-              tooltip: l10n.profileTabSettings,
-              icon: Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: colors.bgCard.withValues(alpha: 0.85),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.settings_outlined,
-                  color: colors.textPrimary,
-                  size: 18,
-                ),
-              ),
-              onPressed: () => context.go('/profile/settings'),
-            ),
-            const SizedBox(width: 4),
-          ],
-          flexibleSpace: FlexibleSpaceBar(
-            background: _buildCoverSection(context, profile, colors),
-          ),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(48),
-            child: Container(
-              color: colors.bgDark,
-              child: TabBar(
-                controller: _tabController,
-                indicatorColor: AppTheme.primary,
-                indicatorWeight: 2.5,
-                indicatorSize: TabBarIndicatorSize.label,
-                labelColor: AppTheme.primary,
-                unselectedLabelColor: colors.textMuted,
-                labelStyle: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-                unselectedLabelStyle: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-                tabs: const [
-                  Tab(text: 'Tổng quan'),
-                  Tab(text: 'Thành tích'),
-                  Tab(text: 'Lịch sử'),
-                  Tab(text: 'Ảnh'),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildOverviewTab(
-            context,
-            profile,
-            colors,
-            rankings: rankings,
-            bestRanking: bestRanking,
-            totalPlayed: totalPlayed,
-            totalWon: totalWon,
-            totalLost: totalLost < 0 ? 0 : totalLost,
-            bestElo: bestElo,
-          ),
-          _buildAchievementsTab(context, colors),
-          _buildHistoryTab(context, profile, colors),
-          _buildPhotosTab(context, profile, colors),
-        ],
-      ),
+    return _buildSinglePageProfile(
+      context,
+      profile,
+      colors,
+      rankings: rankings,
+      bestRanking: bestRanking,
+      totalPlayed: totalPlayed,
+      totalWon: totalWon,
+      totalLost: totalLost < 0 ? 0 : totalLost,
+      bestElo: bestElo,
     );
   }
 
-  // ─── COVER SECTION ───────────────────────────────────────────────────
-  Widget _buildCoverSection(
+  // ─── SINGLE PAGE PROFILE (IMAGE 1 EXACT DESIGN) ──────────────────────
+  Widget _buildSinglePageProfile(
     BuildContext context,
     UserProfile profile,
-    AppColorsExtension colors,
-  ) {
-    final hasCover = profile.coverUrl != null && profile.coverUrl!.isNotEmpty;
-    return GestureDetector(
-      onTap: _pickAndUploadCover,
-      child: Stack(
-        fit: StackFit.expand,
+    AppColorsExtension colors, {
+    required List<PlayerRanking> rankings,
+    required PlayerRanking? bestRanking,
+    required int totalPlayed,
+    required int totalWon,
+    required int totalLost,
+    required int bestElo,
+  }) {
+    final topPadding = MediaQuery.of(context).padding.top;
+    const coverHeight = 220.0;
+    const avatarRadius = 46.0;
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: hasCover
-                  ? null
-                  : const LinearGradient(
-                      colors: [
-                        Color(0xFF1A1A2E),
-                        Color(0xFF16213E),
-                        Color(0xFF0F3460),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+          // ── HERO COVER + OVERLAPPING AVATAR ──
+          Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.topCenter,
+            children: [
+              // 1. Cover Background
+              Container(
+                height: coverHeight,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF0F172A),
+                      Color(0xFF1E3A8A),
+                      Color(0xFF2563EB),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (profile.coverUrl != null && profile.coverUrl!.isNotEmpty)
+                      Image.network(
+                        profile.coverUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (ctx, e, s) => _coverGradient(),
+                      )
+                    else
+                      _coverGradient(),
+                    // Soft vignette / dark ambient overlay
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.black.withValues(alpha: 0.45),
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.55),
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
                     ),
-            ),
-            child: hasCover
-                ? Image.network(
-                    profile.coverUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (ctx, e, s) => _coverGradient(),
-                  )
-                : _coverGradient(),
-          ),
-          // Gradient overlay at bottom
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 90,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.transparent,
-                    colors.bgDark.withValues(alpha: 0.85),
+                    // Subtle tennis court icon watermark
+                    Positioned(
+                      right: 16,
+                      bottom: 16,
+                      child: Opacity(
+                        opacity: 0.15,
+                        child: const Icon(
+                          Icons.sports_tennis_rounded,
+                          size: 110,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
                 ),
               ),
+
+              // 2. Floating Top Actions (Back Button on left, Settings gear on right)
+              Positioned(
+                top: topPadding + 8,
+                left: 16,
+                right: 16,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Back button pill
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        context.go('/home');
+                      },
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.35),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                    // Right actions: Camera (change cover) + Settings gear
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            _pickAndUploadCover();
+                          },
+                          child: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.35),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: _uploadingCover
+                                ? const Center(
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.camera_alt_outlined,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            context.go('/profile/settings');
+                          },
+                          child: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.35),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.settings_outlined,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // 3. Overlapping Centered Avatar
+              Positioned(
+                bottom: -avatarRadius,
+                child: GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    _pickAndUploadAvatar();
+                  },
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(3.5),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: colors.bgDark,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: RankAvatar(
+                          imageUrl: profile.avatarUrl,
+                          name: profile.fullName ?? '',
+                          elo: bestRanking?.eloPoints ?? 0,
+                          tierName: bestRanking?.tierName,
+                          matchesPlayed: bestRanking?.matchesPlayed ?? 0,
+                          size: avatarRadius * 2,
+                          ringWidth: 3,
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colors.bgCard,
+                            border: Border.all(
+                              color: colors.borderLight,
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: _uploading
+                                ? SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: colors.textPrimary,
+                                    ),
+                                  )
+                                : Icon(
+                                    Icons.camera_alt_rounded,
+                                    size: 14,
+                                    color: colors.textPrimary,
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Spacing for avatar protrusion
+          const SizedBox(height: avatarRadius + 14),
+
+          // ── USER NAME, USERNAME, LOCATION ──
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              children: [
+                // Full name
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        profile.fullName ?? 'Người dùng',
+                        style: TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                          letterSpacing: -0.4,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (profile.isEmailVerified == true) ...[
+                      const SizedBox(width: 5),
+                      const Icon(
+                        Icons.verified_rounded,
+                        size: 18,
+                        color: Color(0xFF2563EB),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 4),
+
+                // Handle / Username (@minhanh)
+                if (profile.email != null)
+                  Text(
+                    '@${profile.email!.split('@').first}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: colors.textMuted,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                const SizedBox(height: 5),
+
+                // Location Pin (📍 Đắk Lắk, Việt Nam)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 13,
+                      color: colors.textMuted,
+                    ),
+                    const SizedBox(width: 3),
+                    Flexible(
+                      child: Text(
+                        (profile.address != null && profile.address!.isNotEmpty)
+                            ? profile.address!
+                            : 'Đắk Lắk, Việt Nam',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textMuted,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
+
+          const SizedBox(height: 20),
+
+          // ── 4-METRIC STATS ROW (IMAGE 1) ──
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildStatsRow(
+              context,
+              colors,
+              totalPlayed,
+              totalWon,
+              totalLost < 0 ? 0 : totalLost,
+              bestElo,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // ── 4-ITEM NAVIGATION MENU CARD (IMAGE 1) ──
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildNavMenuCard(context, colors),
+          ),
+
+          const SizedBox(height: 100), // Bottom navigation clearance
         ],
       ),
     );
@@ -471,274 +652,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   Widget _coverGradient() => const DecoratedBox(
     decoration: BoxDecoration(
       gradient: LinearGradient(
-        colors: [Color(0xFF1A1A2E), Color(0xFF16213E), Color(0xFF0F3460)],
+        colors: [Color(0xFF0F172A), Color(0xFF1E3A8A), Color(0xFF2563EB)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
     ),
   );
 
-  // ─── USER INFO HEADER ────────────────────────────────────────────────
-  Widget _buildUserInfoHeader(
-    BuildContext context,
-    UserProfile profile,
-    AppColorsExtension colors,
-    List<PlayerRanking> rankings,
-    PlayerRanking? bestRanking,
-  ) {
-    final isVerified = profile.isEmailVerified == true;
-    final roleText = _formatUserRole(profile.role);
-    final topBadges = _selectProfileBadges(rankings);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Avatar + Camera upload button
-        GestureDetector(
-          onTap: () {
-            HapticFeedback.lightImpact();
-            _pickAndUploadAvatar();
-          },
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              RankAvatar(
-                imageUrl: profile.avatarUrl,
-                name: profile.fullName ?? '',
-                elo: bestRanking?.eloPoints ?? 0,
-                tierName: bestRanking?.tierName,
-                matchesPlayed: bestRanking?.matchesPlayed ?? 0,
-                size: 78,
-                ringWidth: 3,
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppTheme.primary,
-                    border: Border.all(
-                      color: colors.bgDark,
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.35),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  child: _uploading
-                      ? const Padding(
-                          padding: EdgeInsets.all(5),
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.camera_alt_rounded,
-                          size: 13,
-                          color: Colors.white,
-                        ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 14),
-
-        // Right details: Name + Edit button / Role + Tier badges / Handle
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Line 1: Name + Verified icon + Edit button
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            profile.fullName ?? 'Người dùng',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: colors.textPrimary,
-                              letterSpacing: -0.3,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (isVerified) ...[
-                          const SizedBox(width: 5),
-                          const Icon(
-                            Icons.verified_rounded,
-                            size: 17,
-                            color: Color(0xFF2563EB),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Nút "Chỉnh sửa" gọn đẹp chuẩn phong cách capsule
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        context.go('/profile/edit');
-                      },
-                      borderRadius: BorderRadius.circular(14),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: AppTheme.primary.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.edit_outlined,
-                              size: 12,
-                              color: AppTheme.primary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Chỉnh sửa',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-
-              // Line 2: Role chip + Cấp độ (Rank tier badges) ngay cạnh role
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: AppTheme.primary.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Text(
-                        roleText,
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.primary,
-                        ),
-                      ),
-                    ),
-                    if (topBadges.isNotEmpty) ...[
-                      const SizedBox(width: 6),
-                      ...topBadges.take(2).map(
-                        (ranking) => Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: RankTierBadge(
-                            tierName: ranking.tierName,
-                            elo: ranking.eloPoints,
-                            sportName: ranking.categoryName,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 6),
-
-              // Line 3: Handle / Email + Location
-              Row(
-                children: [
-                  if (profile.email != null) ...[
-                    Icon(Icons.alternate_email_rounded, size: 12, color: colors.textMuted),
-                    const SizedBox(width: 3),
-                    Flexible(
-                      child: Text(
-                        profile.email!.split('@').first,
-                        style: TextStyle(fontSize: 11.5, color: colors.textMuted),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  if (profile.address != null && profile.address!.isNotEmpty) ...[
-                    Icon(Icons.location_on_rounded, size: 12, color: colors.textMuted),
-                    const SizedBox(width: 2),
-                    Flexible(
-                      child: Text(
-                        profile.address!,
-                        style: TextStyle(fontSize: 11.5, color: colors.textMuted),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _formatUserRole(String? role) {
-    if (role == null || role.trim().isEmpty) return 'Vận động viên';
-    final r = role.trim().toUpperCase();
-    switch (r) {
-      case 'ADMIN':
-      case 'SUPER_ADMIN':
-        return 'Quản trị viên';
-      case 'ORGANIZER':
-        return 'Ban tổ chức';
-      case 'REFEREE':
-        return 'Trọng tài';
-      case 'LEADER':
-      case 'CAPTAIN':
-        return 'Đội trưởng';
-      case 'COACH':
-        return 'Huấn luyện viên';
-      case 'MEMBER':
-      case 'USER':
-      case 'PLAYER':
-      case 'ATHLETE':
-      default:
-        return 'Vận động viên';
-    }
-  }
-
-  // ─── STATS ROW ────────────────────────────────────────────────────────
+  // ─── USER INFO HEADER (CENTERED AS SHOWN IN DESIGN MOCKUP) ─────────
   Widget _buildStatsRow(
     BuildContext context,
     AppColorsExtension colors,
@@ -748,56 +669,74 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     int elo,
   ) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
       decoration: BoxDecoration(
         color: colors.bgCard,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: colors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
-      clipBehavior: Clip.antiAlias,
       child: Row(
         children: [
           _statItem(
             context,
             colors,
-            played.toString(),
-            'Trận đấu',
+            icon: Icons.emoji_events_rounded,
+            iconColor: const Color(0xFF3B82F6),
+            iconBg: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+            value: played.toString(),
+            label: 'Trận đã đấu',
             onTap: () {
               HapticFeedback.selectionClick();
-              _tabController.animateTo(2); // Tab Lịch sử
+              context.push('/profile/elo');
             },
           ),
           _statDivider(colors),
           _statItem(
             context,
             colors,
-            won.toString(),
-            'Thắng',
+            icon: Icons.people_alt_rounded,
+            iconColor: const Color(0xFF10B981),
+            iconBg: const Color(0xFF10B981).withValues(alpha: 0.12),
+            value: won.toString(),
+            label: 'Thắng',
             onTap: () {
               HapticFeedback.selectionClick();
-              _tabController.animateTo(1); // Tab Thành tích
+              context.push('/profile/elo');
             },
           ),
           _statDivider(colors),
           _statItem(
             context,
             colors,
-            lost.toString(),
-            'Thua',
+            icon: Icons.bar_chart_rounded,
+            iconColor: const Color(0xFFF97316),
+            iconBg: const Color(0xFFF97316).withValues(alpha: 0.12),
+            value: lost.toString(),
+            label: 'Thua',
             onTap: () {
               HapticFeedback.selectionClick();
-              _tabController.animateTo(2); // Tab Lịch sử
+              context.push('/profile/elo');
             },
           ),
           _statDivider(colors),
           _statItem(
             context,
             colors,
-            elo > 0 ? _formatNum(elo) : '—',
-            'Điểm ELO',
+            icon: Icons.star_rounded,
+            iconColor: const Color(0xFF8B5CF6),
+            iconBg: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
+            value: elo > 0 ? _formatNumberWithCommas(elo) : '—',
+            label: 'Điểm xếp hạng',
             onTap: () {
               HapticFeedback.selectionClick();
-              _tabController.animateTo(1); // Tab Thành tích
+              context.push('/profile/elo');
             },
           ),
         ],
@@ -807,9 +746,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   Widget _statItem(
     BuildContext context,
-    AppColorsExtension colors,
-    String value,
-    String label, {
+    AppColorsExtension colors, {
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String value,
+    required String label,
     VoidCallback? onTap,
   }) {
     return Expanded(
@@ -817,29 +759,42 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: iconColor, size: 17),
+                ),
+                const SizedBox(height: 6),
                 Text(
                   value,
                   style: TextStyle(
-                    fontSize: 17,
+                    fontSize: 16,
                     fontWeight: FontWeight.w800,
                     color: colors.textPrimary,
-                    letterSpacing: -0.5,
+                    letterSpacing: -0.4,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 10.5,
                     color: colors.textMuted,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                   textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -851,771 +806,141 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   Widget _statDivider(AppColorsExtension colors) => Container(
     width: 1,
-    height: 28,
+    height: 34,
     color: colors.borderLight,
   );
 
-  String _formatNum(int n) {
-    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
-    return n.toString();
+  // ─── NAV MENU CARD (MATCHING 4-ITEM DESIGN MOCKUP) ────────────────
+  Widget _buildNavMenuCard(BuildContext context, AppColorsExtension colors) {
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          _menuRowItem(
+            colors: colors,
+            icon: Icons.person_rounded,
+            iconColor: const Color(0xFF3B82F6),
+            iconBg: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+            title: 'Thông tin cá nhân',
+            subtitle: 'Tên, giới tính, ngày sinh...',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.go('/profile/edit');
+            },
+          ),
+          Divider(height: 1, thickness: 0.8, color: colors.borderLight, indent: 56, endIndent: 16),
+          _menuRowItem(
+            colors: colors,
+            icon: Icons.leaderboard_rounded,
+            iconColor: const Color(0xFF10B981),
+            iconBg: const Color(0xFF10B981).withValues(alpha: 0.12),
+            title: 'Thống kê thi đấu',
+            subtitle: 'Lịch sử, thành tích, điểm xếp hạng',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.push('/profile/elo');
+            },
+          ),
+          Divider(height: 1, thickness: 0.8, color: colors.borderLight, indent: 56, endIndent: 16),
+          _menuRowItem(
+            colors: colors,
+            icon: Icons.groups_rounded,
+            iconColor: const Color(0xFFF97316),
+            iconBg: const Color(0xFFF97316).withValues(alpha: 0.12),
+            title: 'Đội nhóm',
+            subtitle: 'Các đội bạn đã tham gia',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.go('/home?tab=1');
+            },
+          ),
+          Divider(height: 1, thickness: 0.8, color: colors.borderLight, indent: 56, endIndent: 16),
+          _menuRowItem(
+            colors: colors,
+            icon: Icons.bookmark_rounded,
+            iconColor: const Color(0xFF8B5CF6),
+            iconBg: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
+            title: 'Giải đấu đã đăng ký',
+            subtitle: 'Danh sách giải đấu',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.go('/dashboard');
+            },
+          ),
+        ],
+      ),
+    );
   }
 
-  // ─── TAB 1: TỔNG QUAN ────────────────────────────────────────────────
-  Widget _buildOverviewTab(
-    BuildContext context,
-    UserProfile profile,
-    AppColorsExtension colors, {
-    required List<PlayerRanking> rankings,
-    required PlayerRanking? bestRanking,
-    required int totalPlayed,
-    required int totalWon,
-    required int totalLost,
-    required int bestElo,
+  Widget _menuRowItem({
+    required AppColorsExtension colors,
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
   }) {
-    final l10n = AppLocalizations.of(context)!;
-
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: Avatar + Tên + Role + Cấp độ + Nút Chỉnh sửa
-          _buildUserInfoHeader(context, profile, colors, rankings, bestRanking),
-          const SizedBox(height: 16),
-
-          // 4-item Stats row
-          _buildStatsRow(
-            context,
-            colors,
-            totalPlayed,
-            totalWon,
-            totalLost,
-            bestElo,
-          ),
-          const SizedBox(height: 20),
-
-          // Giới thiệu
-          if (profile.bio != null && profile.bio!.isNotEmpty) ...[
-            _sectionLabel(colors, 'Giới thiệu'),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: colors.border),
-              ),
-              child: Text(
-                profile.bio!,
-                style: TextStyle(
-                  fontSize: 13.5,
-                  color: colors.textSecondary,
-                  height: 1.5,
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-
-          // Giải đấu gần đây (preview 3 item → xem tất cả ở Dashboard)
-          _buildRecentTournamentsPreview(context, colors, l10n),
-          const SizedBox(height: 24),
-
-          // CLB preview
-          _buildRecentClubsPreview(context, colors, l10n),
-          const SizedBox(height: 16),
-
-          // Version
-          FutureBuilder<PackageInfo>(
-            future: _packageInfoFuture,
-            builder: (context, snapshot) {
-              final info = snapshot.data;
-              if (info == null) return const SizedBox.shrink();
-              final build =
-                  info.buildNumber.isEmpty ? '' : ' (${info.buildNumber})';
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 8, bottom: 8),
-                  child: Text(
-                    'Phiên bản ${info.version}$build',
-                    style:
-                        TextStyle(fontSize: 11, color: colors.textSecondary),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-
-
-  // ─── PREVIEW: Giải đấu gần đây ───────────────────────────────────────
-  Widget _buildRecentTournamentsPreview(
-    BuildContext context,
-    AppColorsExtension colors,
-    AppLocalizations l10n,
-  ) {
-    final workspaceAsync = ref.watch(myTournamentWorkspaceProvider);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            _sectionLabel(colors, 'Giải đấu gần đây'),
-            const Spacer(),
-            GestureDetector(
-              onTap: () => context.go('/dashboard'),
-              child: Text(
-                'Xem tất cả →',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        workspaceAsync.when(
-          data: (workspace) {
-            // Collect all tournaments, deduplicate, take 3
-            final all = [
-              ...workspace.organizedTournaments,
-              ...workspace.coOrganizerTournaments,
-              ...workspace.participatingTournaments,
-            ];
-            final seen = <String>{};
-            final deduped = all.where((t) {
-              final id = t.id.toString();
-              return id.isNotEmpty && seen.add(id);
-            }).take(3).toList();
-
-            if (deduped.isEmpty) {
-              return _emptyPreviewCard(
-                colors,
-                Icons.emoji_events_outlined,
-                'Chưa tham gia giải đấu nào',
-                onTap: () => showPublicTournamentTypeSheet(context),
-                actionLabel: 'Tạo giải đấu',
-              );
-            }
-
-            return Column(
-              children: deduped
-                  .map((t) => _buildTournamentPreviewCard(t, colors, context))
-                  .toList(),
-            );
-          },
-          loading: () => _loadingPlaceholder(colors),
-          error: (e, s) => _emptyPreviewCard(
-            colors,
-            Icons.cloud_off_rounded,
-            'Không thể tải giải đấu',
-            onTap: () => ref.invalidate(myTournamentWorkspaceProvider),
-            actionLabel: 'Thử lại',
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTournamentPreviewCard(
-    dynamic t,
-    AppColorsExtension colors,
-    BuildContext context,
-  ) {
-    final String? logoUrl = t.logoUrl?.toString();
-    final String? bannerUrl = t.bannerUrl?.toString();
-    final rawStatus = t.status?.toString() ?? 'draft';
-    final statusLabel = StatusHelper.getTournamentStatusLabel(rawStatus);
-
-    return GestureDetector(
-      onTap: () {
-        final isManager =
-            t.myRole == 'OWNER' ||
-            t.myRole == 'ORGANIZER' ||
-            t.myRole == 'CO_ORGANIZER';
-        if (isManager) {
-          if (t.isClubLite == true) {
-            context.push('/lite-manage/${t.id}');
-          } else {
-            context.push('/organizer/tournaments/${t.id}/manage');
-          }
-        } else {
-          context.push('/intro/${t.id}');
-        }
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.border),
-        ),
-        child: Row(
-          children: [
-            _tournamentLogo(logoUrl, bannerUrl, colors),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    t.name?.toString() ?? '—',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    statusLabel,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: AppTheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: colors.textMuted,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─── PREVIEW: CLB ────────────────────────────────────────────────────
-  Widget _buildRecentClubsPreview(
-    BuildContext context,
-    AppColorsExtension colors,
-    AppLocalizations l10n,
-  ) {
-    final myCommunitiesAsync = ref.watch(myCommunitiesProvider);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            _sectionLabel(colors, 'Đội nhóm / CLB'),
-            const Spacer(),
-            GestureDetector(
-              onTap: () => context.go('/dashboard'),
-              child: Text(
-                'Xem tất cả →',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        myCommunitiesAsync.when(
-          data: (communities) {
-            if (communities.isEmpty) {
-              return _emptyPreviewCard(
-                colors,
-                Icons.groups_outlined,
-                'Chưa tham gia CLB nào',
-                onTap: () => context.push('/club/create'),
-                actionLabel: 'Tạo CLB',
-              );
-            }
-            final preview = communities.take(2).toList();
-            return Column(
-              children: preview
-                  .map((club) => _buildClubPreviewCard(club, colors, context))
-                  .toList(),
-            );
-          },
-          loading: () => _loadingPlaceholder(colors),
-          error: (e, s) => _emptyPreviewCard(
-            colors,
-            Icons.cloud_off_rounded,
-            'Không thể tải CLB',
-            onTap: () => ref.invalidate(myCommunitiesProvider),
-            actionLabel: 'Thử lại',
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildClubPreviewCard(
-    dynamic club,
-    AppColorsExtension colors,
-    BuildContext context,
-  ) {
-    return GestureDetector(
-      onTap: () => context.push('/club/${club.id}'),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.border),
-        ),
-        child: Row(
-          children: [
-            _tournamentLogo(
-              club.logoUrl?.toString(),
-              club.bannerUrl?.toString(),
-              colors,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    club.name?.toString() ?? '—',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${club.memberCount ?? 0} thành viên',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: colors.textMuted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: colors.textMuted,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─── TAB 2: THÀNH TÍCH ───────────────────────────────────────────────
-  Widget _buildAchievementsTab(
-    BuildContext context,
-    AppColorsExtension colors,
-  ) {
-    final rankings =
-        ref.watch(userRankingsProvider).asData?.value ??
-        const <PlayerRanking>[];
-    final followedAsync = ref.watch(followedTournamentsProvider);
-    final followed = followedAsync.asData?.value ?? [];
-
-    // Completed tournaments (achievements)
-    final completed = followed
-        .where((t) => StatusHelper.isTournamentCompleted(t.status))
-        .toList()
-      ..sort((a, b) =>
-          (b.endDate ?? b.updatedAt).compareTo(a.endDate ?? a.updatedAt));
-
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Rankings per sport
-          if (rankings.isNotEmpty) ...[
-            _sectionLabel(colors, 'Xếp hạng theo môn'),
-            const SizedBox(height: 10),
-            ...rankings
-                .where((r) => r.matchesPlayed > 0 || r.adminLeaderboardEligible)
-                .map((r) => _buildRankCard(r, colors)),
-            const SizedBox(height: 24),
-          ],
-
-          // Completed tournaments
-          _sectionLabel(colors, 'Giải đấu đã hoàn thành'),
-          const SizedBox(height: 10),
-          if (completed.isEmpty)
-            _emptyPreviewCard(
-              colors,
-              Icons.emoji_events_outlined,
-              'Chưa có giải đấu hoàn thành nào',
-            )
-          else
-            ...completed.take(10).map(
-              (t) => _buildCompletedTournamentCard(t, colors, context),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRankCard(PlayerRanking rank, AppColorsExtension colors) {
-    final winRate = rank.matchesPlayed > 0
-        ? (rank.matchesWon / rank.matchesPlayed * 100).toStringAsFixed(0)
-        : '0';
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.sports_tennis_rounded, size: 22, color: AppTheme.primary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  rank.categoryName ?? 'Môn thể thao',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${rank.matchesPlayed} trận  •  $winRate% thắng',
-                  style: TextStyle(fontSize: 11, color: colors.textMuted),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                _formatNum(rank.eloPoints),
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: AppTheme.primary,
-                ),
-              ),
-              Text(
-                rank.tierName.isEmpty ? 'ELO' : rank.tierName,
-                style: TextStyle(fontSize: 10, color: colors.textMuted),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompletedTournamentCard(
-    Tournament t,
-    AppColorsExtension colors,
-    BuildContext context,
-  ) {
-    final endDate = t.endDate;
-    final dateStr = endDate != null
-        ? '${endDate.day}/${endDate.month}/${endDate.year}'
-        : '';
-    return GestureDetector(
-      onTap: () => context.push('/intro/${t.id}'),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.border),
-        ),
-        child: Row(
-          children: [
-            _tournamentLogo(t.logoUrl, t.bannerUrl, colors),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    t.name.isNotEmpty ? t.name : '—',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (dateStr.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.calendar_today_rounded,
-                            size: 11,
-                            color: colors.textMuted,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            dateStr,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: colors.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'Hoàn thành',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF059669),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─── TAB 3: LỊCH SỬ ─────────────────────────────────────────────────
-  Widget _buildHistoryTab(
-    BuildContext context,
-    UserProfile profile,
-    AppColorsExtension colors,
-  ) {
-    final matchesAsync = ref.watch(publicUserMatchesProvider(profile.id));
-    final followedAsync = ref.watch(followedTournamentsProvider);
-    final followed = followedAsync.asData?.value ?? [];
-
-    final sortedTournaments = [...followed]
-      ..sort((a, b) =>
-          (b.endDate ?? b.updatedAt).compareTo(a.endDate ?? a.updatedAt));
-
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section 1: Trận đấu gần đây
-          _sectionLabel(colors, 'Trận đấu gần đây'),
-          const SizedBox(height: 10),
-          matchesAsync.when(
-            loading: () => _loadingPlaceholder(colors),
-            error: (err, stack) => _emptyPreviewCard(
-              colors,
-              Icons.sports_tennis_outlined,
-              'Chưa có dữ liệu trận đấu',
-            ),
-            data: (matches) {
-              if (matches.isEmpty) {
-                return _emptyPreviewCard(
-                  colors,
-                  Icons.sports_tennis_outlined,
-                  'Chưa có trận đấu nào được ghi nhận',
-                );
-              }
-              return Column(
-                children: matches
-                    .take(5)
-                    .map((m) => _buildMatchHistoryCard(m, colors, context))
-                    .toList(),
-              );
-            },
-          ),
-          const SizedBox(height: 24),
-
-          // Section 2: Giải đấu đã tham gia / theo dõi
-          _sectionLabel(colors, 'Giải đấu theo dõi & tham gia'),
-          const SizedBox(height: 10),
-          followedAsync.isLoading
-              ? _loadingPlaceholder(colors)
-              : sortedTournaments.isEmpty
-              ? _emptyPreviewCard(
-                  colors,
-                  Icons.emoji_events_outlined,
-                  'Chưa có giải đấu nào trong lịch sử',
-                )
-              : Column(
-                  children: sortedTournaments
-                      .map(
-                        (t) => _buildHistoryCard(t, colors, context),
-                      )
-                      .toList(),
-                ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMatchHistoryCard(
-    MatchModel match,
-    AppColorsExtension colors,
-    BuildContext context,
-  ) {
-    final isCompleted =
-        match.status.toLowerCase() == 'completed' || match.completedAt != null;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isCompleted
-                ? Icons.check_circle_outline_rounded
-                : Icons.schedule_rounded,
-            size: 20,
-            color: isCompleted ? const Color(0xFF10B981) : AppTheme.primary,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${match.team1Name} vs ${match.team2Name}',
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  match.tournamentName ?? (isCompleted ? 'Trận đấu hoàn thành' : 'Sắp diễn ra'),
-                  style: TextStyle(fontSize: 11, color: colors.textMuted),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: colors.bgSurface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: colors.borderLight),
-            ),
-            child: Text(
-              '${match.score1} - ${match.score2}',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-                color: colors.textPrimary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHistoryCard(
-    Tournament t,
-    AppColorsExtension colors,
-    BuildContext context,
-  ) {
-    final statusLabel = StatusHelper.getTournamentStatusLabel(t.status);
-    final isCompleted = StatusHelper.isTournamentCompleted(t.status);
-    final statusColor = isCompleted
-        ? const Color(0xFF10B981)
-        : StatusHelper.isTournamentInProgress(t.status)
-        ? AppTheme.primary
-        : colors.textMuted;
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () {
-          HapticFeedback.selectionClick();
-          context.push('/intro/${t.id}');
-        },
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: colors.bgCard,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: colors.border),
-          ),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             children: [
-              _tournamentLogo(t.logoUrl, t.bannerUrl, colors),
-              const SizedBox(width: 12),
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      t.name.isNotEmpty ? t.name : '—',
+                      title,
                       style: TextStyle(
-                        fontSize: 13.5,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: colors.textPrimary,
+                        letterSpacing: -0.2,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      statusLabel,
+                      subtitle,
                       style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: statusColor,
+                        fontSize: 11.5,
+                        color: colors.textMuted,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                size: 18,
-                color: colors.textMuted,
+                size: 20,
+                color: colors.textMuted.withValues(alpha: 0.7),
               ),
             ],
           ),
@@ -1624,165 +949,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
-  // ─── TAB 4: ẢNH ──────────────────────────────────────────────────────
-  Widget _buildPhotosTab(
-    BuildContext context,
-    UserProfile profile,
-    AppColorsExtension colors,
-  ) {
-    final images = <String>[];
-    if (profile.coverUrl != null && profile.coverUrl!.isNotEmpty) {
-      images.add(profile.coverUrl!);
-    }
-    if (profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty) {
-      images.add(profile.avatarUrl!);
-    }
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              _sectionLabel(colors, 'Bộ sưu tập ảnh'),
-              const Spacer(),
-              Text(
-                '${images.length} ảnh',
-                style: TextStyle(fontSize: 12, color: colors.textMuted),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (images.isEmpty)
-            _emptyPreviewCard(
-              colors,
-              Icons.photo_library_outlined,
-              'Chưa có ảnh nào',
-              onTap: () {
-                HapticFeedback.lightImpact();
-                _pickAndUploadCover();
-              },
-              actionLabel: 'Thêm ảnh bìa',
-            )
-          else
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                childAspectRatio: 1.0,
-              ),
-              itemCount: images.length,
-              itemBuilder: (ctx, i) => Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    _showImagePreviewDialog(context, images[i], colors);
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.network(
-                          images[i],
-                          fit: BoxFit.cover,
-                          errorBuilder: (ctx, e, s) => Container(
-                            color: colors.bgCard,
-                            child: Icon(
-                              Icons.broken_image_outlined,
-                              color: colors.textMuted,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 6,
-                          right: 6,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.55),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.fullscreen_rounded,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  void _showImagePreviewDialog(
-    BuildContext context,
-    String imageUrl,
-    AppColorsExtension colors,
-  ) {
-    showDialog<void>(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.85),
-      builder: (dialogCtx) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.all(16),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            InteractiveViewer(
-              minScale: 0.8,
-              maxScale: 3.5,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.contain,
-                  errorBuilder: (ctx, e, s) => Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: colors.bgCard,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Text(
-                      'Không thể mở ảnh',
-                      style: TextStyle(color: colors.textPrimary),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              top: 0,
-              right: 0,
-              child: IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: const BoxDecoration(
-                    color: Colors.black54,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
-                ),
-                onPressed: () => Navigator.of(dialogCtx).pop(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  String _formatNumberWithCommas(int n) {
+    final s = n.toString();
+    final reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    return s.replaceAllMapped(reg, (Match m) => '${m[1]},');
   }
 
   // ─── LOGIN PROMPT ─────────────────────────────────────────────────────
@@ -1912,151 +1083,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       ),
     );
   }
-
-  // ─── HELPERS ─────────────────────────────────────────────────────────
-  List<PlayerRanking> _selectProfileBadges(List<PlayerRanking> rankings) {
-    final sorted = rankings
-        .where(
-          (ranking) => ranking.isLeaderboardEligible && ranking.eloPoints > 0,
-        )
-        .toList()
-      ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
-
-    final seenCategories = <String>{};
-    return sorted
-        .where((ranking) {
-          final key = (ranking.categoryId ?? ranking.categoryName ?? ranking.id)
-              .trim()
-              .toLowerCase();
-          return seenCategories.add(key);
-        })
-        .take(2)
-        .toList(growable: false);
-  }
-
-  Widget _sectionLabel(AppColorsExtension colors, String text) {
-    return Row(
-      children: [
-        Container(
-          width: 3,
-          height: 16,
-          decoration: BoxDecoration(
-            color: AppTheme.primary,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: colors.textSecondary,
-            letterSpacing: 0.2,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _tournamentLogo(
-    String? logoUrl,
-    String? bannerUrl,
-    AppColorsExtension colors,
-  ) {
-    final url = (logoUrl != null && logoUrl.isNotEmpty)
-        ? logoUrl
-        : ((bannerUrl != null && bannerUrl.isNotEmpty) ? bannerUrl : null);
-
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: colors.border.withValues(alpha: 0.6)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: url != null
-          ? Image.network(
-              url,
-              fit: BoxFit.cover,
-              errorBuilder: (ctx, e, s) => _defaultLogo(),
-            )
-          : _defaultLogo(),
-    );
-  }
-
-  Widget _defaultLogo() => Padding(
-    padding: const EdgeInsets.all(7),
-    child: Image.asset(
-      'assets/images/sporto_v1_with_text.png',
-      fit: BoxFit.contain,
-    ),
-  );
-
-  Widget _emptyPreviewCard(
-    AppColorsExtension colors,
-    IconData icon,
-    String message, {
-    VoidCallback? onTap,
-    String? actionLabel,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: 36, color: colors.textMuted),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            style: TextStyle(fontSize: 13, color: colors.textSecondary),
-            textAlign: TextAlign.center,
-          ),
-          if (onTap != null && actionLabel != null) ...[
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: onTap,
-              child: Text(
-                actionLabel,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.primary,
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _loadingPlaceholder(AppColorsExtension colors) {
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colors.border),
-      ),
-      child: const Center(
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: AppTheme.primary,
-        ),
-      ),
-    );
-  }
 }
-
-
 
 // ─── SHIMMER ─────────────────────────────────────────────────────────────────
 class ProfileShimmerLoading extends StatelessWidget {
