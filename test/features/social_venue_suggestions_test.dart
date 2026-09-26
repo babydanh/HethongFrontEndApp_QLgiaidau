@@ -100,7 +100,9 @@ void main() {
     await tester.enterText(nameField, 'Sân Quận 10');
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump();
-    await tester.tap(find.widgetWithText(ListTile, 'Sân Quận 10'));
+    final venueSuggestion = find.widgetWithText(ListTile, 'Sân Quận 10');
+    await tester.ensureVisible(venueSuggestion);
+    await tester.tap(venueSuggestion);
     await tester.pumpAndSettle();
 
     final courtPicker = find.byType(DropdownButtonFormField<String>).first;

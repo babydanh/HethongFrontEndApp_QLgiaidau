@@ -11,6 +11,8 @@ import 'package:app_quanly_giaidau/data/models/venue_suggestion.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/category_provider.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/social_region_picker.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_duration_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_price_dialog.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_privacy_sheet.dart';
@@ -38,13 +40,6 @@ class CreateSocialScreen extends ConsumerStatefulWidget {
 }
 
 class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
-  // Sports options
-  final List<({String key, String name, IconData icon})> _sports = const [
-    (key: 'pickleball', name: 'Pickleball', icon: Icons.sports_tennis),
-    (key: 'badminton', name: 'Cầu lông', icon: Icons.sports_tennis_rounded),
-    (key: 'tennis', name: 'Tennis', icon: Icons.sports_baseball_outlined),
-  ];
-
   late String _selectedSportKey;
   late String _selectedSportName;
 
@@ -64,6 +59,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   // Venue / Location (Tách 2 trường theo Yêu cầu 5)
   final TextEditingController _venueNameController = TextEditingController();
   final TextEditingController _venueAddressController = TextEditingController();
+  SocialRegionSelection? _venueRegionSelection;
 
   Timer? _venueSearchDebounce;
   int _venueSearchVersion = 0;
@@ -127,8 +123,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
         });
       }
     } else {
-      _selectedSportKey = _sports.first.key;
-      _selectedSportName = _sports.first.name;
+      _selectedSportKey = 'pickleball';
+      _selectedSportName = 'Pickleball';
       _selectedFormat = _formats.first;
       _isClubAttached = widget.clubId.isNotEmpty;
 
@@ -546,7 +542,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     }
 
     final venueNameText = _venueNameController.text.trim();
-    final venueAddressText = _venueAddressController.text.trim();
+
+    final venueAddressText =
+        _venueRegionSelection?.composeAddress(_venueAddressController.text) ??
+        _venueAddressController.text.trim();
     if (venueNameText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -885,9 +884,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                         const SizedBox(height: 20),
                       ],
 
-                      // ─── 2. SECTION MÔN THỂ THAO & THỂ THỨC (Hình 1) ───
                       Text(
-                        'MÔN THỂ THAO',
+                        l10n.socialActiveSportsLabel,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
@@ -897,136 +895,267 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                       ),
                       const SizedBox(height: 10),
 
-                      // Sports Grid
-                      Row(
-                        children: _sports.map((sport) {
-                          final isSelected = _selectedSportKey == sport.key;
-                          return Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedSportKey = sport.key;
-                                    _selectedSportName = sport.name;
-                                  });
+                      // Active sports come from the same public category API.
+                      ref
+                          .watch(categoriesProvider)
+                          .when(
+                            data: (sports) {
+                              if (sports.isEmpty) {
+                                return Text(
+                                  l10n.socialActiveSportsEmpty,
+                                  style: TextStyle(color: colors.textSecondary),
+                                );
+                              }
+                              return LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final cardWidth =
+                                      (constraints.maxWidth - 8) / 2;
+                                  return Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: sports
+                                        .map((sport) {
+                                          final isSelected =
+                                              _selectedSportKey == sport.slug;
+                                          final name = switch (sport.slug) {
+                                            'pickleball' =>
+                                              l10n.socialSportPickleball,
+                                            'badminton' =>
+                                              l10n.socialSportBadminton,
+                                            'tennis' => l10n.socialSportTennis,
+                                            'table_tennis' =>
+                                              l10n.socialSportTableTennis,
+                                            'football' =>
+                                              l10n.socialSportFootball,
+                                            _ => sport.name,
+                                          };
+                                          final icon = switch (sport.slug) {
+                                            'pickleball' => Icons.sports_tennis,
+                                            'badminton' =>
+                                              Icons.sports_tennis_rounded,
+                                            'tennis' =>
+                                              Icons.sports_baseball_outlined,
+                                            'table_tennis' =>
+                                              Icons.sports_tennis,
+                                            'football' => Icons.sports_soccer,
+                                            _ => Icons.sports,
+                                          };
+                                          return SizedBox(
+                                            width: cardWidth,
+                                            child: Semantics(
+                                              button: true,
+                                              selected: isSelected,
+                                              label: name,
+                                              child: InkWell(
+                                                key: ValueKey(
+                                                  'social-sport-${sport.slug}',
+                                                ),
+                                                onTap: () {
+                                                  setState(() {
+                                                    _selectedSportKey =
+                                                        sport.slug;
+                                                    _selectedSportName = name;
+                                                  });
+                                                },
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                child: Container(
+                                                  height: 90,
+                                                  decoration: BoxDecoration(
+                                                    color: isSelected
+                                                        ? colors.success
+                                                              .withValues(
+                                                                alpha: 0.16,
+                                                              )
+                                                        : colors.bgCard,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          12,
+                                                        ),
+                                                    border: Border.all(
+                                                      color: isSelected
+                                                          ? colors.success
+                                                          : colors.border,
+                                                      width: isSelected ? 2 : 1,
+                                                    ),
+                                                  ),
+                                                  child: Stack(
+                                                    children: [
+                                                      if (sport.slug ==
+                                                          'pickleball')
+                                                        Positioned(
+                                                          top: 6,
+                                                          left: 6,
+                                                          child: Container(
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  horizontal: 6,
+                                                                  vertical: 2,
+                                                                ),
+                                                            decoration: BoxDecoration(
+                                                              color: AppTheme
+                                                                  .refereeColor,
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    4,
+                                                                  ),
+                                                            ),
+                                                            child: const Text(
+                                                              'CLB',
+                                                              style: TextStyle(
+                                                                fontSize: 9,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w800,
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      Center(
+                                                        child: Column(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Icon(
+                                                              icon,
+                                                              size: 30,
+                                                              color: isSelected
+                                                                  ? colors
+                                                                        .textPrimary
+                                                                  : colors
+                                                                        .textSecondary,
+                                                            ),
+                                                            const SizedBox(
+                                                              height: 6,
+                                                            ),
+                                                            Text(
+                                                              name,
+                                                              maxLines: 1,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                              style: TextStyle(
+                                                                fontSize: 13,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w700,
+                                                                color: colors
+                                                                    .textPrimary,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        })
+                                        .toList(growable: false),
+                                  );
                                 },
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  height: 90,
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? colors.success.withValues(alpha: 0.16)
-                                        : colors.bgCard,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? colors.success
-                                          : colors.border,
-                                      width: isSelected ? 2 : 1,
-                                    ),
-                                  ),
-                                  child: Stack(
-                                    children: [
-                                      if (sport.key == 'pickleball')
-                                        Positioned(
-                                          top: 6,
-                                          left: 6,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppTheme.refereeColor,
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                            ),
-                                            child: const Text(
-                                              'CLB',
-                                              style: TextStyle(
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.w800,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      Center(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              sport.icon,
-                                              size: 30,
-                                              color: isSelected
-                                                  ? colors.textPrimary
-                                                  : colors.textSecondary,
-                                            ),
-                                            const SizedBox(height: 6),
-                                            Text(
-                                              sport.name,
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w700,
-                                                color: colors.textPrimary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                              );
+                            },
+                            loading: () => const Center(
+                              child: SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
                                 ),
                               ),
                             ),
-                          );
-                        }).toList(),
-                      ),
+                            error: (error, stackTrace) => Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    l10n.socialActiveSportsLoadFailed,
+                                    style: TextStyle(
+                                      color: colors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () =>
+                                      ref.invalidate(categoriesProvider),
+                                  child: Text(l10n.socialActiveSportsRetry),
+                                ),
+                              ],
+                            ),
+                          ),
                       const SizedBox(height: 12),
 
-                      // Format Chips: Giao lưu, Đánh vòng tròn, Đánh đơn, Đánh đôi
+                      Text(
+                        l10n.socialPlayFormatLabel,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textSecondary,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: _formats.map((fmt) {
-                          final isSelected = _selectedFormat == fmt;
-                          return InkWell(
-                            onTap: () {
-                              setState(() => _selectedFormat = fmt);
-                            },
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 9,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.bgCard,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? AppTheme.primary
-                                      : colors.border,
-                                  width: isSelected ? 1.8 : 1,
+                        children: _formats
+                            .map((fmt) {
+                              final isSelected = _selectedFormat == fmt;
+                              final formatLabel = switch (fmt) {
+                                'Giao lưu' => l10n.socialPlayFormatFriendly,
+                                'Đánh vòng tròn' =>
+                                  l10n.socialPlayFormatRoundRobin,
+                                'Đánh đơn' => l10n.socialPlayFormatSingles,
+                                'Đánh đôi' => l10n.socialPlayFormatDoubles,
+                                _ => fmt,
+                              };
+                              return Semantics(
+                                button: true,
+                                selected: isSelected,
+                                label: formatLabel,
+                                child: InkWell(
+                                  onTap: () {
+                                    setState(() => _selectedFormat = fmt);
+                                  },
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 9,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: colors.bgCard,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? AppTheme.primary
+                                            : colors.border,
+                                        width: isSelected ? 1.8 : 1,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      formatLabel,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w700
+                                            : FontWeight.w500,
+                                        color: isSelected
+                                            ? AppTheme.primary
+                                            : colors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              child: Text(
-                                fmt,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w700
-                                      : FontWeight.w500,
-                                  color: isSelected
-                                      ? AppTheme.primary
-                                      : colors.textPrimary,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                              );
+                            })
+                            .toList(growable: false),
                       ),
                       const SizedBox(height: 16),
                       Divider(height: 1, color: colors.border),
@@ -1145,7 +1274,9 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                           ),
                                     ),
                                     validator: (val) {
-                                      if (val == null || val.trim().isEmpty) {
+                                      if ((val == null || val.trim().isEmpty) &&
+                                          _venueRegionSelection?.province ==
+                                              null) {
                                         return 'Địa điểm không được để trống';
                                       }
                                       return null;
@@ -1154,6 +1285,14 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                   if (_activeVenueSearchField ==
                                       _VenueSearchField.address)
                                     _buildVenueSuggestions(context),
+                                  const SizedBox(height: 8),
+                                  SocialRegionPicker(
+                                    onChanged: (selection) {
+                                      setState(() {
+                                        _venueRegionSelection = selection;
+                                      });
+                                    },
+                                  ),
                                   if (_selectedVenueId != null) ...[
                                     const SizedBox(height: 10),
                                     if (_isVenueDetailsLoading)

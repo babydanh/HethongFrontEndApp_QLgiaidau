@@ -25311,6 +25311,120 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Xem thêm yêu cầu'**
   String get socialJoinRequestLoadMore;
+
+  /// No description provided for @socialActiveSportsLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'MÔN THỂ THAO'**
+  String get socialActiveSportsLabel;
+
+  /// No description provided for @socialActiveSportsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện chưa có môn thể thao nào đang hoạt động.'**
+  String get socialActiveSportsEmpty;
+
+  /// No description provided for @socialActiveSportsLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách môn thể thao.'**
+  String get socialActiveSportsLoadFailed;
+
+  /// No description provided for @socialActiveSportsRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get socialActiveSportsRetry;
+
+  /// No description provided for @socialPlayFormatLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'THỂ THỨC'**
+  String get socialPlayFormatLabel;
+
+  /// No description provided for @socialPlayFormatFriendly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giao lưu'**
+  String get socialPlayFormatFriendly;
+
+  /// No description provided for @socialPlayFormatRoundRobin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh vòng tròn'**
+  String get socialPlayFormatRoundRobin;
+
+  /// No description provided for @socialPlayFormatSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh đơn'**
+  String get socialPlayFormatSingles;
+
+  /// No description provided for @socialPlayFormatDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh đôi'**
+  String get socialPlayFormatDoubles;
+
+  /// No description provided for @socialSportPickleball.
+  ///
+  /// In vi, this message translates to:
+  /// **'Pickleball'**
+  String get socialSportPickleball;
+
+  /// No description provided for @socialSportBadminton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cầu lông'**
+  String get socialSportBadminton;
+
+  /// No description provided for @socialSportTennis.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tennis'**
+  String get socialSportTennis;
+
+  /// No description provided for @socialSportTableTennis.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bóng bàn'**
+  String get socialSportTableTennis;
+
+  /// No description provided for @socialSportFootball.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bóng đá'**
+  String get socialSportFootball;
+
+  /// No description provided for @socialRegionSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập để tìm kiếm...'**
+  String get socialRegionSearchHint;
+
+  /// No description provided for @socialRegionSearchFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được gợi ý địa giới. Bạn vẫn có thể nhập địa chỉ thủ công.'**
+  String get socialRegionSearchFailed;
+
+  /// No description provided for @socialRegionSectionLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm thành phố/phường (không bắt buộc)'**
+  String get socialRegionSectionLabel;
+
+  /// No description provided for @socialRegionRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải lại'**
+  String get socialRegionRetry;
+
+  /// No description provided for @socialRegionApply.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng'**
+  String get socialRegionApply;
 }
 
 class _AppLocalizationsDelegate

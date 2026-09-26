@@ -13940,4 +13940,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialJoinRequestLoadMore => 'Load more requests';
+
+  @override
+  String get socialActiveSportsLabel => 'SPORTS';
+
+  @override
+  String get socialActiveSportsEmpty =>
+      'No active sports are available right now.';
+
+  @override
+  String get socialActiveSportsLoadFailed => 'Could not load active sports.';
+
+  @override
+  String get socialActiveSportsRetry => 'Retry';
+
+  @override
+  String get socialPlayFormatLabel => 'PLAY FORMAT';
+
+  @override
+  String get socialPlayFormatFriendly => 'Casual play';
+
+  @override
+  String get socialPlayFormatRoundRobin => 'Round robin';
+
+  @override
+  String get socialPlayFormatSingles => 'Singles';
+
+  @override
+  String get socialPlayFormatDoubles => 'Doubles';
+
+  @override
+  String get socialSportPickleball => 'Pickleball';
+
+  @override
+  String get socialSportBadminton => 'Badminton';
+
+  @override
+  String get socialSportTennis => 'Tennis';
+
+  @override
+  String get socialSportTableTennis => 'Table tennis';
+
+  @override
+  String get socialSportFootball => 'Football';
+
+  @override
+  String get socialRegionSearchHint => 'Type to search...';
+
+  @override
+  String get socialRegionSearchFailed =>
+      'Could not load area suggestions. You can still enter the address manually.';
+
+  @override
+  String get socialRegionSectionLabel => 'Add city/ward (optional)';
+
+  @override
+  String get socialRegionRetry => 'Retry';
+
+  @override
+  String get socialRegionApply => 'Apply';
 }

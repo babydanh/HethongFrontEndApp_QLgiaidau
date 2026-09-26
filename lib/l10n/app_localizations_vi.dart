@@ -13889,4 +13889,65 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get socialJoinRequestLoadMore => 'Xem thêm yêu cầu';
+
+  @override
+  String get socialActiveSportsLabel => 'MÔN THỂ THAO';
+
+  @override
+  String get socialActiveSportsEmpty =>
+      'Hiện chưa có môn thể thao nào đang hoạt động.';
+
+  @override
+  String get socialActiveSportsLoadFailed =>
+      'Không tải được danh sách môn thể thao.';
+
+  @override
+  String get socialActiveSportsRetry => 'Thử lại';
+
+  @override
+  String get socialPlayFormatLabel => 'THỂ THỨC';
+
+  @override
+  String get socialPlayFormatFriendly => 'Giao lưu';
+
+  @override
+  String get socialPlayFormatRoundRobin => 'Đánh vòng tròn';
+
+  @override
+  String get socialPlayFormatSingles => 'Đánh đơn';
+
+  @override
+  String get socialPlayFormatDoubles => 'Đánh đôi';
+
+  @override
+  String get socialSportPickleball => 'Pickleball';
+
+  @override
+  String get socialSportBadminton => 'Cầu lông';
+
+  @override
+  String get socialSportTennis => 'Tennis';
+
+  @override
+  String get socialSportTableTennis => 'Bóng bàn';
+
+  @override
+  String get socialSportFootball => 'Bóng đá';
+
+  @override
+  String get socialRegionSearchHint => 'Nhập để tìm kiếm...';
+
+  @override
+  String get socialRegionSearchFailed =>
+      'Không tải được gợi ý địa giới. Bạn vẫn có thể nhập địa chỉ thủ công.';
+
+  @override
+  String get socialRegionSectionLabel =>
+      'Thêm thành phố/phường (không bắt buộc)';
+
+  @override
+  String get socialRegionRetry => 'Tải lại';
+
+  @override
+  String get socialRegionApply => 'Áp dụng';
 }
