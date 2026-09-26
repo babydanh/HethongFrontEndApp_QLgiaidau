@@ -309,70 +309,43 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       top: false,
       child: Container(
         color: Colors.transparent,
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-        child: Row(
-          children: [
-            // Nút Giới thiệu
-            Expanded(
-              flex: 2,
-              child: SizedBox(
-                height: 40,
-                child: FilledButton.tonalIcon(
-                  onPressed: () {
-                    if (_tabController != null && _introTabIndex >= 0) {
-                      _tabController!.animateTo(_introTabIndex);
-                    }
-                  },
-                  icon: const Icon(Icons.article_outlined, size: 16),
-                  label: const Text(
-                    'Giới thiệu',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: context.colors.bgSurface,
-                    foregroundColor: context.colors.textPrimary,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: BorderSide(color: context.colors.border, width: 0.8),
-                    ),
-                  ),
-                ),
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
+        child: SizedBox(
+          height: 48,
+          child: FilledButton(
+            onPressed: canRegister
+                ? () => context.push(registrationUri)
+                : null,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: context.colors.bgSurface,
+              disabledForegroundColor: context.colors.textMuted,
+              elevation: canRegister ? 2 : 0,
+              shadowColor: AppTheme.primary.withValues(alpha: 0.35),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
               ),
             ),
-            const SizedBox(width: 8),
-            // Nút Đăng ký
-            Expanded(
-              flex: 3,
-              child: SizedBox(
-                height: 40,
-                child: FilledButton.icon(
-                  onPressed: canRegister
-                      ? () => context.push(registrationUri)
-                      : null,
-                  icon: const Icon(Icons.how_to_reg_rounded, size: 16),
-                  label: Text(
-                    registerLabel,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: context.colors.bgSurface,
-                    disabledForegroundColor: context.colors.textMuted,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.how_to_reg_rounded, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  registerLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    letterSpacing: 0.2,
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -796,6 +769,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         onNavigateToMatches: () {
           controller.animateTo(scheduleIndex);
         },
+        onNavigateToIntro: _introTabIndex >= 0
+            ? () => controller.animateTo(_introTabIndex)
+            : null,
         isFollowing: isFollowing,
         onToggleFollow: () => _toggleFollow(tournament, isFollowing),
         inviteCode: activeInvite,

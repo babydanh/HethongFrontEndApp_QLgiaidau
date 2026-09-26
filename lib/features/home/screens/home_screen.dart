@@ -815,6 +815,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     SliverToBoxAdapter(
                       child: SizedBox(height: _pinnedHeaderHeight),
                     ),
+                    SliverToBoxAdapter(
+                      child: _buildLiquidSearchBar(),
+                    ),
                     if (!ref.watch(authProvider).isAuthenticated)
                       SliverToBoxAdapter(
                         child: _buildGuestLoginNoticeBanner(l10n),
@@ -1195,20 +1198,89 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _buildLiquidSearchBar() {
+    final colors = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _showGlobalSearchScreen,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              color: isDark ? colors.bgSurface : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: colors.border.withValues(alpha: isDark ? 0.9 : 0.65),
+                width: 1.0,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.search_rounded,
+                  color: colors.textMuted,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Tìm trận đấu, đội hoặc người chơi...',
+                    style: TextStyle(
+                      color: colors.textMuted,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.tune_rounded,
+                    color: AppTheme.primary,
+                    size: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildExploreSegmentTabBar(AppLocalizations l10n) {
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       color: isDark ? colors.bgDark : Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
-        height: 40,
-        padding: const EdgeInsets.all(3),
+        height: 44,
+        padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           color: isDark ? colors.bgSurface : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: colors.border.withValues(alpha: isDark ? 1.0 : 0.6),
+            color: colors.border.withValues(alpha: isDark ? 0.9 : 0.6),
             width: 1,
           ),
         ),
@@ -1219,10 +1291,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               statusKey: 'live',
               isLive: true,
             ),
+            const SizedBox(width: 4),
             _buildExploreTabButton(
               label: l10n.matchesFilterScheduled,
               statusKey: 'scheduled',
             ),
+            const SizedBox(width: 4),
             _buildExploreTabButton(
               label: l10n.homeCompletedStatus,
               statusKey: 'completed',
@@ -1252,13 +1326,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
             color: isSelected ? AppTheme.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(10),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: AppTheme.primary.withValues(alpha: 0.25),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
+                      color: AppTheme.primary.withValues(alpha: 0.28),
+                      blurRadius: 6,
+                      offset: const Offset(0, 1.5),
                     ),
                   ]
                 : null,

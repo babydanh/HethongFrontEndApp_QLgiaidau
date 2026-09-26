@@ -576,7 +576,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                   endDate: _matchDateRange?.end,
                 );
             if (!mounted || version != _requestVersion) return;
-            
+
             final pageMatches = result.matches
                 .where(isRenderablePublicMatch)
                 .toList(growable: false);
@@ -584,7 +584,8 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
             totalHidden += hiddenCount;
             accumulated.addAll(pageMatches);
 
-            lastHasMore = result.hasMore && (result.nextCursor?.isNotEmpty ?? false);
+            lastHasMore =
+                result.hasMore && (result.nextCursor?.isNotEmpty ?? false);
             lastNextCursor = result.nextCursor;
             cursor = result.nextCursor;
 
@@ -1175,11 +1176,13 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.only(top: 4, bottom: 16),
                 itemCount: count + (_hasMore || _loadingMore ? 1 : 0),
-                separatorBuilder: (context, index) => Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: colors.border.withValues(alpha: 0.75),
-                ),
+                separatorBuilder: (context, index) => _scope == 0 || _scope == 1
+                    ? const SizedBox(height: 8)
+                    : Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: colors.border.withValues(alpha: 0.75),
+                      ),
                 itemBuilder: (context, index) {
                   if (index >= count) {
                     return Center(
@@ -1275,26 +1278,19 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     final team2Avatar = match.team2MemberInfos.isEmpty
         ? null
         : match.team2MemberInfos.first.avatarUrl;
-    final details = [
-      if (match.sportKey?.isNotEmpty == true)
-        l10n.sportDisplayName(match.sportKey!),
-      status,
-      if (match.tournamentName?.isNotEmpty == true) match.tournamentName!,
-      if (scheduled != null)
-        DateFormat.yMMMd(
-          Localizations.localeOf(context).toString(),
-        ).add_Hm().format(scheduled),
-      if (match.court.isNotEmpty) match.court,
-      _matchWardAndCity(match),
-    ];
+    final location = _joinLocation(match.court, _matchWardAndCity(match));
     final setScores = match.sets
         .map((set) => '${set.score1}–${set.score2}')
         .join('  ');
+    final sport = match.sportKey?.isNotEmpty == true
+        ? l10n.sportDisplayName(match.sportKey!)
+        : null;
 
     return _resultRow(
       colors: colors,
       title: match.team1Name,
-      details: details,
+      details: const [],
+      sportCard: true,
       onTap: match.tournamentId == null
           ? null
           : () => context.push(
@@ -1311,27 +1307,63 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (sport != null)
+                _searchMetaTag(sport, Icons.sports_rounded, colors),
+              _searchMetaTag(
+                status,
+                Icons.circle,
+                colors,
+                isLive: match.isLive,
+              ),
+            ],
+          ),
+          if (match.tournamentName?.trim().isNotEmpty == true)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                match.tournamentName!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: colors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          const SizedBox(height: 7),
           _matchTeamLine(match.team1Name, match.score1, showScore, colors),
+          const SizedBox(height: 3),
           _matchTeamLine(match.team2Name, match.score2, showScore, colors),
           if (setScores.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: 2),
+              padding: const EdgeInsets.only(top: 5),
               child: Text(
                 setScores,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: colors.textMuted, fontSize: 10.5),
+                style: TextStyle(
+                  color: colors.textMuted,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          Text(
-            details
-                .whereType<String>()
-                .where((value) => value.trim().isNotEmpty)
-                .join(' · '),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: colors.textMuted, fontSize: 10.5),
-          ),
+          if (scheduled != null)
+            _searchMetaLine(
+              Icons.schedule_rounded,
+              DateFormat.yMMMd(
+                Localizations.localeOf(context).toString(),
+              ).add_Hm().format(scheduled),
+              colors,
+            ),
+          if (location.isNotEmpty)
+            _searchMetaLine(Icons.place_outlined, location, colors),
         ],
       ),
     );
@@ -1374,26 +1406,135 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     );
   }
 
+  Widget _searchMetaTag(
+    String text,
+    IconData icon,
+    AppColorsExtension colors, {
+    bool isLive = false,
+  }) {
+    final foreground = isLive ? colors.success : colors.textSecondary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+      decoration: BoxDecoration(
+        color: isLive
+            ? colors.success.withValues(alpha: 0.12)
+            : colors.bgSurface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isLive
+              ? colors.success.withValues(alpha: 0.35)
+              : colors.border,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: foreground),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: foreground,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _searchMetaLine(
+    IconData icon,
+    String text,
+    AppColorsExtension colors,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 5),
+      child: Row(
+        children: [
+          Icon(icon, size: 13, color: colors.textMuted),
+          const SizedBox(width: 5),
+          Expanded(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: colors.textMuted, fontSize: 10.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _tournamentCard(
     Tournament tournament,
     AppLocalizations l10n,
     AppColorsExtension colors,
   ) {
+    final sport = tournament.sport.isNotEmpty
+        ? l10n.sportDisplayName(tournament.sport)
+        : null;
+    final status = StatusHelper.getTournamentStatusLabel(
+      tournament.status,
+      l10n: l10n,
+    );
+    final startDate = tournament.startDate == null
+        ? null
+        : DateFormat.yMMMd(
+            Localizations.localeOf(context).toString(),
+          ).format(tournament.startDate!);
+    final location = _joinLocation(
+      tournament.venueName,
+      _tournamentWardAndCity(tournament),
+    );
+
     return _resultRow(
       colors: colors,
       title: tournament.name,
-      details: [
-        if (tournament.sport.isNotEmpty)
-          l10n.sportDisplayName(tournament.sport),
-        StatusHelper.getTournamentStatusLabel(tournament.status, l10n: l10n),
-        _tournamentWardAndCity(tournament),
-      ],
+      details: const [],
+      sportCard: true,
       onTap: () => context.push('/intro/${tournament.id}'),
       imageUrl: _preferredImageUrl(
         tournament.logoUrl,
         _preferredImageUrl(tournament.bannerUrl, tournament.communityLogoUrl),
       ),
       sport: tournament.sport,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            tournament.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: colors.textPrimary,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 7),
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (sport != null)
+                _searchMetaTag(sport, Icons.sports_rounded, colors),
+              _searchMetaTag(status, Icons.flag_outlined, colors),
+            ],
+          ),
+          if (startDate != null)
+            _searchMetaLine(Icons.event_outlined, startDate, colors),
+          if (location.isNotEmpty)
+            _searchMetaLine(Icons.place_outlined, location, colors),
+        ],
+      ),
     );
   }
 
@@ -1556,61 +1697,98 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     String? sport,
     Widget? leadingWidget,
     Widget? content,
+    bool sportCard = false,
   }) {
-    final visibleDetails = details
-        .map((detail) => detail.trim())
-        .where((detail) => detail.isNotEmpty)
-        .toList(growable: false);
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 40,
-              height: 40,
-              child:
-                  leadingWidget ??
-                  _resultAvatar(imageUrl, title, sport, size: 40),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child:
-                  content ??
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
+    final visibleDetails = content == null
+        ? details
+              .map((detail) => detail.trim())
+              .where((detail) => detail.isNotEmpty)
+              .toList(growable: false)
+        : const <String>[];
+    final radius = BorderRadius.circular(sportCard ? 14 : 0);
+    final row = Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: sportCard ? 12 : 9,
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40,
+            height: 40,
+            child: leadingWidget ?? _resultAvatar(imageUrl, title, sport),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child:
+                content ??
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                    if (visibleDetails.isNotEmpty)
                       Text(
-                        title,
+                        visibleDetails.join(' · '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: colors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                          color: colors.textMuted,
+                          fontSize: 11,
+                          height: 1.25,
                         ),
                       ),
-                      if (visibleDetails.isNotEmpty)
-                        Text(
-                          visibleDetails.join(' · '),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: colors.textMuted,
-                            fontSize: 11,
-                            height: 1.25,
-                          ),
-                        ),
-                    ],
-                  ),
+                  ],
+                ),
+          ),
+          if (onTap != null) ...[
+            const SizedBox(width: 4),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: sportCard ? colors.info : colors.textMuted,
             ),
-            if (onTap != null) ...[
-              const SizedBox(width: 4),
-              Icon(Icons.chevron_right_rounded, color: colors.textMuted),
-            ],
           ],
+        ],
+      ),
+    );
+    if (!sportCard) {
+      return InkWell(onTap: onTap, child: row);
+    }
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 960),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          child: Material(
+            color: colors.bgCard,
+            borderRadius: radius,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: radius,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: radius,
+                  border: Border(
+                    left: BorderSide(color: colors.info, width: 3),
+                    top: BorderSide(color: colors.border),
+                    right: BorderSide(color: colors.border),
+                    bottom: BorderSide(color: colors.border),
+                  ),
+                ),
+                child: row,
+              ),
+            ),
+          ),
         ),
       ),
     );

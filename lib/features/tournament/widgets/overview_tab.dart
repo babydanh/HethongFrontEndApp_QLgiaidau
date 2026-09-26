@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
 
@@ -19,6 +20,7 @@ class OverviewTab extends StatefulWidget {
   final int teamCount;
   final String Function(String? url) resolveImageUrl;
   final VoidCallback? onNavigateToMatches;
+  final VoidCallback? onNavigateToIntro;
   final bool isFollowing;
   final VoidCallback? onToggleFollow;
   final String? inviteCode;
@@ -29,6 +31,7 @@ class OverviewTab extends StatefulWidget {
     required this.teamCount,
     required this.resolveImageUrl,
     this.onNavigateToMatches,
+    this.onNavigateToIntro,
     this.isFollowing = false,
     this.onToggleFollow,
     this.inviteCode,
@@ -164,39 +167,6 @@ class _OverviewTabState extends State<OverviewTab> {
     final resolvedAvatar = widget.resolveImageUrl(t.creatorAvatarUrl);
     final creatorName = t.creatorFullName ?? 'Ban tổ chức';
     final isClubLite = t.isClubLite;
-
-    String dateRangeStr;
-    if (isClubLite) {
-      if (t.startDate != null) {
-        final dateStr = _formatDate(t.startDate);
-        final hour = t.startDate!.hour;
-        final minute = t.startDate!.minute;
-        final timeStr = (hour != 0 || minute != 0)
-            ? ' · ${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}'
-            : '';
-
-        String durationStr = '';
-        if (t.endDate != null && t.endDate!.isAfter(t.startDate!)) {
-          final diffMinutes = t.endDate!.difference(t.startDate!).inMinutes;
-          if (diffMinutes > 0 && diffMinutes < 24 * 60) {
-            final h = diffMinutes ~/ 60;
-            final m = diffMinutes % 60;
-            durationStr = h > 0
-                ? (m > 0 ? ' (${h}h${m}p)' : ' (${h}h)')
-                : ' (${m}p)';
-          }
-        }
-        dateRangeStr = '$dateStr$timeStr$durationStr';
-      } else {
-        dateRangeStr = 'Chưa cập nhật thời gian';
-      }
-    } else {
-      dateRangeStr = (t.startDate != null && t.endDate != null)
-          ? '${_formatDate(t.startDate)} - ${_formatDate(t.endDate)}'
-          : (t.startDate != null
-                ? _formatDate(t.startDate)
-                : 'Chưa cập nhật thời gian');
-    }
     final locationStr = TournamentLocationFormatter.tournamentFullLocation(t);
     final hasCustomLogo = t.logoUrl != null && t.logoUrl!.trim().isNotEmpty;
 
@@ -331,159 +301,181 @@ class _OverviewTabState extends State<OverviewTab> {
                 ),
                 const SizedBox(height: 14),
 
-                // ─── ROW 1: TWIN METRICS CARDS (Thời gian & Slot Tham Gia) ───
+                // ─── 3 STATS CARDS ROW (Matching Mockup Hình 2) ───
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Card Thời gian
+                    // Card 1: Thời gian
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                         decoration: BoxDecoration(
                           color: colors.bgCard,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: colors.border.withValues(alpha: 0.65),
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(5),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.primary.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: const Icon(
-                                    Icons.calendar_today_rounded,
-                                    size: 14,
-                                    color: AppTheme.primary,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Thời gian',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: colors.textMuted,
-                                    letterSpacing: 0.2,
-                                  ),
-                                ),
-                              ],
+                            const Icon(
+                              Icons.calendar_today_rounded,
+                              size: 18,
+                              color: AppTheme.primary,
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 8),
                             Text(
-                              dateRangeStr,
+                              (t.startDate != null && t.endDate != null)
+                                  ? '${t.startDate!.day} - ${t.endDate!.day}'
+                                  : (t.startDate != null ? '${t.startDate!.day}' : '--'),
                               style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w900,
                                 color: colors.textPrimary,
-                                height: 1.25,
+                                letterSpacing: -0.3,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 2),
                             Text(
                               t.startDate != null
-                                  ? DateFormat('EEEE', 'vi_VN').format(t.startDate!)
-                                  : 'Lịch dự kiến',
+                                  ? 'Tháng ${t.startDate!.month}, ${t.startDate!.year}'
+                                  : 'Dự kiến',
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 10.5,
                                 color: colors.textMuted,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.w600,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
                             ),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
 
-                    // Card Suất đăng ký / Slot capacity
+                    // Card 2: Địa điểm
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                         decoration: BoxDecoration(
                           color: colors.bgCard,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: colors.border.withValues(alpha: 0.65),
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(5),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.primary.withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: const Icon(
-                                        Icons.groups_rounded,
-                                        size: 14,
-                                        color: AppTheme.primary,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      'Đăng ký',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                        color: colors.textMuted,
-                                        letterSpacing: 0.2,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Text(
-                                  '${widget.teamCount}/${t.maxTeams > 0 ? t.maxTeams : "∞"}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppTheme.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            // Progress bar
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(3),
-                              child: LinearProgressIndicator(
-                                value: t.maxTeams > 0
-                                    ? (widget.teamCount / t.maxTeams).clamp(0.0, 1.0)
-                                    : 0.0,
-                                minHeight: 5,
-                                backgroundColor: colors.border.withValues(alpha: 0.4),
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  AppTheme.primary,
-                                ),
-                              ),
+                            const Icon(
+                              Icons.location_on_rounded,
+                              size: 20,
+                              color: AppTheme.primary,
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              t.maxTeams > 0 && widget.teamCount >= t.maxTeams
-                                  ? 'Đã đủ số lượng'
-                                  : (t.maxTeams > 0
-                                      ? 'Còn ${t.maxTeams - widget.teamCount} suất trống'
-                                      : 'Không giới hạn suất'),
+                              t.venueName != null && t.venueName!.trim().isNotEmpty
+                                  ? t.venueName!
+                                  : (locationStr.isNotEmpty ? locationStr.split(',').first.trim() : 'Đang cập nhật'),
                               style: TextStyle(
-                                fontSize: 11,
-                                color: (t.maxTeams > 0 && widget.teamCount >= t.maxTeams)
-                                    ? colors.error
-                                    : colors.textSecondary,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w900,
+                                color: colors.textPrimary,
+                                letterSpacing: -0.3,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              locationStr.isNotEmpty
+                                  ? locationStr.split(',').last.trim()
+                                  : 'Việt Nam',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                color: colors.textMuted,
                                 fontWeight: FontWeight.w600,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Card 3: Vận động viên
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: colors.bgCard,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: colors.border.withValues(alpha: 0.65),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.groups_rounded,
+                              size: 20,
+                              color: AppTheme.primary,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${widget.teamCount > 0 ? widget.teamCount : (t.maxTeams > 0 ? t.maxTeams : 0)}',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w900,
+                                color: colors.textPrimary,
+                                letterSpacing: -0.3,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Vận động viên',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                color: colors.textMuted,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
                             ),
                           ],
                         ),
@@ -491,67 +483,7 @@ class _OverviewTabState extends State<OverviewTab> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-
-                // ─── CARD ĐỊA ĐIỂM THI ĐẤU (Location Card) ───
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: colors.bgCard,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: colors.border.withValues(alpha: 0.65),
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.location_on_rounded,
-                          size: 16,
-                          color: AppTheme.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              t.venueName != null && t.venueName!.trim().isNotEmpty
-                                  ? t.venueName!
-                                  : 'Địa điểm thi đấu',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              locationStr.isNotEmpty
-                                  ? locationStr
-                                  : 'Chưa cập nhật địa chỉ chi tiết',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: colors.textSecondary,
-                                height: 1.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
 
                 // ─── CARD LỆ PHÍ THAM GIA (Entry Fee Card) ───
                 Container(
@@ -619,7 +551,60 @@ class _OverviewTabState extends State<OverviewTab> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
+
+                // ─── GIỚI THIỆU SECTION (Matching Mockup Hình 2) ───
+                if (t.description.trim().isNotEmpty) ...[
+                  Text(
+                    'Giới thiệu',
+                    style: TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w900,
+                      color: colors.textPrimary,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    t.description
+                        .replaceAll(RegExp(r'<[^>]*>'), ' ')
+                        .replaceAll(RegExp(r'\s+'), ' ')
+                        .trim(),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.45,
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                  if (widget.onNavigateToIntro != null) ...[
+                    const SizedBox(height: 4),
+                    GestureDetector(
+                      onTap: widget.onNavigateToIntro,
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Xem thêm',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                          SizedBox(width: 2),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            size: 16,
+                            color: AppTheme.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 14),
+                ],
 
                 // Đếm ngược (nếu có - tinh tế, tinh gọn)
                 if (_countdownLabel.isNotEmpty &&
@@ -1034,17 +1019,25 @@ class _OverviewTabState extends State<OverviewTab> {
     final bg = StatusHelper.getTournamentStatusColor(status, context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(6),
+        color: bg.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: [
+          BoxShadow(
+            color: bg.withValues(alpha: 0.35),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Text(
         label,
         style: const TextStyle(
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: FontWeight.w800,
           color: Colors.white,
+          letterSpacing: 0.2,
         ),
       ),
     );
@@ -1052,23 +1045,45 @@ class _OverviewTabState extends State<OverviewTab> {
 
   Widget _buildSportBadge(String sport) {
     final colors = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final name = sport.isNotEmpty
         ? AppConstants.sportNames[sport.toLowerCase()] ?? sport
         : 'Thể thao';
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
       decoration: BoxDecoration(
-        color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: colors.border),
-      ),
-      child: Text(
-        '🏓 $name',
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: colors.textPrimary,
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.12)
+            : colors.bgCard,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.2)
+              : colors.border.withValues(alpha: 0.8),
+          width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SportChoiceTile.buildSportIcon(sport, 14),
+          const SizedBox(width: 5),
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
+        ],
       ),
     );
   }

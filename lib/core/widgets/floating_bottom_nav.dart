@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
 class FloatingBottomNav extends StatelessWidget {
@@ -18,7 +17,6 @@ class FloatingBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     const activeColor = AppTheme.primary;
@@ -37,7 +35,7 @@ class FloatingBottomNav extends StatelessWidget {
         internalIndex: 0,
         icon: Icons.home_outlined,
         activeIcon: Icons.home_rounded,
-        label: l10n.navHome,
+        label: 'Trang chủ',
       ),
       _NavTabData(
         internalIndex: 3,
@@ -49,19 +47,19 @@ class FloatingBottomNav extends StatelessWidget {
         internalIndex: 1,
         icon: Icons.emoji_events_outlined,
         activeIcon: Icons.emoji_events_rounded,
-        label: l10n.navTournaments,
+        label: 'Giải đấu',
       ),
       _NavTabData(
         internalIndex: 4,
         icon: Icons.leaderboard_outlined,
         activeIcon: Icons.leaderboard_rounded,
-        label: l10n.navRankings,
+        label: 'Xếp hạng',
       ),
       _NavTabData(
         internalIndex: _menuIndex,
-        icon: Icons.menu_rounded,
-        activeIcon: Icons.menu_open_rounded,
-        label: l10n.menuTitle,
+        icon: Icons.person_outline_rounded,
+        activeIcon: Icons.person_rounded,
+        label: 'Tôi',
       ),
     ];
 
