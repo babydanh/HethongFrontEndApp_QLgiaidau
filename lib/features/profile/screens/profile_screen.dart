@@ -287,379 +287,397 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     required int totalLost,
     required int bestElo,
   }) {
-    final topPadding = MediaQuery.of(context).padding.top;
-    const coverHeight = 220.0;
+    const expandedCoverHeight = 220.0;
     const avatarRadius = 46.0;
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        children: [
-          // ── HERO COVER + OVERLAPPING AVATAR ──
-          Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.topCenter,
-            children: [
-              // 1. Cover Background
-              Container(
-                height: coverHeight,
-                width: double.infinity,
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      slivers: [
+        // ── PINNED SLIVER APP BAR (Cover image + Persistent Back/Camera/Settings) ──
+        SliverAppBar(
+          expandedHeight: expandedCoverHeight,
+          pinned: true,
+          elevation: 0,
+          backgroundColor: colors.bgDark,
+          leading: Center(
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go("/home");
+                }
+              },
+              child: Container(
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF0F172A),
-                      Color(0xFF1E3A8A),
-                      Color(0xFF2563EB),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                  color: Colors.black.withValues(alpha: 0.4),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    width: 1,
                   ),
                 ),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    if (profile.coverUrl != null && profile.coverUrl!.isNotEmpty)
-                      Image.network(
-                        profile.coverUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (ctx, e, s) => _coverGradient(),
-                      )
-                    else
-                      _coverGradient(),
-                    // Soft vignette / dark ambient overlay
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.black.withValues(alpha: 0.45),
-                            Colors.transparent,
-                            Colors.black.withValues(alpha: 0.55),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                      ),
-                    ),
-                    // Subtle tennis court icon watermark
-                    Positioned(
-                      right: 16,
-                      bottom: 16,
-                      child: Opacity(
-                        opacity: 0.15,
-                        child: const Icon(
-                          Icons.sports_tennis_rounded,
-                          size: 110,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 16,
                 ),
               ),
-
-              // 2. Floating Top Actions (Back Button on left, Settings gear on right)
-              Positioned(
-                top: topPadding + 8,
-                left: 16,
-                right: 16,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Back button pill
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        context.go('/home');
-                      },
-                      child: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.35),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            width: 1,
+            ),
+          ),
+          actions: [
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _pickAndUploadCover();
+              },
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    width: 1,
+                  ),
+                ),
+                child: _uploadingCover
+                    ? const Center(
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
                           ),
                         ),
-                        child: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white,
-                          size: 16,
-                        ),
+                      )
+                    : const Icon(
+                        Icons.camera_alt_outlined,
+                        color: Colors.white,
+                        size: 18,
                       ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.go("/profile/settings");
+              },
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    width: 1,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.settings_outlined,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
+          flexibleSpace: FlexibleSpaceBar(
+            stretchModes: const [
+              StretchMode.zoomBackground,
+              StretchMode.blurBackground,
+            ],
+            background: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (profile.coverUrl != null && profile.coverUrl!.trim().isNotEmpty)
+                  Image.network(
+                    profile.coverUrl!.trim(),
+                    fit: BoxFit.cover,
+                    errorBuilder: (ctx, e, s) => _buildArtisticCover(colors),
+                  )
+                else
+                  _buildArtisticCover(colors),
+                // Premium gradient vignette
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.black.withValues(alpha: 0.5),
+                        Colors.transparent,
+                        colors.bgDark.withValues(alpha: 0.85),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: const [0.0, 0.45, 1.0],
                     ),
-                    // Right actions: Camera (change cover) + Settings gear
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // ── PROFILE BODY CONTENT WITH OVERLAPPING AVATAR ──
+        SliverToBoxAdapter(
+          child: Column(
+            children: [
+              // Avatar protruding over the cover seam
+              Transform.translate(
+                offset: const Offset(0, -avatarRadius),
+                child: Center(
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      _pickAndUploadAvatar();
+                    },
+                    child: Stack(
+                      clipBehavior: Clip.none,
                       children: [
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            _pickAndUploadCover();
-                          },
-                          child: Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.35),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                width: 1,
+                        Container(
+                          padding: const EdgeInsets.all(3.5),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colors.bgDark,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.25),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
                               ),
+                            ],
+                          ),
+                          child: RankAvatar(
+                            imageUrl: profile.avatarUrl,
+                            name: (profile.fullName != null && profile.fullName!.isNotEmpty)
+                                ? profile.fullName!
+                                : "SportO",
+                            elo: bestRanking?.eloPoints ?? 0,
+                            tierName: bestRanking?.tierName,
+                            matchesPlayed: bestRanking?.matchesPlayed ?? 0,
+                            size: avatarRadius * 2,
+                            ringWidth: 3,
+                          ),
+                        ),
+                        // Small camera badge
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: colors.bgCard,
+                              border: Border.all(
+                                color: colors.borderLight,
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                            child: _uploadingCover
-                                ? const Center(
-                                    child: SizedBox(
-                                      width: 16,
-                                      height: 16,
+                            child: Center(
+                              child: _uploading
+                                  ? SizedBox(
+                                      width: 14,
+                                      height: 14,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        color: Colors.white,
+                                        color: colors.textPrimary,
                                       ),
+                                    )
+                                  : Icon(
+                                      Icons.camera_alt_rounded,
+                                      size: 14,
+                                      color: colors.textPrimary,
                                     ),
-                                  )
-                                : const Icon(
-                                    Icons.camera_alt_outlined,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            context.go('/profile/settings');
-                          },
-                          child: Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.35),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                width: 1,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.settings_outlined,
-                              color: Colors.white,
-                              size: 18,
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
 
-              // 3. Overlapping Centered Avatar
-              Positioned(
-                bottom: -avatarRadius,
-                child: GestureDetector(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    _pickAndUploadAvatar();
-                  },
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(3.5),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: colors.bgDark,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
+              // Offset compensation after protruding avatar
+              Transform.translate(
+                offset: const Offset(0, -avatarRadius + 8),
+                child: Column(
+                  children: [
+                    // ── USER NAME, USERNAME, LOCATION ──
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        children: [
+                          // Full name
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  profile.fullName ?? "Người dùng",
+                                  style: TextStyle(
+                                    fontSize: 21,
+                                    fontWeight: FontWeight.w800,
+                                    color: colors.textPrimary,
+                                    letterSpacing: -0.4,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (profile.isEmailVerified == true) ...[
+                                const SizedBox(width: 5),
+                                const Icon(
+                                  Icons.verified_rounded,
+                                  size: 18,
+                                  color: Color(0xFF2563EB),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+
+                          // Handle / Username (@minhanh)
+                          if (profile.email != null)
+                            Text(
+                              "@${profile.email!.split("@").first}",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: colors.textMuted,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                          ],
-                        ),
-                        child: RankAvatar(
-                          imageUrl: profile.avatarUrl,
-                          name: profile.fullName ?? '',
-                          elo: bestRanking?.eloPoints ?? 0,
-                          tierName: bestRanking?.tierName,
-                          matchesPlayed: bestRanking?.matchesPlayed ?? 0,
-                          size: avatarRadius * 2,
-                          ringWidth: 3,
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: colors.bgCard,
-                            border: Border.all(
-                              color: colors.borderLight,
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
+                          const SizedBox(height: 5),
+
+                          // Location Pin (📍 Đắk Lắk, Việt Nam)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.location_on_outlined,
+                                size: 13,
+                                color: colors.textMuted,
+                              ),
+                              const SizedBox(width: 3),
+                              Flexible(
+                                child: Text(
+                                  (profile.address != null && profile.address!.isNotEmpty)
+                                      ? profile.address!
+                                      : "Đắk Lắk, Việt Nam",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: colors.textMuted,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
-                          child: Center(
-                            child: _uploading
-                                ? SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: colors.textPrimary,
-                                    ),
-                                  )
-                                : Icon(
-                                    Icons.camera_alt_rounded,
-                                    size: 14,
-                                    color: colors.textPrimary,
-                                  ),
-                          ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // ── 4-METRIC STATS ROW (IMAGE 1) ──
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildStatsRow(
+                        context,
+                        colors,
+                        totalPlayed,
+                        totalWon,
+                        totalLost < 0 ? 0 : totalLost,
+                        bestElo,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // ── 4-ITEM NAVIGATION MENU CARD (IMAGE 1) ──
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildNavMenuCard(context, colors),
+                    ),
+
+                    const SizedBox(height: 110), // Bottom navigation clearance
+                  ],
                 ),
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
 
-          // Spacing for avatar protrusion
-          const SizedBox(height: avatarRadius + 14),
-
-          // ── USER NAME, USERNAME, LOCATION ──
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              children: [
-                // Full name
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        profile.fullName ?? 'Người dùng',
-                        style: TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w800,
-                          color: colors.textPrimary,
-                          letterSpacing: -0.4,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (profile.isEmailVerified == true) ...[
-                      const SizedBox(width: 5),
-                      const Icon(
-                        Icons.verified_rounded,
-                        size: 18,
-                        color: Color(0xFF2563EB),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 4),
-
-                // Handle / Username (@minhanh)
-                if (profile.email != null)
-                  Text(
-                    '@${profile.email!.split('@').first}',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: colors.textMuted,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                const SizedBox(height: 5),
-
-                // Location Pin (📍 Đắk Lắk, Việt Nam)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.location_on_outlined,
-                      size: 13,
-                      color: colors.textMuted,
-                    ),
-                    const SizedBox(width: 3),
-                    Flexible(
-                      child: Text(
-                        (profile.address != null && profile.address!.isNotEmpty)
-                            ? profile.address!
-                            : 'Đắk Lắk, Việt Nam',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colors.textMuted,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+  Widget _buildArtisticCover(AppColorsExtension colors) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF0F172A),
+            Color(0xFF1E3A8A),
+            Color(0xFF2563EB),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Tennis/Badminton/Pickleball line graphics
+          Positioned(
+            right: -20,
+            bottom: -20,
+            child: Opacity(
+              opacity: 0.12,
+              child: const Icon(
+                Icons.sports_tennis_rounded,
+                size: 170,
+                color: Colors.white,
+              ),
             ),
           ),
-
-          const SizedBox(height: 20),
-
-          // ── 4-METRIC STATS ROW (IMAGE 1) ──
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildStatsRow(
-              context,
-              colors,
-              totalPlayed,
-              totalWon,
-              totalLost < 0 ? 0 : totalLost,
-              bestElo,
+          Positioned(
+            left: 20,
+            top: 40,
+            child: Opacity(
+              opacity: 0.08,
+              child: const Icon(
+                Icons.emoji_events_rounded,
+                size: 90,
+                color: Colors.white,
+              ),
             ),
           ),
-
-          const SizedBox(height: 16),
-
-          // ── 4-ITEM NAVIGATION MENU CARD (IMAGE 1) ──
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildNavMenuCard(context, colors),
-          ),
-
-          const SizedBox(height: 100), // Bottom navigation clearance
         ],
       ),
     );
   }
 
-  Widget _coverGradient() => const DecoratedBox(
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        colors: [Color(0xFF0F172A), Color(0xFF1E3A8A), Color(0xFF2563EB)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-    ),
-  );
-
-  // ─── USER INFO HEADER (CENTERED AS SHOWN IN DESIGN MOCKUP) ─────────
+    // ─── USER INFO HEADER (CENTERED AS SHOWN IN DESIGN MOCKUP) ─────────
   Widget _buildStatsRow(
     BuildContext context,
     AppColorsExtension colors,
