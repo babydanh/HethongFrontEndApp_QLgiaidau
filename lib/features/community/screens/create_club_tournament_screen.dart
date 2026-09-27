@@ -28,6 +28,8 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   final _nameCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _maxTeamsCtrl = TextEditingController(text: '16');
+  final _maxCombinedEloCtrl = TextEditingController();
+  final _maxTeammateGapCtrl = TextEditingController();
 
   String _selectedSport = AppConstants.sportPickleball;
   String _selectedFormat = AppConstants.formatDoubles;
@@ -42,12 +44,23 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   int _recurringAdvanceDays = 3;
   bool _isLoading = false;
   bool _isRanked = true;
+  int _teamSize = 7;
+  int _maxReserve = 0;
+  int _footballHalvesCount = 2;
+  int _footballHalfDuration = 45;
+  bool _footballAllowDraw = true;
+  bool _twoLegged = false;
+  bool _penaltyShootout = false;
+  bool _awayGoalsRule = false;
+  bool _footballSettingsTouched = false;
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _descCtrl.dispose();
     _maxTeamsCtrl.dispose();
+    _maxCombinedEloCtrl.dispose();
+    _maxTeammateGapCtrl.dispose();
     super.dispose();
   }
 
@@ -114,7 +127,6 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
       _nameCtrl.text = 'Giải $sportName Mini';
     }
   }
-
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
@@ -122,24 +134,50 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
     setState(() => _isLoading = true);
     try {
       final dio = ref.read(dioClientProvider).dio;
-      final club = widget.clubId.isEmpty ? null : ref.read(communityDetailProvider(widget.clubId)).value;
-      final clubSport = club?.sports.isNotEmpty == true ? _mapClubSport(club!.sports.first) : null;
+      final club = widget.clubId.isEmpty
+          ? null
+          : ref.read(communityDetailProvider(widget.clubId)).value;
+      final clubSport = club?.sports.isNotEmpty == true
+          ? _mapClubSport(club!.sports.first)
+          : null;
       final resolvedSport = clubSport ?? _mapSportSlug();
+      final resolvedFormat = resolvedSport == 'football'
+          ? AppConstants.formatDoubles
+          : (_selectedFormat == AppConstants.formatMixedDoubles
+                ? AppConstants.formatDoubles
+                : _selectedFormat);
       final recurringTimeString = _formatTime(_recurringTime);
 
       final body = <String, dynamic>{
         'name': _nameCtrl.text.trim(),
         'communityId': widget.clubId,
         'sport': resolvedSport,
-        'format': _selectedSport == AppConstants.sportFootball
-            ? AppConstants.formatDoubles
-            : (_selectedFormat == AppConstants.formatMixedDoubles
-                ? AppConstants.formatDoubles
-                : _selectedFormat),
+        'format': resolvedFormat,
         'bracketType': _selectedBracket,
         'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
         'description': _descCtrl.text.trim(),
         'isRanked': _isRanked,
+        if (_isRanked &&
+            resolvedFormat == AppConstants.formatDoubles &&
+            _maxCombinedEloCtrl.text.trim().isNotEmpty)
+          'maxCombinedElo': int.parse(_maxCombinedEloCtrl.text.trim()),
+        if (_isRanked &&
+            resolvedFormat == AppConstants.formatDoubles &&
+            _maxTeammateGapCtrl.text.trim().isNotEmpty)
+          'maxTeammateGap': int.parse(_maxTeammateGapCtrl.text.trim()),
+        if (resolvedSport == 'football' && _footballSettingsTouched) ...{
+          'teamSize': _teamSize,
+          'teamSizeOptions': [5, 7, 11],
+          'minTeamSize': _teamSize,
+          'maxTeamSize': _teamSize + _maxReserve,
+          'maxReserve': _maxReserve,
+          'footballHalvesCount': _footballHalvesCount,
+          'footballHalfDuration': _footballHalfDuration,
+          'footballAllowDraw': _footballAllowDraw,
+          'twoLegged': _twoLegged,
+          'awayGoalsRule': _awayGoalsRule,
+          'penaltyShootout': _penaltyShootout,
+        },
         'durationMinutes': (_durationHours * 60) + _durationMinutes,
         'durationHours': ((_durationHours * 60) + _durationMinutes) / 60.0,
         if (_startDate != null) ...{
@@ -151,7 +189,6 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
               .toUtc()
               .toIso8601String(),
         } else if (_isRecurring) ...{
-          // Khi tạo định kỳ không chọn ngày cụ thể, luôn gửi startTime bằng giờ recurring đã chọn
           'startTime': recurringTimeString,
         },
         if (_isRecurring) ...{
@@ -584,6 +621,148 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                   hintStyle: TextStyle(color: colors.textMuted, fontSize: 13),
                 ),
               ),
+              if (activeSport == AppConstants.sportFootball) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colors.bgSurface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: colors.border),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        l10n.tournamentCreateFootballOptions,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      DropdownButtonFormField<int>(
+                        initialValue: _teamSize,
+                        decoration: InputDecoration(
+                          labelText: l10n.tournamentCreateTeamSize,
+                        ),
+                        items: const [5, 7, 11]
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text('$value'),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) => setState(() {
+                          _teamSize = value ?? _teamSize;
+                          _footballSettingsTouched = true;
+                        }),
+                      ),
+                      TextFormField(
+                        initialValue: _maxReserve.toString(),
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: l10n.tournamentCreateMaxReserve,
+                        ),
+                        validator: (value) {
+                          final parsed = int.tryParse(value?.trim() ?? '');
+                          if (parsed == null || parsed < 0) {
+                            return l10n.tournamentCreateIntegerNonNegative;
+                          }
+                          return null;
+                        },
+                        onChanged: (value) {
+                          final parsed = int.tryParse(value);
+                          if (parsed != null && parsed >= 0) {
+                            setState(() {
+                              _maxReserve = parsed;
+                              _footballSettingsTouched = true;
+                            });
+                          }
+                        },
+                      ),
+                      DropdownButtonFormField<int>(
+                        initialValue: _footballHalvesCount,
+                        decoration: InputDecoration(
+                          labelText: l10n.tournamentCreateFootballHalves,
+                        ),
+                        items: const [1, 2, 3, 4]
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text('$value'),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) => setState(() {
+                          _footballHalvesCount =
+                              value ?? _footballHalvesCount;
+                          _footballSettingsTouched = true;
+                        }),
+                      ),
+                      DropdownButtonFormField<int>(
+                        initialValue: _footballHalfDuration,
+                        decoration: InputDecoration(
+                          labelText: l10n.tournamentCreateFootballHalfDuration,
+                        ),
+                        items: const [15, 30, 45, 60]
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text('$value'),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) => setState(() {
+                          _footballHalfDuration =
+                              value ?? _footballHalfDuration;
+                          _footballSettingsTouched = true;
+                        }),
+                      ),
+                      SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l10n.tournamentCreateFootballAllowDraw),
+                        value: _footballAllowDraw,
+                        onChanged: (value) => setState(() {
+                          _footballAllowDraw = value;
+                          _footballSettingsTouched = true;
+                        }),
+                      ),
+                      SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l10n.tournamentCreateTwoLegged),
+                        value: _twoLegged,
+                        onChanged: (value) => setState(() {
+                          _twoLegged = value;
+                          _footballSettingsTouched = true;
+                        }),
+                      ),
+                      SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l10n.tournamentCreateAwayGoalsRule),
+                        value: _awayGoalsRule,
+                        onChanged: (value) => setState(() {
+                          _awayGoalsRule = value;
+                          _footballSettingsTouched = true;
+                        }),
+                      ),
+                      SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l10n.footballScore_penaltyShootout),
+                        value: _penaltyShootout,
+                        onChanged: (value) => setState(() {
+                          _penaltyShootout = value;
+                          _footballSettingsTouched = true;
+                        }),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 8),
+              Text(
+                l10n.tournamentCreateClubFeeDisabled,
+                style: TextStyle(fontSize: 12, color: colors.textMuted),
+              ),
               const SizedBox(height: 20),
 
               // ─── Mô tả ───
@@ -643,6 +822,40 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
                   ],
                 ),
               ),
+              if (_isRanked &&
+                  activeSport != AppConstants.sportFootball &&
+                  _selectedFormat != AppConstants.formatSingles) ...[
+                TextFormField(
+                  controller: _maxCombinedEloCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: l10n.tournamentCreateMaxCombinedElo,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return null;
+                    final parsed = int.tryParse(value.trim());
+                    if (parsed == null || parsed < 0) {
+                      return l10n.tournamentCreateIntegerNonNegative;
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _maxTeammateGapCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: l10n.tournamentCreateMaxTeammateGap,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return null;
+                    final parsed = int.tryParse(value.trim());
+                    if (parsed == null || parsed < 0) {
+                      return l10n.tournamentCreateIntegerNonNegative;
+                    }
+                    return null;
+                  },
+                ),
+              ],
               const SizedBox(height: 24),
 
               // ─── Nút Submit ───

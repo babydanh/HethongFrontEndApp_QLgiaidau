@@ -3886,19 +3886,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_quickTournament => 'Nhanh (Lite)';
 
   @override
-  String get club_advanced => 'Nâng cao';
-
-  @override
-  String get club_selectTournamentType => 'Chọn loại giải đấu';
-
-  @override
-  String get publicClubLiteCreateTitle => 'Tạo giải CLB Lite';
-
-  @override
-  String get club_selectTournamentDesc =>
-      'Vui lòng chọn hình thức giải đấu muốn tạo';
-
-  @override
   String get club_liteTournament => 'Giải Nhanh (Lite)';
 
   @override
@@ -3907,26 +3894,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get club_liteDesc =>
       'Tạo và quản lý sơ đồ thi đấu ngay trên app điện thoại';
-
-  @override
-  String get club_advancedTournament => 'Giải Nâng Cao (Full)';
-
-  @override
-  String get club_createOnWeb => 'TẠO TRÊN WEB';
-
-  @override
-  String get club_advancedDesc =>
-      'Quản lý đầy đủ tính năng, lệ phí, phân quyền trên website';
-
-  @override
-  String get club_createAdvancedTitle => 'Tạo Giải Nâng Cao';
-
-  @override
-  String get club_advancedWebDialog =>
-      'Để quản lý giải đấu nâng cao (phân chia bảng đấu phức tạp, thu lệ phí, tùy chỉnh luật...), vui lòng truy cập website sporto.asia trên máy tính.';
-
-  @override
-  String get club_copyWebLink => 'Đến trang tạo';
 
   @override
   String get club_membersLabel => 'Thành viên';
@@ -4161,29 +4128,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tạo mới và điều hành các giải đấu của Câu lạc bộ.';
 
   @override
-  String get club_chooseTournamentTypeDescription =>
-      'Chọn hình thức tổ chức phù hợp với quy mô giải của CLB';
-
-  @override
   String get club_liteCreatedOnApp => 'TẠO TRÊN APP';
 
   @override
   String get club_liteTournamentDescription =>
       'Tạo trực tiếp trên điện thoại trong 30 giây, tự động chia bảng và theo dõi tỷ số.';
-
-  @override
-  String get club_standardTournamentTitle => 'Giải Tiêu chuẩn';
-
-  @override
-  String get club_standardTournamentTitleAdvanced =>
-      'Giải Tiêu chuẩn (Nâng cao)';
-
-  @override
-  String get club_standardCreatedOnWeb => 'TẠO TRÊN WEB';
-
-  @override
-  String get club_standardTournamentDescription =>
-      'Giải đấu quy mô lớn với đầy đủ tính năng sơ đồ thi đấu, tài chính & trọng tài.';
 
   @override
   String get club_noManagedTournaments =>
@@ -5044,48 +4993,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clubTournamentsLoadError => 'Không thể tải danh sách giải đấu';
 
   @override
-  String get clubTournamentsChooseType => 'Chọn loại giải đấu';
-
-  @override
-  String get clubTournamentsChooseTypeHint =>
-      'Chọn hình thức tạo giải phù hợp cho câu lạc bộ của bạn';
-
-  @override
   String get clubTournamentsLiteTitle => 'Giải Nhanh (Lite)';
 
   @override
   String get clubTournamentsLiteDescription =>
       'Tạo nhanh trong 30 giây. Sinh mã QR và link mời để chia sẻ trực tiếp cho các thành viên.';
-
-  @override
-  String get clubTournamentsWebTitle => 'Tạo nhanh trên Web';
-
-  @override
-  String get clubTournamentsWebDescription =>
-      'Form nhanh đầy đủ hơn Lite; giải vẫn thuộc CLB và mở quản lý nâng cao trên web.';
-
-  @override
-  String get clubTournamentsAdvancedTitle => 'Tạo giải nâng cao trên Web';
-
-  @override
-  String get clubTournamentsAdvancedBadge => 'Tạo trên Web';
-
-  @override
-  String get clubTournamentsAdvancedDescription =>
-      'Giải đấu nâng cao có nhiều cấu hình chuyên sâu (Vòng bảng, Knockout, Lịch thi đấu, Lệ phí và Giải thưởng).\\n\\nVui lòng truy cập trang web sporto.asia trên máy tính để tạo giải nâng cao cho câu lạc bộ!';
-
-  @override
-  String get clubTournamentsAdvancedCardDescription =>
-      'Chỉ khởi tạo trên Web sporto.asia. Đầy đủ cấu hình: Thể thức Vòng bảng, Knockout, Lịch thi đấu và Giải thưởng.';
-
-  @override
-  String get clubTournamentsClose => 'Đóng';
-
-  @override
-  String get clubTournamentsCopyWebLink => 'Sao chép link Web';
-
-  @override
-  String get clubTournamentsLinkCopied => 'Đã sao chép link tạo giải';
 
   @override
   String get myReportsTitle => 'Báo cáo của tôi';
@@ -7805,7 +7717,16 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get quickCreateDescription =>
-      'Tạo nhanh trên app, bổ sung cấu hình nâng cao trong trang quản lý web.';
+      'Tạo giải đấu ngay trong ứng dụng, sau đó quản lý giải tại khu vực Ban tổ chức.';
+
+  @override
+  String get quickCreateOptionsTitle => 'Tùy chọn bổ sung (thể thức, ELO)';
+
+  @override
+  String get quickCreateOptionsCollapse => 'Thu gọn';
+
+  @override
+  String get quickCreateOptionsExpand => 'Mở rộng';
 
   @override
   String get quickCreateNameLabel => 'Tên giải đấu *';
@@ -12299,7 +12220,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get organizer_reqDesc =>
-      'Tạo giải đấu nâng cao (nhiều phân hạng, lệ phí, nhà tài trợ...) yêu cầu tài khoản được cấp quyền Ban Tổ Chức (Organizer). Bạn có thể đăng ký làm Ban Tổ Chức hoặc sử dụng Giải CLB Siêu Lite.';
+      'Tạo giải công khai và sử dụng các tính năng tổ chức giải cần tài khoản Ban Tổ Chức được duyệt. Bạn có thể đăng ký hoặc tạo giải trong phạm vi câu lạc bộ với Giải CLB Siêu Lite.';
 
   @override
   String get organizer_applyNow => 'Đăng ký Ban Tổ Chức';
@@ -13042,6 +12963,69 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementEntryFeesAllowed => 'Cho phép thu lệ phí';
+
+  @override
+  String get tournamentCreateEntryFeeToggle => 'Thu lệ phí tham gia';
+
+  @override
+  String get tournamentCreateEntryFeePolicyUnavailable =>
+      'Không tải được cấu hình lệ phí. Giải đấu sẽ miễn phí.';
+
+  @override
+  String get tournamentCreateRanked => 'Xếp hạng ELO';
+
+  @override
+  String get tournamentCreateUnranked => 'Giải phong trào';
+
+  @override
+  String get tournamentCreateRankedDescription =>
+      'Kết quả được tính vào bảng xếp hạng';
+
+  @override
+  String get tournamentCreateUnrankedDescription =>
+      'Giải giao hữu, không tính xếp hạng';
+
+  @override
+  String get tournamentCreateMaxCombinedElo => 'ELO tổng tối đa';
+
+  @override
+  String get tournamentCreateMaxTeammateGap => 'Chênh lệch ELO đồng đội tối đa';
+
+  @override
+  String get tournamentCreateTeamSize => 'Số người mỗi đội';
+
+  @override
+  String get tournamentCreateMaxReserve => 'Số dự bị tối đa';
+
+  @override
+  String get tournamentCreateFootballHalves => 'Số hiệp';
+
+  @override
+  String get tournamentCreateFootballHalfDuration => 'Số phút mỗi hiệp';
+
+  @override
+  String get tournamentCreateFootballAllowDraw => 'Cho phép kết quả hòa';
+
+  @override
+  String get tournamentCreateTwoLegged => 'Thi đấu hai lượt';
+
+  @override
+  String get tournamentCreateAwayGoalsRule =>
+      'Áp dụng luật bàn thắng sân khách';
+
+  @override
+  String get tournamentCreatePenaltyShootout => 'Cho phép sút luân lưu';
+
+  @override
+  String get tournamentCreateIntegerNonNegative =>
+      'Nhập số nguyên lớn hơn hoặc bằng 0.';
+
+  @override
+  String get tournamentCreateFootballOptions => 'Cấu hình bóng đá';
+
+  @override
+  String get tournamentCreateClubFeeDisabled =>
+      'Giải đấu câu lạc bộ không thu lệ phí và luôn miễn phí.';
 
   @override
   String get tournamentManagementEntryFeeDisabled =>

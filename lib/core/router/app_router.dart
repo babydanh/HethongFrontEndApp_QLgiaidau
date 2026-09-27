@@ -368,24 +368,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/tournaments/create',
         builder: (context, state) => const CreatePublicQuickTournamentScreen(),
       ),
-      GoRoute(
-        path: '/tournaments/create-advanced',
-        builder: (context, state) {
-          final communityId = state.uri.queryParameters['communityId'];
-          if (communityId != null && communityId.isNotEmpty) {
-            return CreateClubTournamentScreen(clubId: communityId);
-          }
-          return const CreatePublicQuickTournamentScreen();
-        },
-      ),
-      GoRoute(
-        path: '/tournament/create',
-        builder: (context, state) => const CreatePublicQuickTournamentScreen(),
-      ),
-      GoRoute(
-        path: '/tournament-create',
-        builder: (context, state) => const CreatePublicQuickTournamentScreen(),
-      ),
 
       // ─── Advanced Organizer Operations ───
       GoRoute(

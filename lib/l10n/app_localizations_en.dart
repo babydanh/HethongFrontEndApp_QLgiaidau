@@ -3898,19 +3898,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get club_quickTournament => 'Quick (Lite)';
 
   @override
-  String get club_advanced => 'Advanced';
-
-  @override
-  String get club_selectTournamentType => 'Select Tournament Type';
-
-  @override
-  String get publicClubLiteCreateTitle => 'Create Club Lite tournament';
-
-  @override
-  String get club_selectTournamentDesc =>
-      'Please select the type of tournament to create';
-
-  @override
   String get club_liteTournament => 'Quick Tournament (Lite)';
 
   @override
@@ -3919,26 +3906,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get club_liteDesc =>
       'Create and manage brackets directly on the mobile app';
-
-  @override
-  String get club_advancedTournament => 'Advanced Tournament (Full)';
-
-  @override
-  String get club_createOnWeb => 'CREATE ON WEB';
-
-  @override
-  String get club_advancedDesc =>
-      'Full features, entry fees, and roles managed on website';
-
-  @override
-  String get club_createAdvancedTitle => 'Create Advanced Tournament';
-
-  @override
-  String get club_advancedWebDialog =>
-      'To manage advanced tournaments (complex group stages, entry fees, custom rules...), please visit sporto.asia on a computer.';
-
-  @override
-  String get club_copyWebLink => 'Go to Create Page';
 
   @override
   String get club_membersLabel => 'Member';
@@ -4172,29 +4139,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Create and manage the club\'s tournaments.';
 
   @override
-  String get club_chooseTournamentTypeDescription =>
-      'Choose the format that fits your club tournament.';
-
-  @override
   String get club_liteCreatedOnApp => 'CREATE IN APP';
 
   @override
   String get club_liteTournamentDescription =>
       'Create on your phone in 30 seconds, automatically build groups, and track scores.';
-
-  @override
-  String get club_standardTournamentTitle => 'Standard tournament';
-
-  @override
-  String get club_standardTournamentTitleAdvanced =>
-      'Standard tournament (Advanced)';
-
-  @override
-  String get club_standardCreatedOnWeb => 'CREATE ON WEB';
-
-  @override
-  String get club_standardTournamentDescription =>
-      'A large-scale tournament with full bracket, finance, and referee features.';
 
   @override
   String get club_noManagedTournaments =>
@@ -5050,49 +4999,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubTournamentsLoadError => 'Could not load tournaments';
 
   @override
-  String get clubTournamentsChooseType => 'Choose tournament type';
-
-  @override
-  String get clubTournamentsChooseTypeHint =>
-      'Choose the creation flow that fits your club';
-
-  @override
   String get clubTournamentsLiteTitle => 'Quick Tournament (Lite)';
 
   @override
   String get clubTournamentsLiteDescription =>
       'Create in 30 seconds. Generate a QR code and invite link to share directly with members.';
-
-  @override
-  String get clubTournamentsWebTitle => 'Create quickly on Web';
-
-  @override
-  String get clubTournamentsWebDescription =>
-      'A fuller quick form than Lite; the tournament remains under the club and opens advanced management on the web.';
-
-  @override
-  String get clubTournamentsAdvancedTitle =>
-      'Create advanced tournament on Web';
-
-  @override
-  String get clubTournamentsAdvancedBadge => 'Create on Web';
-
-  @override
-  String get clubTournamentsAdvancedDescription =>
-      'Advanced tournaments offer deeper configuration (group stage, knockout, scheduling, fees and prizes).\\n\\nPlease visit sporto.asia on a computer to create an advanced tournament for the club!';
-
-  @override
-  String get clubTournamentsAdvancedCardDescription =>
-      'Created only on sporto.asia. Full configuration: group stage, knockout, scheduling and prizes.';
-
-  @override
-  String get clubTournamentsClose => 'Close';
-
-  @override
-  String get clubTournamentsCopyWebLink => 'Copy Web link';
-
-  @override
-  String get clubTournamentsLinkCopied => 'Tournament creation link copied';
 
   @override
   String get myReportsTitle => 'My Reports';
@@ -7821,7 +7732,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickCreateDescription =>
-      'Create quickly in the app, then add advanced settings in the web management page.';
+      'Create a tournament in the app and manage it from your organizer dashboard.';
+
+  @override
+  String get quickCreateOptionsTitle =>
+      'Additional competition settings (format, ELO)';
+
+  @override
+  String get quickCreateOptionsCollapse => 'Hide settings';
+
+  @override
+  String get quickCreateOptionsExpand => 'Show settings';
 
   @override
   String get quickCreateNameLabel => 'Tournament name *';
@@ -12339,7 +12260,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get organizer_reqDesc =>
-      'Creating an advanced tournament (divisions, fees, sponsors) requires an approved Organizer account. You can apply to become an Organizer or use Club Super Lite.';
+      'Creating public tournaments and using organizer tools requires an approved Organizer account. You can apply for Organizer status or create a club tournament with Club Super Lite.';
 
   @override
   String get organizer_applyNow => 'Apply for Organizer';
@@ -13089,6 +13010,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementEntryFeesAllowed => 'Entry fees allowed';
+
+  @override
+  String get tournamentCreateEntryFeeToggle => 'Charge an entry fee';
+
+  @override
+  String get tournamentCreateEntryFeePolicyUnavailable =>
+      'Entry fee settings are unavailable. This tournament will be free.';
+
+  @override
+  String get tournamentCreateRanked => 'ELO ranked';
+
+  @override
+  String get tournamentCreateUnranked => 'Casual';
+
+  @override
+  String get tournamentCreateRankedDescription =>
+      'Results count toward rankings';
+
+  @override
+  String get tournamentCreateUnrankedDescription =>
+      'Friendly tournament; results are not ranked';
+
+  @override
+  String get tournamentCreateMaxCombinedElo => 'Maximum combined ELO';
+
+  @override
+  String get tournamentCreateMaxTeammateGap => 'Maximum teammate ELO gap';
+
+  @override
+  String get tournamentCreateTeamSize => 'Players per team';
+
+  @override
+  String get tournamentCreateMaxReserve => 'Maximum reserve players';
+
+  @override
+  String get tournamentCreateFootballHalves => 'Number of halves';
+
+  @override
+  String get tournamentCreateFootballHalfDuration => 'Minutes per half';
+
+  @override
+  String get tournamentCreateFootballAllowDraw => 'Allow a draw';
+
+  @override
+  String get tournamentCreateTwoLegged => 'Play two legs';
+
+  @override
+  String get tournamentCreateAwayGoalsRule => 'Use the away-goals rule';
+
+  @override
+  String get tournamentCreatePenaltyShootout => 'Allow a penalty shootout';
+
+  @override
+  String get tournamentCreateIntegerNonNegative =>
+      'Enter a whole number of zero or more.';
+
+  @override
+  String get tournamentCreateFootballOptions => 'Football settings';
+
+  @override
+  String get tournamentCreateClubFeeDisabled =>
+      'Entry fees are disabled for club tournaments. Club tournaments are free.';
 
   @override
   String get tournamentManagementEntryFeeDisabled =>

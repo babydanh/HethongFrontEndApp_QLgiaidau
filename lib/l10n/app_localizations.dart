@@ -7322,30 +7322,6 @@ abstract class AppLocalizations {
   /// **'Nhanh (Lite)'**
   String get club_quickTournament;
 
-  /// No description provided for @club_advanced.
-  ///
-  /// In vi, this message translates to:
-  /// **'Nâng cao'**
-  String get club_advanced;
-
-  /// No description provided for @club_selectTournamentType.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chọn loại giải đấu'**
-  String get club_selectTournamentType;
-
-  /// No description provided for @publicClubLiteCreateTitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tạo giải CLB Lite'**
-  String get publicClubLiteCreateTitle;
-
-  /// No description provided for @club_selectTournamentDesc.
-  ///
-  /// In vi, this message translates to:
-  /// **'Vui lòng chọn hình thức giải đấu muốn tạo'**
-  String get club_selectTournamentDesc;
-
   /// No description provided for @club_liteTournament.
   ///
   /// In vi, this message translates to:
@@ -7363,42 +7339,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tạo và quản lý sơ đồ thi đấu ngay trên app điện thoại'**
   String get club_liteDesc;
-
-  /// No description provided for @club_advancedTournament.
-  ///
-  /// In vi, this message translates to:
-  /// **'Giải Nâng Cao (Full)'**
-  String get club_advancedTournament;
-
-  /// No description provided for @club_createOnWeb.
-  ///
-  /// In vi, this message translates to:
-  /// **'TẠO TRÊN WEB'**
-  String get club_createOnWeb;
-
-  /// No description provided for @club_advancedDesc.
-  ///
-  /// In vi, this message translates to:
-  /// **'Quản lý đầy đủ tính năng, lệ phí, phân quyền trên website'**
-  String get club_advancedDesc;
-
-  /// No description provided for @club_createAdvancedTitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tạo Giải Nâng Cao'**
-  String get club_createAdvancedTitle;
-
-  /// No description provided for @club_advancedWebDialog.
-  ///
-  /// In vi, this message translates to:
-  /// **'Để quản lý giải đấu nâng cao (phân chia bảng đấu phức tạp, thu lệ phí, tùy chỉnh luật...), vui lòng truy cập website sporto.asia trên máy tính.'**
-  String get club_advancedWebDialog;
-
-  /// No description provided for @club_copyWebLink.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đến trang tạo'**
-  String get club_copyWebLink;
 
   /// No description provided for @club_membersLabel.
   ///
@@ -7808,12 +7748,6 @@ abstract class AppLocalizations {
   /// **'Tạo mới và điều hành các giải đấu của Câu lạc bộ.'**
   String get club_tournamentManagementDescription;
 
-  /// No description provided for @club_chooseTournamentTypeDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chọn hình thức tổ chức phù hợp với quy mô giải của CLB'**
-  String get club_chooseTournamentTypeDescription;
-
   /// No description provided for @club_liteCreatedOnApp.
   ///
   /// In vi, this message translates to:
@@ -7825,30 +7759,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tạo trực tiếp trên điện thoại trong 30 giây, tự động chia bảng và theo dõi tỷ số.'**
   String get club_liteTournamentDescription;
-
-  /// No description provided for @club_standardTournamentTitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'Giải Tiêu chuẩn'**
-  String get club_standardTournamentTitle;
-
-  /// No description provided for @club_standardTournamentTitleAdvanced.
-  ///
-  /// In vi, this message translates to:
-  /// **'Giải Tiêu chuẩn (Nâng cao)'**
-  String get club_standardTournamentTitleAdvanced;
-
-  /// No description provided for @club_standardCreatedOnWeb.
-  ///
-  /// In vi, this message translates to:
-  /// **'TẠO TRÊN WEB'**
-  String get club_standardCreatedOnWeb;
-
-  /// No description provided for @club_standardTournamentDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Giải đấu quy mô lớn với đầy đủ tính năng sơ đồ thi đấu, tài chính & trọng tài.'**
-  String get club_standardTournamentDescription;
 
   /// No description provided for @club_noManagedTournaments.
   ///
@@ -9458,18 +9368,6 @@ abstract class AppLocalizations {
   /// **'Không thể tải danh sách giải đấu'**
   String get clubTournamentsLoadError;
 
-  /// No description provided for @clubTournamentsChooseType.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chọn loại giải đấu'**
-  String get clubTournamentsChooseType;
-
-  /// No description provided for @clubTournamentsChooseTypeHint.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chọn hình thức tạo giải phù hợp cho câu lạc bộ của bạn'**
-  String get clubTournamentsChooseTypeHint;
-
   /// No description provided for @clubTournamentsLiteTitle.
   ///
   /// In vi, this message translates to:
@@ -9481,60 +9379,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tạo nhanh trong 30 giây. Sinh mã QR và link mời để chia sẻ trực tiếp cho các thành viên.'**
   String get clubTournamentsLiteDescription;
-
-  /// No description provided for @clubTournamentsWebTitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tạo nhanh trên Web'**
-  String get clubTournamentsWebTitle;
-
-  /// No description provided for @clubTournamentsWebDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Form nhanh đầy đủ hơn Lite; giải vẫn thuộc CLB và mở quản lý nâng cao trên web.'**
-  String get clubTournamentsWebDescription;
-
-  /// No description provided for @clubTournamentsAdvancedTitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tạo giải nâng cao trên Web'**
-  String get clubTournamentsAdvancedTitle;
-
-  /// No description provided for @clubTournamentsAdvancedBadge.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tạo trên Web'**
-  String get clubTournamentsAdvancedBadge;
-
-  /// No description provided for @clubTournamentsAdvancedDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Giải đấu nâng cao có nhiều cấu hình chuyên sâu (Vòng bảng, Knockout, Lịch thi đấu, Lệ phí và Giải thưởng).\\n\\nVui lòng truy cập trang web sporto.asia trên máy tính để tạo giải nâng cao cho câu lạc bộ!'**
-  String get clubTournamentsAdvancedDescription;
-
-  /// No description provided for @clubTournamentsAdvancedCardDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chỉ khởi tạo trên Web sporto.asia. Đầy đủ cấu hình: Thể thức Vòng bảng, Knockout, Lịch thi đấu và Giải thưởng.'**
-  String get clubTournamentsAdvancedCardDescription;
-
-  /// No description provided for @clubTournamentsClose.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đóng'**
-  String get clubTournamentsClose;
-
-  /// No description provided for @clubTournamentsCopyWebLink.
-  ///
-  /// In vi, this message translates to:
-  /// **'Sao chép link Web'**
-  String get clubTournamentsCopyWebLink;
-
-  /// No description provided for @clubTournamentsLinkCopied.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đã sao chép link tạo giải'**
-  String get clubTournamentsLinkCopied;
 
   /// No description provided for @myReportsTitle.
   ///
@@ -14513,8 +14357,26 @@ abstract class AppLocalizations {
   /// No description provided for @quickCreateDescription.
   ///
   /// In vi, this message translates to:
-  /// **'Tạo nhanh trên app, bổ sung cấu hình nâng cao trong trang quản lý web.'**
+  /// **'Tạo giải đấu ngay trong ứng dụng, sau đó quản lý giải tại khu vực Ban tổ chức.'**
   String get quickCreateDescription;
+
+  /// No description provided for @quickCreateOptionsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tùy chọn bổ sung (thể thức, ELO)'**
+  String get quickCreateOptionsTitle;
+
+  /// No description provided for @quickCreateOptionsCollapse.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu gọn'**
+  String get quickCreateOptionsCollapse;
+
+  /// No description provided for @quickCreateOptionsExpand.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở rộng'**
+  String get quickCreateOptionsExpand;
 
   /// No description provided for @quickCreateNameLabel.
   ///
@@ -22405,7 +22267,7 @@ abstract class AppLocalizations {
   /// No description provided for @organizer_reqDesc.
   ///
   /// In vi, this message translates to:
-  /// **'Tạo giải đấu nâng cao (nhiều phân hạng, lệ phí, nhà tài trợ...) yêu cầu tài khoản được cấp quyền Ban Tổ Chức (Organizer). Bạn có thể đăng ký làm Ban Tổ Chức hoặc sử dụng Giải CLB Siêu Lite.'**
+  /// **'Tạo giải công khai và sử dụng các tính năng tổ chức giải cần tài khoản Ban Tổ Chức được duyệt. Bạn có thể đăng ký hoặc tạo giải trong phạm vi câu lạc bộ với Giải CLB Siêu Lite.'**
   String get organizer_reqDesc;
 
   /// No description provided for @organizer_applyNow.
@@ -23781,6 +23643,120 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Cho phép thu lệ phí'**
   String get tournamentManagementEntryFeesAllowed;
+
+  /// No description provided for @tournamentCreateEntryFeeToggle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu lệ phí tham gia'**
+  String get tournamentCreateEntryFeeToggle;
+
+  /// No description provided for @tournamentCreateEntryFeePolicyUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được cấu hình lệ phí. Giải đấu sẽ miễn phí.'**
+  String get tournamentCreateEntryFeePolicyUnavailable;
+
+  /// No description provided for @tournamentCreateRanked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp hạng ELO'**
+  String get tournamentCreateRanked;
+
+  /// No description provided for @tournamentCreateUnranked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải phong trào'**
+  String get tournamentCreateUnranked;
+
+  /// No description provided for @tournamentCreateRankedDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết quả được tính vào bảng xếp hạng'**
+  String get tournamentCreateRankedDescription;
+
+  /// No description provided for @tournamentCreateUnrankedDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải giao hữu, không tính xếp hạng'**
+  String get tournamentCreateUnrankedDescription;
+
+  /// No description provided for @tournamentCreateMaxCombinedElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO tổng tối đa'**
+  String get tournamentCreateMaxCombinedElo;
+
+  /// No description provided for @tournamentCreateMaxTeammateGap.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chênh lệch ELO đồng đội tối đa'**
+  String get tournamentCreateMaxTeammateGap;
+
+  /// No description provided for @tournamentCreateTeamSize.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số người mỗi đội'**
+  String get tournamentCreateTeamSize;
+
+  /// No description provided for @tournamentCreateMaxReserve.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số dự bị tối đa'**
+  String get tournamentCreateMaxReserve;
+
+  /// No description provided for @tournamentCreateFootballHalves.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số hiệp'**
+  String get tournamentCreateFootballHalves;
+
+  /// No description provided for @tournamentCreateFootballHalfDuration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số phút mỗi hiệp'**
+  String get tournamentCreateFootballHalfDuration;
+
+  /// No description provided for @tournamentCreateFootballAllowDraw.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép kết quả hòa'**
+  String get tournamentCreateFootballAllowDraw;
+
+  /// No description provided for @tournamentCreateTwoLegged.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thi đấu hai lượt'**
+  String get tournamentCreateTwoLegged;
+
+  /// No description provided for @tournamentCreateAwayGoalsRule.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng luật bàn thắng sân khách'**
+  String get tournamentCreateAwayGoalsRule;
+
+  /// No description provided for @tournamentCreatePenaltyShootout.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép sút luân lưu'**
+  String get tournamentCreatePenaltyShootout;
+
+  /// No description provided for @tournamentCreateIntegerNonNegative.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập số nguyên lớn hơn hoặc bằng 0.'**
+  String get tournamentCreateIntegerNonNegative;
+
+  /// No description provided for @tournamentCreateFootballOptions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu hình bóng đá'**
+  String get tournamentCreateFootballOptions;
+
+  /// No description provided for @tournamentCreateClubFeeDisabled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu câu lạc bộ không thu lệ phí và luôn miễn phí.'**
+  String get tournamentCreateClubFeeDisabled;
 
   /// No description provided for @tournamentManagementEntryFeeDisabled.
   ///

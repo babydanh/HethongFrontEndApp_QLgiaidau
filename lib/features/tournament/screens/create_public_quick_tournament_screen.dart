@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
@@ -11,7 +12,7 @@ import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/regions_provider.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_type_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_create_entry.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
@@ -89,6 +90,9 @@ class _CreatePublicQuickTournamentScreenState
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
   final _maxTeamsController = TextEditingController(text: '16');
+  final _entryFeeController = TextEditingController(text: '0');
+  final _maxCombinedEloController = TextEditingController();
+  final _maxTeammateGapController = TextEditingController();
   final _venueNameController = TextEditingController();
   final _locationAddressController = TextEditingController();
 
@@ -101,6 +105,7 @@ class _CreatePublicQuickTournamentScreenState
     ),
   ];
   bool _isPublic = true;
+  bool _isRanked = false;
   String _bracket = AppConstants.bracketSingleElimination;
   String _registrationMode = 'APPROVAL';
   String _doublesPairingMode = 'ORGANIZER';
@@ -121,6 +126,12 @@ class _CreatePublicQuickTournamentScreenState
   int _footballHalvesCount = 2;
   int _footballHalfDuration = 45;
   bool _footballAllowDraw = true;
+  bool _twoLegged = false;
+  bool _awayGoalsRule = false;
+  bool _penaltyShootout = false;
+  bool _feesConfigLoaded = false;
+  bool _allowEntryFees = false;
+  bool _entryFeeEnabled = false;
   bool _endDateManuallySet = false;
   bool _registrationEndManuallySet = false;
   bool _isSubmitting = false;
@@ -163,9 +174,31 @@ class _CreatePublicQuickTournamentScreenState
     );
     _regStartTime = TimeOfDay.fromDateTime(nextRoundedMinute);
     _syncDefaultRegistrationEnd(defaultStart);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadFeePolicy());
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _verifyOrganizerPermission(),
     );
+  }
+
+  Future<void> _loadFeePolicy() async {
+    try {
+      final values = await ref
+          .read(tournamentManagementRepositoryProvider)
+          .getFeesConfig();
+      if (!mounted) return;
+      setState(() {
+        _feesConfigLoaded = true;
+        _allowEntryFees = values['allowEntryFees'] == true;
+        if (!_allowEntryFees) _entryFeeEnabled = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _feesConfigLoaded = true;
+        _allowEntryFees = false;
+        _entryFeeEnabled = false;
+      });
+    }
   }
 
   Future<void> _verifyOrganizerPermission() async {
@@ -212,6 +245,9 @@ class _CreatePublicQuickTournamentScreenState
     _maxTeamsController.dispose();
     _venueNameController.dispose();
     _locationAddressController.dispose();
+    _entryFeeController.dispose();
+    _maxCombinedEloController.dispose();
+    _maxTeammateGapController.dispose();
     super.dispose();
   }
 
@@ -491,13 +527,29 @@ class _CreatePublicQuickTournamentScreenState
         if (_sport != AppConstants.sportFootball &&
             _contentDrafts.any((draft) => draft.formatKey.contains('DOUBLES')))
           'doublesPairingMode': _doublesPairingMode,
-        'isRanked': false,
+        'isRanked': _isRanked,
+        if (_contentDrafts.any(
+          (draft) => draft.formatKey.contains('DOUBLES'),
+        )) ...{
+          if (_maxCombinedEloController.text.trim().isNotEmpty)
+            'maxCombinedElo': int.parse(_maxCombinedEloController.text.trim()),
+          if (_maxTeammateGapController.text.trim().isNotEmpty)
+            'maxTeammateGap': int.parse(_maxTeammateGapController.text.trim()),
+        },
+        if (_entryFeeEnabled)
+          'entryFee': int.parse(_entryFeeController.text.trim()),
         if (_mapSportSlug() == 'football') ...{
           'teamSize': _teamSize,
           'maxReserve': _maxReserve,
           'footballHalvesCount': _footballHalvesCount,
+          'teamSizeOptions': [5, 7, 11],
+          'minTeamSize': _teamSize,
+          'maxTeamSize': _teamSize + _maxReserve,
           'footballHalfDuration': _footballHalfDuration,
           'footballAllowDraw': _footballAllowDraw,
+          'twoLegged': _twoLegged,
+          'awayGoalsRule': _awayGoalsRule,
+          'penaltyShootout': _penaltyShootout,
         },
         if (_descController.text.trim().isNotEmpty)
           'description': _descController.text.trim(),
@@ -660,27 +712,69 @@ class _CreatePublicQuickTournamentScreenState
             _sectionLabel('Nội dung thi đấu & Giới tính', colors),
             const SizedBox(height: 8),
             _buildFormatPills(colors),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.border),
+              ),
+              child: SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  _isRanked
+                      ? l10n.tournamentCreateRanked
+                      : l10n.tournamentCreateUnranked,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                subtitle: Text(
+                  _isRanked
+                      ? l10n.tournamentCreateRankedDescription
+                      : l10n.tournamentCreateUnrankedDescription,
+                  style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                ),
+                value: _isRanked,
+                onChanged: (value) => setState(() => _isRanked = value),
+              ),
+            ),
             if (_sport != AppConstants.sportFootball &&
-                _contentDrafts.any((draft) => draft.formatKey.contains('DOUBLES'))) ...[
+                _contentDrafts.any(
+                  (draft) => draft.formatKey.contains('DOUBLES'),
+                )) ...[
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.primary.withValues(alpha: 0.07),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.primary.withValues(alpha: 0.18)),
+                  border: Border.all(
+                    color: AppTheme.primary.withValues(alpha: 0.18),
+                  ),
                 ),
                 child: SwitchListTile.adaptive(
                   contentPadding: EdgeInsets.zero,
                   title: Text(
                     l10n.quickCreateOrganizerPairingTitle,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   subtitle: Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
                       '${l10n.quickCreateOrganizerPairingDescription}\n${l10n.quickCreateOrganizerPairingEnabled}: ${_doublesPairingMode == 'ORGANIZER' ? l10n.quickCreateOrganizerPairingOn : l10n.quickCreateOrganizerPairingOff}',
-                      style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colors.textSecondary,
+                      ),
                     ),
                   ),
                   value: _doublesPairingMode == 'ORGANIZER',
@@ -689,6 +783,12 @@ class _CreatePublicQuickTournamentScreenState
                   }),
                 ),
               ),
+            ],
+            if (_contentDrafts.any(
+              (draft) => draft.formatKey.contains('DOUBLES'),
+            )) ...[
+              const SizedBox(height: 12),
+              _buildEligibilityOptions(colors),
             ],
             if (_sport == AppConstants.sportFootball) ...[
               const SizedBox(height: 12),
@@ -865,6 +965,8 @@ class _CreatePublicQuickTournamentScreenState
                 if (val != null) setState(() => _registrationMode = val);
               },
             ),
+            _buildPublicFeeOptions(colors),
+            const SizedBox(height: 12),
             const SizedBox(height: 14),
 
             const SizedBox(height: 8),
@@ -1205,7 +1307,93 @@ class _CreatePublicQuickTournamentScreenState
     );
   }
 
+  Widget _buildEligibilityOptions(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
+    String? validateOptionalNonNegativeInt(String? value) {
+      if (value == null || value.trim().isEmpty) return null;
+      final parsed = int.tryParse(value.trim());
+      if (parsed == null || parsed < 0) {
+        return l10n.tournamentCreateIntegerNonNegative;
+      }
+      return null;
+    }
+
+    return Column(
+      children: [
+        TextFormField(
+          controller: _maxCombinedEloController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: l10n.tournamentCreateMaxCombinedElo,
+            filled: true,
+            fillColor: colors.bgSurface,
+          ),
+          validator: validateOptionalNonNegativeInt,
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _maxTeammateGapController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: l10n.tournamentCreateMaxTeammateGap,
+            filled: true,
+            fillColor: colors.bgSurface,
+          ),
+          validator: validateOptionalNonNegativeInt,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPublicFeeOptions(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
+    if (!_feesConfigLoaded) return const SizedBox.shrink();
+    if (!_allowEntryFees) {
+      return Text(
+        l10n.tournamentCreateEntryFeePolicyUnavailable,
+        style: TextStyle(fontSize: 12, color: colors.textMuted),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: colors.bgSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        children: [
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.tournamentCreateEntryFeeToggle),
+            value: _entryFeeEnabled,
+            onChanged: (value) => setState(() => _entryFeeEnabled = value),
+          ),
+          if (_entryFeeEnabled)
+            TextFormField(
+              controller: _entryFeeController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: l10n.tournamentManagementEntryFee,
+                prefixText: '₫ ',
+              ),
+              validator: (value) {
+                if (!_entryFeeEnabled) return null;
+                final amount = int.tryParse(value?.trim() ?? '');
+                if (amount == null || amount < 0) {
+                  return l10n.tournamentCreateIntegerNonNegative;
+                }
+                return null;
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFootballOptions(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -1217,7 +1405,7 @@ class _CreatePublicQuickTournamentScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Cấu hình bóng đá',
+            l10n.tournamentCreateFootballOptions,
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
@@ -1231,7 +1419,9 @@ class _CreatePublicQuickTournamentScreenState
                 child: DropdownButtonFormField<int>(
                   initialValue: _teamSize,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Số người/đội'),
+                  decoration: InputDecoration(
+                    labelText: l10n.tournamentCreateTeamSize,
+                  ),
                   items: const [5, 7, 11]
                       .map(
                         (value) => DropdownMenuItem<int>(
@@ -1250,7 +1440,9 @@ class _CreatePublicQuickTournamentScreenState
                 child: TextFormField(
                   initialValue: _maxReserve.toString(),
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Dự bị tối đa'),
+                  decoration: InputDecoration(
+                    labelText: l10n.tournamentCreateMaxReserve,
+                  ),
                   onChanged: (value) {
                     final parsed = int.tryParse(value);
                     if (parsed != null && parsed >= 0 && parsed <= 20) {
@@ -1268,7 +1460,9 @@ class _CreatePublicQuickTournamentScreenState
                 child: DropdownButtonFormField<int>(
                   initialValue: _footballHalvesCount,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Số hiệp'),
+                  decoration: InputDecoration(
+                    labelText: l10n.tournamentCreateFootballHalves,
+                  ),
                   items: [1, 2, 3, 4]
                       .map(
                         (value) => DropdownMenuItem<int>(
@@ -1289,7 +1483,9 @@ class _CreatePublicQuickTournamentScreenState
                 child: DropdownButtonFormField<int>(
                   initialValue: _footballHalfDuration,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Phút/hiệp'),
+                  decoration: InputDecoration(
+                    labelText: l10n.tournamentCreateFootballHalfDuration,
+                  ),
                   items: [15, 30, 45, 60]
                       .map(
                         (value) => DropdownMenuItem<int>(
@@ -1317,7 +1513,7 @@ class _CreatePublicQuickTournamentScreenState
                 children: [
                   Expanded(
                     child: Text(
-                      'Cho phép kết quả hòa',
+                      l10n.tournamentCreateFootballAllowDraw,
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w500,
@@ -1334,6 +1530,24 @@ class _CreatePublicQuickTournamentScreenState
                 ],
               ),
             ),
+          ),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.tournamentCreateTwoLegged),
+            value: _twoLegged,
+            onChanged: (value) => setState(() => _twoLegged = value),
+          ),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.tournamentCreateAwayGoalsRule),
+            value: _awayGoalsRule,
+            onChanged: (value) => setState(() => _awayGoalsRule = value),
+          ),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.footballScore_penaltyShootout),
+            value: _penaltyShootout,
+            onChanged: (value) => setState(() => _penaltyShootout = value),
           ),
         ],
       ),
@@ -1738,17 +1952,19 @@ class _CreatePublicQuickTournamentScreenState
                               color: AppTheme.primary,
                             ),
                             const SizedBox(width: 8),
-                            const Expanded(
+                            Expanded(
                               child: Text(
-                                'Tùy chọn nâng cao (thể thức, ELO)',
-                                style: TextStyle(
+                                l10n.quickCreateOptionsTitle,
+                                style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
                             Text(
-                              advanced ? 'Thu gọn' : 'Mở rộng',
+                              advanced
+                                  ? l10n.quickCreateOptionsCollapse
+                                  : l10n.quickCreateOptionsExpand,
                               style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
