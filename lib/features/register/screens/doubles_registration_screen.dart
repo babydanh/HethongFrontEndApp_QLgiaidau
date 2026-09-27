@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/core/utils/tournament_division_id.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/shared/widgets/withdraw_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
@@ -263,15 +264,21 @@ class _DoublesRegistrationFlowState
     _checkExistingRegistration();
   }
 
+  Map<String, String> _myRegistrationQueryParameters() {
+    final queryParameters = <String, String>{
+      '_t': DateTime.now().millisecondsSinceEpoch.toString(),
+    };
+    final divisionId = persistedTournamentDivisionId(widget.division.id);
+    if (divisionId != null) queryParameters['divisionId'] = divisionId;
+    return queryParameters;
+  }
+
   Future<void> _checkExistingRegistration() async {
     try {
       final dio = ref.read(dioClientProvider);
       final regResp = await dio.dio.get(
         '/tournaments/${widget.tournamentId}/my-registration',
-        queryParameters: {
-          'divisionId': widget.division.id,
-          '_t': DateTime.now().millisecondsSinceEpoch.toString(),
-        },
+        queryParameters: _myRegistrationQueryParameters(),
       );
       final body = regResp.data;
       final regData = body is Map && body['data'] is Map
@@ -465,10 +472,7 @@ class _DoublesRegistrationFlowState
           .dio
           .get(
             '/tournaments/${widget.tournamentId}/my-registration',
-            queryParameters: {
-              'divisionId': widget.division.id,
-              '_t': DateTime.now().millisecondsSinceEpoch.toString(),
-            },
+            queryParameters: _myRegistrationQueryParameters(),
           );
       final body = response.data;
       final raw = body is Map && body['data'] is Map
@@ -586,10 +590,7 @@ class _DoublesRegistrationFlowState
         final dio = ref.read(dioClientProvider);
         final regResp = await dio.dio.get(
           '/tournaments/${widget.tournamentId}/my-registration',
-          queryParameters: {
-            'divisionId': widget.division.id,
-            '_t': DateTime.now().millisecondsSinceEpoch.toString(),
-          },
+          queryParameters: _myRegistrationQueryParameters(),
         );
         if (mounted && regResp.data['data'] is Map) {
           final regData = regResp.data['data'] as Map;
@@ -687,10 +688,7 @@ class _DoublesRegistrationFlowState
       final dio = ref.read(dioClientProvider);
       final resp = await dio.dio.get(
         '/tournaments/${widget.tournamentId}/my-registration',
-        queryParameters: {
-          'divisionId': widget.division.id,
-          '_t': DateTime.now().millisecondsSinceEpoch.toString(),
-        },
+        queryParameters: _myRegistrationQueryParameters(),
       );
       if (!mounted || resp.data['data'] is! Map) return;
       final regData = resp.data['data'] as Map;
