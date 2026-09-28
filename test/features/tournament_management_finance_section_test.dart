@@ -85,6 +85,35 @@ void main() {
     );
     expect(repository.payoutHistoryRequests, 1);
   });
+  testWidgets(
+    'creator with organizer membership among multiple roles can request payout',
+    (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+      final repository = _FinanceRepository();
+      await tester.pumpWidget(
+        _app(
+          tournament: _tournament(status: 'COMPLETED', creatorId: 'user-1'),
+          profile: UserProfile.fromJson({
+            'id': 'user-1',
+            'role': 'ADMIN',
+            'roles': ['ADMIN', 'ORGANIZER'],
+          }),
+          repository: repository,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(l10n.tournamentManagementBankAccountNumber),
+        findsOneWidget,
+      );
+      await tester.ensureVisible(
+        find.text(l10n.tournamentManagementBankAccountNumber),
+      );
+      await tester.pumpAndSettle();
+      expect(repository.payoutHistoryRequests, 1);
+    },
+  );
 
   testWidgets('non-creator does not load or see payout controls', (
     tester,

@@ -23944,12 +23944,6 @@ abstract class AppLocalizations {
   /// **'Mở không gian trận đấu trực tiếp được hỗ trợ.'**
   String get tournamentManagementLivestreamDescription;
 
-  /// No description provided for @tournamentManagementLivestreamRouteDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'API di động đã được duyệt chưa cung cấp cấu hình phát trực tiếp. Mở không gian vận hành hiện có để dùng các điều khiển trận đấu được hỗ trợ.'**
-  String get tournamentManagementLivestreamRouteDescription;
-
   /// No description provided for @tournamentManagementLoadError.
   ///
   /// In vi, this message translates to:
@@ -25437,6 +25431,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Nhập tên thiết bị trước.'**
   String get tournamentManagementLivestreamDeviceNameRequired;
+
+  /// No description provided for @tournamentManagementLivestreamDeviceNameLengthInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên thiết bị phải có từ 2 đến 255 ký tự.'**
+  String get tournamentManagementLivestreamDeviceNameLengthInvalid;
 }
 
 class _AppLocalizationsDelegate

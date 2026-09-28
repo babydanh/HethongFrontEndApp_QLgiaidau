@@ -895,26 +895,20 @@ class _ExistingOperationsDestination extends StatelessWidget {
   const _ExistingOperationsDestination({
     required this.route,
     required this.icon,
-    this.isLivestream = false,
   });
   final String route;
   final IconData icon;
-  final bool isLivestream;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    final description = isLivestream
-        ? l10n.tournamentManagementLivestreamRouteDescription
-        : l10n.tournamentManagementOpsRouteDescription;
+    final description = l10n.tournamentManagementOpsRouteDescription;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         TournamentManagementSectionCard(
-          title: isLivestream
-              ? l10n.tournamentManagementLivestream
-              : l10n.tournamentManagementOpenOperations,
+          title: l10n.tournamentManagementOpenOperations,
           subtitle: description,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
