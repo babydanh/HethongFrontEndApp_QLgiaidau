@@ -39,6 +39,7 @@ import 'package:app_quanly_giaidau/features/payment/screens/payment_result_scree
 import 'package:app_quanly_giaidau/features/profile/screens/profile_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/user_profile_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/settings_screen.dart';
+import 'package:app_quanly_giaidau/features/profile/screens/profile_settings_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/change_password_screen.dart';
 import 'package:app_quanly_giaidau/features/reports/screens/my_reports_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
@@ -78,7 +79,7 @@ final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
-    initialLocation: '/home',
+    initialLocation: '/',
     redirect: (context, state) {
       final auth = ref.read(authProvider);
       final isAuth = auth.status == AuthStatus.authenticated;
@@ -199,10 +200,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/home',
         builder: (context, state) {
           final tabStr = state.uri.queryParameters['tab'];
+          final subStr = state.uri.queryParameters['sub'];
           final initialTab = int.tryParse(tabStr ?? '') ?? 0;
+          final initialSubTab = int.tryParse(subStr ?? '') ?? 0;
           return HomeScreen(
             initialTab: initialTab,
-            returnToClub: state.uri.queryParameters['returnToClub'] == '1',
+            initialSubTab: initialSubTab,
           );
         },
       ),
@@ -370,24 +373,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ─── Create Tournament Standalone (Must be placed before /tournaments/:id) ───
       GoRoute(
         path: '/tournaments/create',
-        builder: (context, state) => const CreatePublicQuickTournamentScreen(),
-      ),
-      GoRoute(
-        path: '/tournaments/create-advanced',
-        builder: (context, state) {
-          final communityId = state.uri.queryParameters['communityId'];
-          if (communityId != null && communityId.isNotEmpty) {
-            return CreateClubTournamentScreen(clubId: communityId);
-          }
-          return const CreatePublicQuickTournamentScreen();
-        },
-      ),
-      GoRoute(
-        path: '/tournament/create',
-        builder: (context, state) => const CreatePublicQuickTournamentScreen(),
-      ),
-      GoRoute(
-        path: '/tournament-create',
         builder: (context, state) => const CreatePublicQuickTournamentScreen(),
       ),
 
@@ -647,12 +632,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ─── Club Detail (Both /club/:id and /communities/:id and /clubs/:id) ───
       GoRoute(
         path: '/club/:id',
-        pageBuilder: (context, state) {
+        builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _fbClubDetailPage(
-            key: state.pageKey,
-            child: ClubDetailScreen(clubId: id),
-          );
+          return ClubDetailScreen(clubId: id);
         },
         routes: [
           GoRoute(
@@ -732,12 +714,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/communities/:id',
-        pageBuilder: (context, state) {
+        builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _fbClubDetailPage(
-            key: state.pageKey,
-            child: ClubDetailScreen(clubId: id),
-          );
+          return ClubDetailScreen(clubId: id);
         },
         routes: [
           GoRoute(
@@ -785,12 +764,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/clubs/:id',
-        pageBuilder: (context, state) {
+        builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _fbClubDetailPage(
-            key: state.pageKey,
-            child: ClubDetailScreen(clubId: id),
-          );
+          return ClubDetailScreen(clubId: id);
         },
       ),
 
@@ -833,7 +809,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: 'settings',
-            builder: (context, state) => const SettingsScreen(),
+            builder: (context, state) => const ProfileSettingsScreen(),
           ),
           GoRoute(
             path: 'reports',
@@ -1143,54 +1119,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
   );
 });
-
-// ─── FB-like page transitions (mượt kiểu Facebook mobile) ───
-// * Push: trang mới trượt phải → trái.
-// * Pop: ngược lại trái → phải (reverse tự động).
-const _fbPushDuration = Duration(milliseconds: 380);
-const _fbPopDuration = Duration(milliseconds: 380);
-// Curve gần với iOS/Facebook: đi nhanh đầu rồi glide settles mềm cuối.
-const _fbCurve = Cubic(0.32, 0.72, 0, 1);
-
-CustomTransitionPage<void> _fbClubDetailPage({
-  required LocalKey key,
-  required Widget child,
-}) {
-  return CustomTransitionPage<void>(
-    key: key,
-    transitionDuration: _fbPushDuration,
-    reverseTransitionDuration: _fbPopDuration,
-    maintainState: true,
-    fullscreenDialog: false,
-    child: child,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final slide = Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
-          .animate(
-            CurvedAnimation(
-              parent: animation,
-              curve: _fbCurve,
-              reverseCurve: _fbCurve,
-            ),
-          );
-      return SlideTransition(
-        position: slide,
-        child: DecoratedBox(
-          // Bóng đổ cạnh trái tạo chiều sâu, giống Facebook/iOS.
-          decoration: const BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x2E000000),
-                blurRadius: 16,
-                offset: Offset(-6, 0),
-              ),
-            ],
-          ),
-          child: RepaintBoundary(child: child),
-        ),
-      );
-    },
-  );
-}
 
 class _ClubChatRouteWrapper extends ConsumerStatefulWidget {
   final String communityId;

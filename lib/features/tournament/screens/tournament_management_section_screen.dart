@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_brands_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_divisions_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_finance_section.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_livestream_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_people_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_sponsors_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_venues_section.dart';
@@ -180,11 +181,11 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
         route: opsWorkspaceRoute,
         icon: Icons.sports_score_rounded,
       ),
-    TournamentManagementSection.livestream => _ExistingOperationsDestination(
-      route: opsWorkspaceRoute,
-      icon: Icons.videocam_rounded,
-      isLivestream: true,
-    ),
+    TournamentManagementSection.livestream =>
+      TournamentManagementLivestreamSection(
+        tournamentId: tournament.id,
+        communityId: tournament.communityId,
+      ),
     TournamentManagementSection.teams => _ExistingOperationsDestination(
       route: '$actionRouteBase/teams',
       icon: Icons.groups_rounded,
@@ -420,6 +421,7 @@ class _TournamentGeneralSettingsState
       widget.tournament.visibility.toUpperCase() == 'PRIVATE'
       ? 'PRIVATE'
       : 'PUBLIC';
+  late bool _hideFeaturedCardText = widget.tournament.hideFeaturedCardText;
   late DateTime? _startDate = widget.tournament.startDate;
   late DateTime? _endDate = widget.tournament.endDate;
   late DateTime? _registrationStartDate =
@@ -530,6 +532,18 @@ class _TournamentGeneralSettingsState
                     : (value) {
                         if (value != null) setState(() => _visibility = value);
                       },
+              ),
+              SwitchListTile(
+                key: const ValueKey('hide-featured-card-text'),
+                contentPadding: EdgeInsets.zero,
+                value: _hideFeaturedCardText,
+                title: Text(l10n.tournamentManagementHideFeaturedCardText),
+                subtitle: Text(
+                  l10n.tournamentManagementHideFeaturedCardTextDescription,
+                ),
+                onChanged: _isSaving
+                    ? null
+                    : (value) => setState(() => _hideFeaturedCardText = value),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 12),
@@ -765,6 +779,10 @@ class _TournamentGeneralSettingsState
         'name': name,
         'description': _descriptionController.text.trim(),
         'visibility': _visibility,
+        'tournamentConfig': {
+          ...widget.tournament.tournamentConfig,
+          'hideFeaturedCardText': _hideFeaturedCardText,
+        },
       };
       _addDateUpdate(
         payload,

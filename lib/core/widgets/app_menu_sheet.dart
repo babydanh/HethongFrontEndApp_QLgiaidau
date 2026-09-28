@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.dart';
+import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -15,25 +17,26 @@ class AppMenuSheet extends ConsumerStatefulWidget {
   static Future<void> show(BuildContext context) {
     final router = GoRouter.of(context);
     final screenSize = MediaQuery.sizeOf(context);
-    final menuWidth = (screenSize.width * 0.72)
-        .clamp(0.0, screenSize.width - 32)
+    final menuWidth = (screenSize.width * 0.76)
+        .clamp(280.0, 360.0)
         .toDouble();
     final reduceMotion = MediaQuery.of(context).disableAnimations;
     return showGeneralDialog<void>(
       context: context,
       barrierDismissible: true,
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      barrierColor: Colors.black.withValues(alpha: 0.22),
+      barrierColor: Colors.black.withValues(alpha: 0.28),
       transitionDuration: reduceMotion
           ? Duration.zero
-          : const Duration(milliseconds: 280),
+          : const Duration(milliseconds: 320),
       pageBuilder: (dialogContext, _, _) => Align(
-        alignment: Alignment.bottomLeft,
+        // Shift towards center of the 5th nav icon (approx bottom right, 24px from edge)
+        alignment: const Alignment(0.42, 0.88),
         child: SafeArea(
-          minimum: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          minimum: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
           child: SizedBox(
             width: menuWidth,
-            child: AppMenuSheet(onNavigate: router.go),
+            child: AppMenuSheet(onNavigate: router.push),
           ),
         ),
       ),
@@ -41,15 +44,16 @@ class AppMenuSheet extends ConsumerStatefulWidget {
         if (reduceMotion) return child;
         final entrance = CurvedAnimation(
           parent: animation,
-          curve: Curves.easeOutCubic,
+          curve: Curves.easeOutBack,
         );
         return FadeTransition(
-          opacity: entrance,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 0.08),
-              end: Offset.zero,
-            ).animate(entrance),
+          opacity: CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOut,
+          ),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.82, end: 1.0).animate(entrance),
+            alignment: const Alignment(0.6, 1.0),
             child: child,
           ),
         );
@@ -116,6 +120,11 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final actions = isAuthenticated
         ? <_MenuAction>[
+            const _MenuAction(
+              'Social & Kèo đấu',
+              Icons.dynamic_feed_rounded,
+              '/home?tab=3&sub=1',
+            ),
             _MenuAction(
               l10n.menuMessages,
               Icons.chat_bubble_outline_rounded,
@@ -132,17 +141,17 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
               '/profile/elo',
             ),
             _MenuAction(
-              l10n.settingsPaymentHistory,
-              Icons.receipt_long_outlined,
-              '/payments',
-            ),
-            _MenuAction(
               l10n.settingsTitle,
               Icons.tune_rounded,
               '/profile/settings',
             ),
           ]
         : <_MenuAction>[
+            const _MenuAction(
+              'Social & Kèo đấu',
+              Icons.dynamic_feed_rounded,
+              '/home?tab=3&sub=1',
+            ),
             _MenuAction(
               l10n.profileLoginButton,
               Icons.login_rounded,
@@ -182,12 +191,176 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
                   _buildAction(
                     actions[i],
                     i,
+                    totalCount: actions.length,
                     reduceMotion: reduceMotion,
                   ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showQuickCreateMenu(BuildContext context) {
+    final colors = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+
+    showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: Colors.black.withValues(alpha: 0.35),
+      transitionDuration: reduceMotion
+          ? Duration.zero
+          : const Duration(milliseconds: 260),
+      pageBuilder: (dialogContext, _, _) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: 310,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              decoration: BoxDecoration(
+                color: colors.bgCard,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.6 : 0.18),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildQuickCreateItem(
+                    dialogContext,
+                    icon: Icons.sports_tennis_rounded,
+                    iconBg: const Color(0xFF10B981).withValues(alpha: 0.14),
+                    iconColor: const Color(0xFF10B981),
+                    title: 'Tạo kèo giao lưu',
+                    onTap: () async {
+                      Navigator.of(dialogContext).pop();
+                      if (!ref.read(authProvider).isAuthenticated) {
+                        _navigate('/login');
+                        return;
+                      }
+                      Navigator.of(context).pop();
+                      final createdSession =
+                          await showModalBottomSheet<SocialSessionModel>(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) =>
+                            const CreateSocialScreen(clubId: '', clubName: ''),
+                      );
+                      if (createdSession != null && context.mounted) {
+                        widget.onNavigate('/social/${createdSession.id}?isHost=true');
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  _buildQuickCreateItem(
+                    dialogContext,
+                    icon: Icons.emoji_events_rounded,
+                    iconBg: AppTheme.primary.withValues(alpha: 0.14),
+                    iconColor: AppTheme.primary,
+                    title: 'Tạo giải nhanh',
+                    onTap: () {
+                      Navigator.of(dialogContext).pop();
+                      _navigate('/tournaments/create');
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  _buildQuickCreateItem(
+                    dialogContext,
+                    icon: Icons.groups_rounded,
+                    iconBg: const Color(0xFF8B5CF6).withValues(alpha: 0.14),
+                    iconColor: const Color(0xFF8B5CF6),
+                    title: 'Tạo Câu Lạc Bộ',
+                    onTap: () {
+                      Navigator.of(dialogContext).pop();
+                      final auth = ref.read(authProvider);
+                      _navigate(auth.isAuthenticated ? '/club-create' : '/login');
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (context, anim, _, child) {
+        if (reduceMotion) return child;
+        final curved = CurvedAnimation(
+          parent: anim,
+          curve: Curves.easeOutBack,
+        );
+        return FadeTransition(
+          opacity: anim,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.85, end: 1.0).animate(curved),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildQuickCreateItem(
+    BuildContext dialogContext, {
+    required IconData icon,
+    required Color iconBg,
+    required Color iconColor,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    final colors = context.colors;
+    return Material(
+      color: colors.bgElevated,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: colors.textMuted.withValues(alpha: 0.6),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -206,15 +379,20 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
       color: isDark
           ? AppTheme.primary.withValues(alpha: 0.16)
           : AppTheme.primary.withValues(alpha: 0.1),
-      child: InkWell(
-        onTap: () => _navigate(isAuthenticated ? '/profile' : '/login'),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              _buildAvatar(avatarUrl, colors.textMuted),
-              const SizedBox(width: 10),
-              Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () => _navigate(isAuthenticated ? '/profile' : '/login'),
+              child: _buildAvatar(avatarUrl, colors.textMuted),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => _navigate(isAuthenticated ? '/profile' : '/login'),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -243,20 +421,30 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
                   ],
                 ),
               ),
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                iconSize: 20,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-                tooltip: l10n.settingsTitle,
-                onPressed: () => _navigate('/profile/settings'),
-                icon: Icon(
-                  Icons.settings_outlined,
-                  color: colors.textMuted,
+            ),
+            // Sleek circular '+' quick-creation button
+            Material(
+              color: AppTheme.primary,
+              shape: const CircleBorder(),
+              elevation: 2,
+              shadowColor: AppTheme.primary.withValues(alpha: 0.4),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () => _showQuickCreateMenu(context),
+                child: const SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: Center(
+                    child: Icon(
+                      Icons.add_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -289,6 +477,7 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
   Widget _buildAction(
     _MenuAction action,
     int index, {
+    required int totalCount,
     required bool reduceMotion,
   }) {
     final colors = context.colors;
@@ -350,20 +539,28 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
     );
 
     if (reduceMotion) return row;
-    final start = (index * 0.05).clamp(0.0, 0.5).toDouble();
-    final end = (start + 0.35).clamp(0.0, 1.0).toDouble();
+    // Staggered interval for each action item
+    final step = 0.55 / (totalCount > 0 ? totalCount : 1);
+    final start = (index * step).clamp(0.0, 0.7).toDouble();
+    final end = (start + 0.45).clamp(0.0, 1.0).toDouble();
     final animation = CurvedAnimation(
       parent: _entranceController,
-      curve: Interval(start, end, curve: Curves.easeOutCubic),
+      curve: Interval(start, end, curve: Curves.easeOutBack),
     );
     return FadeTransition(
       opacity: animation,
       child: SlideTransition(
         position: Tween<Offset>(
-          begin: const Offset(0, 0.06),
+          begin: const Offset(0.08, 0.12),
           end: Offset.zero,
         ).animate(animation),
-        child: row,
+        child: ScaleTransition(
+          scale: Tween<double>(
+            begin: 0.92,
+            end: 1.0,
+          ).animate(animation),
+          child: row,
+        ),
       ),
     );
   }

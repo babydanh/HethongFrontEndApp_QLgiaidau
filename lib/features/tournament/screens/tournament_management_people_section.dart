@@ -62,7 +62,10 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
         if (snapshot.connectionState == ConnectionState.waiting)
           return const Center(child: CircularProgressIndicator());
         if (snapshot.hasError)
-          return TournamentManagementError(onRetry: _reload);
+          return TournamentManagementError(
+            error: snapshot.error,
+            onRetry: _reload,
+          );
         final participants = snapshot.data ?? const <OrganizerOpsParticipant>[];
         final pending = participants
             .where((item) => _isPending(item.teamStatus))
@@ -299,7 +302,10 @@ class _TournamentPermissionsState
                       ),
                     );
                   if (snapshot.hasError)
-                    return TournamentManagementError(onRetry: _reload);
+                    return TournamentManagementError(
+                      error: snapshot.error,
+                      onRetry: _reload,
+                    );
                   final staff = snapshot.data ?? const <Map<String, dynamic>>[];
                   if (staff.isEmpty)
                     return TournamentManagementEmpty(
@@ -370,7 +376,10 @@ class _TournamentPermissionsState
                       ),
                     );
                   if (snapshot.hasError)
-                    return TournamentManagementError(onRetry: _reload);
+                    return TournamentManagementError(
+                      error: snapshot.error,
+                      onRetry: _reload,
+                    );
                   final referees =
                       snapshot.data ?? const <Map<String, dynamic>>[];
                   if (referees.isEmpty)

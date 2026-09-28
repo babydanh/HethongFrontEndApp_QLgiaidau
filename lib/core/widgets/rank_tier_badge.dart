@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 
 String getShortTierCode(String? tierName, int? elo) {
   final name = (tierName ?? '').trim();
@@ -55,34 +54,105 @@ class RankTierBadge extends StatelessWidget {
     final code = getShortTierCode(tierName, elo);
     final isRanked =
         code != '--' && (tierName?.trim().isNotEmpty == true || (elo ?? 0) > 0);
-    final palette = TierPalette.fromElo(elo ?? 0, tierName);
-    final accent = isRanked ? palette.badgeBg : context.colors.border;
-    final textColor = isRanked ? palette.border : context.colors.textMuted;
+
+    // Chuẩn web:
+    // TS: viền cam đậm #F59E0B / #D97706, nền vàng cam nhạt #FEF3C7, chữ cam đậm #B45309
+    // HTB: viền xanh dương #2563EB, nền xanh nhạt #EFF6FF, chữ xanh #1D4ED8
+    // Glow shadow lan tỏa xung quanh badge
+    final Color borderColor;
+    final Color badgeBg;
+    final Color textColor;
+    final Color glowColor;
+
+    if (code == 'TS') {
+      borderColor = const Color(0xFFF59E0B);
+      badgeBg = const Color(0xFFFEF3C7);
+      textColor = const Color(0xFFB45309);
+      glowColor = const Color(0xFFF59E0B).withValues(alpha: 0.35);
+    } else if (code == 'HTA') {
+      borderColor = const Color(0xFFE11D48);
+      badgeBg = const Color(0xFFFFE4E6);
+      textColor = const Color(0xFFBE123C);
+      glowColor = const Color(0xFFE11D48).withValues(alpha: 0.35);
+    } else if (code == 'LTA') {
+      borderColor = const Color(0xFFF43F5E);
+      badgeBg = const Color(0xFFFFF1F2);
+      textColor = const Color(0xFFE11D48);
+      glowColor = const Color(0xFFF43F5E).withValues(alpha: 0.3);
+    } else if (code == 'HTB') {
+      borderColor = const Color(0xFF2563EB);
+      badgeBg = const Color(0xFFEFF6FF);
+      textColor = const Color(0xFF1D4ED8);
+      glowColor = const Color(0xFF2563EB).withValues(alpha: 0.35);
+    } else if (code == 'LTB') {
+      borderColor = const Color(0xFF3B82F6);
+      badgeBg = const Color(0xFFF0F9FF);
+      textColor = const Color(0xFF2563EB);
+      glowColor = const Color(0xFF3B82F6).withValues(alpha: 0.3);
+    } else if (code == 'HTC') {
+      borderColor = const Color(0xFF059669);
+      badgeBg = const Color(0xFFECFDF5);
+      textColor = const Color(0xFF047857);
+      glowColor = const Color(0xFF059669).withValues(alpha: 0.35);
+    } else if (code == 'LTC') {
+      borderColor = const Color(0xFF10B981);
+      badgeBg = const Color(0xFFF0FDF4);
+      textColor = const Color(0xFF059669);
+      glowColor = const Color(0xFF10B981).withValues(alpha: 0.3);
+    } else if (code == 'HTD') {
+      borderColor = const Color(0xFF475569);
+      badgeBg = const Color(0xFFF1F5F9);
+      textColor = const Color(0xFF334155);
+      glowColor = const Color(0xFF475569).withValues(alpha: 0.3);
+    } else if (code == 'LTD') {
+      borderColor = const Color(0xFF78716C);
+      badgeBg = const Color(0xFFF5F5F4);
+      textColor = const Color(0xFF57534E);
+      glowColor = const Color(0xFF78716C).withValues(alpha: 0.25);
+    } else {
+      borderColor = context.colors.border;
+      badgeBg = context.colors.bgCard;
+      textColor = context.colors.textMuted;
+      glowColor = Colors.transparent;
+    }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: context.colors.bgDark,
+        color: badgeBg,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: accent.withValues(alpha: isRanked ? 0.9 : 0.5),
+          color: borderColor,
+          width: 1.8,
         ),
         boxShadow: isRanked
-            ? [BoxShadow(color: accent.withValues(alpha: 0.32), blurRadius: 7)]
+            ? [
+                BoxShadow(
+                  color: glowColor,
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 1),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ]
             : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _SportIcon(sportName: sportName, size: 20),
-          const SizedBox(width: 5),
+          _SportIcon(sportName: sportName, size: 22),
+          const SizedBox(width: 6),
           Text(
             showLabel && isRanked ? tierName ?? code : code,
             style: TextStyle(
               color: textColor,
-              fontSize: showLabel ? 10 : 11,
+              fontSize: showLabel ? 11.5 : 13,
               fontWeight: FontWeight.w900,
-              letterSpacing: 0.2,
+              letterSpacing: 0.4,
               height: 1,
             ),
           ),
@@ -90,6 +160,8 @@ class RankTierBadge extends StatelessWidget {
       ),
     );
   }
+
+
 }
 
 class _SportIcon extends StatelessWidget {

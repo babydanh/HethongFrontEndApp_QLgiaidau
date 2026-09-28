@@ -357,6 +357,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get infoGender => 'Giới tính';
 
   @override
+  String get genderMale => 'Nam';
+
+  @override
+  String get genderFemale => 'Nữ';
+
+  @override
+  String get genderOther => 'Khác';
+
+  @override
   String get infoAddress => 'Địa chỉ';
 
   @override
@@ -1514,6 +1523,17 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get matchesStatusWalkover => 'Bỏ cuộc';
+
+  @override
+  String get matchesCourtNotAssigned => 'Chưa được xếp sân';
+
+  @override
+  String get matchesCourtNameUnavailable => 'Tên sân chưa được cung cấp';
+
+  @override
+  String tournamentScheduleHours(String start, String end) {
+    return 'Giờ hoạt động: $start–$end';
+  }
 
   @override
   String get matchLiveCheerError => 'Chưa thể gửi cổ vũ. Vui lòng thử lại.';
@@ -2851,6 +2871,15 @@ class AppLocalizationsVi extends AppLocalizations {
       'Lời mời này đã được xử lý trước đó.';
 
   @override
+  String get notification_tabTournaments => 'Giải đấu';
+
+  @override
+  String get notification_tabTeams => 'Đội nhóm';
+
+  @override
+  String get notification_tabSystem => 'Hệ thống';
+
+  @override
   String get payments_close => 'Đóng';
 
   @override
@@ -3025,6 +3054,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get dashboard_title => 'Của tôi';
+
+  @override
+  String get dashboard_sportActivityFilterLabel => 'Hoạt động theo môn';
 
   @override
   String get dashboard_loginPrompt => 'Đăng nhập để xem khu vực của bạn';
@@ -3886,19 +3918,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_quickTournament => 'Nhanh (Lite)';
 
   @override
-  String get club_advanced => 'Nâng cao';
-
-  @override
-  String get club_selectTournamentType => 'Chọn loại giải đấu';
-
-  @override
-  String get publicClubLiteCreateTitle => 'Tạo giải CLB Lite';
-
-  @override
-  String get club_selectTournamentDesc =>
-      'Vui lòng chọn hình thức giải đấu muốn tạo';
-
-  @override
   String get club_liteTournament => 'Giải Nhanh (Lite)';
 
   @override
@@ -3907,26 +3926,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get club_liteDesc =>
       'Tạo và quản lý sơ đồ thi đấu ngay trên app điện thoại';
-
-  @override
-  String get club_advancedTournament => 'Giải Nâng Cao (Full)';
-
-  @override
-  String get club_createOnWeb => 'TẠO TRÊN WEB';
-
-  @override
-  String get club_advancedDesc =>
-      'Quản lý đầy đủ tính năng, lệ phí, phân quyền trên website';
-
-  @override
-  String get club_createAdvancedTitle => 'Tạo Giải Nâng Cao';
-
-  @override
-  String get club_advancedWebDialog =>
-      'Để quản lý giải đấu nâng cao (phân chia bảng đấu phức tạp, thu lệ phí, tùy chỉnh luật...), vui lòng truy cập website sporto.asia trên máy tính.';
-
-  @override
-  String get club_copyWebLink => 'Đến trang tạo';
 
   @override
   String get club_membersLabel => 'Thành viên';
@@ -4161,29 +4160,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tạo mới và điều hành các giải đấu của Câu lạc bộ.';
 
   @override
-  String get club_chooseTournamentTypeDescription =>
-      'Chọn hình thức tổ chức phù hợp với quy mô giải của CLB';
-
-  @override
   String get club_liteCreatedOnApp => 'TẠO TRÊN APP';
 
   @override
   String get club_liteTournamentDescription =>
       'Tạo trực tiếp trên điện thoại trong 30 giây, tự động chia bảng và theo dõi tỷ số.';
-
-  @override
-  String get club_standardTournamentTitle => 'Giải Tiêu chuẩn';
-
-  @override
-  String get club_standardTournamentTitleAdvanced =>
-      'Giải Tiêu chuẩn (Nâng cao)';
-
-  @override
-  String get club_standardCreatedOnWeb => 'TẠO TRÊN WEB';
-
-  @override
-  String get club_standardTournamentDescription =>
-      'Giải đấu quy mô lớn với đầy đủ tính năng sơ đồ thi đấu, tài chính & trọng tài.';
 
   @override
   String get club_noManagedTournaments =>
@@ -5044,48 +5025,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clubTournamentsLoadError => 'Không thể tải danh sách giải đấu';
 
   @override
-  String get clubTournamentsChooseType => 'Chọn loại giải đấu';
-
-  @override
-  String get clubTournamentsChooseTypeHint =>
-      'Chọn hình thức tạo giải phù hợp cho câu lạc bộ của bạn';
-
-  @override
   String get clubTournamentsLiteTitle => 'Giải Nhanh (Lite)';
 
   @override
   String get clubTournamentsLiteDescription =>
       'Tạo nhanh trong 30 giây. Sinh mã QR và link mời để chia sẻ trực tiếp cho các thành viên.';
-
-  @override
-  String get clubTournamentsWebTitle => 'Tạo nhanh trên Web';
-
-  @override
-  String get clubTournamentsWebDescription =>
-      'Form nhanh đầy đủ hơn Lite; giải vẫn thuộc CLB và mở quản lý nâng cao trên web.';
-
-  @override
-  String get clubTournamentsAdvancedTitle => 'Tạo giải nâng cao trên Web';
-
-  @override
-  String get clubTournamentsAdvancedBadge => 'Tạo trên Web';
-
-  @override
-  String get clubTournamentsAdvancedDescription =>
-      'Giải đấu nâng cao có nhiều cấu hình chuyên sâu (Vòng bảng, Knockout, Lịch thi đấu, Lệ phí và Giải thưởng).\\n\\nVui lòng truy cập trang web sporto.asia trên máy tính để tạo giải nâng cao cho câu lạc bộ!';
-
-  @override
-  String get clubTournamentsAdvancedCardDescription =>
-      'Chỉ khởi tạo trên Web sporto.asia. Đầy đủ cấu hình: Thể thức Vòng bảng, Knockout, Lịch thi đấu và Giải thưởng.';
-
-  @override
-  String get clubTournamentsClose => 'Đóng';
-
-  @override
-  String get clubTournamentsCopyWebLink => 'Sao chép link Web';
-
-  @override
-  String get clubTournamentsLinkCopied => 'Đã sao chép link tạo giải';
 
   @override
   String get myReportsTitle => 'Báo cáo của tôi';
@@ -7805,7 +7749,16 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get quickCreateDescription =>
-      'Tạo nhanh trên app, bổ sung cấu hình nâng cao trong trang quản lý web.';
+      'Tạo giải đấu ngay trong ứng dụng, sau đó quản lý giải tại khu vực Ban tổ chức.';
+
+  @override
+  String get quickCreateOptionsTitle => 'Tùy chọn bổ sung (thể thức, ELO)';
+
+  @override
+  String get quickCreateOptionsCollapse => 'Thu gọn';
+
+  @override
+  String get quickCreateOptionsExpand => 'Mở rộng';
 
   @override
   String get quickCreateNameLabel => 'Tên giải đấu *';
@@ -12299,7 +12252,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get organizer_reqDesc =>
-      'Tạo giải đấu nâng cao (nhiều phân hạng, lệ phí, nhà tài trợ...) yêu cầu tài khoản được cấp quyền Ban Tổ Chức (Organizer). Bạn có thể đăng ký làm Ban Tổ Chức hoặc sử dụng Giải CLB Siêu Lite.';
+      'Tạo giải công khai và sử dụng các tính năng tổ chức giải cần tài khoản Ban Tổ Chức được duyệt. Bạn có thể đăng ký hoặc tạo giải trong phạm vi câu lạc bộ với Giải CLB Siêu Lite.';
 
   @override
   String get organizer_applyNow => 'Đăng ký Ban Tổ Chức';
@@ -13044,6 +12997,69 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementEntryFeesAllowed => 'Cho phép thu lệ phí';
 
   @override
+  String get tournamentCreateEntryFeeToggle => 'Thu lệ phí tham gia';
+
+  @override
+  String get tournamentCreateEntryFeePolicyUnavailable =>
+      'Không tải được cấu hình lệ phí. Giải đấu sẽ miễn phí.';
+
+  @override
+  String get tournamentCreateRanked => 'Xếp hạng ELO';
+
+  @override
+  String get tournamentCreateUnranked => 'Giải phong trào';
+
+  @override
+  String get tournamentCreateRankedDescription =>
+      'Kết quả được tính vào bảng xếp hạng';
+
+  @override
+  String get tournamentCreateUnrankedDescription =>
+      'Giải giao hữu, không tính xếp hạng';
+
+  @override
+  String get tournamentCreateMaxCombinedElo => 'ELO tổng tối đa';
+
+  @override
+  String get tournamentCreateMaxTeammateGap => 'Chênh lệch ELO đồng đội tối đa';
+
+  @override
+  String get tournamentCreateTeamSize => 'Số người mỗi đội';
+
+  @override
+  String get tournamentCreateMaxReserve => 'Số dự bị tối đa';
+
+  @override
+  String get tournamentCreateFootballHalves => 'Số hiệp';
+
+  @override
+  String get tournamentCreateFootballHalfDuration => 'Số phút mỗi hiệp';
+
+  @override
+  String get tournamentCreateFootballAllowDraw => 'Cho phép kết quả hòa';
+
+  @override
+  String get tournamentCreateTwoLegged => 'Thi đấu hai lượt';
+
+  @override
+  String get tournamentCreateAwayGoalsRule =>
+      'Áp dụng luật bàn thắng sân khách';
+
+  @override
+  String get tournamentCreatePenaltyShootout => 'Cho phép sút luân lưu';
+
+  @override
+  String get tournamentCreateIntegerNonNegative =>
+      'Nhập số nguyên lớn hơn hoặc bằng 0.';
+
+  @override
+  String get tournamentCreateFootballOptions => 'Cấu hình bóng đá';
+
+  @override
+  String get tournamentCreateClubFeeDisabled =>
+      'Giải đấu câu lạc bộ không thu lệ phí và luôn miễn phí.';
+
+  @override
   String get tournamentManagementEntryFeeDisabled =>
       'Lệ phí tham gia đang bị tắt hoặc không thể thay đổi với trạng thái hiện tại của giải đấu.';
 
@@ -13228,7 +13244,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementPayoutCreatorOnly =>
-      'Chỉ người tạo giải đấu được gửi yêu cầu thanh toán. Máy chủ vẫn là nơi quyết định quyền cuối cùng.';
+      'Chỉ người tạo giải đấu đã hoàn tất và có vai trò ban tổ chức mới được gửi yêu cầu thanh toán. Máy chủ vẫn là nơi quyết định quyền cuối cùng.';
 
   @override
   String get tournamentManagementPayoutAccessUnverified =>
@@ -13537,6 +13553,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementSponsorSaved => 'Đã lưu nhà tài trợ.';
 
   @override
+  String get tournamentManagementSponsorPublicStatus => 'Công khai';
+
+  @override
+  String get tournamentManagementSponsorDraft => 'Bản nháp';
+
+  @override
+  String get tournamentManagementSponsorArchived => 'Đã lưu trữ';
+
+  @override
   String get tournamentManagementSponsorTier => 'Hạng tài trợ';
 
   @override
@@ -13790,164 +13815,157 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeSocialCreateAction => 'Tạo kèo';
 
   @override
-  String get socialVenueSuggestionsLabel => 'Địa điểm gợi ý';
+  String get tournamentManagementHideFeaturedCardText =>
+      'Ẩn tiêu đề trên thẻ giải đấu';
 
   @override
-  String get socialVenueSuggestionsLoading => 'Đang tìm địa điểm...';
+  String get tournamentManagementHideFeaturedCardTextDescription =>
+      'Ẩn dòng tiêu đề trên biểu ngữ nổi bật ở thẻ giải đấu công khai.';
 
   @override
-  String get socialVenueSuggestionsEmpty => 'Không tìm thấy địa điểm phù hợp';
+  String get tournamentManagementForbidden =>
+      'Bạn không có quyền truy cập mục quản lý giải đấu này.';
 
   @override
-  String get socialVenueSuggestionsFailed =>
-      'Không tải được gợi ý. Bạn vẫn có thể nhập địa điểm.';
+  String get tournamentManagementLivestreamDevices => 'Thiết bị camera';
 
   @override
-  String get socialVenueCourt => 'Sân';
+  String get tournamentManagementLivestreamDevicesDescription =>
+      'Thiết bị camera dùng lại của cộng đồng. Tạo mã QR ghép nối để thiết bị tự đăng nhập.';
 
   @override
-  String get socialVenueCourtOptional => 'Chọn sân (không bắt buộc)';
+  String get tournamentManagementLivestreamDevicesEmpty =>
+      'Chưa có thiết bị camera';
 
   @override
-  String get socialVenueAnyCourt => 'Không chọn sân cụ thể';
+  String get tournamentManagementLivestreamDevicesUnavailable =>
+      'Giải đấu chưa thuộc cộng đồng nào nên chưa thể quản lý thiết bị camera.';
 
   @override
-  String get socialVenueCourtsLoading => 'Đang tải danh sách sân…';
+  String get tournamentManagementLivestreamCreatePairingQr => 'Tạo mã ghép nối';
 
   @override
-  String get socialVenueCourtsUnavailable =>
-      'Không tải được danh sách sân. Địa điểm vẫn được chọn.';
+  String get tournamentManagementLivestreamPairingQrTitle =>
+      'Mã ghép nối camera';
 
   @override
-  String get socialVenueNoCourts => 'Địa điểm này chưa có sân được cấu hình.';
+  String get tournamentManagementLivestreamPairingQrHint =>
+      'Mã dùng một lần và tự hết hạn. Chỉ quét trực tiếp, không chia sẻ mã này.';
 
   @override
-  String get socialGenderRequirement => 'Ai có thể tham gia';
+  String get tournamentManagementLivestreamPairingQrFailed =>
+      'Không thể tạo mã ghép nối.';
 
   @override
-  String get socialGenderAny => 'Mọi giới tính';
+  String get tournamentManagementLivestreamFacebookSubtitle =>
+      'Kết nối Fanpage để vận hành phát trực tiếp.';
 
   @override
-  String get socialGenderMale => 'Chỉ nam';
+  String get tournamentManagementLivestreamFacebookNotConnected =>
+      'Chưa kết nối Fanpage.';
 
   @override
-  String get socialGenderFemale => 'Chỉ nữ';
+  String get tournamentManagementLivestreamFacebookConnect => 'Kết nối Fanpage';
 
   @override
-  String get socialGenderMixed => 'Nhóm kết hợp';
+  String get tournamentManagementLivestreamFacebookRevalidate => 'Kiểm tra lại';
 
   @override
-  String get socialRequestApproval => 'Yêu cầu duyệt tham gia';
+  String get tournamentManagementLivestreamFacebookDisconnect => 'Ngắt kết nối';
 
   @override
-  String get socialJoinDirectly => 'Tham gia trực tiếp';
+  String get tournamentManagementLivestreamFacebookConnectFailed =>
+      'Không thể mở trình duyệt để kết nối Fanpage.';
 
   @override
-  String get socialJoinRequestPending => 'Yêu cầu đang chờ duyệt';
+  String get tournamentManagementLivestreamFacebookActive => 'Đang hoạt động';
 
   @override
-  String get socialCancelJoinRequest => 'Hủy yêu cầu';
+  String get tournamentManagementLivestreamFacebookDisconnected =>
+      'Đã ngắt kết nối';
 
   @override
-  String get socialJoinRequestSent => 'Đã gửi yêu cầu đến người tổ chức.';
-
-  @override
-  String get socialJoinRequestCancelled => 'Đã hủy yêu cầu tham gia.';
-
-  @override
-  String get socialPendingJoinRequests => 'Yêu cầu tham gia';
-
-  @override
-  String get socialNoPendingJoinRequests => 'Chưa có yêu cầu nào đang chờ.';
-
-  @override
-  String get socialApproveJoinRequest => 'Chấp nhận';
-
-  @override
-  String get socialRejectJoinRequest => 'Từ chối';
-
-  @override
-  String socialJoinRequestSlots(Object count) {
-    return 'Số chỗ: $count';
+  String tournamentManagementLivestreamFacebookLastChecked(String time) {
+    return 'Kiểm tra gần nhất: $time';
   }
 
   @override
-  String get socialJoinRequestNoName => 'Thành viên';
+  String get tournamentManagementLivestreamSessions => 'Phiên phát trực tiếp';
 
   @override
-  String get socialJoinRequestDecisionFailed =>
-      'Không thể cập nhật yêu cầu. Vui lòng thử lại.';
+  String get tournamentManagementLivestreamSessionsDescription =>
+      'Theo dõi trạng thái phiên phát trực tiếp của giải đấu.';
 
   @override
-  String get socialJoinOptions => 'Chọn cách tham gia';
+  String get tournamentManagementLivestreamSessionsEmpty =>
+      'Chưa có phiên phát trực tiếp.';
 
   @override
-  String get socialJoinRequestApproved => 'Đã chấp nhận yêu cầu tham gia.';
+  String get tournamentManagementLivestreamStopSession => 'Kết thúc phiên';
 
   @override
-  String get socialJoinRequestRejected => 'Đã từ chối yêu cầu tham gia.';
+  String get tournamentManagementLivestreamStopSessionConfirm =>
+      'Kết thúc phiên phát trực tiếp này?';
 
   @override
-  String get socialJoinRequestLoadMore => 'Xem thêm yêu cầu';
+  String get tournamentManagementLivestreamRecheckStatus =>
+      'Kiểm tra lại trạng thái';
 
   @override
-  String get socialActiveSportsLabel => 'MÔN THỂ THAO';
+  String get tournamentManagementLivestreamRecheckStatusHint =>
+      'Chỉ kiểm tra lại trạng thái với nhà cung cấp, không phát lại luồng.';
 
   @override
-  String get socialActiveSportsEmpty =>
-      'Hiện chưa có môn thể thao nào đang hoạt động.';
+  String get tournamentManagementLivestreamStatusCreated => 'Đã tạo';
 
   @override
-  String get socialActiveSportsLoadFailed =>
-      'Không tải được danh sách môn thể thao.';
+  String get tournamentManagementLivestreamStatusStarting => 'Đang bắt đầu';
 
   @override
-  String get socialActiveSportsRetry => 'Thử lại';
+  String get tournamentManagementLivestreamStatusLive => 'Đang phát';
 
   @override
-  String get socialPlayFormatLabel => 'THỂ THỨC';
+  String get tournamentManagementLivestreamStatusReconnecting =>
+      'Đang kết nối lại';
 
   @override
-  String get socialPlayFormatFriendly => 'Giao lưu';
+  String get tournamentManagementLivestreamStatusStopping => 'Đang kết thúc';
 
   @override
-  String get socialPlayFormatRoundRobin => 'Đánh vòng tròn';
+  String get tournamentManagementLivestreamStatusEnded => 'Đã kết thúc';
 
   @override
-  String get socialPlayFormatSingles => 'Đánh đơn';
+  String get tournamentManagementLivestreamStatusFailed => 'Thất bại';
 
   @override
-  String get socialPlayFormatDoubles => 'Đánh đôi';
+  String get tournamentManagementLivestreamStatusOther => 'Trạng thái khác';
 
   @override
-  String get socialSportPickleball => 'Pickleball';
+  String get tournamentManagementLivestreamDeviceUnpaired => 'Chưa ghép nối';
 
   @override
-  String get socialSportBadminton => 'Cầu lông';
+  String get tournamentManagementLivestreamDeviceReady => 'Sẵn sàng';
 
   @override
-  String get socialSportTennis => 'Tennis';
+  String get tournamentManagementLivestreamDeviceOnline => 'Đang hoạt động';
 
   @override
-  String get socialSportTableTennis => 'Bóng bàn';
+  String get tournamentManagementLivestreamDeviceOffline => 'Mất kết nối';
 
   @override
-  String get socialSportFootball => 'Bóng đá';
+  String get tournamentManagementLivestreamDeviceRevoked => 'Đã thu hồi';
 
   @override
-  String get socialRegionSearchHint => 'Nhập để tìm kiếm...';
+  String get tournamentManagementLivestreamCreateDevice => 'Tạo thiết bị';
 
   @override
-  String get socialRegionSearchFailed =>
-      'Không tải được gợi ý địa giới. Bạn vẫn có thể nhập địa chỉ thủ công.';
+  String get tournamentManagementLivestreamDeviceNameLabel => 'Tên thiết bị';
 
   @override
-  String get socialRegionSectionLabel =>
-      'Thêm thành phố/phường (không bắt buộc)';
+  String get tournamentManagementLivestreamDeviceNameHint =>
+      'Ví dụ: Điện thoại sân 1';
 
   @override
-  String get socialRegionRetry => 'Tải lại';
-
-  @override
-  String get socialRegionApply => 'Áp dụng';
+  String get tournamentManagementLivestreamDeviceNameRequired =>
+      'Nhập tên thiết bị trước.';
 }

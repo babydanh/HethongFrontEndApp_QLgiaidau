@@ -343,8 +343,15 @@ class SportoHeader extends StatelessWidget {
 class SportoHeaderPainter extends CustomPainter {
   final bool isLoggedIn;
   final AppColorsExtension colors;
+  final double waveProgress;
+  final double wavePhase;
 
-  SportoHeaderPainter({required this.isLoggedIn, required this.colors});
+  SportoHeaderPainter({
+    required this.isLoggedIn,
+    required this.colors,
+    this.waveProgress = 1.0,
+    this.wavePhase = 0.0,
+  });
 
   bool get _isDark =>
       colors.bgDark == const Color(0xFF18191A) ||
@@ -353,6 +360,9 @@ class SportoHeaderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final Rect rect = Offset.zero & size;
+    final double amp = waveProgress.clamp(0.0, 1.0);
+    final double phaseShift = wavePhase * 8.0;
+
     if (_isDark) {
       // Dark mode: Dark charcoal/slate gradient with subtle waves
       final Paint bgPaint = Paint()
@@ -364,14 +374,14 @@ class SportoHeaderPainter extends CustomPainter {
       canvas.drawRect(rect, bgPaint);
 
       final Paint circlePaint1 = Paint()
-        ..color = Colors.white.withValues(alpha: 0.03);
-      canvas.drawCircle(Offset(size.width * 0.85, 30.0), 72.0, circlePaint1);
+        ..color = Colors.white.withValues(alpha: 0.03 * amp);
+      canvas.drawCircle(Offset(size.width * 0.85, 30.0), 72.0 * amp.clamp(0.5, 1.0), circlePaint1);
 
       final Paint circlePaint2 = Paint()
-        ..color = Colors.white.withValues(alpha: 0.02);
-      canvas.drawCircle(Offset(size.width * 0.08, 175.0), 52.0, circlePaint2);
+        ..color = Colors.white.withValues(alpha: 0.02 * amp);
+      canvas.drawCircle(Offset(size.width * 0.08, 175.0), 52.0 * amp.clamp(0.5, 1.0), circlePaint2);
 
-      _drawWaves(canvas, size);
+      _drawWaves(canvas, size, amp, phaseShift);
       return;
     }
 
@@ -385,63 +395,99 @@ class SportoHeaderPainter extends CustomPainter {
     canvas.drawRect(rect, bgPaint);
 
     final Paint circlePaint1 = Paint()
-      ..color = Colors.white.withValues(alpha: 0.05);
-    canvas.drawCircle(Offset(size.width * 0.85, 30.0), 72.0, circlePaint1);
+      ..color = Colors.white.withValues(alpha: 0.05 * amp);
+    canvas.drawCircle(Offset(size.width * 0.85, 30.0), 72.0 * amp.clamp(0.5, 1.0), circlePaint1);
 
     final Paint circlePaint2 = Paint()
-      ..color = Colors.white.withValues(alpha: 0.04);
-    canvas.drawCircle(Offset(size.width * 0.08, 175.0), 52.0, circlePaint2);
+      ..color = Colors.white.withValues(alpha: 0.04 * amp);
+    canvas.drawCircle(Offset(size.width * 0.08, 175.0), 52.0 * amp.clamp(0.5, 1.0), circlePaint2);
 
-    _drawWaves(canvas, size);
+    _drawWaves(canvas, size, amp, phaseShift);
   }
 
-  void _drawWaves(Canvas canvas, Size size) {
+  void _drawWaves(Canvas canvas, Size size, double amp, double phaseShift) {
+    if (amp <= 0.01) return;
     final double w = size.width;
     final double h = size.height;
 
     final Color w1Color = _isDark
-        ? const Color(0xFF161616).withValues(alpha: 0.5)
-        : AppTheme.primaryDark.withValues(alpha: 0.5);
+        ? const Color(0xFF161616).withValues(alpha: 0.5 * amp)
+        : AppTheme.primaryDark.withValues(alpha: 0.5 * amp);
 
     final Color w2Color = _isDark
-        ? const Color(0xFF222222).withValues(alpha: 0.3)
-        : const Color(0xFF1E40AF).withValues(alpha: 0.3);
+        ? const Color(0xFF222222).withValues(alpha: 0.3 * amp)
+        : const Color(0xFF1E40AF).withValues(alpha: 0.3 * amp);
 
     final Color w3Color = colors.bgDark;
 
+    // Wave 1: Lớp sóng cong sâu trên cùng (nguyên bản)
     final Paint wave1Paint = Paint()
       ..color = w1Color
       ..style = PaintingStyle.fill;
     final Path path1 = Path();
-    path1.moveTo(0.0, h - 54);
-    path1.cubicTo(w * 0.125, h - 54, w * 0.25, h - 14, w * 0.406, h - 20);
-    path1.cubicTo(w * 0.547, h - 26, w * 0.656, h - 50, w * 0.8125, h - 44);
-    path1.cubicTo(w * 0.89, h - 41, w * 0.95, h - 30, w, h - 34);
+    path1.moveTo(0.0, h - (54 * amp));
+    path1.cubicTo(
+      w * 0.125, h - (54 * amp) + phaseShift,
+      w * 0.25, h - (14 * amp) - phaseShift,
+      w * 0.406, h - (20 * amp),
+    );
+    path1.cubicTo(
+      w * 0.547, h - (26 * amp) + phaseShift,
+      w * 0.656, h - (50 * amp) - phaseShift,
+      w * 0.8125, h - (44 * amp),
+    );
+    path1.cubicTo(
+      w * 0.89, h - (41 * amp),
+      w * 0.95, h - (30 * amp),
+      w, h - (34 * amp),
+    );
     path1.lineTo(w, h);
     path1.lineTo(0.0, h);
     path1.close();
     canvas.drawPath(path1, wave1Paint);
 
+    // Wave 2: Lớp sóng mềm giữa (nguyên bản)
     final Paint wave2Paint = Paint()
       ..color = w2Color
       ..style = PaintingStyle.fill;
     final Path path2 = Path();
-    path2.moveTo(0.0, h - 40);
-    path2.cubicTo(w * 0.094, h - 10, w * 0.265, h, w * 0.453, h - 8);
-    path2.cubicTo(w * 0.61, h - 15, w * 0.75, h - 34, w * 0.906, h - 26);
-    path2.cubicTo(w * 0.95, h - 23, w * 0.98, h - 18, w, h - 20);
+    path2.moveTo(0.0, h - (40 * amp));
+    path2.cubicTo(
+      w * 0.094, h - (10 * amp) - phaseShift,
+      w * 0.265, h + phaseShift,
+      w * 0.453, h - (8 * amp),
+    );
+    path2.cubicTo(
+      w * 0.61, h - (15 * amp) - phaseShift,
+      w * 0.75, h - (34 * amp) + phaseShift,
+      w * 0.906, h - (26 * amp),
+    );
+    path2.cubicTo(
+      w * 0.95, h - (23 * amp),
+      w * 0.98, h - (18 * amp),
+      w, h - (20 * amp),
+    );
     path2.lineTo(w, h);
     path2.lineTo(0.0, h);
     path2.close();
     canvas.drawPath(path2, wave2Paint);
 
+    // Wave 3: Lớp sóng đáy chuyển tiếp vào màu nền bgDark (nguyên bản mượt nhất)
     final Paint wave3Paint = Paint()
       ..color = w3Color
       ..style = PaintingStyle.fill;
     final Path path3 = Path();
-    path3.moveTo(0.0, h - 26);
-    path3.cubicTo(w * 0.156, h - 2, w * 0.344, h + 3, w * 0.547, h - 4);
-    path3.cubicTo(w * 0.703, h - 10, w * 0.844, h - 22, w, h - 12);
+    path3.moveTo(0.0, h - (26 * amp));
+    path3.cubicTo(
+      w * 0.156, h - (2 * amp) + phaseShift,
+      w * 0.344, h + (3 * amp) - phaseShift,
+      w * 0.547, h - (4 * amp),
+    );
+    path3.cubicTo(
+      w * 0.703, h - (10 * amp) + phaseShift,
+      w * 0.844, h - (22 * amp) - phaseShift,
+      w, h - (12 * amp),
+    );
     path3.lineTo(w, h);
     path3.lineTo(0.0, h);
     path3.close();
@@ -449,7 +495,11 @@ class SportoHeaderPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant SportoHeaderPainter oldDelegate) =>
+      oldDelegate.isLoggedIn != isLoggedIn ||
+      oldDelegate.colors != colors ||
+      oldDelegate.waveProgress != waveProgress ||
+      oldDelegate.wavePhase != wavePhase;
 }
 
 /// Thanh tìm kiếm SportoSearchBar chuẩn hoá dùng chung cho ứng dụng

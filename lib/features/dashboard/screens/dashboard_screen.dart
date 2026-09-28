@@ -8,9 +8,10 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_card.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
+import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_type_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_create_entry.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
@@ -127,8 +128,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1180),
               child: Padding(
-                padding: AppResponsive.padding(
-                  MediaQuery.sizeOf(context).width,
+                padding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.sizeOf(context).width >= 840 ? 16 : 12,
+                  vertical: 8,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,6 +178,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Widget _buildSportFilterChips(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
     final categories =
         ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
     final sports = [
@@ -189,64 +192,102 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
     ];
 
-    return SizedBox(
-      height: 36,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: sports.length,
-        separatorBuilder: (_, index) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final sport = sports[index];
-          final isSelected = _selectedSport == sport['id'];
-          final icon = sport['icon'] as IconData;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedSport = sport['id'] as String),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-              decoration: BoxDecoration(
-                color: isSelected ? AppTheme.primary : colors.bgCard,
-                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                border: Border.all(
-                  color: isSelected ? AppTheme.primary : colors.border,
-                ),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: AppTheme.primary.withValues(alpha: 0.25),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.dashboard_sportActivityFilterLabel,
+          style: TextStyle(
+            color: colors.textSecondary,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 48,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: sports.length,
+            separatorBuilder: (_, index) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final sport = sports[index];
+              final id = sport['id'] as String;
+              final label = sport['label'] as String;
+              final isSelected = _selectedSport == id;
+              final icon = sport['icon'] as IconData;
+              void selectSport() {
+                setState(() => _selectedSport = id);
+              }
+
+              return Tooltip(
+                message: label,
+                child: Semantics(
+                  label: label,
+                  button: true,
+                  selected: isSelected,
+                  onTap: selectSport,
+                  child: ExcludeSemantics(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: selectSport,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        constraints: const BoxConstraints(
+                          minWidth: 68,
+                          minHeight: 48,
                         ),
-                      ]
-                    : null,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    icon,
-                    size: 14,
-                    color: isSelected ? Colors.white : colors.textSecondary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    sport['label'] as String,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w600,
-                      color: isSelected ? Colors.white : colors.textSecondary,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? colorScheme.primary
+                              : colors.bgCard,
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusXL * 2,
+                          ),
+                          border: Border.all(
+                            color: isSelected
+                                ? colorScheme.primary
+                                : colors.border,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              icon,
+                              size: 16,
+                              color: isSelected
+                                  ? colorScheme.onPrimary
+                                  : colors.textSecondary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              label,
+                              maxLines: 1,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w600,
+                                color: isSelected
+                                    ? colorScheme.onPrimary
+                                    : colors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -343,31 +384,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Widget _buildPrivateNoRankState(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.emoji_events_outlined, size: 42, color: colors.textMuted),
-          const SizedBox(height: 10),
-          Text(
-            l10n.publicProfileNoPlayedElo,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: colors.textSecondary,
-              fontWeight: FontWeight.w700,
+          Icon(Icons.emoji_events_outlined, size: 36, color: colors.textMuted),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.publicProfileNoPlayedElo,
+                  style: TextStyle(
+                    color: colors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  l10n.publicProfileNoPlayedEloHint,
+                  style: TextStyle(color: colors.textMuted, fontSize: 12),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            l10n.publicProfileNoPlayedEloHint,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: colors.textMuted, fontSize: 12),
           ),
         ],
       ),
@@ -401,14 +442,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: colors.border),
+        border: Border(bottom: BorderSide(color: colors.border)),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        borderRadius: BorderRadius.zero,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
@@ -548,12 +587,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   size: 18,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  '${l10n.publicProfileCurrentStreak}: $streakText',
-                  style: TextStyle(
-                    color: streakColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                Expanded(
+                  child: Text(
+                    '${l10n.publicProfileCurrentStreak}: $streakText',
+                    style: TextStyle(
+                      color: streakColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
@@ -646,18 +687,18 @@ class _DashboardHeader extends StatelessWidget {
     required this.footballTeamsAsync,
   });
 
-  final AsyncValue<dynamic> profileAsync;
-  final AsyncValue<dynamic> rankingsAsync;
-  final AsyncValue<dynamic> footballTeamsAsync;
-
+  final AsyncValue<UserProfile> profileAsync;
+  final AsyncValue<List<PlayerRanking>> rankingsAsync;
+  final AsyncValue<List<FootballTeamSummary>> footballTeamsAsync;
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final name = profileAsync.asData?.value.fullName ?? l10n.dashboard_user;
-    final email = profileAsync.asData?.value.email as String?;
-    final avatarUrl = profileAsync.asData?.value.avatarUrl as String?;
-    final rankings = rankingsAsync.asData?.value ?? const [];
-    final footballTeams = footballTeamsAsync.asData?.value ?? const [];
+    final email = profileAsync.asData?.value.email;
+    final avatarUrl = profileAsync.asData?.value.avatarUrl;
+    final rankings = rankingsAsync.asData?.value ?? const <PlayerRanking>[];
+    final footballTeams =
+        footballTeamsAsync.asData?.value ?? const <FootballTeamSummary>[];
     final bestFootballTeam = footballTeams.isEmpty
         ? null
         : footballTeams.reduce((a, b) => a.eloPoints >= b.eloPoints ? a : b);
@@ -986,31 +1027,28 @@ class _UnifiedTournamentsSectionState
 
     final remainingCount = filteredTournaments.length - 4;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section Title Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section Title Header
+        Row(
+          children: [
+            Expanded(
+              child: Text(
                 l10n.dashboard_myTournaments(allTournaments.length),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
                   color: colors.textPrimary,
                 ),
               ),
-              if (allTournaments.isNotEmpty)
-                Text(
+            ),
+            if (allTournaments.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Text(
                   l10n.dashboard_tournamentCount(allTournaments.length),
                   style: TextStyle(
                     fontSize: 12,
@@ -1018,136 +1056,133 @@ class _UnifiedTournamentsSectionState
                     color: colors.textMuted,
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Search Bar
-          if (allTournaments.length > 2) ...[
-            Container(
-              height: 38,
-              decoration: BoxDecoration(
-                color: colors.bgSurface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colors.border),
               ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (val) => setState(() => _searchQuery = val),
-                style: TextStyle(fontSize: 13, color: colors.textPrimary),
-                decoration: InputDecoration(
-                  hintText: l10n.dashboard_searchHint,
-                  hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
-                  prefixIcon: Icon(
-                    Icons.search_rounded,
-                    size: 18,
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Search Bar
+        if (allTournaments.length > 2) ...[
+          Container(
+            height: 38,
+            decoration: BoxDecoration(
+              color: colors.bgSurface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colors.border),
+            ),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (val) => setState(() => _searchQuery = val),
+              style: TextStyle(fontSize: 13, color: colors.textPrimary),
+              decoration: InputDecoration(
+                hintText: l10n.dashboard_searchHint,
+                hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  size: 18,
+                  color: colors.textMuted,
+                ),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear_rounded, size: 16),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+        ],
+
+        // List of Tournament Cards
+        if (filteredTournaments.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.emoji_events_outlined,
+                    size: 36,
                     color: colors.textMuted,
                   ),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear_rounded, size: 16),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _searchQuery = '');
-                          },
-                        )
-                      : null,
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-          ],
-
-          // List of Tournament Cards
-          if (filteredTournaments.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.emoji_events_outlined,
-                      size: 36,
-                      color: colors.textMuted,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _searchQuery.isNotEmpty
-                          ? l10n.dashboard_noSearchResults
-                          : l10n.dashboard_noTournaments,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else ...[
-            Column(
-              children: visibleTournaments.map((tournament) {
-                final isOwner = workspace.organizedTournaments.any(
-                  (item) => item.id == tournament.id,
-                );
-                final isCoOrg = workspace.coOrganizerTournaments.any(
-                  (item) => item.id == tournament.id,
-                );
-                final isParticipant = workspace.participatingTournaments.any(
-                  (item) => item.id == tournament.id,
-                );
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _TournamentTile(
-                    tournament: tournament,
-                    isOwner: isOwner,
-                    isCoOrg: isCoOrg,
-                    isParticipant: isParticipant,
+                  const SizedBox(height: 8),
+                  Text(
+                    _searchQuery.isNotEmpty
+                        ? l10n.dashboard_noSearchResults
+                        : l10n.dashboard_noTournaments,
+                    style: TextStyle(fontSize: 13, color: colors.textSecondary),
                   ),
-                );
-              }).toList(),
+                ],
+              ),
             ),
+          )
+        else ...[
+          Column(
+            children: visibleTournaments.map((tournament) {
+              final isOwner = workspace.organizedTournaments.any(
+                (item) => item.id == tournament.id,
+              );
+              final isCoOrg = workspace.coOrganizerTournaments.any(
+                (item) => item.id == tournament.id,
+              );
+              final isParticipant = workspace.participatingTournaments.any(
+                (item) => item.id == tournament.id,
+              );
 
-            // "Xem thêm" / "Thu gọn" button
-            if (filteredTournaments.length > 4) ...[
-              const SizedBox(height: 4),
-              SizedBox(
-                width: double.infinity,
-                height: 42,
-                child: TextButton.icon(
-                  onPressed: () => setState(() => _isExpanded = !_isExpanded),
-                  icon: Icon(
-                    _isExpanded
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded,
-                    size: 20,
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _TournamentTile(
+                  tournament: tournament,
+                  isOwner: isOwner,
+                  isCoOrg: isCoOrg,
+                  isParticipant: isParticipant,
+                ),
+              );
+            }).toList(),
+          ),
+
+          // "Xem thêm" / "Thu gọn" button
+          if (filteredTournaments.length > 4) ...[
+            const SizedBox(height: 4),
+            SizedBox(
+              width: double.infinity,
+              height: 42,
+              child: TextButton.icon(
+                onPressed: () => setState(() => _isExpanded = !_isExpanded),
+                icon: Icon(
+                  _isExpanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  size: 20,
+                  color: AppTheme.primary,
+                ),
+                label: Text(
+                  _isExpanded
+                      ? l10n.dashboard_collapse
+                      : l10n.dashboard_showMore(remainingCount),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
                     color: AppTheme.primary,
                   ),
-                  label: Text(
-                    _isExpanded
-                        ? l10n.dashboard_collapse
-                        : l10n.dashboard_showMore(remainingCount),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.primary,
-                    ),
-                  ),
-                  style: TextButton.styleFrom(
-                    backgroundColor: AppTheme.primary.withValues(alpha: 0.08),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor: AppTheme.primary.withValues(alpha: 0.08),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
-            ],
+            ),
           ],
         ],
-      ),
+      ],
     );
   }
 }
@@ -1236,7 +1271,7 @@ class _QuickActions extends ConsumerWidget {
   }
 
   void _openLiteCreation(BuildContext context) {
-    showPublicTournamentTypeSheet(context);
+    openPublicQuickTournamentCreate(context);
   }
 }
 
