@@ -39,6 +39,7 @@ import 'package:app_quanly_giaidau/features/payment/screens/payment_result_scree
 import 'package:app_quanly_giaidau/features/profile/screens/profile_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/user_profile_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/settings_screen.dart';
+import 'package:app_quanly_giaidau/features/profile/screens/profile_settings_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/change_password_screen.dart';
 import 'package:app_quanly_giaidau/features/reports/screens/my_reports_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
@@ -820,7 +821,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: 'settings',
-            builder: (context, state) => const SettingsScreen(),
+            builder: (context, state) => const ProfileSettingsScreen(),
           ),
           GoRoute(
             path: 'reports',

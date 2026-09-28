@@ -1,18 +1,24 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
-
 import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
 
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
@@ -20,6 +26,7 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_type_sheet.dart';
 
 // ─── PROFILE SCREEN ──────────────────────────────────────────────────────────
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -30,9 +37,22 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen>
-    {
+    with SingleTickerProviderStateMixin {
   bool _uploading = false;
   bool _uploadingCover = false;
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
 
 
@@ -262,38 +282,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         ? eligibleRankings.first
         : (rankings.isNotEmpty ? rankings.first : null);
 
-    return _buildSinglePageProfile(
-      context,
-      profile,
-      colors,
-      rankings: rankings,
-      bestRanking: bestRanking,
-      totalPlayed: totalPlayed,
-      totalWon: totalWon,
-      totalLost: totalLost < 0 ? 0 : totalLost,
-      bestElo: bestElo,
-    );
-  }
-
-  // ─── SINGLE PAGE PROFILE (IMAGE 1 EXACT DESIGN) ──────────────────────
-  Widget _buildSinglePageProfile(
-    BuildContext context,
-    UserProfile profile,
-    AppColorsExtension colors, {
-    required List<PlayerRanking> rankings,
-    required PlayerRanking? bestRanking,
-    required int totalPlayed,
-    required int totalWon,
-    required int totalLost,
-    required int bestElo,
-  }) {
     const expandedCoverHeight = 220.0;
-    const avatarRadius = 46.0;
 
-    return CustomScrollView(
-      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-      slivers: [
-        // ── PINNED SLIVER APP BAR (Cover image + Persistent Back/Camera/Settings) ──
+    return NestedScrollView(
+      headerSliverBuilder: (context, innerBoxIsScrolled) => [
+        // ── PINNED SLIVER APP BAR (Cover image + Persistent Controls + TabBar) ──
         SliverAppBar(
           expandedHeight: expandedCoverHeight,
           pinned: true,
@@ -306,7 +299,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 if (context.canPop()) {
                   context.pop();
                 } else {
-                  context.go("/home");
+                  context.go('/home');
                 }
               },
               child: Container(
@@ -367,7 +360,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             GestureDetector(
               onTap: () {
                 HapticFeedback.lightImpact();
-                context.go("/profile/settings");
+                context.push('/profile/settings');
               },
               child: Container(
                 width: 38,
@@ -412,7 +405,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       colors: [
                         Colors.black.withValues(alpha: 0.5),
                         Colors.transparent,
-                        colors.bgDark.withValues(alpha: 0.85),
+                        colors.bgDark.withValues(alpha: 0.9),
                       ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -425,13 +418,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           ),
         ),
 
-        // ── PROFILE BODY CONTENT WITH OVERLAPPING AVATAR ──
+        // ── USER PROFILE HEADER (Avatar, Name, Handle, Location, Stats) ──
         SliverToBoxAdapter(
           child: Column(
             children: [
-              // Avatar protruding over the cover seam
+              // Protruding avatar over the bottom of the cover
               Transform.translate(
-                offset: const Offset(0, -avatarRadius),
+                offset: const Offset(0, -46.0),
                 child: Center(
                   child: GestureDetector(
                     onTap: () {
@@ -458,11 +451,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                             imageUrl: profile.avatarUrl,
                             name: (profile.fullName != null && profile.fullName!.isNotEmpty)
                                 ? profile.fullName!
-                                : "SportO",
+                                : 'SportO',
                             elo: bestRanking?.eloPoints ?? 0,
                             tierName: bestRanking?.tierName,
                             matchesPlayed: bestRanking?.matchesPlayed ?? 0,
-                            size: avatarRadius * 2,
+                            size: 92,
                             ringWidth: 3,
                           ),
                         ),
@@ -514,22 +507,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
               // Offset compensation after protruding avatar
               Transform.translate(
-                offset: const Offset(0, -avatarRadius + 8),
+                offset: const Offset(0, -38.0),
                 child: Column(
                   children: [
-                    // ── USER NAME, USERNAME, LOCATION ──
+                    // Full name
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Column(
                         children: [
-                          // Full name
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Flexible(
                                 child: Text(
-                                  profile.fullName ?? "Người dùng",
+                                  profile.fullName ?? 'Người dùng',
                                   style: TextStyle(
                                     fontSize: 21,
                                     fontWeight: FontWeight.w800,
@@ -556,7 +548,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           // Handle / Username (@minhanh)
                           if (profile.email != null)
                             Text(
-                              "@${profile.email!.split("@").first}",
+                              '@${profile.email!.split('@').first}',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
@@ -581,7 +573,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                 child: Text(
                                   (profile.address != null && profile.address!.isNotEmpty)
                                       ? profile.address!
-                                      : "Đắk Lắk, Việt Nam",
+                                      : 'Đắk Lắk, Việt Nam',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: colors.textMuted,
@@ -599,7 +591,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
                     const SizedBox(height: 18),
 
-                    // ── 4-METRIC STATS ROW (IMAGE 1) ──
+                    // 4-METRIC STATS ROW (Trận đã đấu, Thắng, Thua, Điểm xếp hạng)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: _buildStatsRow(
@@ -611,23 +603,94 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         bestElo,
                       ),
                     ),
-
-                    const SizedBox(height: 16),
-
-                    // ── 4-ITEM NAVIGATION MENU CARD (IMAGE 1) ──
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildNavMenuCard(context, colors),
-                    ),
-
-                    const SizedBox(height: 110), // Bottom navigation clearance
                   ],
                 ),
               ),
             ],
           ),
         ),
+
+        // ── PINNED TABBAR BELOW AVATAR AND STATS ──
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _SliverTabBarDelegate(
+            tabBar: TabBar(
+              controller: _tabController,
+              indicatorColor: AppTheme.primary,
+              indicatorWeight: 2.5,
+              indicatorSize: TabBarIndicatorSize.label,
+              labelColor: AppTheme.primary,
+              unselectedLabelColor: colors.textMuted,
+              labelStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+              tabs: const [
+                Tab(text: 'Tổng quan'),
+                Tab(text: 'Thành tích'),
+                Tab(text: 'Lịch sử'),
+              ],
+            ),
+            backgroundColor: colors.bgDark,
+          ),
+        ),
       ],
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildOverviewTab(
+            context,
+            profile,
+            colors,
+            rankings: rankings,
+            bestRanking: bestRanking,
+            totalPlayed: totalPlayed,
+            totalWon: totalWon,
+            totalLost: totalLost < 0 ? 0 : totalLost,
+            bestElo: bestElo,
+          ),
+          _buildAchievementsTab(context, colors),
+          _buildHistoryTab(context, profile, colors),
+        ],
+      ),
+    );
+  }
+
+  // ─── TAB 1: TỔNG QUAN (IMAGE 1 EXACT DESIGN) ─────────────────────────
+  Widget _buildOverviewTab(
+    BuildContext context,
+    UserProfile profile,
+    AppColorsExtension colors, {
+    required List<PlayerRanking> rankings,
+    required PlayerRanking? bestRanking,
+    required int totalPlayed,
+    required int totalWon,
+    required int totalLost,
+    required int bestElo,
+  }) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+      child: Column(
+        children: [
+          // ── 4-ITEM NAVIGATION MENU CARD (IMAGE 1) ──
+          _buildNavMenuCard(context, colors),
+
+          const SizedBox(height: 20),
+
+          // ── RECENT TOURNAMENTS PREVIEW ──
+          _buildRecentTournamentsPreview(context, colors),
+
+          const SizedBox(height: 20),
+
+          // ── RECENT CLUBS PREVIEW ──
+          _buildRecentClubsPreview(context, colors),
+        ],
+      ),
     );
   }
 
@@ -967,6 +1030,787 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
+  // ─── RECENT TOURNAMENTS PREVIEW ────────────────────────────────────
+  Widget _buildRecentTournamentsPreview(
+    BuildContext context,
+    AppColorsExtension colors,
+  ) {
+    final workspaceAsync = ref.watch(myTournamentWorkspaceProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            _sectionLabel(colors, 'Giải đấu gần đây'),
+            const Spacer(),
+            GestureDetector(
+              onTap: () => context.go('/dashboard'),
+              child: const Text(
+                'Xem tất cả →',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        workspaceAsync.when(
+          data: (workspace) {
+            final all = [
+              ...workspace.organizedTournaments,
+              ...workspace.coOrganizerTournaments,
+              ...workspace.participatingTournaments,
+            ];
+            final seen = <String>{};
+            final deduped = all.where((t) {
+              final id = t.id.toString();
+              return id.isNotEmpty && seen.add(id);
+            }).take(3).toList();
+
+            if (deduped.isEmpty) {
+              return _emptyPreviewCard(
+                colors,
+                Icons.emoji_events_outlined,
+                'Chưa tham gia giải đấu nào',
+                onTap: () => showPublicTournamentTypeSheet(context),
+                actionLabel: 'Tạo giải đấu',
+              );
+            }
+
+            return Column(
+              children: deduped
+                  .map((t) => _buildTournamentPreviewCard(t, colors, context))
+                  .toList(),
+            );
+          },
+          loading: () => _loadingPlaceholder(colors),
+          error: (e, s) => _emptyPreviewCard(
+            colors,
+            Icons.cloud_off_rounded,
+            'Không thể tải giải đấu',
+            onTap: () => ref.invalidate(myTournamentWorkspaceProvider),
+            actionLabel: 'Thử lại',
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTournamentPreviewCard(
+    dynamic t,
+    AppColorsExtension colors,
+    BuildContext context,
+  ) {
+    final String? logoUrl = t.logoUrl?.toString();
+    final String? bannerUrl = t.bannerUrl?.toString();
+    final rawStatus = t.status?.toString() ?? 'draft';
+    final statusLabel = StatusHelper.getTournamentStatusLabel(rawStatus);
+
+    return GestureDetector(
+      onTap: () {
+        final isManager =
+            t.myRole == 'OWNER' ||
+            t.myRole == 'ORGANIZER' ||
+            t.myRole == 'CO_ORGANIZER';
+        if (isManager) {
+          if (t.isClubLite == true) {
+            context.push('/lite-manage/${t.id}');
+          } else {
+            context.push('/organizer/tournaments/${t.id}/manage');
+          }
+        } else {
+          context.push('/intro/${t.id}');
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+            _tournamentLogo(logoUrl, bannerUrl, colors),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t.name?.toString() ?? '—',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    statusLabel,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: colors.textMuted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── RECENT CLUBS PREVIEW ──────────────────────────────────────────
+  Widget _buildRecentClubsPreview(
+    BuildContext context,
+    AppColorsExtension colors,
+  ) {
+    final myCommunitiesAsync = ref.watch(myCommunitiesProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            _sectionLabel(colors, 'Đội nhóm / CLB'),
+            const Spacer(),
+            GestureDetector(
+              onTap: () => context.go('/dashboard'),
+              child: const Text(
+                'Xem tất cả →',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        myCommunitiesAsync.when(
+          data: (communities) {
+            if (communities.isEmpty) {
+              return _emptyPreviewCard(
+                colors,
+                Icons.groups_outlined,
+                'Chưa tham gia CLB nào',
+                onTap: () => context.push('/club/create'),
+                actionLabel: 'Tạo CLB',
+              );
+            }
+            final preview = communities.take(2).toList();
+            return Column(
+              children: preview
+                  .map((club) => _buildClubPreviewCard(club, colors, context))
+                  .toList(),
+            );
+          },
+          loading: () => _loadingPlaceholder(colors),
+          error: (e, s) => _emptyPreviewCard(
+            colors,
+            Icons.cloud_off_rounded,
+            'Không thể tải CLB',
+            onTap: () => ref.invalidate(myCommunitiesProvider),
+            actionLabel: 'Thử lại',
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildClubPreviewCard(
+    dynamic club,
+    AppColorsExtension colors,
+    BuildContext context,
+  ) {
+    return GestureDetector(
+      onTap: () => context.push('/club/${club.id}'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+            _tournamentLogo(
+              club.logoUrl?.toString(),
+              club.bannerUrl?.toString(),
+              colors,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    club.name?.toString() ?? '—',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${club.memberCount ?? 0} thành viên',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: colors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: colors.textMuted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── TAB 2: THÀNH TÍCH ───────────────────────────────────────────────
+  Widget _buildAchievementsTab(
+    BuildContext context,
+    AppColorsExtension colors,
+  ) {
+    final rankings =
+        ref.watch(userRankingsProvider).asData?.value ??
+        const <PlayerRanking>[];
+    final followedAsync = ref.watch(followedTournamentsProvider);
+    final followed = followedAsync.asData?.value ?? [];
+
+    final completed = followed
+        .where((t) => StatusHelper.isTournamentCompleted(t.status))
+        .toList()
+      ..sort((a, b) =>
+          (b.endDate ?? b.updatedAt).compareTo(a.endDate ?? a.updatedAt));
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (rankings.isNotEmpty) ...[
+            _sectionLabel(colors, 'Xếp hạng theo môn'),
+            const SizedBox(height: 10),
+            ...rankings
+                .where((r) => r.matchesPlayed > 0 || r.adminLeaderboardEligible)
+                .map((r) => _buildRankCard(r, colors)),
+            const SizedBox(height: 24),
+          ],
+          _sectionLabel(colors, 'Giải đấu đã hoàn thành'),
+          const SizedBox(height: 10),
+          if (completed.isEmpty)
+            _emptyPreviewCard(
+              colors,
+              Icons.emoji_events_outlined,
+              'Chưa có giải đấu hoàn thành nào',
+            )
+          else
+            ...completed.take(10).map(
+              (t) => _buildCompletedTournamentCard(t, colors, context),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRankCard(PlayerRanking rank, AppColorsExtension colors) {
+    final winRate = rank.matchesPlayed > 0
+        ? (rank.matchesWon / rank.matchesPlayed * 100).toStringAsFixed(0)
+        : '0';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.border),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.sports_tennis_rounded, size: 22, color: AppTheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  rank.categoryName ?? 'Môn thể thao',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${rank.matchesPlayed} trận  •  $winRate% thắng',
+                  style: TextStyle(fontSize: 11, color: colors.textMuted),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                _formatNumberWithCommas(rank.eloPoints),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: AppTheme.primary,
+                ),
+              ),
+              Text(
+                rank.tierName.isEmpty ? 'ELO' : rank.tierName,
+                style: TextStyle(fontSize: 10, color: colors.textMuted),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompletedTournamentCard(
+    Tournament t,
+    AppColorsExtension colors,
+    BuildContext context,
+  ) {
+    final endDate = t.endDate;
+    final dateStr = endDate != null
+        ? '${endDate.day}/${endDate.month}/${endDate.year}'
+        : '';
+    return GestureDetector(
+      onTap: () => context.push('/intro/${t.id}'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+            _tournamentLogo(t.logoUrl, t.bannerUrl, colors),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t.name.isNotEmpty ? t.name : '—',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (dateStr.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today_rounded,
+                            size: 11,
+                            color: colors.textMuted,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            dateStr,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Hoàn thành',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF059669),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── TAB 3: LỊCH SỬ ─────────────────────────────────────────────────
+  Widget _buildHistoryTab(
+    BuildContext context,
+    UserProfile profile,
+    AppColorsExtension colors,
+  ) {
+    final matchesAsync = ref.watch(publicUserMatchesProvider(profile.id));
+    final followedAsync = ref.watch(followedTournamentsProvider);
+    final followed = followedAsync.asData?.value ?? [];
+
+    final sortedTournaments = [...followed]
+      ..sort((a, b) =>
+          (b.endDate ?? b.updatedAt).compareTo(a.endDate ?? a.updatedAt));
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionLabel(colors, 'Trận đấu gần đây'),
+          const SizedBox(height: 10),
+          matchesAsync.when(
+            loading: () => _loadingPlaceholder(colors),
+            error: (err, stack) => _emptyPreviewCard(
+              colors,
+              Icons.sports_tennis_outlined,
+              'Chưa có dữ liệu trận đấu',
+            ),
+            data: (matches) {
+              if (matches.isEmpty) {
+                return _emptyPreviewCard(
+                  colors,
+                  Icons.sports_tennis_outlined,
+                  'Chưa có trận đấu nào được ghi nhận',
+                );
+              }
+              return Column(
+                children: matches
+                    .take(5)
+                    .map((m) => _buildMatchHistoryCard(m, colors, context))
+                    .toList(),
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+          _sectionLabel(colors, 'Giải đấu theo dõi & tham gia'),
+          const SizedBox(height: 10),
+          followedAsync.isLoading
+              ? _loadingPlaceholder(colors)
+              : sortedTournaments.isEmpty
+              ? _emptyPreviewCard(
+                  colors,
+                  Icons.emoji_events_outlined,
+                  'Chưa có giải đấu nào trong lịch sử',
+                )
+              : Column(
+                  children: sortedTournaments
+                      .map((t) => _buildHistoryCard(t, colors, context))
+                      .toList(),
+                ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMatchHistoryCard(
+    MatchModel match,
+    AppColorsExtension colors,
+    BuildContext context,
+  ) {
+    final isCompleted =
+        match.status.toLowerCase() == 'completed' || match.completedAt != null;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.border),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isCompleted
+                ? Icons.check_circle_outline_rounded
+                : Icons.schedule_rounded,
+            size: 20,
+            color: isCompleted ? const Color(0xFF10B981) : AppTheme.primary,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${match.team1Name} vs ${match.team2Name}',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  match.tournamentName ?? (isCompleted ? 'Trận đấu hoàn thành' : 'Sắp diễn ra'),
+                  style: TextStyle(fontSize: 11, color: colors.textMuted),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: colors.bgSurface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: colors.borderLight),
+            ),
+            child: Text(
+              '${match.score1} - ${match.score2}',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: colors.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistoryCard(
+    Tournament t,
+    AppColorsExtension colors,
+    BuildContext context,
+  ) {
+    final statusLabel = StatusHelper.getTournamentStatusLabel(t.status);
+    final isCompleted = StatusHelper.isTournamentCompleted(t.status);
+    final statusColor = isCompleted
+        ? const Color(0xFF10B981)
+        : StatusHelper.isTournamentInProgress(t.status)
+        ? AppTheme.primary
+        : colors.textMuted;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          context.push('/intro/${t.id}');
+        },
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: colors.border),
+          ),
+          child: Row(
+            children: [
+              _tournamentLogo(t.logoUrl, t.bannerUrl, colors),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.name.isNotEmpty ? t.name : '—',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      statusLabel,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: statusColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: colors.textMuted,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+
+  // ─── HELPERS & COMMON WIDGETS ──────────────────────────────────────
+  Widget _sectionLabel(AppColorsExtension colors, String text) {
+    return Row(
+      children: [
+        Container(
+          width: 3.5,
+          height: 16,
+          decoration: BoxDecoration(
+            color: AppTheme.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: colors.textSecondary,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _tournamentLogo(
+    String? logoUrl,
+    String? bannerUrl,
+    AppColorsExtension colors,
+  ) {
+    final url = (logoUrl != null && logoUrl.isNotEmpty)
+        ? logoUrl
+        : ((bannerUrl != null && bannerUrl.isNotEmpty) ? bannerUrl : null);
+
+    return Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: colors.border.withValues(alpha: 0.6)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: url != null
+          ? Image.network(
+              url,
+              fit: BoxFit.cover,
+              errorBuilder: (ctx, e, s) => _defaultLogo(),
+            )
+          : _defaultLogo(),
+    );
+  }
+
+  Widget _defaultLogo() => Padding(
+    padding: const EdgeInsets.all(7),
+    child: Image.asset(
+      'assets/images/sporto_v1_with_text.png',
+      fit: BoxFit.contain,
+    ),
+  );
+
+  Widget _emptyPreviewCard(
+    AppColorsExtension colors,
+    IconData icon,
+    String message, {
+    VoidCallback? onTap,
+    String? actionLabel,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 36, color: colors.textMuted),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            style: TextStyle(fontSize: 13, color: colors.textSecondary),
+            textAlign: TextAlign.center,
+          ),
+          if (onTap != null && actionLabel != null) ...[
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: onTap,
+              child: Text(
+                actionLabel,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.primary,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _loadingPlaceholder(AppColorsExtension colors) {
+    return Container(
+      height: 80,
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.border),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: AppTheme.primary,
+        ),
+      ),
+    );
+  }
 
   String _formatNumberWithCommas(int n) {
     final s = n.toString();
@@ -1171,5 +2015,40 @@ class ProfileShimmerLoading extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// ─── DATA CLASSES ────────────────────────────────────────────────────────────
+class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar tabBar;
+  final Color backgroundColor;
+
+  const _SliverTabBarDelegate({
+    required this.tabBar,
+    required this.backgroundColor,
+  });
+
+  @override
+  double get minExtent => tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: backgroundColor,
+      child: tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
+    return tabBar != oldDelegate.tabBar ||
+        backgroundColor != oldDelegate.backgroundColor;
   }
 }
