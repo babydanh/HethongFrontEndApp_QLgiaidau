@@ -13968,4 +13968,105 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get tournamentManagementLivestreamDeviceNameLengthInvalid =>
       'Tên thiết bị phải có từ 2 đến 255 ký tự.';
+
+  @override
+  String get socialOpenCreateTitle => 'Tạo kèo';
+
+  @override
+  String get socialClubCreateTitle => 'Tạo buổi giao lưu';
+
+  @override
+  String get socialOpenUpdateTitle => 'Cập nhật kèo';
+
+  @override
+  String get socialClubUpdateTitle => 'Cập nhật buổi giao lưu';
+
+  @override
+  String get socialOpenDetailsLabel => 'Kèo';
+
+  @override
+  String get socialClubDetailsLabel => 'Buổi giao lưu';
+
+  @override
+  String get socialOpenTitleFieldLabel => 'Tên kèo';
+
+  @override
+  String get socialClubTitleFieldLabel => 'Tên buổi giao lưu';
+
+  @override
+  String get socialOpenFeeLabel => 'Phí tham gia kèo';
+
+  @override
+  String get socialClubFeeLabel => 'Phí tham gia buổi giao lưu';
+
+  @override
+  String socialClubLinkedStatus(String clubName) {
+    return 'Buổi này thuộc câu lạc bộ $clubName.';
+  }
+
+  @override
+  String get socialClubNoAutoInviteHint =>
+      'Buổi được gắn với câu lạc bộ; thành viên không được tự động thông báo, mời hoặc thêm vào danh sách tham gia.';
+
+  @override
+  String get socialClubUnlinkAction => 'Xóa CLB';
+
+  @override
+  String get socialActiveSportsLabel => 'Môn thể thao';
+
+  @override
+  String get socialActiveSportsLoading => 'Đang tải môn thể thao...';
+
+  @override
+  String get socialActiveSportsEmpty =>
+      'Hiện chưa có môn thể thao nào được bật.';
+
+  @override
+  String get socialActiveSportsError =>
+      'Không tải được danh sách môn thể thao.';
+
+  @override
+  String get socialActiveSportsRetry => 'Thử lại';
+
+  @override
+  String get socialLegacyInactiveSport => 'Môn đã ngừng hoạt động';
+
+  @override
+  String get socialRegionLabel => 'Khu vực (không bắt buộc)';
+
+  @override
+  String get socialRegionChooseAction => 'Chọn khu vực';
+
+  @override
+  String get socialRegionChangeAction => 'Đổi khu vực';
+
+  @override
+  String get socialRegionProvinceLabel => 'Tỉnh/Thành phố';
+
+  @override
+  String get socialRegionWardLabel => 'Phường/Xã';
+
+  @override
+  String get socialRegionProvinceSearchHint => 'Tìm tỉnh/thành phố';
+
+  @override
+  String get socialRegionWardSearchHint => 'Tìm phường/xã';
+
+  @override
+  String get socialRegionApplyAction => 'Áp dụng';
+
+  @override
+  String get socialRegionCancelAction => 'Hủy';
+
+  @override
+  String get socialRegionNoResults => 'Không tìm thấy kết quả.';
+
+  @override
+  String get socialRegionLoadError =>
+      'Không tải được khu vực. Bạn vẫn có thể nhập địa chỉ thủ công.';
+
+  @override
+  String socialRegionSelectedSummary(String ward, String province) {
+    return '$ward, $province';
+  }
 }

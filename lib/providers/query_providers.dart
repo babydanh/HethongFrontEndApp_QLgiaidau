@@ -1,8 +1,6 @@
 import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/di/di.dart';
-import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
@@ -19,15 +17,16 @@ final tournamentsProvider = StreamProvider.autoDispose<List<Tournament>>((ref) {
   });
 });
 
-final myTournamentsProvider = Provider.autoDispose<AsyncValue<List<Tournament>>>((ref) {
-  final allTournamentsAsync = ref.watch(tournamentsProvider);
+final myTournamentsProvider =
+    Provider.autoDispose<AsyncValue<List<Tournament>>>((ref) {
+      final allTournamentsAsync = ref.watch(tournamentsProvider);
 
-  return allTournamentsAsync.when(
-    data: (allTournaments) => AsyncValue.data(allTournaments),
-    loading: () => const AsyncValue.loading(),
-    error: (err, stack) => AsyncValue.data(const <Tournament>[]),
-  );
-});
+      return allTournamentsAsync.when(
+        data: (allTournaments) => AsyncValue.data(allTournaments),
+        loading: () => const AsyncValue.loading(),
+        error: (err, stack) => AsyncValue.data(const <Tournament>[]),
+      );
+    });
 
 final followedTournamentsProvider = FutureProvider<List<Tournament>>((
   ref,
@@ -39,16 +38,7 @@ final tournamentProvider = StreamProvider.family<Tournament?, String>((
   ref,
   id,
 ) {
-  final repo = ref.watch(tournamentRepositoryProvider);
-  final l10n = lookupAppLocalizations(ref.read(localeProvider));
-  return repo
-      .watch(id)
-      .timeout(
-        const Duration(seconds: 8),
-        onTimeout: (sink) {
-          sink.addError(TimeoutException(l10n.tournamentInfoTimeout));
-        },
-      );
+  return ref.watch(tournamentRepositoryProvider).watch(id);
 });
 
 final tournamentIntroProvider = FutureProvider.family<Tournament?, String>((
@@ -126,12 +116,10 @@ final introTeamsProvider = FutureProvider.family<List<Team>, String>((
       .timeout(const Duration(seconds: 8));
 });
 
-final matchesProvider = StreamProvider.autoDispose.family<List<MatchModel>, String>((
-  ref,
-  tournamentId,
-) {
-  return ref.watch(matchRepositoryProvider).watchByTournament(tournamentId);
-});
+final matchesProvider = StreamProvider.autoDispose
+    .family<List<MatchModel>, String>((ref, tournamentId) {
+      return ref.watch(matchRepositoryProvider).watchByTournament(tournamentId);
+    });
 
 final tournamentDivisionsProvider =
     FutureProvider.family<List<Map<String, dynamic>>, String>((

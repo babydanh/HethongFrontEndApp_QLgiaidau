@@ -7,6 +7,8 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_management_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
+import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
+import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 
 /// Preserves club Super Lite management and routes other tournament types to the shared hub.
 class TournamentManagementDispatcher extends ConsumerWidget {
@@ -30,18 +32,65 @@ class TournamentManagementDispatcher extends ConsumerWidget {
     final tournamentAsync = ref.watch(tournamentProvider(tournamentId));
     final l10n = AppLocalizations.of(context)!;
 
+    Widget managementWorkspace(Tournament tournament) {
+      if (tournament.isClubLite ||
+          (showLiteWorkspace && tournament.isSuperLite)) {
+        return LiteManagementScreen(tournamentId: tournamentId);
+      }
+
+      return TournamentManagementHubScreen(
+        tournament: tournament,
+        actionRouteBase: actionRouteBase,
+        opsWorkspaceRoute: opsWorkspaceRoute,
+        liteWorkspaceRoute: liteWorkspaceRoute,
+      );
+    }
+
+    Widget workspaceFrame(Tournament tournament) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          managementWorkspace(tournament),
+          if (tournamentAsync.isLoading)
+            const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: LinearProgressIndicator(),
+            ),
+        ],
+      );
+    }
+
+    Widget errorState(Object error) {
+      final accessDenied = error is TournamentAccessDeniedException;
+      return _StateScaffold(
+        title: l10n.errorPrefix,
+        child: _RetryState(
+          message: error is TournamentAccessDeniedException
+              ? error.message
+              : ErrorParser.parse(error, l10n.errorPrefix, l10n),
+          onRetry: accessDenied
+              ? null
+              : () => ref.invalidate(tournamentProvider(tournamentId)),
+        ),
+      );
+    }
+
+    final currentError = tournamentAsync.error;
+    if (currentError is TournamentAccessDeniedException) {
+      return errorState(currentError);
+    }
+
+    final lastTournament = tournamentAsync.value;
+    if (lastTournament != null) return workspaceFrame(lastTournament);
+
     return tournamentAsync.when(
       loading: () => _StateScaffold(
         title: l10n.unnamed,
         child: const Center(child: CircularProgressIndicator()),
       ),
-      error: (error, _) => _StateScaffold(
-        title: l10n.errorPrefix,
-        child: _RetryState(
-          message: ErrorParser.parse(error, l10n.errorPrefix, l10n),
-          onRetry: () => ref.invalidate(tournamentProvider(tournamentId)),
-        ),
-      ),
+      error: (error, _) => errorState(error),
       data: (tournament) {
         if (tournament == null) {
           return _StateScaffold(
@@ -52,17 +101,7 @@ class TournamentManagementDispatcher extends ConsumerWidget {
             ),
           );
         }
-        if (tournament.isClubLite ||
-            (showLiteWorkspace && tournament.isSuperLite)) {
-          return LiteManagementScreen(tournamentId: tournamentId);
-        }
-
-        return TournamentManagementHubScreen(
-          tournament: tournament,
-          actionRouteBase: actionRouteBase,
-          opsWorkspaceRoute: opsWorkspaceRoute,
-          liteWorkspaceRoute: liteWorkspaceRoute,
-        );
+        return workspaceFrame(tournament);
       },
     );
   }
@@ -102,11 +141,12 @@ class _RetryState extends StatelessWidget {
   const _RetryState({required this.message, required this.onRetry});
 
   final String message;
-  final VoidCallback onRetry;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final retry = onRetry;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -121,11 +161,12 @@ class _RetryState extends StatelessWidget {
             const SizedBox(height: 12),
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(l10n.dashboard_retry),
-            ),
+            if (retry != null)
+              FilledButton.icon(
+                onPressed: retry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(l10n.dashboard_retry),
+              ),
           ],
         ),
       ),

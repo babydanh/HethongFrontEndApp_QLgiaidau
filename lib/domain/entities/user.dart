@@ -84,7 +84,8 @@ class UserProfile {
       bankAccountNumber: p['bankAccountNumber']?.toString(),
       bankAccountName: p['bankAccountName']?.toString(),
       role: p['role']?.toString(),
-      roles: (p['roles'] as List<dynamic>?)
+      roles:
+          (p['roles'] as List<dynamic>?)
               ?.map((value) => value.toString())
               .toList(growable: false) ??
           const <String>[],
@@ -232,7 +233,11 @@ class UserPublicProfile {
       gender: json['gender'] as String?,
       bio: json['bio'] as String?,
       role: json['role'] as String? ?? (json['systemRole'] as String?),
-      roles: (json['roles'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      roles:
+          (json['roles'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
       isVerified: json['isVerified'] == true,
       ranks: [
         ...((json['ranks'] as List<dynamic>?)

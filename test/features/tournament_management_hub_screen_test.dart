@@ -109,6 +109,7 @@ class _IdleLiteManagementNotifier extends LiteManagementNotifier {
   Future<void> init(String tournamentId) async {}
 }
 
+
 void main() {
   testWidgets('admin, organizer, and Lite entry routes share one hub', (
     tester,
@@ -118,11 +119,8 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         userProfileProvider.overrideWith(
-          (ref) async => const UserProfile(
-            id: 'admin-1',
-            role: 'ADMIN',
-            roles: ['ADMIN'],
-          ),
+          (ref) async =>
+              const UserProfile(id: 'admin-1', role: 'ADMIN', roles: ['ADMIN']),
         ),
         authProvider.overrideWith(_AuthenticatedAdmin.new),
         tournamentProvider('tournament-1').overrideWith(
@@ -170,6 +168,7 @@ void main() {
     }
   });
 
+
   testWidgets('club Super Lite keeps the existing Lite management screen', (
     tester,
   ) async {
@@ -214,11 +213,8 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         userProfileProvider.overrideWith(
-          (ref) async => const UserProfile(
-            id: 'admin-1',
-            role: 'ADMIN',
-            roles: ['ADMIN'],
-          ),
+          (ref) async =>
+              const UserProfile(id: 'admin-1', role: 'ADMIN', roles: ['ADMIN']),
         ),
         authProvider.overrideWith(_AuthenticatedAdmin.new),
         tournamentProvider(

@@ -5632,4 +5632,52 @@
   "tournamentManagementLivestreamDeviceNameHint": "Ví dụ: Điện thoại sân 1",
   "tournamentManagementLivestreamDeviceNameRequired": "Nhập tên thiết bị trước.",
   "tournamentManagementLivestreamDeviceNameLengthInvalid": "Tên thiết bị phải có từ 2 đến 255 ký tự."
+  ,"socialOpenCreateTitle": "Tạo kèo",
+  "socialClubCreateTitle": "Tạo buổi giao lưu",
+  "socialOpenUpdateTitle": "Cập nhật kèo",
+  "socialClubUpdateTitle": "Cập nhật buổi giao lưu",
+  "socialOpenDetailsLabel": "Kèo",
+  "socialClubDetailsLabel": "Buổi giao lưu",
+  "socialOpenTitleFieldLabel": "Tên kèo",
+  "socialClubTitleFieldLabel": "Tên buổi giao lưu",
+  "socialOpenFeeLabel": "Phí tham gia kèo",
+  "socialClubFeeLabel": "Phí tham gia buổi giao lưu",
+  "socialClubLinkedStatus": "Buổi này thuộc câu lạc bộ {clubName}.",
+  "@socialClubLinkedStatus": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "socialClubNoAutoInviteHint": "Buổi được gắn với câu lạc bộ; thành viên không được tự động thông báo, mời hoặc thêm vào danh sách tham gia.",
+  "socialClubUnlinkAction": "Xóa CLB",
+  "socialActiveSportsLabel": "Môn thể thao",
+  "socialActiveSportsLoading": "Đang tải môn thể thao...",
+  "socialActiveSportsEmpty": "Hiện chưa có môn thể thao nào được bật.",
+  "socialActiveSportsError": "Không tải được danh sách môn thể thao.",
+  "socialActiveSportsRetry": "Thử lại",
+  "socialLegacyInactiveSport": "Môn đã ngừng hoạt động",
+  "socialRegionLabel": "Khu vực (không bắt buộc)",
+  "socialRegionChooseAction": "Chọn khu vực",
+  "socialRegionChangeAction": "Đổi khu vực",
+  "socialRegionProvinceLabel": "Tỉnh/Thành phố",
+  "socialRegionWardLabel": "Phường/Xã",
+  "socialRegionProvinceSearchHint": "Tìm tỉnh/thành phố",
+  "socialRegionWardSearchHint": "Tìm phường/xã",
+  "socialRegionApplyAction": "Áp dụng",
+  "socialRegionCancelAction": "Hủy",
+  "socialRegionNoResults": "Không tìm thấy kết quả.",
+  "socialRegionLoadError": "Không tải được khu vực. Bạn vẫn có thể nhập địa chỉ thủ công.",
+  "socialRegionSelectedSummary": "{ward}, {province}",
+  "@socialRegionSelectedSummary": {
+    "placeholders": {
+      "ward": {
+        "type": "String"
+      },
+      "province": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -783,7 +783,10 @@ class ApiTournamentRepository implements ITournamentRepository {
 
   @override
   Future<void> update(String id, Map<String, dynamic> data) async {
-    _log.info('Updating tournament $id via API: $data');
+    // Never interpolate the payload: `data` carries the full
+    // `tournamentConfig` (format rules, scoring and prize settings) and
+    // stringifying it would write that configuration into the app logs.
+    _log.info('Updating tournament $id via API');
     await _dioClient.dio.patch('/tournaments/$id', data: data);
   }
 

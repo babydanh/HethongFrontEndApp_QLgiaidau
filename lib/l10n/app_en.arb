@@ -5632,4 +5632,52 @@
   "tournamentManagementLivestreamDeviceNameHint": "Example: Court 1 phone",
   "tournamentManagementLivestreamDeviceNameRequired": "Enter a device name first.",
   "tournamentManagementLivestreamDeviceNameLengthInvalid": "Enter a device name between 2 and 255 characters."
+  ,"socialOpenCreateTitle": "Create session",
+  "socialClubCreateTitle": "Create club social session",
+  "socialOpenUpdateTitle": "Update session",
+  "socialClubUpdateTitle": "Update club social session",
+  "socialOpenDetailsLabel": "Session",
+  "socialClubDetailsLabel": "Club session",
+  "socialOpenTitleFieldLabel": "Session title",
+  "socialClubTitleFieldLabel": "Club session title",
+  "socialOpenFeeLabel": "Session fee",
+  "socialClubFeeLabel": "Club session fee",
+  "socialClubLinkedStatus": "This session belongs to {clubName}.",
+  "@socialClubLinkedStatus": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "socialClubNoAutoInviteHint": "This session is linked to the club; members are not automatically notified, invited, or added to the attendee list.",
+  "socialClubUnlinkAction": "Remove club",
+  "socialActiveSportsLabel": "Sport",
+  "socialActiveSportsLoading": "Loading sports...",
+  "socialActiveSportsEmpty": "No sports are currently available.",
+  "socialActiveSportsError": "Could not load sports.",
+  "socialActiveSportsRetry": "Retry",
+  "socialLegacyInactiveSport": "Inactive sport",
+  "socialRegionLabel": "Area (optional)",
+  "socialRegionChooseAction": "Choose area",
+  "socialRegionChangeAction": "Change area",
+  "socialRegionProvinceLabel": "Province/City",
+  "socialRegionWardLabel": "Ward/Commune",
+  "socialRegionProvinceSearchHint": "Search province/city",
+  "socialRegionWardSearchHint": "Search ward/commune",
+  "socialRegionApplyAction": "Apply",
+  "socialRegionCancelAction": "Cancel",
+  "socialRegionNoResults": "No results found.",
+  "socialRegionLoadError": "Could not load areas. You can still enter the address manually.",
+  "socialRegionSelectedSummary": "{ward}, {province}",
+  "@socialRegionSelectedSummary": {
+    "placeholders": {
+      "ward": {
+        "type": "String"
+      },
+      "province": {
+        "type": "String"
+      }
+    }
+  }
 }

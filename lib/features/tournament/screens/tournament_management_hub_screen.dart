@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -48,6 +49,13 @@ class _TournamentManagementHubScreenState
   @override
   Widget build(BuildContext context) {
     final tournament = widget.tournament;
+    // Kết thúc giải là thao tác admin: backend từ chối organizer.
+    final canFinalize = _canFinalizeTournament(
+      tournament.status,
+      isAdmin:
+          ref.watch(userProfileProvider).asData?.value.hasRole('ADMIN') ??
+          false,
+    );
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -111,8 +119,7 @@ class _TournamentManagementHubScreenState
                   ],
                 ),
               ),
-              if (tournament.status.toUpperCase() ==
-                  AppConstants.statusInProgress.toUpperCase())
+              if (canFinalize)
                 PopupMenuItem(
                   value: 'end',
                   enabled: !_isFinalizing,
@@ -597,8 +604,17 @@ class _TournamentManagementHubScreenState
     ),
   };
 
+  static bool _canFinalizeTournament(String status, {required bool isAdmin}) =>
+      status.toUpperCase() == AppConstants.statusInProgress.toUpperCase() &&
+      isAdmin;
+
   Future<void> _finalizeTournament() async {
-    if (_isFinalizing) return;
+    final isAdmin =
+        ref.read(userProfileProvider).asData?.value.hasRole('ADMIN') ?? false;
+    if (_isFinalizing ||
+        !_canFinalizeTournament(widget.tournament.status, isAdmin: isAdmin)) {
+      return;
+    }
     setState(() => _isFinalizing = true);
     final l10n = AppLocalizations.of(context)!;
     final confirm = await showConfirmDialog(

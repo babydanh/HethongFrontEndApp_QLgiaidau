@@ -14016,4 +14016,103 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tournamentManagementLivestreamDeviceNameLengthInvalid =>
       'Enter a device name between 2 and 255 characters.';
+
+  @override
+  String get socialOpenCreateTitle => 'Create session';
+
+  @override
+  String get socialClubCreateTitle => 'Create club social session';
+
+  @override
+  String get socialOpenUpdateTitle => 'Update session';
+
+  @override
+  String get socialClubUpdateTitle => 'Update club social session';
+
+  @override
+  String get socialOpenDetailsLabel => 'Session';
+
+  @override
+  String get socialClubDetailsLabel => 'Club session';
+
+  @override
+  String get socialOpenTitleFieldLabel => 'Session title';
+
+  @override
+  String get socialClubTitleFieldLabel => 'Club session title';
+
+  @override
+  String get socialOpenFeeLabel => 'Session fee';
+
+  @override
+  String get socialClubFeeLabel => 'Club session fee';
+
+  @override
+  String socialClubLinkedStatus(String clubName) {
+    return 'This session belongs to $clubName.';
+  }
+
+  @override
+  String get socialClubNoAutoInviteHint =>
+      'This session is linked to the club; members are not automatically notified, invited, or added to the attendee list.';
+
+  @override
+  String get socialClubUnlinkAction => 'Remove club';
+
+  @override
+  String get socialActiveSportsLabel => 'Sport';
+
+  @override
+  String get socialActiveSportsLoading => 'Loading sports...';
+
+  @override
+  String get socialActiveSportsEmpty => 'No sports are currently available.';
+
+  @override
+  String get socialActiveSportsError => 'Could not load sports.';
+
+  @override
+  String get socialActiveSportsRetry => 'Retry';
+
+  @override
+  String get socialLegacyInactiveSport => 'Inactive sport';
+
+  @override
+  String get socialRegionLabel => 'Area (optional)';
+
+  @override
+  String get socialRegionChooseAction => 'Choose area';
+
+  @override
+  String get socialRegionChangeAction => 'Change area';
+
+  @override
+  String get socialRegionProvinceLabel => 'Province/City';
+
+  @override
+  String get socialRegionWardLabel => 'Ward/Commune';
+
+  @override
+  String get socialRegionProvinceSearchHint => 'Search province/city';
+
+  @override
+  String get socialRegionWardSearchHint => 'Search ward/commune';
+
+  @override
+  String get socialRegionApplyAction => 'Apply';
+
+  @override
+  String get socialRegionCancelAction => 'Cancel';
+
+  @override
+  String get socialRegionNoResults => 'No results found.';
+
+  @override
+  String get socialRegionLoadError =>
+      'Could not load areas. You can still enter the address manually.';
+
+  @override
+  String socialRegionSelectedSummary(String ward, String province) {
+    return '$ward, $province';
+  }
 }

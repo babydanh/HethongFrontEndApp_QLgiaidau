@@ -10,6 +10,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// Backend DTO bounds for `CameraDeviceModel.name`. A name outside them is
+/// rejected by the server, so it is refused here instead of being sent.
+const _deviceNameMinLength = 2;
+const _deviceNameMaxLength = 255;
+
 /// Livestream management that the mobile API is allowed to drive.
 ///
 /// Covers the safe web subset only: the community camera fleet (registering a
@@ -235,6 +240,14 @@ class _TournamentManagementLivestreamSectionState
       });
       return;
     }
+    if (name.length < _deviceNameMinLength ||
+        name.length > _deviceNameMaxLength) {
+      setState(() {
+        _deviceNameError =
+            l10n.tournamentManagementLivestreamDeviceNameLengthInvalid;
+      });
+      return;
+    }
     setState(() {
       _creatingDevice = true;
       _deviceNameError = null;
@@ -377,6 +390,7 @@ class _TournamentManagementLivestreamSectionState
                     connection: value,
                     busy: _facebookBusy,
                     onRevalidate: () => _revalidateFacebookPage(value.id),
+                    onConnect: _connectFacebookPage,
                     onDisconnect: _disconnectFacebookPage,
                   ),
           ),
@@ -536,12 +550,14 @@ class _FacebookConnectionBody extends StatelessWidget {
     required this.connection,
     required this.busy,
     required this.onRevalidate,
+    required this.onConnect,
     required this.onDisconnect,
   });
 
   final FacebookPageConnectionModel connection;
   final bool busy;
   final VoidCallback onRevalidate;
+  final VoidCallback onConnect;
   final VoidCallback onDisconnect;
 
   @override
@@ -580,27 +596,38 @@ class _FacebookConnectionBody extends StatelessWidget {
             ).textTheme.bodySmall?.copyWith(color: colors.textMuted),
           ),
         ],
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            OutlinedButton.icon(
-              onPressed: busy ? null : onRevalidate,
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(
-                l10n.tournamentManagementLivestreamFacebookRevalidate,
+        // Re-check and unlink only make sense for a live authorization, so a
+        // connection the backend still reports in any other state is a dead
+        // end. The empty state's connect action is offered here as well: it
+        // hands the repository's OAuth URL straight to the platform browser
+        // and never shows, stores or logs it.
+        if (connection.isActive)
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: busy ? null : onRevalidate,
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(
+                  l10n.tournamentManagementLivestreamFacebookRevalidate,
+                ),
               ),
-            ),
-            TextButton.icon(
-              onPressed: busy ? null : onDisconnect,
-              icon: const Icon(Icons.link_off_rounded),
-              label: Text(
-                l10n.tournamentManagementLivestreamFacebookDisconnect,
+              TextButton.icon(
+                onPressed: busy ? null : onDisconnect,
+                icon: const Icon(Icons.link_off_rounded),
+                label: Text(
+                  l10n.tournamentManagementLivestreamFacebookDisconnect,
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          )
+        else
+          FilledButton.icon(
+            onPressed: busy ? null : onConnect,
+            icon: const Icon(Icons.open_in_new_rounded),
+            label: Text(l10n.tournamentManagementLivestreamFacebookConnect),
+          ),
       ],
     );
   }

@@ -21,39 +21,39 @@ class StatusBadge extends StatelessWidget {
     final isCompleted = normalized == AppConstants.statusCompleted;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (isLive) ...[
             Container(
-              width: 6,
-              height: 6,
+              width: 5,
+              height: 5,
               decoration: const BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(width: 5),
+            const SizedBox(width: 4),
           ] else if (isCompleted) ...[
             const Icon(
               Icons.check_circle_rounded,
-              size: 12,
+              size: 10,
               color: Colors.white,
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 3),
           ],
           Text(
             isLive ? l10n.matchTableLive : statusName.toUpperCase(),
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 10,
+              fontSize: 8.5,
               fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
+              letterSpacing: 0.3,
             ),
           ),
         ],

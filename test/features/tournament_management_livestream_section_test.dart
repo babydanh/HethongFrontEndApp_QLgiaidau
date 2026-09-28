@@ -163,6 +163,7 @@ class _FakeLiveSessionRepository implements ILiveSessionRepository {
     calls.add('createFacebookOAuthUrl:$communityId');
     return 'https://www.facebook.com/oauth';
   }
+
   @override
   Future<FacebookPageConnectionModel> validateFacebookConnection(
     String connectionId,
@@ -488,32 +489,28 @@ void main() {
     },
   );
 
-  testWidgets(
-    'a disconnected Page can start a fresh Facebook authorization',
-    (tester) async {
-      final repository = _FakeLiveSessionRepository(
-        connection: _connection(
-          status: FacebookPageConnectionStatus.disconnected,
-        ),
-      );
+  testWidgets('a disconnected Page can start a fresh Facebook authorization', (
+    tester,
+  ) async {
+    final repository = _FakeLiveSessionRepository(
+      connection: _connection(
+        status: FacebookPageConnectionStatus.disconnected,
+      ),
+    );
 
-      final l10n = await _pumpSection(tester, repository);
-      final connect = find.widgetWithText(
-        FilledButton,
-        l10n.tournamentManagementLivestreamFacebookConnect,
-      );
-      expect(connect, findsOneWidget);
-      await tester.ensureVisible(connect);
-      await tester.pumpAndSettle();
-      await tester.tap(connect);
-      await tester.pumpAndSettle();
+    final l10n = await _pumpSection(tester, repository);
+    final connect = find.widgetWithText(
+      FilledButton,
+      l10n.tournamentManagementLivestreamFacebookConnect,
+    );
+    expect(connect, findsOneWidget);
+    await tester.ensureVisible(connect);
+    await tester.pumpAndSettle();
+    await tester.tap(connect);
+    await tester.pumpAndSettle();
 
-      expect(
-        repository.calls,
-        contains('createFacebookOAuthUrl:$_communityId'),
-      );
-    },
-  );
+    expect(repository.calls, contains('createFacebookOAuthUrl:$_communityId'));
+  });
 
   testWidgets(
     'a community with no camera devices can create the first one from the empty state',
@@ -575,43 +572,42 @@ void main() {
     );
     expect(repository.requestedDeviceNames, isEmpty);
   });
-  testWidgets(
-    'device name follows the backend two-to-255 character boundary',
-    (tester) async {
-      final repository = _FakeLiveSessionRepository();
-      final l10n = await _pumpSection(tester, repository);
-      final create = find.widgetWithText(
-        FilledButton,
-        l10n.tournamentManagementLivestreamCreateDevice,
-      );
-      await tester.ensureVisible(create);
-      await tester.pumpAndSettle();
+  testWidgets('device name follows the backend two-to-255 character boundary', (
+    tester,
+  ) async {
+    final repository = _FakeLiveSessionRepository();
+    final l10n = await _pumpSection(tester, repository);
+    final create = find.widgetWithText(
+      FilledButton,
+      l10n.tournamentManagementLivestreamCreateDevice,
+    );
+    await tester.ensureVisible(create);
+    await tester.pumpAndSettle();
 
-      final errorMessage =
-          l10n.tournamentManagementLivestreamDeviceNameLengthInvalid;
-      await tester.enterText(find.byType(TextField), 'x');
-      await tester.tap(create);
-      await tester.pumpAndSettle();
-      expect(find.text(errorMessage), findsOneWidget);
-      expect(repository.requestedDeviceNames, isEmpty);
+    final errorMessage =
+        l10n.tournamentManagementLivestreamDeviceNameLengthInvalid;
+    await tester.enterText(find.byType(TextField), 'x');
+    await tester.tap(create);
+    await tester.pumpAndSettle();
+    expect(find.text(errorMessage), findsOneWidget);
+    expect(repository.requestedDeviceNames, isEmpty);
 
-      await tester.enterText(find.byType(TextField), 'ab');
-      await tester.tap(create);
-      await tester.pumpAndSettle();
-      final maxName = List.filled(255, 'x').join();
-      await tester.enterText(find.byType(TextField), maxName);
-      await tester.tap(create);
-      await tester.pumpAndSettle();
-      expect(repository.requestedDeviceNames, ['ab', maxName]);
+    await tester.enterText(find.byType(TextField), 'ab');
+    await tester.tap(create);
+    await tester.pumpAndSettle();
+    final maxName = List.filled(255, 'x').join();
+    await tester.enterText(find.byType(TextField), maxName);
+    await tester.tap(create);
+    await tester.pumpAndSettle();
+    expect(repository.requestedDeviceNames, ['ab', maxName]);
 
-      final tooLongName = List.filled(256, 'x').join();
-      await tester.enterText(find.byType(TextField), tooLongName);
-      await tester.tap(create);
-      await tester.pumpAndSettle();
-      expect(find.text(errorMessage), findsOneWidget);
-      expect(repository.requestedDeviceNames, ['ab', maxName]);
-    },
-  );
+    final tooLongName = List.filled(256, 'x').join();
+    await tester.enterText(find.byType(TextField), tooLongName);
+    await tester.tap(create);
+    await tester.pumpAndSettle();
+    expect(find.text(errorMessage), findsOneWidget);
+    expect(repository.requestedDeviceNames, ['ab', maxName]);
+  });
 
   testWidgets('a second tap while the create is in flight is ignored', (
     tester,

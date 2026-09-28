@@ -25437,6 +25437,192 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tên thiết bị phải có từ 2 đến 255 ký tự.'**
   String get tournamentManagementLivestreamDeviceNameLengthInvalid;
+
+  /// No description provided for @socialOpenCreateTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo kèo'**
+  String get socialOpenCreateTitle;
+
+  /// No description provided for @socialClubCreateTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo buổi giao lưu'**
+  String get socialClubCreateTitle;
+
+  /// No description provided for @socialOpenUpdateTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật kèo'**
+  String get socialOpenUpdateTitle;
+
+  /// No description provided for @socialClubUpdateTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật buổi giao lưu'**
+  String get socialClubUpdateTitle;
+
+  /// No description provided for @socialOpenDetailsLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kèo'**
+  String get socialOpenDetailsLabel;
+
+  /// No description provided for @socialClubDetailsLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Buổi giao lưu'**
+  String get socialClubDetailsLabel;
+
+  /// No description provided for @socialOpenTitleFieldLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên kèo'**
+  String get socialOpenTitleFieldLabel;
+
+  /// No description provided for @socialClubTitleFieldLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên buổi giao lưu'**
+  String get socialClubTitleFieldLabel;
+
+  /// No description provided for @socialOpenFeeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phí tham gia kèo'**
+  String get socialOpenFeeLabel;
+
+  /// No description provided for @socialClubFeeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phí tham gia buổi giao lưu'**
+  String get socialClubFeeLabel;
+
+  /// No description provided for @socialClubLinkedStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Buổi này thuộc câu lạc bộ {clubName}.'**
+  String socialClubLinkedStatus(String clubName);
+
+  /// No description provided for @socialClubNoAutoInviteHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Buổi được gắn với câu lạc bộ; thành viên không được tự động thông báo, mời hoặc thêm vào danh sách tham gia.'**
+  String get socialClubNoAutoInviteHint;
+
+  /// No description provided for @socialClubUnlinkAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa CLB'**
+  String get socialClubUnlinkAction;
+
+  /// No description provided for @socialActiveSportsLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Môn thể thao'**
+  String get socialActiveSportsLabel;
+
+  /// No description provided for @socialActiveSportsLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải môn thể thao...'**
+  String get socialActiveSportsLoading;
+
+  /// No description provided for @socialActiveSportsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện chưa có môn thể thao nào được bật.'**
+  String get socialActiveSportsEmpty;
+
+  /// No description provided for @socialActiveSportsError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách môn thể thao.'**
+  String get socialActiveSportsError;
+
+  /// No description provided for @socialActiveSportsRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get socialActiveSportsRetry;
+
+  /// No description provided for @socialLegacyInactiveSport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Môn đã ngừng hoạt động'**
+  String get socialLegacyInactiveSport;
+
+  /// No description provided for @socialRegionLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khu vực (không bắt buộc)'**
+  String get socialRegionLabel;
+
+  /// No description provided for @socialRegionChooseAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn khu vực'**
+  String get socialRegionChooseAction;
+
+  /// No description provided for @socialRegionChangeAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi khu vực'**
+  String get socialRegionChangeAction;
+
+  /// No description provided for @socialRegionProvinceLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉnh/Thành phố'**
+  String get socialRegionProvinceLabel;
+
+  /// No description provided for @socialRegionWardLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phường/Xã'**
+  String get socialRegionWardLabel;
+
+  /// No description provided for @socialRegionProvinceSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm tỉnh/thành phố'**
+  String get socialRegionProvinceSearchHint;
+
+  /// No description provided for @socialRegionWardSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm phường/xã'**
+  String get socialRegionWardSearchHint;
+
+  /// No description provided for @socialRegionApplyAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng'**
+  String get socialRegionApplyAction;
+
+  /// No description provided for @socialRegionCancelAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get socialRegionCancelAction;
+
+  /// No description provided for @socialRegionNoResults.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy kết quả.'**
+  String get socialRegionNoResults;
+
+  /// No description provided for @socialRegionLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được khu vực. Bạn vẫn có thể nhập địa chỉ thủ công.'**
+  String get socialRegionLoadError;
+
+  /// No description provided for @socialRegionSelectedSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'{ward}, {province}'**
+  String socialRegionSelectedSummary(String ward, String province);
 }
 
 class _AppLocalizationsDelegate
