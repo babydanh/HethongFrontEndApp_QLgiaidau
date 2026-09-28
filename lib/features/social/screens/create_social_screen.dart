@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/category_provider.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/social_region_picker.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_duration_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_price_dialog.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_privacy_sheet.dart';
@@ -31,15 +37,13 @@ class CreateSocialScreen extends ConsumerStatefulWidget {
 }
 
 class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
-  // Sports options
-  final List<({String key, String name, IconData icon})> _sports = const [
-    (key: 'pickleball', name: 'Pickleball', icon: Icons.sports_tennis),
-    (key: 'badminton', name: 'Cầu lông', icon: Icons.sports_tennis_rounded),
-    (key: 'tennis', name: 'Tennis', icon: Icons.sports_baseball_outlined),
-  ];
-
+  // Môn thể thao đến từ danh mục đang bật; chỉ slug/tên được gửi lên API.
   late String _selectedSportKey;
   late String _selectedSportName;
+  // Người dùng đã tự chọn môn: không còn tự chọn danh mục đầu tiên.
+  bool _userPickedSport = false;
+  // Khu vực đã áp dụng (tuỳ chọn): chỉ ghép vào venueAddress lúc lưu.
+  SocialRegionSelection? _appliedRegion;
 
   // Format options: Giao lưu, Đánh vòng tròn, Đánh đơn, Đánh đôi
   final List<String> _formats = const [
@@ -68,7 +72,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   final TextEditingController _notesController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
-  bool _isClubAttached = true;
+  // Buổi mới chỉ gắn CLB khi route có clubId; buổi đang sửa dùng CLB hiện tại.
+  late bool _isClubAttached;
   bool _isSubmitting = false;
 
   @override
@@ -91,8 +96,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       _isClubAttached =
           (init.communityId != null && init.communityId!.isNotEmpty);
     } else {
-      _selectedSportKey = _sports.first.key;
-      _selectedSportName = _sports.first.name;
+      // Môn được chọn khi danh mục nạp xong, không hard-code danh sách.
+      _selectedSportKey = '';
+      _selectedSportName = '';
+      _isClubAttached = widget.clubId.isNotEmpty;
       _selectedFormat = _formats.first;
 
       // Default time: next hour or 14:45
@@ -126,9 +133,290 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     return 'Host';
   }
 
-  String _getComputedDefaultTitle() {
+  /// Chỉ danh mục đang bật mới được chọn cho buổi mới.
+  List<CategoryModel> _activeSports(AsyncValue<List<CategoryModel>> catalog) {
+    final all = catalog.asData?.value ?? const <CategoryModel>[];
+    return all
+        .where(
+          (category) => category.isActive && category.slug.trim().isNotEmpty,
+        )
+        .toList(growable: false);
+  }
+
+  /// Môn đang giữ: lựa chọn của người dùng, hoặc danh mục đầu tiên khi form
+  /// mới vừa nạp xong danh mục. Môn cũ đã bị gỡ vẫn giữ nguyên slug.
+  ({String slug, String name}) _resolveSport(List<CategoryModel> active) {
+    final slug = _selectedSportKey.trim();
+    if (slug.isEmpty) {
+      if (widget.initialSession != null || _userPickedSport) {
+        return (slug: '', name: _selectedSportName);
+      }
+      final first = active.isEmpty ? null : active.first;
+      return (slug: first?.slug ?? '', name: first?.name ?? '');
+    }
+    for (final category in active) {
+      if (category.slug == slug) return (slug: slug, name: category.name);
+    }
+    return (slug: slug, name: _selectedSportName);
+  }
+
+  /// Môn của buổi đang sửa không còn trong danh mục đang bật.
+  bool _isRetiredSport(List<CategoryModel> active) {
+    if (widget.initialSession == null || _userPickedSport) return false;
+    final slug = _selectedSportKey.trim();
+    if (slug.isEmpty) return false;
+    return !active.any((category) => category.slug == slug);
+  }
+
+  String _getComputedDefaultTitle(String sportName) {
     final hostName = _getHostName();
-    return '$_selectedSportName $_selectedFormat với $hostName';
+    return '$sportName $_selectedFormat với $hostName';
+  }
+
+  /// Ghép khu vực đã áp dụng vào địa chỉ gõ tay, bỏ qua nhãn đã có sẵn.
+  String _composeVenueAddress() {
+    var composed = _venueAddressController.text.trim();
+    final region = _appliedRegion;
+    if (region == null) return composed;
+    final province = region.province;
+    final provinceAlreadyNamed =
+        province != null &&
+        VietnamAddressParser.detectProvince(
+              rawAddress: composed,
+              provinces: [province],
+              getCode: (item) => item.code,
+              getName: (item) => item.name,
+              getFullName: (item) => item.fullName ?? item.name,
+            ) !=
+            null;
+    for (final name in [
+      region.ward?.name,
+      if (!provinceAlreadyNamed) province?.name,
+    ]) {
+      final label = name?.trim() ?? '';
+      if (label.isEmpty || composed.isEmpty) continue;
+      final parts = composed
+          .split(',')
+          .map((part) => part.trim().toLowerCase());
+      if (parts.contains(label.toLowerCase())) continue;
+      composed = '$composed, $label';
+    }
+    return composed;
+  }
+
+  /// Tỉnh của CLB gắn kèm: chỉ làm ngữ cảnh dự phòng cho phần khu vực khi
+  /// địa chỉ gõ tay không nêu thành phố. Kèo độc lập hoặc CLB không có tỉnh
+  /// thì không có ngữ cảnh nào — phần khu vực tự tìm tay.
+  String? get _clubProvinceCode {
+    if (!_isClubAttached || widget.clubId.isEmpty) return null;
+    final community = ref
+        .watch(communityDetailProvider(widget.clubId))
+        .asData
+        ?.value;
+    final code = community?.provinceCode?.trim();
+    return (code == null || code.isEmpty) ? null : code;
+  }
+
+  // ─── Wording: phân biệt buổi gắn CLB và kèo độc lập ───
+  String _createUpdateTitle(AppLocalizations l10n) {
+    if (widget.initialSession != null) {
+      return _isClubAttached
+          ? l10n.socialClubUpdateTitle
+          : l10n.socialOpenUpdateTitle;
+    }
+    return _isClubAttached
+        ? l10n.socialClubCreateTitle
+        : l10n.socialOpenCreateTitle;
+  }
+
+  String _detailsLabel(AppLocalizations l10n) => _isClubAttached
+      ? l10n.socialClubDetailsLabel
+      : l10n.socialOpenDetailsLabel;
+
+  String _titleFieldLabel(AppLocalizations l10n) => _isClubAttached
+      ? l10n.socialClubTitleFieldLabel
+      : l10n.socialOpenTitleFieldLabel;
+
+  String _feeLabel(AppLocalizations l10n) =>
+      _isClubAttached ? l10n.socialClubFeeLabel : l10n.socialOpenFeeLabel;
+
+  /// Danh mục môn đang bật: thẻ vector xuống dòng, kèm nạp/lỗi/rỗng + thử lại.
+  Widget _buildSportSection(
+    BuildContext context, {
+    required AppLocalizations l10n,
+    required AsyncValue<List<CategoryModel>> catalog,
+    required List<CategoryModel> activeSports,
+    required ({String slug, String name}) sport,
+  }) {
+    final colors = context.colors;
+    final label = Text(
+      l10n.socialActiveSportsLabel,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w800,
+        color: colors.textSecondary,
+        letterSpacing: 0.3,
+      ),
+    );
+
+    if (catalog.isLoading) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          label,
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                l10n.socialActiveSportsLoading,
+                style: TextStyle(fontSize: 13.5, color: colors.textSecondary),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    if (catalog.hasError || activeSports.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          label,
+          const SizedBox(height: 10),
+          Text(
+            catalog.hasError
+                ? l10n.socialActiveSportsError
+                : l10n.socialActiveSportsEmpty,
+            style: TextStyle(fontSize: 13.5, color: colors.textSecondary),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: () => ref.invalidate(categoriesProvider),
+              child: Text(l10n.socialActiveSportsRetry),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        label,
+        const SizedBox(height: 10),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            const spacing = 10.0;
+            final columns = constraints.maxWidth >= 330 ? 3 : 2;
+            final itemWidth =
+                (constraints.maxWidth - spacing * (columns - 1)) / columns;
+            return Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              children: [
+                if (_isRetiredSport(activeSports))
+                  SizedBox(
+                    width: itemWidth,
+                    child: _buildSportCard(
+                      context,
+                      sportSlug: _selectedSportKey,
+                      name: _selectedSportName,
+                      isSelected: sport.slug == _selectedSportKey,
+                      isEnabled: false,
+                      note: l10n.socialLegacyInactiveSport,
+                    ),
+                  ),
+                for (final category in activeSports)
+                  SizedBox(
+                    width: itemWidth,
+                    child: _buildSportCard(
+                      context,
+                      sportSlug: category.slug,
+                      name: category.name,
+                      isSelected: category.slug == sport.slug,
+                      isEnabled: true,
+                      onTap: () => setState(() {
+                        _selectedSportKey = category.slug;
+                        _selectedSportName = category.name;
+                        _userPickedSport = true;
+                      }),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSportCard(
+    BuildContext context, {
+    required String sportSlug,
+    required String name,
+    required bool isSelected,
+    required bool isEnabled,
+    String? note,
+    VoidCallback? onTap,
+  }) {
+    final colors = context.colors;
+    return Semantics(
+      button: isEnabled,
+      enabled: isEnabled,
+      selected: isSelected,
+      label: note == null ? name : '$name, $note',
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? colors.success.withValues(alpha: 0.16)
+                : colors.bgCard,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? colors.success : colors.border,
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SportIconWidget(iconData: sportSlug, size: 26),
+              const SizedBox(height: 4),
+              Text(
+                name,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: isEnabled ? colors.textPrimary : colors.textMuted,
+                ),
+              ),
+              if (note != null)
+                Text(
+                  note,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 10.5, color: colors.textMuted),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   String _formatCurrency(int amount) {
@@ -248,6 +536,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       return;
     }
 
+    final sport = _resolveSport(_activeSports(ref.read(categoriesProvider)));
+    if (sport.slug.isEmpty) return;
     final venueNameText = _venueNameController.text.trim();
     final venueAddressText = _venueAddressController.text.trim();
     if (venueNameText.isEmpty) {
@@ -273,7 +563,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     final customTitle = _titleController.text.trim();
     final resolvedTitle = customTitle.isNotEmpty
         ? customTitle
-        : _getComputedDefaultTitle();
+        : _getComputedDefaultTitle(sport.name);
 
     final notes = _notesController.text.trim().isNotEmpty
         ? _notesController.text.trim()
@@ -287,7 +577,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       if (widget.initialSession != null) {
         final sessionId = widget.initialSession!.id;
         final updateFields = <String, dynamic>{
-          'sport': _selectedSportKey,
+          'sport': sport.slug,
           'title': resolvedTitle.length > 100
               ? resolvedTitle.substring(0, 100)
               : resolvedTitle,
@@ -296,7 +586,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           'startAt': _selectedDateTime.toIso8601String(),
           'durationMinutes': (_durationHours * 60).round(),
           'venueName': venueNameText,
-          'venueAddress': venueAddressText,
+          'venueAddress': _composeVenueAddress(),
           'maxSlots': _maxParticipants,
           'feePerSlot': _price,
           'levelRequirement': 'ALL',
@@ -325,7 +615,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
         }
       } else {
         final request = CreateSocialSessionRequest(
-          sport: _selectedSportKey,
+          sport: sport.slug,
           title: resolvedTitle.length > 100
               ? resolvedTitle.substring(0, 100)
               : resolvedTitle,
@@ -334,7 +624,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           startAt: _selectedDateTime,
           durationMinutes: (_durationHours * 60).round(),
           venueName: venueNameText,
-          venueAddress: venueAddressText,
+          venueAddress: _composeVenueAddress(),
           maxSlots: _maxParticipants,
           feePerSlot: _price,
           levelRequirement: 'ALL',
@@ -386,6 +676,12 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final catalog = ref.watch(categoriesProvider);
+    final activeSports = _activeSports(catalog);
+    final sport = _resolveSport(activeSports);
+    final canSubmit = sport.slug.isNotEmpty;
+    final clubProvinceCode = _clubProvinceCode;
 
     return Container(
       decoration: BoxDecoration(
@@ -419,29 +715,36 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                   vertical: 8,
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
                       icon: Icon(Icons.arrow_back, color: colors.textPrimary),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
-                    Text(
-                      widget.initialSession != null
-                          ? 'CẬP NHẬT KÈO'
-                          : 'TẠO KÈO',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: colors.textPrimary,
-                        letterSpacing: 0.5,
+                    Expanded(
+                      child: Text(
+                        _createUpdateTitle(l10n),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
-                    widget.initialSession != null
-                        ? const SizedBox(width: 48)
-                        : Icon(
-                            Icons.swap_horiz_rounded,
-                            color: colors.textPrimary,
-                          ),
+                    SizedBox(
+                      width: 48,
+                      child: widget.initialSession == null
+                          ? Center(
+                              child: Icon(
+                                Icons.swap_horiz_rounded,
+                                color: colors.textPrimary,
+                              ),
+                            )
+                          : null,
+                    ),
                   ],
                 ),
               ),
@@ -457,26 +760,13 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                     children: [
                       // ─── 1. SECTION CLB (Hình 1) ───
                       if (_isClubAttached) ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'CLB',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: colors.textSecondary,
-                              ),
-                            ),
-                            Text(
-                              'Thay đổi',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.primary,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          'CLB',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textSecondary,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Container(
@@ -536,10 +826,21 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                               ),
                               const SizedBox(height: 10),
                               Text(
-                                'Thành viên CLB có gắn thẻ sẽ nhận được thông báo và được tự động mời tham gia kèo.',
+                                l10n.socialClubLinkedStatus(
+                                  widget.clubName.trim(),
+                                ),
                                 style: TextStyle(
                                   fontSize: 12.5,
-                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.textPrimary,
+                                  height: 1.35,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                l10n.socialClubNoAutoInviteHint,
+                                style: TextStyle(
+                                  fontSize: 12.5,
                                   color: colors.textSecondary,
                                   height: 1.35,
                                 ),
@@ -556,7 +857,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                       vertical: 4,
                                     ),
                                     child: Text(
-                                      'Xóa CLB',
+                                      l10n.socialClubUnlinkAction,
                                       style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
@@ -572,104 +873,13 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                         const SizedBox(height: 20),
                       ],
 
-                      // ─── 2. SECTION MÔN THỂ THAO & THỂ THỨC (Hình 1) ───
-                      Text(
-                        'MÔN THỂ THAO',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: colors.textSecondary,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-
-                      // Sports Grid
-                      Row(
-                        children: _sports.map((sport) {
-                          final isSelected = _selectedSportKey == sport.key;
-                          return Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedSportKey = sport.key;
-                                    _selectedSportName = sport.name;
-                                  });
-                                },
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  height: 90,
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? colors.success.withValues(alpha: 0.16)
-                                        : colors.bgCard,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? colors.success
-                                          : colors.border,
-                                      width: isSelected ? 2 : 1,
-                                    ),
-                                  ),
-                                  child: Stack(
-                                    children: [
-                                      if (sport.key == 'pickleball')
-                                        Positioned(
-                                          top: 6,
-                                          left: 6,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppTheme.refereeColor,
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                            ),
-                                            child: const Text(
-                                              'CLB',
-                                              style: TextStyle(
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.w800,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      Center(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              sport.icon,
-                                              size: 30,
-                                              color: isSelected
-                                                  ? colors.textPrimary
-                                                  : colors.textSecondary,
-                                            ),
-                                            const SizedBox(height: 6),
-                                            Text(
-                                              sport.name,
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w700,
-                                                color: colors.textPrimary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                      // ─── 2. SECTION MÔN THỂ THAO & THỂ THỨC ───
+                      _buildSportSection(
+                        context,
+                        l10n: l10n,
+                        catalog: catalog,
+                        activeSports: activeSports,
+                        sport: sport,
                       ),
                       const SizedBox(height: 12),
 
@@ -721,7 +931,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
 
                       // ─── 3. SECTION KÈO (Hình 2) ───
                       Text(
-                        'KÈO',
+                        _detailsLabel(l10n),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
@@ -815,6 +1025,23 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                     return null;
                                   },
                                 ),
+                                const SizedBox(height: 12),
+                                // Khu vực tuỳ chọn nằm thẳng trong form, ngay
+                                // dưới địa điểm: địa chỉ đủ thông tin thì phần
+                                // này tự đề xuất phường + thành phố, và ô tìm
+                                // kiếm tay luôn mở để sửa hoặc chọn lại.
+                                ValueListenableBuilder<TextEditingValue>(
+                                  valueListenable: _venueAddressController,
+                                  builder: (context, address, _) =>
+                                      SocialRegionPicker(
+                                        address: address.text,
+                                        applied: _appliedRegion,
+                                        contextProvinceCode: clubProvinceCode,
+                                        onApply: (selection) => setState(
+                                          () => _appliedRegion = selection,
+                                        ),
+                                      ),
+                                ),
                               ],
                             ),
                           ),
@@ -842,7 +1069,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
 
                       SocialSettingTile(
                         icon: Icons.local_offer_outlined,
-                        label: 'Phí tham gia kèo',
+                        label: _feeLabel(l10n),
                         value: _formatCurrency(_price),
                         valueColor: _price > 0 ? colors.success : null,
                         verticalPadding: 6,
@@ -857,7 +1084,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'TÊN KÈO',
+                            _titleFieldLabel(l10n).toUpperCase(),
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
@@ -892,7 +1119,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                           color: colors.textPrimary,
                         ),
                         decoration: InputDecoration(
-                          hintText: _getComputedDefaultTitle(),
+                          labelText: _titleFieldLabel(l10n),
+                          hintText: _getComputedDefaultTitle(sport.name),
                           counterText: '',
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -935,7 +1163,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: _isSubmitting ? null : _submit,
+                    onPressed: _isSubmitting || !canSubmit ? null : _submit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primary,
                       foregroundColor: Colors.white,
@@ -954,9 +1182,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                             ),
                           )
                         : Text(
-                            widget.initialSession != null
-                                ? 'Cập nhật kèo'
-                                : 'Tạo kèo',
+                            _createUpdateTitle(l10n),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,

@@ -24,6 +24,7 @@ class OverviewTab extends StatefulWidget {
   final bool isFollowing;
   final VoidCallback? onToggleFollow;
   final String? inviteCode;
+  final bool hasSliverBanner;
 
   const OverviewTab({
     super.key,
@@ -35,6 +36,7 @@ class OverviewTab extends StatefulWidget {
     this.isFollowing = false,
     this.onToggleFollow,
     this.inviteCode,
+    this.hasSliverBanner = false,
   });
 
   @override
@@ -176,8 +178,8 @@ class _OverviewTabState extends State<OverviewTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ─── 1. BANNER TRÀN VIỀN (Hiển thị cho mọi giải trừ giải Siêu Lite nội bộ CLB) ───
-          if (!isClubLite)
+          // ─── 1. BANNER TRÀN VIỀN (Hiển thị nếu không dùng SliverBanner và không phải Siêu Lite) ───
+          if (!isClubLite && !widget.hasSliverBanner)
             SizedBox(
               height: 195,
               width: double.infinity,
@@ -186,7 +188,12 @@ class _OverviewTabState extends State<OverviewTab> {
 
           // ─── 2. NỘI DUNG TỔNG QUAN ───
           Padding(
-            padding: EdgeInsets.fromLTRB(16, isClubLite ? 16 : 14, 16, 0),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              (isClubLite || widget.hasSliverBanner) ? 16 : 14,
+              16,
+              0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -973,22 +980,13 @@ class _OverviewTabState extends State<OverviewTab> {
       images.add(t.logoUrl!);
     }
     if (images.isEmpty) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
       return Container(
         width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF1A1A2E),
-              const Color(0xFF16213E),
-              const Color(0xFF0F3460),
-            ],
-          ),
-        ),
+        color: isDark ? const Color(0xFF16233A) : const Color(0xFFE8EEFB),
         child: const SportoBrandFallback(
           withTagline: true,
-          padding: EdgeInsets.all(32),
+          padding: EdgeInsets.symmetric(horizontal: 40, vertical: 24),
           semanticsLabel: 'SportO tournament fallback banner',
         ),
       );
@@ -1000,25 +998,18 @@ class _OverviewTabState extends State<OverviewTab> {
         Image.network(
           firstUrl,
           fit: BoxFit.cover,
-          errorBuilder: (ctx, err, stack) => Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF1A1A2E),
-                  Color(0xFF16213E),
-                  Color(0xFF0F3460),
-                ],
+          errorBuilder: (ctx, err, stack) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            return Container(
+              width: double.infinity,
+              color: isDark ? const Color(0xFF16233A) : const Color(0xFFE8EEFB),
+              child: const SportoBrandFallback(
+                withTagline: true,
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+                semanticsLabel: 'SportO tournament fallback banner',
               ),
-            ),
-            child: const SportoBrandFallback(
-              withTagline: true,
-              padding: EdgeInsets.all(32),
-              semanticsLabel: 'SportO tournament fallback banner',
-            ),
-          ),
+            );
+          },
         ),
         Container(
           decoration: BoxDecoration(

@@ -14081,22 +14081,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialRegionLabel => 'Area (optional)';
 
   @override
-  String get socialRegionChooseAction => 'Choose area';
-
-  @override
-  String get socialRegionChangeAction => 'Change area';
-
-  @override
-  String get socialRegionProvinceLabel => 'Province/City';
-
-  @override
   String get socialRegionWardLabel => 'Ward/Commune';
 
   @override
-  String get socialRegionProvinceSearchHint => 'Search province/city';
+  String get socialRegionWardSearchHint => 'Search ward/commune';
 
   @override
-  String get socialRegionWardSearchHint => 'Search ward/commune';
+  String get socialRegionWardSearchPrompt =>
+      'Enter at least 2 characters to search wards/communes.';
 
   @override
   String get socialRegionApplyAction => 'Apply';
@@ -14106,6 +14098,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialRegionNoResults => 'No results found.';
+
+  @override
+  String get socialRegionUnavailable =>
+      'Area options are currently unavailable. You can still enter the address manually.';
+
+  @override
+  String get socialRegionRetry => 'Retry';
 
   @override
   String get socialRegionLoadError =>

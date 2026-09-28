@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,9 +18,7 @@ class AppMenuSheet extends ConsumerStatefulWidget {
   static Future<void> show(BuildContext context) {
     final router = GoRouter.of(context);
     final screenSize = MediaQuery.sizeOf(context);
-    final menuWidth = (screenSize.width * 0.76)
-        .clamp(280.0, 360.0)
-        .toDouble();
+    final menuWidth = (screenSize.width * 0.76).clamp(280.0, 360.0).toDouble();
     final reduceMotion = MediaQuery.of(context).disableAnimations;
     return showGeneralDialog<void>(
       context: context,
@@ -28,7 +27,7 @@ class AppMenuSheet extends ConsumerStatefulWidget {
       barrierColor: Colors.black.withValues(alpha: 0.28),
       transitionDuration: reduceMotion
           ? Duration.zero
-          : const Duration(milliseconds: 320),
+          : _AppMenuSheetState.cardEntranceDuration,
       pageBuilder: (dialogContext, _, _) => Align(
         // Shift towards center of the 5th nav icon (approx bottom right, 24px from edge)
         alignment: const Alignment(0.42, 0.88),
@@ -42,17 +41,17 @@ class AppMenuSheet extends ConsumerStatefulWidget {
       ),
       transitionBuilder: (context, animation, _, child) {
         if (reduceMotion) return child;
-        final entrance = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutBack,
-        );
+        // Opacity and scale use different curves: a spring scale would drag
+        // opacity past 1 and back down, which reads as a flicker.
         return FadeTransition(
-          opacity: CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOut,
-          ),
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
           child: ScaleTransition(
-            scale: Tween<double>(begin: 0.82, end: 1.0).animate(entrance),
+            scale: Tween<double>(begin: 0.86, end: 1.0).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: _AppMenuSheetState.decelerate,
+              ),
+            ),
             alignment: const Alignment(0.6, 1.0),
             child: child,
           ),
@@ -66,8 +65,29 @@ class AppMenuSheet extends ConsumerStatefulWidget {
 }
 
 class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
+  /// Total budget for the sheet scale-in. Rows are staggered inside it, so it
+  /// must outlast the last row's start or late rows get cut off mid-flight.
+  static const Duration sheetEntranceDuration = Duration(milliseconds: 420);
+
+  /// The card's own scale-in. Deliberately shorter than the cascade: the
+  /// card should be present quickly, then the rows arrive on top of it.
+  static const Duration cardEntranceDuration = Duration(milliseconds: 280);
+
+  /// Deceleration curve for anything that arrives on screen. Spring curves
+  /// (easeOutBack) overshoot; on scale that reads as bounce, and on opacity it
+  /// drags the value past 1 and back, which flickers. Keep it monotonic.
+  static const Curve decelerate = Cubic(0.16, 1.0, 0.3, 1.0);
+  static const Curve _rowEntrance = Cubic(0.2, 0.9, 0.2, 1.0);
+
+  /// Share of the sheet timeline one element spends travelling and fading.
+  /// The fade is kept shorter than the rise so an item is already readable
+  /// while it is still moving, instead of the wave reading as a wipe.
+  static const double _riseFraction = 0.6;
+  static const double _fadeFraction = 0.46;
+
   late final AnimationController _entranceController;
+  late final AnimationController _dismissController;
   bool _entranceStarted = false;
   bool _isNavigating = false;
 
@@ -76,7 +96,11 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
     super.initState();
     _entranceController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 280),
+      duration: sheetEntranceDuration,
+    );
+    _dismissController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 160),
     );
   }
 
@@ -95,14 +119,32 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
   @override
   void dispose() {
     _entranceController.dispose();
+    _dismissController.dispose();
     super.dispose();
   }
 
-  void _navigate(String route) {
+  /// Runs the exit animation, then pops. Dismissal must be faster than the
+  /// entrance: a symmetric duration makes a tap feel like it did nothing.
+  Future<void> _dismissThenPop() async {
+    if (MediaQuery.of(context).disableAnimations) {
+      Navigator.of(context).pop();
+      return;
+    }
+    await _dismissController.forward();
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _navigate(String route) async {
     if (_isNavigating) return;
     _isNavigating = true;
-    Navigator.of(context).pop();
-    widget.onNavigate(route);
+    HapticFeedback.selectionClick();
+    // Dismiss first: pushing the destination while the sheet is still on
+    // top leaves the new screen stuck behind it for the whole exit.
+    // `onNavigate` is captured before the await because the pop disposes
+    // this State, so `widget` must not be read afterwards.
+    final onNavigate = widget.onNavigate;
+    await _dismissThenPop();
+    onNavigate(route);
   }
 
   @override
@@ -152,11 +194,7 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
               Icons.dynamic_feed_rounded,
               '/home?tab=3&sub=1',
             ),
-            _MenuAction(
-              l10n.profileLoginButton,
-              Icons.login_rounded,
-              '/login',
-            ),
+            _MenuAction(l10n.profileLoginButton, Icons.login_rounded, '/login'),
             _MenuAction(
               l10n.settingsTitle,
               Icons.tune_rounded,
@@ -164,40 +202,54 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
             ),
           ];
 
-    return Material(
-      color: colors.bgCard,
-      borderRadius: BorderRadius.circular(20),
-      clipBehavior: Clip.antiAlias,
-      elevation: 12,
-      shadowColor: Colors.black.withValues(alpha: isDark ? 0.6 : 0.25),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildIdentityHeader(
-            context,
-            isAuthenticated: isAuthenticated,
-            name: displayName,
-            avatarUrl: avatarUrl,
-            l10n: l10n,
+    return AnimatedBuilder(
+      animation: _dismissController,
+      builder: (context, child) {
+        if (_dismissController.isDismissed) return child!;
+        return Opacity(
+          opacity: 1 - _dismissController.value,
+          child: Transform.scale(
+            scale: 1 - 0.04 * _dismissController.value,
+            alignment: const Alignment(0.6, 1.0),
+            child: child,
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (var i = 0; i < actions.length; i++)
-                  _buildAction(
-                    actions[i],
-                    i,
-                    totalCount: actions.length,
-                    reduceMotion: reduceMotion,
-                  ),
-              ],
+        );
+      },
+      child: Material(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(20),
+        clipBehavior: Clip.antiAlias,
+        elevation: 12,
+        shadowColor: Colors.black.withValues(alpha: isDark ? 0.6 : 0.25),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildIdentityHeader(
+              context,
+              isAuthenticated: isAuthenticated,
+              name: displayName,
+              avatarUrl: avatarUrl,
+              l10n: l10n,
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < actions.length; i++)
+                    _buildAction(
+                      actions[i],
+                      i,
+                      totalCount: actions.length,
+                      reduceMotion: reduceMotion,
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -226,7 +278,9 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
                 color: colors.bgCard,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06),
+                  color: isDark
+                      ? Colors.white12
+                      : Colors.black.withValues(alpha: 0.06),
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -255,14 +309,18 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
                       Navigator.of(context).pop();
                       final createdSession =
                           await showModalBottomSheet<SocialSessionModel>(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (_) =>
-                            const CreateSocialScreen(clubId: '', clubName: ''),
-                      );
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (_) => const CreateSocialScreen(
+                              clubId: '',
+                              clubName: '',
+                            ),
+                          );
                       if (createdSession != null && context.mounted) {
-                        widget.onNavigate('/social/${createdSession.id}?isHost=true');
+                        widget.onNavigate(
+                          '/social/${createdSession.id}?isHost=true',
+                        );
                       }
                     },
                   ),
@@ -288,7 +346,9 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
                     onTap: () {
                       Navigator.of(dialogContext).pop();
                       final auth = ref.read(authProvider);
-                      _navigate(auth.isAuthenticated ? '/club-create' : '/login');
+                      _navigate(
+                        auth.isAuthenticated ? '/club-create' : '/login',
+                      );
                     },
                   ),
                 ],
@@ -299,10 +359,7 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
       },
       transitionBuilder: (context, anim, _, child) {
         if (reduceMotion) return child;
-        final curved = CurvedAnimation(
-          parent: anim,
-          curve: Curves.easeOutBack,
-        );
+        final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutBack);
         return FadeTransition(
           opacity: anim,
           child: ScaleTransition(
@@ -539,31 +596,57 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
     );
 
     if (reduceMotion) return row;
-    // Staggered interval for each action item
-    final step = 0.55 / (totalCount > 0 ? totalCount : 1);
-    final start = (index * step).clamp(0.0, 0.7).toDouble();
-    final end = (start + 0.45).clamp(0.0, 1.0).toDouble();
-    final animation = CurvedAnimation(
+
+    // One controller drives every row; each row reads only its own slice of
+    // it. The stagger is a per-row delay, not a per-row controller, so the
+    // menu stays on one timeline and rows cannot drift out of order.
+    final rise = CurvedAnimation(
       parent: _entranceController,
-      curve: Interval(start, end, curve: Curves.easeOutBack),
+      curve: _rowInterval(index, totalCount, _riseFraction, _rowEntrance),
     );
-    return FadeTransition(
-      opacity: animation,
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0.08, 0.12),
-          end: Offset.zero,
-        ).animate(animation),
-        child: ScaleTransition(
-          scale: Tween<double>(
-            begin: 0.92,
-            end: 1.0,
-          ).animate(animation),
-          child: row,
+    final fade = CurvedAnimation(
+      parent: _entranceController,
+      curve: _rowInterval(index, totalCount, _fadeFraction, Curves.easeOut),
+    );
+
+    return RepaintBoundary(
+      child: FadeTransition(
+        opacity: fade,
+        child: SlideTransition(
+          // Rows rise from their own resting place, so they do not look like
+          // they are being dragged across the sheet by a shared origin.
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.35),
+            end: Offset.zero,
+          ).animate(rise),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1.0).animate(rise),
+            alignment: Alignment.center,
+            child: row,
+          ),
         ),
       ),
     );
   }
+
+  /// Maps row [index] onto a window of [span] on the shared timeline.
+  ///
+  /// Every row travels for the same [span] and the step between rows is
+  /// whatever is left over, so a five-row menu and a three-row guest menu
+  /// both finish together and neither row can be clipped by the end of the
+  /// controller.
+  Curve _rowInterval(int index, int totalCount, double span, Curve curve) {
+    return Interval(
+      _rowStep(totalCount) * index,
+      _rowStep(totalCount) * index + span,
+      curve: curve,
+    );
+  }
+
+  /// Spacing between rows, derived from the rise span alone so that every
+  /// channel of a row starts at the same instant and only differs in length.
+  double _rowStep(int totalCount) =>
+      totalCount > 1 ? (1.0 - _riseFraction) / (totalCount - 1) : 0.0;
 }
 
 class _MenuAction {

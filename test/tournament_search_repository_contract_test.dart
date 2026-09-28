@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/core/services/token_manager.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_tournament_repository.dart';
@@ -10,6 +11,34 @@ import 'package:shared_preferences/shared_preferences.dart';
 class _NoTokenManager extends TokenManager {
   @override
   Future<String?> getAccessToken() async => null;
+}
+
+class _StringificationTrackingMap extends MapBase<String, dynamic> {
+  _StringificationTrackingMap(this._values);
+
+  final Map<String, dynamic> _values;
+  bool wasStringified = false;
+
+  @override
+  dynamic operator [](Object? key) => _values[key];
+
+  @override
+  void operator []=(String key, dynamic value) => _values[key] = value;
+
+  @override
+  void clear() => _values.clear();
+
+  @override
+  Iterable<String> get keys => _values.keys;
+
+  @override
+  dynamic remove(Object? key) => _values.remove(key);
+
+  @override
+  String toString() {
+    wasStringified = true;
+    return _values.toString();
+  }
 }
 
 void main() {
@@ -77,5 +106,17 @@ void main() {
     expect(requests.single.method, 'PATCH');
     expect(requests.single.path, '/tournaments/tournament-1');
     expect(requests.single.data, {'status': 'COMPLETED'});
+  });
+
+  test('tournament update logs never stringify the settings payload', () async {
+    final data = _StringificationTrackingMap({
+      'tournamentConfig': {'privateValue': 'do-not-log'},
+    });
+
+    await repository.update('tournament-1', data);
+
+    expect(requests.single.method, 'PATCH');
+    expect(requests.single.data, same(data));
+    expect(data.wasStringified, isFalse);
   });
 }

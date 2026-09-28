@@ -25,6 +25,7 @@ import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
+import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
 
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -50,6 +51,22 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   String? _selectedDivisionId;
   String? _customInviteCode;
   bool _hasUserSwitchedTab = false;
+  late final ScrollController _scrollController;
+  bool _isCollapsed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController()..addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final collapsed = _scrollController.offset >= 110.0;
+    if (collapsed != _isCollapsed) {
+      setState(() => _isCollapsed = collapsed);
+    }
+  }
 
   void _updateTabController(int count, {int? defaultIndex}) {
     if (_tabController != null && _currentTabCount == count) return;
@@ -84,6 +101,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _tabController?.dispose();
     super.dispose();
   }
@@ -786,6 +805,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         isFollowing: isFollowing,
         onToggleFollow: () => _toggleFollow(tournament, isFollowing),
         inviteCode: activeInvite,
+        hasSliverBanner: !tournament.isClubLite,
       ),
     );
 
@@ -904,27 +924,55 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       );
     }
 
-    return Column(
-      children: [
-        // Keep the back action reachable while each tab scrolls independently.
-        _buildTopBar(tournament, colors, isFollowing),
+    final isClubLite = tournament.isClubLite;
+    final topPadding = MediaQuery.of(context).padding.top;
 
-        // ─── Dynamic Tab Bar Navigation ───
-        _buildStickyTabBar(controller, tabHeaders, colors),
-
-        // ─── Tab Views Content ───
-        Expanded(
-          child: teamsAsync.when(
-            data: (_) => TabBarView(controller: controller, children: tabViews),
-            loading: () => const Center(
-              child: CircularProgressIndicator(color: AppTheme.primary),
-            ),
-            error: (err, st) => Center(
-              child: Text('$err', style: TextStyle(color: colors.error)),
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(
+          tournamentIntroWithInviteProvider((
+            id: widget.tournamentId,
+            invite: activeInvite,
+          )),
+        );
+        ref.invalidate(tournamentDivisionsProvider(widget.tournamentId));
+        ref.invalidate(introTeamsProvider(widget.tournamentId));
+        ref.invalidate(
+          tournament.isLite
+              ? liteBracketMatchesProvider(widget.tournamentId)
+              : matchesProvider(widget.tournamentId),
+        );
+      },
+      child: NestedScrollView(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        headerSliverBuilder: (context, innerBoxIsScrolled) => [
+          _buildSliverAppBar(
+            tournament,
+            colors,
+            isFollowing,
+            topPadding,
+            isClubLite: isClubLite,
+          ),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _TournamentTabBarDelegate(
+              tabController: controller,
+              tabHeaders: tabHeaders,
+              colors: colors,
             ),
           ),
+        ],
+        body: teamsAsync.when(
+          data: (_) => TabBarView(controller: controller, children: tabViews),
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppTheme.primary),
+          ),
+          error: (err, st) => Center(
+            child: Text('$err', style: TextStyle(color: colors.error)),
+          ),
         ),
-      ],
+      ),
     );
   }
 
@@ -1064,92 +1112,135 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-  Widget _buildTopBar(
+  Widget _buildSliverAppBar(
     Tournament tournament,
     AppColorsExtension colors,
     bool isFollowing,
-  ) {
-    return Container(
-      color: colors.bgCard,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 6,
-        bottom: 8,
-        left: 12,
-        right: 12,
-      ),
-      child: Row(
-        children: [
-          _backButton(colors),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              tournament.name,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: colors.textPrimary,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          IconButton(
-            icon: Icon(
-              isFollowing
-                  ? Icons.bookmark_rounded
-                  : Icons.bookmark_border_rounded,
-              color: isFollowing ? AppTheme.primary : colors.textMuted,
-              size: 22,
-            ),
-            onPressed: () => _toggleFollow(tournament, isFollowing),
-          ),
-          IconButton(
-            icon: Icon(Icons.share_outlined, color: colors.textMuted, size: 20),
-            onPressed: () => _shareTournament(tournament),
-          ),
-        ],
-      ),
-    );
-  }
+    double topPadding, {
+    required bool isClubLite,
+  }) {
+    final images = <String>[];
+    if (tournament.bannerUrl != null && tournament.bannerUrl!.isNotEmpty) {
+      images.add(tournament.bannerUrl!);
+    }
+    if (tournament.logoUrl != null &&
+        tournament.logoUrl!.isNotEmpty &&
+        !images.contains(tournament.logoUrl)) {
+      images.add(tournament.logoUrl!);
+    }
 
-  Widget _buildStickyTabBar(
-    TabController controller,
-    List<Widget> tabHeaders,
-    AppColorsExtension colors,
-  ) {
-    return Container(
-      width: double.infinity,
-      alignment: Alignment.centerLeft,
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        border: Border(
-          bottom: BorderSide(
-            color: colors.border.withValues(alpha: 0.5),
-            width: 1,
+    final double bannerContentHeight = isClubLite ? 0.0 : 180.0;
+    final double totalBannerHeight = bannerContentHeight + topPadding;
+
+    Widget fallbackBanner() {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return Container(
+        color: isDark ? const Color(0xFF16233A) : const Color(0xFFE8EEFB),
+        child: const Center(
+          child: SportoBrandFallback(
+            withTagline: true,
+            padding: EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+            semanticsLabel: 'SportO tournament fallback banner',
           ),
         ),
+      );
+    }
+
+    final List<Shadow>? iconShadows = (_isCollapsed || isClubLite)
+        ? null
+        : [
+            Shadow(
+              offset: const Offset(0, 1),
+              blurRadius: 4.0,
+              color: Colors.black.withValues(alpha: 0.5),
+            ),
+          ];
+
+    final Color currentIconColor =
+        (_isCollapsed || isClubLite) ? colors.textPrimary : Colors.white;
+
+    return SliverAppBar(
+      pinned: true,
+      primary: true,
+      toolbarHeight: 44.0,
+      expandedHeight: isClubLite ? 44.0 + topPadding : totalBannerHeight,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      backgroundColor: (_isCollapsed || isClubLite) ? colors.bgDark : Colors.transparent,
+      iconTheme: IconThemeData(
+        color: currentIconColor,
+        opacity: 1.0,
       ),
-      child: TabBar(
-        controller: controller,
-        isScrollable: true,
-        tabAlignment: TabAlignment.start,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        labelPadding: const EdgeInsets.symmetric(horizontal: 12),
-        indicatorSize: TabBarIndicatorSize.label,
-        indicator: const UnderlineTabIndicator(
-          borderSide: BorderSide(color: AppTheme.primary, width: 2.5),
-          insets: EdgeInsets.only(bottom: 0),
+      leading: IconButton(
+        icon: Icon(
+          Icons.arrow_back_ios_rounded,
+          color: currentIconColor,
+          size: 20,
+          shadows: iconShadows,
         ),
-        dividerColor: Colors.transparent,
-        labelColor: AppTheme.primary,
-        unselectedLabelColor: colors.textSecondary,
-        labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-        unselectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 13,
-        ),
-        tabs: tabHeaders,
+        onPressed: _goBack,
+        splashRadius: 20,
       ),
+      // User requirement: Khi cuộn xuống qua banner thì hiện header với nút quay lại thôi, KHÔNG CẦN HIỆN TÊN GIẢI
+      title: null,
+      actions: [
+        IconButton(
+          icon: Icon(
+            isFollowing
+                ? Icons.bookmark_rounded
+                : Icons.bookmark_border_rounded,
+            color: isFollowing
+                ? AppTheme.primary
+                : currentIconColor,
+            size: 22,
+            shadows: isFollowing ? null : iconShadows,
+          ),
+          splashRadius: 20,
+          onPressed: () => _toggleFollow(tournament, isFollowing),
+        ),
+        IconButton(
+          icon: Icon(
+            Icons.share_outlined,
+            color: currentIconColor,
+            size: 20,
+            shadows: iconShadows,
+          ),
+          splashRadius: 20,
+          onPressed: () => _shareTournament(tournament),
+        ),
+        const SizedBox(width: 4),
+      ],
+      flexibleSpace: isClubLite
+          ? null
+          : FlexibleSpaceBar(
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  images.isNotEmpty
+                      ? Image.network(
+                          _resolveImageUrl(images.first),
+                          fit: BoxFit.cover,
+                          errorBuilder: (ctx, err, stack) => fallbackBanner(),
+                        )
+                      : fallbackBanner(),
+                  // Top/Bottom gradient overlay for legibility
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withValues(alpha: 0.4),
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.35),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 
@@ -1297,5 +1388,75 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           )
           .toList(),
     );
+  }
+}
+
+class _TournamentTabBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabController tabController;
+  final List<Widget> tabHeaders;
+  final AppColorsExtension colors;
+
+  static const double _tabBarHeight = 44.0;
+
+  const _TournamentTabBarDelegate({
+    required this.tabController,
+    required this.tabHeaders,
+    required this.colors,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      width: double.infinity,
+      height: _tabBarHeight,
+      alignment: Alignment.centerLeft,
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        border: Border(
+          bottom: BorderSide(
+            color: colors.border.withValues(alpha: 0.5),
+            width: 1,
+          ),
+        ),
+      ),
+      child: TabBar(
+        controller: tabController,
+        isScrollable: true,
+        tabAlignment: TabAlignment.start,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 12),
+        indicatorSize: TabBarIndicatorSize.label,
+        indicator: const UnderlineTabIndicator(
+          borderSide: BorderSide(color: AppTheme.primary, width: 2.5),
+          insets: EdgeInsets.only(bottom: 0),
+        ),
+        dividerColor: Colors.transparent,
+        labelColor: AppTheme.primary,
+        unselectedLabelColor: colors.textSecondary,
+        labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w500,
+          fontSize: 13,
+        ),
+        tabs: tabHeaders,
+      ),
+    );
+  }
+
+  @override
+  double get maxExtent => _tabBarHeight;
+
+  @override
+  double get minExtent => _tabBarHeight;
+
+  @override
+  bool shouldRebuild(_TournamentTabBarDelegate oldDelegate) {
+    return oldDelegate.tabController != tabController ||
+        oldDelegate.tabHeaders != tabHeaders ||
+        oldDelegate.colors != colors;
   }
 }

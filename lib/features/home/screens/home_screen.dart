@@ -68,7 +68,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   // ─── Per-tab filter state ───
   String _exploreSport = 'all';
-  String _exploreStatus = 'live';
+  // Mặc định mở tab "Sắp diễn ra": phần lớn người dùng vào app để xem giải
+  // sắp diễn ra, còn "Trực tiếp" thường rỗng nên phải bấm mới thấy.
+  String _exploreStatus = 'scheduled';
   bool _initialLiveProbeCompleted = false;
   bool _initialLiveProbeStarted = false;
   bool _hasAutoSwitchedLiveTab = false;
@@ -173,7 +175,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     setState(() {
       _hasAutoSwitchedLiveTab = false;
       _userManuallySelectedLiveTab = false;
-      _exploreStatus = 'live';
+      _exploreStatus = 'scheduled';
       _exploreSport = key;
       _tournamentSport = key;
       _clubSport = key;
@@ -352,9 +354,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     double h = _headerHeight;
     if (_currentIndex == 3) {
       h += 44.0; // Explore sub-tabs (CLB / Social)
-      h += _exploreSubTabIndex == 0
-          ? 52.0 // Existing Create Club row.
-          : 56.0; // Social create action row.
     }
     return h;
   }
@@ -752,40 +751,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 ],
                               ),
                             ),
-                          if (_currentIndex == 3 && _exploreSubTabIndex == 0)
-                            Container(
-                              color: context.colors.bgDark,
-                              padding: const EdgeInsets.fromLTRB(
-                                16.0,
-                                6.0,
-                                16.0,
-                                8.0,
-                              ),
-                              alignment: Alignment.centerRight,
-                              child: _buildCreateClubButton(),
-                            ),
-                          if (_currentIndex == 3 && _exploreSubTabIndex == 1)
-                            Container(
-                              height: 56,
-                              color: context.colors.bgDark,
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              alignment: Alignment.centerRight,
-                              child: FilledButton.icon(
-                                key: const ValueKey('home-social-create-action'),
-                                onPressed: _showCreateSocialSession,
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: AppTheme.primary,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size(0, 48),
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                ),
-                                icon: const Icon(Icons.add_rounded, size: 20),
-                                label: Text(l10n.homeSocialCreateAction),
-                              ),
-                            ),
+
+
                         ],
                       ),
                     ),

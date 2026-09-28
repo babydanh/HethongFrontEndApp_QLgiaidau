@@ -14035,22 +14035,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get socialRegionLabel => 'Khu vực (không bắt buộc)';
 
   @override
-  String get socialRegionChooseAction => 'Chọn khu vực';
-
-  @override
-  String get socialRegionChangeAction => 'Đổi khu vực';
-
-  @override
-  String get socialRegionProvinceLabel => 'Tỉnh/Thành phố';
-
-  @override
   String get socialRegionWardLabel => 'Phường/Xã';
 
   @override
-  String get socialRegionProvinceSearchHint => 'Tìm tỉnh/thành phố';
+  String get socialRegionWardSearchHint => 'Tìm phường/xã';
 
   @override
-  String get socialRegionWardSearchHint => 'Tìm phường/xã';
+  String get socialRegionWardSearchPrompt =>
+      'Nhập ít nhất 2 ký tự để tìm phường/xã.';
 
   @override
   String get socialRegionApplyAction => 'Áp dụng';
@@ -14060,6 +14052,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get socialRegionNoResults => 'Không tìm thấy kết quả.';
+
+  @override
+  String get socialRegionUnavailable =>
+      'Khu vực hiện không khả dụng. Bạn vẫn có thể nhập địa chỉ thủ công.';
+
+  @override
+  String get socialRegionRetry => 'Thử lại';
 
   @override
   String get socialRegionLoadError =>

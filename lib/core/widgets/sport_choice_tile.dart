@@ -95,6 +95,8 @@ class SportChoiceTile extends StatelessWidget {
 
     if (normalized.contains('football') ||
         normalized.contains('bóng đá') ||
+        normalized.contains('bong-da') ||
+        normalized.contains('bong_da') ||
         normalized.contains('soccer')) {
       return SvgPicture.asset(
         'assets/icons/football.svg',
@@ -103,7 +105,10 @@ class SportChoiceTile extends StatelessWidget {
         fit: BoxFit.contain,
       );
     }
-    if (normalized.contains('badminton') || normalized.contains('cầu lông')) {
+    if (normalized.contains('badminton') ||
+        normalized.contains('cầu lông') ||
+        normalized.contains('cau-long') ||
+        normalized.contains('cau_long')) {
       return SvgPicture.asset(
         'assets/icons/badminton.svg',
         width: size,
@@ -112,7 +117,10 @@ class SportChoiceTile extends StatelessWidget {
       );
     }
     if (normalized.contains('table_tennis') ||
+        normalized.contains('table-tennis') ||
         normalized.contains('bóng bàn') ||
+        normalized.contains('bong-ban') ||
+        normalized.contains('bong_ban') ||
         normalized.contains('ping_pong') ||
         normalized.contains('ping-pong') ||
         normalized.contains('ping')) {
@@ -131,8 +139,19 @@ class SportChoiceTile extends StatelessWidget {
         fit: BoxFit.contain,
       );
     }
+    if (normalized.contains('tennis') ||
+        normalized.contains('quần vợt') ||
+        normalized.contains('quan-vot') ||
+        normalized.contains('quan_vot')) {
+      return SvgPicture.asset(
+        'assets/icons/tennis.svg',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+      );
+    }
     return SvgPicture.asset(
-      'assets/icons/tennis.svg',
+      'assets/icons/ball_icon.svg',
       width: size,
       height: size,
       fit: BoxFit.contain,

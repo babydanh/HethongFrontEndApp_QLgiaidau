@@ -16,6 +16,77 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
+import 'package:image_picker/image_picker.dart';
+
+import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
+
+/// Nút viền đứt, dùng cho "Thêm nội dung" để khớp web. `OutlinedButton` của
+/// Flutter không vẽ được nét đứt nên phải tự vẽ; chiều cao 48dp để đạt chuẩn
+/// chạm tối thiểu trên Android.
+class DottedBorderBox extends StatelessWidget {
+  const DottedBorderBox({super.key, required this.onTap, required this.child});
+
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: CustomPaint(
+        painter: _DashedBorderPainter(
+          color: AppTheme.primary.withValues(alpha: 0.55),
+          radius: 10,
+        ),
+        child: SizedBox(
+          height: 48,
+          width: double.infinity,
+          child: Center(child: child),
+        ),
+      ),
+    );
+  }
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  const _DashedBorderPainter({required this.color, required this.radius});
+
+  final Color color;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+
+    final path = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Offset.zero & size,
+          Radius.circular(radius),
+        ),
+      );
+
+    // Vẽ theo đường viền rồi cắt thành nét đứt bằng PathMetric.
+    for (final metric in path.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        canvas.drawPath(
+          metric.extractPath(distance, distance + 6),
+          paint,
+        );
+        distance += 10;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorderPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.radius != radius;
+}
 
 class _QuickTournamentContentDraft {
   const _QuickTournamentContentDraft({
@@ -108,7 +179,9 @@ class _CreatePublicQuickTournamentScreenState
   bool _isRanked = false;
   String _bracket = AppConstants.bracketSingleElimination;
   final String _registrationMode = 'APPROVAL';
-  String _doublesPairingMode = 'ORGANIZER';
+  // Không còn công tắc trên màn tạo nữa: luật ghép đôi do BTC quyết, mặc
+  // định 'ORGANIZER' đúng như web (web cũng không có control này khi tạo).
+  static const String _doublesPairingMode = 'ORGANIZER';
   DateTime? _startDate;
   TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
   DateTime? _endDate;
@@ -132,9 +205,13 @@ class _CreatePublicQuickTournamentScreenState
   bool _feesConfigLoaded = false;
   bool _allowEntryFees = false;
   bool _entryFeeEnabled = false;
+  bool _regStartDateManuallySet = false;
   bool _endDateManuallySet = false;
   bool _registrationEndManuallySet = false;
   bool _isSubmitting = false;
+  String? _logoUrl;
+  String? _bannerUrl;
+  bool _isUploadingBrand = false;
 
   AppLocalizations get l10n => AppLocalizations.of(context)!;
 
@@ -143,41 +220,78 @@ class _CreatePublicQuickTournamentScreenState
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
-    final defaultStart = now.add(const Duration(days: 7));
-    _startDate = DateTime(
-      defaultStart.year,
-      defaultStart.month,
-      defaultStart.day,
-    );
-    final defaultEnd = DateTime(
-      defaultStart.year,
-      defaultStart.month,
-      defaultStart.day,
-      23,
-      59,
-    );
-    _startTime = TimeOfDay.fromDateTime(defaultStart);
-    _endDate = DateTime(defaultEnd.year, defaultEnd.month, defaultEnd.day);
-    _endTime = TimeOfDay.fromDateTime(defaultEnd);
-    final nextRoundedMinute = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      now.hour,
-      now.minute,
-    ).add(const Duration(minutes: 1));
-    _regStartDate = DateTime(
-      nextRoundedMinute.year,
-      nextRoundedMinute.month,
-      nextRoundedMinute.day,
-    );
-    _regStartTime = TimeOfDay.fromDateTime(nextRoundedMinute);
-    _syncDefaultRegistrationEnd(defaultStart);
+    _applyScheduleDefaults();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadFeePolicy());
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _verifyOrganizerPermission(),
     );
+  }
+
+  /// Mốc thời gian mặc định, bám đúng web:
+  ///
+  /// - Bắt đầu: 06:00 hôm nay nếu lúc này còn trước 06:00, nếu không thì
+  ///   00:00 ngày mai (`getVietnamNextTournamentStartIsoMinute`).
+  /// - Kết thúc: để trống — web cho phép BTC tự bấm kết thúc giải.
+  /// - Mở đăng ký: 00:00 hôm nay.
+  /// - Hạn đăng ký: 23:59 hôm nay, lùi về trước giờ bắt đầu đúng một phút nếu
+  ///   hai mốc chồng nhau, và nếu hôm nay đã qua thì lùi tới giờ bắt đầu
+  ///   trừ một phút khi mốc đó còn ở tương lai
+  ///   (`deriveRegistrationWindow`).
+  void _applyScheduleDefaults() {
+    final now = DateTime.now();
+    final start = now.isBefore(DateTime(now.year, now.month, now.day, 6))
+        ? DateTime(now.year, now.month, now.day, 6)
+        : DateTime(now.year, now.month, now.day + 1);
+    _startDate = DateTime(start.year, start.month, start.day);
+    _startTime = TimeOfDay(hour: start.hour, minute: start.minute);
+    // Kết thúc dự kiến: 00:00 ngày kế tiếp. Đây chỉ là mốc dự kiến để BTC
+    // nhìn thấy quy mô giải; màn quản lý không tự tính lại nên BTC sửa tay
+    // được bất cứ lúc nào.
+    _endDate = DateTime(start.year, start.month, start.day + 1);
+    _endTime = const TimeOfDay(hour: 0, minute: 0);
+    _endDateManuallySet = false;
+    _registrationEndManuallySet = false;
+
+    _deriveRegistrationWindow(start);
+  }
+
+  /// Cửa sổ đăng ký, đúng `deriveRegistrationWindow` của web
+  /// (`tournamentRegistrationSchedule.ts:69-100`):
+  /// mở đăng ký 00:00 hôm nay, hạn chót 23:59 hôm nay nhưng lùi về trước
+  /// giờ bắt đầu đúng một phút khi hai mốc chồng nhau, và nếu hạn chót hôm nay
+  /// đã qua thì lùi tiếp tới giờ bắt đầu trừ một phút khi mốc đó còn ở tương
+  /// lai. Backend cho phép mở đăng ký trong quá khứ, chỉ chặn hạn chót đã qua
+  /// (`tournament-lite.service.ts:656`).
+  void _deriveRegistrationWindow(DateTime start, {DateTime? nowOverride}) {
+    final now = nowOverride ?? DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    _regStartDate = today;
+    _regStartTime = const TimeOfDay(hour: 0, minute: 0);
+
+    // 00:00 ngày hôm sau, lùi về trước giờ bắt đầu một phút khi trùng hoặc
+    // vượt — backend từ chối hạn chót không nằm trước giờ bắt đầu.
+    var regEnd = DateTime(today.year, today.month, today.day + 1);
+    final lastUsable = start.subtract(const Duration(minutes: 1));
+    if (!regEnd.isBefore(start)) regEnd = lastUsable;
+    if (!regEnd.isAfter(now) && lastUsable.isAfter(now)) regEnd = lastUsable;
+    _regEndDate = DateTime(regEnd.year, regEnd.month, regEnd.day);
+    _regEndTime = TimeOfDay(hour: regEnd.hour, minute: regEnd.minute);
+  }
+
+  /// Đổi giờ bắt đầu thì kéo theo các mốc còn lại, trừ mốc BTC đã tự chọn.
+  void _syncScheduleFromStart(DateTime start) {
+    if (!_endDateManuallySet) {
+      // Giữ quy tắc "00:00 ngày kế tiếp" khi BTC dịch giờ bắt đầu.
+      _endDate = DateTime(start.year, start.month, start.day + 1);
+      _endTime = const TimeOfDay(hour: 0, minute: 0);
+    }
+    // `_deriveRegistrationWindow` ghi cả mở đăng ký lẫn hạn chót, nên chỉ
+    // chạy lại khi BTC chưa tự chọn mốc nào; nếu chỉ một trong hai đã chốt,
+    // giữ nguyên mốc đó thay vì âm thầm ghi đè.
+    if (!_regStartDateManuallySet && !_registrationEndManuallySet) {
+      _deriveRegistrationWindow(start);
+    }
   }
 
   Future<void> _loadFeePolicy() async {
@@ -268,30 +382,26 @@ class _CreatePublicQuickTournamentScreenState
     }
   }
 
+  /// Nội dung thi đấu mặc định phải thuộc môn đang chọn: bóng đá chỉ nhận
+  /// `FOOTBALL_*`, các môn vợt chỉ nhận nhóm `SINGLES`/`DOUBLES`
+  /// (`_openContentDraftDialog` lọc danh sách theo môn). Trước đây mọi môn đều
+  /// nhận `MALE_DOUBLES`, nên đổi sang bóng đá xong bản nháp vẫn mang nội dung
+  /// không hợp lệ cho môn.
+  void _resetContentDraftsForSport(String sport) {
+    final defaultFormat = sport == AppConstants.sportFootball
+        ? 'FOOTBALL_MALE'
+        : 'MALE_DOUBLES';
+    _contentDrafts = [
+      _QuickTournamentContentDraft(
+        id: defaultFormat,
+        formatKey: defaultFormat,
+        name: '',
+      ),
+    ];
+  }
+
   DateTime _withTime(DateTime date, TimeOfDay time) =>
       DateTime(date.year, date.month, date.day, time.hour, time.minute);
-
-  /// Keeps the default end datetime aligned when the organizer changes the
-  /// start before explicitly choosing an end datetime.
-  void _syncDefaultEnd(DateTime start) {
-    final estimatedEnd = DateTime(start.year, start.month, start.day, 23, 59);
-    _endDate = DateTime(
-      estimatedEnd.year,
-      estimatedEnd.month,
-      estimatedEnd.day,
-    );
-    _endTime = TimeOfDay.fromDateTime(estimatedEnd);
-  }
-
-  void _syncDefaultRegistrationEnd(DateTime start) {
-    final previousDay = start.subtract(const Duration(days: 1));
-    _regEndDate = DateTime(
-      previousDay.year,
-      previousDay.month,
-      previousDay.day,
-    );
-    _regEndTime = const TimeOfDay(hour: 23, minute: 59);
-  }
 
   String _formatLabel(String key) {
     switch (key) {
@@ -528,16 +638,11 @@ class _CreatePublicQuickTournamentScreenState
             _contentDrafts.any((draft) => draft.formatKey.contains('DOUBLES')))
           'doublesPairingMode': _doublesPairingMode,
         'isRanked': _isRanked,
-        if (_contentDrafts.any(
-          (draft) => draft.formatKey.contains('DOUBLES'),
-        )) ...{
-          if (_maxCombinedEloController.text.trim().isNotEmpty)
-            'maxCombinedElo': int.parse(_maxCombinedEloController.text.trim()),
-          if (_maxTeammateGapController.text.trim().isNotEmpty)
-            'maxTeammateGap': int.parse(_maxTeammateGapController.text.trim()),
-        },
         if (_entryFeeEnabled)
           'entryFee': int.parse(_entryFeeController.text.trim()),
+        if (_logoUrl != null && _logoUrl!.isNotEmpty) 'logoUrl': _logoUrl,
+        if (_bannerUrl != null && _bannerUrl!.isNotEmpty)
+          'bannerUrl': _bannerUrl,
         if (_mapSportSlug() == 'football') ...{
           'teamSize': _teamSize,
           'maxReserve': _maxReserve,
@@ -680,7 +785,7 @@ class _CreatePublicQuickTournamentScreenState
             ),
             const SizedBox(height: 12),
             // ─── Tên giải đấu ───
-            _sectionLabel('Tên giải đấu *', colors),
+            _sectionLabel(l10n.quickCreateNameLabel, colors),
             const SizedBox(height: 6),
             TextFormField(
               controller: _nameController,
@@ -707,135 +812,75 @@ class _CreatePublicQuickTournamentScreenState
             const SizedBox(height: 18),
 
             // ─── Môn thể thao ───
-            _sectionLabel('Môn thể thao *', colors),
+            _sectionLabel(l10n.quickCreateSportLabel, colors),
             const SizedBox(height: 8),
             _buildSportGrid(colors),
             const SizedBox(height: 18),
 
             // ─── Thể thức thi đấu ───
-            _sectionLabel('Sơ đồ thi đấu *', colors),
+            _sectionLabel('${l10n.quickCreateBracketLabel} *', colors),
             const SizedBox(height: 8),
             _buildBracketSelector(colors),
             const SizedBox(height: 18),
 
             // ─── Nội dung thi đấu (Bao gồm Giới tính) ───
-            _sectionLabel('Nội dung thi đấu & Giới tính', colors),
+            // Bộ đếm đặt cạnh tiêu đề để người tạo luôn biết mình đang có bao
+            // nhiêu nội dung — đây là trường bắt buộc tối thiểu 1.
+            Row(
+              children: [
+                Expanded(
+                  child: _sectionLabel(l10n.quickCreateFormatLabel, colors),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text(
+                    'Đã chọn ${_contentDrafts.length} nội dung',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             _buildFormatPills(colors),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: colors.bgSurface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colors.border),
-              ),
-              child: SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  _isRanked
-                      ? l10n.tournamentCreateRanked
-                      : l10n.tournamentCreateUnranked,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                subtitle: Text(
-                  _isRanked
-                      ? l10n.tournamentCreateRankedDescription
-                      : l10n.tournamentCreateUnrankedDescription,
-                  style: TextStyle(fontSize: 11, color: colors.textSecondary),
-                ),
-                value: _isRanked,
-                onChanged: (value) => setState(() => _isRanked = value),
-              ),
-            ),
-            if (_sport != AppConstants.sportFootball &&
-                _contentDrafts.any(
-                  (draft) => draft.formatKey.contains('DOUBLES'),
-                )) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.07),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppTheme.primary.withValues(alpha: 0.18),
-                  ),
-                ),
-                child: SwitchListTile.adaptive(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    l10n.quickCreateOrganizerPairingTitle,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      '${l10n.quickCreateOrganizerPairingDescription}\n${l10n.quickCreateOrganizerPairingEnabled}: ${_doublesPairingMode == 'ORGANIZER' ? l10n.quickCreateOrganizerPairingOn : l10n.quickCreateOrganizerPairingOff}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: colors.textSecondary,
-                      ),
-                    ),
-                  ),
-                  value: _doublesPairingMode == 'ORGANIZER',
-                  onChanged: (enabled) => setState(() {
-                    _doublesPairingMode = enabled ? 'ORGANIZER' : 'SELF';
-                  }),
-                ),
-              ),
-            ],
-            if (_contentDrafts.any(
-              (draft) => draft.formatKey.contains('DOUBLES'),
-            )) ...[
-              const SizedBox(height: 12),
-              _buildEligibilityOptions(colors),
-            ],
-            if (_sport == AppConstants.sportFootball) ...[
-              const SizedBox(height: 12),
-              _buildFootballOptions(colors),
-            ],
             const SizedBox(height: 18),
 
             // ─── Quy mô & Giới hạn số đội ───
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _sectionLabel('Số đội / VĐV tối đa', colors),
-                const SizedBox(height: 6),
-                TextFormField(
-                  controller: _maxTeamsController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    hintText: '16',
-                    prefixIcon: const Icon(Icons.groups_outlined, size: 20),
-                    filled: true,
-                    fillColor: colors.bgSurface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: colors.border),
+                Row(
+                  children: [
+                    Expanded(child: _sectionLabel('Số đội / VĐV tối đa', colors)),
+                    Text(
+                      'Tối đa 128',
+                      style: TextStyle(fontSize: 12, color: colors.textMuted),
                     ),
-                  ),
-                  validator: (val) {
-                    final n = int.tryParse(val?.trim() ?? '');
-                    if (n == null || n < 2 || n > 128) {
-                      return 'Số đội từ 2 đến 128';
-                    }
-                    if (_bracket == AppConstants.bracketRoundRobin && n > 15) {
-                      return 'Vòng tròn tối đa 15 đội / VĐV';
-                    }
-                    return null;
-                  },
+                  ],
                 ),
+                const SizedBox(height: 8),
+                _buildMaxTeamsSelector(colors),
+                _buildRoundRobinHint(colors) ?? const SizedBox.shrink(),
+
+            // ─── Luật bóng đá (chỉ môn bóng đá) ───
+            // Web đặt luật bóng đá ngay dưới khối thể thức, hiện sẵn khi môn là
+            // bóng đá (`QuickTournamentCreate.tsx:1209-1272`); hai luật hai lượt
+            // / bàn thắng sân khách / luân lưu nằm ở khối nâng cao của web
+            // (`:1715-1720`) nên mobile cũng tách vậy.
+            if (_sport == AppConstants.sportFootball) ...[
+              const SizedBox(height: 18),
+              _buildFootballOptions(colors),
+            ],
               ],
             ),
             const SizedBox(height: 18),
@@ -869,6 +914,7 @@ class _CreatePublicQuickTournamentScreenState
                   _buildScheduleRow(
                     avatarLetter: 'E',
                     title: 'Thời gian kết thúc',
+                    hint: 'Dự kiến',
                     value: _endDate == null
                         ? null
                         : _withTime(_endDate!, _endTime),
@@ -909,12 +955,6 @@ class _CreatePublicQuickTournamentScreenState
               ),
             ),
             const SizedBox(height: 18),
-
-            _buildPublicFeeOptions(colors),
-            const SizedBox(height: 12),
-            const SizedBox(height: 14),
-
-            const SizedBox(height: 8),
 
             // ─── Địa điểm thi đấu ───
             _sectionLabel('Địa điểm thi đấu (Tùy chọn)', colors),
@@ -1022,6 +1062,12 @@ class _CreatePublicQuickTournamentScreenState
               ),
             ),
             const SizedBox(height: 12),
+
+            // ─── Cài đặt nâng cao (giống web: thu gọn, mở ra mới thấy) ───
+            // Web đặt lệ phí, logo và banner trong khối "Thêm cài đặt giải
+            // đấu" đóng mặc định và đặt sau mô tả. Mobile đặt cùng vị trí để
+            // phần bắt buộc không bị đẩy xuống dưới màn hình.
+            _buildAdvancedExtras(colors),
           ],
         ),
       ),
@@ -1078,71 +1124,312 @@ class _CreatePublicQuickTournamentScreenState
   Widget _buildSportGrid(AppColorsExtension colors) {
     return Consumer(
       builder: (context, ref, _) {
+        final categoriesAsync = ref.watch(categoriesProvider);
         final activeCategories =
-            ref.watch(categoriesProvider).value ?? const [];
+            categoriesAsync.asData?.value ?? const <CategoryModel>[];
 
-        final sportsMeta = {
-          'pickleball': ('Pickleball', Icons.sports_tennis),
-          'badminton': ('Cầu lông', Icons.sports_handball),
-          'tennis': ('Tennis', Icons.sports_tennis),
-          'table_tennis': ('Bóng bàn', Icons.sports_mma),
-          'football': ('Bóng đá', Icons.sports_soccer),
+        // Chỉ nhận đúng 5 môn mà `POST /tournaments/lite` chấp nhận
+        // (`@IsIn` trong create-lite-tournament.dto.ts). Một category khác
+        // (ví dụ bóng chuyền) không có nguồn scoring nên không được hiện:
+        // map nó về môn khác sẽ tạo giải sai môn so với nhãn người dùng thấy.
+        // Nhãn lấy từ `cat.name` của backend; icon do
+        // `SportChoiceTile.buildSportIcon` tự tra theo slug, không cần bảng map.
+        const creatableSlugs = {
+          AppConstants.sportBadminton,
+          AppConstants.sportPickleball,
+          AppConstants.sportTennis,
+          AppConstants.sportTableTennis,
+          AppConstants.sportFootball,
         };
+        final sports = activeCategories
+            .where((cat) => creatableSlugs.contains(cat.slug.toLowerCase()))
+            .map((cat) {
+              final slug = cat.slug.toLowerCase();
+              final fallbackName =
+                  AppConstants.sportNames[slug] ?? slug;
+              return (slug, cat.name.isNotEmpty ? cat.name : fallbackName);
+            })
+            .toList();
 
-        // Chỉ hiển thị các môn thể thao đang ACTIVE từ backend, tuyệt đối không fallback hiển thị môn đã tắt
-        final sports = activeCategories.where((cat) => cat.isActive).map((cat) {
-          final slug = cat.slug.toLowerCase();
-          final metaKey = sportsMeta.keys.firstWhere(
-            (k) => slug.contains(k) || k.contains(slug),
-            orElse: () => 'pickleball',
+        if (categoriesAsync.hasError && activeCategories.isEmpty) {
+          return _sportFallbackState(
+            colors,
+            message: l10n.socialActiveSportsError,
+            retryLabel: l10n.socialActiveSportsRetry,
+            onRetry: () => ref.invalidate(categoriesProvider),
           );
-          final meta =
-              sportsMeta[metaKey] ?? (cat.name, Icons.emoji_events_outlined);
-          return (metaKey, cat.name.isNotEmpty ? cat.name : meta.$1, meta.$2);
-        }).toList();
-
-        if (sports.isNotEmpty && !sports.any((s) => s.$1 == _sport)) {
-          final firstSport = sports.first.$1;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && _sport != firstSport) {
-              setState(() => _sport = firstSport);
-            }
-          });
         }
 
-        if (sports.isEmpty) {
+        if (categoriesAsync.isLoading && activeCategories.isEmpty) {
           return const SizedBox(
             height: 60,
             child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
           );
         }
 
-        return Row(
-          children: sports.map((s) {
-            final selected = _sport == s.$1;
-            return SportChoiceTile(
-              sportKey: s.$1,
-              label: s.$2,
-              selected: selected,
-              iconSize: 24,
-              withTrailingGap: s != sports.last,
-              onTap: () => setState(() {
-                _sport = s.$1;
-                final defaultFormat = s.$1 == AppConstants.sportFootball
-                    ? 'FOOTBALL_MALE'
-                    : 'MALE_DOUBLES';
-                _contentDrafts = [
-                  _QuickTournamentContentDraft(
-                    id: defaultFormat,
-                    formatKey: defaultFormat,
-                    name: '',
+        if (sports.isEmpty) {
+          return _sportFallbackState(colors, message: l10n.infoNoData);
+        }
+
+        if (!sports.any((s) => s.$1 == _sport)) {
+          final firstSport = sports.first.$1;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _sport != firstSport) {
+              // Nội dung thi đấu phải đi theo môn: đổi môn mà giữ bản nháp cũ
+              // sẽ gửi lên một `matchType` không hợp lệ với môn mới.
+              setState(() {
+                _sport = firstSport;
+                _resetContentDraftsForSport(firstSport);
+              });
+            }
+          });
+        }
+
+        // Bề rộng ô cố định để danh sách môn tự xuống dòng: số môn thay đổi
+        // theo `isActive` từ backend, `Row` + `Expanded` sẽ bóp nhãn về 0 và
+        // kích hoạt ellipsis khi có từ 5 môn trở lên.
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            const spacing = 8.0;
+            const minTileWidth = 96.0;
+            final columns = ((constraints.maxWidth + spacing) / (minTileWidth + spacing))
+                .floor()
+                .clamp(2, 4);
+            final tileWidth = (constraints.maxWidth - spacing * (columns - 1)) / columns;
+
+            return Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              children: sports.map((s) {
+                final selected = _sport == s.$1;
+                return SizedBox(
+                  width: tileWidth,
+                  child: SportChoiceTile(
+                    sportKey: s.$1,
+                    label: s.$2,
+                    selected: selected,
+                    iconSize: 24,
+                    expanded: false,
+                    onTap: () => setState(() {
+                      _sport = s.$1;
+                      _resetContentDraftsForSport(s.$1);
+                    }),
                   ),
-                ];
-              }),
+                );
+              }).toList(),
             );
-          }).toList(),
+          },
         );
       },
+    );
+  }
+
+  /// Trạng thái lỗi/rỗng cho khối chọn môn. Trước đây khối này chỉ có
+  /// spinner, nên khi `GET /categories` lỗi người dùng thấy vòng xoay vô hạn.
+  Widget _sportFallbackState(
+    AppColorsExtension colors, {
+    required String message,
+    String? retryLabel,
+    VoidCallback? onRetry,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        color: colors.bgSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.border),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.sports_rounded, size: 20, color: colors.textMuted),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(fontSize: 13, color: colors.textSecondary),
+            ),
+          ),
+          if (onRetry != null && retryLabel != null)
+            TextButton(
+              onPressed: onRetry,
+              child: Text(
+                retryLabel,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Chọn quy mô giải: chip mặc định + ô "Khác" cho giá trị tự do.
+  ///
+  /// Ô "Khác" phải là `TextFormField` gắn `_maxTeamsController` — `_submit`
+  /// gọi `_formKey.currentState!.validate()`, nên `validator` của nó là nơi
+  /// thực thi luật 2..128 và luật vòng tròn ≤ 15. Đổi sang `TextField` sẽ làm
+  /// hai luật đó ngừng chạy và cho phép gửi số không hợp lệ.
+  /// Danh sách chip bám đúng preset của web (`QuickTournamentCreate.tsx:1341`):
+  /// vòng tròn chỉ tới 15 vì mỗi đội phải gặp nhau.
+  List<int> get _maxTeamsPresets => _bracket == AppConstants.bracketRoundRobin
+      ? const [4, 6, 8, 10, 12, 15]
+      : const [4, 8, 16, 32, 64, 128];
+
+
+  /// Quy mô: một hàng chip cuộn ngang + ô "Khác" gọn. Web cũng để vậy, và ô
+  /// "Khác" viền xanh khi giá trị không thuộc chip để thấy rõ đang dùng số
+  /// tuỳ chỉnh chứ không phải preset.
+  Widget _buildMaxTeamsSelector(AppColorsExtension colors) {
+    final current = int.tryParse(_maxTeamsController.text.trim());
+    final presets = _maxTeamsPresets;
+    final usesCustom = current != null && !presets.contains(current);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Một hàng ngang, cuộn được: 6 chip không làm khối này cao thêm dòng.
+        Expanded(
+          child: SizedBox(
+            height: 40,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: presets.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final value = presets[index];
+                final selected = current == value;
+                return ChoiceChip(
+                  label: Text('$value'),
+                  selected: selected,
+                  onSelected: (_) => setState(() {
+                    _maxTeamsController.text = '$value';
+                  }),
+                  labelStyle: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: selected ? Colors.white : colors.textPrimary,
+                  ),
+                  selectedColor: AppTheme.primary,
+                  backgroundColor: colors.bgSurface,
+                  side: BorderSide(
+                    color: selected ? AppTheme.primary : colors.border,
+                  ),
+                  showCheckmark: false,
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        // Ô "Khác" gọn, viền xanh khi đang là giá trị tuỳ chỉnh.
+        SizedBox(
+          width: 92,
+          child: TextFormField(
+            controller: _maxTeamsController,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            onChanged: (_) => setState(() {}),
+            style: const TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+            ),
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 10,
+              ),
+              hintText: 'Khác',
+              hintStyle: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: colors.textMuted,
+              ),
+              filled: true,
+              fillColor: usesCustom
+                  ? AppTheme.primary.withValues(alpha: 0.06)
+                  : colors.bgSurface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: usesCustom ? AppTheme.primary : colors.border,
+                  width: usesCustom ? 1.6 : 1,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: usesCustom ? AppTheme.primary : colors.border,
+                  width: usesCustom ? 1.6 : 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: AppTheme.primary,
+                  width: 1.6,
+                ),
+              ),
+            ),
+            validator: (val) {
+              final n = int.tryParse(val?.trim() ?? '');
+              if (n == null || n < 2 || n > 128) {
+                return '2–128';
+              }
+              if (_bracket == AppConstants.bracketRoundRobin && n > 15) {
+                return 'Tối đa 15';
+              }
+              return null;
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Gợi ý chuyển thể thức khi vòng tròn đang vượt quy mô hợp lệ, như web.
+  Widget? _buildRoundRobinHint(AppColorsExtension colors) {
+    final current = int.tryParse(_maxTeamsController.text.trim()) ?? 0;
+    if (_bracket != AppConstants.bracketRoundRobin || current <= 15) {
+      return null;
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.lightbulb_outline,
+            size: 16,
+            color: AppTheme.primary,
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              'Vòng tròn chỉ hợp lệ tới 15 đội. Với quy mô này nên dùng '
+              '"Vòng bảng + Knockout".',
+              style: TextStyle(fontSize: 11.5, color: colors.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => setState(() {
+              _bracket = AppConstants.bracketGroupStageKnockout;
+              _maxTeamsController.text = '16';
+            }),
+            style: TextButton.styleFrom(
+              minimumSize: const Size(0, 32),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+            ),
+            child: const Text(
+              'Đổi',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1252,43 +1539,6 @@ class _CreatePublicQuickTournamentScreenState
     );
   }
 
-  Widget _buildEligibilityOptions(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context)!;
-    String? validateOptionalNonNegativeInt(String? value) {
-      if (value == null || value.trim().isEmpty) return null;
-      final parsed = int.tryParse(value.trim());
-      if (parsed == null || parsed < 0) {
-        return l10n.tournamentCreateIntegerNonNegative;
-      }
-      return null;
-    }
-
-    return Column(
-      children: [
-        TextFormField(
-          controller: _maxCombinedEloController,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: l10n.tournamentCreateMaxCombinedElo,
-            filled: true,
-            fillColor: colors.bgSurface,
-          ),
-          validator: validateOptionalNonNegativeInt,
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _maxTeammateGapController,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: l10n.tournamentCreateMaxTeammateGap,
-            filled: true,
-            fillColor: colors.bgSurface,
-          ),
-          validator: validateOptionalNonNegativeInt,
-        ),
-      ],
-    );
-  }
 
   Widget _buildPublicFeeOptions(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
@@ -1337,10 +1587,83 @@ class _CreatePublicQuickTournamentScreenState
     );
   }
 
+
+  /// Các nội dung luôn hiện sẵn trong danh sách, giống web: tất cả đều ở
+  /// trạng thái đã tick và nằm sẵn trong thẻ "Nội dung thi đấu". Đơn và nội
+  /// dung riêng không mở sẵn — thêm qua dialog để không làm danh sách dài ra.
+  List<String> get _defaultFormatKeys =>
+      _sport == AppConstants.sportFootball
+      ? const ['FOOTBALL_MALE', 'FOOTBALL_FEMALE', 'FOOTBALL_MIXED']
+      : const ['MALE_DOUBLES', 'FEMALE_DOUBLES', 'MIXED_DOUBLES'];
+
+  _QuickTournamentContentDraft? _draftFor(String formatKey) {
+    for (final draft in _contentDrafts) {
+      if (draft.formatKey == formatKey) return draft;
+    }
+    return null;
+  }
+
+  /// Tên hiển thị của một dòng: tên BTC tự đặt nếu có, không thì tên chuẩn.
+  String _draftName(String formatKey) {
+    final draft = _draftFor(formatKey);
+    final custom = draft?.name.trim() ?? '';
+    return custom.isEmpty ? _formatLabel(formatKey) : custom;
+  }
+
+  /// Quy mô đang áp dụng cho một nội dung: ghi đè riêng nếu có, nếu không thì
+  /// theo quy mô chung của giải.
+  int _draftLimit(_QuickTournamentContentDraft? draft) =>
+      draft?.maxParticipantsOverride ?? _globalMaxParticipants();
+
+  /// Bật/tắt một nội dung.
+  ///
+  /// Bỏ tick nội dung cuối cùng không báo lỗi: giải bắt buộc có ít nhất một
+  /// nội dung, nên ta chuyển sang nội dung mặc định khác của môn thay vì chặn
+  /// người dùng ở một ô tick đang bật.
+  void _toggleFormatKey(String formatKey, bool on) {
+    if (on) {
+      if (_draftFor(formatKey) != null) return;
+      _contentDrafts = [
+        ..._contentDrafts,
+        _QuickTournamentContentDraft(
+          id: 'content-${DateTime.now().microsecondsSinceEpoch}',
+          formatKey: formatKey,
+          name: '',
+        ),
+      ];
+      return;
+    }
+
+    final remaining = _contentDrafts
+        .where((draft) => draft.formatKey != formatKey)
+        .toList();
+    if (remaining.isNotEmpty) {
+      _contentDrafts = remaining;
+      return;
+    }
+
+    final reseed = _defaultFormatKeys.firstWhere(
+      (candidate) => candidate != formatKey,
+      orElse: () => _defaultFormatKeys.first,
+    );
+    _contentDrafts = [
+      _QuickTournamentContentDraft(id: reseed, formatKey: reseed, name: ''),
+    ];
+  }
+
+  /// Danh sách nội dung: mỗi dòng có ô tick, tên, quy mô và nút sửa — bám
+  /// theo `selectedFormats` của web. Danh sách dài cố định nên tick không
+  /// làm form dài thêm, và nội dung đã thêm qua dialog hiện dưới dạng dòng
+  /// có nút sửa.
+  /// Luật bóng đá, bám đúng web: số người mỗi đội, số dự bị, số hiệp, số
+  /// phút mỗi hiệp và có cho phép hòa hay không. Backend kiểm tra
+  /// `teamSize ∈ {5,7,11}` và `teamSize === minTeamSize`
+  /// (`assertValidFootballTeamConfig`), nên `minTeamSize`/`maxTeamSize` được
+  /// tính theo để khớp DTO.
   Widget _buildFootballOptions(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10nNow = l10n;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
       decoration: BoxDecoration(
         color: colors.bgSurface,
         borderRadius: BorderRadius.circular(12),
@@ -1349,297 +1672,638 @@ class _CreatePublicQuickTournamentScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.tournamentCreateFootballOptions,
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              color: colors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(
-                child: DropdownButtonFormField<int>(
-                  initialValue: _teamSize,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.tournamentCreateTeamSize,
-                  ),
-                  items: const [5, 7, 11]
-                      .map(
-                        (value) => DropdownMenuItem<int>(
-                          value: value,
-                          child: Text('$value người'),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) setState(() => _teamSize = value);
-                  },
-                ),
+              const Icon(
+                Icons.sports_soccer,
+                size: 16,
+                color: AppTheme.primary,
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextFormField(
-                  initialValue: _maxReserve.toString(),
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: l10n.tournamentCreateMaxReserve,
-                  ),
-                  onChanged: (value) {
-                    final parsed = int.tryParse(value);
-                    if (parsed != null && parsed >= 0 && parsed <= 20) {
-                      _maxReserve = parsed;
-                    }
-                  },
+              const SizedBox(width: 8),
+              Text(
+                l10nNow.tournamentCreateFootballOptions,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
-                child: DropdownButtonFormField<int>(
-                  initialValue: _footballHalvesCount,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.tournamentCreateFootballHalves,
-                  ),
-                  items: [1, 2, 3, 4]
-                      .map(
-                        (value) => DropdownMenuItem<int>(
-                          value: value,
-                          child: Text('$value hiệp'),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() => _footballHalvesCount = value);
-                    }
-                  },
+                child: _footballDropdown<int>(
+                  colors: colors,
+                  label: l10nNow.tournamentCreateTeamSize,
+                  value: _teamSize,
+                  items: const [5, 7, 11],
+                  format: (v) => '$v người',
+                  onChanged: (v) => setState(() => _teamSize = v ?? _teamSize),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: DropdownButtonFormField<int>(
-                  initialValue: _footballHalfDuration,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.tournamentCreateFootballHalfDuration,
-                  ),
-                  items: [15, 30, 45, 60]
-                      .map(
-                        (value) => DropdownMenuItem<int>(
-                          value: value,
-                          child: Text('$value phút'),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() => _footballHalfDuration = value);
-                    }
-                  },
+                child: _footballDropdown<int>(
+                  colors: colors,
+                  label: l10nNow.tournamentCreateMaxReserve,
+                  value: _maxReserve,
+                  items: const [0, 3, 5, 7, 10],
+                  format: (v) => '$v người',
+                  onChanged: (v) =>
+                      setState(() => _maxReserve = v ?? _maxReserve),
                 ),
               ),
             ],
           ),
-          InkWell(
-            onTap: () =>
-                setState(() => _footballAllowDraw = !_footballAllowDraw),
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.tournamentCreateFootballAllowDraw,
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w500,
-                        color: colors.textPrimary,
-                      ),
-                    ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _footballDropdown<int>(
+                  colors: colors,
+                  label: l10nNow.tournamentCreateFootballHalves,
+                  value: _footballHalvesCount,
+                  items: const [1, 2, 3, 4],
+                  format: (v) => '$v hiệp',
+                  onChanged: (v) => setState(
+                    () => _footballHalvesCount = v ?? _footballHalvesCount,
                   ),
-                  Switch.adaptive(
-                    value: _footballAllowDraw,
-                    onChanged: (value) =>
-                        setState(() => _footballAllowDraw = value),
-                    activeTrackColor: AppTheme.primary,
-                  ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _footballDropdown<int>(
+                  colors: colors,
+                  label: l10nNow.tournamentCreateFootballHalfDuration,
+                  value: _footballHalfDuration,
+                  items: const [15, 30, 45, 60, 90],
+                  format: (v) => '$v phút',
+                  onChanged: (v) => setState(
+                    () => _footballHalfDuration =
+                        v ?? _footballHalfDuration,
+                  ),
+                ),
+              ),
+            ],
           ),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.tournamentCreateTwoLegged),
-            value: _twoLegged,
-            onChanged: (value) => setState(() => _twoLegged = value),
-          ),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.tournamentCreateAwayGoalsRule),
-            value: _awayGoalsRule,
-            onChanged: (value) => setState(() => _awayGoalsRule = value),
-          ),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.footballScore_penaltyShootout),
-            value: _penaltyShootout,
-            onChanged: (value) => setState(() => _penaltyShootout = value),
+          const Divider(height: 20),
+          _footballSwitch(
+            colors: colors,
+            label: l10nNow.tournamentCreateFootballAllowDraw,
+            value: _footballAllowDraw,
+            onChanged: (v) => setState(() => _footballAllowDraw = v),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFormatPills(AppColorsExtension colors) {
-    final maxParticipants = _globalMaxParticipants();
+  Widget _footballDropdown<T>({
+    required AppColorsExtension colors,
+    required String label,
+    required T value,
+    required List<T> items,
+    required String Function(T) format,
+    required ValueChanged<T?> onChanged,
+  }) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ..._contentDrafts.map(
-          (draft) => Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            decoration: BoxDecoration(
-              color: colors.bgSurface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colors.border),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w700,
+            color: colors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<T>(
+          initialValue: value,
+          isExpanded: true,
+          borderRadius: BorderRadius.circular(10),
+          isDense: true,
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 12,
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _editContentDraft(draft),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: AppTheme.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.layers_outlined,
-                              size: 16,
-                              color: AppTheme.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 9),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  draft.name.trim().isEmpty
-                                      ? _formatLabel(draft.formatKey)
-                                      : draft.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: colors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${draft.maxParticipantsOverride ?? maxParticipants} người/đội tối đa',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: colors.textMuted,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+            filled: true,
+            fillColor: colors.bgCard,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: colors.border),
+            ),
+          ),
+          items: items
+              .map(
+                (item) => DropdownMenuItem(
+                  value: item,
+                  child: Text(
+                    format(item),
+                    style: TextStyle(fontSize: 13, color: colors.textPrimary),
                   ),
                 ),
-                IconButton(
-                  tooltip: 'Sửa nội dung',
-                  onPressed: () => _editContentDraft(draft),
-                  icon: const Icon(Icons.settings_outlined, size: 18),
-                  color: colors.textMuted,
-                ),
-                if (_contentDrafts.length > 1)
-                  IconButton(
-                    tooltip: 'Xóa nội dung',
-                    onPressed: () => _removeContentDraft(draft),
-                    icon: const Icon(Icons.delete_outline, size: 18),
-                    color: colors.textMuted,
-                  ),
-              ],
+              )
+              .toList(),
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+
+  Widget _footballSwitch({
+    required AppColorsExtension colors,
+    required String label,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: colors.textPrimary,
             ),
           ),
         ),
-        OutlinedButton.icon(
-          onPressed: () => _openContentDraftDialog(),
-          icon: const Icon(Icons.add, size: 17),
-          label: const Text('Thêm nội dung'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppTheme.primary,
-            side: BorderSide(color: AppTheme.primary.withValues(alpha: 0.45)),
-            padding: const EdgeInsets.symmetric(vertical: 11),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+        Switch.adaptive(
+          value: value,
+          onChanged: onChanged,
+          activeThumbColor: AppTheme.primary,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFormatPills(AppColorsExtension colors) {
+    final keys = <String>[..._defaultFormatKeys];
+    for (final draft in _contentDrafts) {
+      if (!keys.contains(draft.formatKey)) keys.add(draft.formatKey);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final key in keys)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _buildFormatRow(colors, key),
+          ),
+        const SizedBox(height: 2),
+        _buildAddContentButton(colors),
+      ],
+    );
+  }
+
+  Widget _buildFormatRow(AppColorsExtension colors, String formatKey) {
+    final draft = _draftFor(formatKey);
+    final selected = draft != null;
+    final overrideNote = draft == null ? null : _contentDraftSummary(draft);
+
+    return Material(
+      color: selected
+          ? AppTheme.primary.withValues(alpha: 0.06)
+          : colors.bgSurface,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: () => setState(() => _toggleFormatKey(formatKey, !selected)),
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 48),
+          padding: const EdgeInsets.fromLTRB(8, 8, 4, 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected ? AppTheme.primary : colors.border,
             ),
+          ),
+          child: Row(
+            children: [
+              // Ô tick tự đóng, không nuốt cả hàng: chạm vào nó thì chỉ
+              // bật/tắt nội dung, chạm chỗ khác mở dialog sửa.
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: Checkbox(
+                  value: selected,
+                  onChanged: (value) =>
+                      setState(() => _toggleFormatKey(formatKey, value ?? false)),
+                  activeColor: AppTheme.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _draftName(formatKey),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: selected
+                            ? colors.textPrimary
+                            : colors.textMuted,
+                      ),
+                    ),
+                    if (overrideNote != null && overrideNote.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          overrideNote,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              // Quy mô: hiển thị, sửa qua dialog. Ô nhỏ nhưng vẫn chạm được.
+              Container(
+                constraints: const BoxConstraints(minWidth: 56, minHeight: 36),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  color: colors.bgCard,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: colors.border),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.groups_outlined,
+                      size: 14,
+                      color: colors.textMuted,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${_draftLimit(draft)}',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: 'Sửa nội dung này',
+                onPressed: () => draft == null
+                    ? setState(() => _toggleFormatKey(formatKey, true))
+                    : _editContentDraft(draft),
+                icon: Icon(
+                  Icons.tune,
+                  size: 18,
+                  color: selected ? AppTheme.primary : colors.textMuted,
+                ),
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                padding: EdgeInsets.zero,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Nút "Thêm nội dung" dạng viền đứt như web, chỉ hiện khi còn nội dung chưa
+  /// dùng trong danh sách mặc định.
+  Widget _buildAddContentButton(AppColorsExtension colors) {
+    final hasMore = _sport != AppConstants.sportFootball ||
+        _contentDrafts.length < _defaultFormatKeys.length;
+    if (!hasMore) return const SizedBox.shrink();
+
+    return DottedBorderBox(
+      onTap: _openContentDraftDialog,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.add, size: 17, color: AppTheme.primary),
+          const SizedBox(width: 6),
+          Text(
+            'Thêm nội dung',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Tóm tắt phần khác với luật chung: quy mô riêng, thể thức riêng, ELO.
+  String _contentDraftSummary(_QuickTournamentContentDraft draft) {
+    final parts = <String>[];
+    if (draft.maxParticipantsOverride != null) {
+      parts.add('${draft.maxParticipantsOverride} người/đội');
+    }
+    if (draft.bracketType != null) {
+      parts.add(BracketFormatIcons.getFormatLabel(context, draft.bracketType));
+    }
+    if (draft.eloEnabled && draft.minElo != null && draft.maxElo != null) {
+      parts.add('ELO ${draft.minElo}-${draft.maxElo}');
+    }
+    return parts.join(' · ');
+  }
+
+  /// Khối "Cài đặt nâng cao", thu gọn mặc định, đặt cuối form.
+  ///
+  /// Chỉ chứa lệ phí, logo và banner — đúng phần web đặt trong khối thu gọn
+  /// `showCreateOptions` của form thủ công (`QuickTournamentCreate.tsx:1652-1774`).
+  /// Trần ELO toàn giải, công tắc ghép đôi BTC và luật bóng đá đã bỏ khỏi màn
+  /// này. Giới hạn ELO riêng vẫn đặt được cho từng nội dung trong dialog.
+  Widget _buildAdvancedExtras(AppColorsExtension colors) {
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.bgSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.border),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: false,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          leading: const Icon(Icons.tune, size: 18, color: AppTheme.primary),
+          title: Text(
+            'Cài đặt nâng cao',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: colors.textPrimary,
+            ),
+          ),
+          subtitle: Text(
+            'Lệ phí, logo, banner',
+            style: TextStyle(fontSize: 11, color: colors.textMuted),
+          ),
+          children: [
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                _isRanked
+                    ? l10n.tournamentCreateRanked
+                    : l10n.tournamentCreateUnranked,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              subtitle: Text(
+                _isRanked
+                    ? l10n.tournamentCreateRankedDescription
+                    : l10n.tournamentCreateUnrankedDescription,
+                style: TextStyle(fontSize: 11, color: colors.textSecondary),
+              ),
+              value: _isRanked,
+              onChanged: (value) => setState(() => _isRanked = value),
+            ),
+            const SizedBox(height: 6),
+            _buildPublicFeeOptions(colors),
+            // Ba luật này web để trong khối nâng cao
+            // (QuickTournamentCreate.tsx:1715-1720), không đặt ở card bóng đá.
+            if (_sport == AppConstants.sportFootball) ...[
+              const Divider(height: 20),
+              _footballSwitch(
+                colors: colors,
+                label: l10n.tournamentCreateTwoLegged,
+                value: _twoLegged,
+                onChanged: (v) => setState(() => _twoLegged = v),
+              ),
+              _footballSwitch(
+                colors: colors,
+                label: l10n.tournamentCreateAwayGoalsRule,
+                value: _awayGoalsRule,
+                onChanged: (v) => setState(() => _awayGoalsRule = v),
+              ),
+              _footballSwitch(
+                colors: colors,
+                label: l10n.footballScore_penaltyShootout,
+                value: _penaltyShootout,
+                onChanged: (v) => setState(() => _penaltyShootout = v),
+              ),
+            ],
+            const SizedBox(height: 14),
+            Text(
+              'Ảnh giải đấu',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: colors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _buildBrandPicker(
+                    colors,
+                    label: 'Logo',
+                    icon: Icons.emoji_events_outlined,
+                    url: _logoUrl,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildBrandPicker(
+                    colors,
+                    label: 'Banner',
+                    icon: Icons.panorama_outlined,
+                    url: _bannerUrl,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Ô chọn ảnh. Ảnh đã chọn hiện kèm nút xoá, bấm lại để đổi ảnh.
+  Widget _buildBrandPicker(
+    AppColorsExtension colors, {
+    required String label,
+    required IconData icon,
+    required String? url,
+  }) {
+    final isBanner = label == 'Banner';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w700,
+            color: colors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 6),
+        InkWell(
+          onTap: () => _pickAndUploadBrand(isBanner: isBanner),
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            height: 84,
+            width: double.infinity,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: colors.border),
+            ),
+            child: _isUploadingBrand
+                ? const Center(
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : url == null || url.isEmpty
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon, size: 22, color: colors.textMuted),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Chọn ảnh',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    ],
+                  )
+                : Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        LiteTournamentCreateResult.resolveUrl(url),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stack) => ColoredBox(
+                          color: colors.bgCard,
+                          child: Icon(icon, size: 22, color: colors.textMuted),
+                        ),
+                      ),
+                      Positioned(
+                        right: 2,
+                        top: 2,
+                        child: Material(
+                          color: Colors.black.withValues(alpha: 0.55),
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: () => setState(() {
+                              if (isBanner) {
+                                _bannerUrl = null;
+                              } else {
+                                _logoUrl = null;
+                              }
+                            }),
+                            child: const Padding(
+                              padding: EdgeInsets.all(5),
+                              child: Icon(
+                                Icons.close,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ),
       ],
     );
   }
 
+  Future<void> _pickAndUploadBrand({required bool isBanner}) async {
+    if (_isUploadingBrand) return;
+    setState(() => _isUploadingBrand = true);
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 88,
+      );
+      if (picked == null) return;
+      final uploaded = await ref
+          .read(communitySocialRepositoryProvider)
+          .uploadImage(await picked.readAsBytes(), picked.name);
+      if (!mounted) return;
+      setState(() {
+        if (isBanner) {
+          _bannerUrl = uploaded;
+        } else {
+          _logoUrl = uploaded;
+        }
+      });
+    } catch (error) {
+      if (mounted) _showError('Không tải được ảnh lên. Vui lòng thử lại.');
+    } finally {
+      if (mounted) setState(() => _isUploadingBrand = false);
+    }
+  }
+
   Future<void> _editContentDraft(_QuickTournamentContentDraft draft) async {
     await _openContentDraftDialog(existing: draft);
   }
 
-  void _removeContentDraft(_QuickTournamentContentDraft draft) {
-    if (_contentDrafts.length <= 1) {
-      _showError('Giải phải có ít nhất một nội dung thi đấu');
-      return;
-    }
-    setState(() {
-      _contentDrafts = _contentDrafts
-          .where((item) => item.id != draft.id)
-          .toList();
-    });
-  }
 
+  /// Thêm hoặc sửa một nội dung thi đấu.
+  ///
+  /// Dùng bottom sheet thay cho `AlertDialog`: trên điện thoại sheet chiếm hết
+  /// bề ngang, tự co theo bàn phím và cho các trường đủ chỗ, trong khi
+  /// `AlertDialog` bóp tiêu đề thành hai dòng và cắt chữ phụ. Bộ trường giữ
+  /// nguyên theo web: loại nội dung, tên riêng, số lượng, rồi tới khối
+  /// "Tuỳ chọn bổ sung" (thể thức riêng + khoảng ELO) đang thu gọn.
   Future<void> _openContentDraftDialog({
     _QuickTournamentContentDraft? existing,
   }) async {
     if (!mounted) return;
 
+    final l10nNow = l10n;
     final isFootball = _sport == AppConstants.sportFootball;
     final formatOptions = isFootball
-        ? <String>['FOOTBALL_MALE', 'FOOTBALL_FEMALE', 'FOOTBALL_MIXED']
-        : <String>[
+        ? const <String>['FOOTBALL_MALE', 'FOOTBALL_FEMALE', 'FOOTBALL_MIXED']
+        : const <String>[
             'MALE_SINGLES',
             'FEMALE_SINGLES',
             'MALE_DOUBLES',
             'FEMALE_DOUBLES',
             'MIXED_DOUBLES',
           ];
+
     var formatKey = existing?.formatKey ?? formatOptions.first;
     if (!formatOptions.contains(formatKey)) formatKey = formatOptions.first;
+
     var nameTouched = existing != null && existing.name.trim().isNotEmpty;
     var limitTouched = existing?.maxParticipantsOverride != null;
     var bracketType = existing?.bracketType;
-    var advanced =
-        existing != null &&
+    var advanced = existing != null &&
         (existing.bracketType != null || existing.eloEnabled);
     var eloEnabled = existing?.eloEnabled ?? false;
     var minElo = existing?.minElo;
@@ -1649,8 +2313,8 @@ class _CreatePublicQuickTournamentScreenState
     String? eloError;
 
     final nameController = TextEditingController(
-      text: existing?.name.trim().isNotEmpty == true
-          ? existing!.name
+      text: existing != null && existing.name.trim().isNotEmpty
+          ? existing.name
           : _formatLabel(formatKey),
     );
     final limitController = TextEditingController(
@@ -1663,395 +2327,531 @@ class _CreatePublicQuickTournamentScreenState
       text: maxElo?.toString() ?? '',
     );
 
-    final saved = await showDialog<_QuickTournamentContentDraft>(
+    final bracketOptions = [
+      ('', 'Theo thể thức chung của giải'),
+      (AppConstants.bracketSingleElimination,
+        l10nNow.quickCreateBracketSingle),
+      (AppConstants.bracketDoubleElimination,
+        l10nNow.quickCreateBracketDouble),
+      (AppConstants.bracketRoundRobin, l10nNow.quickCreateBracketRoundRobin),
+      (AppConstants.bracketGroupStageKnockout,
+        l10nNow.quickCreateBracketGroup),
+    ];
+
+    _QuickTournamentContentDraft? buildDraft() {
+      final name = nameController.text.trim();
+      final limit = int.tryParse(limitController.text.trim());
+      final parsedMin = int.tryParse(minEloController.text.trim());
+      final parsedMax = int.tryParse(maxEloController.text.trim());
+      final usesRoundRobin = bracketType == AppConstants.bracketRoundRobin;
+      final ceiling = usesRoundRobin ? 15 : 128;
+
+      if (name.isEmpty) {
+        nameError = 'Vui lòng nhập tên nội dung';
+      } else if (name.length > 60) {
+        nameError = 'Tên nội dung tối đa 60 ký tự';
+      }
+      if (limit == null) {
+        limitError = 'Vui lòng nhập số người/đội';
+      } else if (limit < 2 || limit > ceiling) {
+        limitError = usesRoundRobin
+            ? 'Vòng tròn cần từ 2 đến 15 người/đội'
+            : 'Số lượng cần từ 2 đến 128 người/đội';
+      }
+      String? eloFailure;
+      if (eloEnabled) {
+        if (parsedMin == null || parsedMin < 0 ||
+            parsedMax == null || parsedMax < 0) {
+          eloFailure = 'Khoảng ELO không hợp lệ';
+        } else if (parsedMin > parsedMax) {
+          eloFailure = 'ELO tối thiểu không được lớn hơn ELO tối đa';
+        }
+      }
+      eloError = eloFailure;
+
+      if (nameError != null || limitError != null || eloFailure != null) {
+        return null;
+      }
+
+      return _QuickTournamentContentDraft(
+          id: existing?.id ?? 'content-${DateTime.now().microsecondsSinceEpoch}',
+          formatKey: formatKey,
+          name: name,
+          maxParticipantsOverride: limitTouched ? limit : null,
+          bracketType: bracketType,
+        eloEnabled: eloEnabled,
+        minElo: eloEnabled ? parsedMin : null,
+        maxElo: eloEnabled ? parsedMax : null,
+      );
+    }
+
+    // Bottom sheet: cao tối đa 92% màn hình, co lại khi bàn phím mở.
+    final saved = await showModalBottomSheet<_QuickTournamentContentDraft>(
       context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) => _QuickTournamentContentDialogOwner(
-        controllers: [
-          nameController,
-          limitController,
-          minEloController,
-          maxEloController,
-        ],
-        builder: (dialogContext) => StatefulBuilder(
-          builder: (dialogContext, setDialogState) {
-            final dialogColors = dialogContext.colors;
-            final bracketOptions = [
-              (AppConstants.bracketSingleElimination, 'Loại trực tiếp'),
-              (
-                AppConstants.bracketDoubleElimination,
-                'Nhánh thắng / nhánh thua',
+      isScrollControlled: true,
+      backgroundColor: context.colors.bgCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        // Bốn controller phải sống cùng route của sheet: future của
+        // showModalBottomSheet hoàn tất lúc pop, trước khi reverse transition
+        // gỡ cây widget, nên dispose ở đây sẽ làm TextField còn mount gặp
+        // controller đã dispose. Owner giữ chúng cho tới khi route thật sự
+        // bị tháo.
+        return _QuickTournamentContentDialogOwner(
+          controllers: [
+            nameController,
+            limitController,
+            minEloController,
+            maxEloController,
+          ],
+          builder: (sheetContext) => StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            final colors = sheetContext.colors;
+            void setDialogState(VoidCallback fn) => setSheetState(fn);
+
+            return Padding(
+              // Đệm theo viewInsets để bàn phím không che nút.
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
               ),
-              (AppConstants.bracketRoundRobin, 'Vòng tròn tính điểm'),
-              (AppConstants.bracketGroupStageKnockout, 'Vòng bảng + Knockout'),
-            ];
-
-            void saveDraft() {
-              final name = nameController.text.trim();
-              final maxParticipants = int.tryParse(limitController.text.trim());
-              final parsedMinElo = int.tryParse(minEloController.text.trim());
-              final parsedMaxElo = int.tryParse(maxEloController.text.trim());
-              final usesRoundRobin =
-                  (bracketType ?? _bracket) == AppConstants.bracketRoundRobin;
-
-              setDialogState(() {
-                nameError = name.isEmpty ? 'Vui lòng nhập tên nội dung' : null;
-                limitError =
-                    maxParticipants == null ||
-                        maxParticipants < 2 ||
-                        maxParticipants > 128
-                    ? 'Số người/đội phải từ 2 đến 128'
-                    : usesRoundRobin && maxParticipants > 15
-                    ? 'Vòng tròn tối đa 15 người/đội'
-                    : null;
-                eloError =
-                    eloEnabled &&
-                        ((parsedMinElo != null && parsedMinElo < 0) ||
-                            (parsedMaxElo != null && parsedMaxElo < 0) ||
-                            (parsedMinElo != null &&
-                                parsedMaxElo != null &&
-                                parsedMinElo > parsedMaxElo))
-                    ? 'Khoảng ELO không hợp lệ'
-                    : null;
-              });
-
-              if (nameError != null || limitError != null || eloError != null) {
-                return;
-              }
-
-              Navigator.of(dialogContext).pop(
-                _QuickTournamentContentDraft(
-                  id:
-                      existing?.id ??
-                      'content-${DateTime.now().microsecondsSinceEpoch}',
-                  formatKey: formatKey,
-                  name: name,
-                  maxParticipantsOverride: limitTouched
-                      ? maxParticipants
-                      : null,
-                  bracketType: bracketType,
-                  eloEnabled: eloEnabled,
-                  minElo: eloEnabled ? parsedMinElo : null,
-                  maxElo: eloEnabled ? parsedMaxElo : null,
-                ),
-              );
-            }
-
-            return AlertDialog(
-              title: Text(
-                existing == null
-                    ? 'Thêm nội dung thi đấu mới'
-                    : 'Sửa nội dung thi đấu',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              content: ConstrainedBox(
+              child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: 520,
-                  maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.68,
+                  maxHeight: MediaQuery.of(sheetContext).size.height * 0.92,
                 ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Mỗi nội dung có thể cấu hình riêng như trên web.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: dialogColors.textMuted,
-                        ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Nắm kéo + tiêu đề: giữ tiêu đề một dòng, phụ tắt.
+                    const SizedBox(height: 10),
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: colors.border,
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                      const SizedBox(height: 18),
-                      Text(
-                        'Loại nội dung',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: dialogColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      DropdownButtonFormField<String>(
-                        initialValue: formatKey,
-                        isExpanded: true,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: dialogColors.bgSurface,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        items: formatOptions
-                            .map(
-                              (key) => DropdownMenuItem(
-                                value: key,
-                                child: Text(_formatLabel(key)),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setDialogState(() {
-                            formatKey = value;
-                            if (!nameTouched) {
-                              nameController.text = _formatLabel(value);
-                            }
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 14),
-                      TextField(
-                        controller: nameController,
-                        onChanged: (_) => setDialogState(() {
-                          nameTouched = true;
-                          nameError = null;
-                        }),
-                        decoration: InputDecoration(
-                          labelText: 'Tên nội dung riêng',
-                          helperText:
-                              'Tên này hiển thị trong danh sách nội dung và bảng đấu.',
-                          errorText: nameError,
-                          filled: true,
-                          fillColor: dialogColors.bgSurface,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primary.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: AppTheme.primary.withValues(alpha: 0.16),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Số lượng người/đội tham gia',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 7),
-                            SizedBox(
-                              width: 140,
-                              child: TextField(
-                                controller: limitController,
-                                keyboardType: TextInputType.number,
-                                onChanged: (_) => setDialogState(() {
-                                  limitTouched = true;
-                                  limitError = null;
-                                }),
-                                decoration: InputDecoration(
-                                  suffixText: 'người/đội',
-                                  errorText: limitError,
-                                  filled: true,
-                                  fillColor: dialogColors.bgSurface,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 14, 8, 4),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  existing == null
+                                      ? 'Thêm nội dung thi đấu'
+                                      : 'Sửa nội dung thi đấu',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w800,
+                                    color: colors.textPrimary,
                                   ),
                                 ),
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              limitTouched
-                                  ? 'Đã đặt giới hạn riêng cho nội dung này.'
-                                  : 'Mặc định theo quy mô chung của giải: ${_globalMaxParticipants()} người/đội.',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: dialogColors.textMuted,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      OutlinedButton(
-                        onPressed: () =>
-                            setDialogState(() => advanced = !advanced),
-                        style: OutlinedButton.styleFrom(
-                          alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 12,
-                          ),
-                          side: BorderSide(color: dialogColors.border),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.tune,
-                              size: 17,
-                              color: AppTheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                l10n.quickCreateOptionsTitle,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              advanced
-                                  ? l10n.quickCreateOptionsCollapse
-                                  : l10n.quickCreateOptionsExpand,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (advanced) ...[
-                        const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: dialogColors.bgSurface,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: dialogColors.border),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              DropdownButtonFormField<String>(
-                                initialValue: bracketType ?? '',
-                                isExpanded: true,
-                                decoration: const InputDecoration(
-                                  labelText: 'Thể thức riêng',
-                                ),
-                                items: [
-                                  const DropdownMenuItem(
-                                    value: '',
-                                    child: Text('Theo thể thức chung của giải'),
-                                  ),
-                                  ...bracketOptions.map(
-                                    (option) => DropdownMenuItem(
-                                      value: option.$1,
-                                      child: Text(option.$2),
-                                    ),
-                                  ),
-                                ],
-                                onChanged: (value) => setDialogState(
-                                  () => bracketType =
-                                      value == null || value.isEmpty
-                                      ? null
-                                      : value,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              CheckboxListTile(
-                                value: eloEnabled,
-                                onChanged: (value) => setDialogState(
-                                  () => eloEnabled = value ?? false,
-                                ),
-                                contentPadding: EdgeInsets.zero,
-                                dense: true,
-                                title: const Text(
-                                  'Giới hạn ELO',
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Mặc định dùng thể thức chung của giải, bạn có thể chọn riêng cho nội dung này.',
                                   style: TextStyle(
                                     fontSize: 12,
+                                    color: colors.textMuted,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(sheetContext).pop(),
+                            icon: const Icon(Icons.close, size: 20),
+                            color: colors.textMuted,
+                            tooltip: 'Đóng',
+                            constraints: const BoxConstraints(
+                              minWidth: 44,
+                              minHeight: 44,
+                            ),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    Flexible(
+                      child: ListView(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                        children: [
+                          _dialogFieldLabel('Loại nội dung'),
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            initialValue: formatKey,
+                            isExpanded: true,
+                            borderRadius: BorderRadius.circular(12),
+                            decoration: _dialogInputDecoration(),
+                            items: formatOptions
+                                .map(
+                                  (key) => DropdownMenuItem(
+                                    value: key,
+                                    child: Text(
+                                      _formatLabel(key),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: colors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) {
+                              if (value == null) return;
+                              setDialogState(() {
+                                formatKey = value;
+                                if (!nameTouched) {
+                                  nameController.text = _formatLabel(value);
+                                }
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 18),
+
+                          _dialogFieldLabel('Tên nội dung riêng'),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: nameController,
+                            onChanged: (value) {
+                              setDialogState(() {
+                                nameTouched = true;
+                                nameError = null;
+                              });
+                            },
+                            decoration: _dialogInputDecoration(
+                              errorText: nameError,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Để trống để dùng tên chuẩn của loại nội dung.',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: colors.textMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+
+                          _dialogFieldLabel('Số lượng người/đội tham gia'),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: limitController,
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              setDialogState(() {
+                                limitTouched = true;
+                                limitError = null;
+                              });
+                            },
+                            decoration: _dialogInputDecoration(
+                              errorText: limitError,
+                              suffixText: 'người/đội',
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Mặc định theo quy mô chung của giải '
+                            '(${_globalMaxParticipants()} người/đội).',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: colors.textMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+
+                          // Khối tuỳ chọn bổ sung, thu gọn mặc định — web cũng
+                          // vậy (QuickTournamentCreate.tsx:1875).
+                          Container(
+                            decoration: BoxDecoration(
+                              color: colors.bgSurface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: colors.border),
+                            ),
+                            child: Theme(
+                              data: Theme.of(sheetContext).copyWith(
+                                dividerColor: Colors.transparent,
+                              ),
+                              child: ExpansionTile(
+                                initiallyExpanded: advanced,
+                                tilePadding:
+                                    const EdgeInsets.symmetric(horizontal: 14),
+                                childrenPadding:
+                                    const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                                leading: const Icon(
+                                  Icons.tune,
+                                  size: 18,
+                                  color: AppTheme.primary,
+                                ),
+                                title: Text(
+                                  'Tuỳ chọn bổ sung (thể thức, ELO)',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: colors.textPrimary,
+                                  ),
+                                ),
+                                trailing: Icon(
+                                  advanced
+                                      ? Icons.expand_less
+                                      : Icons.expand_more,
+                                  size: 20,
+                                  color: AppTheme.primary,
+                                ),
+                                children: [
+                                  _dialogFieldLabel('Thể thức bảng đấu riêng'),
+                                  const SizedBox(height: 8),
+                                  DropdownButtonFormField<String>(
+                                    initialValue: bracketType ?? '',
+                                    isExpanded: true,
+                                    borderRadius: BorderRadius.circular(12),
+                                    decoration: _dialogInputDecoration(),
+                                    items: bracketOptions
+                                        .map(
+                                          (option) => DropdownMenuItem(
+                                            value: option.$1,
+                                            child: Text(
+                                              option.$2,
+                                              maxLines: 1,
+                                              overflow:
+                                                  TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: colors.textPrimary,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (value) => setDialogState(() {
+                                      bracketType = (value == null ||
+                                              value.isEmpty)
+                                          ? null
+                                          : value;
+                                    }),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  CheckboxListTile(
+                                    value: eloEnabled,
+                                    onChanged: (value) => setDialogState(() {
+                                      eloEnabled = value ?? false;
+                                      eloError = null;
+                                    }),
+                                    contentPadding: EdgeInsets.zero,
+                                    dense: true,
+                                    controlAffinity:
+                                        ListTileControlAffinity.leading,
+                                    activeColor: AppTheme.primary,
+                                    title: Text(
+                                      'Giới hạn ELO cho nội dung này',
+                                      style: TextStyle(
+                                        fontSize: 13.5,
+                                        fontWeight:
+                                            FontWeight.w600,
+                                        color: colors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  if (eloEnabled) ...[
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: TextField(
+                                            controller: minEloController,
+                                            keyboardType:
+                                                TextInputType.number,
+                                            onChanged: (_) => setDialogState(
+                                              () => eloError = null,
+                                            ),
+                                            decoration:
+                                                _dialogInputDecoration(
+                                              labelText: 'ELO tối thiểu',
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: TextField(
+                                            controller: maxEloController,
+                                            keyboardType:
+                                                TextInputType.number,
+                                            onChanged: (_) => setDialogState(
+                                              () => eloError = null,
+                                            ),
+                                            decoration:
+                                                _dialogInputDecoration(
+                                              labelText: 'ELO tối đa',
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    if (eloError != null)
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(top: 8),
+                                        child: Text(
+                                          eloError!,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: colors.error,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    // Hành động dính đáy sheet, không cuộn theo nội dung.
+                    SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () =>
+                                    Navigator.of(sheetContext).pop(),
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize:
+                                      const Size.fromHeight(48),
+                                  foregroundColor: colors.textSecondary,
+                                  side: BorderSide(color: colors.border),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Hủy',
+                                  style: TextStyle(
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                                controlAffinity:
-                                    ListTileControlAffinity.leading,
                               ),
-                              if (eloEnabled) ...[
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextField(
-                                        controller: minEloController,
-                                        keyboardType: TextInputType.number,
-                                        onChanged: (_) => setDialogState(
-                                          () => eloError = null,
-                                        ),
-                                        decoration: const InputDecoration(
-                                          labelText: 'ELO tối thiểu',
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: TextField(
-                                        controller: maxEloController,
-                                        keyboardType: TextInputType.number,
-                                        onChanged: (_) => setDialogState(
-                                          () => eloError = null,
-                                        ),
-                                        decoration: const InputDecoration(
-                                          labelText: 'ELO tối đa',
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 2,
+                              child: FilledButton.icon(
+                                onPressed: () {
+                                  final draft = buildDraft();
+                                  if (draft != null) {
+                                    Navigator.of(sheetContext).pop(draft);
+                                  }
+                                },
+                                icon: Icon(
+                                  existing == null
+                                      ? Icons.add
+                                      : Icons.check,
+                                  size: 18,
                                 ),
-                                if (eloError != null) ...[
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    eloError!,
-                                    style: TextStyle(
-                                      color: dialogColors.error,
-                                      fontSize: 11,
-                                    ),
+                                label: Text(
+                                  existing == null
+                                      ? 'Thêm nội dung'
+                                      : 'Lưu thay đổi',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
                                   ),
-                                ],
-                              ],
-                            ],
-                          ),
+                                ),
+                                style: FilledButton.styleFrom(
+                                  minimumSize:
+                                      const Size.fromHeight(48),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ],
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Hủy'),
-                ),
-                FilledButton.icon(
-                  onPressed: saveDraft,
-                  icon: const Icon(Icons.add, size: 17),
-                  label: Text(
-                    existing == null ? 'Thêm nội dung' : 'Lưu thay đổi',
-                  ),
-                ),
-              ],
             );
           },
         ),
-      ),
+        );
+      },
     );
 
     if (!mounted || saved == null) return;
     setState(() {
-      if (existing == null) {
-        _contentDrafts = [..._contentDrafts, saved];
+      final index =
+          _contentDrafts.indexWhere((draft) => draft.id == saved.id);
+      if (index >= 0) {
+        _contentDrafts = List.of(_contentDrafts)..[index] = saved;
       } else {
-        _contentDrafts = _contentDrafts
-            .map((draft) => draft.id == saved.id ? saved : draft)
-            .toList();
+        _contentDrafts = [..._contentDrafts, saved];
       }
     });
+  }
+
+  Text _dialogFieldLabel(String text) => Text(
+    text,
+    style: TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w700,
+      color: context.colors.textPrimary,
+    ),
+  );
+
+  InputDecoration _dialogInputDecoration({
+    String? errorText,
+    String? labelText,
+    String? suffixText,
+  }) {
+    final sheetColors = context.colors;
+    return InputDecoration(
+      labelText: labelText,
+      suffixText: suffixText,
+      errorText: errorText,
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 14,
+      ),
+      filled: true,
+      fillColor: sheetColors.bgSurface,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: sheetColors.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: sheetColors.border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppTheme.primary, width: 1.6),
+      ),
+    );
   }
 
   Widget _buildBracketSelector(AppColorsExtension colors) {
@@ -2080,7 +2880,16 @@ class _CreatePublicQuickTournamentScreenState
               ),
             ),
             child: InkWell(
-              onTap: () => setState(() => _bracket = b.$1),
+              onTap: () => setState(() {
+                _bracket = b.$1;
+                // Vòng tròn chỉ hợp lệ tới 15 đội vì mọi cặp đều phải gặp nhau.
+                // Kẹp giá trị đang có lại, nếu không ô "Khác" sẽ giữ một số mà
+                // chính validator của form cũng từ chối.
+                if (b.$1 == AppConstants.bracketRoundRobin) {
+                  final current = _globalMaxParticipants();
+                  if (current > 15) _maxTeamsController.text = '15';
+                }
+              }),
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -2163,13 +2972,7 @@ class _CreatePublicQuickTournamentScreenState
     setState(() {
       _startDate = pickedDate;
       _startTime = pickedTime;
-      if (!_endDateManuallySet) {
-        _syncDefaultEnd(start);
-      }
-      _regStartDate ??= DateTime(now.year, now.month, now.day);
-      if (!_registrationEndManuallySet) {
-        _syncDefaultRegistrationEnd(start);
-      }
+      _syncScheduleFromStart(start);
     });
   }
 
@@ -2212,6 +3015,7 @@ class _CreatePublicQuickTournamentScreenState
     setState(() {
       _regStartDate = pickedDate;
       _regStartTime = pickedTime;
+      _regStartDateManuallySet = true;
     });
   }
 
@@ -2269,6 +3073,7 @@ class _CreatePublicQuickTournamentScreenState
   Widget _buildScheduleRow({
     required String avatarLetter,
     required String title,
+    String? hint,
     required DateTime? value,
     required VoidCallback onTap,
     required AppColorsExtension colors,
@@ -2339,6 +3144,29 @@ class _CreatePublicQuickTournamentScreenState
                           color: AppTheme.primary,
                         ),
                       ),
+                      if (hint != null) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.textSecondary.withValues(
+                              alpha: 0.12,
+                            ),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            hint,
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   if (displayTime != null) ...[

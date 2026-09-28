@@ -25558,41 +25558,23 @@ abstract class AppLocalizations {
   /// **'Khu vực (không bắt buộc)'**
   String get socialRegionLabel;
 
-  /// No description provided for @socialRegionChooseAction.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chọn khu vực'**
-  String get socialRegionChooseAction;
-
-  /// No description provided for @socialRegionChangeAction.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đổi khu vực'**
-  String get socialRegionChangeAction;
-
-  /// No description provided for @socialRegionProvinceLabel.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tỉnh/Thành phố'**
-  String get socialRegionProvinceLabel;
-
   /// No description provided for @socialRegionWardLabel.
   ///
   /// In vi, this message translates to:
   /// **'Phường/Xã'**
   String get socialRegionWardLabel;
 
-  /// No description provided for @socialRegionProvinceSearchHint.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tìm tỉnh/thành phố'**
-  String get socialRegionProvinceSearchHint;
-
   /// No description provided for @socialRegionWardSearchHint.
   ///
   /// In vi, this message translates to:
   /// **'Tìm phường/xã'**
   String get socialRegionWardSearchHint;
+
+  /// No description provided for @socialRegionWardSearchPrompt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập ít nhất 2 ký tự để tìm phường/xã.'**
+  String get socialRegionWardSearchPrompt;
 
   /// No description provided for @socialRegionApplyAction.
   ///
@@ -25611,6 +25593,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Không tìm thấy kết quả.'**
   String get socialRegionNoResults;
+
+  /// No description provided for @socialRegionUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khu vực hiện không khả dụng. Bạn vẫn có thể nhập địa chỉ thủ công.'**
+  String get socialRegionUnavailable;
+
+  /// No description provided for @socialRegionRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get socialRegionRetry;
 
   /// No description provided for @socialRegionLoadError.
   ///
