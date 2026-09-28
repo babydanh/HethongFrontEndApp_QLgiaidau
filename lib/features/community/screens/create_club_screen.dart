@@ -386,8 +386,14 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.close_rounded, color: colors.textPrimary),
-          onPressed: () => context.pop(),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: colors.textPrimary, size: 20),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
         ),
         title: Text(
           l10n.createClub_title,

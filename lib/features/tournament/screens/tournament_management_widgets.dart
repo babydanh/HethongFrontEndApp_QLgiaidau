@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
@@ -51,32 +52,51 @@ class TournamentManagementSectionCard extends StatelessWidget {
 }
 
 class TournamentManagementError extends StatelessWidget {
-  const TournamentManagementError({super.key, required this.onRetry});
+  const TournamentManagementError({
+    super.key,
+    required this.onRetry,
+    this.error,
+  });
 
   final VoidCallback onRetry;
+  final Object? error;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
+    final currentError = error;
+    final isForbidden =
+        currentError is DioException &&
+        currentError.response?.statusCode == 403;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 40, color: colors.textMuted),
+            Icon(
+              isForbidden
+                  ? Icons.lock_outline_rounded
+                  : Icons.cloud_off_rounded,
+              size: 40,
+              color: colors.textMuted,
+            ),
             const SizedBox(height: 12),
             Text(
-              l10n.tournamentManagementLoadError,
+              isForbidden
+                  ? l10n.tournamentManagementForbidden
+                  : l10n.tournamentManagementLoadError,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(l10n.tournamentManagementRetry),
-            ),
+            if (!isForbidden) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(l10n.tournamentManagementRetry),
+              ),
+            ],
           ],
         ),
       ),

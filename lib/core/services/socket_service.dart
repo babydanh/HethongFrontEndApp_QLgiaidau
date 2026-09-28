@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/token_manager.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Service quản lý kết nối WebSocket (socket.io) tới backend.
@@ -41,7 +42,13 @@ class SocketService {
         return;
       }
 
-      final rawBaseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
+      const envApiBaseUrl = String.fromEnvironment('API_BASE_URL');
+      final rawBaseUrl = envApiBaseUrl.isNotEmpty
+          ? envApiBaseUrl
+          : (dotenv.env['API_BASE_URL'] ??
+              (kIsWeb
+                  ? 'https://sporto.asia/api/v1'
+                  : 'http://localhost:3000/api/v1'));
       // Lấy base server URL (bỏ /api/v1, thêm namespace /notifications)
       final serverUrl = rawBaseUrl.replaceAll(RegExp(r'/api/v1/?$'), '');
 

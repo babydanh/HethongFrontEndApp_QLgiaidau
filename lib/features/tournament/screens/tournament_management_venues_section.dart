@@ -49,7 +49,10 @@ class _TournamentManagementVenuesSectionState
         if (snapshot.connectionState == ConnectionState.waiting)
           return const Center(child: CircularProgressIndicator());
         if (snapshot.hasError)
-          return TournamentManagementError(onRetry: _reload);
+          return TournamentManagementError(
+            error: snapshot.error,
+            onRetry: _reload,
+          );
         final venues = snapshot.data ?? const <Map<String, dynamic>>[];
         return ListView(
           padding: const EdgeInsets.all(16),

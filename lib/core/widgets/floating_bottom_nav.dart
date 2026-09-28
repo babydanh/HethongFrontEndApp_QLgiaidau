@@ -23,14 +23,12 @@ class FloatingBottomNav extends StatelessWidget {
 
     const activeColor = AppTheme.primary;
     final inactiveColor = isDark
-        ? Colors.white.withValues(alpha: 0.4)
-        : const Color(0xFF94A3B8);
-    final bgColor = isDark
-        ? const Color(0xFF0A0A0A).withValues(alpha: 0.98)
-        : Colors.white;
-    final borderSide = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.06);
+        ? Colors.white.withValues(alpha: 0.62)
+        : const Color(0xFF64748B);
+    final barColor = isDark ? context.colors.bgDark : Colors.white;
+    final dividerColor = isDark
+        ? context.colors.border
+        : const Color(0xFFE2E8F0);
 
     final tabs = <_NavTabData>[
       _NavTabData(
@@ -65,38 +63,32 @@ class FloatingBottomNav extends StatelessWidget {
       ),
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: bgColor,
-        border: Border(top: BorderSide(color: borderSide)),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
+    return ColoredBox(
+      color: barColor,
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 60,
-          child: Row(
-            children: [
-              for (final tab in tabs)
-                Expanded(
-                  child: _buildNavItem(
-                    tab,
-                    isSelected: currentIndex == tab.internalIndex,
-                    activeColor: activeColor,
-                    inactiveColor: inactiveColor,
-                    onTap: () => tab.internalIndex == _menuIndex
-                        ? onMenuTap()
-                        : onTabSelected(tab.internalIndex),
+          height: 64,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: dividerColor, width: 1)),
+            ),
+            child: Row(
+              children: [
+                for (final tab in tabs)
+                  Expanded(
+                    child: _buildNavItem(
+                      tab,
+                      isSelected: currentIndex == tab.internalIndex,
+                      activeColor: activeColor,
+                      inactiveColor: inactiveColor,
+                      onTap: () => tab.internalIndex == _menuIndex
+                          ? onMenuTap()
+                          : onTabSelected(tab.internalIndex),
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -110,42 +102,50 @@ class FloatingBottomNav extends StatelessWidget {
     required Color inactiveColor,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 36,
-              height: 26,
-              decoration: isSelected
-                  ? BoxDecoration(
-                      color: activeColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(9),
-                    )
-                  : null,
-              child: Icon(
-                isSelected ? tab.activeIcon : tab.icon,
-                color: isSelected ? activeColor : inactiveColor,
-                size: 22,
-              ),
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: tab.label,
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox.expand(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 36,
+                  height: 26,
+                  decoration: isSelected
+                      ? BoxDecoration(
+                          color: activeColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(9),
+                        )
+                      : null,
+                  child: Icon(
+                    isSelected ? tab.activeIcon : tab.icon,
+                    color: isSelected ? activeColor : inactiveColor,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  tab.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isSelected ? activeColor : inactiveColor,
+                    fontSize: 10.5,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 2),
-            Text(
-              tab.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: isSelected ? activeColor : inactiveColor,
-                fontSize: 10.5,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

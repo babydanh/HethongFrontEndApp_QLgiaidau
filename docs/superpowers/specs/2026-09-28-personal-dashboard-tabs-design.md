@@ -1,6 +1,6 @@
 # Personal Dashboard Tabs — Design Specification
 
-**Status:** Three-tab design approved in chat; written specification review pending.  
+**Status:** Written design reviewed and approved by the user; implementation plan review pending.  
 **Date:** 2026-09-28  
 **Platform:** Flutter app (Android/iOS; preserve existing responsive behavior).
 

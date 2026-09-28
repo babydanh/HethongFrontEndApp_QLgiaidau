@@ -7,7 +7,6 @@ import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 
 abstract class ITournamentRepository {
-  Future<Tournament> create(Tournament tournament);
   Future<Tournament?> getById(String id, {String? inviteCode});
   Future<Tournament?> getByInviteCode(String code);
   Future<List<TournamentSponsor>> getPublicSponsors(String tournamentId);
@@ -72,14 +71,12 @@ abstract class ITournamentRepository {
   getPublicTournamentsPaged({
     String? cursor,
     int limit = 6,
-    String? sport,
+    String? categoryId,
     String? status,
     String? search,
-    String? content,
-    String? bracket,
-    String? ranked,
-    String? province,
-    String? ward,
+    String? bracketType,
+    bool? isRanked,
+    String? region,
     DateTime? startDate,
     DateTime? endDate,
     bool rethrowOnError = false,

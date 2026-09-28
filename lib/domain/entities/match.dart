@@ -159,6 +159,8 @@ class MatchModel {
   final String loserNextMatchId;
   final String court;
   final String courtAddress;
+  final String? courtId;
+  final String? courtName;
   final int? maxScore;
   final bool winByTwo;
   final List<MatchEvent> events;
@@ -230,6 +232,8 @@ class MatchModel {
     this.loserNextMatchId = '',
     this.court = '',
     this.courtAddress = '',
+    this.courtId,
+    this.courtName,
     this.maxScore,
     this.winByTwo = true,
     this.events = const [],
@@ -366,7 +370,20 @@ class MatchModel {
     }
 
     final matchCourtName = json['courtName']?.toString().trim() ?? '';
-    final matchCourt = json['court']?.toString().trim() ?? '';
+    final matchCourtPayload = json['court'];
+    final matchCourt =
+        (matchCourtPayload is Map
+                ? matchCourtPayload['name']
+                : matchCourtPayload)
+            ?.toString()
+            .trim() ??
+        '';
+    final matchCourtId =
+        (json['courtId'] ??
+                json['court_id'] ??
+                (matchCourtPayload is Map ? matchCourtPayload['id'] : null))
+            ?.toString()
+            .trim();
     final tournamentPayload = json['tournament'];
     final tournamentVenue = tournamentPayload is Map
         ? (tournamentPayload['venueName'] ??
@@ -375,10 +392,14 @@ class MatchModel {
                   : null))
         : null;
     final tournamentVenueName = tournamentVenue?.toString().trim() ?? '';
-    final courtDisplay = matchCourtName.isNotEmpty
+    final assignedCourtName = matchCourtName.isNotEmpty
         ? matchCourtName
-        : matchCourt.isNotEmpty
+        : matchCourt.isNotEmpty &&
+              matchCourt.toLowerCase() != tournamentVenueName.toLowerCase()
         ? matchCourt
+        : '';
+    final courtDisplay = assignedCourtName.isNotEmpty
+        ? assignedCourtName
         : tournamentVenueName;
 
     Map<String, dynamic>? asMap(dynamic value) {
@@ -520,6 +541,8 @@ class MatchModel {
       loserNextMatchId: json['loserNextMatchId'] ?? '',
       // A match-level courtName override wins over any generic court value;
       // otherwise show the tournament venue when no specific court is assigned.
+      courtId: matchCourtId?.isNotEmpty == true ? matchCourtId : null,
+      courtName: assignedCourtName.isNotEmpty ? assignedCourtName : null,
       court: courtDisplay,
       courtAddress:
           json['courtAddress']?.toString() ??
@@ -633,6 +656,8 @@ class MatchModel {
       'nextMatchId': nextMatchId,
       'loserNextMatchId': loserNextMatchId,
       'court': court,
+      if (courtId != null) 'courtId': courtId,
+      if (courtName != null) 'courtName': courtName,
       if (courtAddress.isNotEmpty) 'courtAddress': courtAddress,
       'maxScore': maxScore,
       'winByTwo': winByTwo,
@@ -691,6 +716,8 @@ class MatchModel {
     String? loserNextMatchId,
     String? court,
     String? courtAddress,
+    String? courtId,
+    String? courtName,
     int? maxScore,
     bool? winByTwo,
     List<MatchEvent>? events,
@@ -748,6 +775,8 @@ class MatchModel {
       loserNextMatchId: loserNextMatchId ?? this.loserNextMatchId,
       court: court ?? this.court,
       courtAddress: courtAddress ?? this.courtAddress,
+      courtId: courtId ?? this.courtId,
+      courtName: courtName ?? this.courtName,
       maxScore: maxScore ?? this.maxScore,
       winByTwo: winByTwo ?? this.winByTwo,
       events: events ?? this.events,

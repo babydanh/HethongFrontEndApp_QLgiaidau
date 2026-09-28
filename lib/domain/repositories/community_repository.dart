@@ -62,10 +62,6 @@ abstract class ICommunityRepository {
     String? status,
     String? search,
   });
-  Future<CommunityTournamentModel?> createTournament(
-    String communityId,
-    Map<String, dynamic> data,
-  );
   Future<Community?> createCommunity(Map<String, dynamic> data);
   Future<List<GalleryImageModel>> getGallery(String communityId);
   Future<bool> removeGalleryItem(String communityId, String imageId);

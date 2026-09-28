@@ -25,7 +25,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   final _scrollController = ScrollController();
   bool _isLoadingMore = false;
 
-  // Filter mode: false = Tất cả, true = Chưa đọc
+  // Category filter: 0 = Tất cả, 1 = Giải đấu, 2 = Đội nhóm, 3 = Hệ thống
+  int _selectedCategoryTab = 0;
+  // Filter mode: false = Tất cả, true = Chỉ chưa đọc
   bool _unreadOnly = false;
   final Set<String> _handledInviteIds = <String>{};
   final Set<String> _handlingInviteIds = <String>{};
@@ -216,98 +218,236 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     }
   }
 
+  bool _matchesCategory(AppNotification n) {
+    if (_selectedCategoryTab == 0) return true;
+    final t = n.type.toUpperCase();
+    if (_selectedCategoryTab == 1) {
+      // Giải đấu & Trận đấu
+      return t.startsWith('TOURNAMENT') ||
+          t.startsWith('MATCH') ||
+          t.contains('REFEREE') ||
+          t.contains('DOUBLES') ||
+          t.contains('PARTNER');
+    } else if (_selectedCategoryTab == 2) {
+      // Đội nhóm & CLB / Cộng đồng
+      return t.startsWith('CLUB') ||
+          t.startsWith('COMMUNITY') ||
+          t.startsWith('FOOTBALL_TEAM');
+    } else {
+      // Hệ thống, thanh toán, nhắc nhở, chat
+      return t.startsWith('SYSTEM') ||
+          t.startsWith('GENERAL') ||
+          t.startsWith('PAYMENT') ||
+          t.startsWith('PAYOUT') ||
+          t.startsWith('CHAT') ||
+          t.startsWith('REMINDER');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final stateNotif = ref.watch(notificationStateProvider);
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
 
-    // Lọc notifications theo chế độ
-    final displayedNotifications = _unreadOnly
-        ? stateNotif.notifications.where((n) => !n.isRead).toList()
-        : stateNotif.notifications;
+    // Lọc notifications theo chế độ chưa đọc và tab phân loại
+    final displayedNotifications = stateNotif.notifications.where((n) {
+      if (_unreadOnly && n.isRead) return false;
+      return _matchesCategory(n);
+    }).toList();
 
     final totalUnread = stateNotif.notifications.where((n) => !n.isRead).length;
 
     return Scaffold(
       backgroundColor: colors.bgDark,
-      appBar: AppBar(
-        backgroundColor: colors.bgDark,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          l10n.notification_title,
-          style: TextStyle(
-            color: colors.textPrimary,
-            fontWeight: FontWeight.w900,
-            fontSize: 20,
-          ),
-        ),
-        actions: [
-          if (totalUnread > 0)
-            TextButton(
-              onPressed: _markAllAsRead,
-              child: Text(
-                l10n.notification_readAll,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+      body: Stack(
+        children: [
+          // Background subtle top ambient blur / gradient like Image 2
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 160,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF2979FF).withValues(alpha: 0.16),
+                    const Color(0xFF3AB5F6).withValues(alpha: 0.04),
+                    Colors.transparent,
+                  ],
                 ),
               ),
             ),
-        ],
-      ),
-      body: Column(
-        children: [
-          _buildFilterBar(colors, totalUnread, l10n),
-          Expanded(
-            child: stateNotif.notifications.isEmpty && stateNotif.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : stateNotif.notifications.isEmpty &&
-                      stateNotif.errorMessage != null
-                ? _buildError(stateNotif.errorMessage!, colors, l10n)
-                : stateNotif.notifications.isEmpty
-                ? _buildEmpty(colors, l10n)
-                : displayedNotifications.isEmpty
-                ? _buildFilteredEmpty(colors, l10n)
-                : _buildList(displayedNotifications, colors, l10n),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                _buildModernAppBar(colors, totalUnread, l10n),
+                _buildCategoryTabs(colors, l10n, totalUnread),
+                Expanded(
+                  child: stateNotif.notifications.isEmpty && stateNotif.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : stateNotif.notifications.isEmpty &&
+                            stateNotif.errorMessage != null
+                      ? _buildError(stateNotif.errorMessage!, colors, l10n)
+                      : stateNotif.notifications.isEmpty
+                      ? _buildEmpty(colors, l10n)
+                      : displayedNotifications.isEmpty
+                      ? _buildFilteredEmpty(colors, l10n)
+                      : _buildList(displayedNotifications, colors, l10n),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFilterBar(
+  Widget _buildModernAppBar(
     AppColorsExtension colors,
     int totalUnread,
     AppLocalizations l10n,
   ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: colors.bgDark,
-        border: Border(bottom: BorderSide(color: colors.border)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Row(
         children: [
-          _FilterSegment(
-            label: l10n.notification_all,
-            isActive: !_unreadOnly,
-            colors: colors,
-            onTap: () => setState(() => _unreadOnly = false),
+          IconButton(
+            style: IconButton.styleFrom(
+              backgroundColor: colors.bgCard.withValues(alpha: 0.8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: colors.border.withValues(alpha: 0.6)),
+              ),
+            ),
+            icon: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: colors.textPrimary),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            },
           ),
-          const SizedBox(width: 8),
-          _FilterSegment(
-            label: totalUnread > 0
-                ? '${l10n.notification_unread} ($totalUnread)'
-                : l10n.notification_unread,
-            isActive: _unreadOnly,
-            colors: colors,
-            count: totalUnread,
-            onTap: () => setState(() => _unreadOnly = true),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              l10n.notification_title,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontWeight: FontWeight.w800,
+                fontSize: 22,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ),
+          if (totalUnread > 0)
+            TextButton.icon(
+              onPressed: _markAllAsRead,
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF2979FF),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              icon: const Icon(Icons.done_all_rounded, size: 16),
+              label: Text(
+                l10n.notification_readAll,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryTabs(
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+    int totalUnread,
+  ) {
+    final tabs = [
+      l10n.notification_all,
+      l10n.notification_tabTournaments,
+      l10n.notification_tabTeams,
+      l10n.notification_tabSystem,
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                for (int i = 0; i < tabs.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _PillFilterTab(
+                      label: tabs[i],
+                      isSelected: _selectedCategoryTab == i,
+                      onTap: () => setState(() => _selectedCategoryTab = i),
+                      colors: colors,
+                    ),
+                  ),
+                // Toggle chỉ hiển thị chưa đọc
+                Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: InkWell(
+                    onTap: () => setState(() => _unreadOnly = !_unreadOnly),
+                    borderRadius: BorderRadius.circular(20),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: _unreadOnly
+                            ? const Color(0xFF2979FF).withValues(alpha: 0.15)
+                            : colors.bgCard,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: _unreadOnly
+                              ? const Color(0xFF2979FF)
+                              : colors.border.withValues(alpha: 0.7),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _unreadOnly ? Icons.mark_chat_unread : Icons.mark_chat_unread_outlined,
+                            size: 14,
+                            color: _unreadOnly ? const Color(0xFF2979FF) : colors.textMuted,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            totalUnread > 0
+                                ? '${l10n.notification_unread} ($totalUnread)'
+                                : l10n.notification_unread,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: _unreadOnly ? FontWeight.w700 : FontWeight.w600,
+                              color: _unreadOnly
+                                  ? const Color(0xFF2979FF)
+                                  : colors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -671,27 +811,39 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         if (route != null) context.push(route);
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 6),
+        margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: colors.bgCard,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.border),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: notif.isRead
+                ? colors.border.withValues(alpha: 0.5)
+                : const Color(0xFF2979FF).withValues(alpha: 0.25),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // Circular icon container as in Image 2
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
                     color: notif.color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    shape: BoxShape.circle,
                   ),
-                  child: Icon(notif.icon, color: notif.color, size: 20),
+                  child: Icon(notif.icon, color: notif.color, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -704,9 +856,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                             child: Text(
                               notif.title,
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 14.5,
                                 fontWeight: notif.isRead
-                                    ? FontWeight.w500
+                                    ? FontWeight.w600
                                     : FontWeight.w700,
                                 color: colors.textPrimary,
                               ),
@@ -714,36 +866,50 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (!notif.isRead)
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Color(0xFF2979FF),
-                              ),
+                          const SizedBox(width: 6),
+                          Text(
+                            notif.localizedTimeAgo(l10n),
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: colors.textMuted,
+                              fontWeight: FontWeight.w500,
                             ),
+                          ),
                         ],
                       ),
                       if (notif.body != null && notif.body!.isNotEmpty) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 3),
                         Text(
                           notif.body!,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 12.5,
+                            height: 1.3,
                             color: colors.textSecondary,
                           ),
-                          maxLines: 3,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
-                      const SizedBox(height: 4),
-                      Text(
-                        notif.localizedTimeAgo(l10n),
-                        style: TextStyle(fontSize: 11, color: colors.textMuted),
-                      ),
                     ],
                   ),
+                ),
+                const SizedBox(width: 6),
+                // Red unread dot or chevron navigation arrow
+                if (!notif.isRead) ...[
+                  Container(
+                    width: 7,
+                    height: 7,
+                    margin: const EdgeInsets.only(right: 4),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFFEF4444), // red dot as seen in Image 2
+                    ),
+                  ),
+                ],
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: colors.textMuted.withValues(alpha: 0.6),
                 ),
               ],
             ),
@@ -862,62 +1028,60 @@ class _TournamentWithRole {
   const _TournamentWithRole(this.tournament, this.role, this.roleColor);
 }
 
-// ─── Filter Segment Widget ───
+// ─── Filter Pill Tab Widget ───
 
-class _FilterSegment extends StatelessWidget {
+class _PillFilterTab extends StatelessWidget {
   final String label;
-  final bool isActive;
-  final AppColorsExtension colors;
-  final int? count;
+  final bool isSelected;
   final VoidCallback onTap;
+  final AppColorsExtension colors;
 
-  const _FilterSegment({
+  const _PillFilterTab({
     required this.label,
-    required this.isActive,
-    required this.colors,
-    this.count,
+    required this.isSelected,
     required this.onTap,
+    required this.colors,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
         decoration: BoxDecoration(
-          color: isActive
-              ? const Color(0xFF2979FF).withValues(alpha: 0.12)
+          color: isSelected
+              ? const Color(0xFF2979FF)
               : colors.bgCard,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isActive
-                ? const Color(0xFF2979FF).withValues(alpha: 0.4)
-                : colors.border,
+            color: isSelected
+                ? const Color(0xFF2979FF)
+                : colors.border.withValues(alpha: 0.7),
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF2979FF).withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isActive ? Icons.filter_alt_rounded : Icons.filter_alt_outlined,
-              size: 16,
-              color: isActive ? const Color(0xFF2979FF) : colors.textMuted,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                color: isActive
-                    ? const Color(0xFF2979FF)
-                    : colors.textSecondary,
-              ),
-            ),
-          ],
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected
+                ? Colors.white
+                : colors.textSecondary,
+          ),
         ),
       ),
     );
   }
 }
+

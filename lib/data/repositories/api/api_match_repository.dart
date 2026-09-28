@@ -667,6 +667,11 @@ class ApiMatchRepository implements IMatchRepository {
           (json['tournament'] is Map
               ? (json['tournament'] as Map)['id']?.toString()
               : null),
+      tournamentName:
+          json['tournamentName']?.toString() ??
+          (json['tournament'] is Map
+              ? (json['tournament'] as Map)['name']?.toString()
+              : null),
       round: json['roundNumber'] ?? json['round'] ?? 1,
       leg: json['leg'] is num
           ? (json['leg'] as num).toInt()

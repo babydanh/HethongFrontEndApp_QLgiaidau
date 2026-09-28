@@ -49,7 +49,10 @@ class _TournamentManagementSponsorsSectionState
         if (snapshot.connectionState == ConnectionState.waiting)
           return const Center(child: CircularProgressIndicator());
         if (snapshot.hasError)
-          return TournamentManagementError(onRetry: _reload);
+          return TournamentManagementError(
+            error: snapshot.error,
+            onRetry: _reload,
+          );
         final sponsors = snapshot.data ?? const <TournamentSponsor>[];
         return ListView(
           padding: const EdgeInsets.all(16),
@@ -188,7 +191,10 @@ class _SponsorEditorDialogState extends ConsumerState<_SponsorEditorDialog> {
     text: (widget.sponsor?.displayOrder ?? 0).toString(),
   );
   late String _tier = _normalizeTier(widget.sponsor?.tier ?? 'GOLD');
-  bool _isPublic = true;
+  late bool _isPublic =
+      widget.sponsor == null ||
+      (widget.sponsor!.status.toUpperCase() == 'PUBLISHED' &&
+          (widget.sponsor!.isPublic ?? true));
   bool _isSaving = false;
   bool _isUploading = false;
   bool _hasError = false;
@@ -300,15 +306,14 @@ class _SponsorEditorDialogState extends ConsumerState<_SponsorEditorDialog> {
                   border: const OutlineInputBorder(),
                 ),
               ),
-              if (widget.sponsor == null)
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  value: _isPublic,
-                  title: Text(l10n.tournamentManagementSponsorPublic),
-                  onChanged: _isSaving
-                      ? null
-                      : (value) => setState(() => _isPublic = value),
-                ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _isPublic,
+                title: Text(l10n.tournamentManagementSponsorPublic),
+                onChanged: _isSaving
+                    ? null
+                    : (value) => setState(() => _isPublic = value),
+              ),
               if (_hasError)
                 Align(
                   alignment: Alignment.centerLeft,
@@ -390,8 +395,8 @@ class _SponsorEditorDialogState extends ConsumerState<_SponsorEditorDialog> {
             ? null
             : _description.text.trim(),
         'displayOrder': displayOrder,
-        if (widget.sponsor == null) 'status': _isPublic ? 'PUBLISHED' : 'DRAFT',
-        if (widget.sponsor == null) 'isPublic': _isPublic,
+        'status': _isPublic ? 'PUBLISHED' : 'DRAFT',
+        'isPublic': _isPublic,
       });
       if (mounted) Navigator.pop(context);
     } catch (_) {
@@ -437,8 +442,13 @@ class _SponsorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final isArchived = sponsor.status.toUpperCase() == 'ARCHIVED';
+    final isPublic =
+        !isArchived &&
+        sponsor.status.toUpperCase() == 'PUBLISHED' &&
+        (sponsor.isPublic ?? true);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -482,6 +492,33 @@ class _SponsorCard extends StatelessWidget {
                 Text(
                   _tierLabel(l10n, sponsor.tier),
                   style: TextStyle(color: colors.textSecondary, fontSize: 12),
+                ),
+                Container(
+                  margin: const EdgeInsets.only(top: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isArchived
+                        ? colors.bgElevated
+                        : isPublic
+                        ? colors.success.withValues(alpha: 0.1)
+                        : colors.bgElevated,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    isArchived
+                        ? l10n.tournamentManagementSponsorArchived
+                        : isPublic
+                        ? l10n.tournamentManagementSponsorPublicStatus
+                        : l10n.tournamentManagementSponsorDraft,
+                    style: TextStyle(
+                      color: isPublic ? colors.success : colors.textMuted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
                 if (sponsor.shortDescription?.isNotEmpty == true)
                   Text(

@@ -45,7 +45,7 @@ void main() {
       expect(match.team2Name, 'Doi B');
       expect(match.status, 'completed');
       expect(match.court, 'San 1');
-      expect(match.bracketPosition?.bracket, 'winners');
+      expect(match.bracketPosition.bracket, 'winners');
       expect(match.loserNextMatchId, 'loser-match-1');
     });
 
@@ -123,10 +123,34 @@ void main() {
       expect(match.tournamentConfig?['scoringMode'], 'FREE');
       expect(match.sportRules?['scoringMode'], 'FREE');
     });
+    test('keeps explicit court identity separate from venue display text', () {
+      final match = MatchModel.fromJson({
+        'courtId': 'court-1',
+        'courtName': 'Court 1',
+        'court': 'Court 1',
+        'tournament': {'venueName': 'Sporto Arena'},
+      }, 'court-assigned');
+
+      expect(match.courtId, 'court-1');
+      expect(match.courtName, 'Court 1');
+
+      final venueOnlyMatch = MatchModel.fromJson({
+        'court': 'Sporto Arena',
+        'tournament': {'venueName': 'Sporto Arena'},
+      }, 'venue-only');
+
+      expect(venueOnlyMatch.court, 'Sporto Arena');
+      expect(venueOnlyMatch.courtId, isNull);
+      expect(venueOnlyMatch.courtName, isNull);
+      expect(
+        MatchModel.fromJson(match.toJson(), match.id).courtName,
+        'Court 1',
+      );
+    });
   });
 
-  final _defaultBracket = BracketPosition(round: 1, position: 0);
-  final _now = DateTime.now();
+  final defaultBracket = BracketPosition(round: 1, position: 0);
+  final now = DateTime.now();
 
   // Test MatchModel isLive/isCompleted
   group('TC-FLUTTER-MATCH-005: MatchModel status getters', () {
@@ -137,8 +161,8 @@ void main() {
           round: 1,
           matchNumber: 1,
           status: 'live',
-          bracketPosition: _defaultBracket,
-          updatedAt: _now,
+          bracketPosition: defaultBracket,
+          updatedAt: now,
         ).isLive,
         true,
       );
@@ -148,8 +172,8 @@ void main() {
           round: 1,
           matchNumber: 1,
           status: 'ongoing',
-          bracketPosition: _defaultBracket,
-          updatedAt: _now,
+          bracketPosition: defaultBracket,
+          updatedAt: now,
         ).isLive,
         true,
       );
@@ -159,8 +183,8 @@ void main() {
           round: 1,
           matchNumber: 1,
           status: 'in_progress',
-          bracketPosition: _defaultBracket,
-          updatedAt: _now,
+          bracketPosition: defaultBracket,
+          updatedAt: now,
         ).isLive,
         true,
       );
@@ -173,8 +197,8 @@ void main() {
           round: 1,
           matchNumber: 1,
           status: 'scheduled',
-          bracketPosition: _defaultBracket,
-          updatedAt: _now,
+          bracketPosition: defaultBracket,
+          updatedAt: now,
         ).isLive,
         false,
       );
@@ -184,8 +208,8 @@ void main() {
           round: 1,
           matchNumber: 1,
           status: 'completed',
-          bracketPosition: _defaultBracket,
-          updatedAt: _now,
+          bracketPosition: defaultBracket,
+          updatedAt: now,
         ).isLive,
         false,
       );
@@ -195,8 +219,8 @@ void main() {
           round: 1,
           matchNumber: 1,
           status: 'cancelled',
-          bracketPosition: _defaultBracket,
-          updatedAt: _now,
+          bracketPosition: defaultBracket,
+          updatedAt: now,
         ).isLive,
         false,
       );
@@ -209,8 +233,8 @@ void main() {
           round: 1,
           matchNumber: 1,
           status: 'completed',
-          bracketPosition: _defaultBracket,
-          updatedAt: _now,
+          bracketPosition: defaultBracket,
+          updatedAt: now,
         ).isCompleted,
         true,
       );
@@ -220,8 +244,8 @@ void main() {
           round: 1,
           matchNumber: 1,
           status: 'scheduled',
-          bracketPosition: _defaultBracket,
-          updatedAt: _now,
+          bracketPosition: defaultBracket,
+          updatedAt: now,
         ).isCompleted,
         false,
       );

@@ -776,6 +776,24 @@ abstract class AppLocalizations {
   /// **'Giới tính'**
   String get infoGender;
 
+  /// No description provided for @genderMale.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nam'**
+  String get genderMale;
+
+  /// No description provided for @genderFemale.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nữ'**
+  String get genderFemale;
+
+  /// No description provided for @genderOther.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khác'**
+  String get genderOther;
+
   /// No description provided for @infoAddress.
   ///
   /// In vi, this message translates to:
@@ -2989,6 +3007,24 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Bỏ cuộc'**
   String get matchesStatusWalkover;
+
+  /// No description provided for @matchesCourtNotAssigned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa được xếp sân'**
+  String get matchesCourtNotAssigned;
+
+  /// No description provided for @matchesCourtNameUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên sân chưa được cung cấp'**
+  String get matchesCourtNameUnavailable;
+
+  /// No description provided for @tournamentScheduleHours.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giờ hoạt động: {start}–{end}'**
+  String tournamentScheduleHours(String start, String end);
 
   /// No description provided for @matchLiveCheerError.
   ///
@@ -5408,6 +5444,24 @@ abstract class AppLocalizations {
   /// **'Lời mời này đã được xử lý trước đó.'**
   String get notification_inviteAlreadyHandled;
 
+  /// No description provided for @notification_tabTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu'**
+  String get notification_tabTournaments;
+
+  /// No description provided for @notification_tabTeams.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội nhóm'**
+  String get notification_tabTeams;
+
+  /// No description provided for @notification_tabSystem.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hệ thống'**
+  String get notification_tabSystem;
+
   /// No description provided for @payments_close.
   ///
   /// In vi, this message translates to:
@@ -5749,6 +5803,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Của tôi'**
   String get dashboard_title;
+
+  /// No description provided for @dashboard_sportActivityFilterLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoạt động theo môn'**
+  String get dashboard_sportActivityFilterLabel;
 
   /// No description provided for @dashboard_loginPrompt.
   ///
@@ -7322,30 +7382,6 @@ abstract class AppLocalizations {
   /// **'Nhanh (Lite)'**
   String get club_quickTournament;
 
-  /// No description provided for @club_advanced.
-  ///
-  /// In vi, this message translates to:
-  /// **'Nâng cao'**
-  String get club_advanced;
-
-  /// No description provided for @club_selectTournamentType.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chọn loại giải đấu'**
-  String get club_selectTournamentType;
-
-  /// No description provided for @publicClubLiteCreateTitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tạo giải CLB Lite'**
-  String get publicClubLiteCreateTitle;
-
-  /// No description provided for @club_selectTournamentDesc.
-  ///
-  /// In vi, this message translates to:
-  /// **'Vui lòng chọn hình thức giải đấu muốn tạo'**
-  String get club_selectTournamentDesc;
-
   /// No description provided for @club_liteTournament.
   ///
   /// In vi, this message translates to:
@@ -7363,42 +7399,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tạo và quản lý sơ đồ thi đấu ngay trên app điện thoại'**
   String get club_liteDesc;
-
-  /// No description provided for @club_advancedTournament.
-  ///
-  /// In vi, this message translates to:
-  /// **'Giải Nâng Cao (Full)'**
-  String get club_advancedTournament;
-
-  /// No description provided for @club_createOnWeb.
-  ///
-  /// In vi, this message translates to:
-  /// **'TẠO TRÊN WEB'**
-  String get club_createOnWeb;
-
-  /// No description provided for @club_advancedDesc.
-  ///
-  /// In vi, this message translates to:
-  /// **'Quản lý đầy đủ tính năng, lệ phí, phân quyền trên website'**
-  String get club_advancedDesc;
-
-  /// No description provided for @club_createAdvancedTitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tạo Giải Nâng Cao'**
-  String get club_createAdvancedTitle;
-
-  /// No description provided for @club_advancedWebDialog.
-  ///
-  /// In vi, this message translates to:
-  /// **'Để quản lý giải đấu nâng cao (phân chia bảng đấu phức tạp, thu lệ phí, tùy chỉnh luật...), vui lòng truy cập website sporto.asia trên máy tính.'**
-  String get club_advancedWebDialog;
-
-  /// No description provided for @club_copyWebLink.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đến trang tạo'**
-  String get club_copyWebLink;
 
   /// No description provided for @club_membersLabel.
   ///
@@ -7808,12 +7808,6 @@ abstract class AppLocalizations {
   /// **'Tạo mới và điều hành các giải đấu của Câu lạc bộ.'**
   String get club_tournamentManagementDescription;
 
-  /// No description provided for @club_chooseTournamentTypeDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chọn hình thức tổ chức phù hợp với quy mô giải của CLB'**
-  String get club_chooseTournamentTypeDescription;
-
   /// No description provided for @club_liteCreatedOnApp.
   ///
   /// In vi, this message translates to:
@@ -7825,30 +7819,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tạo trực tiếp trên điện thoại trong 30 giây, tự động chia bảng và theo dõi tỷ số.'**
   String get club_liteTournamentDescription;
-
-  /// No description provided for @club_standardTournamentTitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'Giải Tiêu chuẩn'**
-  String get club_standardTournamentTitle;
-
-  /// No description provided for @club_standardTournamentTitleAdvanced.
-  ///
-  /// In vi, this message translates to:
-  /// **'Giải Tiêu chuẩn (Nâng cao)'**
-  String get club_standardTournamentTitleAdvanced;
-
-  /// No description provided for @club_standardCreatedOnWeb.
-  ///
-  /// In vi, this message translates to:
-  /// **'TẠO TRÊN WEB'**
-  String get club_standardCreatedOnWeb;
-
-  /// No description provided for @club_standardTournamentDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Giải đấu quy mô lớn với đầy đủ tính năng sơ đồ thi đấu, tài chính & trọng tài.'**
-  String get club_standardTournamentDescription;
 
   /// No description provided for @club_noManagedTournaments.
   ///
@@ -9458,18 +9428,6 @@ abstract class AppLocalizations {
   /// **'Không thể tải danh sách giải đấu'**
   String get clubTournamentsLoadError;
 
-  /// No description provided for @clubTournamentsChooseType.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chọn loại giải đấu'**
-  String get clubTournamentsChooseType;
-
-  /// No description provided for @clubTournamentsChooseTypeHint.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chọn hình thức tạo giải phù hợp cho câu lạc bộ của bạn'**
-  String get clubTournamentsChooseTypeHint;
-
   /// No description provided for @clubTournamentsLiteTitle.
   ///
   /// In vi, this message translates to:
@@ -9481,60 +9439,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tạo nhanh trong 30 giây. Sinh mã QR và link mời để chia sẻ trực tiếp cho các thành viên.'**
   String get clubTournamentsLiteDescription;
-
-  /// No description provided for @clubTournamentsWebTitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tạo nhanh trên Web'**
-  String get clubTournamentsWebTitle;
-
-  /// No description provided for @clubTournamentsWebDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Form nhanh đầy đủ hơn Lite; giải vẫn thuộc CLB và mở quản lý nâng cao trên web.'**
-  String get clubTournamentsWebDescription;
-
-  /// No description provided for @clubTournamentsAdvancedTitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tạo giải nâng cao trên Web'**
-  String get clubTournamentsAdvancedTitle;
-
-  /// No description provided for @clubTournamentsAdvancedBadge.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tạo trên Web'**
-  String get clubTournamentsAdvancedBadge;
-
-  /// No description provided for @clubTournamentsAdvancedDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Giải đấu nâng cao có nhiều cấu hình chuyên sâu (Vòng bảng, Knockout, Lịch thi đấu, Lệ phí và Giải thưởng).\\n\\nVui lòng truy cập trang web sporto.asia trên máy tính để tạo giải nâng cao cho câu lạc bộ!'**
-  String get clubTournamentsAdvancedDescription;
-
-  /// No description provided for @clubTournamentsAdvancedCardDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chỉ khởi tạo trên Web sporto.asia. Đầy đủ cấu hình: Thể thức Vòng bảng, Knockout, Lịch thi đấu và Giải thưởng.'**
-  String get clubTournamentsAdvancedCardDescription;
-
-  /// No description provided for @clubTournamentsClose.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đóng'**
-  String get clubTournamentsClose;
-
-  /// No description provided for @clubTournamentsCopyWebLink.
-  ///
-  /// In vi, this message translates to:
-  /// **'Sao chép link Web'**
-  String get clubTournamentsCopyWebLink;
-
-  /// No description provided for @clubTournamentsLinkCopied.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đã sao chép link tạo giải'**
-  String get clubTournamentsLinkCopied;
 
   /// No description provided for @myReportsTitle.
   ///
@@ -14513,8 +14417,26 @@ abstract class AppLocalizations {
   /// No description provided for @quickCreateDescription.
   ///
   /// In vi, this message translates to:
-  /// **'Tạo nhanh trên app, bổ sung cấu hình nâng cao trong trang quản lý web.'**
+  /// **'Tạo giải đấu ngay trong ứng dụng, sau đó quản lý giải tại khu vực Ban tổ chức.'**
   String get quickCreateDescription;
+
+  /// No description provided for @quickCreateOptionsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tùy chọn bổ sung (thể thức, ELO)'**
+  String get quickCreateOptionsTitle;
+
+  /// No description provided for @quickCreateOptionsCollapse.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu gọn'**
+  String get quickCreateOptionsCollapse;
+
+  /// No description provided for @quickCreateOptionsExpand.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở rộng'**
+  String get quickCreateOptionsExpand;
 
   /// No description provided for @quickCreateNameLabel.
   ///
@@ -22405,7 +22327,7 @@ abstract class AppLocalizations {
   /// No description provided for @organizer_reqDesc.
   ///
   /// In vi, this message translates to:
-  /// **'Tạo giải đấu nâng cao (nhiều phân hạng, lệ phí, nhà tài trợ...) yêu cầu tài khoản được cấp quyền Ban Tổ Chức (Organizer). Bạn có thể đăng ký làm Ban Tổ Chức hoặc sử dụng Giải CLB Siêu Lite.'**
+  /// **'Tạo giải công khai và sử dụng các tính năng tổ chức giải cần tài khoản Ban Tổ Chức được duyệt. Bạn có thể đăng ký hoặc tạo giải trong phạm vi câu lạc bộ với Giải CLB Siêu Lite.'**
   String get organizer_reqDesc;
 
   /// No description provided for @organizer_applyNow.
@@ -23782,6 +23704,120 @@ abstract class AppLocalizations {
   /// **'Cho phép thu lệ phí'**
   String get tournamentManagementEntryFeesAllowed;
 
+  /// No description provided for @tournamentCreateEntryFeeToggle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu lệ phí tham gia'**
+  String get tournamentCreateEntryFeeToggle;
+
+  /// No description provided for @tournamentCreateEntryFeePolicyUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được cấu hình lệ phí. Giải đấu sẽ miễn phí.'**
+  String get tournamentCreateEntryFeePolicyUnavailable;
+
+  /// No description provided for @tournamentCreateRanked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp hạng ELO'**
+  String get tournamentCreateRanked;
+
+  /// No description provided for @tournamentCreateUnranked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải phong trào'**
+  String get tournamentCreateUnranked;
+
+  /// No description provided for @tournamentCreateRankedDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết quả được tính vào bảng xếp hạng'**
+  String get tournamentCreateRankedDescription;
+
+  /// No description provided for @tournamentCreateUnrankedDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải giao hữu, không tính xếp hạng'**
+  String get tournamentCreateUnrankedDescription;
+
+  /// No description provided for @tournamentCreateMaxCombinedElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO tổng tối đa'**
+  String get tournamentCreateMaxCombinedElo;
+
+  /// No description provided for @tournamentCreateMaxTeammateGap.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chênh lệch ELO đồng đội tối đa'**
+  String get tournamentCreateMaxTeammateGap;
+
+  /// No description provided for @tournamentCreateTeamSize.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số người mỗi đội'**
+  String get tournamentCreateTeamSize;
+
+  /// No description provided for @tournamentCreateMaxReserve.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số dự bị tối đa'**
+  String get tournamentCreateMaxReserve;
+
+  /// No description provided for @tournamentCreateFootballHalves.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số hiệp'**
+  String get tournamentCreateFootballHalves;
+
+  /// No description provided for @tournamentCreateFootballHalfDuration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số phút mỗi hiệp'**
+  String get tournamentCreateFootballHalfDuration;
+
+  /// No description provided for @tournamentCreateFootballAllowDraw.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép kết quả hòa'**
+  String get tournamentCreateFootballAllowDraw;
+
+  /// No description provided for @tournamentCreateTwoLegged.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thi đấu hai lượt'**
+  String get tournamentCreateTwoLegged;
+
+  /// No description provided for @tournamentCreateAwayGoalsRule.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng luật bàn thắng sân khách'**
+  String get tournamentCreateAwayGoalsRule;
+
+  /// No description provided for @tournamentCreatePenaltyShootout.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép sút luân lưu'**
+  String get tournamentCreatePenaltyShootout;
+
+  /// No description provided for @tournamentCreateIntegerNonNegative.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập số nguyên lớn hơn hoặc bằng 0.'**
+  String get tournamentCreateIntegerNonNegative;
+
+  /// No description provided for @tournamentCreateFootballOptions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu hình bóng đá'**
+  String get tournamentCreateFootballOptions;
+
+  /// No description provided for @tournamentCreateClubFeeDisabled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu câu lạc bộ không thu lệ phí và luôn miễn phí.'**
+  String get tournamentCreateClubFeeDisabled;
+
   /// No description provided for @tournamentManagementEntryFeeDisabled.
   ///
   /// In vi, this message translates to:
@@ -24091,7 +24127,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementPayoutCreatorOnly.
   ///
   /// In vi, this message translates to:
-  /// **'Chỉ người tạo giải đấu được gửi yêu cầu thanh toán. Máy chủ vẫn là nơi quyết định quyền cuối cùng.'**
+  /// **'Chỉ người tạo giải đấu đã hoàn tất và có vai trò ban tổ chức mới được gửi yêu cầu thanh toán. Máy chủ vẫn là nơi quyết định quyền cuối cùng.'**
   String get tournamentManagementPayoutCreatorOnly;
 
   /// No description provided for @tournamentManagementPayoutAccessUnverified.
@@ -24640,6 +24676,24 @@ abstract class AppLocalizations {
   /// **'Đã lưu nhà tài trợ.'**
   String get tournamentManagementSponsorSaved;
 
+  /// No description provided for @tournamentManagementSponsorPublicStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Công khai'**
+  String get tournamentManagementSponsorPublicStatus;
+
+  /// No description provided for @tournamentManagementSponsorDraft.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bản nháp'**
+  String get tournamentManagementSponsorDraft;
+
+  /// No description provided for @tournamentManagementSponsorArchived.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu trữ'**
+  String get tournamentManagementSponsorArchived;
+
   /// No description provided for @tournamentManagementSponsorTier.
   ///
   /// In vi, this message translates to:
@@ -25120,311 +25174,269 @@ abstract class AppLocalizations {
   /// **'Tạo kèo'**
   String get homeSocialCreateAction;
 
-  /// No description provided for @socialVenueSuggestionsLabel.
+  /// No description provided for @tournamentManagementHideFeaturedCardText.
   ///
   /// In vi, this message translates to:
-  /// **'Địa điểm gợi ý'**
-  String get socialVenueSuggestionsLabel;
+  /// **'Ẩn tiêu đề trên thẻ giải đấu'**
+  String get tournamentManagementHideFeaturedCardText;
 
-  /// No description provided for @socialVenueSuggestionsLoading.
+  /// No description provided for @tournamentManagementHideFeaturedCardTextDescription.
   ///
   /// In vi, this message translates to:
-  /// **'Đang tìm địa điểm...'**
-  String get socialVenueSuggestionsLoading;
+  /// **'Ẩn dòng tiêu đề trên biểu ngữ nổi bật ở thẻ giải đấu công khai.'**
+  String get tournamentManagementHideFeaturedCardTextDescription;
 
-  /// No description provided for @socialVenueSuggestionsEmpty.
+  /// No description provided for @tournamentManagementForbidden.
   ///
   /// In vi, this message translates to:
-  /// **'Không tìm thấy địa điểm phù hợp'**
-  String get socialVenueSuggestionsEmpty;
+  /// **'Bạn không có quyền truy cập mục quản lý giải đấu này.'**
+  String get tournamentManagementForbidden;
 
-  /// No description provided for @socialVenueSuggestionsFailed.
+  /// No description provided for @tournamentManagementLivestreamDevices.
   ///
   /// In vi, this message translates to:
-  /// **'Không tải được gợi ý. Bạn vẫn có thể nhập địa điểm.'**
-  String get socialVenueSuggestionsFailed;
+  /// **'Thiết bị camera'**
+  String get tournamentManagementLivestreamDevices;
 
-  /// No description provided for @socialVenueCourt.
+  /// No description provided for @tournamentManagementLivestreamDevicesDescription.
   ///
   /// In vi, this message translates to:
-  /// **'Sân'**
-  String get socialVenueCourt;
+  /// **'Thiết bị camera dùng lại của cộng đồng. Tạo mã QR ghép nối để thiết bị tự đăng nhập.'**
+  String get tournamentManagementLivestreamDevicesDescription;
 
-  /// No description provided for @socialVenueCourtOptional.
+  /// No description provided for @tournamentManagementLivestreamDevicesEmpty.
   ///
   /// In vi, this message translates to:
-  /// **'Chọn sân (không bắt buộc)'**
-  String get socialVenueCourtOptional;
+  /// **'Chưa có thiết bị camera'**
+  String get tournamentManagementLivestreamDevicesEmpty;
 
-  /// No description provided for @socialVenueAnyCourt.
+  /// No description provided for @tournamentManagementLivestreamDevicesUnavailable.
   ///
   /// In vi, this message translates to:
-  /// **'Không chọn sân cụ thể'**
-  String get socialVenueAnyCourt;
+  /// **'Giải đấu chưa thuộc cộng đồng nào nên chưa thể quản lý thiết bị camera.'**
+  String get tournamentManagementLivestreamDevicesUnavailable;
 
-  /// No description provided for @socialVenueCourtsLoading.
+  /// No description provided for @tournamentManagementLivestreamCreatePairingQr.
   ///
   /// In vi, this message translates to:
-  /// **'Đang tải danh sách sân…'**
-  String get socialVenueCourtsLoading;
+  /// **'Tạo mã ghép nối'**
+  String get tournamentManagementLivestreamCreatePairingQr;
 
-  /// No description provided for @socialVenueCourtsUnavailable.
+  /// No description provided for @tournamentManagementLivestreamPairingQrTitle.
   ///
   /// In vi, this message translates to:
-  /// **'Không tải được danh sách sân. Địa điểm vẫn được chọn.'**
-  String get socialVenueCourtsUnavailable;
+  /// **'Mã ghép nối camera'**
+  String get tournamentManagementLivestreamPairingQrTitle;
 
-  /// No description provided for @socialVenueNoCourts.
+  /// No description provided for @tournamentManagementLivestreamPairingQrHint.
   ///
   /// In vi, this message translates to:
-  /// **'Địa điểm này chưa có sân được cấu hình.'**
-  String get socialVenueNoCourts;
+  /// **'Mã dùng một lần và tự hết hạn. Chỉ quét trực tiếp, không chia sẻ mã này.'**
+  String get tournamentManagementLivestreamPairingQrHint;
 
-  /// No description provided for @socialGenderRequirement.
+  /// No description provided for @tournamentManagementLivestreamPairingQrFailed.
   ///
   /// In vi, this message translates to:
-  /// **'Ai có thể tham gia'**
-  String get socialGenderRequirement;
+  /// **'Không thể tạo mã ghép nối.'**
+  String get tournamentManagementLivestreamPairingQrFailed;
 
-  /// No description provided for @socialGenderAny.
+  /// No description provided for @tournamentManagementLivestreamFacebookSubtitle.
   ///
   /// In vi, this message translates to:
-  /// **'Mọi giới tính'**
-  String get socialGenderAny;
+  /// **'Kết nối Fanpage để vận hành phát trực tiếp.'**
+  String get tournamentManagementLivestreamFacebookSubtitle;
 
-  /// No description provided for @socialGenderMale.
+  /// No description provided for @tournamentManagementLivestreamFacebookNotConnected.
   ///
   /// In vi, this message translates to:
-  /// **'Chỉ nam'**
-  String get socialGenderMale;
+  /// **'Chưa kết nối Fanpage.'**
+  String get tournamentManagementLivestreamFacebookNotConnected;
 
-  /// No description provided for @socialGenderFemale.
+  /// No description provided for @tournamentManagementLivestreamFacebookConnect.
   ///
   /// In vi, this message translates to:
-  /// **'Chỉ nữ'**
-  String get socialGenderFemale;
+  /// **'Kết nối Fanpage'**
+  String get tournamentManagementLivestreamFacebookConnect;
 
-  /// No description provided for @socialGenderMixed.
+  /// No description provided for @tournamentManagementLivestreamFacebookRevalidate.
   ///
   /// In vi, this message translates to:
-  /// **'Nhóm kết hợp'**
-  String get socialGenderMixed;
+  /// **'Kiểm tra lại'**
+  String get tournamentManagementLivestreamFacebookRevalidate;
 
-  /// No description provided for @socialRequestApproval.
+  /// No description provided for @tournamentManagementLivestreamFacebookDisconnect.
   ///
   /// In vi, this message translates to:
-  /// **'Yêu cầu duyệt tham gia'**
-  String get socialRequestApproval;
+  /// **'Ngắt kết nối'**
+  String get tournamentManagementLivestreamFacebookDisconnect;
 
-  /// No description provided for @socialJoinDirectly.
+  /// No description provided for @tournamentManagementLivestreamFacebookConnectFailed.
   ///
   /// In vi, this message translates to:
-  /// **'Tham gia trực tiếp'**
-  String get socialJoinDirectly;
+  /// **'Không thể mở trình duyệt để kết nối Fanpage.'**
+  String get tournamentManagementLivestreamFacebookConnectFailed;
 
-  /// No description provided for @socialJoinRequestPending.
+  /// No description provided for @tournamentManagementLivestreamFacebookActive.
   ///
   /// In vi, this message translates to:
-  /// **'Yêu cầu đang chờ duyệt'**
-  String get socialJoinRequestPending;
+  /// **'Đang hoạt động'**
+  String get tournamentManagementLivestreamFacebookActive;
 
-  /// No description provided for @socialCancelJoinRequest.
+  /// No description provided for @tournamentManagementLivestreamFacebookDisconnected.
   ///
   /// In vi, this message translates to:
-  /// **'Hủy yêu cầu'**
-  String get socialCancelJoinRequest;
+  /// **'Đã ngắt kết nối'**
+  String get tournamentManagementLivestreamFacebookDisconnected;
 
-  /// No description provided for @socialJoinRequestSent.
+  /// No description provided for @tournamentManagementLivestreamFacebookLastChecked.
   ///
   /// In vi, this message translates to:
-  /// **'Đã gửi yêu cầu đến người tổ chức.'**
-  String get socialJoinRequestSent;
+  /// **'Kiểm tra gần nhất: {time}'**
+  String tournamentManagementLivestreamFacebookLastChecked(String time);
 
-  /// No description provided for @socialJoinRequestCancelled.
+  /// No description provided for @tournamentManagementLivestreamSessions.
   ///
   /// In vi, this message translates to:
-  /// **'Đã hủy yêu cầu tham gia.'**
-  String get socialJoinRequestCancelled;
+  /// **'Phiên phát trực tiếp'**
+  String get tournamentManagementLivestreamSessions;
 
-  /// No description provided for @socialPendingJoinRequests.
+  /// No description provided for @tournamentManagementLivestreamSessionsDescription.
   ///
   /// In vi, this message translates to:
-  /// **'Yêu cầu tham gia'**
-  String get socialPendingJoinRequests;
+  /// **'Theo dõi trạng thái phiên phát trực tiếp của giải đấu.'**
+  String get tournamentManagementLivestreamSessionsDescription;
 
-  /// No description provided for @socialNoPendingJoinRequests.
+  /// No description provided for @tournamentManagementLivestreamSessionsEmpty.
   ///
   /// In vi, this message translates to:
-  /// **'Chưa có yêu cầu nào đang chờ.'**
-  String get socialNoPendingJoinRequests;
+  /// **'Chưa có phiên phát trực tiếp.'**
+  String get tournamentManagementLivestreamSessionsEmpty;
 
-  /// No description provided for @socialApproveJoinRequest.
+  /// No description provided for @tournamentManagementLivestreamStopSession.
   ///
   /// In vi, this message translates to:
-  /// **'Chấp nhận'**
-  String get socialApproveJoinRequest;
+  /// **'Kết thúc phiên'**
+  String get tournamentManagementLivestreamStopSession;
 
-  /// No description provided for @socialRejectJoinRequest.
+  /// No description provided for @tournamentManagementLivestreamStopSessionConfirm.
   ///
   /// In vi, this message translates to:
-  /// **'Từ chối'**
-  String get socialRejectJoinRequest;
+  /// **'Kết thúc phiên phát trực tiếp này?'**
+  String get tournamentManagementLivestreamStopSessionConfirm;
 
-  /// No description provided for @socialJoinRequestSlots.
+  /// No description provided for @tournamentManagementLivestreamRecheckStatus.
   ///
   /// In vi, this message translates to:
-  /// **'Số chỗ: {count}'**
-  String socialJoinRequestSlots(Object count);
+  /// **'Kiểm tra lại trạng thái'**
+  String get tournamentManagementLivestreamRecheckStatus;
 
-  /// No description provided for @socialJoinRequestNoName.
+  /// No description provided for @tournamentManagementLivestreamRecheckStatusHint.
   ///
   /// In vi, this message translates to:
-  /// **'Thành viên'**
-  String get socialJoinRequestNoName;
+  /// **'Chỉ kiểm tra lại trạng thái với nhà cung cấp, không phát lại luồng.'**
+  String get tournamentManagementLivestreamRecheckStatusHint;
 
-  /// No description provided for @socialJoinRequestDecisionFailed.
+  /// No description provided for @tournamentManagementLivestreamStatusCreated.
   ///
   /// In vi, this message translates to:
-  /// **'Không thể cập nhật yêu cầu. Vui lòng thử lại.'**
-  String get socialJoinRequestDecisionFailed;
+  /// **'Đã tạo'**
+  String get tournamentManagementLivestreamStatusCreated;
 
-  /// No description provided for @socialJoinOptions.
+  /// No description provided for @tournamentManagementLivestreamStatusStarting.
   ///
   /// In vi, this message translates to:
-  /// **'Chọn cách tham gia'**
-  String get socialJoinOptions;
+  /// **'Đang bắt đầu'**
+  String get tournamentManagementLivestreamStatusStarting;
 
-  /// No description provided for @socialJoinRequestApproved.
+  /// No description provided for @tournamentManagementLivestreamStatusLive.
   ///
   /// In vi, this message translates to:
-  /// **'Đã chấp nhận yêu cầu tham gia.'**
-  String get socialJoinRequestApproved;
+  /// **'Đang phát'**
+  String get tournamentManagementLivestreamStatusLive;
 
-  /// No description provided for @socialJoinRequestRejected.
+  /// No description provided for @tournamentManagementLivestreamStatusReconnecting.
   ///
   /// In vi, this message translates to:
-  /// **'Đã từ chối yêu cầu tham gia.'**
-  String get socialJoinRequestRejected;
+  /// **'Đang kết nối lại'**
+  String get tournamentManagementLivestreamStatusReconnecting;
 
-  /// No description provided for @socialJoinRequestLoadMore.
+  /// No description provided for @tournamentManagementLivestreamStatusStopping.
   ///
   /// In vi, this message translates to:
-  /// **'Xem thêm yêu cầu'**
-  String get socialJoinRequestLoadMore;
+  /// **'Đang kết thúc'**
+  String get tournamentManagementLivestreamStatusStopping;
 
-  /// No description provided for @socialActiveSportsLabel.
+  /// No description provided for @tournamentManagementLivestreamStatusEnded.
   ///
   /// In vi, this message translates to:
-  /// **'MÔN THỂ THAO'**
-  String get socialActiveSportsLabel;
+  /// **'Đã kết thúc'**
+  String get tournamentManagementLivestreamStatusEnded;
 
-  /// No description provided for @socialActiveSportsEmpty.
+  /// No description provided for @tournamentManagementLivestreamStatusFailed.
   ///
   /// In vi, this message translates to:
-  /// **'Hiện chưa có môn thể thao nào đang hoạt động.'**
-  String get socialActiveSportsEmpty;
+  /// **'Thất bại'**
+  String get tournamentManagementLivestreamStatusFailed;
 
-  /// No description provided for @socialActiveSportsLoadFailed.
+  /// No description provided for @tournamentManagementLivestreamStatusOther.
   ///
   /// In vi, this message translates to:
-  /// **'Không tải được danh sách môn thể thao.'**
-  String get socialActiveSportsLoadFailed;
+  /// **'Trạng thái khác'**
+  String get tournamentManagementLivestreamStatusOther;
 
-  /// No description provided for @socialActiveSportsRetry.
+  /// No description provided for @tournamentManagementLivestreamDeviceUnpaired.
   ///
   /// In vi, this message translates to:
-  /// **'Thử lại'**
-  String get socialActiveSportsRetry;
+  /// **'Chưa ghép nối'**
+  String get tournamentManagementLivestreamDeviceUnpaired;
 
-  /// No description provided for @socialPlayFormatLabel.
+  /// No description provided for @tournamentManagementLivestreamDeviceReady.
   ///
   /// In vi, this message translates to:
-  /// **'THỂ THỨC'**
-  String get socialPlayFormatLabel;
+  /// **'Sẵn sàng'**
+  String get tournamentManagementLivestreamDeviceReady;
 
-  /// No description provided for @socialPlayFormatFriendly.
+  /// No description provided for @tournamentManagementLivestreamDeviceOnline.
   ///
   /// In vi, this message translates to:
-  /// **'Giao lưu'**
-  String get socialPlayFormatFriendly;
+  /// **'Đang hoạt động'**
+  String get tournamentManagementLivestreamDeviceOnline;
 
-  /// No description provided for @socialPlayFormatRoundRobin.
+  /// No description provided for @tournamentManagementLivestreamDeviceOffline.
   ///
   /// In vi, this message translates to:
-  /// **'Đánh vòng tròn'**
-  String get socialPlayFormatRoundRobin;
+  /// **'Mất kết nối'**
+  String get tournamentManagementLivestreamDeviceOffline;
 
-  /// No description provided for @socialPlayFormatSingles.
+  /// No description provided for @tournamentManagementLivestreamDeviceRevoked.
   ///
   /// In vi, this message translates to:
-  /// **'Đánh đơn'**
-  String get socialPlayFormatSingles;
+  /// **'Đã thu hồi'**
+  String get tournamentManagementLivestreamDeviceRevoked;
 
-  /// No description provided for @socialPlayFormatDoubles.
+  /// No description provided for @tournamentManagementLivestreamCreateDevice.
   ///
   /// In vi, this message translates to:
-  /// **'Đánh đôi'**
-  String get socialPlayFormatDoubles;
+  /// **'Tạo thiết bị'**
+  String get tournamentManagementLivestreamCreateDevice;
 
-  /// No description provided for @socialSportPickleball.
+  /// No description provided for @tournamentManagementLivestreamDeviceNameLabel.
   ///
   /// In vi, this message translates to:
-  /// **'Pickleball'**
-  String get socialSportPickleball;
+  /// **'Tên thiết bị'**
+  String get tournamentManagementLivestreamDeviceNameLabel;
 
-  /// No description provided for @socialSportBadminton.
+  /// No description provided for @tournamentManagementLivestreamDeviceNameHint.
   ///
   /// In vi, this message translates to:
-  /// **'Cầu lông'**
-  String get socialSportBadminton;
+  /// **'Ví dụ: Điện thoại sân 1'**
+  String get tournamentManagementLivestreamDeviceNameHint;
 
-  /// No description provided for @socialSportTennis.
+  /// No description provided for @tournamentManagementLivestreamDeviceNameRequired.
   ///
   /// In vi, this message translates to:
-  /// **'Tennis'**
-  String get socialSportTennis;
-
-  /// No description provided for @socialSportTableTennis.
-  ///
-  /// In vi, this message translates to:
-  /// **'Bóng bàn'**
-  String get socialSportTableTennis;
-
-  /// No description provided for @socialSportFootball.
-  ///
-  /// In vi, this message translates to:
-  /// **'Bóng đá'**
-  String get socialSportFootball;
-
-  /// No description provided for @socialRegionSearchHint.
-  ///
-  /// In vi, this message translates to:
-  /// **'Nhập để tìm kiếm...'**
-  String get socialRegionSearchHint;
-
-  /// No description provided for @socialRegionSearchFailed.
-  ///
-  /// In vi, this message translates to:
-  /// **'Không tải được gợi ý địa giới. Bạn vẫn có thể nhập địa chỉ thủ công.'**
-  String get socialRegionSearchFailed;
-
-  /// No description provided for @socialRegionSectionLabel.
-  ///
-  /// In vi, this message translates to:
-  /// **'Thêm thành phố/phường (không bắt buộc)'**
-  String get socialRegionSectionLabel;
-
-  /// No description provided for @socialRegionRetry.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tải lại'**
-  String get socialRegionRetry;
-
-  /// No description provided for @socialRegionApply.
-  ///
-  /// In vi, this message translates to:
-  /// **'Áp dụng'**
-  String get socialRegionApply;
+  /// **'Nhập tên thiết bị trước.'**
+  String get tournamentManagementLivestreamDeviceNameRequired;
 }
 
 class _AppLocalizationsDelegate

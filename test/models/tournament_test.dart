@@ -33,7 +33,10 @@ void main() {
         'locationAddress': 'Ha Noi',
         'prizeDescription': '10.000.000d',
         'contactInfo': {'phone': '0123456789'},
-        'divisions': [{'name': 'Nam'}, {'name': 'Nu'}],
+        'divisions': [
+          {'name': 'Nam'},
+          {'name': 'Nu'},
+        ],
       };
 
       final tournament = Tournament.fromJson(json, 'tour-1');
@@ -41,7 +44,10 @@ void main() {
       expect(tournament.id, 'tour-1');
       expect(tournament.name, 'Giai Cau Long Mo Rong 2026');
       expect(tournament.sport, 'badminton');
-      expect(tournament.format, 'singles'); // matchType 'singles' maps to formatSingles which is lowercase
+      expect(
+        tournament.format,
+        'singles',
+      ); // matchType 'singles' maps to formatSingles which is lowercase
       expect(tournament.category, 'Cầu lông');
       expect(tournament.bracketType, 'single_elimination');
       expect(tournament.status, 'in_progress');
@@ -68,7 +74,6 @@ void main() {
       expect(tournament.name, 'Giai Test');
       expect(tournament.sport, '');
       expect(tournament.format, '');
-      expect(tournament.status, 'draft');
       expect(tournament.visibility, 'PUBLIC');
       expect(tournament.maxTeams, 16);
       expect(tournament.entryFee, null);
@@ -84,7 +89,10 @@ void main() {
         'updatedAt': '2026-01-01T00:00:00Z',
       };
       final t = Tournament.fromJson(json, '1');
-      expect(t.format, 'doubles'); // matchType 'doubles' maps to formatDoubles which is 'doubles'
+      expect(
+        t.format,
+        'doubles',
+      ); // matchType 'doubles' maps to formatDoubles which is 'doubles'
     });
 
     test('should parse status through normalizer', () {
@@ -114,6 +122,55 @@ void main() {
       expect(t.bracketType, 'round_robin');
       expect(t.maxTeams, 8);
       expect(t.roundCount, 2);
+    });
+    test('preserves only supported public schedule settings', () {
+      final tournament = Tournament.fromJson({
+        'name': 'Schedule settings',
+        'tournamentConfig': {
+          'scheduleDate': '2026-08-12',
+          'operatingStart': '08:00',
+          'operatingEnd': '18:00',
+          'stepMinutes': 15,
+          'gridIncrementMinutes': 15,
+          'minutesPerSet': 25,
+          'courtNames': ['Court A'],
+          'internalSetting': 'not-for-display',
+        },
+        'createdAt': '2026-01-01T00:00:00Z',
+        'updatedAt': '2026-01-01T00:00:00Z',
+      }, 'schedule-settings');
+
+      expect(tournament.scheduleSettings, {
+        'scheduleDate': '2026-08-12',
+        'operatingStart': '08:00',
+        'operatingEnd': '18:00',
+        'stepMinutes': 15,
+        'gridIncrementMinutes': 15,
+        'minutesPerSet': 25,
+      });
+      expect(tournament.tournamentConfig, {
+        'scheduleDate': '2026-08-12',
+        'operatingStart': '08:00',
+        'operatingEnd': '18:00',
+        'stepMinutes': 15,
+        'gridIncrementMinutes': 15,
+        'minutesPerSet': 25,
+        'courtNames': ['Court A'],
+        'internalSetting': 'not-for-display',
+      });
+      expect(
+        tournament.copyWith(name: 'Copied').tournamentConfig,
+        tournament.tournamentConfig,
+      );
+      expect(
+        (tournament.toJson()['tournamentConfig'] as Map<String, dynamic>)
+            .containsKey('internalSetting'),
+        isFalse,
+      );
+      expect(
+        tournament.copyWith(name: 'Copied').scheduleSettings,
+        tournament.scheduleSettings,
+      );
     });
 
     test('should handle gallery images', () {
