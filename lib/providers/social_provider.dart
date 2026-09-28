@@ -1,10 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 
+import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
+
 final _socialClubLog = AppLogger('ClubSocialSessions');
+
+/// Bán kính mặc định khi bật "Gần bạn" (km). Backend cho tối đa 50.
+const defaultNearbyRadiusKm = 10.0;
+
+/// Các mốc bán kính cho chips filter.
+const nearbyRadiusOptions = <double>[3, 5, 10, 20];
 
 class SocialFilterState {
   final DateTime selectedDate;
@@ -12,11 +22,19 @@ class SocialFilterState {
   final String searchQuery;
   final Set<String> collapsedTimeSlots;
 
+  /// Bật lọc/sắp xếp "Gần bạn" (cần quyền vị trí + venue đã ghim tọa độ).
+  final bool nearbyOnly;
+
+  /// Bán kính lọc khi [nearbyOnly] = true (km).
+  final double radiusKm;
+
   SocialFilterState({
     DateTime? selectedDate,
     this.selectedSport = 'all',
     this.searchQuery = '',
     this.collapsedTimeSlots = const {},
+    this.nearbyOnly = false,
+    this.radiusKm = defaultNearbyRadiusKm,
   }) : selectedDate = _normalizeDate(selectedDate ?? DateTime.now());
 
   static DateTime _normalizeDate(DateTime date) =>
@@ -34,12 +52,16 @@ class SocialFilterState {
     String? selectedSport,
     String? searchQuery,
     Set<String>? collapsedTimeSlots,
+    bool? nearbyOnly,
+    double? radiusKm,
   }) {
     return SocialFilterState(
       selectedDate: selectedDate ?? this.selectedDate,
       selectedSport: selectedSport ?? this.selectedSport,
       searchQuery: searchQuery ?? this.searchQuery,
       collapsedTimeSlots: collapsedTimeSlots ?? this.collapsedTimeSlots,
+      nearbyOnly: nearbyOnly ?? this.nearbyOnly,
+      radiusKm: radiusKm ?? this.radiusKm,
     );
   }
 }
@@ -58,6 +80,15 @@ class SocialFilterNotifier extends Notifier<SocialFilterState> {
 
   void setSearchQuery(String query) {
     state = state.copyWith(searchQuery: query);
+  }
+
+  /// Bật/tắt chế độ "Gần bạn" (sort DISTANCE + lọc theo bán kính).
+  void setNearbyOnly(bool value) {
+    state = state.copyWith(nearbyOnly: value);
+  }
+
+  void setRadiusKm(double value) {
+    state = state.copyWith(radiusKm: value);
   }
 
   void toggleTimeSlotCollapse(String timeSlot) {
@@ -82,26 +113,46 @@ final socialFilterProvider =
 
 class SocialSessionsNotifier
     extends AsyncNotifier<List<SocialSessionModel>> {
+  /// Tọa độ gửi kèm query — chỉ khi user bật "Gần bạn" VÀ đã có vị trí.
+  /// Thiếu vị trí (từ chối quyền/tắt GPS) thì fallback danh sách theo giờ.
+  ({double? lat, double? lng, String? sortBy}) _geoParams(
+    SocialFilterState filter,
+    UserLocationState location,
+  ) {
+    if (filter.nearbyOnly && location.hasPosition) {
+      return (lat: location.latitude, lng: location.longitude, sortBy: 'DISTANCE');
+    }
+    return (lat: null, lng: null, sortBy: null);
+  }
+
   @override
   Future<List<SocialSessionModel>> build() async {
     final filter = ref.watch(socialFilterProvider);
+    final location = ref.watch(userLocationProvider);
     final repo = ref.watch(socialSessionRepositoryProvider);
 
     final dateStr = DateFormat('yyyy-MM-dd').format(filter.selectedDate);
+    final geo = _geoParams(filter, location);
     final response = await repo.listByDate(
       date: dateStr,
       sport: filter.selectedSport == 'all' ? null : filter.selectedSport,
       search: filter.searchQuery.trim().isNotEmpty
           ? filter.searchQuery.trim()
           : null,
+      lat: geo.lat,
+      lng: geo.lng,
+      radiusKm: geo.lat != null ? filter.radiusKm : null,
+      sortBy: geo.sortBy,
     );
     return response.items;
   }
 
   Future<void> refresh() async {
     final filter = ref.read(socialFilterProvider);
+    final location = ref.read(userLocationProvider);
     final repo = ref.read(socialSessionRepositoryProvider);
     final dateStr = DateFormat('yyyy-MM-dd').format(filter.selectedDate);
+    final geo = _geoParams(filter, location);
 
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
@@ -111,6 +162,10 @@ class SocialSessionsNotifier
         search: filter.searchQuery.trim().isNotEmpty
             ? filter.searchQuery.trim()
             : null,
+        lat: geo.lat,
+        lng: geo.lng,
+        radiusKm: geo.lat != null ? filter.radiusKm : null,
+        sortBy: geo.sortBy,
       );
       return response.items;
     });
@@ -362,22 +417,68 @@ final socialSessionDetailProvider =
       String
     >(SocialSessionDetailNotifier.new);
 
-final clubSocialSessionsQueryProvider =
-    FutureProvider.family<List<SocialSessionModel>, String>(
-  (ref, communityId) async {
-    final repo = ref.watch(socialSessionRepositoryProvider);
+/// Thời gian TTL tối đa cho cache Social sessions (giây).
+/// Sau khoảng này, dữ liệu được coi là stale và tự fetch lại.
+const _socialSessionsCacheTtlSeconds = 60;
+
+/// Chu kỳ auto-refresh Social sessions (giây).
+/// Khớp với cron `EVERY_5_MINUTES` phía backend để đảm bảo
+/// status expired (OPEN → COMPLETED) luôn đồng bộ.
+const _socialSessionsAutoRefreshSeconds = 5 * 60;
+
+/// AsyncNotifier quản lý danh sách Social sessions của một CLB.
+///
+/// Luồng hoạt động theo tài liệu backend:
+/// 1. Gọi `GET /social-sessions/by-community/:communityId`
+/// 2. Backend tự chạy `closeExpiredSessions(now, communityId)` scoped đúng
+///    Club đó **trước khi** query list → response trả về status mới nhất.
+/// 3. Client KHÔNG gọi endpoint close riêng.
+///
+/// Cơ chế refresh:
+/// - Auto-refresh mỗi 5 phút (nhịp cron server).
+/// - TTL 60s: nếu data cũ hơn 60s khi rebuild, tự fetch lại.
+/// - Pull-to-refresh / resume app / chuyển tab → gọi [refresh] thủ công.
+class ClubSocialSessionsNotifier
+    extends AsyncNotifier<List<SocialSessionModel>> {
+  final String communityId;
+  ClubSocialSessionsNotifier(this.communityId);
+
+  Timer? _autoRefreshTimer;
+  DateTime? _lastFetchTime;
+
+  @override
+  Future<List<SocialSessionModel>> build() async {
+    // Hủy timer cũ khi provider rebuild (ví dụ: hot restart).
+    _autoRefreshTimer?.cancel();
+
+    // Đăng ký auto-dispose: hủy timer khi provider bị dispose.
+    ref.onDispose(() {
+      _autoRefreshTimer?.cancel();
+      _autoRefreshTimer = null;
+    });
+
+    final items = await _fetchSessions();
+
+    // Khởi tạo auto-refresh timer sau khi fetch thành công lần đầu.
+    _startAutoRefreshTimer();
+
+    return items;
+  }
+
+  Future<List<SocialSessionModel>> _fetchSessions() async {
+    final repo = ref.read(socialSessionRepositoryProvider);
     try {
       // Backend: GET /social-sessions/by-community/:communityId
-      // Lấy toàn bộ Social của CLB (không giới hạn theo ngày hôm nay).
+      // → auto close expired sessions trước khi query.
+      // Default status: OPEN,FULL,COMPLETED (tài liệu §3).
       final res = await repo.listByCommunity(
         communityId: communityId,
         status: 'OPEN,FULL,COMPLETED',
-        limit: 20,
+        limit: 50,
       );
+      _lastFetchTime = DateTime.now();
       return res.items;
     } catch (error, stack) {
-      // Đừng nuốt lỗi: log để debug vì sao tab "Mở" trống
-      // trong khi tab "Đã xong" vẫn có dữ liệu.
       _socialClubLog.error(
         'listByCommunity failed for $communityId',
         error,
@@ -385,36 +486,57 @@ final clubSocialSessionsQueryProvider =
       );
       rethrow;
     }
-  },
-);
+  }
 
-final clubSocialSessionsProvider =
-    Provider.family<List<SocialSessionModel>, String>((ref, communityId) {
-  return ref.watch(clubSocialSessionsQueryProvider(communityId)).asData?.value ??
-      const <SocialSessionModel>[];
-});
+  void _startAutoRefreshTimer() {
+    _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = Timer.periodic(
+      const Duration(seconds: _socialSessionsAutoRefreshSeconds),
+      (_) => _silentRefresh(),
+    );
+  }
 
-final communitySocialSessionsQueryProvider =
-    FutureProvider.family<List<SocialSessionModel>, String>(
-  (ref, communityId) async {
-    final repo = ref.watch(socialSessionRepositoryProvider);
+  /// Refresh im lặng: không set loading state, chỉ cập nhật data.
+  /// Dùng cho auto-refresh timer, không gây flicker UI.
+  Future<void> _silentRefresh() async {
     try {
-      final res = await repo.listByCommunity(
-        communityId: communityId,
-        status: 'OPEN,FULL,COMPLETED',
-        limit: 20,
+      final items = await _fetchSessions();
+      state = AsyncData(items);
+    } catch (error) {
+      // Silent refresh lỗi: giữ data cũ, chỉ warn log.
+      // Cron server sẽ dọn lại, lần refresh tiếp sẽ đúng.
+      _socialClubLog.warning(
+        'Silent refresh failed for $communityId: $error',
       );
-      return res.items;
-    } catch (error, stack) {
-      _socialClubLog.error(
-        'listByCommunity failed for $communityId',
-        error,
-        stack,
-      );
-      rethrow;
     }
-  },
-);
+  }
+
+  /// Refresh công khai: hiện loading indicator, dùng cho pull-to-refresh,
+  /// resume app, chuyển tab.
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() => _fetchSessions());
+  }
+
+  /// Kiểm tra data đã stale chưa (quá TTL).
+  /// Dùng trong widget khi chuyển tab hoặc resume app.
+  bool get isStale {
+    if (_lastFetchTime == null) return true;
+    return DateTime.now().difference(_lastFetchTime!).inSeconds >
+        _socialSessionsCacheTtlSeconds;
+  }
+}
+
+final clubSocialSessionsProvider = AsyncNotifierProvider.family<
+    ClubSocialSessionsNotifier,
+    List<SocialSessionModel>,
+    String>(ClubSocialSessionsNotifier.new);
+
+/// Aliases tương thích ngược: cùng trỏ tới [clubSocialSessionsProvider]
+/// để dùng chung cơ chế auto-close, auto-refresh 5 phút và TTL 60s.
+final clubSocialSessionsQueryProvider = clubSocialSessionsProvider;
+final communitySocialSessionsQueryProvider = clubSocialSessionsProvider;
+
 
 final filteredSocialSessionsProvider =
     Provider<AsyncValue<List<SocialSessionModel>>>((ref) {

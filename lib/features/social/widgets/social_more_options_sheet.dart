@@ -78,6 +78,7 @@ class SocialMoreOptionsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final isCompleted = session.status.toUpperCase() == 'COMPLETED';
     if (!isHost) {
       return SafeArea(
         child: SingleChildScrollView(
@@ -123,8 +124,10 @@ class SocialMoreOptionsSheet extends StatelessWidget {
             Divider(height: 1, color: colors.border),
             _option(context, 'Lặp lại kèo', onRepeat),
             Divider(height: 1, color: colors.border),
-            _option(context, 'Chỉnh sửa kèo', onEdit),
-            Divider(height: 1, color: colors.border),
+            if (!isCompleted) ...[
+              _option(context, 'Chỉnh sửa kèo', onEdit),
+              Divider(height: 1, color: colors.border),
+            ],
             _option(context, 'Hủy kèo', onCancel, destructive: true),
             Divider(height: 1, color: colors.border),
             _option(context, 'Tắt thông báo cuộc trò chuyện', onMute),
