@@ -124,7 +124,10 @@ class _TournamentManagementBrandsSectionState
                     );
                   }
                   if (snapshot.hasError)
-                    return TournamentManagementError(onRetry: _reload);
+                    return TournamentManagementError(
+                      error: snapshot.error,
+                      onRetry: _reload,
+                    );
                   final images = snapshot.data ?? const <String>[];
                   if (images.isEmpty)
                     return TournamentManagementEmpty(

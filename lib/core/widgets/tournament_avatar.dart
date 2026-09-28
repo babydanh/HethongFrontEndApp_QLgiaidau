@@ -6,15 +6,16 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
-/// Reusable Tournament Avatar widget with graceful sport emoji & initial letter fallback.
-/// Conforms to taste-skill design standards (anti-slop, clean visual hierarchy, no squished images).
+/// Reusable tournament image with a SportO brand fallback.
 class TournamentAvatar extends StatelessWidget {
   final String? imageUrl;
   final String tournamentName;
   final String? sport;
   final double size;
+  final bool fillHeight;
   final double? borderWidth;
   final Color? borderColor;
+  final BorderRadius? borderRadius;
 
   const TournamentAvatar({
     super.key,
@@ -22,8 +23,10 @@ class TournamentAvatar extends StatelessWidget {
     required this.tournamentName,
     this.sport,
     this.size = 38,
+    this.fillHeight = false,
     this.borderWidth,
     this.borderColor,
+    this.borderRadius,
   });
 
   String _resolveImageUrl(String? url) {
@@ -42,81 +45,57 @@ class TournamentAvatar extends StatelessWidget {
     return '$host$url';
   }
 
-  String _getInitials(String name) {
-    final clean = name
-        .replaceFirst(RegExp(r'^(Giải|GIẢI)\s+', caseSensitive: false), '')
-        .trim();
-    if (clean.isEmpty) return 'T';
-    final parts = clean
-        .split(RegExp(r'\s+'))
-        .where((p) => p.isNotEmpty)
-        .toList();
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return clean.substring(0, clean.length >= 2 ? 2 : 1).toUpperCase();
-  }
-
-  String _getSportEmoji(String? sportKey) {
-    if (sportKey == null) return '🏆';
-    switch (sportKey.toLowerCase()) {
-      case 'pickleball':
-        return '🏓';
-      case 'badminton':
-        return '🏸';
-      case 'tennis':
-        return '🎾';
-      case 'table_tennis':
-        return '🏓';
-      case 'football':
-        return '⚽';
-      default:
-        return '🏆';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final resolvedUrl = _resolveImageUrl(imageUrl);
     final hasImage = resolvedUrl.isNotEmpty;
-    final initials = _getInitials(tournamentName);
-    final emoji = _getSportEmoji(sport);
+    final radius = borderRadius;
+    final image = hasImage
+        ? Image.network(
+            resolvedUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) =>
+                _buildFallback(context),
+          )
+        : _buildFallback(context);
 
     return Container(
       width: size,
-      height: size,
+      height: fillHeight ? null : size,
+      constraints: fillHeight ? BoxConstraints(minHeight: size) : null,
       decoration: BoxDecoration(
         color: colors.bgSurface,
-        shape: BoxShape.circle,
+        shape: radius == null ? BoxShape.circle : BoxShape.rectangle,
+        borderRadius: radius,
         border: Border.all(
           color: borderColor ?? colors.border,
           width: borderWidth ?? 1,
         ),
       ),
-      child: ClipOval(
-        child: hasImage
-            ? Image.network(
-                resolvedUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    _buildFallback(context, initials, emoji),
-              )
-            : _buildFallback(context, initials, emoji),
-      ),
+      child: radius == null
+          ? ClipOval(child: image)
+          : ClipRRect(borderRadius: radius, child: image),
     );
   }
 
-  Widget _buildFallback(BuildContext context, String initials, String emoji) {
+  Widget _buildFallback(BuildContext context) {
     final colors = context.colors;
-    return Container(
-      color: colors.bgSurface,
+    return Align(
       alignment: Alignment.center,
-      padding: EdgeInsets.all(size * 0.12),
-      child: SvgPicture.asset(
-        'assets/images/sporto_v1.svg',
-        fit: BoxFit.contain,
-        semanticsLabel: 'SportO',
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Container(
+          color: colors.bgSurface,
+          alignment: Alignment.center,
+          padding: EdgeInsets.all(size * 0.12),
+          child: SvgPicture.asset(
+            'assets/images/sporto_v1.svg',
+            fit: BoxFit.contain,
+            semanticsLabel: 'SportO',
+          ),
+        ),
       ),
     );
   }

@@ -37,6 +37,8 @@ class _EloProgressCardState extends State<EloProgressCard> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    final colorScheme = Theme.of(context).colorScheme;
     final categoryOptions = <String, String>{
       for (final rank in widget.rankings)
         if (rank.categoryId != null && rank.categoryName != null)
@@ -44,7 +46,9 @@ class _EloProgressCardState extends State<EloProgressCard> {
     };
     final activeRanks = _selectedCategoryId == null
         ? widget.rankings
-        : widget.rankings.where((rank) => rank.categoryId == _selectedCategoryId).toList();
+        : widget.rankings
+              .where((rank) => rank.categoryId == _selectedCategoryId)
+              .toList();
     final activeRank = EloHelpers.getBestRankForCategory(activeRanks);
     final hasRank = activeRank != null && activeRank.matchesPlayed > 0;
     final eloPoints = activeRank?.eloPoints ?? 1000;
@@ -61,11 +65,11 @@ class _EloProgressCardState extends State<EloProgressCard> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: context.colors.bgCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: context.colors.border),
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL * 2),
+        border: Border.all(color: colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,29 +77,31 @@ class _EloProgressCardState extends State<EloProgressCard> {
           Row(
             children: [
               _Avatar(name: widget.userName, avatarUrl: widget.avatarUrl),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.userName.isNotEmpty ? widget.userName : l10n.ranking_userFallback,
+                      widget.userName.isNotEmpty
+                          ? widget.userName
+                          : l10n.ranking_userFallback,
                       style: TextStyle(
-                        color: context.colors.textPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
+                        color: colors.textPrimary,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (widget.userEmail?.isNotEmpty == true) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
                         widget.userEmail!,
                         style: TextStyle(
-                          color: context.colors.textMuted,
+                          color: colors.textMuted,
                           fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -109,60 +115,101 @@ class _EloProgressCardState extends State<EloProgressCard> {
                   onPressed: widget.onTapProfile,
                   icon: Icon(
                     Icons.chevron_right_rounded,
-                    color: context.colors.textMuted,
+                    color: colors.textSecondary,
                   ),
                   tooltip: l10n.ranking_profileTooltip,
                 ),
             ],
           ),
+          const SizedBox(height: 16),
+          Divider(height: 1, thickness: 1, color: colors.borderLight),
           if (categoryOptions.length > 1) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
             Text(
               l10n.ranking_categoryLabel,
               style: TextStyle(
-                color: context.colors.textMuted,
-                fontSize: 11,
+                color: colors.textSecondary,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Wrap(
-              spacing: 6,
-              runSpacing: 6,
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                ...categoryOptions.entries.map(
-                  (entry) => ChoiceChip(
-                    label: Text(entry.value),
-                    selected: _selectedCategoryId == entry.key,
-                    onSelected: (_) => setState(() => _selectedCategoryId = entry.key),
+                for (final entry in categoryOptions.entries)
+                  Tooltip(
+                    message: entry.value,
+                    child: ChoiceChip(
+                      label: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 136),
+                        child: Text(
+                          entry.value,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      avatar: _selectedCategoryId == entry.key
+                          ? Icon(
+                              Icons.check_rounded,
+                              color: colorScheme.primary,
+                              size: 16,
+                            )
+                          : null,
+                      selected: _selectedCategoryId == entry.key,
+                      showCheckmark: false,
+                      onSelected: (_) =>
+                          setState(() => _selectedCategoryId = entry.key),
+                      backgroundColor: colors.bgSurface,
+                      selectedColor: colors.info.withValues(alpha: 0.12),
+                      side: BorderSide(
+                        color: _selectedCategoryId == entry.key
+                            ? colors.info
+                            : colors.border,
+                      ),
+                      labelStyle: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 12,
+                        fontWeight: _selectedCategoryId == entry.key
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                      ),
+                      materialTapTargetSize: MaterialTapTargetSize.padded,
+                    ),
                   ),
-                ),
               ],
             ),
           ],
           if (widget.footballTeam != null) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Container(
-              width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                color: colors.bgSurface,
+                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               ),
               child: Row(
                 children: [
-                  ClipOval(
-                    child: widget.footballTeam!.logoUrl?.isNotEmpty == true
-                        ? Image.network(
-                            widget.footballTeam!.logoUrl!,
-                            width: 24,
-                            height: 24,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.groups_rounded, color: AppTheme.primary, size: 18),
-                          )
-                        : const Icon(Icons.groups_rounded, color: AppTheme.primary, size: 18),
-                  ),
+                  if (widget.footballTeam!.logoUrl?.isNotEmpty == true)
+                    ClipOval(
+                      child: Image.network(
+                        widget.footballTeam!.logoUrl!,
+                        width: 24,
+                        height: 24,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Icon(
+                          Icons.groups_rounded,
+                          color: colors.info,
+                          size: 18,
+                        ),
+                      ),
+                    )
+                  else
+                    Icon(Icons.groups_rounded, color: colors.info, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -170,168 +217,177 @@ class _EloProgressCardState extends State<EloProgressCard> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: context.colors.textPrimary,
+                        color: colors.textPrimary,
                         fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Text(
                     l10n.ranking_eloValue(widget.footballTeam!.eloPoints),
-                    style: const TextStyle(
-                      color: AppTheme.primary,
+                    style: TextStyle(
+                      color: colors.textPrimary,
                       fontSize: 12,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ],
               ),
             ),
           ],
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: context.colors.bgSurface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: context.colors.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.ranking_progressTitle,
-                            style: TextStyle(
-                              color: context.colors.textMuted,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            activeRank == null
-                                ? l10n.ranking_overviewLabel
-                                : EloHelpers.getRankDisplayName(activeRank, l10n),
-                            style: TextStyle(
-                              color: context.colors.textPrimary,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: AppTheme.primary.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Text(
-                        '$eloPoints ELO',
-                        style: const TextStyle(
-                          color: AppTheme.primary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          const SizedBox(height: 18),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      hasRank ? EloHelpers.getTierName(progress.currentIndex, l10n) : '1000',
+                      l10n.ranking_progressTitle,
                       style: TextStyle(
-                        color: context.colors.textPrimary,
-                        fontSize: 11,
+                        color: colors.textMuted,
+                        fontSize: 10,
                         fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                    Flexible(
-                      child: Text(
-                        hasRank
-                            ? progress.label
-                            : EloHelpers.getOnboardingCopy(l10n),
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                          color: context.colors.textMuted,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: 4),
+                    Text(
+                      activeRank == null
+                          ? l10n.ranking_overviewLabel
+                          : EloHelpers.getRankDisplayName(activeRank, l10n),
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    value: hasRank ? progress.percent / 100 : 0,
-                    minHeight: 6,
-                    backgroundColor: context.colors.border,
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      AppTheme.primary,
-                    ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: colors.bgSurface,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                  border: Border.all(color: colors.border),
+                ),
+                child: Text(
+                  l10n.ranking_eloValue(eloPoints),
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${currentThreshold.minElo}',
-                      style: TextStyle(
-                        color: context.colors.textMuted,
-                        fontSize: 10,
-                      ),
-                    ),
-                    Text(
-                      nextThreshold == null ? l10n.ranking_maxElo : '${nextThreshold.minElo}',
-                      style: TextStyle(
-                        color: context.colors.textMuted,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                _ShieldRow(status: shield),
-              ],
-            ),
+              ),
+            ],
           ),
           const SizedBox(height: 14),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _StatChip(label: l10n.ranking_matchesLabel, value: '$matchesPlayed'),
+              Text(
+                hasRank
+                    ? EloHelpers.getTierName(progress.currentIndex, l10n)
+                    : '${currentThreshold.minElo}',
+                style: TextStyle(
+                  color: colors.textPrimary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  hasRank ? progress.label : EloHelpers.getOnboardingCopy(l10n),
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: colors.textSecondary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    height: 1.3,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: hasRank ? progress.percent / 100 : 0,
+              minHeight: 8,
+              backgroundColor: colors.borderLight,
+              valueColor: AlwaysStoppedAnimation<Color>(colors.info),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${currentThreshold.minElo}',
+                style: TextStyle(color: colors.textMuted, fontSize: 10),
+              ),
+              Text(
+                nextThreshold == null
+                    ? l10n.ranking_maxElo
+                    : '${nextThreshold.minElo}',
+                style: TextStyle(color: colors.textMuted, fontSize: 10),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _ShieldRow(status: shield),
+          const SizedBox(height: 16),
+          Divider(height: 1, thickness: 1, color: colors.borderLight),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _StatChip(
+                  label: l10n.ranking_matchesLabel,
+                  value: '$matchesPlayed',
+                ),
+              ),
               const SizedBox(width: 8),
-              _StatChip(label: l10n.ranking_winsLabel, value: '$matchesWon'),
+              Container(width: 1, height: 28, color: colors.border),
               const SizedBox(width: 8),
-              _StatChip(label: l10n.ranking_winRateLabel, value: '$winRate%'),
+              Expanded(
+                child: _StatChip(
+                  label: l10n.ranking_winsLabel,
+                  value: '$matchesWon',
+                ),
+              ),
               const SizedBox(width: 8),
-              _StatChip(label: l10n.ranking_peakLabel, value: '$peakElo'),
+              Container(width: 1, height: 28, color: colors.border),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _StatChip(
+                  label: l10n.ranking_winRateLabel,
+                  value: '$winRate%',
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(width: 1, height: 28, color: colors.border),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _StatChip(
+                  label: l10n.ranking_peakLabel,
+                  value: '$peakElo',
+                ),
+              ),
             ],
           ),
         ],
@@ -351,7 +407,7 @@ class _Avatar extends StatelessWidget {
     final initial = name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?';
     return CircleAvatar(
       radius: 28,
-      backgroundColor: AppTheme.primary.withValues(alpha: 0.20),
+      backgroundColor: context.colors.info.withValues(alpha: 0.12),
       backgroundImage: avatarUrl?.isNotEmpty == true
           ? NetworkImage(avatarUrl!)
           : null,
@@ -359,10 +415,10 @@ class _Avatar extends StatelessWidget {
           ? null
           : Text(
               initial,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.colors.textPrimary,
                 fontSize: 22,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w800,
               ),
             ),
     );
@@ -392,7 +448,7 @@ class _ShieldRow extends StatelessWidget {
         // This card is rendered on the light surface used by “Của tôi”.
         // White onboarding text was effectively invisible there.
         color: context.colors.textSecondary,
-        bg: context.colors.bgCard,
+        bg: context.colors.bgSurface,
       ),
     };
 
@@ -431,36 +487,33 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: context.colors.bgSurface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.colors.border.withValues(alpha: 0.5)),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: context.colors.textPrimary,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+          ),
         ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                color: context.colors.textPrimary,
-                fontSize: 15,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: context.colors.textMuted,
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+        const SizedBox(height: 3),
+        Text(
+          label,
+          maxLines: 2,
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: context.colors.textMuted,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            height: 1.2,
+          ),
         ),
-      ),
+      ],
     );
   }
 }

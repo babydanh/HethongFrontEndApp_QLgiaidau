@@ -153,3 +153,58 @@ final myFootballTeamsProvider = FutureProvider<List<FootballTeamSummary>>((
   if (!authState.isAuthenticated) return const [];
   return ref.read(footballTeamApiProvider).listMyFootballTeams();
 });
+
+class FriendshipItem {
+  final String friendshipId;
+  final String status; // ACCEPTED, PENDING, REJECTED, BLOCKED
+  final String direction; // INCOMING, OUTGOING
+  final String senderId;
+  final String receiverId;
+  final String friendId;
+  final String? friendName;
+  final String? friendAvatar;
+
+  const FriendshipItem({
+    required this.friendshipId,
+    required this.status,
+    required this.direction,
+    required this.senderId,
+    required this.receiverId,
+    required this.friendId,
+    this.friendName,
+    this.friendAvatar,
+  });
+
+  factory FriendshipItem.fromJson(Map<String, dynamic> json) {
+    return FriendshipItem(
+      friendshipId: json['friendshipId']?.toString() ?? json['id']?.toString() ?? '',
+      status: json['status']?.toString().toUpperCase() ?? 'NONE',
+      direction: json['direction']?.toString().toUpperCase() ?? 'NONE',
+      senderId: json['senderId']?.toString() ?? '',
+      receiverId: json['receiverId']?.toString() ?? '',
+      friendId: json['friendId']?.toString() ?? '',
+      friendName: json['friendName'] as String?,
+      friendAvatar: json['friendAvatar'] as String?,
+    );
+  }
+}
+
+final userFriendsProvider = FutureProvider<List<FriendshipItem>>((ref) async {
+  final authState = ref.watch(authProvider);
+  if (!authState.isAuthenticated) return const [];
+
+  try {
+    final dio = ref.read(dioProvider);
+    final response = await dio.get('/social/friends');
+    final raw = response.data;
+    final payload = raw is Map ? (raw['data'] ?? raw) : raw;
+    final List<dynamic> list = payload is List ? payload : [];
+    return list
+        .whereType<Map<String, dynamic>>()
+        .map((e) => FriendshipItem.fromJson(e))
+        .toList();
+  } catch (_) {
+    return const [];
+  }
+});
+

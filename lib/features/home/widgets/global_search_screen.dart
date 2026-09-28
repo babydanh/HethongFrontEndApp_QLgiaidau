@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
@@ -89,38 +90,39 @@ class GlobalSearchScreen extends ConsumerStatefulWidget {
     required String initialQuery,
     bool showFiltersInitially = false,
   }) {
-    return showGeneralDialog<void>(
-      context: context,
-      useRootNavigator: true,
-      barrierDismissible: true,
-      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      barrierColor: Colors.black54,
-      transitionDuration: MediaQuery.of(context).disableAnimations
-          ? Duration.zero
-          : const Duration(milliseconds: 360),
-      pageBuilder: (context, animation, secondaryAnimation) =>
-          GlobalSearchScreen(
-            initialTabIndex: initialTabIndex,
-            initialQuery: initialQuery,
-            showFiltersInitially: showFiltersInitially,
-          ),
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        final reducedMotion = MediaQuery.of(context).disableAnimations;
-        final curved = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-          reverseCurve: Curves.easeInCubic,
-        );
-        return SlideTransition(
-          position: reducedMotion
-              ? const AlwaysStoppedAnimation(Offset.zero)
-              : Tween<Offset>(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).animate(curved),
-          child: child,
-        );
-      },
+    final reducedMotion = MediaQuery.of(context).disableAnimations;
+    return Navigator.of(context, rootNavigator: true).push<void>(
+      PageRouteBuilder<void>(
+        opaque: false,
+        barrierDismissible: true,
+        barrierLabel: MaterialLocalizations.of(
+          context,
+        ).modalBarrierDismissLabel,
+        barrierColor: Colors.black54,
+        transitionDuration: reducedMotion
+            ? Duration.zero
+            : const Duration(milliseconds: 320),
+        reverseTransitionDuration: reducedMotion
+            ? Duration.zero
+            : const Duration(milliseconds: 260),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            GlobalSearchScreen(
+              initialTabIndex: initialTabIndex,
+              initialQuery: initialQuery,
+              showFiltersInitially: showFiltersInitially,
+            ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          if (reducedMotion) {
+            return child;
+          }
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
+          );
+          return FadeTransition(opacity: curved, child: child);
+        },
+      ),
     );
   }
 
@@ -601,17 +603,30 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
           _matches = append ? [..._matches, ...accumulated] : accumulated;
           _nextCursor = lastNextCursor;
           _hasMore = lastHasMore;
-          break;
         case 1:
+          String? categoryId;
+          if (_tournamentSport != 'all') {
+            final categories = await ref.read(categoriesProvider.future);
+            if (!mounted || version != _requestVersion) return;
+            for (final category in categories) {
+              if (category.slug == _tournamentSport) {
+                categoryId = category.id;
+                break;
+              }
+            }
+            if (categoryId == null) {
+              throw StateError('Selected tournament category is unavailable');
+            }
+          }
           final result = await ref
               .read(tournamentRepositoryProvider)
               .getPublicTournamentsPaged(
                 cursor: append ? _nextCursor : null,
                 limit: 10,
-                sport: _tournamentSport == 'all' ? null : _tournamentSport,
+                categoryId: categoryId,
                 status: _tournamentStatus == 'all' ? null : _tournamentStatus,
                 search: query.isEmpty ? null : query,
-                province: _tournamentProvinceCode.isEmpty
+                region: _tournamentProvinceCode.isEmpty
                     ? null
                     : ProvinceData.all
                           .firstWhere(
@@ -619,6 +634,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                           )
                           .name,
                 startDate: _tournamentDateRange?.start,
+                endDate: _tournamentDateRange?.end,
                 rethrowOnError: true,
               );
           if (!mounted || version != _requestVersion) return;
@@ -899,66 +915,97 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
             ),
             const SizedBox(width: 4),
             Expanded(
-              child: Container(
-                height: 48,
-                decoration: BoxDecoration(
-                  color: colors.bgCard,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  children: [
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Semantics(
-                        label: l10n.homeGlobalSearchInputLabel,
-                        textField: true,
-                        child: TextField(
-                          controller: _queryController,
-                          textInputAction: TextInputAction.search,
-                          onSubmitted: (_) => _loadScope(),
-                          style: TextStyle(
-                            color: colors.textPrimary,
-                            fontSize: 14,
-                          ),
-                          cursorColor: AppTheme.primary,
-                          decoration: InputDecoration(
-                            hintText: _scopeHint(l10n),
-                            isDense: true,
-                            filled: false,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 0,
-                              vertical: 6,
-                            ),
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            suffixIconConstraints:
-                                const BoxConstraints.tightFor(
-                                  width: 48,
-                                  height: 48,
+              child: Hero(
+                tag: 'global_search_hero_box',
+                createRectTween: (begin, end) =>
+                    MaterialRectCenterArcTween(begin: begin, end: end),
+                flightShuttleBuilder:
+                    (
+                      flightContext,
+                      animation,
+                      flightDirection,
+                      fromHeroContext,
+                      toHeroContext,
+                    ) {
+                      final curved = CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeInOutCubicEmphasized,
+                      );
+                      return AnimatedBuilder(
+                        animation: curved,
+                        builder: (context, child) {
+                          return Material(
+                            color: Colors.transparent,
+                            child: toHeroContext.widget,
+                          );
+                        },
+                      );
+                    },
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: colors.bgCard,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Semantics(
+                            label: l10n.homeGlobalSearchInputLabel,
+                            textField: true,
+                            child: TextField(
+                              controller: _queryController,
+                              textInputAction: TextInputAction.search,
+                              onSubmitted: (_) => _loadScope(),
+                              style: TextStyle(
+                                color: colors.textPrimary,
+                                fontSize: 14,
+                              ),
+                              cursorColor: AppTheme.primary,
+                              decoration: InputDecoration(
+                                hintText: _scopeHint(l10n),
+                                isDense: true,
+                                filled: false,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 0,
+                                  vertical: 6,
                                 ),
-                            suffixIcon: _queryController.text.isEmpty
-                                ? null
-                                : IconButton(
-                                    tooltip: l10n.homeGlobalSearchClear,
-                                    constraints: const BoxConstraints.tightFor(
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                suffixIconConstraints:
+                                    const BoxConstraints.tightFor(
                                       width: 48,
                                       height: 48,
                                     ),
-                                    padding: EdgeInsets.zero,
-                                    onPressed: _queryController.clear,
-                                    icon: const Icon(
-                                      Icons.close_rounded,
-                                      size: 18,
-                                    ),
-                                  ),
+                                suffixIcon: _queryController.text.isEmpty
+                                    ? null
+                                    : IconButton(
+                                        tooltip: l10n.homeGlobalSearchClear,
+                                        constraints:
+                                            const BoxConstraints.tightFor(
+                                              width: 48,
+                                              height: 48,
+                                            ),
+                                        padding: EdgeInsets.zero,
+                                        onPressed: _queryController.clear,
+                                        icon: const Icon(
+                                          Icons.close_rounded,
+                                          size: 18,
+                                        ),
+                                      ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        const SizedBox(width: 4),
+                        _buildFilterButton(colors, l10n),
+                        const SizedBox(width: 4),
+                      ],
                     ),
-                    const SizedBox(width: 4),
-                    _buildFilterButton(colors, l10n),
-                    const SizedBox(width: 4),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -978,9 +1025,6 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   };
 
   IconData _scopeIcon(int scope) => switch (scope) {
-    0 => Icons.sports_tennis_rounded,
-    1 => Icons.emoji_events_rounded,
-    3 => Icons.groups_2_rounded,
     4 => Icons.person_search_rounded,
     5 => Icons.place_rounded,
     _ => Icons.search_rounded,
@@ -1002,16 +1046,29 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
             selected: selected,
             label: _scopeLabel(l10n, scope),
             child: ChoiceChip(
-              avatar: Icon(
-                _scopeIcon(scope),
-                size: 17,
-                color: selected ? AppTheme.primary : colors.textSecondary,
-              ),
+              avatar: switch (scope) {
+                0 || 1 || 3 => null,
+                _ => Icon(
+                  _scopeIcon(scope),
+                  size: 17,
+                  color: selected ? AppTheme.primary : colors.textSecondary,
+                ),
+              },
               label: Text(_scopeLabel(l10n, scope)),
               selected: selected,
+              showCheckmark: false,
               onSelected: (_) => _selectScope(scope),
-              selectedColor: AppTheme.primary.withValues(alpha: 0.12),
-              backgroundColor: colors.bgCard,
+              color: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return AppTheme.primary.withValues(alpha: 0.12);
+                }
+                if (states.contains(WidgetState.hovered) ||
+                    states.contains(WidgetState.focused)) {
+                  return AppTheme.primary.withValues(alpha: 0.06);
+                }
+                return colors.bgCard;
+              }),
+              shape: const StadiumBorder(),
               side: BorderSide(
                 color: selected
                     ? AppTheme.primary.withValues(alpha: 0.4)
@@ -1278,6 +1335,8 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     final team2Avatar = match.team2MemberInfos.isEmpty
         ? null
         : match.team2MemberInfos.first.avatarUrl;
+    final team1Image = _preferredImageUrl(match.team1LogoUrl, team1Avatar);
+    final team2Image = _preferredImageUrl(match.team2LogoUrl, team2Avatar);
     final location = _joinLocation(match.court, _matchWardAndCity(match));
     final setScores = match.sets
         .map((set) => '${set.score1}–${set.score2}')
@@ -1291,18 +1350,13 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       title: match.team1Name,
       details: const [],
       sportCard: true,
+      showLeading: false,
+      showTrailingArrow: false,
       onTap: match.tournamentId == null
           ? null
           : () => context.push(
               NavigationHelper.getLiveMatchRoute(match.tournamentId!, match.id),
             ),
-      leadingWidget: _matchLogos(
-        _preferredImageUrl(match.team1LogoUrl, team1Avatar),
-        _preferredImageUrl(match.team2LogoUrl, team2Avatar),
-        match.team1Name,
-        match.team2Name,
-        match.sportKey,
-      ),
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -1323,23 +1377,71 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
             ],
           ),
           if (match.tournamentName?.trim().isNotEmpty == true)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                match.tournamentName!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: colors.textSecondary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+            _searchMetaLine(
+              Icons.emoji_events_outlined,
+              match.tournamentName!,
+              colors,
+            ),
+          const SizedBox(height: 6),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 26,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 26,
+                      height: 26,
+                      child: ExcludeSemantics(
+                        child: _resultAvatar(
+                          team1Image,
+                          match.team1Name,
+                          match.sportKey,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    SizedBox(
+                      width: 26,
+                      height: 26,
+                      child: ExcludeSemantics(
+                        child: _resultAvatar(
+                          team2Image,
+                          match.team2Name,
+                          match.sportKey,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          const SizedBox(height: 7),
-          _matchTeamLine(match.team1Name, match.score1, showScore, colors),
-          const SizedBox(height: 3),
-          _matchTeamLine(match.team2Name, match.score2, showScore, colors),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _matchTeamLine(
+                      match.team1Name,
+                      match.score1,
+                      showScore,
+                      colors,
+                    ),
+                    const SizedBox(height: 3),
+                    _matchTeamLine(
+                      match.team2Name,
+                      match.score2,
+                      showScore,
+                      colors,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           if (setScores.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 5),
@@ -1375,34 +1477,37 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     bool showScore,
     AppColorsExtension colors,
   ) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            teamName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: colors.textPrimary,
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        if (showScore)
-          SizedBox(
-            width: 22,
+    return SizedBox(
+      height: 26,
+      child: Row(
+        children: [
+          Expanded(
             child: Text(
-              '$score',
-              textAlign: TextAlign.end,
+              teamName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: colors.textPrimary,
                 fontSize: 13,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
-      ],
+          if (showScore)
+            SizedBox(
+              width: 22,
+              child: Text(
+                '$score',
+                textAlign: TextAlign.end,
+                style: TextStyle(
+                  color: colors.textPrimary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -1411,19 +1516,26 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     IconData icon,
     AppColorsExtension colors, {
     bool isLive = false,
+    Color? solidColor,
   }) {
-    final foreground = isLive ? colors.success : colors.textSecondary;
+    final foreground = solidColor != null
+        ? Colors.white
+        : isLive
+        ? colors.success
+        : colors.textSecondary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
       decoration: BoxDecoration(
-        color: isLive
-            ? colors.success.withValues(alpha: 0.12)
-            : colors.bgSurface,
+        color:
+            solidColor ??
+            (isLive
+                ? colors.success.withValues(alpha: 0.12)
+                : colors.bgSurface),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isLive
-              ? colors.success.withValues(alpha: 0.35)
-              : colors.border,
+          color:
+              solidColor ??
+              (isLive ? colors.success.withValues(alpha: 0.35) : colors.border),
         ),
       ),
       child: Row(
@@ -1431,14 +1543,60 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         children: [
           Icon(icon, size: 11, color: foreground),
           const SizedBox(width: 4),
-          Text(
-            text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: foreground,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: foreground,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _searchSportTag(
+    String sportKey,
+    String localizedSportName,
+    AppColorsExtension colors,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+      decoration: BoxDecoration(
+        color: colors.bgSurface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: colors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ExcludeSemantics(
+            child: SizedBox(
+              width: 13,
+              height: 13,
+              child: SportChoiceTile.buildSportIcon(
+                sportKey,
+                13,
+                colors.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              localizedSportName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: colors.textSecondary,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -1475,13 +1633,18 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     AppLocalizations l10n,
     AppColorsExtension colors,
   ) {
-    final sport = tournament.sport.isNotEmpty
+    final sportName = tournament.sport.isNotEmpty
         ? l10n.sportDisplayName(tournament.sport)
         : null;
     final status = StatusHelper.getTournamentStatusLabel(
       tournament.status,
       l10n: l10n,
     );
+    final statusColor = Color.lerp(
+      StatusHelper.getTournamentStatusColor(tournament.status, context),
+      Colors.black,
+      0.35,
+    )!;
     final startDate = tournament.startDate == null
         ? null
         : DateFormat.yMMMd(
@@ -1498,11 +1661,20 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       details: const [],
       sportCard: true,
       onTap: () => context.push('/intro/${tournament.id}'),
-      imageUrl: _preferredImageUrl(
-        tournament.logoUrl,
-        _preferredImageUrl(tournament.bannerUrl, tournament.communityLogoUrl),
+      leadingWidget: ExcludeSemantics(
+        child: _resultAvatar(
+          tournament.bannerUrl,
+          tournament.name,
+          tournament.sport,
+          size: 144,
+          fillHeight: true,
+          borderWidth: 0,
+          borderRadius: BorderRadius.zero,
+        ),
       ),
-      sport: tournament.sport,
+      leadingSize: 144,
+      showTrailingArrow: false,
+      bleedLeading: true,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -1524,9 +1696,14 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
             runSpacing: 4,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              if (sport != null)
-                _searchMetaTag(sport, Icons.sports_rounded, colors),
-              _searchMetaTag(status, Icons.flag_outlined, colors),
+              if (sportName != null)
+                _searchSportTag(tournament.sport, sportName, colors),
+              _searchMetaTag(
+                status,
+                Icons.flag_outlined,
+                colors,
+                solidColor: statusColor,
+              ),
             ],
           ),
           if (startDate != null)
@@ -1634,50 +1811,24 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     );
   }
 
-  Widget _matchLogos(
-    String? team1Image,
-    String? team2Image,
-    String team1Name,
-    String team2Name,
-    String? sport,
-  ) {
-    if (team1Image == null && team2Image == null) {
-      return _resultAvatar(null, '$team1Name · $team2Name', sport, size: 40);
-    }
-
-    return SizedBox(
-      width: 40,
-      height: 40,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            child: _resultAvatar(team1Image, team1Name, sport, size: 27),
-          ),
-          Positioned(
-            right: 0,
-            bottom: 0,
-            child: _resultAvatar(team2Image, team2Name, sport, size: 27),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _resultAvatar(
     String? imageUrl,
     String label,
     String? sport, {
     double size = 40,
+    bool fillHeight = false,
+    double? borderWidth,
+    BorderRadius? borderRadius,
   }) {
     return TournamentAvatar(
       imageUrl: imageUrl,
       tournamentName: label,
       sport: sport,
       size: size,
+      fillHeight: fillHeight,
+      borderWidth: borderWidth,
       borderColor: context.colors.border.withValues(alpha: .7),
+      borderRadius: borderRadius,
     );
   }
 
@@ -1698,6 +1849,10 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     Widget? leadingWidget,
     Widget? content,
     bool sportCard = false,
+    bool showLeading = true,
+    double leadingSize = 40,
+    bool showTrailingArrow = true,
+    bool bleedLeading = false,
   }) {
     final visibleDetails = content == null
         ? details
@@ -1706,60 +1861,80 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
               .toList(growable: false)
         : const <String>[];
     final radius = BorderRadius.circular(sportCard ? 14 : 0);
-    final row = Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: sportCard ? 12 : 9,
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 40,
-            height: 40,
-            child: leadingWidget ?? _resultAvatar(imageUrl, title, sport),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child:
-                content ??
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                      ),
-                    ),
-                    if (visibleDetails.isNotEmpty)
-                      Text(
-                        visibleDetails.join(' · '),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: colors.textMuted,
-                          fontSize: 11,
-                          height: 1.25,
-                        ),
-                      ),
-                  ],
-                ),
-          ),
-          if (onTap != null) ...[
-            const SizedBox(width: 4),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: sportCard ? colors.info : colors.textMuted,
+    final leading = showLeading
+        ? leadingWidget ?? _resultAvatar(imageUrl, title, sport)
+        : null;
+    final resultContent =
+        content ??
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
             ),
+            if (visibleDetails.isNotEmpty)
+              Text(
+                visibleDetails.join(' · '),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: colors.textMuted,
+                  fontSize: 11,
+                  height: 1.25,
+                ),
+              ),
           ],
-        ],
+        );
+    final resultChildren = <Widget>[
+      if (leading != null) ...[
+        SizedBox(
+          width: leadingSize,
+          height: bleedLeading ? null : leadingSize,
+          child: leading,
+        ),
+        if (!bleedLeading) const SizedBox(width: 10),
+      ],
+      Expanded(
+        child: bleedLeading
+            ? Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: resultContent,
+              )
+            : resultContent,
       ),
-    );
+      if (showTrailingArrow && onTap != null) ...[
+        const SizedBox(width: 4),
+        Icon(
+          Icons.chevron_right_rounded,
+          color: sportCard ? colors.info : colors.textMuted,
+        ),
+      ],
+    ];
+    final row = bleedLeading
+        ? IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: resultChildren,
+            ),
+          )
+        : Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: sportCard ? 12 : 9,
+            ),
+            child: Row(children: resultChildren),
+          );
     if (!sportCard) {
       return InkWell(onTap: onTap, child: row);
     }
@@ -1778,14 +1953,9 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: radius,
-                  border: Border(
-                    left: BorderSide(color: colors.info, width: 3),
-                    top: BorderSide(color: colors.border),
-                    right: BorderSide(color: colors.border),
-                    bottom: BorderSide(color: colors.border),
-                  ),
+                  border: Border.all(color: colors.border),
                 ),
-                child: row,
+                child: ClipRRect(borderRadius: radius, child: row),
               ),
             ),
           ),

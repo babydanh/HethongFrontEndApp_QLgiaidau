@@ -39,6 +39,15 @@ class Tournament {
   final String? city;
   final String? locationAddress;
   final Map<String, dynamic>? locationConfig;
+
+  /// Public schedule settings from `tournamentConfig`; only known display keys
+  /// are retained so serialization cannot leak unrelated JSONB values.
+  final Map<String, dynamic> scheduleSettings;
+
+  /// Complete `tournamentConfig` JSONB exactly as received, so a partial update
+  /// can round-trip keys this entity does not model. In-memory only: [toJson]
+  /// keeps its allow-list and must not leak unrelated JSONB values.
+  final Map<String, dynamic> tournamentConfig;
   final String? prizeDescription;
   final Map<String, dynamic>? contactInfo;
   final List<TournamentDivision> divisions;
@@ -99,6 +108,8 @@ class Tournament {
     this.city,
     this.locationAddress,
     this.locationConfig,
+    this.scheduleSettings = const {},
+    this.tournamentConfig = const {},
     this.prizeDescription,
     this.contactInfo,
     this.divisions = const [],
@@ -182,6 +193,17 @@ class Tournament {
     if (json['tournamentConfig'] != null && json['tournamentConfig'] is Map) {
       config = json['tournamentConfig'] as Map<String, dynamic>;
     }
+    final scheduleSettings = <String, dynamic>{
+      for (final key in const [
+        'scheduleDate',
+        'operatingStart',
+        'operatingEnd',
+        'stepMinutes',
+        'gridIncrementMinutes',
+        'minutesPerSet',
+      ])
+        if (config[key] != null) key: config[key],
+    };
 
     String bracketTypeVal =
         (config['bracketType']?.toString() ??
@@ -384,6 +406,8 @@ class Tournament {
           : json['location'] is Map
           ? Map<String, dynamic>.from(json['location'] as Map)
           : null,
+      scheduleSettings: scheduleSettings,
+      tournamentConfig: Map<String, dynamic>.from(config),
       prizeDescription: json['prizeDescription'] ?? json['prize_description'],
       contactInfo: parsedContactInfo,
       divisions: parsedDivisions,
@@ -450,6 +474,7 @@ class Tournament {
       if (category != null) 'category': category,
       'bracketType': bracketType,
       'tournamentConfig': {
+        ...scheduleSettings,
         'bracketType': bracketType,
         'maxTeams': maxTeams,
         'roundRobinLegs': roundCount,
@@ -552,6 +577,8 @@ class Tournament {
     String? city,
     String? locationAddress,
     Map<String, dynamic>? locationConfig,
+    Map<String, dynamic>? scheduleSettings,
+    Map<String, dynamic>? tournamentConfig,
     String? prizeDescription,
     Map<String, dynamic>? contactInfo,
     List<TournamentDivision>? divisions,
@@ -609,6 +636,8 @@ class Tournament {
       city: city ?? this.city,
       locationAddress: locationAddress ?? this.locationAddress,
       locationConfig: locationConfig ?? this.locationConfig,
+      scheduleSettings: scheduleSettings ?? this.scheduleSettings,
+      tournamentConfig: tournamentConfig ?? this.tournamentConfig,
       prizeDescription: prizeDescription ?? this.prizeDescription,
       contactInfo: contactInfo ?? this.contactInfo,
       divisions: divisions ?? this.divisions,

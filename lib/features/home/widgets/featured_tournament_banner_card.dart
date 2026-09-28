@@ -119,15 +119,20 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                   right: 10,
                   top: 8,
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _CompactTopSportBadge(
-                        label: _sportLabel(l10n),
-                        sportKey: tournament.sport,
+                      Flexible(
+                        child: _CompactTopSportBadge(
+                          label: _sportLabel(l10n),
+                          sportKey: tournament.sport,
+                        ),
                       ),
-                      const Spacer(),
-                      _CompactTopStatusBadge(
-                        label: _statusLabel(l10n),
-                        color: _statusColor(context),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: _CompactTopStatusBadge(
+                          label: _statusLabel(l10n),
+                          color: _statusColor(context),
+                        ),
                       ),
                     ],
                   ),
@@ -223,19 +228,27 @@ class _CompactTopSportBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 0.8),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.25),
+          width: 0.8,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           SportChoiceTile.buildSportIcon(sportKey, 12, Colors.white),
           const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 10.5,
-              fontWeight: FontWeight.w700,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -260,6 +273,9 @@ class _CompactTopStatusBadge extends StatelessWidget {
       ),
       child: Text(
         label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        softWrap: false,
         style: const TextStyle(
           color: Colors.white,
           fontSize: 9.5,

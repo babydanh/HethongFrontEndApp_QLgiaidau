@@ -22,16 +22,20 @@ class TournamentManagementFinanceSection extends ConsumerWidget {
     final completed = tournament.status.toUpperCase() == 'COMPLETED';
     final user = ref.watch(userProfileProvider);
     final profile = user.asData?.value;
+    final isOrganizer = profile?.role?.toUpperCase() == 'ORGANIZER';
     final canRequestPayout =
         completed &&
         profile != null &&
         profile.id.isNotEmpty &&
-        profile.id == tournament.creatorId;
+        profile.id == tournament.creatorId &&
+        isOrganizer;
     final accessMessage = !completed
         ? l10n.tournamentManagementPayoutRequiresCompleted
         : profile == null
         ? l10n.tournamentManagementPayoutAccessUnverified
-        : profile.id.isEmpty || profile.id != tournament.creatorId
+        : profile.id.isEmpty ||
+              profile.id != tournament.creatorId ||
+              !isOrganizer
         ? l10n.tournamentManagementPayoutCreatorOnly
         : null;
     return _TournamentFinanceContent(
@@ -169,15 +173,20 @@ class _TournamentFinanceContentState
           child: FutureBuilder<Map<String, dynamic>>(
             future: _feesFuture,
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting)
+              if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
                   child: Padding(
                     padding: EdgeInsets.all(12),
                     child: CircularProgressIndicator(),
                   ),
                 );
-              if (snapshot.hasError)
-                return TournamentManagementError(onRetry: _reload);
+              }
+              if (snapshot.hasError) {
+                return TournamentManagementError(
+                  error: snapshot.error,
+                  onRetry: _reload,
+                );
+              }
               return _FeeConfiguration(
                 values: snapshot.data ?? const {},
                 tournament: widget.tournament,
@@ -289,7 +298,10 @@ class _TournamentFinanceContentState
                   );
                 }
                 if (snapshot.hasError) {
-                  return TournamentManagementError(onRetry: _reload);
+                  return TournamentManagementError(
+                    error: snapshot.error,
+                    onRetry: _reload,
+                  );
                 }
                 final payouts =
                     (snapshot.data ?? const <Map<String, dynamic>>[])

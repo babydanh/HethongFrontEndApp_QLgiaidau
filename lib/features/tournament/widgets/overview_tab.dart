@@ -307,7 +307,10 @@ class _OverviewTabState extends State<OverviewTab> {
                     // Card 1: Thời gian
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: colors.bgCard,
                           borderRadius: BorderRadius.circular(14),
@@ -334,7 +337,9 @@ class _OverviewTabState extends State<OverviewTab> {
                             Text(
                               (t.startDate != null && t.endDate != null)
                                   ? '${t.startDate!.day} - ${t.endDate!.day}'
-                                  : (t.startDate != null ? '${t.startDate!.day}' : '--'),
+                                  : (t.startDate != null
+                                        ? '${t.startDate!.day}'
+                                        : '--'),
                               style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w900,
@@ -368,7 +373,10 @@ class _OverviewTabState extends State<OverviewTab> {
                     // Card 2: Địa điểm
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: colors.bgCard,
                           borderRadius: BorderRadius.circular(14),
@@ -393,9 +401,12 @@ class _OverviewTabState extends State<OverviewTab> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              t.venueName != null && t.venueName!.trim().isNotEmpty
+                              t.venueName != null &&
+                                      t.venueName!.trim().isNotEmpty
                                   ? t.venueName!
-                                  : (locationStr.isNotEmpty ? locationStr.split(',').first.trim() : 'Đang cập nhật'),
+                                  : (locationStr.isNotEmpty
+                                        ? locationStr.split(',').first.trim()
+                                        : 'Đang cập nhật'),
                               style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w900,
@@ -429,7 +440,10 @@ class _OverviewTabState extends State<OverviewTab> {
                     // Card 3: Vận động viên
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: colors.bgCard,
                           borderRadius: BorderRadius.circular(14),
@@ -488,7 +502,10 @@ class _OverviewTabState extends State<OverviewTab> {
                 // ─── CARD LỆ PHÍ THAM GIA (Entry Fee Card) ───
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 11,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.bgCard,
                     borderRadius: BorderRadius.circular(12),
@@ -497,47 +514,55 @@ class _OverviewTabState extends State<OverviewTab> {
                     ),
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.payments_outlined,
-                              size: 16,
-                              color: AppTheme.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Lệ phí giải',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: colors.textPrimary,
-                                ),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                              Text(
-                                t.entryFee != null && t.entryFee! > 0
-                                    ? 'Thanh toán trực tiếp / QR'
-                                    : 'Miễn phí tham dự',
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  color: colors.textMuted,
-                                ),
+                              child: const Icon(
+                                Icons.payments_outlined,
+                                size: 16,
+                                color: AppTheme.primary,
                               ),
-                            ],
-                          ),
-                        ],
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Lệ phí giải',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: colors.textPrimary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    t.entryFee != null && t.entryFee! > 0
+                                        ? 'Thanh toán trực tiếp / QR'
+                                        : 'Miễn phí tham dự',
+                                    style: TextStyle(
+                                      fontSize: 10.5,
+                                      color: colors.textMuted,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         _formatCurrency(t.entryFee),
                         style: TextStyle(
@@ -547,6 +572,8 @@ class _OverviewTabState extends State<OverviewTab> {
                               ? const Color(0xFFE11D48)
                               : const Color(0xFF10B981),
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -611,7 +638,10 @@ class _OverviewTabState extends State<OverviewTab> {
                     _remainingTime > Duration.zero) ...[
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: colors.error.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(8),
@@ -812,7 +842,10 @@ class _OverviewTabState extends State<OverviewTab> {
                   const SizedBox(height: 8),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: colors.bgCard,
                       borderRadius: BorderRadius.circular(12),
@@ -828,7 +861,8 @@ class _OverviewTabState extends State<OverviewTab> {
                           subtitle: _formatDate(t.registrationStartDate),
                           isFirst: true,
                           isLast: false,
-                          isPassed: t.registrationStartDate != null &&
+                          isPassed:
+                              t.registrationStartDate != null &&
                               DateTime.now().isAfter(t.registrationStartDate!),
                         ),
                         _buildTimelineItem(
@@ -836,7 +870,8 @@ class _OverviewTabState extends State<OverviewTab> {
                           subtitle: _formatDate(t.registrationEndDate),
                           isFirst: false,
                           isLast: false,
-                          isPassed: t.registrationEndDate != null &&
+                          isPassed:
+                              t.registrationEndDate != null &&
                               DateTime.now().isAfter(t.registrationEndDate!),
                         ),
                         _buildTimelineItem(
@@ -844,7 +879,8 @@ class _OverviewTabState extends State<OverviewTab> {
                           subtitle: _formatDate(t.startDate),
                           isFirst: false,
                           isLast: true,
-                          isPassed: t.startDate != null &&
+                          isPassed:
+                              t.startDate != null &&
                               DateTime.now().isAfter(t.startDate!),
                         ),
                       ],
@@ -1052,9 +1088,7 @@ class _OverviewTabState extends State<OverviewTab> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.12)
-            : colors.bgCard,
+        color: isDark ? Colors.white.withValues(alpha: 0.12) : colors.bgCard,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
           color: isDark
@@ -1116,7 +1150,9 @@ class _OverviewTabState extends State<OverviewTab> {
     required bool isPassed,
   }) {
     final colors = context.colors;
-    final dotColor = isPassed ? AppTheme.primary : colors.textMuted.withValues(alpha: 0.4);
+    final dotColor = isPassed
+        ? AppTheme.primary
+        : colors.textMuted.withValues(alpha: 0.4);
 
     return IntrinsicHeight(
       child: Row(
@@ -1179,4 +1215,3 @@ class _OverviewTabState extends State<OverviewTab> {
     );
   }
 }
-

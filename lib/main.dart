@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -7,6 +8,10 @@ import 'package:app_quanly_giaidau/app.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await LiquidGlassWidgets.initialize(
+    warmUpMode: GlassWarmUpMode.never,
+    enablePerformanceMonitor: false,
+  );
 
   // Khởi tạo biến môi trường
   await dotenv.load(fileName: ".env");
@@ -37,7 +42,12 @@ Future<void> main() async {
     // Sentry installs its platform hooks first; the project handler then
     // preserves the existing error UI while forwarding errors safely.
     GlobalErrorHandler.init();
-    runApp(const ProviderScope(child: TournamentApp()));
+    runApp(
+      LiquidGlassWidgets.wrap(
+        child: const ProviderScope(child: TournamentApp()),
+        brightnessResolver: Theme.maybeBrightnessOf,
+      ),
+    );
   }
 
   if (sentryDsn.isEmpty) {
@@ -46,16 +56,13 @@ Future<void> main() async {
     return;
   }
 
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = sentryDsn;
-      options.environment = sentryEnvironment;
-      options.release = sentryRelease.isEmpty ? null : sentryRelease;
-      options.tracesSampleRate = sentryTraceSampleRate;
-      options.sendDefaultPii = false;
-      options.enablePrintBreadcrumbs = false;
-      options.recordHttpBreadcrumbs = false;
-    },
-    appRunner: runAppWithErrorHandling,
-  );
+  await SentryFlutter.init((options) {
+    options.dsn = sentryDsn;
+    options.environment = sentryEnvironment;
+    options.release = sentryRelease.isEmpty ? null : sentryRelease;
+    options.tracesSampleRate = sentryTraceSampleRate;
+    options.sendDefaultPii = false;
+    options.enablePrintBreadcrumbs = false;
+    options.recordHttpBreadcrumbs = false;
+  }, appRunner: runAppWithErrorHandling);
 }

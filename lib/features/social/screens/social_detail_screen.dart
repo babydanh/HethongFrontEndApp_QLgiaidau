@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -10,7 +12,6 @@ import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_joi
 import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_details_tab.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_participants_tab.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/payment_tab/social_payment_tab.dart';
-import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/chat_tab/social_chat_tab.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_cancel_session_dialog.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_contact_host_sheet.dart';
@@ -18,6 +19,7 @@ import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_fin
 import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_add_participant_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_more_options_sheet.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.dart';
 
 class SocialDetailScreen extends ConsumerStatefulWidget {
@@ -33,6 +35,53 @@ class SocialDetailScreen extends ConsumerStatefulWidget {
 class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
+  String? _removingParticipantId;
+
+  Future<void> _removeParticipant(SocialParticipantModel participant) async {
+    if (_removingParticipantId != null || participant.isHost) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Xóa người tham gia?'),
+        content: Text('Xóa ${participant.name} khỏi buổi Social này?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Xóa'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _removingParticipantId = participant.apiIdentifier);
+    try {
+      await ref
+          .read(socialSessionDetailProvider(widget.sessionId).notifier)
+          .removeParticipant(participant.apiIdentifier);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đã xóa ${participant.name} khỏi buổi Social.'),
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.toString()),
+            backgroundColor: context.colors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _removingParticipantId = null);
+    }
+  }
 
   bool get _isHost {
     if (widget.isHost != null) return widget.isHost!;
@@ -237,6 +286,8 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                     SocialParticipantsTab(
                       session: session,
                       isHost: host,
+                      onRemoveParticipant: _removeParticipant,
+                      removingParticipantId: _removingParticipantId,
                       onAddParticipant: (slot) =>
                           SocialAddParticipantSheet.show(
                             context,
@@ -374,8 +425,22 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
     SocialSessionModel session,
     AppColorsExtension colors,
   ) {
-    final l10n = AppLocalizations.of(context)!;
-    if (_isHost || session.isJoined) return const SizedBox.shrink();
+    if (_isHost) {
+      return const SizedBox.shrink();
+    }
+    final canJoin =
+        session.status == 'OPEN' &&
+        session.currentSlots < session.maxSlots &&
+        !session.isJoined;
+    final joinLabel = session.isJoined
+        ? 'Đã tham gia'
+        : session.status == 'CANCELLED'
+        ? 'Đã hủy'
+        : session.status == 'COMPLETED'
+        ? 'Đã kết thúc'
+        : canJoin
+        ? 'Yêu cầu tham gia'
+        : 'Đã đủ người';
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -431,9 +496,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
               child: SizedBox(
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: session.joinRequestStatus == 'REQUESTED'
-                      ? _withdrawJoinRequest
-                      : () => _handleRequestJoin(context, session),
+                  onPressed: canJoin
+                      ? () => _handleRequestJoin(context, session)
+                      : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     foregroundColor: Colors.white,
@@ -448,9 +513,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      session.joinRequestStatus == 'REQUESTED'
-                          ? l10n.socialCancelJoinRequest
-                          : l10n.socialJoinOptions,
+                      joinLabel,
                       style: const TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w700,
@@ -469,7 +532,10 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
   // ── Modal Tìm thêm người chơi (IMG3) ──
 
   // ── Chia sẻ vào cuộc trò chuyện Câu lạc bộ ──
-  String _buildClubChatShareMessage(SocialSessionModel session) {
+  String _buildClubChatShareMessage(
+    SocialSessionModel session,
+    String shareUrl,
+  ) {
     final currencyFormatter = NumberFormat.currency(
       locale: 'vi_VN',
       symbol: 'đ',
@@ -485,10 +551,15 @@ $timeLine
 $feeLine
 👥 ${session.currentParticipants}/${session.maxParticipants}
 
-RSVP: https://sporto.vn/social/${session.id}''';
+Link: $shareUrl''';
   }
 
   Future<void> _shareToClubChat(SocialSessionModel session) async {
+    final shareUrl = session.shareUrl;
+    if (shareUrl == null) {
+      _showShortLinkUnavailable();
+      return;
+    }
     final communityId = session.communityId ?? session.clubId;
     if (communityId == null || communityId.isEmpty) {
       if (mounted) {
@@ -502,7 +573,7 @@ RSVP: https://sporto.vn/social/${session.id}''';
       return;
     }
 
-    final message = _buildClubChatShareMessage(session);
+    final message = _buildClubChatShareMessage(session, shareUrl);
     try {
       final dio = ref.read(dioClientProvider).dio;
       final res = await dio.get(
@@ -548,41 +619,42 @@ RSVP: https://sporto.vn/social/${session.id}''';
   }
 
   void _handleRequestJoin(BuildContext context, SocialSessionModel session) {
+    if (ref.read(authProvider).status != AuthStatus.authenticated) {
+      context.push(
+        '/login?redirect=${Uri.encodeComponent('/social/${session.id}')}',
+      );
+      return;
+    }
     SocialJoinBottomSheet.show(context, session);
   }
 
-  Future<void> _withdrawJoinRequest() async {
+  Future<void> _handleShare(SocialSessionModel session) async {
+    final shareUrl = session.shareUrl;
+    if (shareUrl == null) {
+      _showShortLinkUnavailable();
+      return;
+    }
     try {
-      await ref
-          .read(socialSessionDetailProvider(widget.sessionId).notifier)
-          .withdrawJoinRequest();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.socialJoinRequestCancelled,
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
+      await SharePlus.instance.share(
+        ShareParams(text: shareUrl, subject: session.title),
       );
     } catch (_) {
+      await Clipboard.setData(ClipboardData(text: shareUrl));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.socialJoinRequestDecisionFailed,
-          ),
-          backgroundColor: context.colors.error,
+          content: Text('Đã sao chép link chia sẻ buổi ${session.title}!'),
           behavior: SnackBarBehavior.floating,
         ),
       );
     }
   }
 
-  void _handleShare(SocialSessionModel session) {
+  void _showShortLinkUnavailable() {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Đã sao chép link chia sẻ buổi ${session.title}!'),
+      const SnackBar(
+        content: Text('Link rút gọn chưa sẵn sàng. Vui lòng thử lại sau.'),
         behavior: SnackBarBehavior.floating,
       ),
     );

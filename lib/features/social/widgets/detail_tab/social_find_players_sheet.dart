@@ -38,12 +38,14 @@ class SocialFindPlayersSheet extends StatelessWidget {
     final colors = context.colors;
     final ctx = context;
     final messenger = ScaffoldMessenger.of(context);
-    final inviteMessage =
-        '''${session.title}
+    final shareUrl = session.shareUrl;
+    final inviteMessage = shareUrl == null
+        ? null
+        : '''${session.title}
 ⏰ ${session.dayOfWeek}, ngày ${session.dayOfMonth.toString().padLeft(2, '0')} Th${session.dateTime.month.toString().padLeft(2, '0')} lúc ${session.timeSlot}
 📍 ${session.venueName}
 
-RSVP: https://sporto.vn/social/${session.id}''';
+Link: $shareUrl''';
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -127,7 +129,9 @@ RSVP: https://sporto.vn/social/${session.id}''';
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'RSVP: https://sporto.vn/social/${session.id}',
+                      shareUrl == null
+                          ? 'Link rút gọn chưa sẵn sàng. Vui lòng thử lại sau.'
+                          : 'Link: $shareUrl',
                       style: TextStyle(
                         fontSize: 13,
                         color: colors.textSecondary,
@@ -139,17 +143,23 @@ RSVP: https://sporto.vn/social/${session.id}''';
 
                     // Button 'Sao chép tin nhắn' inside the card
                     InkWell(
-                      onTap: () {
-                        Clipboard.setData(ClipboardData(text: inviteMessage));
-                        Navigator.pop(ctx);
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: const Text('Đã sao chép tin nhắn mời!'),
-                            backgroundColor: colors.success,
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
+                      onTap: inviteMessage == null
+                          ? null
+                          : () {
+                              Clipboard.setData(
+                                ClipboardData(text: inviteMessage),
+                              );
+                              Navigator.pop(ctx);
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: const Text(
+                                    'Đã sao chép tin nhắn mời!',
+                                  ),
+                                  backgroundColor: colors.success,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            },
                       borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 6),
@@ -195,17 +205,19 @@ RSVP: https://sporto.vn/social/${session.id}''';
                     color: colors.textPrimary,
                   ),
                 ),
-                onTap: () {
-                  Clipboard.setData(ClipboardData(text: inviteMessage));
-                  Navigator.pop(ctx);
-                  messenger.showSnackBar(
-                    SnackBar(
-                      content: const Text('Đã sao chép tin nhắn mời!'),
-                      backgroundColor: colors.success,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
+                onTap: inviteMessage == null
+                    ? null
+                    : () {
+                        Clipboard.setData(ClipboardData(text: inviteMessage));
+                        Navigator.pop(ctx);
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: const Text('Đã sao chép tin nhắn mời!'),
+                            backgroundColor: colors.success,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
               ),
 
               // Option 2: Chia sẻ trong cuộc trò chuyện (IMG4)
@@ -224,10 +236,12 @@ RSVP: https://sporto.vn/social/${session.id}''';
                     color: colors.textPrimary,
                   ),
                 ),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  onShareToChat();
-                },
+                onTap: shareUrl == null
+                    ? null
+                    : () {
+                        Navigator.pop(ctx);
+                        onShareToChat();
+                      },
               ),
             ],
           ),

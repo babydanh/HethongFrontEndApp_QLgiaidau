@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
-import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/providers/social_provider.dart';
 
-class SocialParticipantsTab extends ConsumerWidget {
+class SocialParticipantsTab extends StatelessWidget {
   const SocialParticipantsTab({
     super.key,
     required this.session,
     required this.isHost,
     required this.onAddParticipant,
+    required this.onRemoveParticipant,
+    this.removingParticipantId,
   });
   final SocialSessionModel session;
   final bool isHost;
   final ValueChanged<int> onAddParticipant;
+  final ValueChanged<SocialParticipantModel> onRemoveParticipant;
+  final String? removingParticipantId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final session = this.session;
     final colors = context.colors;
     final host =
@@ -39,8 +40,6 @@ class SocialParticipantsTab extends ConsumerWidget {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       children: [
-        if (isHost) _buildJoinRequests(context, ref),
-        if (isHost) const SizedBox(height: 20),
         // ─── 1. NGƯỜI TỔ CHỨC ───
         Text(
           'NGƯỜI TỔ CHỨC • 1',
@@ -180,47 +179,84 @@ class SocialParticipantsTab extends ConsumerWidget {
           itemBuilder: (context, index) {
             if (index < session.participants.length) {
               final p = session.participants[index];
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 54,
-                    height: 54,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: p.isHost
-                          ? colors.success.withValues(alpha: 0.25)
-                          : AppTheme.primaryLight.withValues(alpha: 0.35),
-                      border: Border.all(
-                        color: p.isHost
-                            ? colors.success.withValues(alpha: 0.6)
-                            : AppTheme.primary.withValues(alpha: 0.4),
-                        width: 1.2,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        p.initials,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: colors.textPrimary,
+              final canRemove =
+                  isHost && !p.isHost && p.apiIdentifier.isNotEmpty;
+              return InkWell(
+                onTap: canRemove && removingParticipantId == null
+                    ? () => onRemoveParticipant(p)
+                    : null,
+                borderRadius: BorderRadius.circular(12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Stack(
+                      children: [
+                        Container(
+                          width: 54,
+                          height: 54,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: p.isHost
+                                ? colors.success.withValues(alpha: 0.25)
+                                : AppTheme.primaryLight.withValues(alpha: 0.35),
+                            border: Border.all(
+                              color: p.isHost
+                                  ? colors.success.withValues(alpha: 0.6)
+                                  : AppTheme.primary.withValues(alpha: 0.4),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              p.initials,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                          ),
                         ),
+                        if (canRemove)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: colors.bgCard,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: colors.border),
+                              ),
+                              child: removingParticipantId == p.apiIdentifier
+                                  ? const SizedBox(
+                                      width: 17,
+                                      height: 17,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Icon(
+                                      Icons.close_rounded,
+                                      size: 17,
+                                      color: colors.error,
+                                    ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      p.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    p.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               );
             } else {
               // Empty slot with '+' icon
@@ -257,190 +293,5 @@ class SocialParticipantsTab extends ConsumerWidget {
         ),
       ],
     );
-  }
-
-  Widget _buildJoinRequests(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final provider = socialJoinRequestsProvider(session.id);
-    return ref
-        .watch(provider)
-        .when(
-          loading: () => const Center(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: CircularProgressIndicator(),
-            ),
-          ),
-          error: (_, _) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.socialPendingJoinRequests,
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () => ref.invalidate(provider),
-                icon: const Icon(Icons.refresh_rounded),
-                label: Text(l10n.socialJoinRequestDecisionFailed),
-              ),
-            ],
-          ),
-          data: (response) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${l10n.socialPendingJoinRequests} • ${response.total}',
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: l10n.socialPendingJoinRequests,
-                    onPressed: () => ref.read(provider.notifier).refresh(),
-                    icon: const Icon(Icons.refresh_rounded),
-                  ),
-                ],
-              ),
-              if (response.items.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Text(
-                    l10n.socialNoPendingJoinRequests,
-                    style: TextStyle(color: colors.textSecondary),
-                  ),
-                )
-              else
-                ...response.items.map((participant) {
-                  final name = participant.fullName?.trim().isNotEmpty == true
-                      ? participant.fullName!.trim()
-                      : l10n.socialJoinRequestNoName;
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    decoration: BoxDecoration(
-                      color: colors.bgCard,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: colors.border),
-                    ),
-                    child: ListTile(
-                      leading: CircleAvatar(child: Text(participant.initials)),
-                      title: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(
-                        l10n.socialJoinRequestSlots(participant.ticketCount),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            tooltip: l10n.socialRejectJoinRequest,
-                            onPressed: () => _decideJoinRequest(
-                              context,
-                              ref,
-                              participant.id,
-                              approve: false,
-                            ),
-                            icon: const Icon(Icons.close_rounded),
-                            color: colors.error,
-                          ),
-                          IconButton(
-                            tooltip: l10n.socialApproveJoinRequest,
-                            onPressed: () => _decideJoinRequest(
-                              context,
-                              ref,
-                              participant.id,
-                              approve: true,
-                            ),
-                            icon: const Icon(Icons.check_rounded),
-                            color: colors.success,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-              if (response.items.length < response.total)
-                Align(
-                  alignment: Alignment.center,
-                  child: TextButton(
-                    onPressed: () => _loadMoreJoinRequests(context, ref),
-                    child: Text(l10n.socialJoinRequestLoadMore),
-                  ),
-                ),
-            ],
-          ),
-        );
-  }
-
-  Future<void> _loadMoreJoinRequests(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
-    try {
-      await ref
-          .read(socialJoinRequestsProvider(session.id).notifier)
-          .loadMore();
-    } catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.socialJoinRequestDecisionFailed,
-          ),
-        ),
-      );
-    }
-  }
-
-  Future<void> _decideJoinRequest(
-    BuildContext context,
-    WidgetRef ref,
-    String participantId, {
-    required bool approve,
-  }) async {
-    try {
-      final notifier = ref.read(
-        socialSessionDetailProvider(session.id).notifier,
-      );
-      if (approve) {
-        await notifier.approveJoinRequest(participantId);
-      } else {
-        await notifier.rejectJoinRequest(participantId);
-      }
-      if (!context.mounted) return;
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            approve
-                ? l10n.socialJoinRequestApproved
-                : l10n.socialJoinRequestRejected,
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.socialJoinRequestDecisionFailed,
-          ),
-          backgroundColor: context.colors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
   }
 }
