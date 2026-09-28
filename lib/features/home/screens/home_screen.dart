@@ -19,10 +19,12 @@ import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_ban
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.dart';
 import 'package:app_quanly_giaidau/features/social/screens/social_list_view.dart';
 
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -322,59 +324,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ];
   }
 
-  Future<bool> _ensureSportCategories() async {
-    try {
-      await ref.read(categoriesProvider.future);
-      return mounted;
-    } catch (_) {
-      if (mounted) {
-        ref.invalidate(categoriesProvider);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Không thể tải danh sách môn thể thao. Vui lòng thử lại.',
-            ),
-          ),
-        );
-      }
-      return false;
-    }
-  }
-
-  Future<void> _openSportMenu(
-    BuildContext anchorContext,
-    AppLocalizations l10n,
-  ) async {
-    if (!await _ensureSportCategories()) return;
-    if (!mounted || !anchorContext.mounted) return;
-    final box = anchorContext.findRenderObject() as RenderBox;
-    final overlay =
-        Overlay.of(anchorContext).context.findRenderObject() as RenderBox;
-    final topLeft = box.localToGlobal(Offset.zero, ancestor: overlay);
-    final selected = await showMenu<String>(
-      context: anchorContext,
-      position: RelativeRect.fromRect(
-        Rect.fromLTWH(
-          topLeft.dx,
-          topLeft.dy + box.size.height,
-          box.size.width,
-          0,
-        ),
-        Offset.zero & overlay.size,
-      ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: context.colors.bgSurface,
-      elevation: 8,
-      items: [
-        if (_currentIndex != 4) _buildPopupMenuItem(l10n.filterAll, 'all'),
-        ..._activeSportFilterItems(l10n)
-            .where((item) => item.$1 != 'all')
-            .map((item) => _buildPopupMenuItem(item.$2, item.$1)),
-      ],
-    );
-    if (mounted && selected != null) _setActiveSportFilter(selected);
-  }
-
   final ScrollController _scrollController = ScrollController();
   PageController? _carouselController;
   Timer? _carouselTimer;
@@ -462,7 +411,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _showGlobalSearchScreen() async {
     await GlobalSearchScreen.show(
       context: context,
-      initialTabIndex: _currentIndex,
+      initialTabIndex: _currentIndex == 0 ? 0 : _currentIndex,
       initialQuery: _searchQueries[_currentIndex] ?? '',
     );
   }
@@ -703,13 +652,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ],
         ),
-        floatingActionButton:
-        _currentIndex == 3 && _exploreSubTabIndex == 0
-            ? _buildCreateClubButton()
-            : null,
+        floatingActionButton: _currentIndex != 3
+            ? null
+            : switch (_exploreSubTabIndex) {
+                0 => _buildCreateClubButton(),
+                1 => _buildCreateSocialButton(l10n),
+                _ => null,
+              },
 
-        floatingActionButtonLocation:
-        FloatingActionButtonLocation.endFloat,
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
 
         bottomNavigationBar: FloatingBottomNav(
           currentIndex: _currentIndex,
@@ -865,6 +816,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     SliverToBoxAdapter(
                       child: SizedBox(height: _pinnedHeaderHeight),
                     ),
+                    SliverToBoxAdapter(child: _buildLiquidSearchBar()),
                     if (!ref.watch(authProvider).isAuthenticated)
                       SliverToBoxAdapter(
                         child: _buildGuestLoginNoticeBanner(l10n),
@@ -1009,10 +961,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final activeSport = _activeSportFilter;
     final isSelected =
         activeSport == key || (key == '' && activeSport == 'all');
+    final iconColor = isSelected
+        ? AppTheme.primary
+        : context.colors.textSecondary;
     return PopupMenuItem<String>(
       value: key,
       child: Row(
         children: [
+          if (key == 'all' || key.isEmpty)
+            Icon(Icons.sports_rounded, size: 18, color: iconColor)
+          else
+            SportChoiceTile.buildSportIcon(key, 18, iconColor),
+          const SizedBox(width: 10),
           Text(
             label,
             style: TextStyle(
@@ -1126,11 +1086,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: AppTheme.primary,
       foregroundColor: Colors.white,
       elevation: 6,
-      shape: const CircleBorder(
-        side: BorderSide(
-          color: Colors.transparent,
-        ),
-      ),
+      shape: const CircleBorder(side: BorderSide(color: Colors.transparent)),
       onPressed: () {
         final auth = ref.read(authProvider);
 
@@ -1140,10 +1096,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           context.push('/club-create');
         }
       },
-      child: const Icon(
-        Icons.add_rounded,
-        size: 36,
-      ),
+      child: const Icon(Icons.add_rounded, size: 36),
+    );
+  }
+
+  Widget _buildCreateSocialButton(AppLocalizations l10n) {
+    return FloatingActionButton.extended(
+      key: const ValueKey('home-social-create-action'),
+      heroTag: 'create-social-action',
+      backgroundColor: AppTheme.primary,
+      foregroundColor: Colors.white,
+      elevation: 6,
+      onPressed: () {
+        final auth = ref.read(authProvider);
+        if (!auth.isAuthenticated) {
+          context.push('/login');
+          return;
+        }
+
+        showModalBottomSheet<Object?>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => const CreateSocialScreen(clubId: '', clubName: ''),
+        );
+      },
+      icon: const Icon(Icons.add_rounded),
+      label: Text(l10n.homeSocialCreateAction),
     );
   }
 
@@ -1229,6 +1208,72 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _buildLiquidSearchBar() {
+    final colors = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _showGlobalSearchScreen,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              color: isDark ? colors.bgSurface : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: colors.border.withValues(alpha: isDark ? 0.9 : 0.65),
+                width: 1.0,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.search_rounded, color: colors.textMuted, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.homeSearchMatchesHint,
+                    style: TextStyle(
+                      color: colors.textMuted,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.tune_rounded,
+                    color: AppTheme.primary,
+                    size: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildExploreSegmentTabBar(AppLocalizations l10n) {
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1286,13 +1331,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
             color: isSelected ? AppTheme.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(10),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: AppTheme.primary.withValues(alpha: 0.25),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
+                      color: AppTheme.primary.withValues(alpha: 0.28),
+                      blurRadius: 6,
+                      offset: const Offset(0, 1.5),
                     ),
                   ]
                 : null,

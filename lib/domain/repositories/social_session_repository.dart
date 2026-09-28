@@ -15,7 +15,10 @@ abstract class ISocialSessionRepository {
   Future<SocialSessionModel> getDetail(String sessionId);
 
   /// 4.1 - Tạo kèo (POST /social-sessions)
-  Future<SocialSessionModel> create(CreateSocialSessionRequest request);
+  Future<SocialSessionModel> create(
+    CreateSocialSessionRequest request, {
+    required String idempotencyKey,
+  });
 
   /// 4.2b - Danh sách theo CLB (GET /social-sessions/by-community/:communityId)
   /// Backend: QuerySocialByCommunityDto { status, from, to, sport, search, page, limit }
@@ -31,7 +34,10 @@ abstract class ISocialSessionRepository {
   });
 
   /// 4.6 - Sửa kèo (PATCH /social-sessions/:id)
-  Future<SocialSessionModel> update(String sessionId, Map<String, dynamic> fields);
+  Future<SocialSessionModel> update(
+    String sessionId,
+    Map<String, dynamic> fields,
+  );
 
   /// 4.8 - Hủy kèo (PATCH /social-sessions/:id/cancel)
   Future<void> cancel(String sessionId);
@@ -48,6 +54,17 @@ abstract class ISocialSessionRepository {
 
   /// 4.4 - Member tự join (POST /social-sessions/:id/join)
   Future<JoinSessionResponse> join(String sessionId, {int ticketCount = 1});
+  Future<void> requestToJoin(String sessionId, {int ticketCount = 1});
+
+  Future<SocialJoinRequestListResponse> listJoinRequests(
+    String sessionId, {
+    int page = 1,
+    int limit = 20,
+  });
+
+  Future<void> approveJoinRequest(String sessionId, String participantId);
+  Future<void> rejectJoinRequest(String sessionId, String participantId);
+  Future<void> withdrawJoinRequest(String sessionId);
 
   /// 4.5 - Admin thêm người (POST /social-sessions/:id/participants)
   Future<void> addParticipant(

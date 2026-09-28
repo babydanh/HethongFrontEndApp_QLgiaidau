@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 
 String getShortTierCode(String? tierName, int? elo) {
@@ -104,7 +105,6 @@ class _SportIcon extends StatelessWidget {
         .where((entry) => entry.value.toLowerCase() == normalized)
         .map((entry) => entry.key)
         .firstWhere((value) => true, orElse: () => normalized);
-    final visual = AppConstants.sportIcons[key] ?? '🏅';
 
     return Container(
       width: size,
@@ -123,12 +123,10 @@ class _SportIcon extends StatelessWidget {
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: visual.startsWith('assets/')
-          ? Padding(
-              padding: const EdgeInsets.all(3),
-              child: Image.asset(visual, fit: BoxFit.contain),
-            )
-          : Text(visual, style: TextStyle(fontSize: size * 0.62, height: 1)),
+      child: Padding(
+        padding: const EdgeInsets.all(2.5),
+        child: SportChoiceTile.buildSportIcon(key, size - 5),
+      ),
     );
   }
 }

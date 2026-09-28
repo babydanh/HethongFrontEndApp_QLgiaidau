@@ -10,8 +10,6 @@ import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
 
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
-import 'package:app_quanly_giaidau/providers/theme_provider.dart' as tp;
-import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -24,20 +22,15 @@ import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
-import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/organizer_verification_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_type_sheet.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
-import 'package:app_quanly_giaidau/core/services/app_update_service.dart';
-import 'package:app_quanly_giaidau/core/widgets/app_update_gate.dart';
 
+// ─── PROFILE SCREEN ──────────────────────────────────────────────────────────
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
@@ -48,38 +41,9 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _uploading = false;
   bool _uploadingCover = false;
-  int _activeTab = 0;
   String _followedFilter = 'all';
-  late final Future<PackageInfo> _packageInfoFuture;
 
-  void _selectBottomTab(int index) {
-    if (index == 2) return;
-    final returnDepth =
-        int.tryParse(
-          GoRouterState.of(context).uri.queryParameters['returnToClub'] ?? '',
-        ) ??
-        0;
-    if (returnDepth > 0) {
-      final router = GoRouter.of(context);
-      for (var i = 0; i < returnDepth && router.canPop(); i++) {
-        router.pop();
-      }
-      if (index != 3) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          router.push('/home?tab=$index&returnToClub=1');
-        });
-      }
-      return;
-    }
-    context.go('/home?tab=$index');
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _packageInfoFuture = PackageInfo.fromPlatform();
-  }
-
+  // ─── IMAGE PICKER ────────────────────────────────────────────────────
   Future<void> _pickImage(bool isCover) async {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
@@ -189,7 +153,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l10n.profileCoverUpdated),
-              backgroundColor: Color(0xFF10B981),
+              backgroundColor: const Color(0xFF10B981),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -225,7 +189,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l10n.profileAvatarUpdated),
-              backgroundColor: Color(0xFF10B981),
+              backgroundColor: const Color(0xFF10B981),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -251,12 +215,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _pickAndUploadAvatar() => _pickImage(false);
   Future<void> _pickAndUploadCover() => _pickImage(true);
 
+  // ─── BUILD ───────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final themeMode = ref.watch(tp.themeProvider);
-    final isDark = themeMode == ThemeMode.dark;
     final authState = ref.watch(authProvider);
-    final l10n = AppLocalizations.of(context)!;
 
     if (!authState.isAuthenticated) {
       return _buildLoginPrompt(context);
@@ -266,47 +228,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: context.colors.bgDark,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_rounded,
-            color: context.colors.textPrimary,
-          ),
-          onPressed: () => context.go('/home'),
-        ),
-        title: Text(
-          l10n.profileTitle,
-          style: TextStyle(
-            color: context.colors.textPrimary,
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          TextButton.icon(
-            onPressed: () => context.go('/profile/edit'),
-            icon: const Icon(
-              Icons.edit_rounded,
-              size: 18,
-              color: AppTheme.primary,
-            ),
-            label: Text(
-              l10n.infoEdit,
-              style: const TextStyle(
-                color: AppTheme.primary,
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-              ),
-            ),
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
       body: profileAsync.when(
-        data: (profile) => _buildBody(context, profile, isDark),
+        data: (profile) => _buildNestedBody(context, profile),
         loading: () => const ProfileShimmerLoading(),
         error: (err, _) => _buildError(
           context,
@@ -323,828 +246,532 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildLoginPrompt(BuildContext context) {
+  Widget _buildNestedBody(BuildContext context, UserProfile profile) {
     final colors = context.colors;
-    final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: colors.bgDark,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
-          onPressed: () => context.go('/home'),
-        ),
-        title: Text(
-          l10n.profileTitle,
-          style: TextStyle(
-            color: colors.textPrimary,
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
+    final rankings =
+        ref.watch(userRankingsProvider).asData?.value ??
+        const <PlayerRanking>[];
+
+    // Compute stats from rankings
+    final totalPlayed = rankings.fold<int>(0, (s, r) => s + r.matchesPlayed);
+    final totalWon = rankings.fold<int>(0, (s, r) => s + r.matchesWon);
+    final totalLost = totalPlayed - totalWon;
+    final bestElo = rankings.isNotEmpty
+        ? rankings.map((r) => r.eloPoints).reduce((a, b) => a > b ? a : b)
+        : (profile.eloPoints ?? 0);
+
+    final eligibleRankings =
+        rankings
+            .where((r) => r.isLeaderboardEligible && r.eloPoints > 0)
+            .toList()
+          ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
+
+    final bestRanking = eligibleRankings.isNotEmpty
+        ? eligibleRankings.first
+        : (rankings.isNotEmpty ? rankings.first : null);
+
+    return _buildSinglePageProfile(
+      context,
+      profile,
+      colors,
+      rankings: rankings,
+      bestRanking: bestRanking,
+      totalPlayed: totalPlayed,
+      totalWon: totalWon,
+      totalLost: totalLost < 0 ? 0 : totalLost,
+      bestElo: bestElo,
+    );
+  }
+
+  // ─── SINGLE PAGE PROFILE (IMAGE 1 EXACT DESIGN) ──────────────────────
+  Widget _buildSinglePageProfile(
+    BuildContext context,
+    UserProfile profile,
+    AppColorsExtension colors, {
+    required List<PlayerRanking> rankings,
+    required PlayerRanking? bestRanking,
+    required int totalPlayed,
+    required int totalWon,
+    required int totalLost,
+    required int bestElo,
+  }) {
+    const expandedCoverHeight = 220.0;
+    const avatarRadius = 46.0;
+
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(
+        parent: AlwaysScrollableScrollPhysics(),
+      ),
+      slivers: [
+        // ── PINNED SLIVER APP BAR (Cover image + Persistent Back/Camera/Settings) ──
+        SliverAppBar(
+          expandedHeight: expandedCoverHeight,
+          pinned: true,
+          elevation: 0,
+          backgroundColor: colors.bgDark,
+          leading: Center(
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go("/home");
+                }
+              },
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    width: 1,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _pickAndUploadCover();
+              },
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    width: 1,
+                  ),
+                ),
+                child: _uploadingCover
+                    ? const Center(
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                    : const Icon(
+                        Icons.camera_alt_outlined,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.go("/profile/settings");
+              },
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    width: 1,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.settings_outlined,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
+          flexibleSpace: FlexibleSpaceBar(
+            stretchModes: const [
+              StretchMode.zoomBackground,
+              StretchMode.blurBackground,
+            ],
+            background: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (profile.coverUrl != null &&
+                    profile.coverUrl!.trim().isNotEmpty)
+                  Image.network(
+                    profile.coverUrl!.trim(),
+                    fit: BoxFit.cover,
+                    errorBuilder: (ctx, e, s) => _buildArtisticCover(colors),
+                  )
+                else
+                  _buildArtisticCover(colors),
+                // Premium gradient vignette
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.black.withValues(alpha: 0.5),
+                        Colors.transparent,
+                        colors.bgDark.withValues(alpha: 0.85),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: const [0.0, 0.45, 1.0],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 24),
+
+        // ── PROFILE BODY CONTENT WITH OVERLAPPING AVATAR ──
+        SliverToBoxAdapter(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Official Sporto SVG Logo
-              Image.asset(
-                'assets/images/sporto_v1_with_text.png',
-                width: 190,
-                fit: BoxFit.contain,
-              ),
-              const SizedBox(height: 28),
-              Text(
-                l10n.profileLoginGreeting,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: colors.textPrimary,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                l10n.profileLoginDescription,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colors.textSecondary,
-                  height: 1.45,
-                ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: FilledButton.icon(
-                  onPressed: () => context.go('/login'),
-                  icon: const Icon(Icons.login_rounded, size: 20),
-                  label: Text(
-                    l10n.profileLoginButton,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+              // Avatar protruding over the cover seam
+              Transform.translate(
+                offset: const Offset(0, -avatarRadius),
+                child: Center(
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      _pickAndUploadAvatar();
+                    },
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(3.5),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colors.bgDark,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.25),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: RankAvatar(
+                            imageUrl: profile.avatarUrl,
+                            name:
+                                (profile.fullName != null &&
+                                    profile.fullName!.isNotEmpty)
+                                ? profile.fullName!
+                                : "SportO",
+                            elo: bestRanking?.eloPoints ?? 0,
+                            tierName: bestRanking?.tierName,
+                            matchesPlayed: bestRanking?.matchesPlayed ?? 0,
+                            size: avatarRadius * 2,
+                            ringWidth: 3,
+                          ),
+                        ),
+                        // Small camera badge
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: colors.bgCard,
+                              border: Border.all(
+                                color: colors.borderLight,
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: _uploading
+                                  ? SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: colors.textPrimary,
+                                      ),
+                                    )
+                                  : Icon(
+                                      Icons.camera_alt_rounded,
+                                      size: 14,
+                                      color: colors.textPrimary,
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => context.go('/login'),
-                child: Text(
-                  '${l10n.noAccount} ${l10n.registerNow}',
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    color: AppTheme.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
+
+              // Offset compensation after protruding avatar
+              Transform.translate(
+                offset: const Offset(0, -avatarRadius + 8),
+                child: Column(
+                  children: [
+                    // ── USER NAME, USERNAME, LOCATION ──
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        children: [
+                          // Full name
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  profile.fullName ?? "Người dùng",
+                                  style: TextStyle(
+                                    fontSize: 21,
+                                    fontWeight: FontWeight.w800,
+                                    color: colors.textPrimary,
+                                    letterSpacing: -0.4,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (profile.isEmailVerified == true) ...[
+                                const SizedBox(width: 5),
+                                const Icon(
+                                  Icons.verified_rounded,
+                                  size: 18,
+                                  color: Color(0xFF2563EB),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+
+                          // Handle / Username (@minhanh)
+                          if (profile.email != null)
+                            Text(
+                              "@${profile.email!.split("@").first}",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: colors.textMuted,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          const SizedBox(height: 5),
+
+                          // Location Pin (📍 Đắk Lắk, Việt Nam)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.location_on_outlined,
+                                size: 13,
+                                color: colors.textMuted,
+                              ),
+                              const SizedBox(width: 3),
+                              Flexible(
+                                child: Text(
+                                  (profile.address != null &&
+                                          profile.address!.isNotEmpty)
+                                      ? profile.address!
+                                      : "Đắk Lắk, Việt Nam",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: colors.textMuted,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // ── 4-METRIC STATS ROW (IMAGE 1) ──
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildStatsRow(
+                        context,
+                        colors,
+                        totalPlayed,
+                        totalWon,
+                        totalLost < 0 ? 0 : totalLost,
+                        bestElo,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // ── 4-ITEM NAVIGATION MENU CARD (IMAGE 1) ──
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildNavMenuCard(context, colors),
+                    ),
+
+                    const SizedBox(height: 24),
+                  ],
                 ),
               ),
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: FloatingBottomNav(
-        currentIndex: 2,
-        onTabSelected: (index) {
-          if (index != 2) context.go('/home?tab=$index');
-        },
-        onMenuTap: () => AppMenuSheet.show(context),
-      ),
-    );
-  }
 
-  // ─── MAIN BODY ──────────────────────────────────────────────────────
-  Widget _buildBody(BuildContext context, UserProfile profile, bool isDark) {
-    final colors = context.colors;
-    final l10n = AppLocalizations.of(context)!;
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        children: [
-          // Cover + Avatar section
-          _buildCoverAndAvatar(context, profile),
-          const SizedBox(height: 4),
-
-          // Name + Role + Email + Bio
-          _buildUserInfo(context, profile),
-          const SizedBox(height: 20),
-
-          // Tab bar selector (3 Tabs: Thông tin | Theo dõi | Thành tích)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              height: 46,
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colors.border),
-              ),
-              child: Row(
+        // ── MY TOURNAMENTS / COMMUNITIES / FOLLOWED ──
+        SliverToBoxAdapter(
+          child: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: _buildTabButton(
-                      0,
-                      l10n.profileTabInfo,
-                      Icons.person_outline_rounded,
+                  // My Tournaments
+                  _buildSectionTitle(
+                    colors,
+                    l10n.infoMyTournaments,
+                    trailing: IconButton(
+                      onPressed: () => showPublicTournamentTypeSheet(context),
+                      icon: const Icon(Icons.add_circle_outline_rounded, size: 22),
+                      color: AppTheme.primary,
+                      tooltip: 'Tạo giải đấu',
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
+                      padding: EdgeInsets.zero,
                     ),
                   ),
-                  Expanded(
-                    child: _buildTabButton(
-                      1,
-                      l10n.profileTabSettings,
-                      Icons.settings_rounded,
-                    ),
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildMyTournamentsSection(context),
                   ),
+                  const SizedBox(height: 24),
+
+                  // My Communities
+                  _buildSectionTitle(colors, l10n.infoMyClubs),
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildMyCommunitiesSection(context),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Followed Tournaments
+                  _buildSectionTitle(colors, l10n.infoFollowedTournaments),
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildFollowedTournamentsSection(context),
+                  ),
+                  const SizedBox(height: 110), // Bottom navigation clearance
                 ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Tab Content
-          if (_activeTab == 0) ...[
-            // My Tournaments Section
-            _buildSectionTitle(
-              colors,
-              l10n.infoMyTournaments,
-              trailing: IconButton(
-                onPressed: () => showPublicTournamentTypeSheet(context),
-                icon: const Icon(Icons.add_circle_outline_rounded, size: 22),
-                color: AppTheme.primary,
-                tooltip: 'Tạo giải đấu',
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                padding: EdgeInsets.zero,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildMyTournamentsSection(context),
-            ),
-            const SizedBox(height: 24),
-
-            // My Communities Section
-            _buildSectionTitle(colors, l10n.infoMyClubs),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildMyCommunitiesSection(context),
-            ),
-            const SizedBox(height: 24),
-
-            // Followed Tournaments Section
-            _buildSectionTitle(colors, l10n.infoFollowedTournaments),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildFollowedTournamentsSection(context),
-            ),
-            const SizedBox(height: 24),
-
-            // Personal Info Section
-            _buildSectionTitle(colors, l10n.infoPersonalInfo),
-            const SizedBox(height: 10),
-            _buildInfoCard(context, profile),
-            const SizedBox(height: 32),
-          ] else ...[
-            // Tab 1: Cài đặt (Menu buttons)
-            _buildSectionTitle(colors, l10n.settingsAccountTitle),
-            const SizedBox(height: 10),
-            _buildAccountMenu(context),
-            const SizedBox(height: 24),
-
-            _buildSectionTitle(colors, l10n.settingsSystemTitle),
-            const SizedBox(height: 10),
-            _buildOtherMenu(context, isDark),
-            const SizedBox(height: 32),
-          ],
-          FutureBuilder<PackageInfo>(
-            future: _packageInfoFuture,
-            builder: (context, snapshot) {
-              final info = snapshot.data;
-              if (info == null) return const SizedBox(height: 8);
-              final build = info.buildNumber.isEmpty
-                  ? ''
-                  : ' (${info.buildNumber})';
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 22),
-                child: Text(
-                  l10n.profileVersion(info.version, build),
-                  style: TextStyle(fontSize: 11, color: colors.textSecondary),
-                ),
               );
             },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabButton(int index, String label, IconData icon) {
-    final colors = context.colors;
-    final isSelected = _activeTab == index;
-    return GestureDetector(
-      onTap: () => setState(() => _activeTab = index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 15,
-              color: isSelected ? Colors.white : colors.textSecondary,
-            ),
-            const SizedBox(width: 5),
-            Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : colors.textSecondary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─── COVER + AVATAR ─────────────────────────────────────────────────
-  Widget _buildCoverAndAvatar(BuildContext context, UserProfile profile) {
-    final colors = context.colors;
-    final rankings =
-        ref.watch(userRankingsProvider).asData?.value ??
-        const <PlayerRanking>[];
-    final eligibleRankings =
-        rankings
-            .where(
-              (r) =>
-                  r.isLeaderboardEligible &&
-                  (r.eloPoints > 0 || r.tierName.isNotEmpty),
-            )
-            .toList()
-          ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
-    final allRankings = rankings.toList()
-      ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
-    final bestRanking = eligibleRankings.isNotEmpty
-        ? eligibleRankings.first
-        : (allRankings.isNotEmpty ? allRankings.first : null);
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        // Cover photo
-        GestureDetector(
-          onTap: _pickAndUploadCover,
-          child: Container(
-            height: 180,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: profile.coverUrl != null && profile.coverUrl!.isNotEmpty
-                  ? null
-                  : const LinearGradient(
-                      colors: [
-                        Color(0xFF1A1A2E),
-                        Color(0xFF16213E),
-                        Color(0xFF0F3460),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-            ),
-            child: profile.coverUrl != null && profile.coverUrl!.isNotEmpty
-                ? Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.network(
-                        profile.coverUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _coverGradient(),
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.transparent,
-                              colors.bgDark.withValues(alpha: 0.5),
-                            ],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : _coverGradient(),
-          ),
-        ),
-        // Cover upload overlay
-        Positioned(
-          top: 12,
-          right: 16,
-          child: GestureDetector(
-            onTap: _pickAndUploadCover,
-            child: Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.45),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.25),
-                  width: 1.5,
-                ),
-              ),
-              child: _uploadingCover
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(
-                      Icons.camera_alt_rounded,
-                      size: 17,
-                      color: Colors.white,
-                    ),
-            ),
-          ),
-        ),
-        // Avatar Centered (Facebook Style)
-        Positioned(
-          bottom: -50,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: GestureDetector(
-              onTap: _pickAndUploadAvatar,
-              child: Stack(
-                children: [
-                  RankAvatar(
-                    imageUrl: profile.avatarUrl,
-                    name: profile.fullName ?? '',
-                    elo: bestRanking?.eloPoints ?? 0,
-                    tierName: bestRanking?.tierName,
-                    matchesPlayed: bestRanking?.matchesPlayed ?? 0,
-                    size: 100,
-                    ringWidth: 4,
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppTheme.primary,
-                        border: Border.all(color: colors.bgDark, width: 2.5),
-                      ),
-                      child: _uploading
-                          ? const Padding(
-                              padding: EdgeInsets.all(6),
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(
-                              Icons.camera_alt_rounded,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _coverGradient() => const DecoratedBox(
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        colors: [Color(0xFF1A1A2E), Color(0xFF16213E), Color(0xFF0F3460)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
+  Widget _buildArtisticCover(AppColorsExtension colors) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0F172A), Color(0xFF1E3A8A), Color(0xFF2563EB)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
-    ),
-  );
-
-  // ─── USER INFO ──────────────────────────────────────────────────────
-  Widget _buildUserInfo(BuildContext context, UserProfile profile) {
-    final colors = context.colors;
-    final l10n = AppLocalizations.of(context)!;
-    final isEmailVerified = profile.isEmailVerified == true;
-
-    // Translate role to Vietnamese
-    String getRoleText(String? r) {
-      if (r == null || r.isEmpty) return l10n.infoPlayer;
-      final upper = r.toUpperCase();
-      if (upper == 'ADMIN') return l10n.infoAdmin;
-      if (upper == 'ORGANIZER') return l10n.infoOrganizer;
-      if (upper == 'REFEREE') return l10n.infoReferee;
-      if (upper == 'PLAYER') return l10n.infoPlayer;
-      return upper;
-    }
-
-    final roleText = getRoleText(profile.role);
-    final rankings =
-        ref.watch(userRankingsProvider).asData?.value ??
-        const <PlayerRanking>[];
-    final profileBadges = _selectProfileBadges(rankings);
-
-    // Format joined date
-    String joinedDateText = '${l10n.infoJoinedAt} 7/2026';
-    if (profile.createdAt != null && profile.createdAt!.isNotEmpty) {
-      try {
-        final dt = DateTime.parse(profile.createdAt!);
-        joinedDateText = '${l10n.infoJoinedAt} ${dt.month}/${dt.year}';
-      } catch (_) {}
-    }
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 56, 24, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          // 1. Centered Name
-          Text(
-            profile.fullName ?? l10n.profileUnknownUser,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: colors.textPrimary,
-              letterSpacing: -0.3,
-            ),
-          ),
-          if (profileBadges.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 6,
-              runSpacing: 6,
-              children: profileBadges
-                  .map(
-                    (ranking) => RankTierBadge(
-                      tierName: ranking.tierName,
-                      elo: ranking.eloPoints,
-                      sportName: ranking.categoryName,
-                    ),
-                  )
-                  .toList(growable: false),
-            ),
-          ],
-          const SizedBox(height: 6),
-
-          // 2. Role Badge (Placed cleanly below name, matching Web brand royal blue style)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3.5),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEFF6FF), // bg-blue-50
-              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-              border: Border.all(
-                color: const Color(0xFFBFDBFE),
-              ), // border-blue-200
-            ),
-            child: Text(
-              roleText,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF2563EB), // text-blue-600 (Royal Blue brand)
+          // Tennis/Badminton/Pickleball line graphics
+          Positioned(
+            right: -20,
+            bottom: -20,
+            child: Opacity(
+              opacity: 0.12,
+              child: const Icon(
+                Icons.sports_tennis_rounded,
+                size: 170,
+                color: Colors.white,
               ),
             ),
           ),
-          const SizedBox(height: 10),
-
-          // 3. Email with Verified Checkmark Centered
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.email_outlined, size: 14, color: colors.textMuted),
-              const SizedBox(width: 5),
-              Flexible(
-                child: Text(
-                  profile.email ?? '',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: colors.textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (isEmailVerified) ...[
-                const SizedBox(width: 5),
-                const Icon(
-                  Icons.verified_rounded,
-                  size: 15,
-                  color: Color(0xFF2563EB), // Web Royal Blue Verified Check
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 6),
-
-          // 4. Joined Date Line
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.calendar_today_outlined,
-                size: 13,
-                color: colors.textMuted,
-              ),
-              const SizedBox(width: 5),
-              Text(
-                joinedDateText,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  color: colors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-
-          if (profile.bio != null && profile.bio!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colors.border),
-              ),
-              child: Text(
-                profile.bio!,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: colors.textSecondary,
-                  height: 1.4,
-                ),
+          Positioned(
+            left: 20,
+            top: 40,
+            child: Opacity(
+              opacity: 0.08,
+              child: const Icon(
+                Icons.emoji_events_rounded,
+                size: 90,
+                color: Colors.white,
               ),
             ),
-          ],
+          ),
         ],
       ),
     );
   }
 
-  List<PlayerRanking> _selectProfileBadges(List<PlayerRanking> rankings) {
-    final sorted =
-        rankings
-            .where(
-              (ranking) =>
-                  ranking.isLeaderboardEligible && ranking.eloPoints > 0,
-            )
-            .toList()
-          ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
-
-    final seenCategories = <String>{};
-    return sorted
-        .where((ranking) {
-          final key = (ranking.categoryId ?? ranking.categoryName ?? ranking.id)
-              .trim()
-              .toLowerCase();
-          return seenCategories.add(key);
-        })
-        .take(2)
-        .toList(growable: false);
-  }
-
-  // ─── INFO CARD ──────────────────────────────────────────────────────
-  Widget _buildInfoCard(BuildContext context, UserProfile profile) {
-    final colors = context.colors;
-    final l10n = AppLocalizations.of(context)!;
-    final provincesAsync = ref.watch(provincesProvider);
-    final provinces = provincesAsync.value ?? [];
-    final province = provinces.firstWhere(
-      (p) => p.code == profile.provinceCode,
-      orElse: () => Province(code: '', name: ''),
-    );
-    final provinceDisplay = province.name.isNotEmpty
-        ? province.name
-        : (profile.provinceCode != null && profile.provinceCode!.isNotEmpty
-              ? profile.provinceCode!
-              : '—');
-
-    final emailVerified = profile.isEmailVerified == true;
-    final items = <_InfoItem>[
-      _InfoItem(
-        Icons.phone_rounded,
-        l10n.profilePhoneLabel,
-        profile.phoneNumber ?? '—',
-      ),
-      _InfoItem(
-        Icons.cake_rounded,
-        l10n.profileDobLabel,
-        profile.dateOfBirth ?? '—',
-      ),
-      _InfoItem(
-        Icons.wc_rounded,
-        l10n.profileGenderLabel,
-        profile.gender ?? '—',
-      ),
-      _InfoItem(
-        Icons.location_on_rounded,
-        l10n.profileAddressLabel,
-        profile.address ?? '—',
-      ),
-      _InfoItem(Icons.map_rounded, l10n.profileProvinceLabel, provinceDisplay),
-      _InfoItem(
-        Icons.verified_outlined,
-        l10n.infoEmailVerified,
-        emailVerified ? l10n.infoEmailVerified : l10n.infoEmailUnverified,
-      ),
-      _InfoItem(
-        Icons.phone_android_rounded,
-        l10n.profilePhoneVerifiedLabel,
-        profile.isPhoneVerified == true
-            ? l10n.infoEmailVerified
-            : l10n.infoEmailUnverified,
-      ),
-    ];
-    if (profile.bankName != null && profile.bankName!.isNotEmpty) {
-      items.add(
-        _InfoItem(
-          Icons.account_balance_rounded,
-          l10n.profileBankLabel,
-          profile.bankName!,
-        ),
-      );
-    }
-    if (profile.bankAccountNumber != null &&
-        profile.bankAccountNumber!.isNotEmpty) {
-      items.add(
-        _InfoItem(
-          Icons.numbers_rounded,
-          l10n.profileBankAccountLabel,
-          profile.bankAccountNumber!,
-        ),
-      );
-    }
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
+  // ─── SECTION TITLE ────────────────────────────────────────────────
+  Widget _buildSectionTitle(
+    AppColorsExtension colors,
+    String title, {
+    Widget? trailing,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color:
-                        (emailVerified
-                                ? const Color(0xFF22C55E)
-                                : colors.warning)
-                            .withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    emailVerified
-                        ? Icons.verified_rounded
-                        : Icons.mark_email_unread_rounded,
-                    color: emailVerified
-                        ? const Color(0xFF16A34A)
-                        : colors.warning,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.profileEmailStatusLabel,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        emailVerified
-                            ? l10n.profileEmailVerifiedDescription
-                            : l10n.profileEmailUnverifiedDescription,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colors.textMuted,
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          Container(
+            width: 3,
+            height: 18,
+            decoration: BoxDecoration(
+              color: AppTheme.primary,
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
-          Divider(
-            height: 1,
-            color: colors.borderLight,
-            indent: 16,
-            endIndent: 16,
-          ),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: items.length,
-            separatorBuilder: (context, index) => Padding(
-              padding: const EdgeInsets.only(left: 58),
-              child: Divider(height: 1, color: colors.borderLight),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: colors.textSecondary,
+                letterSpacing: 0.3,
+              ),
             ),
-            itemBuilder: (_, i) {
-              final item = items[i];
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(item.icon, size: 16, color: AppTheme.primary),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.label,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            item.value,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: colors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
           ),
+          ?trailing,
         ],
       ),
     );
@@ -1158,8 +785,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return workspaceAsync.when(
       data: (workspace) {
+        // Referee assignments ship as flat invites; resolve them against the
+        // tournament lists so the row keeps real name/logo/status/route.
+        final refereeTournaments = <Tournament>[];
+        for (final invite in workspace.refereeTournaments) {
+          final match = workspace.organizedTournaments
+              .where((t) => t.id == invite.tournamentId)
+              .firstOrNull;
+          final resolved =
+              match ??
+              workspace.participatingTournaments
+                  .where((t) => t.id == invite.tournamentId)
+                  .firstOrNull;
+          if (resolved != null) refereeTournaments.add(resolved);
+        }
+
         final roleGroups =
-            <({String label, IconData icon, Color color, List<dynamic> items})>[
+            <
+              ({
+                String label,
+                IconData icon,
+                Color color,
+                List<Tournament> items,
+              })
+            >[
               (
                 label: l10n.profileOwnerTournamentRole,
                 icon: Icons.workspace_premium_rounded,
@@ -1176,7 +825,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 label: l10n.profileRefereeTournamentRole,
                 icon: Icons.gavel_rounded,
                 color: AppTheme.refereeColor,
-                items: workspace.refereeTournaments,
+                items: refereeTournaments,
               ),
               (
                 label: l10n.profilePlayerTournamentRole,
@@ -1189,14 +838,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         final deduplicatedItems =
             <
               ({
-                dynamic tournament,
+                Tournament tournament,
                 ({String label, IconData icon, Color color}) role,
               })
             >[];
 
         for (final group in roleGroups) {
           for (final item in group.items) {
-            final id = item.id?.toString() ?? '';
+            final id = item.id.trim();
             if (id.isNotEmpty && !seenIds.contains(id)) {
               seenIds.add(id);
               deduplicatedItems.add((
@@ -1270,16 +919,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           child: Column(
             children: [
-              ...visible.map((entry) {
-                return _buildTournamentRow(
+              ...visible.map(
+                (entry) => _buildTournamentRow(
                   entry.tournament,
                   colors,
                   context,
                   roleLabel: entry.role.label,
                   roleColor: entry.role.color,
                   roleIcon: entry.role.icon,
-                );
-              }),
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: TextButton.icon(
@@ -1296,39 +945,49 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         );
       },
-      loading: () => Center(
+      loading: () => const Center(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20),
           child: CircularProgressIndicator(
             strokeWidth: 2,
             color: AppTheme.primary,
           ),
         ),
       ),
-      error: (e, _) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-          border: Border.all(color: colors.border),
-        ),
-        child: Center(
-          child: Column(
-            children: [
-              Icon(Icons.cloud_off_rounded, size: 32, color: colors.textMuted),
-              const SizedBox(height: 8),
-              Text(
-                l10n.profileTournamentLoadError,
-                style: TextStyle(color: colors.textSecondary, fontSize: 13),
-              ),
-            ],
-          ),
+      error: (e, _) => _buildSectionErrorCard(
+        colors,
+        message: l10n.profileTournamentLoadError,
+      ),
+    );
+  }
+
+  Widget _buildSectionErrorCard(
+    AppColorsExtension colors, {
+    required String message,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        border: Border.all(color: colors.border),
+      ),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 32, color: colors.textMuted),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: TextStyle(color: colors.textSecondary, fontSize: 13),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // ─── MY COMMUNITIES / CLUBS SECTION ─────────────────────────────────────
+  // ─── MY COMMUNITIES / CLUBS SECTION ─────────────────────────────────
   Widget _buildMyCommunitiesSection(BuildContext context) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
@@ -1407,19 +1066,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
       ),
-      error: (e, _) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-          border: Border.all(color: colors.border),
-        ),
-        child: Center(
-          child: Text(
-            l10n.profileClubLoadError,
-            style: TextStyle(color: colors.textSecondary, fontSize: 13),
-          ),
-        ),
+      error: (e, _) => _buildSectionErrorCard(
+        colors,
+        message: l10n.profileClubLoadError,
       ),
     );
   }
@@ -1494,7 +1143,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           child: Text(
             l10n.profileDefaultSport,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.w700,
               color: AppTheme.primary,
@@ -1598,7 +1247,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 4),
                   Text(
                     l10n.profileClubResubmit,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 9.5,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.primary,
@@ -1654,6 +1303,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  // ─── FOLLOWED TOURNAMENTS SECTION ───────────────────────────────────
   Widget _buildFollowedTournamentsSection(BuildContext context) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
@@ -1723,8 +1373,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     children: filters.map((f) {
                       final isSelected = _followedFilter == f['id'];
                       return GestureDetector(
-                        onTap: () =>
-                            setState(() => _followedFilter = f['id'] as String),
+                        key: ValueKey('profile-followed-filter-${f['id']}'),
+                        onTap: () => setState(
+                          () => _followedFilter = f['id'] as String,
+                        ),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 180),
                           margin: const EdgeInsets.only(right: 8),
@@ -1805,25 +1457,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
       ),
-      error: (e, _) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-          border: Border.all(color: colors.border),
-        ),
-        child: Center(
-          child: Column(
-            children: [
-              Icon(Icons.cloud_off_rounded, size: 32, color: colors.textMuted),
-              const SizedBox(height: 8),
-              Text(
-                l10n.profileFollowedLoadError,
-                style: TextStyle(color: colors.textSecondary, fontSize: 13),
-              ),
-            ],
-          ),
-        ),
+      error: (e, _) => _buildSectionErrorCard(
+        colors,
+        message: l10n.profileFollowedLoadError,
       ),
     );
   }
@@ -1880,7 +1516,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 2),
                   Text(
                     statusLabel,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
                       color: AppTheme.primary,
                       fontWeight: FontWeight.w700,
@@ -1923,7 +1559,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildTournamentRow(
-    dynamic t,
+    Tournament t,
     AppColorsExtension colors,
     BuildContext context, {
     required String roleLabel,
@@ -1931,14 +1567,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required IconData roleIcon,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    final rawStatus = t.status?.toString() ?? 'draft';
-    final statusLabel = StatusHelper.getTournamentStatusLabel(rawStatus);
-    final String? logoUrl = t is Tournament
-        ? t.logoUrl
-        : (t.logoUrl?.toString());
-    final String? bannerUrl = t is Tournament
-        ? t.bannerUrl
-        : (t.bannerUrl?.toString());
+    final statusLabel = StatusHelper.getTournamentStatusLabel(t.status);
 
     return GestureDetector(
       onLongPress: () async {
@@ -1948,7 +1577,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             backgroundColor: colors.bgCard,
             title: Text(l10n.profileDeleteTournamentTitle),
             content: Text(
-              l10n.profileDeleteTournamentContent(t.name?.toString() ?? ''),
+              l10n.profileDeleteTournamentContent(t.name),
               style: TextStyle(color: colors.textSecondary, fontSize: 14),
             ),
             actions: [
@@ -2002,14 +1631,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: Row(
             children: [
               // Logo giải đấu thật hoặc SportO logo
-              _buildTournamentLogo(logoUrl, bannerUrl),
+              _buildTournamentLogo(t.logoUrl, t.bannerUrl),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      t.name ?? '',
+                      t.name,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -2019,8 +1648,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    if (t is Tournament &&
-                        t.communityName != null &&
+                    if (t.communityName != null &&
                         t.communityName!.isNotEmpty) ...[
                       Row(
                         children: [
@@ -2048,8 +1676,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ],
                     Text(
                       t.isClubLite
-                          ? (t is Tournament &&
-                                    t.communityName != null &&
+                          ? (t.communityName != null &&
                                     t.communityName!.isNotEmpty
                                 ? 'Giải Siêu Lite • ${t.communityName}'
                                 : l10n.profileLiteTournamentHint)
@@ -2101,439 +1728,404 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  // ─── ACCOUNT MENU ──────────────────────────────────────────────────
-  Widget _buildAccountMenu(BuildContext context) {
-    final colors = context.colors;
-    final l = AppLocalizations.of(context)!;
-    final items = [
-      _MenuItem(Icons.dashboard_rounded, l.settingsDashboard, '/dashboard'),
-      _MenuItem(Icons.leaderboard_rounded, l.navRankings, '/rankings'),
-      _MenuItem(
-        Icons.person_outline_rounded,
-        l.settingsEditProfile,
-        '/profile/edit',
-      ),
-      _MenuItem(
-        Icons.account_balance_wallet_rounded,
-        l.settingsPaymentHistory,
-        '/payments',
-      ),
-      _MenuItem(Icons.emoji_events_rounded, l.settingsSeries, '/series'),
-      _MenuItem(
-        Icons.mail_outline_rounded,
-        l.settingsClubInvites,
-        '/club-invites',
-      ),
-      _MenuItem(
-        Icons.lock_outline_rounded,
-        l.settingsChangePassword,
-        '/profile/change-password',
-      ),
-      _MenuItem(
-        Icons.leaderboard_rounded,
-        l.settingsEloHistory,
-        '/profile/elo',
-      ),
-      _MenuItem(Icons.flag_outlined, l.myReportsTitle, '/profile/reports'),
-      _MenuItem(
-        Icons.verified_user_outlined,
-        l.organizer_becomeOrganizer,
-        null, // Custom handler to open OrganizerVerificationSheet
-      ),
-    ];
-
+  // ─── USER INFO HEADER (CENTERED AS SHOWN IN DESIGN MOCKUP) ─────────
+  Widget _buildStatsRow(
+    BuildContext context,
+    AppColorsExtension colors,
+    int played,
+    int won,
+    int lost,
+    int elo,
+  ) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
       decoration: BoxDecoration(
         color: colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: colors.border),
-      ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: items.length,
-        separatorBuilder: (context, index) =>
-            Divider(height: 1, color: colors.borderLight, indent: 56),
-        itemBuilder: (_, i) {
-          final item = items[i];
-          final isLast = i == items.length - 1;
-          return InkWell(
-            onTap: () {
-              if (item.route != null) {
-                context.push(item.route!);
-              } else {
-                OrganizerVerificationSheet.show(context);
-              }
-            },
-            borderRadius: isLast
-                ? const BorderRadius.vertical(bottom: Radius.circular(20))
-                : BorderRadius.zero,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-              child: Row(
-                children: [
-                  Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(item.icon, size: 16, color: AppTheme.primary),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text(
-                      item.label,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 18,
-                    color: colors.textMuted,
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  // ─── OTHER MENU ────────────────────────────────────────────────────
-  Widget _buildOtherMenu(BuildContext context, bool isDark) {
-    final colors = context.colors;
-    final l = AppLocalizations.of(context)!;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: () => context.push('/notifications'),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-              child: Row(
-                children: [
-                  Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.notifications_outlined,
-                      size: 16,
-                      color: AppTheme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text(
-                      l.settingsNotifications,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 18,
-                    color: colors.textMuted,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Divider(height: 1, color: colors.borderLight, indent: 56),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Row(
-              children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.language_rounded,
-                    size: 16,
-                    color: AppTheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    l.settingsLanguage,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: colors.bgSurface,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: colors.borderLight),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _langSegmentButton(
-                        'vi',
-                        'VI',
-                        ref.watch(localeProvider).languageCode == 'vi',
-                        ref,
-                      ),
-                      _langSegmentButton(
-                        'en',
-                        'EN',
-                        ref.watch(localeProvider).languageCode == 'en',
-                        ref,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: colors.borderLight, indent: 56),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Row(
-              children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.dark_mode_rounded,
-                    size: 16,
-                    color: AppTheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    l.settingsDarkMode,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                ),
-                Switch(
-                  value: isDark,
-                  activeThumbColor: AppTheme.primary,
-                  onChanged: (v) =>
-                      ref.read(tp.themeProvider.notifier).toggleTheme(),
-                ),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: colors.borderLight, indent: 56),
-          InkWell(
-            onTap: () async {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(l.coreCheckingForUpdate),
-                  duration: const Duration(seconds: 1),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-              try {
-                final info = await AppUpdateService(
-                  ref.read(dioProvider),
-                ).check();
-                if (!context.mounted) return;
-                if (info != null && info.hasUpdate) {
-                  await AppUpdateGate.showUpdateDialog(context, info);
-                } else {
-                  final current = info?.currentVersion ?? '';
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l.coreAppUpToDate(current)),
-                      backgroundColor: const Color(0xFF16A34A),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(e.toString()),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.system_update_rounded,
-                      size: 16,
-                      color: AppTheme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text(
-                      l.coreCheckForUpdate,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 18,
-                    color: colors.textMuted,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Divider(height: 1, color: colors.borderLight, indent: 56),
-          InkWell(
-            onTap: () async {
-              await ref.read(authProvider.notifier).signOut();
-              ref.invalidate(userProfileProvider);
-              ref.invalidate(userRankingsProvider);
-              if (!context.mounted) return;
-              context.go('/home');
-            },
-            borderRadius: const BorderRadius.vertical(
-              bottom: Radius.circular(20),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.logout_rounded,
-                    size: 20,
-                    color: AppTheme.adminColor,
-                  ),
-                  const SizedBox(width: 14),
-                  Text(
-                    l.settingsLogout,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.adminColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _langSegmentButton(
-    String code,
-    String label,
-    bool isSelected,
-    WidgetRef ref,
-  ) {
-    return GestureDetector(
-      onTap: () {
-        if (!isSelected) {
-          ref.read(localeProvider.notifier).changeLocale(code);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            color: isSelected ? Colors.white : AppTheme.primary,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ─── SECTION TITLE ────────────────────────────────────────────────
-  Widget _buildSectionTitle(
-    AppColorsExtension colors,
-    String title, {
-    Widget? trailing,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          Container(
-            width: 3,
-            height: 18,
-            decoration: BoxDecoration(
-              color: AppTheme.primary,
-              borderRadius: BorderRadius.circular(2),
-            ),
+          _statItem(
+            context,
+            colors,
+            icon: Icons.emoji_events_rounded,
+            iconColor: const Color(0xFF3B82F6),
+            iconBg: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+            value: played.toString(),
+            label: 'Trận đã đấu',
+            onTap: () {
+              HapticFeedback.selectionClick();
+              context.push('/profile/elo');
+            },
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: colors.textSecondary,
-                letterSpacing: 0.3,
-              ),
-            ),
+          _statDivider(colors),
+          _statItem(
+            context,
+            colors,
+            icon: Icons.people_alt_rounded,
+            iconColor: const Color(0xFF10B981),
+            iconBg: const Color(0xFF10B981).withValues(alpha: 0.12),
+            value: won.toString(),
+            label: 'Thắng',
+            onTap: () {
+              HapticFeedback.selectionClick();
+              context.push('/profile/elo');
+            },
           ),
-          ?trailing,
+          _statDivider(colors),
+          _statItem(
+            context,
+            colors,
+            icon: Icons.bar_chart_rounded,
+            iconColor: const Color(0xFFF97316),
+            iconBg: const Color(0xFFF97316).withValues(alpha: 0.12),
+            value: lost.toString(),
+            label: 'Thua',
+            onTap: () {
+              HapticFeedback.selectionClick();
+              context.push('/profile/elo');
+            },
+          ),
+          _statDivider(colors),
+          _statItem(
+            context,
+            colors,
+            icon: Icons.star_rounded,
+            iconColor: const Color(0xFF8B5CF6),
+            iconBg: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
+            value: elo > 0 ? _formatNumberWithCommas(elo) : '—',
+            label: 'Điểm xếp hạng',
+            onTap: () {
+              HapticFeedback.selectionClick();
+              context.push('/profile/elo');
+            },
+          ),
         ],
       ),
     );
   }
 
-  // ─── ERROR ─────────────────────────────────────────────────────────
+  Widget _statItem(
+    BuildContext context,
+    AppColorsExtension colors, {
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String value,
+    required String label,
+    VoidCallback? onTap,
+  }) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: iconColor, size: 17),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: colors.textMuted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _statDivider(AppColorsExtension colors) =>
+      Container(width: 1, height: 34, color: colors.borderLight);
+
+  // ─── NAV MENU CARD (MATCHING 4-ITEM DESIGN MOCKUP) ────────────────
+  Widget _buildNavMenuCard(BuildContext context, AppColorsExtension colors) {
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          _menuRowItem(
+            colors: colors,
+            icon: Icons.person_rounded,
+            iconColor: const Color(0xFF3B82F6),
+            iconBg: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+            title: 'Thông tin cá nhân',
+            subtitle: 'Tên, giới tính, ngày sinh...',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.go('/profile/edit');
+            },
+          ),
+          Divider(
+            height: 1,
+            thickness: 0.8,
+            color: colors.borderLight,
+            indent: 56,
+            endIndent: 16,
+          ),
+          _menuRowItem(
+            colors: colors,
+            icon: Icons.leaderboard_rounded,
+            iconColor: const Color(0xFF10B981),
+            iconBg: const Color(0xFF10B981).withValues(alpha: 0.12),
+            title: 'Thống kê thi đấu',
+            subtitle: 'Lịch sử, thành tích, điểm xếp hạng',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.push('/profile/elo');
+            },
+          ),
+          Divider(
+            height: 1,
+            thickness: 0.8,
+            color: colors.borderLight,
+            indent: 56,
+            endIndent: 16,
+          ),
+          _menuRowItem(
+            colors: colors,
+            icon: Icons.groups_rounded,
+            iconColor: const Color(0xFFF97316),
+            iconBg: const Color(0xFFF97316).withValues(alpha: 0.12),
+            title: 'Đội nhóm',
+            subtitle: 'Các đội bạn đã tham gia',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.go('/home?tab=3');
+            },
+          ),
+          Divider(
+            height: 1,
+            thickness: 0.8,
+            color: colors.borderLight,
+            indent: 56,
+            endIndent: 16,
+          ),
+          _menuRowItem(
+            colors: colors,
+            icon: Icons.bookmark_rounded,
+            iconColor: const Color(0xFF8B5CF6),
+            iconBg: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
+            title: 'Giải đấu đã đăng ký',
+            subtitle: 'Danh sách giải đấu',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.go('/dashboard');
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _menuRowItem({
+    required AppColorsExtension colors,
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 11.5, color: colors.textMuted),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: colors.textMuted.withValues(alpha: 0.7),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatNumberWithCommas(int n) {
+    final s = n.toString();
+    final reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    return s.replaceAllMapped(reg, (Match m) => '${m[1]},');
+  }
+
+  // ─── LOGIN PROMPT ─────────────────────────────────────────────────────
+  Widget _buildLoginPrompt(BuildContext context) {
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(
+      backgroundColor: colors.bgDark,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
+          onPressed: () => context.go('/home'),
+        ),
+        title: Text(
+          l10n.profileTitle,
+          style: TextStyle(
+            color: colors.textPrimary,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.account_circle_outlined,
+                size: 80,
+                color: colors.textMuted,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                l10n.profileLoginGreeting,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                l10n.profileLoginDescription,
+                style: TextStyle(fontSize: 14, color: colors.textSecondary),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 28),
+              FilledButton(
+                onPressed: () => context.go('/login'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                  ),
+                ),
+                child: Text(l10n.profileLoginButton),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => context.go('/login'),
+                child: Text(
+                  '${l10n.noAccount} ${l10n.registerNow}',
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: FloatingBottomNav(
+        currentIndex: 2,
+        onTabSelected: (index) {
+          if (index != 2) context.go('/home?tab=$index');
+        },
+        onMenuTap: () => AppMenuSheet.show(context),
+      ),
+    );
+  }
+
+  // ─── ERROR ────────────────────────────────────────────────────────────
   Widget _buildError(BuildContext context, String message) {
     final colors = context.colors;
     return Center(
@@ -2568,26 +2160,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
     );
   }
-
-  // ─── HELPERS ────────────────────────────────────────────────────────
 }
 
-// ─── DATA CLASSES ───────────────────────────────────────────────────
-class _InfoItem {
-  final IconData icon;
-  final String label;
-  final String value;
-  const _InfoItem(this.icon, this.label, this.value);
-}
-
-class _MenuItem {
-  final IconData icon;
-  final String label;
-  final String? route;
-  const _MenuItem(this.icon, this.label, this.route);
-}
-
-// ─── SHIMMER ────────────────────────────────────────────────────────
+// ─── SHIMMER ─────────────────────────────────────────────────────────────────
 class ProfileShimmerLoading extends StatelessWidget {
   const ProfileShimmerLoading({super.key});
 
@@ -2600,10 +2175,10 @@ class ProfileShimmerLoading extends StatelessWidget {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            Container(height: 180, color: colors.border),
-            const SizedBox(height: 20),
+            Container(height: 220, color: colors.border),
+            const SizedBox(height: 16),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -2617,19 +2192,18 @@ class ProfileShimmerLoading extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    width: 200,
-                    height: 14,
+                    height: 60,
                     decoration: BoxDecoration(
                       color: colors.border,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   const SizedBox(height: 16),
                   Container(
-                    height: 100,
+                    height: 44,
                     decoration: BoxDecoration(
                       color: colors.border,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -2646,24 +2220,7 @@ class ProfileShimmerLoading extends StatelessWidget {
                     height: 200,
                     decoration: BoxDecoration(
                       color: colors.border,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    width: 120,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: colors.border,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 160,
-                    decoration: BoxDecoration(
-                      color: colors.border,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                 ],

@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 
 class FeaturedTournamentBannerCard extends StatelessWidget {
   final Tournament tournament;
@@ -121,7 +122,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                     children: [
                       _CompactTopSportBadge(
                         label: _sportLabel(l10n),
-                        icon: Icons.sports_tennis_rounded,
+                        sportKey: tournament.sport,
                       ),
                       const Spacer(),
                       _CompactTopStatusBadge(
@@ -211,29 +212,29 @@ class _FallbackBanner extends StatelessWidget {
 
 class _CompactTopSportBadge extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final String sportKey;
 
-  const _CompactTopSportBadge({required this.label, required this.icon});
+  const _CompactTopSportBadge({required this.label, required this.sportKey});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
+        color: Colors.black.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 0.8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 10, color: Colors.white.withValues(alpha: 0.9)),
-          const SizedBox(width: 4),
+          SportChoiceTile.buildSportIcon(sportKey, 12, Colors.white),
+          const SizedBox(width: 5),
           Text(
             label,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 9.5,
+              fontSize: 10.5,
               fontWeight: FontWeight.w700,
             ),
           ),

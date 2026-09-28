@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/features/profile/screens/profile_screen.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -96,7 +97,7 @@ void main() {
 
     final context = tester.element(find.text('home page'));
     final l10n = AppLocalizations.of(context)!;
-    await tester.tap(find.text(l10n.menuTitle).first);
+    await tester.tap(find.text(l10n.navProfile).first);
     await tester.pumpAndSettle();
 
     expect(find.byType(AppMenuSheet), findsOneWidget);
@@ -107,8 +108,8 @@ void main() {
       closeTo(390 * 0.72, 1),
     );
     expect(tester.getRect(find.byType(AppMenuSheet)).left, 16);
-    expect(find.byKey(const ValueKey('app-menu-/home?tab=3')), findsOneWidget);
-    expect(find.text(l10n.profileLoginButton), findsOneWidget);
+    expect(find.byKey(const ValueKey('app-menu-/login')), findsOneWidget);
+    expect(find.text(l10n.profileLoginButton), findsNWidgets(2));
   });
 
   testWidgets('member shortcuts navigate to existing routes', (tester) async {
@@ -130,7 +131,7 @@ void main() {
 
     final context = tester.element(find.text('home page'));
     final l10n = AppLocalizations.of(context)!;
-    await tester.tap(find.text(l10n.menuTitle).first);
+    await tester.tap(find.text(l10n.navProfile).first);
     await tester.pumpAndSettle();
     expect(find.text(l10n.menuProfile), findsOneWidget);
     expect(find.text(l10n.menuMessages), findsOneWidget);
@@ -164,7 +165,7 @@ void main() {
 
     final context = tester.element(find.text('home page'));
     final l10n = AppLocalizations.of(context)!;
-    await tester.tap(find.text(l10n.menuTitle).first);
+    await tester.tap(find.text(l10n.navProfile).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.menuProfile));
     await tester.pumpAndSettle();
@@ -188,12 +189,15 @@ void main() {
 
     final context = tester.element(find.text('home page'));
     final l10n = AppLocalizations.of(context)!;
-    await tester.tap(find.text(l10n.menuTitle).first);
+    await tester.tap(find.text(l10n.navProfile).first);
     await tester.pumpAndSettle();
 
-    expect(find.text(l10n.profileLoginButton), findsOneWidget);
-    expect(find.text(l10n.navClubs), findsOneWidget);
-    expect(find.byKey(const ValueKey('app-menu-/home?tab=1')), findsOneWidget);
+    expect(find.text(l10n.profileLoginButton), findsNWidgets(2));
+    expect(find.byKey(const ValueKey('app-menu-/login')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('app-menu-/profile/settings')),
+      findsOneWidget,
+    );
     expect(find.text(l10n.menuMessages), findsNothing);
     expect(find.text(l10n.settingsPaymentHistory), findsNothing);
   });
@@ -219,7 +223,7 @@ void main() {
 
     final context = tester.element(find.text('home page'));
     final l10n = AppLocalizations.of(context)!;
-    await tester.tap(find.text(l10n.menuTitle).first);
+    await tester.tap(find.text(l10n.navProfile).first);
     await tester.pumpAndSettle();
 
     expect(find.text(l10n.routerDefaultUser), findsOneWidget);
@@ -242,7 +246,7 @@ void main() {
 
     final context = tester.element(find.text('home page'));
     final l10n = AppLocalizations.of(context)!;
-    await tester.tap(find.text(l10n.menuTitle).first);
+    await tester.tap(find.text(l10n.navProfile).first);
     await tester.pumpAndSettle();
 
     final row = find.text(l10n.menuMessages);
@@ -269,12 +273,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Menu').first);
+    final context = tester.element(find.text('home page'));
+    final l10n = AppLocalizations.of(context)!;
+    await tester.tap(find.text(l10n.navProfile).first);
     await tester.pumpAndSettle();
 
-    expect(find.text('Community'), findsOneWidget);
     expect(find.text('Messages'), findsOneWidget);
-    expect(find.text('Account'), findsOneWidget);
+    expect(find.text('Notifications'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
   });
   testWidgets(
     'member sheet scrolls and inherits dark theme on compact screens',
@@ -302,7 +308,7 @@ void main() {
 
       final context = tester.element(find.text('home page'));
       final l10n = AppLocalizations.of(context)!;
-      await tester.tap(find.text(l10n.menuTitle).first);
+      await tester.tap(find.text(l10n.navProfile).first);
       await tester.pumpAndSettle();
 
       expect(
@@ -340,10 +346,94 @@ void main() {
 
     final context = tester.element(find.text('home page'));
     final l10n = AppLocalizations.of(context)!;
-    await tester.tap(find.text(l10n.menuTitle).first);
+    await tester.tap(find.text(l10n.navProfile).first);
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.person_rounded), findsOneWidget);
     expect(find.text(l10n.menuMessages), findsOneWidget);
+  });
+  testWidgets('profile team shortcut opens Explore instead of tournaments', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final router = GoRouter(
+      initialLocation: '/profile',
+      routes: [
+        GoRoute(
+          path: '/profile',
+          builder: (context, state) => const ProfileScreen(),
+        ),
+        GoRoute(
+          path: '/home',
+          builder: (context, state) => Scaffold(
+            body: Center(
+              child: Text('home tab ${state.uri.queryParameters['tab']}'),
+            ),
+          ),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    const authState = AuthState(
+      status: AuthStatus.authenticated,
+      role: UserRole.viewer,
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(() => _TestAuthNotifier(authState)),
+          userProfileProvider.overrideWith(
+            (ref) async => const UserProfile(id: 'u1', fullName: 'Alex Player'),
+          ),
+          userRankingsProvider.overrideWith((ref) async => const []),
+        ],
+        child: MaterialApp.router(
+          routerConfig: router,
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('vi'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final teamShortcut = find.text('Đội nhóm');
+    await tester.ensureVisible(teamShortcut);
+    await tester.tap(teamShortcut);
+    await tester.pumpAndSettle();
+
+    expect(
+      router.routeInformationProvider.value.uri.queryParameters['tab'],
+      '3',
+    );
+    expect(find.text('home tab 3'), findsOneWidget);
+  });
+  testWidgets('bottom navigation labels use the selected locale', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final router = _testRouter();
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      _testApp(
+        router: router,
+        authState: const AuthState(),
+        reduceMotion: true,
+        locale: const Locale('en'),
+      ),
+    );
+
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Explore'), findsOneWidget);
+    expect(find.text('Tourneys'), findsOneWidget);
+    expect(find.text('Rankings'), findsOneWidget);
+    expect(find.text('Profile'), findsOneWidget);
   });
 }

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
 class FloatingBottomNav extends StatelessWidget {
@@ -18,8 +18,8 @@ class FloatingBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     const activeColor = AppTheme.primary;
     final inactiveColor = isDark
@@ -43,7 +43,7 @@ class FloatingBottomNav extends StatelessWidget {
         internalIndex: 3,
         icon: Icons.explore_outlined,
         activeIcon: Icons.explore_rounded,
-        label: 'Khám phá',
+        label: l10n.navExplore,
       ),
       _NavTabData(
         internalIndex: 1,
@@ -59,9 +59,9 @@ class FloatingBottomNav extends StatelessWidget {
       ),
       _NavTabData(
         internalIndex: _menuIndex,
-        icon: Icons.menu_rounded,
-        activeIcon: Icons.menu_open_rounded,
-        label: l10n.menuTitle,
+        icon: Icons.person_outline_rounded,
+        activeIcon: Icons.person_rounded,
+        label: l10n.navProfile,
       ),
     ];
 

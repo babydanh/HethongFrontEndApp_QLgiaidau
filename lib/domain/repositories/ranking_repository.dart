@@ -11,6 +11,15 @@ abstract class IRankingRepository {
     String? genderRestriction,
     String? provinceCode,
   });
+  Future<({List<PlayerRanking> rankings, String? nextCursor, bool hasMore})>
+  getRankingsPaged({
+    required String categoryId,
+    String? cursor,
+    int limit = 10,
+    String? matchType,
+    String? genderRestriction,
+    String? provinceCode,
+  });
 
   /// Lấy rank tổng hợp của 1 user (public + community).
   Future<UserRankResponse> getUserRank(String userId, String categoryId);

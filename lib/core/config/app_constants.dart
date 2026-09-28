@@ -22,7 +22,7 @@ class AppConstants {
   static const String sportFootball = 'football';
 
   static const Map<String, String> sportNames = {
-    sportFootball: 'Football',
+    sportFootball: 'Bóng đá',
     sportPickleball: 'Pickleball',
     sportBadminton: 'Cầu lông',
     sportTennis: 'Tennis',
@@ -30,11 +30,11 @@ class AppConstants {
   };
 
   static const Map<String, String> sportIcons = {
-    sportFootball: '⚽',
+    sportFootball: 'assets/icons/football.svg',
     sportPickleball: 'assets/icons/pickleball.png',
-    sportBadminton: '🏸',
-    sportTennis: '🎾',
-    sportTableTennis: '🏓',
+    sportBadminton: 'assets/icons/badminton.svg',
+    sportTennis: 'assets/icons/tennis.svg',
+    sportTableTennis: 'assets/icons/ping-pong.svg',
   };
 
   // ─── Tag BQT (P2C.4/P2C.5) ───

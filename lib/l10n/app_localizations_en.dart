@@ -10269,7 +10269,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get doublesRegStatusPendingApproval =>
-      'Team formed, awaiting organizer approval';
+      'Registration awaiting organizer approval';
+
+  @override
+  String get doublesRegStatusPendingPartner =>
+      'Waiting for a teammate or organizer pairing';
+
+  @override
+  String get doublesRegCheckStatus => 'Check approval status';
+
+  @override
+  String get doublesRegTeamRoster => 'Team members';
+
+  @override
+  String get doublesRegApprovalPendingPairing =>
+      'Your registration is waiting for organizer approval. BTC pairing starts after approval.';
+
+  @override
+  String get doublesRegApprovalPendingInvite =>
+      'Your registration is waiting for organizer approval. The teammate invitation becomes available after approval.';
+
+  @override
+  String get doublesRegApprovalPendingTeam =>
+      'Your team is formed and waiting for organizer approval.';
 
   @override
   String get doublesRegStatusComplete => 'Team formed and approved';
@@ -13234,6 +13256,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementParticipantPending => 'Pending approval';
 
   @override
+  String get tournamentManagementParticipantPendingPartner =>
+      'Waiting for partner pairing';
+
+  @override
   String get tournamentManagementParticipantRejected => 'Rejected';
 
   @override
@@ -13757,6 +13783,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGlobalSearchRetry => 'Try again';
 
   @override
+  String get homeGlobalSearchLoadMore => 'Load more results';
+
+  @override
   String get homeGlobalSearchVenueNote =>
       'Venues are derived from public matches; nearby search is not available.';
 
@@ -13780,4 +13809,194 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeGlobalSearchClearFilters => 'Clear filters';
+
+  @override
+  String get homeGlobalSearchSuggested => 'suggested';
+
+  @override
+  String get homeGlobalSearchSort => 'Sort';
+
+  @override
+  String get homeGlobalSearchSortNewest => 'Newest';
+
+  @override
+  String get homeGlobalSearchNoResultsQuestion =>
+      'Can\'t find the result you want?';
+
+  @override
+  String get homeGlobalSearchCreateTournament => 'Create a tournament';
+
+  @override
+  String get homeGlobalSearchOr => 'or';
+
+  @override
+  String get homeGlobalSearchExpandFilters => 'Expand filters';
+
+  @override
+  String get homeGlobalSearchHiddenMatches =>
+      'Matches on this page are hidden because team details are incomplete.';
+
+  @override
+  String get homeSocialCreateAction => 'Create session';
+
+  @override
+  String get socialVenueSuggestionsLabel => 'Suggested venues';
+
+  @override
+  String get socialVenueSuggestionsLoading => 'Searching venues...';
+
+  @override
+  String get socialVenueSuggestionsEmpty => 'No matching venues';
+
+  @override
+  String get socialVenueSuggestionsFailed =>
+      'Suggestions are unavailable. You can still enter the venue.';
+
+  @override
+  String get socialVenueCourt => 'Court';
+
+  @override
+  String get socialVenueCourtOptional => 'Select a court (optional)';
+
+  @override
+  String get socialVenueAnyCourt => 'No specific court';
+
+  @override
+  String get socialVenueCourtsLoading => 'Loading courts…';
+
+  @override
+  String get socialVenueCourtsUnavailable =>
+      'Could not load courts. The venue is still selected.';
+
+  @override
+  String get socialVenueNoCourts => 'No courts are configured for this venue.';
+
+  @override
+  String get socialGenderRequirement => 'Who can join';
+
+  @override
+  String get socialGenderAny => 'Any gender';
+
+  @override
+  String get socialGenderMale => 'Men only';
+
+  @override
+  String get socialGenderFemale => 'Women only';
+
+  @override
+  String get socialGenderMixed => 'Mixed group';
+
+  @override
+  String get socialRequestApproval => 'Request host approval';
+
+  @override
+  String get socialJoinDirectly => 'Join directly';
+
+  @override
+  String get socialJoinRequestPending => 'Join request pending';
+
+  @override
+  String get socialCancelJoinRequest => 'Cancel request';
+
+  @override
+  String get socialJoinRequestSent => 'Your request was sent to the host.';
+
+  @override
+  String get socialJoinRequestCancelled => 'Join request cancelled.';
+
+  @override
+  String get socialPendingJoinRequests => 'Join requests';
+
+  @override
+  String get socialNoPendingJoinRequests =>
+      'There are no pending join requests.';
+
+  @override
+  String get socialApproveJoinRequest => 'Approve';
+
+  @override
+  String get socialRejectJoinRequest => 'Reject';
+
+  @override
+  String socialJoinRequestSlots(Object count) {
+    return 'Requested slots: $count';
+  }
+
+  @override
+  String get socialJoinRequestNoName => 'Member';
+
+  @override
+  String get socialJoinRequestDecisionFailed =>
+      'Could not update the request. Please try again.';
+
+  @override
+  String get socialJoinOptions => 'Choose how to join';
+
+  @override
+  String get socialJoinRequestApproved => 'Join request approved.';
+
+  @override
+  String get socialJoinRequestRejected => 'Join request rejected.';
+
+  @override
+  String get socialJoinRequestLoadMore => 'Load more requests';
+
+  @override
+  String get socialActiveSportsLabel => 'SPORTS';
+
+  @override
+  String get socialActiveSportsEmpty =>
+      'No active sports are available right now.';
+
+  @override
+  String get socialActiveSportsLoadFailed => 'Could not load active sports.';
+
+  @override
+  String get socialActiveSportsRetry => 'Retry';
+
+  @override
+  String get socialPlayFormatLabel => 'PLAY FORMAT';
+
+  @override
+  String get socialPlayFormatFriendly => 'Casual play';
+
+  @override
+  String get socialPlayFormatRoundRobin => 'Round robin';
+
+  @override
+  String get socialPlayFormatSingles => 'Singles';
+
+  @override
+  String get socialPlayFormatDoubles => 'Doubles';
+
+  @override
+  String get socialSportPickleball => 'Pickleball';
+
+  @override
+  String get socialSportBadminton => 'Badminton';
+
+  @override
+  String get socialSportTennis => 'Tennis';
+
+  @override
+  String get socialSportTableTennis => 'Table tennis';
+
+  @override
+  String get socialSportFootball => 'Football';
+
+  @override
+  String get socialRegionSearchHint => 'Type to search...';
+
+  @override
+  String get socialRegionSearchFailed =>
+      'Could not load area suggestions. You can still enter the address manually.';
+
+  @override
+  String get socialRegionSectionLabel => 'Add city/ward (optional)';
+
+  @override
+  String get socialRegionRetry => 'Retry';
+
+  @override
+  String get socialRegionApply => 'Apply';
 }

@@ -83,6 +83,55 @@ class ApiRankingRepository implements IRankingRepository {
   }
 
   @override
+  Future<({List<PlayerRanking> rankings, String? nextCursor, bool hasMore})>
+  getRankingsPaged({
+    required String categoryId,
+    String? cursor,
+    int limit = 10,
+    String? matchType,
+    String? genderRestriction,
+    String? provinceCode,
+  }) async {
+    final query = buildRankingQueryParams(
+      categoryId: categoryId,
+      matchType: matchType,
+      genderRestriction: genderRestriction,
+      provinceCode: provinceCode,
+      limit: limit,
+    );
+    if (cursor != null && cursor.isNotEmpty) query['cursor'] = cursor;
+
+    try {
+      final response = await _dioClient.dio.get(
+        '/rankings',
+        queryParameters: query,
+      );
+      final raw = response.data;
+      final data = raw is Map<String, dynamic>
+          ? (raw['data'] as List<dynamic>? ?? const <dynamic>[])
+          : (raw as List<dynamic>? ?? const <dynamic>[]);
+      final rankings = data
+          .whereType<Map>()
+          .map(
+            (json) => PlayerRanking.fromJson(Map<String, dynamic>.from(json)),
+          )
+          .toList(growable: false);
+      final meta = raw is Map && raw['meta'] is Map
+          ? Map<String, dynamic>.from(raw['meta'] as Map)
+          : null;
+      final nextCursor = meta?['nextCursor']?.toString();
+      return (
+        rankings: rankings,
+        nextCursor: nextCursor?.isNotEmpty == true ? nextCursor : null,
+        hasMore: meta?['hasMore'] == true || (nextCursor?.isNotEmpty == true),
+      );
+    } catch (e, stack) {
+      _log.error('Lỗi tải trang bảng xếp hạng', e, stack);
+      rethrow;
+    }
+  }
+
+  @override
   Future<List<FootballTeamRanking>> getFootballTeamRankings({
     required String categoryId,
     String? communityId,

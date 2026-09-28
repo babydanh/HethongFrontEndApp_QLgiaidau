@@ -19,6 +19,7 @@ class LiteParticipant {
   final String id;
   final String status;
   final String teamName;
+  final String? teamInviteToken;
   final String? footballTeamId;
   final String? footballTeamLogoUrl;
   final List<LiteMember> members;
@@ -29,6 +30,7 @@ class LiteParticipant {
     this.teamName = '',
     this.footballTeamId,
     this.footballTeamLogoUrl,
+    this.teamInviteToken,
     this.members = const [],
   });
 
@@ -47,13 +49,19 @@ class LiteParticipant {
       status: (json['teamStatus']?.toString() ?? '').toUpperCase(),
       teamName: json['teamName']?.toString() ?? '',
       footballTeamId: json['footballTeamId']?.toString(),
+      teamInviteToken: json['teamInviteToken']?.toString(),
       footballTeamLogoUrl: json['footballTeamLogoUrl']?.toString(),
       members: membersList,
     );
   }
 
-  bool get isPending => status == 'PENDING_PARTNER';
-  bool get isComplete => status == 'COMPLETE' || status == 'PENDING_APPROVAL';
+  bool get isPending =>
+      status == 'PENDING_PARTNER' &&
+      (teamInviteToken == null || teamInviteToken!.isEmpty) &&
+      members.length == 1;
+  bool get isComplete =>
+      status == 'COMPLETE' ||
+      (status == 'PENDING_APPROVAL' && members.length >= 2);
 
   String get displayName => teamName.isNotEmpty
       ? teamName

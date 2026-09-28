@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_joi
 import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_details_tab.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_participants_tab.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/payment_tab/social_payment_tab.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/chat_tab/social_chat_tab.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_cancel_session_dialog.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_contact_host_sheet.dart';
@@ -425,9 +426,8 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
     SocialSessionModel session,
     AppColorsExtension colors,
   ) {
-    if (_isHost) {
-      return const SizedBox.shrink();
-    }
+    final l10n = AppLocalizations.of(context)!;
+    if (_isHost || session.isJoined) return const SizedBox.shrink();
     final canJoin =
         session.status == 'OPEN' &&
         session.currentSlots < session.maxSlots &&
@@ -496,7 +496,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
               child: SizedBox(
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: canJoin
+                  onPressed: session.joinRequestStatus == 'REQUESTED'
+                      ? _withdrawJoinRequest
+                      : canJoin
                       ? () => _handleRequestJoin(context, session)
                       : null,
                   style: ElevatedButton.styleFrom(
@@ -513,7 +515,11 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      joinLabel,
+                      session.joinRequestStatus == 'REQUESTED'
+                          ? l10n.socialCancelJoinRequest
+                          : canJoin
+                          ? l10n.socialJoinOptions
+                          : joinLabel,
                       style: const TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w700,
@@ -644,6 +650,34 @@ Link: $shareUrl''';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Đã sao chép link chia sẻ buổi ${session.title}!'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _withdrawJoinRequest() async {
+    try {
+      await ref
+          .read(socialSessionDetailProvider(widget.sessionId).notifier)
+          .withdrawJoinRequest();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.socialJoinRequestCancelled,
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.socialJoinRequestDecisionFailed,
+          ),
+          backgroundColor: context.colors.error,
           behavior: SnackBarBehavior.floating,
         ),
       );

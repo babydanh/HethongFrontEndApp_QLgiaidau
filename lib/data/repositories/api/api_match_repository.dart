@@ -1211,6 +1211,66 @@ class ApiMatchRepository implements IMatchRepository {
     }
   }
 
+  @override
+  Future<
+    ({List<MatchModel> matches, String? nextCursor, bool hasMore, int total})
+  >
+  getPublicMatchesPaged({
+    String? cursor,
+    int limit = 10,
+    String? search,
+    String? categoryId,
+    String? status,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final query = <String, dynamic>{'publicOnly': true, 'limit': limit};
+    if (cursor != null && cursor.isNotEmpty) query['cursor'] = cursor;
+    if (search != null && search.trim().isNotEmpty) {
+      query['search'] = search.trim();
+    }
+    if (categoryId != null && categoryId.isNotEmpty) {
+      query['categoryId'] = categoryId;
+    }
+    if (status != null && status.isNotEmpty) {
+      query['status'] = status.toUpperCase();
+    }
+    if (startDate != null) {
+      query['startDate'] = startDate.toIso8601String().split('T').first;
+    }
+    if (endDate != null) {
+      query['endDate'] = endDate.toIso8601String().split('T').first;
+    }
+
+    try {
+      final response = await _dioClient.dio.get(
+        '/matches',
+        queryParameters: query,
+      );
+      final payload = response.data;
+      final matches = _extractList(payload)
+          .whereType<Map>()
+          .map((json) => _parseMatch(Map<String, dynamic>.from(json)))
+          .toList(growable: false);
+      final meta = payload is Map && payload['meta'] is Map
+          ? Map<String, dynamic>.from(payload['meta'] as Map)
+          : null;
+      final nextCursor = _extractNextCursor(payload);
+      final total = meta?['total'] is num
+          ? (meta!['total'] as num).toInt()
+          : matches.length;
+      return (
+        matches: matches,
+        nextCursor: nextCursor,
+        hasMore: meta?['hasMore'] == true || nextCursor != null,
+        total: total,
+      );
+    } catch (e, stack) {
+      _log.error('Error loading public match search page', e, stack);
+      rethrow;
+    }
+  }
+
   // ── Cheer ──────────────────────────────────────────────────────────────────
 
   @override

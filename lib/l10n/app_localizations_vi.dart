@@ -10243,8 +10243,29 @@ class AppLocalizationsVi extends AppLocalizations {
   String get doublesRegShareToPartner => 'Chia sẻ tới đồng đội';
 
   @override
-  String get doublesRegStatusPendingApproval =>
-      'Đã ghép đội, đang chờ BTC duyệt';
+  String get doublesRegStatusPendingApproval => 'Đăng ký đang chờ BTC duyệt';
+
+  @override
+  String get doublesRegStatusPendingPartner =>
+      'Đang chờ đồng đội hoặc BTC ghép đôi';
+
+  @override
+  String get doublesRegCheckStatus => 'Kiểm tra trạng thái duyệt';
+
+  @override
+  String get doublesRegTeamRoster => 'Thành viên đội';
+
+  @override
+  String get doublesRegApprovalPendingPairing =>
+      'Đăng ký đang chờ BTC duyệt. BTC chỉ ghép đôi sau khi hồ sơ được duyệt.';
+
+  @override
+  String get doublesRegApprovalPendingInvite =>
+      'Đăng ký đang chờ BTC duyệt. Bạn chỉ có thể gửi lời mời đồng đội sau khi hồ sơ được duyệt.';
+
+  @override
+  String get doublesRegApprovalPendingTeam =>
+      'Đội đã đủ thành viên và đang chờ BTC duyệt.';
 
   @override
   String get doublesRegStatusComplete => 'Đã ghép đội và được duyệt';
@@ -13188,6 +13209,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementParticipantPending => 'Chờ duyệt';
 
   @override
+  String get tournamentManagementParticipantPendingPartner =>
+      'Đang chờ ghép đồng đội';
+
+  @override
   String get tournamentManagementParticipantRejected => 'Đã từ chối';
 
   @override
@@ -13708,6 +13733,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeGlobalSearchRetry => 'Thử lại';
 
   @override
+  String get homeGlobalSearchLoadMore => 'Tải thêm kết quả';
+
+  @override
   String get homeGlobalSearchVenueNote =>
       'Địa điểm được tổng hợp từ các trận đấu công khai; chưa hỗ trợ tìm quanh đây.';
 
@@ -13731,4 +13759,195 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeGlobalSearchClearFilters => 'Xóa bộ lọc';
+
+  @override
+  String get homeGlobalSearchSuggested => 'đề xuất';
+
+  @override
+  String get homeGlobalSearchSort => 'Sắp xếp';
+
+  @override
+  String get homeGlobalSearchSortNewest => 'Mới nhất';
+
+  @override
+  String get homeGlobalSearchNoResultsQuestion =>
+      'Không tìm thấy kết quả mong muốn?';
+
+  @override
+  String get homeGlobalSearchCreateTournament => 'Tạo giải đấu mới';
+
+  @override
+  String get homeGlobalSearchOr => 'hoặc';
+
+  @override
+  String get homeGlobalSearchExpandFilters => 'Mở rộng bộ lọc';
+
+  @override
+  String get homeGlobalSearchHiddenMatches =>
+      'Trận trong lượt tải này chưa đủ thông tin hai đội để hiển thị.';
+
+  @override
+  String get homeSocialCreateAction => 'Tạo kèo';
+
+  @override
+  String get socialVenueSuggestionsLabel => 'Địa điểm gợi ý';
+
+  @override
+  String get socialVenueSuggestionsLoading => 'Đang tìm địa điểm...';
+
+  @override
+  String get socialVenueSuggestionsEmpty => 'Không tìm thấy địa điểm phù hợp';
+
+  @override
+  String get socialVenueSuggestionsFailed =>
+      'Không tải được gợi ý. Bạn vẫn có thể nhập địa điểm.';
+
+  @override
+  String get socialVenueCourt => 'Sân';
+
+  @override
+  String get socialVenueCourtOptional => 'Chọn sân (không bắt buộc)';
+
+  @override
+  String get socialVenueAnyCourt => 'Không chọn sân cụ thể';
+
+  @override
+  String get socialVenueCourtsLoading => 'Đang tải danh sách sân…';
+
+  @override
+  String get socialVenueCourtsUnavailable =>
+      'Không tải được danh sách sân. Địa điểm vẫn được chọn.';
+
+  @override
+  String get socialVenueNoCourts => 'Địa điểm này chưa có sân được cấu hình.';
+
+  @override
+  String get socialGenderRequirement => 'Ai có thể tham gia';
+
+  @override
+  String get socialGenderAny => 'Mọi giới tính';
+
+  @override
+  String get socialGenderMale => 'Chỉ nam';
+
+  @override
+  String get socialGenderFemale => 'Chỉ nữ';
+
+  @override
+  String get socialGenderMixed => 'Nhóm kết hợp';
+
+  @override
+  String get socialRequestApproval => 'Yêu cầu duyệt tham gia';
+
+  @override
+  String get socialJoinDirectly => 'Tham gia trực tiếp';
+
+  @override
+  String get socialJoinRequestPending => 'Yêu cầu đang chờ duyệt';
+
+  @override
+  String get socialCancelJoinRequest => 'Hủy yêu cầu';
+
+  @override
+  String get socialJoinRequestSent => 'Đã gửi yêu cầu đến người tổ chức.';
+
+  @override
+  String get socialJoinRequestCancelled => 'Đã hủy yêu cầu tham gia.';
+
+  @override
+  String get socialPendingJoinRequests => 'Yêu cầu tham gia';
+
+  @override
+  String get socialNoPendingJoinRequests => 'Chưa có yêu cầu nào đang chờ.';
+
+  @override
+  String get socialApproveJoinRequest => 'Chấp nhận';
+
+  @override
+  String get socialRejectJoinRequest => 'Từ chối';
+
+  @override
+  String socialJoinRequestSlots(Object count) {
+    return 'Số chỗ: $count';
+  }
+
+  @override
+  String get socialJoinRequestNoName => 'Thành viên';
+
+  @override
+  String get socialJoinRequestDecisionFailed =>
+      'Không thể cập nhật yêu cầu. Vui lòng thử lại.';
+
+  @override
+  String get socialJoinOptions => 'Chọn cách tham gia';
+
+  @override
+  String get socialJoinRequestApproved => 'Đã chấp nhận yêu cầu tham gia.';
+
+  @override
+  String get socialJoinRequestRejected => 'Đã từ chối yêu cầu tham gia.';
+
+  @override
+  String get socialJoinRequestLoadMore => 'Xem thêm yêu cầu';
+
+  @override
+  String get socialActiveSportsLabel => 'MÔN THỂ THAO';
+
+  @override
+  String get socialActiveSportsEmpty =>
+      'Hiện chưa có môn thể thao nào đang hoạt động.';
+
+  @override
+  String get socialActiveSportsLoadFailed =>
+      'Không tải được danh sách môn thể thao.';
+
+  @override
+  String get socialActiveSportsRetry => 'Thử lại';
+
+  @override
+  String get socialPlayFormatLabel => 'THỂ THỨC';
+
+  @override
+  String get socialPlayFormatFriendly => 'Giao lưu';
+
+  @override
+  String get socialPlayFormatRoundRobin => 'Đánh vòng tròn';
+
+  @override
+  String get socialPlayFormatSingles => 'Đánh đơn';
+
+  @override
+  String get socialPlayFormatDoubles => 'Đánh đôi';
+
+  @override
+  String get socialSportPickleball => 'Pickleball';
+
+  @override
+  String get socialSportBadminton => 'Cầu lông';
+
+  @override
+  String get socialSportTennis => 'Tennis';
+
+  @override
+  String get socialSportTableTennis => 'Bóng bàn';
+
+  @override
+  String get socialSportFootball => 'Bóng đá';
+
+  @override
+  String get socialRegionSearchHint => 'Nhập để tìm kiếm...';
+
+  @override
+  String get socialRegionSearchFailed =>
+      'Không tải được gợi ý địa giới. Bạn vẫn có thể nhập địa chỉ thủ công.';
+
+  @override
+  String get socialRegionSectionLabel =>
+      'Thêm thành phố/phường (không bắt buộc)';
+
+  @override
+  String get socialRegionRetry => 'Tải lại';
+
+  @override
+  String get socialRegionApply => 'Áp dụng';
 }

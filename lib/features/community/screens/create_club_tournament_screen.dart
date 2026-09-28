@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
@@ -676,59 +677,30 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   Widget _buildSportSelector({String? lockedSport}) {
     final l10n = AppLocalizations.of(context)!;
     final sports = [
-      (AppConstants.sportPickleball, l10n.createClubTournament_sportPickleball, AppConstants.sportIcons[AppConstants.sportPickleball] ?? 'assets/icons/pickleball.png'),
-      (AppConstants.sportBadminton, l10n.createClubTournament_sportBadminton, '🏸'),
-      (AppConstants.sportTennis, l10n.createClubTournament_sportTennis, '🎾'),
-      (AppConstants.sportTableTennis, l10n.createClubTournament_sportTableTennis, '🏓'),
-      (AppConstants.sportFootball, l10n.createClubTournament_sportFootball, '⚽'),
+      (AppConstants.sportPickleball, l10n.createClubTournament_sportPickleball),
+      (AppConstants.sportBadminton, l10n.createClubTournament_sportBadminton),
+      (AppConstants.sportTennis, l10n.createClubTournament_sportTennis),
+      (AppConstants.sportTableTennis, l10n.createClubTournament_sportTableTennis),
+      (AppConstants.sportFootball, l10n.createClubTournament_sportFootball),
     ];
+    final visibleSports = sports.where((s) => lockedSport == null || lockedSport == s.$1).toList();
     return Row(
-      children: sports.where((s) => lockedSport == null || lockedSport == s.$1).map((s) {
+      children: visibleSports.map((s) {
         final selected = _selectedSport == s.$1;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: s != sports.last ? 8 : 0),
-            child: GestureDetector(
-              onTap: lockedSport == null
-                  ? () => setState(() {
-                      _selectedSport = s.$1;
-                      if (s.$1 == AppConstants.sportFootball) {
-                        _selectedFormat = AppConstants.formatDoubles;
-                      }
-                    })
-                  : null,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: selected ? AppTheme.primary.withValues(alpha: 0.1) : context.colors.bgSurface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: selected ? AppTheme.primary : context.colors.border, width: selected ? 1.5 : 1),
-                ),
-                child: Column(
-                  children: [
-                    s.$3.endsWith('.png') || s.$3.endsWith('.svg')
-                        ? SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Image.asset(
-                              s.$3,
-                              width: 24,
-                              height: 24,
-                              errorBuilder: (context, error, stackTrace) => const Icon(
-                                Icons.sports_tennis_rounded,
-                                size: 22,
-                                color: Color(0xFF0D9488),
-                              ),
-                            ),
-                          )
-                        : Text(s.$3, style: const TextStyle(fontSize: 20)),
-                    const SizedBox(height: 4),
-                    Text(s.$2, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: selected ? AppTheme.primary : context.colors.textSecondary)),
-                  ],
-                ),
-              ),
-            ),
-          ),
+        return SportChoiceTile(
+          sportKey: s.$1,
+          label: s.$2,
+          selected: selected,
+          iconSize: 22,
+          withTrailingGap: s != visibleSports.last,
+          onTap: lockedSport == null
+              ? () => setState(() {
+                  _selectedSport = s.$1;
+                  if (s.$1 == AppConstants.sportFootball) {
+                    _selectedFormat = AppConstants.formatDoubles;
+                  }
+                })
+              : null,
         );
       }).toList(),
     );

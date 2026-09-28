@@ -87,6 +87,7 @@ class ApiCommunityRepository implements ICommunityRepository {
     String? search,
     String? provinceCode,
     String? categoryId,
+    bool rethrowOnError = false,
   }) async {
     _log.info(
       'Lấy danh sách CLB paged: search=$search, provinceCode=$provinceCode, categoryId=$categoryId, cursor=$cursor, limit=$limit',
@@ -145,6 +146,11 @@ class ApiCommunityRepository implements ICommunityRepository {
           total: total,
         );
       }
+      if (rethrowOnError) {
+        throw StateError(
+          'Community search returned HTTP ${response.statusCode}',
+        );
+      }
       return (
         communities: <Community>[],
         nextCursor: null,
@@ -152,11 +158,8 @@ class ApiCommunityRepository implements ICommunityRepository {
         total: 0,
       );
     } catch (e, stack) {
-      _log.error(
-        'Lỗi getCommunitiesPaged, fallback sang getCommunities',
-        e,
-        stack,
-      );
+      _log.error('Lỗi getCommunitiesPaged', e, stack);
+      if (rethrowOnError) rethrow;
       return (
         communities: <Community>[],
         nextCursor: null,

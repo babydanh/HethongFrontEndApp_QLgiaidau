@@ -138,8 +138,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
           'sport': sport,
         if (communityId != null && communityId.isNotEmpty)
           'communityId': communityId,
-        if (search != null && search.trim().isNotEmpty)
-          'search': search.trim(),
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
       };
 
       final response = await _dioClient.dio.get(
@@ -159,10 +158,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
           combined['meta'] = rawMeta;
         }
       } else if (rawData is List) {
-        combined = {
-          'items': rawData,
-          if (rawMeta is Map) 'meta': rawMeta,
-        };
+        combined = {'items': rawData, if (rawMeta is Map) 'meta': rawMeta};
       } else {
         combined = body;
       }
@@ -198,11 +194,15 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
   }
 
   @override
-  Future<SocialSessionModel> create(CreateSocialSessionRequest request) async {
+  Future<SocialSessionModel> create(
+    CreateSocialSessionRequest request, {
+    required String idempotencyKey,
+  }) async {
     try {
       final response = await _dioClient.dio.post(
         '/social-sessions',
         data: request.toJson(),
+        options: Options(headers: {'Idempotency-Key': idempotencyKey}),
       );
       final body = _asMap(response.data);
       final rawData = body['data'];
@@ -255,12 +255,10 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
       final queryParams = <String, dynamic>{
         'page': page,
         'limit': limit,
-        if (status != null && status.trim().isNotEmpty)
-          'status': status.trim(),
+        if (status != null && status.trim().isNotEmpty) 'status': status.trim(),
         if (sport != null && sport.isNotEmpty && sport.toLowerCase() != 'all')
           'sport': sport,
-        if (search != null && search.trim().isNotEmpty)
-          'search': search.trim(),
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         if (from != null && from.isNotEmpty) 'from': from,
         if (to != null && to.isNotEmpty) 'to': to,
       };
@@ -282,10 +280,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
           combined['meta'] = rawMeta;
         }
       } else if (rawData is List) {
-        combined = {
-          'items': rawData,
-          if (rawMeta is Map) 'meta': rawMeta,
-        };
+        combined = {'items': rawData, if (rawMeta is Map) 'meta': rawMeta};
       } else {
         combined = body;
       }
@@ -339,10 +334,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
     try {
       final response = await _dioClient.dio.get(
         '/social-sessions/$sessionId/messages',
-        queryParameters: {
-          'page': page,
-          'limit': limit,
-        },
+        queryParameters: {'page': page, 'limit': limit},
         options: Options(extra: {'noCache': true}),
       );
 
@@ -351,9 +343,11 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
       if (rawData is List) {
         return rawData
             .whereType<Map>()
-            .map((m) => SocialChatMessageModel.fromJson(
-                  m.map((k, v) => MapEntry(k.toString(), v)),
-                ))
+            .map(
+              (m) => SocialChatMessageModel.fromJson(
+                m.map((k, v) => MapEntry(k.toString(), v)),
+              ),
+            )
             .toList();
       }
       return const [];
@@ -390,6 +384,121 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
   }
 
   @override
+  Future<void> requestToJoin(String sessionId, {int ticketCount = 1}) async {
+    try {
+      await _dioClient.dio.post(
+        '/social-sessions/$sessionId/requests',
+        data: {'ticketCount': ticketCount},
+      );
+    } on DioException catch (error, stack) {
+      _log.error('request to join session error: $sessionId', error, stack);
+      throw SocialApiException.fromDioException(error);
+    } catch (error, stack) {
+      _log.error(
+        'request to join session unexpected error: $sessionId',
+        error,
+        stack,
+      );
+      rethrow;
+    }
+  }
+
+  @override
+  Future<SocialJoinRequestListResponse> listJoinRequests(
+    String sessionId, {
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dioClient.dio.get(
+        '/social-sessions/$sessionId/requests',
+        queryParameters: {'page': page, 'limit': limit},
+        options: Options(extra: {'noCache': true}),
+      );
+      final body = _asMap(response.data);
+      final rawData = body['data'];
+      final data = rawData is Map ? _asMap(rawData) : body;
+      return SocialJoinRequestListResponse.fromJson(data);
+    } on DioException catch (error, stack) {
+      _log.error('list join requests error: $sessionId', error, stack);
+      throw SocialApiException.fromDioException(error);
+    } catch (error, stack) {
+      _log.error(
+        'list join requests unexpected error: $sessionId',
+        error,
+        stack,
+      );
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> approveJoinRequest(
+    String sessionId,
+    String participantId,
+  ) async {
+    try {
+      await _dioClient.dio.post(
+        '/social-sessions/$sessionId/requests/$participantId/approve',
+      );
+    } on DioException catch (error, stack) {
+      _log.error(
+        'approve join request error: $sessionId/$participantId',
+        error,
+        stack,
+      );
+      throw SocialApiException.fromDioException(error);
+    } catch (error, stack) {
+      _log.error(
+        'approve join request unexpected error: $sessionId/$participantId',
+        error,
+        stack,
+      );
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> rejectJoinRequest(String sessionId, String participantId) async {
+    try {
+      await _dioClient.dio.post(
+        '/social-sessions/$sessionId/requests/$participantId/reject',
+      );
+    } on DioException catch (error, stack) {
+      _log.error(
+        'reject join request error: $sessionId/$participantId',
+        error,
+        stack,
+      );
+      throw SocialApiException.fromDioException(error);
+    } catch (error, stack) {
+      _log.error(
+        'reject join request unexpected error: $sessionId/$participantId',
+        error,
+        stack,
+      );
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> withdrawJoinRequest(String sessionId) async {
+    try {
+      await _dioClient.dio.delete('/social-sessions/$sessionId/requests/self');
+    } on DioException catch (error, stack) {
+      _log.error('withdraw join request error: $sessionId', error, stack);
+      throw SocialApiException.fromDioException(error);
+    } catch (error, stack) {
+      _log.error(
+        'withdraw join request unexpected error: $sessionId',
+        error,
+        stack,
+      );
+      rethrow;
+    }
+  }
+
+  @override
   Future<void> addParticipant(
     String sessionId, {
     required String userId,
@@ -398,10 +507,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
     try {
       await _dioClient.dio.post(
         '/social-sessions/$sessionId/participants',
-        data: {
-          'userId': userId,
-          'ticketCount': ticketCount,
-        },
+        data: {'userId': userId, 'ticketCount': ticketCount},
       );
     } on DioException catch (error, stack) {
       _log.error('addParticipant error for: $sessionId', error, stack);
@@ -421,10 +527,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
     try {
       await _dioClient.dio.post(
         '/social-sessions/$sessionId/participants',
-        data: {
-          'guestName': guestName.trim(),
-          'ticketCount': ticketCount,
-        },
+        data: {'guestName': guestName.trim(), 'ticketCount': ticketCount},
       );
     } on DioException catch (error, stack) {
       _log.error('addGuestParticipant error for: $sessionId', error, stack);
@@ -444,10 +547,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
     try {
       final response = await _dioClient.dio.post(
         '/social-sessions/$sessionId/participants/batch',
-        data: {
-          'userIds': userIds,
-          'ticketCount': ticketCount,
-        },
+        data: {'userIds': userIds, 'ticketCount': ticketCount},
       );
       final body = _asMap(response.data);
       final rawData = body['data'];

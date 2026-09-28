@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
@@ -757,59 +758,34 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
       (
         AppConstants.sportPickleball,
         l10n.createClubTournament_sportPickleball,
-        '🏓',
       ),
       (
         AppConstants.sportBadminton,
         l10n.createClubTournament_sportBadminton,
-        '🏸',
       ),
-      (AppConstants.sportTennis, l10n.createClubTournament_sportTennis, '🎾'),
+      (
+        AppConstants.sportTennis,
+        l10n.createClubTournament_sportTennis,
+      ),
       (
         AppConstants.sportTableTennis,
         l10n.createClubTournament_sportTableTennis,
-        '🏓',
+      ),
+      (
+        AppConstants.sportFootball,
+        l10n.createClubTournament_sportFootball,
       ),
     ];
     return Row(
       children: sports.map((s) {
         final selected = _selectedSport == s.$1;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: s != sports.last ? 8 : 0),
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedSport = s.$1),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? AppTheme.primary.withValues(alpha: 0.1)
-                      : context.colors.bgSurface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: selected ? AppTheme.primary : context.colors.border,
-                    width: selected ? 1.5 : 1,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Text(s.$3, style: const TextStyle(fontSize: 20)),
-                    const SizedBox(height: 4),
-                    Text(
-                      s.$2,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: selected
-                            ? AppTheme.primary
-                            : context.colors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+        return SportChoiceTile(
+          sportKey: s.$1,
+          label: s.$2,
+          selected: selected,
+          iconSize: 22,
+          withTrailingGap: s != sports.last,
+          onTap: () => setState(() => _selectedSport = s.$1),
         );
       }).toList(),
     );

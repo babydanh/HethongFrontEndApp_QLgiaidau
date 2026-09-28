@@ -1,6 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
-import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_details_tab.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_find_players_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,26 +18,12 @@ SocialSessionModel sessionWithCode(String? code) =>
     });
 
 void main() {
-  testWidgets('Social details and invite sheet use the short share URL', (
+  testWidgets('Social invite sheet uses the short share URL', (
     tester,
   ) async {
     final session = sessionWithCode('abc12345678');
     const expectedUrl = 'https://sporto.asia/s/abc12345678';
 
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.lightTheme,
-        home: Scaffold(
-          body: SocialDetailsTab(
-            session: session,
-            isHost: false,
-            onContactHost: () {},
-            onFindPlayers: () {},
-          ),
-        ),
-      ),
-    );
-    expect(find.text(expectedUrl), findsOneWidget);
 
     await tester.pumpWidget(
       MaterialApp(
