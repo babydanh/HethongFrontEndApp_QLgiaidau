@@ -1,6 +1,6 @@
 # Personal Dashboard Tabs — Design Specification
 
-**Status:** Written design reviewed and approved by the user; implementation plan review pending.  
+**Status:** Written design and implementation plan approved for the full three-tab scope in checkout `danh`; execution will use subagent-driven development under the multi-file delegation policy. Implementation remains blocked pending Recommendation risk, dashboard data/access-owner, and I18N terminology decisions.
 **Date:** 2026-09-28  
 **Platform:** Flutter app (Android/iOS; preserve existing responsive behavior).
 

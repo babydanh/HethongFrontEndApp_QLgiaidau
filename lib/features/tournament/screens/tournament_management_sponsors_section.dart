@@ -46,13 +46,15 @@ class _TournamentManagementSponsorsSectionState
     return FutureBuilder<List<TournamentSponsor>>(
       future: _sponsorsFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting)
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
-        if (snapshot.hasError)
+        }
+        if (snapshot.hasError) {
           return TournamentManagementError(
             error: snapshot.error,
             onRetry: _reload,
           );
+        }
         final sponsors = snapshot.data ?? const <TournamentSponsor>[];
         return ListView(
           padding: const EdgeInsets.all(16),
@@ -109,30 +111,34 @@ class _TournamentManagementSponsorsSectionState
   Future<void> _openEditor([TournamentSponsor? sponsor]) async {
     await showDialog<void>(
       context: context,
-      builder: (context) => _SponsorEditorDialog(
-        sponsor: sponsor,
-        onSave: (payload) async {
-          final repository = ref.read(tournamentManagementRepositoryProvider);
-          if (sponsor == null) {
-            await repository.createSponsor(widget.tournamentId, payload);
-          } else {
-            await repository.updateSponsor(
-              widget.tournamentId,
-              sponsor.id,
-              payload,
+      builder: (dialogContext) {
+        final messenger = ScaffoldMessenger.of(dialogContext);
+        final savedLabel = AppLocalizations.of(
+          dialogContext,
+        )!.tournamentManagementSponsorSaved;
+        return _SponsorEditorDialog(
+          sponsor: sponsor,
+          onSave: (payload) async {
+            final repository = ref.read(
+              tournamentManagementRepositoryProvider,
             );
-          }
-          if (!mounted) return;
-          _reload();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                AppLocalizations.of(context)!.tournamentManagementSponsorSaved,
-              ),
-            ),
-          );
-        },
-      ),
+            if (sponsor == null) {
+              await repository.createSponsor(widget.tournamentId, payload);
+            } else {
+              await repository.updateSponsor(
+                widget.tournamentId,
+                sponsor.id,
+                payload,
+              );
+            }
+            if (!mounted || !messenger.mounted) return;
+            _reload();
+            messenger.showSnackBar(
+              SnackBar(content: Text(savedLabel)),
+            );
+          },
+        );
+      },
     );
   }
 

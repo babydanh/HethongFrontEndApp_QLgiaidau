@@ -13136,10 +13136,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mở không gian trận đấu trực tiếp được hỗ trợ.';
 
   @override
-  String get tournamentManagementLivestreamRouteDescription =>
-      'API di động đã được duyệt chưa cung cấp cấu hình phát trực tiếp. Mở không gian vận hành hiện có để dùng các điều khiển trận đấu được hỗ trợ.';
-
-  @override
   String get tournamentManagementLoadError => 'Không thể tải mục này.';
 
   @override
@@ -13968,4 +13964,8 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get tournamentManagementLivestreamDeviceNameRequired =>
       'Nhập tên thiết bị trước.';
+
+  @override
+  String get tournamentManagementLivestreamDeviceNameLengthInvalid =>
+      'Tên thiết bị phải có từ 2 đến 255 ký tự.';
 }

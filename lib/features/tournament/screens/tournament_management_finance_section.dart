@@ -22,7 +22,7 @@ class TournamentManagementFinanceSection extends ConsumerWidget {
     final completed = tournament.status.toUpperCase() == 'COMPLETED';
     final user = ref.watch(userProfileProvider);
     final profile = user.asData?.value;
-    final isOrganizer = profile?.role?.toUpperCase() == 'ORGANIZER';
+    final isOrganizer = profile?.hasRole('ORGANIZER') ?? false;
     final canRequestPayout =
         completed &&
         profile != null &&

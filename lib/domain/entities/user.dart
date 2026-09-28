@@ -18,6 +18,7 @@ class UserProfile {
   final String? bankAccountNumber;
   final String? bankAccountName;
   final String? role;
+  final List<String> roles;
   final int? eloPoints;
   final String? tierName;
   final String? createdAt;
@@ -42,6 +43,7 @@ class UserProfile {
     this.bankAccountNumber,
     this.bankAccountName,
     this.role,
+    this.roles = const <String>[],
     this.eloPoints,
     this.tierName,
     this.createdAt,
@@ -82,10 +84,20 @@ class UserProfile {
       bankAccountNumber: p['bankAccountNumber']?.toString(),
       bankAccountName: p['bankAccountName']?.toString(),
       role: p['role']?.toString(),
+      roles: (p['roles'] as List<dynamic>?)
+              ?.map((value) => value.toString())
+              .toList(growable: false) ??
+          const <String>[],
       eloPoints: _parseInt(p['eloPoints']),
       tierName: p['tierName']?.toString(),
       createdAt: p['createdAt']?.toString(),
     );
+  }
+
+  bool hasRole(String expectedRole) {
+    final expected = expectedRole.trim().toUpperCase();
+    return role?.trim().toUpperCase() == expected ||
+        roles.any((value) => value.trim().toUpperCase() == expected);
   }
 
   Map<String, dynamic> toJson() {
@@ -135,8 +147,7 @@ class UserProfile {
     String? bankAccountNumber,
     String? bankAccountName,
     String? role,
-    int? eloPoints,
-    String? tierName,
+    List<String>? roles,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -159,8 +170,7 @@ class UserProfile {
       bankAccountNumber: bankAccountNumber ?? this.bankAccountNumber,
       bankAccountName: bankAccountName ?? this.bankAccountName,
       role: role ?? this.role,
-      eloPoints: eloPoints ?? this.eloPoints,
-      tierName: tierName ?? this.tierName,
+      roles: roles ?? this.roles,
     );
   }
 

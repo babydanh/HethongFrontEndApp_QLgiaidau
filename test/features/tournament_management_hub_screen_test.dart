@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/router/app_router.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/repositories/region_repository.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_management_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
@@ -14,6 +15,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,21 +48,35 @@ Tournament _tournament(
   'updatedAt': '2026-01-01T00:00:00Z',
 }, 'tournament-1');
 
-Widget _app(Tournament tournament, {Locale locale = const Locale('vi')}) =>
-    ProviderScope(
-      child: MaterialApp(
-        theme: AppTheme.lightTheme,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: locale,
-        home: TournamentManagementHubScreen(
-          tournament: tournament,
-          actionRouteBase: '/admin/tournament/tournament-1',
-          opsWorkspaceRoute: '/organizer/tournaments/tournament-1/ops',
-          liteWorkspaceRoute: '/lite-manage/tournament-1?workspace=1',
-        ),
-      ),
-    );
+Widget _app(
+  Tournament tournament, {
+  Locale locale = const Locale('vi'),
+  UserProfile? profile,
+}) => ProviderScope(
+  overrides: [
+    userProfileProvider.overrideWith(
+      (ref) async =>
+          profile ??
+          const UserProfile(
+            id: 'manager-1',
+            role: 'ORGANIZER',
+            roles: ['ORGANIZER', 'ADMIN'],
+          ),
+    ),
+  ],
+  child: MaterialApp(
+    theme: AppTheme.lightTheme,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    locale: locale,
+    home: TournamentManagementHubScreen(
+      tournament: tournament,
+      actionRouteBase: '/admin/tournament/tournament-1',
+      opsWorkspaceRoute: '/organizer/tournaments/tournament-1/ops',
+      liteWorkspaceRoute: '/lite-manage/tournament-1?workspace=1',
+    ),
+  ),
+);
 
 class _SuccessfulFinalizer extends TournamentActionNotifier {
   _SuccessfulFinalizer(this.onFinalize);
@@ -101,6 +117,13 @@ void main() {
     tester.view.devicePixelRatio = 1;
     final container = ProviderContainer(
       overrides: [
+        userProfileProvider.overrideWith(
+          (ref) async => const UserProfile(
+            id: 'admin-1',
+            role: 'ADMIN',
+            roles: ['ADMIN'],
+          ),
+        ),
         authProvider.overrideWith(_AuthenticatedAdmin.new),
         tournamentProvider('tournament-1').overrideWith(
           (ref) => Stream.value(_tournament('in_progress', quick: true)),
@@ -190,6 +213,13 @@ void main() {
   testWidgets('Advanced organizer entry opens the shared hub', (tester) async {
     final container = ProviderContainer(
       overrides: [
+        userProfileProvider.overrideWith(
+          (ref) async => const UserProfile(
+            id: 'admin-1',
+            role: 'ADMIN',
+            roles: ['ADMIN'],
+          ),
+        ),
         authProvider.overrideWith(_AuthenticatedAdmin.new),
         tournamentProvider(
           'tournament-1',
@@ -227,6 +257,13 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          userProfileProvider.overrideWith(
+            (ref) async => const UserProfile(
+              id: 'admin-1',
+              role: 'ADMIN',
+              roles: ['ADMIN'],
+            ),
+          ),
           tournamentProvider('tournament-1').overrideWith((ref) {
             tournamentReads += 1;
             return Stream.value(
@@ -276,6 +313,28 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(l10n.endTournament), findsNothing);
     expect(find.text(l10n.tournamentEnded), findsOneWidget);
+  });
+
+  testWidgets('organizer cannot see the server-forbidden end action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        _tournament('in_progress'),
+        profile: const UserProfile(
+          id: 'organizer-1',
+          role: 'ORGANIZER',
+          roles: ['ORGANIZER'],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final context = tester.element(find.byType(TournamentManagementHubScreen));
+    final l10n = AppLocalizations.of(context)!;
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.endTournament), findsNothing);
   });
 
   testWidgets('opens the existing action workspaces from the shared hub', (

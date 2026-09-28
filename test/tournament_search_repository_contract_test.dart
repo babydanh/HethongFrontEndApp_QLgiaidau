@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/core/services/token_manager.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_tournament_repository.dart';
+import 'package:app_quanly_giaidau/domain/usecases/tournament/finalize_tournament_use_case.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -67,5 +68,14 @@ void main() {
       'categoryId': categoryId,
     });
     expect(requests.single.queryParameters.keys, isNot(contains('sport')));
+  });
+
+  test('finalize sends only the supported status field', () async {
+    await FinalizeTournamentUseCase(repository).call('tournament-1');
+
+    expect(requests, hasLength(1));
+    expect(requests.single.method, 'PATCH');
+    expect(requests.single.path, '/tournaments/tournament-1');
+    expect(requests.single.data, {'status': 'COMPLETED'});
   });
 }

@@ -5355,7 +5355,6 @@
   "tournamentManagementLiveOperationsDescription": "Open the existing workspace for live match operations.",
   "tournamentManagementLivestream": "Livestream",
   "tournamentManagementLivestreamDescription": "Open the supported live-match workspace.",
-  "tournamentManagementLivestreamRouteDescription": "Livestream setup is not exposed by the approved mobile API. Open the existing operations workspace for supported live-match controls.",
   "tournamentManagementLoadError": "Could not load this section.",
   "tournamentManagementLockConfirm": "Lock tournament registration now?",
   "tournamentManagementLockTournament": "Lock registration",
@@ -5631,5 +5630,6 @@
   "tournamentManagementLivestreamCreateDevice": "Create device",
   "tournamentManagementLivestreamDeviceNameLabel": "Device name",
   "tournamentManagementLivestreamDeviceNameHint": "Example: Court 1 phone",
-  "tournamentManagementLivestreamDeviceNameRequired": "Enter a device name first."
+  "tournamentManagementLivestreamDeviceNameRequired": "Enter a device name first.",
+  "tournamentManagementLivestreamDeviceNameLengthInvalid": "Enter a device name between 2 and 255 characters."
 }

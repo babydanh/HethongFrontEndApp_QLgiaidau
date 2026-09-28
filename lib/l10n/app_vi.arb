@@ -5355,7 +5355,6 @@
   "tournamentManagementLiveOperationsDescription": "Mở không gian hiện có để vận hành các trận đấu trực tiếp.",
   "tournamentManagementLivestream": "Phát trực tiếp",
   "tournamentManagementLivestreamDescription": "Mở không gian trận đấu trực tiếp được hỗ trợ.",
-  "tournamentManagementLivestreamRouteDescription": "API di động đã được duyệt chưa cung cấp cấu hình phát trực tiếp. Mở không gian vận hành hiện có để dùng các điều khiển trận đấu được hỗ trợ.",
   "tournamentManagementLoadError": "Không thể tải mục này.",
   "tournamentManagementLockConfirm": "Khóa đăng ký giải đấu ngay bây giờ?",
   "tournamentManagementLockTournament": "Khóa đăng ký",
@@ -5631,5 +5630,6 @@
   "tournamentManagementLivestreamCreateDevice": "Tạo thiết bị",
   "tournamentManagementLivestreamDeviceNameLabel": "Tên thiết bị",
   "tournamentManagementLivestreamDeviceNameHint": "Ví dụ: Điện thoại sân 1",
-  "tournamentManagementLivestreamDeviceNameRequired": "Nhập tên thiết bị trước."
+  "tournamentManagementLivestreamDeviceNameRequired": "Nhập tên thiết bị trước.",
+  "tournamentManagementLivestreamDeviceNameLengthInvalid": "Tên thiết bị phải có từ 2 đến 255 ký tự."
 }

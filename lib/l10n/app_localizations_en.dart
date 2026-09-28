@@ -13182,10 +13182,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Open the supported live-match workspace.';
 
   @override
-  String get tournamentManagementLivestreamRouteDescription =>
-      'Livestream setup is not exposed by the approved mobile API. Open the existing operations workspace for supported live-match controls.';
-
-  @override
   String get tournamentManagementLoadError => 'Could not load this section.';
 
   @override
@@ -14016,4 +14012,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tournamentManagementLivestreamDeviceNameRequired =>
       'Enter a device name first.';
+
+  @override
+  String get tournamentManagementLivestreamDeviceNameLengthInvalid =>
+      'Enter a device name between 2 and 255 characters.';
 }
