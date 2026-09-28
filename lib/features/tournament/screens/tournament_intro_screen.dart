@@ -21,6 +21,8 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/matches_tab.dart'
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
+import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 
@@ -245,7 +247,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     bool isAdmin,
   ) {
     if (tournament == null) {
-      return const SizedBox.shrink();
+      return _buildFloatingBottomNav(context);
     }
 
     final isCreator = tournament.creatorId == currentUserId;
@@ -272,7 +274,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           membershipStatus == 'APPROVED';
     }
 
-    if (!hasTournamentAccess) return const SizedBox.shrink();
+    if (!hasTournamentAccess || isCreator) {
+      return _buildFloatingBottomNav(context);
+    }
 
     final now = DateTime.now();
     final isRegistrationNotStarted =
@@ -282,6 +286,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         tournament.registrationEndDate != null &&
         now.isAfter(tournament.registrationEndDate!);
     final isRegOpen = StatusHelper.isTournamentRegistration(tournament.status);
+    if (!isRegOpen) return _buildFloatingBottomNav(context);
     final canRegister =
         isRegOpen &&
         !tournament.isRegistrationLocked &&
@@ -291,7 +296,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final registerLabel = isRegistrationNotStarted
         ? l10n.lite_registrationNotOpen
         : canRegister
-        ? 'Đăng ký'
+        ? l10n.registerNow
         : l10n.registerRegClosed;
     final queryParameters = <String, String>{
       if (hasInvite) 'invite': activeInvite!.trim(),
@@ -329,14 +334,16 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               children: [
                 const Icon(Icons.how_to_reg_rounded, size: 20),
                 const SizedBox(width: 8),
-                Text(
-                  registerLabel,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                    letterSpacing: 0.2,
+                Flexible(
+                  child: Text(
+                    registerLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      letterSpacing: 0.2,
+                    ),
                   ),
                 ),
               ],
@@ -346,6 +353,14 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       ),
     );
   }
+
+  Widget _buildFloatingBottomNav(BuildContext context) => FloatingBottomNav(
+    currentIndex: 1,
+    onTabSelected: (index) {
+      if (index != 1) context.go('/home?tab=$index');
+    },
+    onMenuTap: () => AppMenuSheet.show(context),
+  );
 
   Widget _buildLoadingState() {
     final colors = context.colors;

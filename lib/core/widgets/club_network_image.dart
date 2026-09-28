@@ -7,12 +7,14 @@ class ClubNetworkImage extends StatelessWidget {
     this.url, {
     super.key,
     this.fit,
+    this.cacheWidth,
     this.loadingBuilder,
     required this.errorBuilder,
   });
 
   final String url;
   final BoxFit? fit;
+  final int? cacheWidth;
   final ImageLoadingBuilder? loadingBuilder;
   final ImageErrorWidgetBuilder errorBuilder;
 
@@ -43,6 +45,7 @@ class ClubNetworkImage extends StatelessWidget {
           target,
           key: ValueKey(target),
           fit: fit,
+          cacheWidth: cacheWidth,
           loadingBuilder: loadingBuilder,
           frameBuilder: (context, child, frame, synchronous) {
             if (synchronous || frame != null) return child;

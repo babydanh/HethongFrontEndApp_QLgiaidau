@@ -1155,6 +1155,11 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
             child: FloatingActionButton(
               heroTag: 'fab_club_activity_social_${widget.communityId}',
               backgroundColor: AppTheme.primary,
+              shape: const CircleBorder(
+                side: BorderSide(
+                  color: Colors.transparent,
+                ),
+              ),
               elevation: 4,
               onPressed: () async {
                 final createdSession =
