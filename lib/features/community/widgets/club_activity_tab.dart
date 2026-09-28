@@ -30,8 +30,14 @@ import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.
 class ClubActivityTab extends ConsumerStatefulWidget {
   final String communityId;
   final Community? club;
+  final TabController? tabController;
 
-  const ClubActivityTab({super.key, required this.communityId, this.club});
+  const ClubActivityTab({
+    super.key,
+    required this.communityId,
+    this.club,
+    this.tabController,
+  });
 
   @override
   ConsumerState<ClubActivityTab> createState() => _ClubActivityTabState();
@@ -39,7 +45,8 @@ class ClubActivityTab extends ConsumerStatefulWidget {
 
 enum _ActivityFilter { all, myMatches, ongoing, completed }
 
-class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
+class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
+    with WidgetsBindingObserver {
   static const _activityMatchPageSize = 10;
   static const _activitySessionPageSize = 8;
 
@@ -78,6 +85,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    widget.tabController?.addListener(_onTabControllerChanged);
     // Capture the provider-owned service while the ConsumerState is mounted.
     // dispose() must not call ref.read after Riverpod has unmounted this state.
     _matchSocket = ref.read(matchSocketServiceProvider);
@@ -86,6 +95,45 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) _fetchMatches(silent: true);
     });
+  }
+
+  @override
+  void didUpdateWidget(ClubActivityTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.tabController != widget.tabController) {
+      oldWidget.tabController?.removeListener(_onTabControllerChanged);
+      widget.tabController?.addListener(_onTabControllerChanged);
+    }
+  }
+
+  /// Khi user chuyển sang tab "Hoạt động" (index 1), nếu dữ liệu stale (>60s)
+  /// thì tự động fetch lại để backend auto-close các kèo quá hạn.
+  void _onTabControllerChanged() {
+    if (widget.tabController?.index == 1 &&
+        !widget.tabController!.indexIsChanging &&
+        mounted) {
+      final notifier = ref.read(
+        clubSocialSessionsProvider(widget.communityId).notifier,
+      );
+      if (notifier.isStale) {
+        unawaited(notifier.refresh());
+      }
+    }
+  }
+
+  /// Khi app resume từ background, refresh Social sessions nếu data stale.
+  /// Backend sẽ tự close expired sessions trong `listByCommunity`
+  /// → response trả về status mới nhất (OPEN quá giờ → COMPLETED).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      final notifier = ref.read(
+        clubSocialSessionsProvider(widget.communityId).notifier,
+      );
+      if (notifier.isStale) {
+        unawaited(notifier.refresh());
+      }
+    }
   }
 
   @override
@@ -157,6 +205,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    widget.tabController?.removeListener(_onTabControllerChanged);
     _attachedActivityScrollController?.removeListener(
       _onActivityScrollPosition,
     );
@@ -812,7 +862,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     // Backend trả về status OPEN,FULL,COMPLETED cho GET /by-community/:id.
     // Watch AsyncValue trực tiếp để phân biệt loading/error với rỗng thật.
     final clubSocialsAsync =
-        ref.watch(clubSocialSessionsQueryProvider(widget.communityId));
+        ref.watch(clubSocialSessionsProvider(widget.communityId));
     final clubSocials =
         clubSocialsAsync.asData?.value ?? const <SocialSessionModel>[];
     final isLoadingSocials =
@@ -842,12 +892,10 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
     }
 
     Future<void> refreshSocials() async {
-      ref.invalidate(clubSocialSessionsQueryProvider(widget.communityId));
-      // Chờ provider fetch lại để RefreshIndicator tắt đúng lúc.
       try {
-        await ref.read(
-          clubSocialSessionsQueryProvider(widget.communityId).future,
-        );
+        await ref
+            .read(clubSocialSessionsProvider(widget.communityId).notifier)
+            .refresh();
       } catch (_) {}
     }
 
@@ -892,9 +940,13 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                       ),
                       const SizedBox(height: 8),
                       OutlinedButton(
-                        onPressed: () => ref.invalidate(
-                          clubSocialSessionsQueryProvider(widget.communityId),
-                        ),
+                        onPressed: () => ref
+                            .read(
+                              clubSocialSessionsProvider(
+                                widget.communityId,
+                              ).notifier,
+                            )
+                            .refresh(),
                         child: const Text('Thử lại'),
                       ),
                     ],
@@ -1178,7 +1230,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                 // ngay cả khi sheet bị dismiss mà không qua _submit.
                 if (createdSession != null) {
                   ref.invalidate(
-                    clubSocialSessionsQueryProvider(widget.communityId),
+                    clubSocialSessionsProvider(widget.communityId),
                   );
                 }
                 if (createdSession != null && context.mounted) {
@@ -1189,7 +1241,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab> {
                   // load lại để filter "Mở"/"Đã xong" đúng trạng thái mới.
                   if (mounted) {
                     ref.invalidate(
-                      clubSocialSessionsQueryProvider(widget.communityId),
+                      clubSocialSessionsProvider(widget.communityId),
                     );
                   }
                 }

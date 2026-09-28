@@ -81,6 +81,12 @@ dependencies:
   lucide_icons_flutter: ^3.1.20
   liquid_glass_widgets: ^1.7.2
 
+  # Location (Social gần bạn: xin quyền khi vào tab Social, ghim map khi tạo kèo)
+  geolocator: ^13.0.4
+  permission_handler: ^11.4.0
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

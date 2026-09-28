@@ -2,6 +2,8 @@ import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 
 abstract class ISocialSessionRepository {
   /// 4.2 - Danh sách theo ngày (GET /social-sessions?date=YYYY-MM-DD)
+  /// [lat]/[lng]: vị trí user — bật lọc bán kính + sort DISTANCE (gần lên trước).
+  /// [radiusKm]: bán kính lọc (km, backend 0.5–50). [sortBy]: 'TIME' | 'DISTANCE'.
   Future<SocialSessionListResponse> listByDate({
     required String date,
     String? sport,
@@ -9,6 +11,10 @@ abstract class ISocialSessionRepository {
     String? search,
     int page = 1,
     int limit = 20,
+    double? lat,
+    double? lng,
+    double? radiusKm,
+    String? sortBy,
   });
 
   /// 4.3 - Chi tiết (GET /social-sessions/:id)
@@ -28,6 +34,10 @@ abstract class ISocialSessionRepository {
     String? to,
     int page = 1,
     int limit = 20,
+    double? lat,
+    double? lng,
+    double? radiusKm,
+    String? sortBy,
   });
 
   /// 4.6 - Sửa kèo (PATCH /social-sessions/:id)

@@ -77,6 +77,9 @@ class SocialApiException implements Exception {
         case 'INVALID_GUEST_NAME':
           message = 'Tên khách không hợp lệ (tối đa 100 ký tự)';
           break;
+        case 'LOCATION_PAIR_REQUIRED':
+          message = 'Tọa độ phải gồm cả vĩ độ và kinh độ';
+          break;
         default:
           if (statusCode == 401) {
             message = 'Phiên đăng nhập đã hết hạn, vui lòng thử lại';
@@ -120,6 +123,23 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
 
   ApiSocialSessionRepository(this._dioClient);
 
+  /// Query params vị trí user (null = không lọc geo).
+  /// Vị trí chỉ dùng để lọc/sắp xếp — không lưu server.
+  static Map<String, dynamic>? _geoQueryParams({
+    required double? lat,
+    required double? lng,
+    required double? radiusKm,
+    required String? sortBy,
+  }) {
+    if (lat == null || lng == null) return null;
+    final params = <String, dynamic>{'lat': lat, 'lng': lng};
+    final r = radiusKm;
+    if (r != null) params['radiusKm'] = r;
+    final s = sortBy;
+    if (s != null && s.isNotEmpty) params['sortBy'] = s;
+    return params;
+  }
+
   @override
   Future<SocialSessionListResponse> listByDate({
     required String date,
@@ -128,6 +148,10 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
     String? search,
     int page = 1,
     int limit = 20,
+    double? lat,
+    double? lng,
+    double? radiusKm,
+    String? sortBy,
   }) async {
     try {
       final queryParams = <String, dynamic>{
@@ -140,6 +164,13 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
           'communityId': communityId,
         if (search != null && search.trim().isNotEmpty)
           'search': search.trim(),
+        // Vị trí user chỉ dùng để lọc/sắp xếp — không lưu server.
+        ...?_geoQueryParams(
+          lat: lat,
+          lng: lng,
+          radiusKm: radiusKm,
+          sortBy: sortBy,
+        ),
       };
 
       final response = await _dioClient.dio.get(
@@ -250,6 +281,10 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
     String? to,
     int page = 1,
     int limit = 20,
+    double? lat,
+    double? lng,
+    double? radiusKm,
+    String? sortBy,
   }) async {
     try {
       final queryParams = <String, dynamic>{
@@ -263,6 +298,12 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
           'search': search.trim(),
         if (from != null && from.isNotEmpty) 'from': from,
         if (to != null && to.isNotEmpty) 'to': to,
+        ...?_geoQueryParams(
+          lat: lat,
+          lng: lng,
+          radiusKm: radiusKm,
+          sortBy: sortBy,
+        ),
       };
 
       final response = await _dioClient.dio.get(

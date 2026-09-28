@@ -5,15 +5,38 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_date_selector.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/social_nearby_filter.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_session_card.dart';
+import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
 
-class SocialListView extends ConsumerWidget {
+class SocialListView extends ConsumerStatefulWidget {
   final double topPadding;
 
   const SocialListView({super.key, this.topPadding = 0});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SocialListView> createState() => _SocialListViewState();
+}
+
+class _SocialListViewState extends ConsumerState<SocialListView> {
+  @override
+  void initState() {
+    super.initState();
+    // Xin quyền vị trí khi user vào tab Social (đúng lúc cần).
+    // Chỉ tự hỏi lần đầu (initial); các lần sau user chủ động qua toggle/banner
+    // để tránh nag dialog khi chuyển tab. Đã granted thì refresh im lặng.
+    Future.microtask(() {
+      final status = ref.read(userLocationProvider).status;
+      if (status == UserLocationStatus.initial) {
+        ref.read(userLocationProvider.notifier).requestWhenInUse();
+      } else if (status == UserLocationStatus.granted) {
+        ref.read(userLocationProvider.notifier).refreshSilently();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final filterState = ref.watch(socialFilterProvider);
     final sessionsAsync = ref.watch(filteredSocialSessionsProvider);
@@ -28,10 +51,13 @@ class SocialListView extends ConsumerWidget {
         ),
         slivers: [
           // Offset for top header
-          SliverToBoxAdapter(child: SizedBox(height: topPadding)),
+          SliverToBoxAdapter(child: SizedBox(height: widget.topPadding)),
 
           // Horizontal Date Selector
           const SliverToBoxAdapter(child: SocialDateSelector()),
+
+          // Toggle "Gần bạn" + chips bán kính + banner quyền vị trí
+          const SliverToBoxAdapter(child: SocialNearbyFilter()),
 
           const SliverToBoxAdapter(child: SizedBox(height: 6)),
 
@@ -145,6 +171,17 @@ class SocialListView extends ConsumerWidget {
                 groupedSessions
                     .putIfAbsent(session.timeSlot, () => [])
                     .add(session);
+              }
+              // Chế độ "Gần bạn": xếp gần lên trước TRONG từng khung giờ
+              // (giữ grouping theo giờ như đã chốt). Venue chưa ghim (<=0) xếp cuối.
+              if (filterState.nearbyOnly) {
+                for (final entry in groupedSessions.entries) {
+                  entry.value.sort((a, b) {
+                    final da = a.distanceKm > 0 ? a.distanceKm : double.infinity;
+                    final db = b.distanceKm > 0 ? b.distanceKm : double.infinity;
+                    return da.compareTo(db);
+                  });
+                }
               }
               final sortedTimeSlots = groupedSessions.keys.toList()..sort();
 

@@ -35,6 +35,7 @@ class SocialParticipantsTab extends StatelessWidget {
 
     final totalSlots = session.maxParticipants;
     final confirmedCount = session.participants.length;
+    final isCompleted = session.status.toUpperCase() == 'COMPLETED';
 
     return ListView(
       physics: const BouncingScrollPhysics(),
@@ -180,7 +181,10 @@ class SocialParticipantsTab extends StatelessWidget {
             if (index < session.participants.length) {
               final p = session.participants[index];
               final canRemove =
-                  isHost && !p.isHost && p.apiIdentifier.isNotEmpty;
+                  isHost &&
+                  !isCompleted &&
+                  !p.isHost &&
+                  p.apiIdentifier.isNotEmpty;
               return InkWell(
                 onTap: canRemove && removingParticipantId == null
                     ? () => onRemoveParticipant(p)
@@ -261,7 +265,9 @@ class SocialParticipantsTab extends StatelessWidget {
             } else {
               // Empty slot with '+' icon
               return InkWell(
-                onTap: isHost ? () => onAddParticipant(index + 1) : null,
+                onTap: (isHost && !isCompleted)
+                    ? () => onAddParticipant(index + 1)
+                    : null,
                 borderRadius: BorderRadius.circular(28),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

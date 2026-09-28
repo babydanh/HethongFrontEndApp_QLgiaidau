@@ -23,6 +23,7 @@ class SocialDetailsTab extends StatelessWidget {
     final session = this.session;
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isCompleted = session.status.toUpperCase() == 'COMPLETED';
     final currencyFormatter = NumberFormat.currency(
       locale: 'vi_VN',
       symbol: 'đ',
@@ -351,7 +352,7 @@ class SocialDetailsTab extends StatelessWidget {
             ),
           ), // đóng SingleChildScrollView
         ), // đóng Expanded
-        if (isHost)
+        if (isHost && !isCompleted)
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             decoration: BoxDecoration(

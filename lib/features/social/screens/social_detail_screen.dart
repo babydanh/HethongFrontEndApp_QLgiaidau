@@ -39,6 +39,11 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
 
   Future<void> _removeParticipant(SocialParticipantModel participant) async {
     if (_removingParticipantId != null || participant.isHost) return;
+    final currentSession = ref
+        .read(socialSessionDetailProvider(widget.sessionId))
+        .asData
+        ?.value;
+    if ((currentSession?.status.toUpperCase() ?? '') == 'COMPLETED') return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -277,23 +282,28 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       session: session,
                       isHost: host,
                       onContactHost: () => _handleContactHost(session),
-                      onFindPlayers: () => SocialFindPlayersSheet.show(
-                        context,
-                        session,
-                        onShareToChat: () => _shareToClubChat(session),
-                      ),
+                      onFindPlayers: () {
+                        if (session.status.toUpperCase() == 'COMPLETED') return;
+                        SocialFindPlayersSheet.show(
+                          context,
+                          session,
+                          onShareToChat: () => _shareToClubChat(session),
+                        );
+                      },
                     ),
                     SocialParticipantsTab(
                       session: session,
                       isHost: host,
                       onRemoveParticipant: _removeParticipant,
                       removingParticipantId: _removingParticipantId,
-                      onAddParticipant: (slot) =>
-                          SocialAddParticipantSheet.show(
-                            context,
-                            session,
-                            slot,
-                          ),
+                      onAddParticipant: (slot) {
+                        if (session.status.toUpperCase() == 'COMPLETED') return;
+                        SocialAddParticipantSheet.show(
+                          context,
+                          session,
+                          slot,
+                        );
+                      },
                     ),
                     if (showPayment) SocialPaymentTab(session: session),
                     SocialChatTab(session: session),
@@ -675,17 +685,20 @@ Link: $shareUrl''';
       session,
       isHost: _isHost,
       onRepeat: comingSoon,
-      onEdit: () => showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (_) => CreateSocialScreen(
-          clubId: session.communityId ?? '',
-          clubName: session.hostClubName,
-          clubLogoUrl: session.hostClubAvatar,
-          initialSession: session,
-        ),
-      ),
+      onEdit: () {
+        if (session.status.toUpperCase() == 'COMPLETED') return;
+        showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => CreateSocialScreen(
+            clubId: session.communityId ?? '',
+            clubName: session.hostClubName,
+            clubLogoUrl: session.hostClubAvatar,
+            initialSession: session,
+          ),
+        );
+      },
       onCancel: _cancelSession,
       onMute: comingSoon,
       onReport: () => ScaffoldMessenger.of(context).showSnackBar(

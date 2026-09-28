@@ -364,6 +364,14 @@ class SocialSessionModel {
   final int durationMinutes;
   final String venueName;
   final String venueAddress;
+
+  /// Tọa độ sân do host ghim map (null = kèo cũ chưa ghim).
+  final double? latitude;
+  final double? longitude;
+
+  /// Khoảng cách từ user tới sân (km) — server tính qua PostGIS khi query
+  /// kèm lat/lng; 0.0 = chưa có (không hiện badge).
+  final double distanceKm;
   final int maxSlots;
   final int currentSlots;
   final int feePerSlot;
@@ -402,6 +410,9 @@ class SocialSessionModel {
     this.durationMinutes = 120,
     required this.venueName,
     required this.venueAddress,
+    this.latitude,
+    this.longitude,
+    this.distanceKm = 0.0,
     this.maxSlots = 6,
     this.currentSlots = 1,
     this.feePerSlot = 0,
@@ -436,7 +447,6 @@ class SocialSessionModel {
   }
 
   String get creatorId => hostUserId;
-  double get distanceKm => 0.0; // Ignored as per user instruction
   String get hostClubName =>
       community?.name ??
       (participants.where((p) => p.isHost).firstOrNull?.name ?? 'Host');
@@ -493,7 +503,6 @@ class SocialSessionModel {
     const days = ['', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
     return days[dt.weekday];
   }
-
   static String _fullWeekdayDisplay(DateTime dt) {
     const days = [
       '',
@@ -506,6 +515,12 @@ class SocialSessionModel {
       'Chủ nhật',
     ];
     return days[dt.weekday];
+  }
+
+  static double? _toDoubleOrNull(Object? value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
   }
 
   factory SocialSessionModel.fromJson(Map<String, dynamic> json) {
@@ -579,6 +594,10 @@ class SocialSessionModel {
       durationMinutes: durationMin,
       venueName: json['venueName']?.toString() ?? '',
       venueAddress: json['venueAddress']?.toString() ?? '',
+      latitude: _toDoubleOrNull(json['latitude']),
+      longitude: _toDoubleOrNull(json['longitude']),
+      distanceKm:
+          _toDoubleOrNull(json['distanceKm'] ?? json['distance_km']) ?? 0.0,
       maxSlots: (json['maxSlots'] is num)
           ? (json['maxSlots'] as num).toInt()
           : ((json['maxParticipants'] is num)
@@ -651,6 +670,9 @@ class SocialSessionModel {
     'durationMinutes': durationMinutes,
     'venueName': venueName,
     'venueAddress': venueAddress,
+    if (latitude != null) 'latitude': latitude,
+    if (longitude != null) 'longitude': longitude,
+    if (distanceKm > 0) 'distanceKm': distanceKm,
     'maxSlots': maxSlots,
     'currentSlots': currentSlots,
     'feePerSlot': feePerSlot,
@@ -685,6 +707,9 @@ class SocialSessionModel {
     int? durationMinutes,
     String? venueName,
     String? venueAddress,
+    double? latitude,
+    double? longitude,
+    double? distanceKm,
     int? maxSlots,
     int? currentSlots,
     int? feePerSlot,
@@ -721,6 +746,9 @@ class SocialSessionModel {
       durationMinutes: durationMinutes ?? this.durationMinutes,
       venueName: venueName ?? this.venueName,
       venueAddress: venueAddress ?? this.venueAddress,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      distanceKm: distanceKm ?? this.distanceKm,
       maxSlots: maxSlots ?? this.maxSlots,
       currentSlots: currentSlots ?? this.currentSlots,
       feePerSlot: feePerSlot ?? this.feePerSlot,
@@ -755,6 +783,10 @@ class CreateSocialSessionRequest {
   final int durationMinutes;
   final String venueName;
   final String venueAddress;
+
+  /// Tọa độ sân do host ghim map (đi cặp; null = không ghim).
+  final double? latitude;
+  final double? longitude;
   final int maxSlots;
   final int feePerSlot;
   final String levelRequirement;
@@ -772,6 +804,8 @@ class CreateSocialSessionRequest {
     this.durationMinutes = 120,
     required this.venueName,
     required this.venueAddress,
+    this.latitude,
+    this.longitude,
     this.maxSlots = 6,
     this.feePerSlot = 0,
     this.levelRequirement = 'ALL',
@@ -799,6 +833,10 @@ class CreateSocialSessionRequest {
       'durationMinutes': durationMinutes,
       'venueName': venueName,
       'venueAddress': venueAddress,
+      if (latitude != null && longitude != null) ...{
+        'latitude': latitude,
+        'longitude': longitude,
+      },
       'maxSlots': maxSlots,
       'feePerSlot': feePerSlot,
       'levelRequirement': levelRequirement,

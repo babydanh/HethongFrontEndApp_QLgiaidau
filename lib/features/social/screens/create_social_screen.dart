@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/social_location_picker.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_duration_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_price_dialog.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_privacy_sheet.dart';
@@ -58,6 +61,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   final TextEditingController _venueNameController = TextEditingController();
   final TextEditingController _venueAddressController = TextEditingController();
 
+  /// Tọa độ sân do host ghim map (null = chưa ghim).
+  double? _latitude;
+  double? _longitude;
+
   // Configurations
   int _maxParticipants = 6;
   String _privacy = 'Công khai';
@@ -86,6 +93,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       _price = init.feePerSlot;
       _venueNameController.text = init.venueName;
       _venueAddressController.text = init.venueAddress;
+      _latitude = init.latitude;
+      _longitude = init.longitude;
       _titleController.text = init.title;
       _notesController.text = init.description ?? '';
       _isClubAttached =
@@ -223,6 +232,33 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     if (privacy != null && mounted) setState(() => _privacy = privacy);
   }
 
+  /// Mở bản đồ cho host ghim vị trí sân. Tâm map ưu tiên:
+  /// tọa độ cũ (sửa kèo) → vị trí user → fallback TP.HCM.
+  Future<void> _openLocationPicker() async {
+    final userLoc = ref.read(userLocationProvider);
+    final LatLng center;
+    if (_latitude != null && _longitude != null) {
+      center = LatLng(_latitude!, _longitude!);
+    } else if (userLoc.hasPosition) {
+      center = LatLng(userLoc.latitude!, userLoc.longitude!);
+    } else {
+      center = const LatLng(10.7769, 106.7009);
+    }
+    final picked = await SocialLocationPicker.show(
+      context,
+      initialCenter: center,
+      initialPin: (_latitude != null && _longitude != null)
+          ? LatLng(_latitude!, _longitude!)
+          : null,
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        _latitude = picked.latitude;
+        _longitude = picked.longitude;
+      });
+    }
+  }
+
   /// Invalidate cache Social theo CLB để tab Hoạt động cập nhật ngay.
   /// [session] là kèo vừa tạo/sửa (lấy communityId thực tế từ server).
   void _invalidateClubSocialProviders(
@@ -297,6 +333,9 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           'durationMinutes': (_durationHours * 60).round(),
           'venueName': venueNameText,
           'venueAddress': venueAddressText,
+          // Tọa độ ghim (null = xóa vị trí đã ghim).
+          'latitude': _latitude,
+          'longitude': _longitude,
           'maxSlots': _maxParticipants,
           'feePerSlot': _price,
           'levelRequirement': 'ALL',
@@ -335,6 +374,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           durationMinutes: (_durationHours * 60).round(),
           venueName: venueNameText,
           venueAddress: venueAddressText,
+          latitude: _latitude,
+          longitude: _longitude,
           maxSlots: _maxParticipants,
           feePerSlot: _price,
           levelRequirement: 'ALL',
@@ -815,6 +856,17 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                     return null;
                                   },
                                 ),
+                                const SizedBox(height: 10),
+                                // Ghim vị trí sân trên bản đồ (để hiện "gần bạn")
+                                _VenueLocationTile(
+                                  latitude: _latitude,
+                                  longitude: _longitude,
+                                  onPick: _openLocationPicker,
+                                  onClear: () => setState(() {
+                                    _latitude = null;
+                                    _longitude = null;
+                                  }),
+                                ),
                               ],
                             ),
                           ),
@@ -967,6 +1019,91 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Tile ghim vị trí sân: hiện tọa độ đã ghim (nếu có) + nút mở bản đồ.
+class _VenueLocationTile extends StatelessWidget {
+  final double? latitude;
+  final double? longitude;
+  final VoidCallback onPick;
+  final VoidCallback onClear;
+
+  const _VenueLocationTile({
+    required this.latitude,
+    required this.longitude,
+    required this.onPick,
+    required this.onClear,
+  });
+
+  bool get _hasPin => latitude != null && longitude != null;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return InkWell(
+      onTap: onPick,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: _hasPin
+              ? colors.success.withValues(alpha: 0.1)
+              : colors.bgCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _hasPin
+                ? colors.success.withValues(alpha: 0.4)
+                : colors.border,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              _hasPin
+                  ? Icons.location_on_rounded
+                  : Icons.map_outlined,
+              color: _hasPin ? colors.success : AppTheme.primary,
+              size: 22,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _hasPin ? 'Đã ghim vị trí sân' : 'Ghim vị trí sân',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _hasPin
+                        ? '${latitude!.toStringAsFixed(5)}, ${longitude!.toStringAsFixed(5)}'
+                        : 'Để kèo hiện trong "Gần bạn"',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_hasPin)
+              IconButton(
+                tooltip: 'Xóa vị trí',
+                icon: Icon(Icons.close_rounded, color: colors.textMuted),
+                onPressed: onClear,
+              )
+            else
+              Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+          ],
         ),
       ),
     );

@@ -612,8 +612,11 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                 _LazyClubTab(
                   controller: _tabController,
                   index: 1,
-                  builder: (_) =>
-                      ClubActivityTab(communityId: club.id, club: club),
+                  builder: (_) => ClubActivityTab(
+                    communityId: club.id,
+                    club: club,
+                    tabController: _tabController,
+                  ),
                 ),
                 _LazyClubTab(
                   controller: _tabController,
