@@ -6,12 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/data/models/venue_suggestion.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_region_picker.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_duration_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_price_dialog.dart';
@@ -82,7 +84,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
 
   // Configurations
   int _maxParticipants = 6;
-  String _privacy = 'Công khai';
+  String _privacy = 'PUBLIC';
   int _price = 0;
 
   // Title and Notes
@@ -104,7 +106,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       _selectedDateTime = init.startAt;
       _durationHours = init.durationMinutes / 60.0;
       _maxParticipants = init.maxSlots;
-      _privacy = init.visibility == 'CLUB_ONLY' ? 'Nội bộ CLB' : 'Công khai';
+      _privacy = init.visibility == 'CLUB_ONLY' ? 'CLUB_ONLY' : 'PUBLIC';
       _price = init.feePerSlot;
       _venueNameController.text = init.venueName;
       _selectedVenueId = init.venueId;
@@ -511,10 +513,43 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     if (price != null && mounted) setState(() => _price = price);
   }
 
-  Future<void> _showPrivacyPicker() async {
-    final privacy = await SocialPrivacySheet.show(context, _privacy);
-    if (privacy != null && mounted) setState(() => _privacy = privacy);
+  Future<void> _showPrivacyPicker({
+    required bool allowClubOnly,
+    required List<CategoryModel> clubSports,
+    required AppLocalizations l10n,
+  }) async {
+    final privacy = await SocialPrivacySheet.show(
+      context,
+      _privacy,
+      allowClubOnly: allowClubOnly,
+    );
+    if (privacy == null || !mounted) return;
+    setState(() {
+      _privacy = privacy;
+      if (privacy != 'CLUB_ONLY' || widget.initialSession != null) return;
+      if (clubSports.length == 1) {
+        final sport = clubSports.single;
+        _selectedSportKey = sport.slug;
+        _selectedSportName = _localizedSportName(sport.slug, sport.name, l10n);
+      } else if (!clubSports.any((sport) => sport.slug == _selectedSportKey)) {
+        _selectedSportKey = '';
+        _selectedSportName = '';
+      }
+    });
   }
+
+  String _localizedSportName(
+    String slug,
+    String fallback,
+    AppLocalizations l10n,
+  ) => switch (slug) {
+    'pickleball' => l10n.socialSportPickleball,
+    'badminton' => l10n.socialSportBadminton,
+    'tennis' => l10n.socialSportTennis,
+    'table_tennis' => l10n.socialSportTableTennis,
+    'football' => l10n.socialSportFootball,
+    _ => fallback,
+  };
 
   /// Invalidate cache Social theo CLB để tab Hoạt động cập nhật ngay.
   /// [session] là kèo vừa tạo/sửa (lấy communityId thực tế từ server).
@@ -539,6 +574,31 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
+    }
+    if (_privacy == 'CLUB_ONLY' && widget.initialSession == null) {
+      final l10n = AppLocalizations.of(context)!;
+      final community = widget.clubId.isEmpty
+          ? null
+          : ref.read(communityDetailProvider(widget.clubId)).asData?.value;
+      final activeSports =
+          ref.read(categoriesProvider).asData?.value ?? const <CategoryModel>[];
+      final categoryIds = community?.sportCategoryIds.values.toSet() ?? {};
+      final eligibleSports = activeSports
+          .where((sport) => categoryIds.contains(sport.id))
+          .toList(growable: false);
+      final message = community == null
+          ? l10n.socialClubSportUnavailable
+          : eligibleSports.isEmpty
+          ? l10n.socialClubSportNoMatch
+          : !eligibleSports.any((sport) => sport.slug == _selectedSportKey)
+          ? l10n.socialClubSportSelectSport
+          : null;
+      if (message != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+        return;
+      }
     }
 
     final venueNameText = _venueNameController.text.trim();
@@ -598,7 +658,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           'maxSlots': _maxParticipants,
           'feePerSlot': _price,
           'levelRequirement': 'ALL',
-          'visibility': _privacy == 'Nội bộ CLB' ? 'CLUB_ONLY' : 'PUBLIC',
+          'visibility': _privacy,
           if (_isClubAttached && widget.clubId.isNotEmpty)
             'communityId': widget.clubId,
         };
@@ -638,7 +698,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           maxSlots: _maxParticipants,
           feePerSlot: _price,
           levelRequirement: 'ALL',
-          visibility: _privacy == 'Nội bộ CLB' ? 'CLUB_ONLY' : 'PUBLIC',
+          visibility: _privacy,
           contactPhone: user?.phoneNumber,
           communityId: _isClubAttached && widget.clubId.isNotEmpty
               ? widget.clubId
@@ -698,6 +758,22 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
+    final isEditing = widget.initialSession != null;
+    final communityId = widget.initialSession?.communityId ?? widget.clubId;
+    final communityAsync =
+        !isEditing && _isClubAttached && communityId.isNotEmpty
+        ? ref.watch(communityDetailProvider(communityId))
+        : null;
+    final categoryAsync = ref.watch(categoriesProvider);
+    final community = communityAsync?.asData?.value;
+    final communitySportIds = community?.sportCategoryIds.values.toSet() ?? {};
+    final clubSports = (categoryAsync.asData?.value ?? const <CategoryModel>[])
+        .where((sport) => communitySportIds.contains(sport.id))
+        .toList(growable: false);
+    final clubDataReady = community != null && categoryAsync.hasValue;
+    final clubOnlyAvailable =
+        _isClubAttached &&
+        (isEditing || (clubDataReady && clubSports.isNotEmpty));
 
     return Container(
       decoration: BoxDecoration(
@@ -737,23 +813,27 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                       icon: Icon(Icons.arrow_back, color: colors.textPrimary),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
-                    Text(
-                      widget.initialSession != null
-                          ? 'CẬP NHẬT KÈO'
-                          : 'TẠO KÈO',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: colors.textPrimary,
-                        letterSpacing: 0.5,
+                    Expanded(
+                      child: Text(
+                        _isClubAttached
+                            ? widget.initialSession != null
+                                  ? l10n.socialClubUpdateTitle
+                                  : l10n.socialClubCreateTitle
+                            : widget.initialSession != null
+                            ? l10n.socialOpenUpdateTitle
+                            : l10n.socialOpenCreateTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
-                    widget.initialSession != null
-                        ? const SizedBox(width: 48)
-                        : Icon(
-                            Icons.swap_horiz_rounded,
-                            color: colors.textPrimary,
-                          ),
+                    const SizedBox(width: 48),
                   ],
                 ),
               ),
@@ -781,11 +861,11 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                               ),
                             ),
                             Text(
-                              'Thay đổi',
+                              l10n.socialClubLinkedStatus,
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: AppTheme.primary,
+                                color: colors.textSecondary,
                               ),
                             ),
                           ],
@@ -848,7 +928,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                               ),
                               const SizedBox(height: 10),
                               Text(
-                                'Thành viên CLB có gắn thẻ sẽ nhận được thông báo và được tự động mời tham gia kèo.',
+                                l10n.socialClubNoAutoInviteHint,
                                 style: TextStyle(
                                   fontSize: 12.5,
                                   fontStyle: FontStyle.italic,
@@ -860,7 +940,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                               Center(
                                 child: InkWell(
                                   onTap: () {
-                                    setState(() => _isClubAttached = false);
+                                    setState(() {
+                                      _isClubAttached = false;
+                                      _privacy = 'PUBLIC';
+                                    });
                                   },
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
@@ -896,198 +979,174 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                       const SizedBox(height: 10),
 
                       // Active sports come from the same public category API.
-                      ref
-                          .watch(categoriesProvider)
-                          .when(
-                            data: (sports) {
-                              if (sports.isEmpty) {
-                                return Text(
-                                  l10n.socialActiveSportsEmpty,
-                                  style: TextStyle(color: colors.textSecondary),
-                                );
-                              }
-                              return LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final cardWidth =
-                                      (constraints.maxWidth - 8) / 2;
-                                  return Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: sports
-                                        .map((sport) {
-                                          final isSelected =
-                                              _selectedSportKey == sport.slug;
-                                          final name = switch (sport.slug) {
-                                            'pickleball' =>
-                                              l10n.socialSportPickleball,
-                                            'badminton' =>
-                                              l10n.socialSportBadminton,
-                                            'tennis' => l10n.socialSportTennis,
-                                            'table_tennis' =>
-                                              l10n.socialSportTableTennis,
-                                            'football' =>
-                                              l10n.socialSportFootball,
-                                            _ => sport.name,
-                                          };
-                                          final icon = switch (sport.slug) {
-                                            'pickleball' => Icons.sports_tennis,
-                                            'badminton' =>
-                                              Icons.sports_tennis_rounded,
-                                            'tennis' =>
-                                              Icons.sports_baseball_outlined,
-                                            'table_tennis' =>
-                                              Icons.sports_tennis,
-                                            'football' => Icons.sports_soccer,
-                                            _ => Icons.sports,
-                                          };
-                                          return SizedBox(
-                                            width: cardWidth,
-                                            child: Semantics(
-                                              button: true,
-                                              selected: isSelected,
-                                              label: name,
-                                              child: InkWell(
-                                                key: ValueKey(
-                                                  'social-sport-${sport.slug}',
-                                                ),
-                                                onTap: () {
-                                                  setState(() {
-                                                    _selectedSportKey =
-                                                        sport.slug;
-                                                    _selectedSportName = name;
-                                                  });
-                                                },
+                      categoryAsync.when(
+                        data: (sports) {
+                          final visibleSports =
+                              _privacy == 'CLUB_ONLY' && !isEditing
+                              ? sports
+                                    .where(
+                                      (sport) =>
+                                          communitySportIds.contains(sport.id),
+                                    )
+                                    .toList(growable: false)
+                              : sports;
+                          if (visibleSports.isEmpty) {
+                            return Text(
+                              _privacy == 'CLUB_ONLY' && !isEditing
+                                  ? l10n.socialClubSportNoMatch
+                                  : l10n.socialActiveSportsEmpty,
+                              style: TextStyle(color: colors.textSecondary),
+                            );
+                          }
+                          return LayoutBuilder(
+                            builder: (context, constraints) {
+                              final cardWidth = (constraints.maxWidth - 8) / 2;
+                              final locked =
+                                  _privacy == 'CLUB_ONLY' &&
+                                  !isEditing &&
+                                  visibleSports.length == 1;
+                              return Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: visibleSports
+                                    .map((sport) {
+                                      final isSelected =
+                                          _selectedSportKey == sport.slug;
+                                      final name = _localizedSportName(
+                                        sport.slug,
+                                        sport.name,
+                                        l10n,
+                                      );
+                                      return SizedBox(
+                                        width: cardWidth,
+                                        child: Semantics(
+                                          button: !locked,
+                                          enabled: !locked,
+                                          selected: isSelected,
+                                          label: name,
+                                          child: InkWell(
+                                            key: ValueKey(
+                                              'social-sport-${sport.slug}',
+                                            ),
+                                            onTap: locked
+                                                ? null
+                                                : () {
+                                                    setState(() {
+                                                      _selectedSportKey =
+                                                          sport.slug;
+                                                      _selectedSportName = name;
+                                                    });
+                                                  },
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            child: Container(
+                                              height: 76,
+                                              decoration: BoxDecoration(
+                                                color: isSelected
+                                                    ? AppTheme.primary.withValues(
+                                                        alpha: 0.10,
+                                                      )
+                                                    : colors.bgCard,
                                                 borderRadius:
                                                     BorderRadius.circular(12),
-                                                child: Container(
-                                                  height: 90,
-                                                  decoration: BoxDecoration(
-                                                    color: isSelected
-                                                        ? colors.success
-                                                              .withValues(
-                                                                alpha: 0.16,
-                                                              )
-                                                        : colors.bgCard,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          12,
-                                                        ),
-                                                    border: Border.all(
-                                                      color: isSelected
-                                                          ? colors.success
-                                                          : colors.border,
-                                                      width: isSelected ? 2 : 1,
+                                                border: Border.all(
+                                                  color: isSelected
+                                                      ? AppTheme.primary
+                                                      : colors.border,
+                                                  width: isSelected ? 1.8 : 1,
+                                                ),
+                                              ),
+                                              child: Stack(
+                                                children: [
+                                                  if (locked)
+                                                    Positioned(
+                                                      top: 6,
+                                                      right: 6,
+                                                      child: Icon(
+                                                        Icons
+                                                            .lock_outline_rounded,
+                                                        size: 15,
+                                                        color: colors
+                                                            .textSecondary,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  child: Stack(
-                                                    children: [
-                                                      if (sport.slug ==
-                                                          'pickleball')
-                                                        Positioned(
-                                                          top: 6,
-                                                          left: 6,
-                                                          child: Container(
-                                                            padding:
-                                                                const EdgeInsets.symmetric(
-                                                                  horizontal: 6,
-                                                                  vertical: 2,
-                                                                ),
-                                                            decoration: BoxDecoration(
-                                                              color: AppTheme
-                                                                  .refereeColor,
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    4,
-                                                                  ),
-                                                            ),
-                                                            child: const Text(
-                                                              'CLB',
-                                                              style: TextStyle(
-                                                                fontSize: 9,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w800,
-                                                                color: Colors
-                                                                    .white,
-                                                              ),
+                                                  Center(
+                                                    child: Column(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        SizedBox(
+                                                          width: 28,
+                                                          height: 28,
+                                                          child: Center(
+                                                            child: SportChoiceTile.buildSportIcon(
+                                                              sport.slug,
+                                                              28,
+                                                              isSelected
+                                                                  ? AppTheme.primary
+                                                                  : colors.textSecondary,
                                                             ),
                                                           ),
                                                         ),
-                                                      Center(
-                                                        child: Column(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .center,
-                                                          children: [
-                                                            Icon(
-                                                              icon,
-                                                              size: 30,
-                                                              color: isSelected
-                                                                  ? colors
-                                                                        .textPrimary
-                                                                  : colors
-                                                                        .textSecondary,
-                                                            ),
-                                                            const SizedBox(
-                                                              height: 6,
-                                                            ),
-                                                            Text(
-                                                              name,
-                                                              maxLines: 1,
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                              style: TextStyle(
-                                                                fontSize: 13,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w700,
-                                                                color: colors
-                                                                    .textPrimary,
-                                                              ),
-                                                            ),
-                                                          ],
+                                                        const SizedBox(
+                                                          height: 6,
                                                         ),
-                                                      ),
-                                                    ],
+                                                        Text(
+                                                          name,
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style: TextStyle(
+                                                            fontSize: 13,
+                                                            fontWeight:
+                                                                isSelected
+                                                                    ? FontWeight.w700
+                                                                    : FontWeight.w600,
+                                                            color: isSelected
+                                                                ? AppTheme.primary
+                                                                : colors.textPrimary,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
-                                                ),
+                                                ],
                                               ),
                                             ),
-                                          );
-                                        })
-                                        .toList(growable: false),
-                                  );
-                                },
+                                          ),
+                                        ),
+                                      );
+                                    })
+                                    .toList(growable: false),
                               );
                             },
-                            loading: () => const Center(
-                              child: SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
+                          );
+                        },
+                        loading: () => const Center(
+                          child: SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                        error: (error, stackTrace) => Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                l10n.socialActiveSportsLoadFailed,
+                                style: TextStyle(color: colors.textSecondary),
                               ),
                             ),
-                            error: (error, stackTrace) => Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    l10n.socialActiveSportsLoadFailed,
-                                    style: TextStyle(
-                                      color: colors.textSecondary,
-                                    ),
-                                  ),
-                                ),
-                                TextButton(
-                                  onPressed: () =>
-                                      ref.invalidate(categoriesProvider),
-                                  child: Text(l10n.socialActiveSportsRetry),
-                                ),
-                              ],
+                            TextButton(
+                              onPressed: () =>
+                                  ref.invalidate(categoriesProvider),
+                              child: Text(l10n.socialActiveSportsRetry),
                             ),
-                          ),
+                          ],
+                        ),
+                      ),
                       const SizedBox(height: 12),
 
                       Text(
@@ -1163,7 +1222,9 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
 
                       // ─── 3. SECTION KÈO (Hình 2) ───
                       Text(
-                        'KÈO',
+                        _isClubAttached
+                            ? l10n.socialClubDetailsLabel
+                            : l10n.socialOpenDetailsLabel,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
@@ -1287,9 +1348,23 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                     _buildVenueSuggestions(context),
                                   const SizedBox(height: 8),
                                   SocialRegionPicker(
+                                    showSectionLabel: false,
                                     onChanged: (selection) {
+                                      final composedAddress = selection
+                                          .composeAddress(
+                                            _venueAddressController.text,
+                                            previousSelection:
+                                                _venueRegionSelection,
+                                          );
                                       setState(() {
                                         _venueRegionSelection = selection;
+                                        _venueAddressController
+                                            .value = TextEditingValue(
+                                          text: composedAddress,
+                                          selection: TextSelection.collapsed(
+                                            offset: composedAddress.length,
+                                          ),
+                                        );
                                       });
                                     },
                                   ),
@@ -1392,16 +1467,69 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
 
                       SocialSettingTile(
                         icon: Icons.lock_outline_rounded,
-                        label: 'Quyền riêng tư',
-                        value: _privacy,
+                        label: l10n.socialPrivacyLabel,
+                        value: _privacy == 'CLUB_ONLY'
+                            ? l10n.socialPrivacyClubOnly
+                            : l10n.socialPrivacyPublic,
                         verticalPadding: 6,
-                        onTap: _showPrivacyPicker,
+                        onTap: () => _showPrivacyPicker(
+                          allowClubOnly: clubOnlyAvailable,
+                          clubSports: clubSports,
+                          l10n: l10n,
+                        ),
+                      ),
+                      if (_isClubAttached && !isEditing) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.socialClubSportRestriction,
+                          style: TextStyle(
+                            color: colors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                        if (!clubDataReady) ...[
+                          if (categoryAsync.isLoading ||
+                              communityAsync?.isLoading == true)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: LinearProgressIndicator(minHeight: 2),
+                            )
+                          else
+                            TextButton.icon(
+                              onPressed: () {
+                                ref.invalidate(categoriesProvider);
+                                if (communityId.isNotEmpty) {
+                                  ref.invalidate(
+                                    communityDetailProvider(communityId),
+                                  );
+                                }
+                              },
+                              icon: const Icon(Icons.refresh, size: 16),
+                              label: Text(l10n.socialClubSportUnavailable),
+                            ),
+                        ] else if (clubSports.isEmpty) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            l10n.socialClubSportNoMatch,
+                            style: TextStyle(color: colors.textSecondary),
+                          ),
+                        ],
+                      ],
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.socialJoinApprovalHint,
+                        style: TextStyle(
+                          color: colors.textSecondary,
+                          fontSize: 12,
+                        ),
                       ),
                       const SizedBox(height: 14),
 
                       SocialSettingTile(
                         icon: Icons.local_offer_outlined,
-                        label: 'Phí tham gia kèo',
+                        label: _isClubAttached
+                            ? l10n.socialClubFeeLabel
+                            : l10n.socialOpenFeeLabel,
                         value: _formatCurrency(_price),
                         valueColor: _price > 0 ? colors.success : null,
                         verticalPadding: 6,
@@ -1416,7 +1544,9 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'TÊN KÈO',
+                            _isClubAttached
+                                ? l10n.socialClubTitleFieldLabel
+                                : l10n.socialOpenTitleFieldLabel,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
@@ -1513,9 +1643,13 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                             ),
                           )
                         : Text(
-                            widget.initialSession != null
-                                ? 'Cập nhật kèo'
-                                : 'Tạo kèo',
+                            _isClubAttached
+                                ? widget.initialSession != null
+                                      ? l10n.socialClubUpdateAction
+                                      : l10n.socialClubCreateAction
+                                : widget.initialSession != null
+                                ? l10n.socialOpenUpdateAction
+                                : l10n.homeSocialCreateAction,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,

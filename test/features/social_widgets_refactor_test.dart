@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_duration_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_more_options_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_participant_counter.dart';
@@ -17,6 +18,9 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
+          locale: const Locale('vi'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: Builder(
               builder: (context) {
@@ -31,16 +35,75 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byIcon(Icons.add));
+      await tester.tap(find.byTooltip('Tăng số người tham gia'));
       await tester.pump();
-      await tester.tap(find.byIcon(Icons.remove));
+      await tester.tap(find.byTooltip('Giảm số người tham gia'));
       await tester.pump();
 
       expect(values, [7, 6]);
       expect(parentBuilds, 1);
-      expect(find.text('6'), findsOneWidget);
+      expect(
+        tester
+            .widget<TextFormField>(
+              find.byKey(const ValueKey('social-max-slots-input')),
+            )
+            .controller
+            ?.text,
+        '6',
+      );
     },
   );
+
+  testWidgets('participant capacity input validates its 2–64 contract', (
+    tester,
+  ) async {
+    final formKey = GlobalKey<FormState>();
+    final values = <int>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.lightTheme,
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Form(
+            key: formKey,
+            child: SocialParticipantCounter(
+              initialValue: 6,
+              onChanged: values.add,
+            ),
+          ),
+        ),
+      ),
+    );
+    final input = find.byKey(const ValueKey('social-max-slots-input'));
+
+    await tester.enterText(input, '64');
+    await tester.pumpAndSettle();
+    expect(values, [64]);
+    final increaseButton = find.ancestor(
+      of: find.byTooltip('Increase participants'),
+      matching: find.byType(IconButton),
+    );
+    expect(tester.widget<IconButton>(increaseButton).onPressed, isNull);
+
+    await tester.enterText(input, '2');
+    await tester.pumpAndSettle();
+    expect(values, [64, 2]);
+    final decreaseButton = find.ancestor(
+      of: find.byTooltip('Decrease participants'),
+      matching: find.byType(IconButton),
+    );
+    expect(tester.widget<IconButton>(decreaseButton).onPressed, isNull);
+
+    for (final invalidValue in ['1', '65', '2.5']) {
+      await tester.enterText(input, invalidValue);
+      await tester.pumpAndSettle();
+      expect(formKey.currentState!.validate(), isFalse);
+      expect(find.text('Enter a whole number from 2 to 64.'), findsOneWidget);
+    }
+    expect(values, [64, 2]);
+  });
 
   testWidgets('duration and price modals return confirmed values', (
     tester,

@@ -13,18 +13,26 @@ class SocialRegionSelection {
 
   const SocialRegionSelection({this.province, this.ward});
 
-  String composeAddress(String detail) {
+  String composeAddress(
+    String detail, {
+    SocialRegionSelection? previousSelection,
+  }) {
     final selectedNames = [ward?.name, province?.name]
         .whereType<String>()
         .where((name) => name.trim().isNotEmpty)
         .toList(growable: false);
+    final regionNames = [
+      previousSelection?.ward?.name,
+      previousSelection?.province?.name,
+      ...selectedNames,
+    ].whereType<String>().where((name) => name.trim().isNotEmpty);
     final retainedParts = detail
         .split(',')
         .map((part) => part.trim())
         .where(
           (part) =>
               part.isNotEmpty &&
-              !selectedNames.any(
+              !regionNames.any(
                 (name) => name.toLowerCase() == part.toLowerCase(),
               ),
         )
@@ -36,8 +44,13 @@ class SocialRegionSelection {
 
 class SocialRegionPicker extends ConsumerStatefulWidget {
   final ValueChanged<SocialRegionSelection> onChanged;
+  final bool showSectionLabel;
 
-  const SocialRegionPicker({super.key, required this.onChanged});
+  const SocialRegionPicker({
+    super.key,
+    required this.onChanged,
+    this.showSectionLabel = true,
+  });
 
   @override
   ConsumerState<SocialRegionPicker> createState() => _SocialRegionPickerState();
@@ -52,9 +65,13 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
   bool _loadingWards = false;
   bool _provinceLoadFailed = false;
   bool _wardLoadFailed = false;
-  bool _provincesLoaded = false;
   int _wardLoadVersion = 0;
-  SocialRegionSelection? _appliedSelection;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadProvinces());
+  }
 
   Future<void> _loadProvinces() async {
     setState(() {
@@ -67,7 +84,6 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
       setState(() {
         _provinces = provinces;
         _loadingProvinces = false;
-        _provincesLoaded = true;
       });
     } catch (_) {
       if (!mounted) return;
@@ -78,11 +94,11 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
     }
   }
 
-  Future<void> _loadWards(Region province, {Region? selectedWard}) async {
+  Future<void> _loadWards(Region province) async {
     final loadVersion = ++_wardLoadVersion;
     setState(() {
       _wards = const [];
-      _ward = selectedWard;
+      _ward = null;
       _loadingWards = true;
       _wardLoadFailed = false;
     });
@@ -94,11 +110,6 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
       setState(() {
         _wards = wards;
         _loadingWards = false;
-        _ward =
-            selectedWard != null &&
-                wards.any((ward) => ward.code == selectedWard.code)
-            ? selectedWard
-            : null;
       });
     } catch (_) {
       if (!mounted || loadVersion != _wardLoadVersion) return;
@@ -118,6 +129,7 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
       _loadingWards = false;
       _wardLoadFailed = false;
     });
+    widget.onChanged(const SocialRegionSelection());
   }
 
   @override
@@ -125,123 +137,34 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final selectedArea = [
-      _appliedSelection?.ward?.name,
-      _appliedSelection?.province?.name,
+      _ward?.name,
+      _province?.name,
     ].whereType<String>().where((name) => name.isNotEmpty).join(', ');
-    final label = selectedArea.isEmpty
-        ? l10n.socialRegionSectionLabel
-        : selectedArea;
-    return IconButton(
-      key: const ValueKey('social-region-picker-toggle'),
-      tooltip: label,
-      onPressed: () => _showPicker(context),
-      icon: Icon(
-        Icons.location_searching,
-        color: _appliedSelection?.province == null
-            ? colors.textSecondary
-            : colors.success,
-      ),
-    );
-  }
 
-  Future<void> _showPicker(BuildContext context) async {
-    setState(() {
-      _province = _appliedSelection?.province;
-      _ward = _appliedSelection?.ward;
-      _wards = const [];
-      _wardLoadFailed = false;
-    });
-    final province = _province;
-    if (province != null) {
-      unawaited(_loadWards(province, selectedWard: _ward));
-    }
-    if (!_provincesLoaded && !_loadingProvinces && !_provinceLoadFailed) {
-      unawaited(_loadProvinces());
-    }
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      backgroundColor: colors.bgSurface,
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            final keyboardInset = MediaQuery.viewInsetsOf(sheetContext).bottom;
-            final maxHeight = MediaQuery.sizeOf(sheetContext).height * 0.82;
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(20, 8, 20, keyboardInset + 16),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: maxHeight),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                l10n.socialRegionSectionLabel,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  color: colors.textPrimary,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              tooltip: MaterialLocalizations.of(
-                                sheetContext,
-                              ).closeButtonTooltip,
-                              onPressed: () => Navigator.of(sheetContext).pop(),
-                              icon: const Icon(Icons.close),
-                            ),
-                          ],
-                        ),
-                        if (_province != null)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Text(
-                              [
-                                _ward?.name,
-                                _province!.name,
-                              ].whereType<String>().join(', '),
-                              style: TextStyle(color: colors.textSecondary),
-                            ),
-                          ),
-                        _buildRegionFields(
-                          context,
-                          l10n,
-                          colors,
-                          setModalState,
-                        ),
-                        const SizedBox(height: 16),
-                        FilledButton.icon(
-                          key: const ValueKey('social-region-apply'),
-                          onPressed: () {
-                            final selection = SocialRegionSelection(
-                              province: _province,
-                              ward: _ward,
-                            );
-                            setState(() => _appliedSelection = selection);
-                            widget.onChanged(selection);
-                            Navigator.of(sheetContext).pop();
-                          },
-                          icon: const Icon(Icons.check),
-                          label: Text(l10n.socialRegionApply),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (widget.showSectionLabel) ...[
+          Text(
+            l10n.socialRegionSectionLabel,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+        _buildRegionFields(context, l10n, colors),
+        if (selectedArea.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            selectedArea,
+            key: const ValueKey('social-region-selected-summary'),
+            style: TextStyle(color: colors.textSecondary, fontSize: 12),
+          ),
+        ],
+      ],
     );
   }
 
@@ -249,12 +172,11 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
     BuildContext context,
     AppLocalizations l10n,
     AppColorsExtension colors,
-    StateSetter setModalState,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (_loadingProvinces)
+        if (_loadingProvinces || _loadingWards)
           const Padding(
             padding: EdgeInsets.only(bottom: 8),
             child: LinearProgressIndicator(minHeight: 2),
@@ -269,18 +191,18 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
           options: _provinces,
           onSelected: (province) {
             FocusScope.of(context).unfocus();
-            setState(() => _province = province);
-            setModalState(() => _province = province);
-            unawaited(
-              _loadWards(province).then((_) {
-                if (mounted) setModalState(() {});
-              }),
-            );
+            setState(() {
+              _province = province;
+              _ward = null;
+              _wards = const [];
+              _wardLoadFailed = false;
+            });
+            widget.onChanged(SocialRegionSelection(province: province));
+            unawaited(_loadWards(province));
           },
           onTextChanged: (value) {
-            if (_province != null && value.trim().isEmpty) {
+            if (value.trim().isEmpty && _province != null) {
               _clearProvince();
-              setModalState(() {});
             }
           },
           colors: colors,
@@ -297,9 +219,16 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
           onSelected: (ward) {
             FocusScope.of(context).unfocus();
             setState(() => _ward = ward);
-            setModalState(() => _ward = ward);
+            widget.onChanged(
+              SocialRegionSelection(province: _province, ward: ward),
+            );
           },
-          onTextChanged: (_) {},
+          onTextChanged: (value) {
+            if (_ward != null && value.trim() != _ward!.name) {
+              setState(() => _ward = null);
+              widget.onChanged(SocialRegionSelection(province: _province));
+            }
+          },
           colors: colors,
         ),
         if (_provinceLoadFailed || _wardLoadFailed) ...[

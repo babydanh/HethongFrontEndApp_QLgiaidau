@@ -314,8 +314,14 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
       elevation: 0,
       scrolledUnderElevation: 0,
       leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: colors.textPrimary, size: 24),
-        onPressed: () => context.pop(),
+        icon: Icon(Icons.arrow_back_ios_new_rounded, color: colors.textPrimary, size: 20),
+        onPressed: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/home');
+          }
+        },
       ),
       centerTitle: true,
       title: Text(
