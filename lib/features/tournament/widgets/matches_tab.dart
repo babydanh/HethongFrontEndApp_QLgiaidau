@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
 
 class MatchesTab extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -179,115 +180,150 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
             scheduledWithoutCourtName.isNotEmpty ||
             unscheduledMatches.isNotEmpty;
 
-        return CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: Column(
-                  children: [
-                    _buildSearchField(colors, l10n),
-                    const SizedBox(height: 10),
-                    _buildStatusFilters(allMatches, l10n),
-                  ],
-                ),
+        // ── Dữ liệu cho lưới ──
+        // Cột sân gom từ TOÀN BỘ trận của division, KHÔNG lọc theo ngày: nếu lấy
+        // từ courtGroups (đã lọc ngày) thì sân hôm nay không có trận sẽ mất
+        // cột, và số cột nhảy theo từng ngày. Lọc ngày chỉ quyết định trận nào
+        // hiện trong ô, không quyết định có bao nhiêu cột.
+        final gridCourts = <String>{
+          for (final match in tournamentMatches)
+            ?_courtDisplayName(match),
+        }.toList()
+          ..sort(
+            (a, b) => a.toLowerCase().compareTo(b.toLowerCase()),
+          );
+        final gridMatches = courtGroups
+            .expand((g) => g.value)
+            .where((m) => m.scheduledTime != null)
+            .toList();
+        final gridStartHour = _operatingHour(
+          widget.scheduleSettings['operatingStart'],
+          fallback: 7,
+        );
+        final gridEndHour = _operatingHour(
+          widget.scheduleSettings['operatingEnd'],
+          fallback: 22,
+        );
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Column(
+                children: [
+                  _buildSearchField(colors, l10n),
+                  const SizedBox(height: 10),
+                  _buildStatusFilters(allMatches, l10n),
+                ],
               ),
             ),
             if (scheduleDates.length > 1)
-              SliverToBoxAdapter(
-                child: _buildDateSelector(scheduleDates, selectedDate, colors),
-              ),
+              _buildDateSelector(scheduleDates, selectedDate, colors),
             if (selectedDate != null)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                  child: Text(
-                    DateFormat.yMMMMd(
-                      Localizations.localeOf(context).toString(),
-                    ).format(selectedDate),
-                    style: TextStyle(
-                      color: colors.textPrimary,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                child: Text(
+                  DateFormat.yMMMMd(
+                    Localizations.localeOf(context).toString(),
+                  ).format(selectedDate),
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
             if (hours != null)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.schedule_rounded,
-                        size: 16,
-                        color: colors.textMuted,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.schedule_rounded,
+                      size: 16,
+                      color: colors.textMuted,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      hours,
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        hours,
-                        style: TextStyle(
-                          color: colors.textSecondary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             if (!hasVisibleMatches)
-              SliverFillRemaining(
-                hasScrollBody: false,
+              Expanded(
                 child: _buildEmptyState(
                   l10n,
                   colors,
                   hasSourceMatches: tournamentMatches.isNotEmpty,
                 ),
-              ),
-            for (final group in courtGroups) ...[
-              SliverToBoxAdapter(
-                child: _buildCourtHeading(
-                  courtLabels[group.key]!,
-                  group.value.length,
-                  colors,
+              )
+            else ...[
+              // Lưới thay cho danh sách thẻ: cột giờ khoá trái, mỗi sân một cột.
+              // Expanded ở đây BẮT BUỘC — ScheduleGrid dùng Expanded bên trong nên
+              // cần chiều cao hữu hạn; đặt trong SliverToBoxAdapter sẽ crash lúc
+              // render với "incoming height constraints are unbounded".
+              // Cột sân derive từ trận của NGÀY ĐANG CHỌN, nên sân hôm nay không
+              // có trận sẽ không xuất hiện (xem giới hạn trong release note).
+              if (gridCourts.isNotEmpty)
+                // flex: 3 — lưới là nội dung chính. Hai Expanded cùng flex: 1 sẽ
+                // chia đều màn hình, khiến danh sách phụ (chỉ là dự phòng) giành
+                // mất nửa không gian của lưới.
+                Expanded(
+                  flex: 3,
+                  child: ScheduleGrid(
+                    courts: gridCourts,
+                    matches: gridMatches,
+                    startHour: gridStartHour,
+                    endHour: gridEndHour,
+                    onTapMatch: _openMatchById,
+                  ),
                 ),
-              ),
-              _buildMatchList(group.value),
-            ],
-            if (scheduledWithoutCourt.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: _buildCourtHeading(
-                  l10n.matchesCourtNotAssigned,
-                  scheduledWithoutCourt.length,
-                  colors,
+              // KHÔNG được điều kiện hoá theo gridCourts: giả định mọi trận chưa
+              // xếp lịch đều kèm sân là sai. Trận không sân/giờ sẽ khiến
+              // gridCourts rỗng, và nếu chặn theo nó thì danh sách phụ — chính là
+              // nơi duy nhất hiển thị các trận đó — sẽ biến mất.
+              if (scheduledWithoutCourt.isNotEmpty ||
+                  scheduledWithoutCourtName.isNotEmpty ||
+                  unscheduledMatches.isNotEmpty)
+                Expanded(
+                  flex: 1,
+                  child: ListView(
+                    padding: const EdgeInsets.only(bottom: 100),
+                    children: [
+                      if (scheduledWithoutCourt.isNotEmpty) ...[
+                        _buildCourtHeading(
+                          l10n.matchesCourtNotAssigned,
+                          scheduledWithoutCourt.length,
+                          colors,
+                        ),
+                        _buildMatchList(scheduledWithoutCourt),
+                      ],
+                      if (scheduledWithoutCourtName.isNotEmpty) ...[
+                        _buildCourtHeading(
+                          l10n.matchesCourtNameUnavailable,
+                          scheduledWithoutCourtName.length,
+                          colors,
+                        ),
+                        _buildMatchList(scheduledWithoutCourtName),
+                      ],
+                      if (unscheduledMatches.isNotEmpty) ...[
+                        _buildCourtHeading(
+                          l10n.matchNotScheduled,
+                          unscheduledMatches.length,
+                          colors,
+                        ),
+                        _buildMatchList(unscheduledMatches),
+                      ],
+                    ],
+                  ),
                 ),
-              ),
-              _buildMatchList(scheduledWithoutCourt),
             ],
-            if (scheduledWithoutCourtName.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: _buildCourtHeading(
-                  l10n.matchesCourtNameUnavailable,
-                  scheduledWithoutCourtName.length,
-                  colors,
-                ),
-              ),
-              _buildMatchList(scheduledWithoutCourtName),
-            ],
-            if (unscheduledMatches.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: _buildCourtHeading(
-                  l10n.matchNotScheduled,
-                  unscheduledMatches.length,
-                  colors,
-                ),
-              ),
-              _buildMatchList(unscheduledMatches),
-            ],
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         );
       },
@@ -549,15 +585,32 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
   }
 
   Widget _buildMatchList(List<MatchModel> matches) {
-    return SliverPadding(
+    // Không còn SliverList: tab đã chuyển từ CustomScrollView sang Column, nên
+    // danh sách phải là widget thường.
+    return Padding(
       padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) => _buildMatchCard(matches[index]),
-          childCount: matches.length,
-        ),
+      child: Column(
+        children: [
+          for (final match in matches) _buildMatchCard(match),
+        ],
       ),
     );
+  }
+
+  /// Giờ mở cửa từ scheduleSettings, rơi về [fallback] khi thiếu/sai định dạng.
+  int _operatingHour(Object? value, {required int fallback}) {
+    final raw = value?.toString().trim();
+    if (raw == null || raw.isEmpty) return fallback;
+    final match = _clockTimePattern.firstMatch(raw);
+    if (match == null) return fallback;
+    final hour = int.tryParse(match.group(1)!);
+    if (hour == null || hour < 0 || hour > 23) return fallback;
+    return hour;
+  }
+
+  /// Mở màn chi tiết trận từ thẻ trong lưới — dùng chung đường dẫn với thẻ thường.
+  void _openMatchById(String matchId) {
+    context.push(NavigationHelper.getLiveMatchRoute(widget.tournamentId, matchId));
   }
 
   Widget _buildMatchCard(MatchModel match) {

@@ -298,6 +298,80 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    testWidgets(
+      'a pin with no resolved area is flagged, and the retry recovers it',
+      (tester) async {
+        // `/regions/resolve` unreachable is what the report came from: the
+        // host pinned a point, the pin landed, and nothing filled the two
+        // locality fields behind it.
+        final adapter = _FlakyResolveAdapter();
+        final dio = Dio(BaseOptions(baseUrl: 'https://api.example.test'))
+          ..httpClientAdapter = adapter;
+        await _pumpSocialForm(
+          tester,
+          regionRepository: _FakeRegionRepository(),
+          dio: dio,
+        );
+        await _dropPinByHand(tester);
+
+        // The reported state: a pinned card, an empty address, and two empty
+        // locality fields.
+        expect(_cardPin(tester, _handPicked), findsOneWidget);
+        expect(textCI('Đã ghim vị trí sân'), findsOneWidget);
+        expect(_addressText(tester), isEmpty);
+        expect(_appliedArea(tester), isEmpty);
+
+        // A pin and an empty area must not read as a finished state.
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('venue-location-card')),
+            matching: find.textContaining('Chưa nhận ra tỉnh/phường'),
+          ),
+          findsOneWidget,
+        );
+        expect(adapter.resolveCalls, 1);
+
+        // The lookup recovers once it can answer: the same pin keeps its
+        // coordinates and the area fills in behind it.
+        adapter.resolveFails = false;
+        await _tapVisible(tester, find.widgetWithText(TextButton, 'Tra lại'));
+        expect(_cardPin(tester, _handPicked), findsOneWidget);
+        expect(_appliedArea(tester), _myDinhSummary);
+        expect(adapter.resolveCalls, 2);
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('venue-location-card')),
+            matching: find.textContaining('Chưa nhận ra tỉnh/phường'),
+          ),
+          findsNothing,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets('a pin whose area is known is not flagged', (tester) async {
+      // The auto pin always comes from a ward the form already holds, so the
+      // healthy pairing must stay quiet.
+      await _pumpSocialForm(
+        tester,
+        regionRepository: _FakeRegionRepository(),
+        dio: _geoDio(),
+      );
+      await tester.enterText(_addressField(), _myDinhAddress);
+      await _pumpUi(tester);
+      await _pumpUi(tester);
+      expect(_cardPin(tester, _myDinhCentroid), findsOneWidget);
+      expect(_appliedArea(tester), _myDinhSummary);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('venue-location-card')),
+          matching: find.textContaining('Chưa nhận ra tỉnh/phường'),
+        ),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('the locality fields stay unloaded until a list is opened', (
       tester,
     ) async {
@@ -1423,8 +1497,51 @@ Finder textCI(String value) => find.byWidgetPredicate(
 Community _club({String? provinceCode}) => Community(
   id: 'club-1',
   name: 'CLB Cầu Lông Sài Gòn',
+
   provinceCode: provinceCode,
 );
+
+/// The reverse lookup that follows a hand pin, modelled at the moment the
+/// report was filed: `/regions/resolve` was unreachable, so the pin landed and
+/// the two locality fields stayed empty. [resolveFails] flips to false to model
+/// the backend coming back, which is what the card's retry has to recover from.
+class _FlakyResolveAdapter implements HttpClientAdapter {
+  bool resolveFails = true;
+  int resolveCalls = 0;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    if (!options.path.startsWith('/regions/resolve')) {
+      return _geoJson(404, const {});
+    }
+    resolveCalls++;
+    if (resolveFails) throw StateError('synthetic reverse lookup failure');
+    return _geoJson(200, {
+      'wardCode': '01-001',
+      'wardName': 'Phường Mỹ Đình',
+      'provinceCode': '01',
+      'provinceName': 'Hà Nội',
+    });
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
+/// A response body in the envelope the API client unwraps, shared by the geo
+/// fakes so both speak the same wire shape.
+ResponseBody _geoJson(int status, Map<String, dynamic> body) =>
+    ResponseBody.fromString(
+      jsonEncode({'data': body}),
+      status,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
 
 /// Deterministic club source for the attached-club context. `failures` models
 /// the club lookup going down, which must degrade to the manual path.
@@ -1472,27 +1589,19 @@ class _GeoAdapter implements HttpClientAdapter {
     if (path.startsWith('/regions/wards/centroid')) {
       final point = centroids[options.queryParameters['wardCode']];
       if (point != null) {
-        return _json(200, {'centerLat': point.$1, 'centerLng': point.$2});
+        return _geoJson(200, {'centerLat': point.$1, 'centerLng': point.$2});
       }
     }
     if (path.startsWith('/regions/resolve')) {
-      return _json(200, {
+      return _geoJson(200, {
         'wardCode': '01-001',
         'wardName': 'Phường Mỹ Đình',
         'provinceCode': '01',
         'provinceName': 'Hà Nội',
       });
     }
-    return _json(404, const {});
+    return _geoJson(404, const {});
   }
-
-  ResponseBody _json(int status, Map<String, dynamic> body) => ResponseBody.fromString(
-    jsonEncode({'data': body}),
-    status,
-    headers: {
-      Headers.contentTypeHeader: [Headers.jsonContentType],
-    },
-  );
 
   @override
   void close({bool force = false}) {}

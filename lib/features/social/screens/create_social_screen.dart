@@ -787,6 +787,27 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     });
   }
 
+  /// Pin có toạ độ nhưng chưa có khu vực đi kèm. Ghim tay xong mà tra
+  /// ngược hỏng (mất mạng, server lỗi, điểm nằm ngoài vùng có ranh giới)
+  /// đều rơi vào đây: thẻ vị trí vẫn hiện "đã ghim" trong khi hai ô khu
+  /// vực vẫn trống, nên form phải nói ra chứ không được im lặng. Một chỗ
+  /// duy nhất quyết định "hai phần này có khớp nhau không", thay vì rải
+  /// điều kiện ở từng chỗ nên lệch nhau.
+  bool get _pinWithoutRegion =>
+      _latitude != null &&
+      _longitude != null &&
+      (_appliedRegion == null || _appliedRegion!.isEmpty);
+
+  /// Tra lại khu vực cho điểm đang ghim. Lần tra đầu có thể hỏng vì mất
+  /// mạng lúc host đang ghim, nên cho host bấm lại thay vì phải mở bản đồ
+  /// dò lại từ đầu. Pin của host giữ nguyên — chỉ khu vực được điền thêm.
+  Future<void> _retryRegionForPin() {
+    final lat = _latitude;
+    final lng = _longitude;
+    if (lat == null || lng == null) return Future<void>.value();
+    return _applyReverseLookup(LatLng(lat, lng));
+  }
+
   /// Mở bản đồ cho host ghim vị trí sân. Tâm map ưu tiên:
   /// tọa độ cũ (sửa kèo) → vị trí user → fallback TP.HCM.
   Future<void> _openLocationPicker() async {
@@ -1457,12 +1478,16 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                 // Thẻ "Vị trí" chỉ còn trạng thái ghim (chưa
                                 // ghim / tay / tự động). Địa chỉ nằm ngay ở ô
                                 // phía trên, khu vực nằm ở hai ô khu vực, nên
-                                // thẻ không lặp lại hai thứ đã hiện sẵn.
                                 _VenueLocationCard(
                                   key: _venueLocationCardKey,
                                   latitude: _latitude,
                                   longitude: _longitude,
                                   autoPlaced: _pinAutoPlaced,
+                                  // Pin mà không có khu vực là trạng thái lệch
+                                  // nhau, nên thẻ phải nói ra chứ không để hai
+                                  // ô khu vực trống dưới một thẻ "đã ghim".
+                                  regionMissing: _pinWithoutRegion,
+                                  onRetryRegion: _retryRegionForPin,
                                   onPick: _openLocationPicker,
                                   onClear: () => setState(() {
                                     _latitude = null;
@@ -1647,6 +1672,15 @@ class _VenueLocationCard extends StatelessWidget {
   final VoidCallback onPick;
   final VoidCallback onClear;
 
+  /// Có toạ độ nhưng chưa có tỉnh/phường đi kèm. Trạng thái lệch nhau: thẻ
+  /// không được hiện như đã xong khi hai ô khu vực phía trên vẫn trống.
+  final bool regionMissing;
+
+  /// Tra lại khu vực cho chính điểm đang ghim — đường sửa lại khi lần tra
+  /// ngược đầu hỏng, thay vì bắt host mở bản đồ dò lại từ đầu.
+  final VoidCallback onRetryRegion;
+
+
   const _VenueLocationCard({
     super.key,
     required this.latitude,
@@ -1654,6 +1688,8 @@ class _VenueLocationCard extends StatelessWidget {
     required this.autoPlaced,
     required this.onPick,
     required this.onClear,
+    required this.regionMissing,
+    required this.onRetryRegion,
   });
 
   bool get _hasPin => latitude != null && longitude != null;
@@ -1766,6 +1802,54 @@ class _VenueLocationCard extends StatelessWidget {
                   ),
               ],
             ),
+            if (hasPin && regionMissing) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+                decoration: BoxDecoration(
+                  color: colors.warning.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: colors.warning.withValues(alpha: 0.45),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.help_outline_rounded,
+                      color: colors.warning,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n.socialLocationRegionMissing,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: colors.textPrimary,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    TextButton(
+                      onPressed: onRetryRegion,
+                      style: TextButton.styleFrom(
+                        foregroundColor: colors.warning,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        minimumSize: const Size(0, 36),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        l10n.socialLocationRegionRetry,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             if (hasPin) ...[
               const SizedBox(height: 10),
               SizedBox(
