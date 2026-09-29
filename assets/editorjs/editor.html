@@ -121,8 +121,15 @@
       if (!editorInstance) return;
       editorInstance.saver.save().then(function (saved) {
         try {
-          window.__richTextChannel.postMessage(editorjsToHtml(saved));
-        } catch (e) { /* WebView chưa sẵn sàng, bỏ qua lượt này */ }
+          // Tên channel phải KHỚP chính xác với addJavaScriptChannel bên Dart
+          // ('RichTextChannel'). Sai tên thì postMessage ném lỗi và bị catch ở
+          // đây nuốt mất — Dart không bao giờ nhận được tin nhắn nào.
+          window.RichTextChannel.postMessage(editorjsToHtml(saved));
+        } catch (e) {
+          // KHÔNG nuốt im lỗi ở đây: chính việc nuốt im đã che mất bug sai tên
+          // channel. Log ra để thấy ngay trong WebView console.
+          console.error('[RichText] postMessage failed', e);
+        }
       });
     }
 
@@ -133,23 +140,26 @@
       if (editorInstance && typeof editorInstance.destroy === 'function') {
         try { editorInstance.destroy(); } catch (e) { /* ignore */ }
       }
-      editorInstance = new window.EditorJS({
+      // UMD có thể trả thẳng class hoặc namespace {default: Class}. Dùng
+      // fallback cho cả hai trường hợp để không phụ thuộc cách bundler đóng gói.
+      var EditorJSClass = window.EditorJS.default || window.EditorJS;
+      editorInstance = new EditorJSClass({
         holder: holder,
         data: htmlToEditorjs(html || ''),
         placeholder: 'Nhập mô tả…',
         tools: {
           header: {
-            class: window.Header,
+            class: (window.Header.default || window.Header),
             inlineToolbar: ['link', 'bold', 'italic'],
             config: { placeholder: 'Tiêu đề', levels: [1, 2, 3, 4], defaultLevel: 2 }
           },
           list: {
-            class: window.EditorjsList,
+            class: (window.EditorjsList.default || window.EditorjsList),
             inlineToolbar: true,
             config: { defaultStyle: 'unordered' }
           },
           image: {
-            class: window.ImageTool,
+            class: (window.ImageTool.default || window.ImageTool),
             config: {
               uploader: {
                 // App không cho chọn ảnh trong lúc soạn thảo: báo rõ thay vì
@@ -172,9 +182,25 @@
     // Báo Dart rằng trang đã nạp xong 4 file UMD. Dart chỉ gửi giá trị ban đầu sau
     // khi nhận được tín hiệu này — gọi `setEditorHtml` sớm hơn thì
     // `window.EditorJS` chưa tồn tại và editor không khởi tạo được.
-    window.addEventListener('load', function () {
-      try { window.__richTextChannel.postMessage('__ready__'); } catch (e) { /* ignore */ }
-    });
+    // `window.RichTextChannel` chỉ tồn tại SAU khi Dart gọi
+    // addJavaScriptChannel, còn sự kiện 'load' của WebView có thể bắn trước lúc
+    // channel được gắn vào. Nếu chỉ post một lần thì `__ready__` mất sạch và
+    // editor không bao giờ nhận giá trị ban đầu. Vì vậy thử lại cho tới khi
+    // thành công.
+    function notifyReady(attempt) {
+      try {
+        if (window.RichTextChannel) {
+          window.RichTextChannel.postMessage('__ready__');
+          return;
+        }
+      } catch (e) {
+        console.error('[RichText] ready notify failed', e);
+      }
+      if ((attempt || 0) < 40) {
+        setTimeout(function () { notifyReady((attempt || 0) + 1); }, 100);
+      }
+    }
+    window.addEventListener('load', function () { notifyReady(0); });
   </script>
 </body>
 </html>
