@@ -18,10 +18,14 @@ abstract class IMatchRepository {
     String matchId, {
     String? courtName,
     String? courtAddress,
+
+    /// Court the match plays on. Changing it makes the backend hand the match
+    /// that court's camera; a match that already has a manually assigned
+    /// camera keeps it.
+    String? courtId,
     String? refereeId,
     DateTime? scheduledAt,
   });
-
   Future<void> updateLiveState(
     String tournamentId,
     String matchId, {

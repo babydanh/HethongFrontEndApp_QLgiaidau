@@ -12097,8 +12097,136 @@ class AppLocalizationsVi extends AppLocalizations {
   String get opsNoActivity => 'Chưa có hoạt động vận hành nào.';
 
   @override
-  String get opsCameraNotReady =>
-      'App chưa có contract gán camera cho giải này.';
+  String get tournamentManagementCamera => 'Camera';
+
+  @override
+  String get tournamentManagementCameraDescription =>
+      'Khai báo URL phát cho từng sân và gán trận vào sân để camera của sân đó theo trận.';
+
+  @override
+  String tournamentManagementCameraCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count camera sân',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tournamentManagementCameraRefresh => 'Tải lại danh sách camera';
+
+  @override
+  String get tournamentManagementCameraUrl => 'URL phát của camera';
+
+  @override
+  String get tournamentManagementCameraUrlHint => 'https://…';
+
+  @override
+  String get tournamentManagementCameraReady => 'Camera đã sẵn sàng';
+
+  @override
+  String get tournamentManagementCameraNotReady => 'Chưa có URL camera';
+
+  @override
+  String get tournamentManagementCameraUrlRequired =>
+      'Nhập URL phát của camera.';
+
+  @override
+  String get tournamentManagementCameraUrlSaved => 'Đã lưu URL camera.';
+
+  @override
+  String get tournamentManagementCameraUrlCleared => 'Đã xoá URL camera.';
+
+  @override
+  String get tournamentManagementCameraUrlSaveFailed =>
+      'Không lưu được URL camera.';
+
+  @override
+  String get tournamentManagementCameraClearUrl => 'Xoá URL';
+
+  @override
+  String tournamentManagementCameraClearUrlConfirm(Object court) {
+    return 'Xoá URL camera của sân $court? Các trận ở sân này sẽ không còn camera.';
+  }
+
+  @override
+  String get tournamentManagementCameraNoCourts =>
+      'Giải này chưa có sân nào. Hãy thêm sân ở mục Cơ sở trước.';
+
+  @override
+  String get tournamentManagementCameraMatchPool => 'Trận đấu';
+
+  @override
+  String get tournamentManagementCameraMatchPoolHint =>
+      'Nhấn giữ một trận rồi kéo thả lên sân, hoặc chọn sân từ menu của trận.';
+
+  @override
+  String get tournamentManagementCameraMatchPoolEmpty =>
+      'Không có trận nào để gán sân.';
+
+  @override
+  String get tournamentManagementCameraUnassigned => 'Chưa có sân';
+
+  @override
+  String get tournamentManagementCameraChooseCourt => 'Chọn sân';
+
+  @override
+  String get tournamentManagementCameraSelectHint =>
+      'Đã chọn trận. Chọn một sân để gán.';
+
+  @override
+  String tournamentManagementCameraSelectedMatch(Object match) {
+    return 'Đang chọn: $match';
+  }
+
+  @override
+  String get tournamentManagementCameraClearSelection => 'Bỏ chọn';
+
+  @override
+  String tournamentManagementCameraAssigned(Object court, Object match) {
+    return 'Đã chuyển $match sang sân $court.';
+  }
+
+  @override
+  String get tournamentManagementCameraAssignFailed =>
+      'Không chuyển được trận sang sân.';
+
+  @override
+  String tournamentManagementCameraAlreadyAssigned(Object court, Object match) {
+    return '$match đã ở sân $court.';
+  }
+
+  @override
+  String tournamentManagementCameraMatchesHere(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Trận tại sân này',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tournamentManagementCameraNoMatchesHere =>
+      'Chưa có trận nào được xếp vào sân này.';
+
+  @override
+  String tournamentManagementCameraAssignHere(Object match) {
+    return 'Gán $match vào sân này';
+  }
+
+  @override
+  String get tournamentManagementCameraPickCamera => 'Camera cho trận này';
+
+  @override
+  String tournamentManagementCameraManualAssigned(Object camera) {
+    return 'Đã gán camera: $camera';
+  }
+
+  @override
+  String get tournamentManagementCameraManualAssignFailed =>
+      'Không gán được camera cho trận.';
 
   @override
   String get opsSpecialOperation => 'Xử lý đặc biệt';

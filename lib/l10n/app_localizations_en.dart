@@ -12136,8 +12136,138 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opsNoActivity => 'No operational activity yet.';
 
   @override
-  String get opsCameraNotReady =>
-      'Camera assignment is not available in the App yet.';
+  String get tournamentManagementCamera => 'Camera';
+
+  @override
+  String get tournamentManagementCameraDescription =>
+      'Declare a playback URL for each court and assign a match to a court so that court\'s camera follows it.';
+
+  @override
+  String tournamentManagementCameraCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count court cameras',
+      one: '$count court camera',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tournamentManagementCameraRefresh => 'Reload cameras';
+
+  @override
+  String get tournamentManagementCameraUrl => 'Camera playback URL';
+
+  @override
+  String get tournamentManagementCameraUrlHint => 'https://…';
+
+  @override
+  String get tournamentManagementCameraReady => 'Camera ready';
+
+  @override
+  String get tournamentManagementCameraNotReady => 'No camera URL';
+
+  @override
+  String get tournamentManagementCameraUrlRequired =>
+      'Enter a camera playback URL.';
+
+  @override
+  String get tournamentManagementCameraUrlSaved => 'Camera URL saved.';
+
+  @override
+  String get tournamentManagementCameraUrlCleared => 'Camera URL removed.';
+
+  @override
+  String get tournamentManagementCameraUrlSaveFailed =>
+      'Could not save the camera URL.';
+
+  @override
+  String get tournamentManagementCameraClearUrl => 'Clear URL';
+
+  @override
+  String tournamentManagementCameraClearUrlConfirm(Object court) {
+    return 'Remove the camera URL of $court? Matches on this court lose their camera.';
+  }
+
+  @override
+  String get tournamentManagementCameraNoCourts =>
+      'This tournament has no courts yet. Add one in Venues first.';
+
+  @override
+  String get tournamentManagementCameraMatchPool => 'Matches';
+
+  @override
+  String get tournamentManagementCameraMatchPoolHint =>
+      'Long-press a match and drop it on a court, or pick a court from the match menu.';
+
+  @override
+  String get tournamentManagementCameraMatchPoolEmpty =>
+      'No match can be assigned to a court.';
+
+  @override
+  String get tournamentManagementCameraUnassigned => 'No court yet';
+
+  @override
+  String get tournamentManagementCameraChooseCourt => 'Choose a court';
+
+  @override
+  String get tournamentManagementCameraSelectHint =>
+      'Match selected. Choose a court to assign it.';
+
+  @override
+  String tournamentManagementCameraSelectedMatch(Object match) {
+    return 'Selected: $match';
+  }
+
+  @override
+  String get tournamentManagementCameraClearSelection => 'Clear selection';
+
+  @override
+  String tournamentManagementCameraAssigned(Object court, Object match) {
+    return '$match moved to $court.';
+  }
+
+  @override
+  String get tournamentManagementCameraAssignFailed =>
+      'Could not move that match to the court.';
+
+  @override
+  String tournamentManagementCameraAlreadyAssigned(Object court, Object match) {
+    return '$match is already on $court.';
+  }
+
+  @override
+  String tournamentManagementCameraMatchesHere(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Matches here',
+      one: 'Match here',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tournamentManagementCameraNoMatchesHere =>
+      'No match scheduled on this court.';
+
+  @override
+  String tournamentManagementCameraAssignHere(Object match) {
+    return 'Assign $match here';
+  }
+
+  @override
+  String get tournamentManagementCameraPickCamera => 'Camera for this match';
+
+  @override
+  String tournamentManagementCameraManualAssigned(Object camera) {
+    return 'Camera pinned: $camera';
+  }
+
+  @override
+  String get tournamentManagementCameraManualAssignFailed =>
+      'Could not pin that camera to the match.';
 
   @override
   String get opsSpecialOperation => 'Special operation';

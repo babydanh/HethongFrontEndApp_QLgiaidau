@@ -933,6 +933,7 @@ class ApiMatchRepository implements IMatchRepository {
     String matchId, {
     String? courtName,
     String? courtAddress,
+    String? courtId,
     String? refereeId,
     DateTime? scheduledAt,
   }) async {
@@ -941,6 +942,7 @@ class ApiMatchRepository implements IMatchRepository {
       data: {
         'courtName': courtName,
         'courtAddress': courtAddress,
+        'courtId': courtId,
         'refereeId': refereeId,
         'scheduledAt': scheduledAt?.toUtc().toIso8601String(),
       },

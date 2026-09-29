@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_row.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -88,6 +89,7 @@ class _TournamentManagementVenuesSectionState
                     const SizedBox(height: 12),
                     for (final venue in venues) ...[
                       _VenueCard(
+                        tournamentId: widget.tournamentId,
                         venue: venue,
                         isBusy: _isBusy,
                         onEdit: () => _editVenue(venue),
@@ -442,6 +444,7 @@ class _VenueDialogState extends State<_VenueDialog> {
 
 class _VenueCard extends StatelessWidget {
   const _VenueCard({
+    required this.tournamentId,
     required this.venue,
     required this.isBusy,
     required this.onEdit,
@@ -450,6 +453,7 @@ class _VenueCard extends StatelessWidget {
     required this.onAddCourt,
     required this.onRemoveCourt,
   });
+  final String tournamentId;
   final Map<String, dynamic> venue;
   final bool isBusy;
   final VoidCallback onEdit;
@@ -561,24 +565,68 @@ class _VenueCard extends StatelessWidget {
               style: TextStyle(color: colors.textMuted),
             )
           else
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final court in courts)
-                  InputChip(
-                    label: Text(
-                      (court['name'] ??
-                              court['courtName'] ??
-                              l10n.tournamentManagementCourt)
-                          .toString(),
-                    ),
-                    onDeleted: isBusy ? null : () => onRemoveCourt(court),
+                for (final court in courts) ...[
+                  _VenueCourtRow(
+                    tournamentId: tournamentId,
+                    court: court,
+                    fallbackName: l10n.tournamentManagementCourt,
+                    isBusy: isBusy,
+                    onRemove: () => onRemoveCourt(court),
                   ),
+                  const SizedBox(height: 12),
+                ],
               ],
             ),
         ],
       ),
+    );
+  }
+}
+
+/// A court inside a venue: the existing chip, plus the camera playback-URL
+/// control the organizer needs to keep the court's camera alive.
+class _VenueCourtRow extends StatelessWidget {
+  const _VenueCourtRow({
+    required this.tournamentId,
+    required this.court,
+    required this.fallbackName,
+    required this.isBusy,
+    required this.onRemove,
+  });
+
+  final String tournamentId;
+  final Map<String, dynamic> court;
+  final String fallbackName;
+  final bool isBusy;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final name =
+        (court['name'] ?? court['courtName'] ?? fallbackName).toString();
+    final courtId = (court['id'] ?? court['courtId'] ?? '').toString();
+
+    final chip = InputChip(label: Text(name), onDeleted: isBusy ? null : onRemove);
+
+    // Without an id the camera routes cannot address this court, so the
+    // control is hidden rather than offering a field that cannot be saved.
+    if (courtId.isEmpty) return chip;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        chip,
+        const SizedBox(height: 8),
+        CourtCameraUrlRow(
+          tournamentId: tournamentId,
+          courtId: courtId,
+          courtName: name,
+          dense: true,
+        ),
+      ],
     );
   }
 }

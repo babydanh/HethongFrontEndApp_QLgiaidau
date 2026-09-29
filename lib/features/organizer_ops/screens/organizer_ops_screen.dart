@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_camera_section.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/providers/organizer_ops_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -266,11 +267,14 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 else if (_selectedTab == 4)
                   _buildActivitySliver(context, opsReadAsync)
                 else
-                  SliverToBoxAdapter(
-                    child: _OpsReadOnlyNotice(
-                      icon: Icons.videocam_outlined,
-                      title: l10n.opsCamera,
-                      message: l10n.opsCameraNotReady,
+                  // The camera board owns its scroll view, so this sliver
+                  // must hand it a bounded height instead of sizing to it.
+                  SliverFillRemaining(
+                    hasScrollBody: true,
+                    child: TournamentManagementCameraSection(
+                      tournamentId: widget.tournamentId,
+                      divisionId: selectedDivisionId,
+                      readOnly: isReadOnly,
                     ),
                   ),
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
