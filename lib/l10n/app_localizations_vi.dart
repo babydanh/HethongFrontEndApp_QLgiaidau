@@ -3107,6 +3107,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get dashboard_coOrganizer => 'Ban tổ chức';
 
   @override
+  String get dashboard_participant => 'Tham gia';
+
+  @override
   String get dashboard_noRolesDesc => 'Bạn chưa có vai trò nào trong giải đấu.';
 
   @override

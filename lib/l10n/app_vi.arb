@@ -1207,6 +1207,7 @@
   "dashboard_myRoles": "Vai trò của tôi",
   "dashboard_organizer": "Chủ giải",
   "dashboard_coOrganizer": "Ban tổ chức",
+  "dashboard_participant": "Tham gia",
   "dashboard_noRolesDesc": "Bạn chưa có vai trò nào trong giải đấu.",
   "dashboard_assignedMatches": "Trận được phân công",
   "dashboard_viewInvites": "Xem lời mời",

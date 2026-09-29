@@ -5906,6 +5906,12 @@ abstract class AppLocalizations {
   /// **'Ban tổ chức'**
   String get dashboard_coOrganizer;
 
+  /// No description provided for @dashboard_participant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tham gia'**
+  String get dashboard_participant;
+
   /// No description provided for @dashboard_noRolesDesc.
   ///
   /// In vi, this message translates to:

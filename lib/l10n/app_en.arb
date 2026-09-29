@@ -1207,6 +1207,7 @@
   "dashboard_myRoles": "My Roles",
   "dashboard_organizer": "Organizer",
   "dashboard_coOrganizer": "Co-Organizer",
+  "dashboard_participant": "Participant",
   "dashboard_noRolesDesc": "You don't have any roles in tournaments yet.",
   "dashboard_assignedMatches": "Assigned Matches",
   "dashboard_viewInvites": "View Invites",

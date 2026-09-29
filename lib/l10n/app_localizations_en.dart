@@ -3118,6 +3118,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboard_coOrganizer => 'Co-Organizer';
 
   @override
+  String get dashboard_participant => 'Participant';
+
+  @override
   String get dashboard_noRolesDesc =>
       'You don\'t have any roles in tournaments yet.';
 
