@@ -13784,6 +13784,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSearchScopeAthletes => 'Athletes';
 
   @override
+  String get homeSearchScopeSessions => 'Sessions';
+
+  @override
+  String get homeSearchSessionsHint => 'Search sessions...';
+
+  @override
   String get homeGlobalSearchAdvancedFilters => 'Advanced filters';
 
   @override
@@ -13819,6 +13825,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Venues are derived from public matches; nearby search is not available.';
 
   @override
+  String get homeGlobalSearchSessionNote =>
+      'Sessions are searched by play date. Open advanced filters to change the day.';
+
+  @override
   String get homeGlobalSearchSport => 'Sport';
 
   @override
@@ -13832,6 +13842,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeGlobalSearchDate => 'Date range';
+
+  @override
+  String get homeGlobalSearchSessionDate => 'Play date';
 
   @override
   String get homeGlobalSearchLocation => 'Venue/address';

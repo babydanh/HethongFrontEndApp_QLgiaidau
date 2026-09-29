@@ -25024,6 +25024,18 @@ abstract class AppLocalizations {
   /// **'Vận động viên'**
   String get homeSearchScopeAthletes;
 
+  /// No description provided for @homeSearchScopeSessions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kèo'**
+  String get homeSearchScopeSessions;
+
+  /// No description provided for @homeSearchSessionsHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kèo giao lưu...'**
+  String get homeSearchSessionsHint;
+
   /// No description provided for @homeGlobalSearchAdvancedFilters.
   ///
   /// In vi, this message translates to:
@@ -25090,6 +25102,12 @@ abstract class AppLocalizations {
   /// **'Địa điểm được tổng hợp từ các trận đấu công khai; chưa hỗ trợ tìm quanh đây.'**
   String get homeGlobalSearchVenueNote;
 
+  /// No description provided for @homeGlobalSearchSessionNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kèo được tìm theo ngày chơi. Mở bộ lọc nâng cao để đổi ngày.'**
+  String get homeGlobalSearchSessionNote;
+
   /// No description provided for @homeGlobalSearchSport.
   ///
   /// In vi, this message translates to:
@@ -25119,6 +25137,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Khoảng ngày'**
   String get homeGlobalSearchDate;
+
+  /// No description provided for @homeGlobalSearchSessionDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày chơi'**
+  String get homeGlobalSearchSessionDate;
 
   /// No description provided for @homeGlobalSearchLocation.
   ///

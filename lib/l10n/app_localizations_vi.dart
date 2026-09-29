@@ -13735,6 +13735,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeSearchScopeAthletes => 'Vận động viên';
 
   @override
+  String get homeSearchScopeSessions => 'Kèo';
+
+  @override
+  String get homeSearchSessionsHint => 'Tìm kèo giao lưu...';
+
+  @override
   String get homeGlobalSearchAdvancedFilters => 'Bộ lọc nâng cao';
 
   @override
@@ -13770,6 +13776,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Địa điểm được tổng hợp từ các trận đấu công khai; chưa hỗ trợ tìm quanh đây.';
 
   @override
+  String get homeGlobalSearchSessionNote =>
+      'Kèo được tìm theo ngày chơi. Mở bộ lọc nâng cao để đổi ngày.';
+
+  @override
   String get homeGlobalSearchSport => 'Môn thể thao';
 
   @override
@@ -13783,6 +13793,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeGlobalSearchDate => 'Khoảng ngày';
+
+  @override
+  String get homeGlobalSearchSessionDate => 'Ngày chơi';
 
   @override
   String get homeGlobalSearchLocation => 'Sân/địa chỉ';
