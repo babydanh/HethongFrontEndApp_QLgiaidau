@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_display.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
@@ -670,26 +670,7 @@ class _AboutTabState extends State<AboutTab> {
   }
 
   Widget _buildDescriptionContent(String text) {
-    final colors = context.colors;
-    final isHtml = text.contains('<') && text.contains('>');
-    if (isHtml) {
-      return HtmlWidget(
-        text,
-        textStyle: TextStyle(
-          fontSize: 13,
-          color: colors.textSecondary,
-          height: 1.5,
-        ),
-      );
-    }
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 13,
-        color: colors.textSecondary,
-        height: 1.5,
-      ),
-    );
+    return RichTextDisplay(data: text, color: context.colors.textSecondary);
   }
 
   Widget _buildMetaRow(String label, String value, {bool isFee = false}) {

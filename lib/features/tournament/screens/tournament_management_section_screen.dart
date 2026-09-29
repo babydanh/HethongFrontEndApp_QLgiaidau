@@ -12,8 +12,8 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_display.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:intl/intl.dart';
@@ -236,13 +236,13 @@ class _TournamentManagementOverview extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (tournament.description.trim().isNotEmpty)
-                // Mô tả lưu dạng HTML (web nhập tay ở textarea rồi render bằng
-                // dangerouslySetInnerHTML). Dùng `Text()` sẽ lộ nguyên thẻ
-                // <h3>/<li> cho BTC; phải render giống trang công khai
-                // (about_tab.dart dùng HtmlWidget cho đúng việc này).
-                HtmlWidget(
-                  tournament.description,
-                  textStyle: TextStyle(color: colors.textSecondary),
+                // Mô tả lưu dạng HTML (web nhập bằng Editor.js rồi xuất ra
+                // HTML). Dùng `Text()` sẽ lộ nguyên thẻ <h3>/<li> cho BTC.
+                // Dùng widget dùng chung để cỡ chữ khớp với trang công khai —
+                // trước đó chỉ truyền `textStyle` nên thẻ tiêu đề phình to.
+                RichTextDisplay(
+                  data: tournament.description,
+                  color: colors.textSecondary,
                 ),
               const SizedBox(height: 12),
               Wrap(
