@@ -30,9 +30,19 @@ class DashboardScreen extends ConsumerStatefulWidget {
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+class _DashboardScreenState extends ConsumerState<DashboardScreen>
+    with SingleTickerProviderStateMixin {
   String _selectedSport = 'all';
 
+  /// Tổng quan | Hoạt động | Quản lý — giữ controller để tab không nhảy khi
+  /// người dùng vuốt ngang hoặc bấm lại nhãn.
+  late final TabController _tabController = TabController(length: 3, vsync: this);
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -116,58 +126,104 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           },
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: () =>
-            ref.read(myTournamentWorkspaceProvider.notifier).refresh(),
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics(),
+      body: Column(
+        children: [
+          // Tab bar có nhãn chữ: icon-only khiến 4 ý nghĩa phải đoán mò, và
+          // không có accessible name cho screen reader.
+          Container(
+            decoration: BoxDecoration(
+              color: colors.bgDark,
+              border: Border(
+                bottom: BorderSide(color: colors.border),
+              ),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: AppTheme.primary,
+              indicatorWeight: 3,
+              indicatorSize: TabBarIndicatorSize.label,
+              labelColor: AppTheme.primary,
+              unselectedLabelColor: colors.textMuted,
+              labelStyle: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+              tabs: [
+                Tab(
+                  icon: const Icon(Icons.space_dashboard_rounded, size: 20),
+                  text: l10n.dashboard_tab_overview,
+                ),
+                Tab(
+                  icon: const Icon(Icons.bolt_rounded, size: 20),
+                  text: l10n.dashboard_tab_activity,
+                ),
+                Tab(
+                  icon: const Icon(Icons.tune_rounded, size: 20),
+                  text: l10n.dashboard_tab_manage,
+                ),
+              ],
+            ),
           ),
-          padding: EdgeInsets.zero,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1180),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.sizeOf(context).width >= 840 ? 16 : 12,
-                  vertical: 8,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _DashboardHeader(
-                      profileAsync: profileAsync,
-                      rankingsAsync: rankingsAsync,
-                      footballTeamsAsync: footballTeamsAsync,
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildTabScroll(context, [
+                  _DashboardHeader(
+                    profileAsync: profileAsync,
+                    rankingsAsync: rankingsAsync,
+                    footballTeamsAsync: footballTeamsAsync,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildSportFilterChips(colors),
+                  const SizedBox(height: 16),
+                  _buildRankingsSection(context, rankingsAsync),
+                ]),
+                _buildTabScroll(context, [
+                  AchievementsTab(selectedSport: _selectedSport),
+                  const SizedBox(height: 20),
+                  workspaceAsync.when(
+                    loading: () => const _DashboardLoadingCard(),
+                    error: (error, _) => _DashboardErrorCard(
+                      onRetry: () => ref
+                          .read(myTournamentWorkspaceProvider.notifier)
+                          .refresh(),
                     ),
-                    const SizedBox(height: 16),
+                    data: (workspace) =>
+                        _WorkspaceDashboardContent(workspace: workspace),
+                  ),
+                ]),
+                _buildTabScroll(context, const [_QuickActions()]),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                    // Sport Category Filter Chips
-                    _buildSportFilterChips(colors),
-                    const SizedBox(height: 16),
-
-                    // Detailed ELO rankings cards (filtered by _selectedSport)
-                    _buildRankingsSection(context, rankingsAsync),
-                    const SizedBox(height: 20),
-
-                    // Recent Achievements (filtered by _selectedSport)
-                    AchievementsTab(selectedSport: _selectedSport),
-                    const SizedBox(height: 20),
-
-                    workspaceAsync.when(
-                      loading: () => const _DashboardLoadingCard(),
-                      error: (error, _) => _DashboardErrorCard(
-                        onRetry: () => ref
-                            .read(myTournamentWorkspaceProvider.notifier)
-                            .refresh(),
-                      ),
-                      data: (workspace) =>
-                          _WorkspaceDashboardContent(workspace: workspace),
-                    ),
-                    const SizedBox(height: 16),
-                    _QuickActions(),
-                  ],
-                ),
+  /// Mỗi tab cuộn riêng nhưng dùng chung một khung responsive (maxWidth +
+  /// padding) để bề ngang giống nhau khi xoay máy.
+  Widget _buildTabScroll(BuildContext context, List<Widget> children) {
+    return RefreshIndicator(
+      onRefresh: () =>
+          ref.read(myTournamentWorkspaceProvider.notifier).refresh(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        padding: EdgeInsets.zero,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1180),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: MediaQuery.sizeOf(context).width >= 840 ? 16 : 12,
+                vertical: 16,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: children,
               ),
             ),
           ),

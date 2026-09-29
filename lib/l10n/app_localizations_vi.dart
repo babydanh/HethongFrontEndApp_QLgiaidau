@@ -3056,6 +3056,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get dashboard_title => 'Của tôi';
 
   @override
+  String get dashboard_tab_overview => 'Tổng quan';
+
+  @override
+  String get dashboard_tab_activity => 'Hoạt động';
+
+  @override
+  String get dashboard_tab_manage => 'Quản lý';
+
+  @override
   String get dashboard_sportActivityFilterLabel => 'Hoạt động theo môn';
 
   @override

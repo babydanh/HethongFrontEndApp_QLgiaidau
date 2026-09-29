@@ -3067,6 +3067,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboard_title => 'My Dashboard';
 
   @override
+  String get dashboard_tab_overview => 'Overview';
+
+  @override
+  String get dashboard_tab_activity => 'Activity';
+
+  @override
+  String get dashboard_tab_manage => 'Manage';
+
+  @override
   String get dashboard_sportActivityFilterLabel => 'Activity by sport';
 
   @override

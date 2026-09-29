@@ -5804,6 +5804,24 @@ abstract class AppLocalizations {
   /// **'Của tôi'**
   String get dashboard_title;
 
+  /// No description provided for @dashboard_tab_overview.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổng quan'**
+  String get dashboard_tab_overview;
+
+  /// No description provided for @dashboard_tab_activity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoạt động'**
+  String get dashboard_tab_activity;
+
+  /// No description provided for @dashboard_tab_manage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý'**
+  String get dashboard_tab_manage;
+
   /// No description provided for @dashboard_sportActivityFilterLabel.
   ///
   /// In vi, this message translates to:
