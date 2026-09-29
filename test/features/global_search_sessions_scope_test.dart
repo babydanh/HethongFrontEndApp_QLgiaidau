@@ -19,7 +19,7 @@ class _SessionRequest {
     required this.page,
   });
 
-  final String date;
+  final String? date;
   final String? sport;
   final String? search;
   final int page;
@@ -35,7 +35,7 @@ class _SearchSocialSessionRepository extends Fake
 
   @override
   Future<SocialSessionListResponse> listByDate({
-    required String date,
+    String? date,
     String? sport,
     String? communityId,
     String? search,
@@ -165,6 +165,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.requests.last.search, 'bong da');
+    // Có từ khoá thì phải bỏ ghim ngày, nếu không backend vẫn lọc đúng một ngày
+    // và "bóng đá" chỉ ra kèo của hôm nay — đúng cái lỗi ta đang sửa.
+    expect(repository.requests.last.date, isNull);
     expect(find.text('Kèo bóng đá cuối tuần'), findsOneWidget);
   });
 

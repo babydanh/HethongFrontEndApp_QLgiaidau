@@ -872,7 +872,7 @@ class _RecordingSocialSessionRepository extends Fake
 
   @override
   Future<SocialSessionListResponse> listByDate({
-    required String date,
+    String? date,
     String? sport,
     String? communityId,
     String? search,

@@ -26,8 +26,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-/// Ngày chơi mặc định của scope kèo: backend bắt buộc `date` (YYYY-MM-DD)
-/// nên tìm kiếm toàn cục vẫn neo theo một ngày, giống trang kèo.
+/// Ngày chơi của hôm nay — chỉ dùng làm mặc định khi user KHÔNG gõ từ khoá.
+/// Backend bắt buộc `date` trừ khi có `search`, nên lướt trống vẫn phải gửi
+/// một ngày; có từ khoá thì mới bỏ trống được để tìm mọi ngày.
 DateTime _startOfToday() {
   final now = DateTime.now();
   return DateTime(now.year, now.month, now.day);
@@ -66,7 +67,7 @@ class _SearchFilterDraft {
   String? athleteProvince;
 
   String sessionSport;
-  DateTime sessionDate;
+  DateTime? sessionDate;
 
   void reset() {
     matchSport = 'all';
@@ -83,7 +84,7 @@ class _SearchFilterDraft {
     athleteGender = 'all';
     athleteProvince = null;
     sessionSport = 'all';
-    sessionDate = _startOfToday();
+    sessionDate = null;
   }
 }
 
@@ -520,7 +521,8 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   String _athleteGender = 'all';
   String? _athleteProvince;
   String _sessionSport = 'all';
-  DateTime _sessionDate = _startOfToday();
+  // null = không ghim ngày, tìm trên mọi ngày chơi. Chỉ ghim khi user tự chọn.
+  DateTime? _sessionDate;
 
   @override
   void initState() {
@@ -678,18 +680,26 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
           _hasMore = result.hasMore && (result.nextCursor?.isNotEmpty ?? false);
           break;
         case 2:
-          // Kèo dùng chung endpoint của trang kèo (GET /social-sessions) —
-          // endpoint này bắt buộc `date`, nên tìm toàn cục vẫn neo theo ngày
-          // đang chọn trong bộ lọc nâng cao (mặc định hôm nay).
+          // Kèo dùng chung endpoint của trang kèo (GET /social-sessions).
+          // Endpoint nới `date` khi có `search`, nên mặc định (không ghim ngày)
+          // tìm được kèo ở mọi ngày; ghim ngày thì vẫn lọc đúng một ngày.
           final sessionPage = append
               ? int.tryParse(_nextCursor ?? '') ?? 1
               : 1;
+          // Có từ khoá thì không ghim ngày (tìm mọi ngày chơi); không có từ
+          // khoá thì rơi về hôm nay — backend chỉ chấp nhận thiếu `date` khi
+          // request mang `search`, thiếu cả hai sẽ bị 400.
+          final sessionSearch = query.isEmpty ? null : query;
+          final sessionDate =
+              _sessionDate ?? (sessionSearch == null ? _startOfToday() : null);
           final sessionResult = await ref
               .read(socialSessionRepositoryProvider)
               .listByDate(
-                date: DateFormat('yyyy-MM-dd').format(_sessionDate),
+                date: sessionDate == null
+                    ? null
+                    : DateFormat('yyyy-MM-dd').format(sessionDate),
                 sport: _sessionSport == 'all' ? null : _sessionSport,
-                search: query.isEmpty ? null : query,
+                search: sessionSearch,
                 page: sessionPage,
                 limit: 10,
               );
@@ -892,9 +902,10 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
           (_tournamentStatus != 'all' ? 1 : 0) +
           (_tournamentProvinceCode.isNotEmpty ? 1 : 0) +
           (_tournamentDateRange != null ? 1 : 0),
-    // Ngày chơi luôn áp dụng (endpoint kèo bắt buộc `date`) nên luôn tính là
-    // 1 bộ lọc để nút bộ lọc báo cho user biết cần mở ra để đổi ngày.
-    2 => 1 + (_sessionSport != 'all' ? 1 : 0),
+    // Ngày chơi không còn bắt buộc nên chỉ tính vào số bộ lọc khi đang ghim;
+    // mặc định (null) là tìm mọi ngày nên không có gì để "mở ra đổi".
+    2 =>
+      (_sessionDate != null ? 1 : 0) + (_sessionSport != 'all' ? 1 : 0),
     3 => (_clubSport != 'all' ? 1 : 0) + (_clubProvince != null ? 1 : 0),
     4 =>
       (_athleteSport != 'all' ? 1 : 0) +
@@ -919,7 +930,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       _athleteGender = 'all';
       _athleteProvince = null;
       _sessionSport = 'all';
-      _sessionDate = _startOfToday();
+      _sessionDate = null;
     });
     _loadScope();
   }
@@ -1248,11 +1259,14 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
 
   /// Bộ lọc một ngày — kèo được backend lọc theo đúng `playDate` nên không
   /// dùng được khoảng ngày như giải đấu/trận đấu.
+  ///
+  /// `null` là trạng thái mặc định: chưa ghim ngày, tìm mọi ngày chơi. Nhãn chỉ
+  /// hiện ngày khi đang ghim, giống [_dateFilter] khi không có khoảng ngày.
   Widget _dayFilter(
     AppLocalizations l10n,
     AppColorsExtension colors,
-    DateTime value,
-    ValueChanged<DateTime> onChanged,
+    DateTime? value,
+    ValueChanged<DateTime?> onChanged,
   ) {
     final now = DateTime.now();
     return OutlinedButton.icon(
@@ -1261,14 +1275,16 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
           context: context,
           firstDate: DateTime(now.year - 3),
           lastDate: DateTime(now.year + 4),
-          initialDate: value,
+          initialDate: value ?? _startOfDay(DateTime.now()),
         );
         if (picked != null) onChanged(_startOfDay(picked));
       },
       icon: const Icon(Icons.event_rounded),
       label: Text(
-        '${l10n.homeGlobalSearchSessionDate}: '
-        '${DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(value)}',
+        value == null
+            ? l10n.homeGlobalSearchSessionDate
+            : '${l10n.homeGlobalSearchSessionDate}: '
+                  '${DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(value)}',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),

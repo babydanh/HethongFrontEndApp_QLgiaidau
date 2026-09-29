@@ -142,7 +142,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
 
   @override
   Future<SocialSessionListResponse> listByDate({
-    required String date,
+    String? date,
     String? sport,
     String? communityId,
     String? search,
@@ -155,7 +155,9 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
   }) async {
     try {
       final queryParams = <String, dynamic>{
-        'date': date,
+        // Chỉ gửi `date` khi có: backend bắt buộc trường này trừ khi request
+        // mang `search`, nên bỏ trống ở đây là chủ đích cho ô tìm kiếm.
+        if (date != null && date.isNotEmpty) 'date': date,
         'page': page,
         'limit': limit,
         if (sport != null && sport.isNotEmpty && sport.toLowerCase() != 'all')

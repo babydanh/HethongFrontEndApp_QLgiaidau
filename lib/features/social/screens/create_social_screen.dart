@@ -32,23 +32,25 @@ const Duration _autoRegionDelay = Duration(milliseconds: 600);
 
 /// Cổng bật/tắt cho hai đường đi qua dữ liệu hình học GeoJSON/PostGIS.
 ///
-/// Danh mục tỉnh/phường đang chuẩn hoá về `provinces.open-api.vn/api/v2` —
-/// nguồn này không kèm toạ độ — nên cả lớp hình học bị dừng và cột
-/// `wards.center_lat/center_lng` không còn được đổ vào. Hai endpoint sau đều
-/// đọc đúng hai cột đó, nên cùng tắt theo:
+/// Trước đây cổng này tắt vì server chưa bao giờ có tâm phường: ảnh Docker
+/// không nạp cây GeoJSON ~630 MB nên `wards.center_lat/center_lng` toàn NULL và
+/// cả hai endpoint trả rỗng cho mọi điểm. Nay tâm phường nằm trong file
+/// `seed/ward-centroids.tsv` (~250 KB) được commit cùng ảnh, nên đường dữ liệu
+/// không còn phụ thuộc import ranh giới:
 ///
-///  * `GET /regions/resolve` — điểm host vừa ghim tay → tỉnh/phường.
 ///  * `GET /regions/wards/centroid` — tỉnh + phường → ghim tạm theo tâm.
+///  * `GET /regions/resolve` — điểm host vừa ghim tay → tỉnh/phường.
 ///
 /// Tắt thì app không gọi mạng cho hai việc đó: tỉnh/phường lấp từ danh mục
 /// theo tên trong ô địa chỉ (tự điền) hoặc từ hai ô khu vực host tự chọn;
 /// toạ độ thì chỉ có khi host tự ghim map. Thẻ "Vị trí" vẫn hiện đúng trạng
 /// thái thật: chưa ghim thì hiện nút "Ghim vị trí sân".
 ///
-/// Bật lại: đổi `false` thành `true`, và bảo đảm dữ liệu ranh giới đã được
-/// import vào `wards.boundary` — bước import GeoJSON ở CI hiện đang tắt nên
-/// server sẽ trả rỗng cho cả hai endpoint.
-const bool _kGeometryLookupEnabled = false;
+/// Đã kiểm trên DB dev: `/regions/resolve` trả đúng Phường Phú Lâm (HCMC) và
+/// Phường Ô Chợ Dừa (Hà Nội), `/regions/wards/centroid` trả tâm cho mã phường
+/// hợp lệ và null cho mã không có. Điểm ở nước khác trả null chứ không bị gán
+/// bừa phường Việt Nam.
+const bool _kGeometryLookupEnabled = true;
 
 /// Định danh thẻ vị trí: thẻ tự hiển thị tóm tắt khu vực đã áp dụng, nên có
 /// định danh để test kiểm tra đúng chỗ đó thay vì dò chuỗi trên cả form.

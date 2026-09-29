@@ -361,12 +361,12 @@ void main() {
     });
 
     testWidgets(
-      'a hand pin costs no reverse lookup and is not nagged for the area',
+      'a hand pin resolves the area from the point it landed on',
       (tester) async {
-        // Ghim tay của host vẫn phải lưu được. Khu vực thì lấp từ địa chỉ
-        // chứ không lấp từ điểm, nên app không gọi `/regions/resolve` — và
-        // vì vậy cũng không được cảnh báo "chưa nhận ra tỉnh/phường", cái đó
-        // chỉ là điều rồm rá khi còn tra ngược theo hình học.
+        // Ghim tay vẫn phải lưu được. Khác trước đây, điểm đó giờ được tra
+        // ngược qua `/regions/resolve` để lấp tỉnh/phường — nhờ đó host không
+        // phải tự gõ tên phường, và cũng không bị cảnh báo "chưa nhận ra
+        // tỉnh/phường".
         final requests = <String>[];
         final dio = Dio(BaseOptions(baseUrl: 'https://api.example.test'))
           ..httpClientAdapter = _GeoAdapter(const {}, requests);
@@ -379,8 +379,11 @@ void main() {
 
         expect(_cardPin(tester, _handPicked), findsOneWidget);
         expect(textCI('Đã ghim vị trí sân'), findsOneWidget);
-        expect(requests.where(_isGeometryPath), isEmpty);
-        expect(find.widgetWithText(TextButton, 'Tra lại'), findsNothing);
+        expect(
+          requests.where((path) => path.startsWith('/regions/resolve')),
+          isNotEmpty,
+        );
+        expect(_appliedArea(tester), _myDinhSummary);
         expect(
           find.descendant(
             of: find.byKey(const ValueKey('venue-location-card')),
@@ -1978,7 +1981,7 @@ class _RecordingSocialSessionRepository extends Fake
 
   @override
   Future<SocialSessionListResponse> listByDate({
-    required String date,
+    String? date,
     String? sport,
     String? communityId,
     String? search,
