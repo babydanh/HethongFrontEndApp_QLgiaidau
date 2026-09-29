@@ -39,7 +39,9 @@ const Duration _autoRegionDelay = Duration(milliseconds: 600);
 /// không còn phụ thuộc import ranh giới:
 ///
 ///  * `GET /regions/wards/centroid` — tỉnh + phường → ghim tạm theo tâm.
-///  * `GET /regions/resolve` — điểm host vừa ghim tay → tỉnh/phường.
+///  * `GET /regions/resolve` — điểm host vừa ghim tay → tỉnh/phường. Chỉ tự
+///    điền hai ô khu vực khi server trả `isEstimated: false` (phường thật sự
+///    chứa điểm); khớp bằng tâm gần nhất là ước lượng nên để host tự chọn.
 ///
 /// Tắt thì app không gọi mạng cho hai việc đó: tỉnh/phường lấp từ danh mục
 /// theo tên trong ô địa chỉ (tự điền) hoặc từ hai ô khu vực host tự chọn;
@@ -922,6 +924,16 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       _showLocationMessage(l10n.socialLocationReverseFailed);
       return;
     }
+    // `isEstimated` = phường server tìm bằng KHOẢNG CÁCH tới tâm gần nhất,
+    // không phải phường chứa điểm. Không được điền vào hai ô khu vực: ghim
+    // tự đặt nằm đúng ở tâm phường nên tra ngược sẽ khớp thẳng về lại chính
+    // phường đó, tức là điền phỏng đoán của chính hệ thống vào chỗ của host;
+    // ở khu vực đông (phường HCM cách nhau ~500 m) ghim sát ranh giới còn
+    // khớp nhầm sang phường kế bên. Hai ô để trống thì thẻ vị trí đã tự báo
+    // "Chưa nhận ra tỉnh/phường" và mời host chọn tay — đó mới là câu trả lời
+    // trung thực. Chỉ `isEstimated: false` mới được điền: đáp án thiếu cờ là
+    // của server cũ, lúc đó ta không chứng minh được phường chứa điểm.
+    if (body?['isEstimated'] != false) return;
     final wardCode = body?['wardCode']?.toString() ?? '';
     final wardName = body?['wardName']?.toString() ?? '';
     final provinceCode = body?['provinceCode']?.toString() ?? '';

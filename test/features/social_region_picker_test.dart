@@ -402,6 +402,95 @@ void main() {
       },
     );
 
+    testWidgets(
+      'a nearest-centroid match leaves both area fields to the host',
+      (tester) async {
+        // Không có polygon phủ điểm thì `/regions/resolve` rơi về nhánh tâm
+        // gần nhất và tự gắn `isEstimated: true`. Đáp án đó là đoán: phường
+        // HCM cách nhau ~500 m nên ghim sát ranh giới khớp nhầm sang phường
+        // bên cạnh, và ghim tự đặt ở tâm phường N thì khớp thẳng về lại N —
+        // nếu điền vào hai ô, hệ thống đang tự xác nhận phỏng đoán của chính
+        // nó thay cho host.
+        await _pumpSocialForm(
+          tester,
+          regionRepository: _FakeRegionRepository(),
+          dio: _geoDio(
+            resolve: const {
+              'wardCode': '01-002',
+              'wardName': 'Phường Văn Miếu - Quốc Tử Giám',
+              'provinceCode': '01',
+              'provinceName': 'Hà Nội',
+              'isEstimated': true,
+            },
+          ),
+        );
+        await _dropPinByHand(tester);
+        await _ensureAreaVisible(tester);
+
+        expect(_fieldText(tester, _provinceField()), isEmpty);
+        expect(_fieldText(tester, _wardField()), isEmpty);
+        expect(_appliedArea(tester), isEmpty);
+        // Pin tay của host vẫn còn, và thẻ vị trí nói ra chỗ chưa chắc chắn
+        // thay vì im lặng điền.
+        expect(_cardPin(tester, _handPicked), findsOneWidget);
+        expect(textCI('Đã ghim vị trí sân'), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('venue-location-card')),
+            matching: find.textContaining('Chưa nhận ra tỉnh/phường'),
+          ),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets('the auto-placed pin says it is an estimate and stays editable', (
+      tester,
+    ) async {
+      // Đường ghim tạm, tách biệt hoàn toàn với tra ngược: biết tỉnh +
+      // phường rồi thì gọi `/regions/wards/centroid` và đặt ghim ở tâm phường.
+      // Tâm là ước lượng, nên thẻ vị trí phải nói thẳng là ghim tự động chứ
+      // không được trình bày như lựa chọn của host — và host vẫn phải sửa
+      // được nó.
+      final requests = <String>[];
+      await _pumpSocialForm(
+        tester,
+        regionRepository: _FakeRegionRepository(),
+        dio: _geoDio(requests: requests),
+      );
+      // Ghim tạm chỉ nổ khi form đã chốt đủ tỉnh + phường. Gõ địa chỉ thôi
+      // chưa đủ trong kịch bản này, nên host chọn phường bằng tay như thật.
+      await _searchWard(tester, 'Mỹ Đình');
+      await _selectOption(tester, 'Phường Mỹ Đình');
+      expect(_appliedArea(tester), _myDinhSummary);
+      await _pumpUi(tester);
+
+      expect(
+        requests.where((path) => path.startsWith('/regions/wards/centroid')),
+        isNotEmpty,
+      );
+      expect(textCI('Ghim tự động theo khu vực'), findsOneWidget);
+      expect(_cardPin(tester, _myDinhCentroid), findsOneWidget);
+      expect(find.widgetWithText(OutlinedButton, 'Chỉnh ghim'), findsOneWidget);
+
+      // Host kéo ghim sang chỗ khác: nhãn phải chuyển sang ghim tay, tức
+      // điểm đã đổi và không còn là ước lượng của form.
+      await _tapVisible(tester, find.widgetWithText(OutlinedButton, 'Chỉnh ghim'));
+      await tester.tapAt(const Offset(60, 200));
+      await _pumpUi(tester);
+      await _tapVisible(
+        tester,
+        find.widgetWithText(ElevatedButton, 'Xác nhận vị trí'),
+      );
+      await _pumpUi(tester);
+
+      expect(_cardPin(tester, _myDinhCentroid), findsNothing);
+      expect(textCI('Ghim tự động theo khu vực'), findsNothing);
+      expect(textCI('Đã ghim vị trí sân'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('the locality fields stay unloaded until a list is opened', (
       tester,
     ) async {
@@ -1782,13 +1871,17 @@ class _FakeCommunityRepository extends Fake implements ICommunityRepository {
 /// test can prove the app never reaches for either. Everything else 404s, so a
 /// test that reaches further than it meant to fails loudly instead of silently
 /// getting an empty answer.
-Dio _geoDio({List<String>? requests}) {
+Dio _geoDio({List<String>? requests, Map<String, Object?>? resolve}) {
   const centroids = <String, (double, double)>{
     '01-001': (21, 105),
     '48-001': (16, 108),
   };
   return Dio(BaseOptions(baseUrl: 'https://api.example.test'))
-    ..httpClientAdapter = _GeoAdapter(centroids, requests ?? <String>[]);
+    ..httpClientAdapter = _GeoAdapter(
+      centroids,
+      requests ?? <String>[],
+      resolve: resolve,
+    );
 }
 
 /// Paths that only exist to serve the retired GeoJSON/PostGIS layer.
@@ -1797,10 +1890,23 @@ bool _isGeometryPath(String path) =>
     path.startsWith('/regions/wards/centroid');
 
 class _GeoAdapter implements HttpClientAdapter {
-  _GeoAdapter(this.centroids, this.requests);
+  _GeoAdapter(this.centroids, this.requests, {Map<String, Object?>? resolve})
+    : _resolve = resolve ?? confirmedMatch;
+
+  /// Đáp án mặc định của `/regions/resolve`: phường chứa điểm, `isEstimated`
+  /// false — đúng nhánh `ST_Covers` mà app vẫn tự điền. Test nào cần nhánh
+  /// tâm gần nhất thì truyền `resolve:` riêng.
+  static const Map<String, Object?> confirmedMatch = {
+    'wardCode': '01-001',
+    'wardName': 'Phường Mỹ Đình',
+    'provinceCode': '01',
+    'provinceName': 'Hà Nội',
+    'isEstimated': false,
+  };
 
   final Map<String, (double, double)> centroids;
   final List<String> requests;
+  final Map<String, Object?> _resolve;
 
   @override
   Future<ResponseBody> fetch(
@@ -1817,12 +1923,7 @@ class _GeoAdapter implements HttpClientAdapter {
       }
     }
     if (path.startsWith('/regions/resolve')) {
-      return _geoJson(200, {
-        'wardCode': '01-001',
-        'wardName': 'Phường Mỹ Đình',
-        'provinceCode': '01',
-        'provinceName': 'Hà Nội',
-      });
+      return _geoJson(200, _resolve);
     }
     return _geoJson(404, const {});
   }
