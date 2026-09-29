@@ -16,6 +16,8 @@ environment:
   flutter: ">=3.41.0"
 
 dependencies:
+  # Live video (HLS): phat duoc tren ca Android (ExoPlayer) va iOS (AVPlayer)
+  video_player: ^2.9.2
   flutter:
     sdk: flutter
 
@@ -104,4 +106,5 @@ flutter:
     - .env
     - assets/icons/
     - assets/images/
+
     - assets/logos/
