@@ -14000,6 +14000,87 @@ class AppLocalizationsVi extends AppLocalizations {
   String get socialClubFeeLabel => 'Phí tham gia buổi giao lưu';
 
   @override
+  String get socialCreateVenueNameLabel => 'Tên sân';
+
+  @override
+  String get socialCreateVenueNameHint => 'Nhập tên sân (VD: 22 Cộng Hòa)...';
+
+  @override
+  String get socialCreateVenueNameRequired => 'Tên sân không được để trống';
+
+  @override
+  String get socialCreateVenueNameDialogTitle => 'Vui lòng nhập tên sân.';
+
+  @override
+  String get socialCreateLocationLabel => 'Địa điểm';
+
+  @override
+  String get socialCreateLocationHint => 'Nhập địa chỉ cụ thể...';
+
+  @override
+  String get socialCreateLocationRequired => 'Địa điểm không được để trống';
+
+  @override
+  String get socialCreateLocationDialogTitle => 'Vui lòng nhập địa điểm.';
+
+  @override
+  String get socialCreatePrivacyLabel => 'Quyền riêng tư';
+
+  @override
+  String get socialCreateNotesHint => 'Thêm ghi chú';
+
+  @override
+  String get socialCreateFeeNone => 'Không có';
+
+  @override
+  String socialCreateSuccess(String title) {
+    return 'Tạo Social \"$title\" thành công!';
+  }
+
+  @override
+  String socialCreateUpdateSuccess(String title) {
+    return 'Cập nhật kèo \"$title\" thành công!';
+  }
+
+  @override
+  String get socialLocationPinAction => 'Ghim vị trí sân';
+
+  @override
+  String get socialLocationPinDone => 'Đã ghim vị trí sân';
+
+  @override
+  String get socialLocationPinHint => 'Để kèo hiện trong \"Gần bạn\"';
+
+  @override
+  String get socialLocationPinClear => 'Xóa vị trí';
+
+  @override
+  String get socialLocationEditPin => 'Chỉnh ghim';
+
+  @override
+  String get socialLocationConfirmRequired => 'Xác nhận vị trí';
+
+  @override
+  String get socialLocationCenterOnPin => 'Về vị trí đã chọn';
+
+  @override
+  String socialLocationMovePinHint(String coords) {
+    return 'Chạm vào bản đồ để di chuyển ghim\n$coords';
+  }
+
+  @override
+  String get socialLocationSearching => 'Đang tìm vị trí theo khu vực...';
+
+  @override
+  String get socialLocationAutoPlaced => 'Ghim tự động theo khu vực';
+
+  @override
+  String get socialPrivacyPublic => 'Công khai';
+
+  @override
+  String get socialPrivacyClubOnly => 'Nội bộ CLB';
+
+  @override
   String socialClubLinkedStatus(String clubName) {
     return 'Buổi này thuộc câu lạc bộ $clubName.';
   }
@@ -14068,4 +14149,33 @@ class AppLocalizationsVi extends AppLocalizations {
   String socialRegionSelectedSummary(String ward, String province) {
     return '$ward, $province';
   }
+
+  @override
+  String get socialRegionOpenAction => 'Chọn khu vực';
+
+  @override
+  String get socialRegionPickerTitle => 'Chọn khu vực sân';
+
+  @override
+  String get socialRegionProvinceLabel => 'Tỉnh/Thành phố';
+
+  @override
+  String get socialRegionProvinceSearchHint => 'Tìm tỉnh/thành phố';
+
+  @override
+  String get socialRegionAlphabetHint => 'Lọc kết quả theo chữ cái đầu';
+
+  @override
+  String get socialRegionSuggestionLabel => 'Gợi ý từ địa chỉ';
+
+  @override
+  String get socialRegionCloseAction => 'Đóng';
+
+  @override
+  String get socialLocationReverseFailed =>
+      'Không tra được khu vực từ vị trí đã ghim.';
+
+  @override
+  String get socialLocationNoAddressFound =>
+      'Chưa tìm thấy địa chỉ cho vị trí đã ghim.';
 }

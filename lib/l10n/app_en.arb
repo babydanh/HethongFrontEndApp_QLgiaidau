@@ -5642,6 +5642,52 @@
   "socialClubTitleFieldLabel": "Club session title",
   "socialOpenFeeLabel": "Session fee",
   "socialClubFeeLabel": "Club session fee",
+  "socialCreateVenueNameLabel": "Venue name",
+  "socialCreateVenueNameHint": "Enter venue name (e.g. 22 Cong Hoa)...",
+  "socialCreateVenueNameRequired": "Venue name is required",
+  "socialCreateVenueNameDialogTitle": "Please enter a venue name.",
+  "socialCreateLocationLabel": "Location",
+  "socialCreateLocationHint": "Enter a specific address...",
+  "socialCreateLocationRequired": "Location is required",
+  "socialCreateLocationDialogTitle": "Please enter a location.",
+  "socialCreatePrivacyLabel": "Privacy",
+  "socialCreateNotesHint": "Add notes",
+  "socialCreateFeeNone": "Free",
+  "socialCreateSuccess": "Session \"{title}\" created successfully!",
+  "@socialCreateSuccess": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "socialCreateUpdateSuccess": "Session \"{title}\" updated successfully!",
+  "@socialCreateUpdateSuccess": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "socialLocationPinAction": "Pin venue location",
+  "socialLocationPinDone": "Venue location pinned",
+  "socialLocationPinHint": "So this session shows up in \"Nearby\"",
+  "socialLocationPinClear": "Remove location",
+  "socialLocationEditPin": "Adjust pin",
+  "socialLocationConfirmRequired": "Confirm location",
+  "socialLocationCenterOnPin": "Center on selected pin",
+  "socialLocationMovePinHint": "Tap the map to move the pin\n{coords}",
+  "@socialLocationMovePinHint": {
+    "placeholders": {
+      "coords": {
+        "type": "String"
+      }
+    }
+  },
+  "socialLocationSearching": "Looking up the area...",
+  "socialLocationAutoPlaced": "Auto-placed from area",
+  "socialPrivacyPublic": "Public",
+  "socialPrivacyClubOnly": "Club only",
   "socialClubLinkedStatus": "This session belongs to {clubName}.",
   "@socialClubLinkedStatus": {
     "placeholders": {
@@ -5678,5 +5724,14 @@
         "type": "String"
       }
     }
-  }
+  },
+  "socialRegionOpenAction": "Choose area",
+  "socialRegionPickerTitle": "Choose venue area",
+  "socialRegionProvinceLabel": "City/Province",
+  "socialRegionProvinceSearchHint": "Search city/province",
+  "socialRegionAlphabetHint": "Filter options by initial letter",
+  "socialRegionSuggestionLabel": "Suggested from the address",
+  "socialRegionCloseAction": "Close",
+  "socialLocationReverseFailed": "Couldn't look up the area for this pin.",
+  "socialLocationNoAddressFound": "No address found for this pin."
 }

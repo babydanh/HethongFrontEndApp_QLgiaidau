@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Màn ghim vị trí sân trên bản đồ (OpenStreetMap — không cần API key).
 /// Trả về [LatLng] đã chọn qua Navigator.pop, null khi hủy.
@@ -51,16 +52,19 @@ class _SocialLocationPickerState extends State<SocialLocationPicker> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final coords =
+        '${_picked.latitude.toStringAsFixed(5)}, ${_picked.longitude.toStringAsFixed(5)}';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Ghim vị trí sân',
-          style: TextStyle(fontWeight: FontWeight.w800),
+        title: Text(
+          l10n.socialLocationPinAction,
+          style: const TextStyle(fontWeight: FontWeight.w800),
         ),
         actions: [
           IconButton(
-            tooltip: 'Về vị trí đã chọn',
+            tooltip: l10n.socialLocationCenterOnPin,
             icon: const Icon(Icons.my_location_rounded),
             onPressed: () => _mapController.move(_picked, 16),
           ),
@@ -118,7 +122,7 @@ class _SocialLocationPickerState extends State<SocialLocationPicker> {
                       border: Border.all(color: colors.border),
                     ),
                     child: Text(
-                      'Chạm vào bản đồ để di chuyển ghim\n${_picked.latitude.toStringAsFixed(5)}, ${_picked.longitude.toStringAsFixed(5)}',
+                      l10n.socialLocationMovePinHint(coords),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12.5,
@@ -139,9 +143,9 @@ class _SocialLocationPickerState extends State<SocialLocationPicker> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Xác nhận vị trí',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.socialLocationConfirmRequired,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
