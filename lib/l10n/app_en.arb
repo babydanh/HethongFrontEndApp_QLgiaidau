@@ -5689,6 +5689,8 @@
   },
   "socialLocationSearching": "Looking up the area...",
   "socialLocationAutoPlaced": "Auto-placed from area",
+  "socialLocationRegionMissing": "No province/ward resolved from the pinned point. Pick the area so the session shows in the right locality.",
+  "socialLocationRegionRetry": "Look up again",
   "socialPrivacyPublic": "Public",
   "socialPrivacyClubOnly": "Club only",
   "socialClubLinkedStatus": "This session belongs to {clubName}.",

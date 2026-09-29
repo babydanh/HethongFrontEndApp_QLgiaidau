@@ -25654,6 +25654,18 @@ abstract class AppLocalizations {
   /// **'Ghim tự động theo khu vực'**
   String get socialLocationAutoPlaced;
 
+  /// No description provided for @socialLocationRegionMissing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa nhận ra tỉnh/phường từ điểm đã ghim. Hãy chọn khu vực để kèo hiện đúng chỗ.'**
+  String get socialLocationRegionMissing;
+
+  /// No description provided for @socialLocationRegionRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tra lại'**
+  String get socialLocationRegionRetry;
+
   /// No description provided for @socialPrivacyPublic.
   ///
   /// In vi, this message translates to:

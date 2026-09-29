@@ -5689,6 +5689,8 @@
   },
   "socialLocationSearching": "Đang tìm vị trí theo khu vực...",
   "socialLocationAutoPlaced": "Ghim tự động theo khu vực",
+  "socialLocationRegionMissing": "Chưa nhận ra tỉnh/phường từ điểm đã ghim. Hãy chọn khu vực để kèo hiện đúng chỗ.",
+  "socialLocationRegionRetry": "Tra lại",
   "socialPrivacyPublic": "Công khai",
   "socialPrivacyClubOnly": "Nội bộ CLB",
   "socialClubLinkedStatus": "Buổi này thuộc câu lạc bộ {clubName}.",

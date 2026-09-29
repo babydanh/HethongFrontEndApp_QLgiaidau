@@ -14084,6 +14084,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get socialLocationAutoPlaced => 'Ghim tự động theo khu vực';
 
   @override
+  String get socialLocationRegionMissing =>
+      'Chưa nhận ra tỉnh/phường từ điểm đã ghim. Hãy chọn khu vực để kèo hiện đúng chỗ.';
+
+  @override
+  String get socialLocationRegionRetry => 'Tra lại';
+
+  @override
   String get socialPrivacyPublic => 'Công khai';
 
   @override

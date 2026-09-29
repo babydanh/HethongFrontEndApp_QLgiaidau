@@ -193,7 +193,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         _WorkspaceDashboardContent(workspace: workspace),
                   ),
                 ]),
-                _buildTabScroll(context, const [_QuickActions()]),
+                _buildTabScroll(context, [_QuickActions()]),
               ],
             ),
           ),

@@ -14133,6 +14133,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialLocationAutoPlaced => 'Auto-placed from area';
 
   @override
+  String get socialLocationRegionMissing =>
+      'No province/ward resolved from the pinned point. Pick the area so the session shows in the right locality.';
+
+  @override
+  String get socialLocationRegionRetry => 'Look up again';
+
+  @override
   String get socialPrivacyPublic => 'Public';
 
   @override
