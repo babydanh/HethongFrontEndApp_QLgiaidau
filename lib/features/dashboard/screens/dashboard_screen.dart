@@ -1328,9 +1328,12 @@ class _ManageTournamentsSectionState
         final all = _collect(workspace);
         _sort(all);
 
-        // Ô lọc chỉ hiện khi vai trò đó có ít nhất một giải.
+        // Khởi tạo đủ cả 3 vai trò về 0 để đọc map không bao giờ gặp null,
+        // kể cả khi người dùng chưa làm chủ giải giải nào.
         final roleCounts = <_ManageRoleFilter, int>{
-          for (final item in all) item.role: 0,
+          _ManageRoleFilter.organizer: 0,
+          _ManageRoleFilter.coOrganizer: 0,
+          _ManageRoleFilter.participant: 0,
         };
         for (final item in all) {
           roleCounts[item.role] = roleCounts[item.role]! + 1;
