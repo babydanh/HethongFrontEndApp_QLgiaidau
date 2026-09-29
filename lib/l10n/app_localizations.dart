@@ -25702,11 +25702,35 @@ abstract class AppLocalizations {
   /// **'Môn đã ngừng hoạt động'**
   String get socialLegacyInactiveSport;
 
-  /// No description provided for @socialRegionLabel.
+  /// No description provided for @socialRegionProvinceFieldLabel.
   ///
   /// In vi, this message translates to:
-  /// **'Khu vực (không bắt buộc)'**
-  String get socialRegionLabel;
+  /// **'Tỉnh / thành'**
+  String get socialRegionProvinceFieldLabel;
+
+  /// No description provided for @socialRegionProvinceFieldHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn tỉnh'**
+  String get socialRegionProvinceFieldHint;
+
+  /// No description provided for @socialRegionWardFieldLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phường / xã'**
+  String get socialRegionWardFieldLabel;
+
+  /// No description provided for @socialRegionWardFieldHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn phường'**
+  String get socialRegionWardFieldHint;
+
+  /// No description provided for @socialRegionWardNeedsProvinceHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn tỉnh trước'**
+  String get socialRegionWardNeedsProvinceHint;
 
   /// No description provided for @socialRegionWardLabel.
   ///
@@ -25725,18 +25749,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Nhập ít nhất 2 ký tự để tìm phường/xã.'**
   String get socialRegionWardSearchPrompt;
-
-  /// No description provided for @socialRegionApplyAction.
-  ///
-  /// In vi, this message translates to:
-  /// **'Áp dụng'**
-  String get socialRegionApplyAction;
-
-  /// No description provided for @socialRegionCancelAction.
-  ///
-  /// In vi, this message translates to:
-  /// **'Hủy'**
-  String get socialRegionCancelAction;
 
   /// No description provided for @socialRegionNoResults.
   ///
@@ -25768,12 +25780,6 @@ abstract class AppLocalizations {
   /// **'{ward}, {province}'**
   String socialRegionSelectedSummary(String ward, String province);
 
-  /// No description provided for @socialRegionOpenAction.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chọn khu vực'**
-  String get socialRegionOpenAction;
-
   /// No description provided for @socialRegionPickerTitle.
   ///
   /// In vi, this message translates to:
@@ -25797,12 +25803,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Lọc kết quả theo chữ cái đầu'**
   String get socialRegionAlphabetHint;
-
-  /// No description provided for @socialRegionSuggestionLabel.
-  ///
-  /// In vi, this message translates to:
-  /// **'Gợi ý từ địa chỉ'**
-  String get socialRegionSuggestionLabel;
 
   /// No description provided for @socialRegionCloseAction.
   ///

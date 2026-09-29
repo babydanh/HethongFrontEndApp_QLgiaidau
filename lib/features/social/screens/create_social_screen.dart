@@ -27,6 +27,13 @@ import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/socia
 /// Ngừng gõ bao lâu thì ghim tạm theo tâm phường.
 const Duration _autoPlaceDelay = Duration(milliseconds: 600);
 
+/// Ngừng gõ bao lâu thì tự điền khu vực từ địa chỉ.
+const Duration _autoRegionDelay = Duration(milliseconds: 600);
+
+/// Định danh thẻ vị trí: thẻ tự hiển thị tóm tắt khu vực đã áp dụng, nên có
+/// định danh để test kiểm tra đúng chỗ đó thay vì dò chuỗi trên cả form.
+const Key _venueLocationCardKey = ValueKey('venue-location-card');
+
 class CreateSocialScreen extends ConsumerStatefulWidget {
   final String clubId;
   final String clubName;
@@ -83,6 +90,18 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   String? _autoPlaceScheduledFor;
   /// Hẹn giờ debounce trước khi gọi tâm phường.
   Timer? _autoPlaceDebounce;
+  /// Địa chỉ gõ lần cuối đã lên lịch tự điền khu vực — chống lên lịch lại
+  /// vô ích mỗi lần form rebuild với cùng nội dung ô địa chỉ.
+  String? _autoRegionScheduledFor;
+  /// Hẹn giờ debounce trước khi tự điền khu vực.
+  Timer? _autoRegionDebounce;
+  /// Host đã tự chọn khu vực (hai trường khu vực hoặc ghim map): tự điền chỉ
+  /// lấp chỗ trống, nên cờ này tắt hẳn đường tự động cho tới hết buổi tạo kèo.
+  bool _regionChosenByHost = false;
+  /// Danh mục tỉnh + phường phục vụ tự điền và hai trường khu vực: nạp một
+  /// lần rồi dùng lại cho cả hai. Giữ future để các lần gọi chồng nhau dùng
+  /// chung một lần nạp; lần lỡ mạng thì bỏ cache để lần sau thử lại.
+  Future<SocialRegionCatalogue?>? _regionCatalogue;
 
   // Configurations
   int _maxParticipants = 6;
@@ -141,6 +160,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   @override
   void dispose() {
     _autoPlaceDebounce?.cancel();
+    _autoRegionDebounce?.cancel();
     _venueNameController.dispose();
     _venueAddressController.dispose();
     _titleController.dispose();
@@ -232,14 +252,22 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   /// Tỉnh của CLB gắn kèm: chỉ làm ngữ cảnh dự phòng cho phần khu vực khi
   /// địa chỉ gõ tay không nêu thành phố. Kèo độc lập hoặc CLB không có tỉnh
   /// thì không có ngữ cảnh nào — phần khu vực tự tìm tay.
-  String? get _clubProvinceCode {
+  ///
+  /// Chờ future thay vì đọc đồng bộ: phần tự điền thường là nơi đầu tiên đọc
+  /// provider này, mà `ref.watch` ngay lần đầu chỉ trả về "đang tải" — đọc
+  /// kiểu đó âm thầm mất luôn tỉnh của CLB rồi không thử lại nữa. CLB không
+  /// tải được cũng chỉ mất ngữ cảnh dự phòng, không được làm hỏng cả kèo.
+  Future<String?> _clubProvinceCode() async {
     if (!_isClubAttached || widget.clubId.isEmpty) return null;
-    final community = ref
-        .watch(communityDetailProvider(widget.clubId))
-        .asData
-        ?.value;
-    final code = community?.provinceCode?.trim();
-    return (code == null || code.isEmpty) ? null : code;
+    try {
+      final community = await ref.read(
+        communityDetailProvider(widget.clubId).future,
+      );
+      final code = community?.provinceCode?.trim();
+      return (code == null || code.isEmpty) ? null : code;
+    } catch (_) {
+      return null;
+    }
   }
 
   // ─── Wording: phân biệt buổi gắn CLB và kèo độc lập ───
@@ -561,6 +589,153 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     });
   }
 
+  /// Một chỗ duy nhất để đổi khu vực đã áp dụng. Chốt đủ tỉnh + phường thì
+  /// hẹn ghim tạm theo tâm phường, khỏi phải chờ gõ thêm.
+  void _applyRegion(SocialRegionSelection selection, {required bool byHost}) {
+    setState(() {
+      _appliedRegion = selection;
+      if (byHost) _regionChosenByHost = true;
+    });
+    if (selection.province != null && selection.ward != null) {
+      _restartAutoPlaceDebounce();
+    }
+  }
+
+  /// Lên lịch tự điền khu vực, chỉ khi nội dung ô địa chỉ thực sự đổi:
+  /// mỗi lần ngừng gõ mới nhận diện một lần, không bám từng phím.
+  void _scheduleAutoRegionForAddress(String address) {
+    if (_autoRegionScheduledFor == address) return;
+    _autoRegionScheduledFor = address;
+    _autoRegionDebounce?.cancel();
+    _autoRegionDebounce = Timer(_autoRegionDelay, () {
+      unawaited(_autoFillRegionFromAddress());
+    });
+  }
+
+  /// Tự điền khu vực từ địa chỉ gõ tay, host không phải bấm gì.
+  ///
+  /// Nhận diện được tỉnh thì chốt tỉnh; nhận diện thêm phường và tên phường
+  /// là duy nhất trong tỉnh đó thì chốt cả hai. Không nhận diện được gì thì
+  /// để trống chứ không đoán — khu vực chỉ là tuỳ chọn, suy ra sai còn tệ
+  /// hơn để host tự chọn.
+  Future<void> _autoFillRegionFromAddress() async {
+    if (!mounted || _regionChosenByHost) return;
+    final address = _venueAddressController.text.trim();
+    if (address.isEmpty) return;
+    final applied = _appliedRegion;
+    if (applied != null && !applied.isEmpty) return;
+
+    final catalogue = await _regionCatalogueFor();
+    // Nạp danh mục xong mà host đã tự chọn khu vực hoặc vừa gõ tiếp thì
+    // để host làm chủ: đừng đè lên lựa chọn đó.
+    if (catalogue == null ||
+        !mounted ||
+        _regionChosenByHost ||
+        _venueAddressController.text.trim() != address) {
+      return;
+    }
+    final current = _appliedRegion;
+    if (current != null && !current.isEmpty) return;
+
+    final detected = await _detectProvinceIn(address, catalogue);
+    if (detected == null) return;
+
+    final scope = catalogue.wards
+        .where((ward) => ward.provinceCode == detected.code)
+        .toList(growable: false);
+    final ward = scope.isEmpty
+        ? null
+        : VietnamAddressParser.detectWard<Region>(
+            rawAddress: address,
+            wards: scope,
+            getCode: (region) => region.code,
+            // Parser tự bỏ tiền tố loại, nên "Bãy Hiến" cũng khớp "Phường Bãy Hiến".
+            getName: (region) => region.name,
+            getFullName: (region) => region.fullName ?? region.name,
+          );
+    _applyRegion(
+      SocialRegionSelection(
+        province: detected,
+        // Trùng tên trong cùng tỉnh thì địa chỉ không đủ tin: chỉ chốt tỉnh.
+        ward: ward != null && _isUniquelyNamed(ward, scope) ? ward : null,
+      ),
+      byHost: false,
+    );
+  }
+
+  /// Tỉnh mà địa chỉ đang nêu. Địa chỉ không nêu thành phố thì mượn tỉnh của
+  /// CLB gắn kèp làm ngữ cảnh dự phòng — cùng cách đã dùng để gợi ý, nay
+  /// áp thẳng vào hai trường nên host không phải bấm "Áp dụng". Tỉnh của CLB
+  /// chỉ làm phạm vi tìm phường: phường không nằm trong tỉnh đó thì không
+  /// chốt gì, chứ không đoán.
+  Future<Region?> _detectProvinceIn(
+    String address,
+    SocialRegionCatalogue catalogue,
+  ) async {
+    final detected = VietnamAddressParser.detectProvince<Region>(
+      rawAddress: address,
+      provinces: catalogue.provinces,
+      getCode: (region) => region.code,
+      getName: (region) => region.name,
+      getFullName: (region) => region.fullName ?? region.name,
+    );
+    if (detected != null) return detected;
+    final contextCode = await _clubProvinceCode() ?? '';
+    if (contextCode.isEmpty) return null;
+    for (final province in catalogue.provinces) {
+      if (province.code == contextCode) return province;
+    }
+    return null;
+  }
+
+  /// Danh mục tỉnh + phường cho tự điền và hai trường khu vực, nạp một lần
+  /// rồi dùng lại. `null` = mất mạng: tự điền là tiện ích nên im lặng bỏ qua
+  /// và thử lại ở lần ngừng gõ sau, tuyệt đối không báo lỗi lên form. Danh
+  /// mục rỗng không cache, để lần sau vẫn thử lại được.
+  Future<SocialRegionCatalogue?> _regionCatalogueFor({bool refresh = false}) async {
+    if (refresh) _regionCatalogue = null;
+    final pending = _regionCatalogue ??= _fetchRegionCatalogue();
+    final catalogue = await pending;
+    if (catalogue == null || catalogue.provinces.isEmpty) {
+      _regionCatalogue = null;
+    }
+    return catalogue;
+  }
+
+  Future<SocialRegionCatalogue?> _fetchRegionCatalogue() async {
+    final repository = ref.read(regionRepositoryProvider);
+    final List<Region> provinces;
+    try {
+      provinces = await repository.getProvinces();
+    } catch (_) {
+      return null;
+    }
+    // Server trả rỗng vẫn là một câu trả lời: trả về danh mục rỗng để hai
+    // trường báo "chưa dùng được" thay vì báo nhầm thành lỗi mạng.
+    // Mã tỉnh rỗng là lấy toàn bộ phường, giống hệt danh mục hai trường khu
+    // vực dùng. Thiếu phường vẫn chốt được tỉnh nên lỗi phường không loại cả
+    // danh mục.
+    List<Region> wards = const [];
+    try {
+      wards = await repository.getWardsByProvince('');
+    } catch (_) {
+      // Bỏ trống: chỉ chốt được tỉnh.
+    }
+    return (provinces: provinces, wards: wards);
+  }
+
+  /// Trùng tên phường trong cùng tỉnh thì địa chỉ không đủ tin để chọn —
+  /// cùng cách danh sách phường loại tên mơ hồ, chỉ chốt tỉnh.
+  bool _isUniquelyNamed(Region ward, List<Region> scope) {
+    final key = VietnamAddressParser.localityName(ward.name);
+    return scope
+            .where(
+              (item) => VietnamAddressParser.localityName(item.name) == key,
+            )
+            .length ==
+        1;
+  }
+
   /// Tâm phường — GET /regions/wards/centroid. Trả null khi server không
   /// tìm thấy hoặc lỗi mạng: ghim tạm là tiện ích, không được chặn lưu kèo.
   Future<({double lat, double lng})?> _fetchWardCentroid({
@@ -689,7 +864,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       ),
     );
     setState(() {
+      // Host chủ động ghim map: đây là lựa chọn của host, tự điền từ địa
+      // chỉ không được đè lên.
       _appliedRegion = selection;
+      _regionChosenByHost = true;
       // Chỉ điền khi host chưa gõ: tuyệt đối không xoá địa chỉ đã gõ tay.
       if (_venueAddressController.text.trim().isEmpty) {
         _venueAddressController.text = selection.summary(l10n);
@@ -879,7 +1057,6 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     final activeSports = _activeSports(catalog);
     final sport = _resolveSport(activeSports);
     final canSubmit = sport.slug.isNotEmpty;
-    final clubProvinceCode = _clubProvinceCode;
 
     return Container(
       decoration: BoxDecoration(
@@ -1199,8 +1376,33 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                 TextFormField(
                                   controller: _venueAddressController,
                                   onChanged: (_) {
-                                    if (_appliedRegion == null) return;
-                                    setState(() => _appliedRegion = null);
+                                    // Ghim do form suy ra từ tâm phường cũ
+                                    // thì trỏ vào địa chỉ cũ, nên địa chỉ đổi là
+                                    // bỏ, khỏi chỉ vào một chỗ không còn đúng.
+                                    // Ghim tay của host thì giữ nguyên: host
+                                    // sửa lỗi chính tả trong địa chỉ không có
+                                    // nghĩa là muốn mất điểm mình vừa chọn,
+                                    // muốn bỏ thì bấm "×" ngay trên thẻ vị trí.
+                                    final dropPin = _pinAutoPlaced;
+                                    // Địa chỉ đổi thì lựa chọn khu vực do
+                                    // form tự nhận diện cũ không còn đúng nên
+                                    // bỏ, khỏi ghép nhầm vào địa chỉ lúc lưu.
+                                    // Lựa chọn của host thì giữ nguyên: host
+                                    // sửa lại địa chỉ không có nghĩa là host
+                                    // đổi ý về khu vực, mà đổi ý thì bấm
+                                    // vào chính ô khu vực để chọn lại.
+                                    final dropRegion =
+                                        _appliedRegion != null &&
+                                        !_regionChosenByHost;
+                                    if (!dropPin && !dropRegion) return;
+                                    setState(() {
+                                      if (dropPin) {
+                                        _latitude = null;
+                                        _longitude = null;
+                                        _pinAutoPlaced = false;
+                                      }
+                                      if (dropRegion) _appliedRegion = null;
+                                    });
                                   },
                                   maxLength: 500,
                                   maxLines: 2,
@@ -1227,9 +1429,12 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                   },
                                 ),
                                 const SizedBox(height: 12),
-                                // Khu vực tuỳ chọn được xác nhận trong popup.
-                                // Khi địa chỉ đổi, bỏ lựa chọn cũ để không ghép
-                                // nhầm phường/tỉnh vào venueAddress lúc lưu.
+                                // Khu vực tuỳ chọn hiện sẵn hai trường "Tỉnh /
+                                // thành" + "Phường / xã": tự điền từ địa chỉ
+                                // gõ tay vào thẳng hai trường, host sửa tay
+                                // được bất cứ lúc nào. Khi địa chỉ đổi, bỏ lựa
+                                // chọn cũ để không ghép nhầm phường/tỉnh vào
+                                // venueAddress lúc lưu.
                                 ValueListenableBuilder<TextEditingValue>(
                                   valueListenable: _venueAddressController,
                                   builder: (context, address, _) {
@@ -1237,42 +1442,33 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                     // phường: không cần mở map, và không bao giờ
                                     // ghi đè pin host đã tự ghim tay.
                                     _scheduleAutoPlaceForAddress(address.text);
-                                    return SocialRegionPicker(
-                                      address: address.text,
+                                    // Ngừng gõ 600ms thì tự điền khu vực từ
+                                    // địa chỉ, host khỏi phải bấm gì cả.
+                                    _scheduleAutoRegionForAddress(address.text);
+                                    return SocialRegionInlineFields(
                                       applied: _appliedRegion,
-                                      contextProvinceCode: clubProvinceCode,
-                                      onApply: (selection) {
-                                        setState(
-                                          () => _appliedRegion = selection,
-                                        );
-                                        // Vừa chốt đủ tỉnh + phường thì hẹn
-                                        // ghim tạm luôn, khỏi chờ gõ thêm.
-                                        _restartAutoPlaceDebounce();
-                                      },
+                                      onSelect: (selection) =>
+                                          _applyRegion(selection, byHost: true),
+                                      loadCatalogue: _regionCatalogueFor,
                                     );
                                   },
                                 ),
                                 const SizedBox(height: 10),
-                                // Thẻ "Vị trí" duy nhất: địa chỉ + gợi ý khu vực +
-                                // trạng thái ghim (chưa ghim / tay / tự động).
-                                ValueListenableBuilder<TextEditingValue>(
-                                  valueListenable: _venueAddressController,
-                                  builder: (context, address, _) =>
-                                      _VenueLocationCard(
-                                        address: address.text,
-                                        regionHint: _appliedRegion?.summary(
-                                          l10n,
-                                        ),
-                                        latitude: _latitude,
-                                        longitude: _longitude,
-                                        autoPlaced: _pinAutoPlaced,
-                                        onPick: _openLocationPicker,
-                                        onClear: () => setState(() {
-                                          _latitude = null;
-                                          _longitude = null;
-                                          _pinAutoPlaced = false;
-                                        }),
-                                      ),
+                                // Thẻ "Vị trí" chỉ còn trạng thái ghim (chưa
+                                // ghim / tay / tự động). Địa chỉ nằm ngay ở ô
+                                // phía trên, khu vực nằm ở hai ô khu vực, nên
+                                // thẻ không lặp lại hai thứ đã hiện sẵn.
+                                _VenueLocationCard(
+                                  key: _venueLocationCardKey,
+                                  latitude: _latitude,
+                                  longitude: _longitude,
+                                  autoPlaced: _pinAutoPlaced,
+                                  onPick: _openLocationPicker,
+                                  onClear: () => setState(() {
+                                    _latitude = null;
+                                    _longitude = null;
+                                    _pinAutoPlaced = false;
+                                  }),
                                 ),
                               ],
                             ),
@@ -1435,15 +1631,14 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
 /// thái luôn đi kèm nhãn chữ riêng (xem [_VenueLocationCard._stateLabel]).
 enum _VenuePinState { unpinned, manual, auto }
 
-/// Thẻ "Vị trí" duy nhất của form: gộp địa chỉ gõ tay, gợi ý khu vực đã
-/// áp dụng và trạng thái ghim (chưa ghim / host ghim tay / suy ra tự động),
-/// kèm nút mở bản đồ để ghim lại cho chính xác hơn.
+/// Thẻ "Vị trí" duy nhất của form: chỉ trạng thái ghim (chưa ghim / host ghim
+/// tay / suy ra tự động) với tọa độ, kèm nút mở bản đồ để ghim lại cho
+/// chính xác hơn và nút "×" để gỡ.
+///
+/// Thẻ không lặp lại địa chỉ lẫn khu vực: ô "Địa điểm" ngay phía trên và hai
+/// ô khu vực bên dưới nó đã hiện sẵn, host đọc một chỗ duy nhất mà không
+/// phải so hai nơi có khớp nhau hay không.
 class _VenueLocationCard extends StatelessWidget {
-  /// Địa chỉ gõ tay, hiển thị tóm tắt trong thẻ.
-  final String address;
-
-  /// "Phường, Tỉnh" đã áp dụng, rỗng khi host chưa chốt khu vực.
-  final String? regionHint;
   final double? latitude;
   final double? longitude;
 
@@ -1453,8 +1648,7 @@ class _VenueLocationCard extends StatelessWidget {
   final VoidCallback onClear;
 
   const _VenueLocationCard({
-    required this.address,
-    required this.regionHint,
+    super.key,
     required this.latitude,
     required this.longitude,
     required this.autoPlaced,
@@ -1497,8 +1691,6 @@ class _VenueLocationCard extends StatelessWidget {
       _VenuePinState.manual => colors.success,
       _VenuePinState.auto => colors.warning,
     };
-    final place = address.trim();
-    final area = regionHint?.trim() ?? '';
 
     return InkWell(
       onTap: onPick,
@@ -1574,32 +1766,6 @@ class _VenueLocationCard extends StatelessWidget {
                   ),
               ],
             ),
-            if (place.isNotEmpty || area.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.bgSurface,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: colors.borderLight),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (place.isNotEmpty)
-                      _placeLine(colors, Icons.place_outlined, place),
-                    if (place.isNotEmpty && area.isNotEmpty)
-                      const SizedBox(height: 6),
-                    if (area.isNotEmpty)
-                      _placeLine(colors, Icons.map_outlined, area),
-                  ],
-                ),
-              ),
-            ],
             if (hasPin) ...[
               const SizedBox(height: 10),
               SizedBox(
@@ -1628,26 +1794,4 @@ class _VenueLocationCard extends StatelessWidget {
     );
   }
 
-  /// Một dòng địa chỉ/khu vực trong khung xem trước vị trí.
-  Widget _placeLine(AppColorsExtension colors, IconData icon, String text) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 15, color: colors.textMuted),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12.5,
-              height: 1.35,
-              color: colors.textSecondary,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }

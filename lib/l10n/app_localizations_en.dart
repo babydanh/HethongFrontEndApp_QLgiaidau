@@ -14160,7 +14160,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialLegacyInactiveSport => 'Inactive sport';
 
   @override
-  String get socialRegionLabel => 'Area (optional)';
+  String get socialRegionProvinceFieldLabel => 'Province / City';
+
+  @override
+  String get socialRegionProvinceFieldHint => 'Select a province';
+
+  @override
+  String get socialRegionWardFieldLabel => 'Ward / Commune';
+
+  @override
+  String get socialRegionWardFieldHint => 'Select a ward';
+
+  @override
+  String get socialRegionWardNeedsProvinceHint => 'Select a province first';
 
   @override
   String get socialRegionWardLabel => 'Ward/Commune';
@@ -14171,12 +14183,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get socialRegionWardSearchPrompt =>
       'Enter at least 2 characters to search wards/communes.';
-
-  @override
-  String get socialRegionApplyAction => 'Apply';
-
-  @override
-  String get socialRegionCancelAction => 'Cancel';
 
   @override
   String get socialRegionNoResults => 'No results found.';
@@ -14198,9 +14204,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get socialRegionOpenAction => 'Choose area';
-
-  @override
   String get socialRegionPickerTitle => 'Choose venue area';
 
   @override
@@ -14211,9 +14214,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialRegionAlphabetHint => 'Filter options by initial letter';
-
-  @override
-  String get socialRegionSuggestionLabel => 'Suggested from the address';
 
   @override
   String get socialRegionCloseAction => 'Close';

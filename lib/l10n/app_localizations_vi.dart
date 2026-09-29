@@ -14113,7 +14113,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get socialLegacyInactiveSport => 'Môn đã ngừng hoạt động';
 
   @override
-  String get socialRegionLabel => 'Khu vực (không bắt buộc)';
+  String get socialRegionProvinceFieldLabel => 'Tỉnh / thành';
+
+  @override
+  String get socialRegionProvinceFieldHint => 'Chọn tỉnh';
+
+  @override
+  String get socialRegionWardFieldLabel => 'Phường / xã';
+
+  @override
+  String get socialRegionWardFieldHint => 'Chọn phường';
+
+  @override
+  String get socialRegionWardNeedsProvinceHint => 'Chọn tỉnh trước';
 
   @override
   String get socialRegionWardLabel => 'Phường/Xã';
@@ -14124,12 +14136,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get socialRegionWardSearchPrompt =>
       'Nhập ít nhất 2 ký tự để tìm phường/xã.';
-
-  @override
-  String get socialRegionApplyAction => 'Áp dụng';
-
-  @override
-  String get socialRegionCancelAction => 'Hủy';
 
   @override
   String get socialRegionNoResults => 'Không tìm thấy kết quả.';
@@ -14151,9 +14157,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get socialRegionOpenAction => 'Chọn khu vực';
-
-  @override
   String get socialRegionPickerTitle => 'Chọn khu vực sân';
 
   @override
@@ -14164,9 +14167,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get socialRegionAlphabetHint => 'Lọc kết quả theo chữ cái đầu';
-
-  @override
-  String get socialRegionSuggestionLabel => 'Gợi ý từ địa chỉ';
 
   @override
   String get socialRegionCloseAction => 'Đóng';

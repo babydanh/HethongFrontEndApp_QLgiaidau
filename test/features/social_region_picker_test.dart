@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
@@ -13,31 +17,37 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Widget coverage for the Social create form's optional locality bottom sheet.
+/// Widget coverage for the Social create form's inline locality fields.
 ///
-/// The sheet uses only the existing `IRegionRepository` and deterministic
-/// `VietnamAddressParser`: address-derived suggestions require explicit Apply,
-/// separate city/ward controls support manual correction, and applied labels
-/// are composed into the existing address only when the form is saved.
+/// The two fields are always on screen, the way the quick-tournament screen
+/// shows them, and they use only the existing `IRegionRepository` plus the
+/// deterministic `VietnamAddressParser`: a typed address fills them without
+/// any tap, each field opens its own searchable list for manual correction,
+/// and the applied names are composed into the existing address on save.
 void main() {
-  group('Social locality popup', () {
-    testWidgets('opening locality shows separate city and ward fields', (
+  group('Social locality fields', () {
+    testWidgets('the two locality fields need no tap to be seen', (
       tester,
     ) async {
       await _pumpSocialForm(tester, regionRepository: _FakeRegionRepository());
       await _ensureAreaVisible(tester);
 
-      await _openAreaPicker(tester);
-
-      expect(find.byType(BottomSheet), findsOneWidget);
-      expect(textCI('Tỉnh/Thành phố'), findsOneWidget);
-      expect(textCI('Phường/Xã'), findsOneWidget);
+      expect(find.byType(SocialRegionInlineFields), findsOneWidget);
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(textCI('Tỉnh / thành'), findsOneWidget);
+      expect(textCI('Chọn tỉnh'), findsOneWidget);
+      expect(textCI('Phường / xã'), findsOneWidget);
+      // Chưa có tỉnh thì phường nói rõ điều kiện và không bấm được.
+      expect(textCI('Chọn tỉnh trước'), findsOneWidget);
+      expect(_localityField(tester, _wardField()).enabled, isFalse);
       expect(tester.takeException(), isNull);
     });
+
     testWidgets('city options sort by Vietnamese name and filter by letter', (
       tester,
     ) async {
@@ -59,6 +69,59 @@ void main() {
       expect(find.text('TP. Hồ Chí Minh'), findsNothing);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('city options narrow and lead with the typed term', (
+      tester,
+    ) async {
+      await _pumpSocialForm(tester, regionRepository: _FakeRegionRepository());
+      await _openAreaPicker(tester);
+
+      // Tone-free typing reaches the accented name it was written without.
+      await _searchProvince(tester, 'ho chi minh');
+      expect(find.text('TP. Hồ Chí Minh'), findsOneWidget);
+      expect(find.text('Đà Nẵng'), findsNothing);
+      expect(find.text('Hà Nội'), findsNothing);
+
+      // The short forms the address parser accepts are the same wording here.
+      await _searchProvince(tester, 'hcm');
+      expect(find.text('TP. Hồ Chí Minh'), findsOneWidget);
+      expect(find.text('Đà Nẵng'), findsNothing);
+
+      await _searchProvince(tester, 'zzz');
+      expect(textCI('Không tìm thấy kết quả.'), findsOneWidget);
+      expect(find.text('TP. Hồ Chí Minh'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('ward options lead with the name closest to the typed term', (
+      tester,
+    ) async {
+      await _pumpSocialForm(
+        tester,
+        regionRepository: _FakeRegionRepository(
+          wardRows: [
+            Region.fromJson({
+              'code': '01-001',
+              'name': 'Phường An Mỹ',
+              'provinceCode': '01',
+            }),
+            Region.fromJson({
+              'code': '01-002',
+              'name': 'Phường Mỹ Đình',
+              'provinceCode': '01',
+            }),
+          ],
+        ),
+      );
+      await _searchWard(tester, 'Mỹ');
+
+      expect(
+        tester.getTopLeft(find.text('Phường Mỹ Đình')).dy,
+        lessThan(tester.getTopLeft(find.text('Phường An Mỹ')).dy),
+      );
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets(
       'ward options sort by locality name and filter by its initial',
       (tester) async {
@@ -70,24 +133,32 @@ void main() {
 
         expect(
           tester.getTopLeft(find.text('Phường Cầu Giấy')).dy,
-          lessThan(tester.getTopLeft(find.text('Phường Hải Châu')).dy),
+          lessThan(tester.getTopLeft(find.text('Phường Mỹ Đình')).dy),
         );
         expect(find.text('Phường Cầu Giấy'), findsOneWidget);
-        expect(find.text('Phường Bến Thành'), findsOneWidget);
+        expect(find.text('Phường Mỹ Đình'), findsOneWidget);
 
         await _tapVisible(tester, find.text('C'));
 
         expect(find.text('Phường Cầu Giấy'), findsOneWidget);
-        expect(find.text('Phường Bến Thành'), findsNothing);
+        expect(find.text('Phường Mỹ Đình'), findsNothing);
         expect(tester.takeException(), isNull);
       },
     );
-    testWidgets('selecting a city narrows the ward options', (tester) async {
+
+    testWidgets('choosing a city fills its field and scopes the ward list', (
+      tester,
+    ) async {
       await _pumpSocialForm(tester, regionRepository: _FakeRegionRepository());
       await _openAreaPicker(tester);
-
-      await _tapVisible(tester, _fieldWithCopy('tỉnh/thành phố'));
       await _selectOption(tester, 'Hà Nội');
+
+      // Chọn là áp dụng luôn: không còn sheet, không còn bước "Áp dụng".
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(_fieldText(tester, _provinceField()), 'Hà Nội');
+      expect(_fieldText(tester, _wardField()), isEmpty);
+
+      await _openWardList(tester);
 
       expect(find.text('Phường Cầu Giấy'), findsOneWidget);
       expect(find.text('Phường Mỹ Đình'), findsOneWidget);
@@ -95,6 +166,30 @@ void main() {
       expect(find.text('Phường Hải Châu'), findsNothing);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('the detected area fills the two fields', (
+      tester,
+    ) async {
+      await _pumpSocialForm(tester, regionRepository: _FakeRegionRepository());
+      await _ensureAreaVisible(tester);
+      // Địa chỉ nhận diện được cả tỉnh lẫn phường mà chưa chạm tay vào ô nào.
+      await tester.enterText(
+        _addressField(),
+        '83 Đường A4, Phường Bến Thành, TP. Hồ Chí Minh',
+      );
+      await _pumpUi(tester);
+
+      // Regression: hai ô phải hiện tên đã nhận diện, không phải vẫn là
+      // gợi ý "Chọn tỉnh"/"Chọn phường" trong khi thẻ vị trí đã có tóm tắt.
+      expect(_fieldText(tester, _provinceField()), 'TP. Hồ Chí Minh');
+      expect(_fieldText(tester, _wardField()), 'Phường Bến Thành');
+      expect(textCI('Chọn tỉnh'), findsNothing);
+      expect(textCI('Chọn phường'), findsNothing);
+      // Cùng lựa chọn đó nằm trong cả hai ô, không lệch nhau.
+      expect(_appliedArea(tester), _benThanhSummary);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets(
       'editing the address clears an applied locality before saving',
       (tester) async {
@@ -107,12 +202,8 @@ void main() {
         await tester.enterText(_venueNameField(), _manualVenue);
         await tester.enterText(_addressField(), _myDinhAddress);
         await _pumpUi(tester);
-        await _openAreaPicker(tester);
-        expect(find.text(_myDinhSummary), findsOneWidget);
-
-        await _tapVisible(tester, find.text('Áp dụng'));
-        await _pumpUi(tester);
-        expect(_appliedArea(_myDinhSummary), findsOneWidget);
+        // Khu vực tự điền từ địa chỉ, host không bấm gì.
+        expect(_appliedArea(tester), _myDinhSummary);
 
         const editedAddress = 'Sân mới, 15 Lê Lợi, Đà Nẵng';
         await tester.enterText(_addressField(), editedAddress);
@@ -126,13 +217,94 @@ void main() {
         expect(tester.takeException(), isNull);
       },
     );
-    testWidgets('region data loads when the popup is opened', (tester) async {
+
+    testWidgets(
+      'editing the address re-places an auto pin on the new ward',
+      (tester) async {
+        await _pumpSocialForm(
+          tester,
+          regionRepository: _FakeRegionRepository(),
+          dio: _geoDio(),
+        );
+        await tester.enterText(_addressField(), _myDinhAddress);
+        await _pumpUi(tester);
+        // Nhận diện xong mới hẹn ghim, nên cần thêm một nhịp cho hẹn 600 ms
+        // đó chạy.
+        await _pumpUi(tester);
+        // Tâm "Phường Mỹ Đình" do server trả về: ghim tự động.
+        expect(_cardPin(tester, _myDinhCentroid), findsOneWidget);
+        expect(textCI('Ghim tự động theo khu vực'), findsOneWidget);
+
+        await tester.enterText(
+          _addressField(),
+          '120 Trần Phú, Phường Hải Châu, Đà Nẵng',
+        );
+        await _pumpUi(tester);
+        await _pumpUi(tester);
+        // Ghim cũ trỏ vào Mỹ Đình nên phải nhường chỗ cho tâm phường mới,
+        // không giữ nguyên một điểm đã không còn đúng với địa chỉ.
+        expect(_appliedArea(tester), 'Phường Hải Châu, Đà Nẵng');
+        expect(_cardPin(tester, _haiChauCentroid), findsOneWidget);
+        expect(_cardPin(tester, _myDinhCentroid), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'editing the address drops an auto pin it can no longer place',
+      (tester) async {
+        await _pumpSocialForm(
+          tester,
+          regionRepository: _FakeRegionRepository(),
+          dio: _geoDio(),
+        );
+        await tester.enterText(_addressField(), _myDinhAddress);
+        await _pumpUi(tester);
+        await _pumpUi(tester);
+        expect(_cardPin(tester, _myDinhCentroid), findsOneWidget);
+
+        // Địa chỉ mới chỉ còn tỉnh, nhận diện không ra phường nên không ghim
+        // tạm được — nhưng điểm của phường cũ cũng phải mất, chứ không nằm
+        // lại chỉ vào một địa chỉ đã bị thay.
+        await tester.enterText(_addressField(), '15 Lê Lợi, Đà Nẵng');
+        await _pumpUi(tester);
+        await _pumpUi(tester);
+        expect(_appliedArea(tester), 'Đà Nẵng');
+        expect(_cardPin(tester, _myDinhCentroid), findsNothing);
+        expect(textCI('Ghim vị trí sân'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets('editing the address keeps a pin the host dropped by hand', (
+      tester,
+    ) async {
+      await _pumpSocialForm(
+        tester,
+        regionRepository: _FakeRegionRepository(),
+        dio: _geoDio(),
+      );
+      await _dropPinByHand(tester);
+      expect(_cardPin(tester, _handPicked), findsOneWidget);
+      expect(textCI('Đã ghim vị trí sân'), findsOneWidget);
+
+      await tester.enterText(_addressField(), '$_myDinhAddress, gần ngã ba');
+      await _pumpUi(tester);
+      // Host sửa lỗi chính tả trong địa chỉ không phải lý do để mất điểm
+      // mình vừa chọn tay; muốn bỏ thì bấm "×" trên thẻ.
+      expect(_addressText(tester), contains('gần ngã ba'));
+      expect(_cardPin(tester, _handPicked), findsOneWidget);
+      expect(textCI('Đã ghim vị trí sân'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('the locality fields stay unloaded until a list is opened', (
+      tester,
+    ) async {
       final repository = _FakeRegionRepository();
       await _pumpSocialForm(tester, regionRepository: repository);
 
-      expect(find.byType(SocialRegionPicker), findsOneWidget);
-      expect(textCI('Khu vực (không bắt buộc)'), findsOneWidget);
-      expect(textCI('Phường/Xã'), findsNothing);
+      expect(find.byType(SocialRegionInlineFields), findsOneWidget);
       expect(find.byType(BottomSheet), findsNothing);
       expect(repository.provinceCalls, 0);
       expect(repository.wardRequests, isEmpty);
@@ -141,8 +313,10 @@ void main() {
       expect(find.byType(BottomSheet), findsOneWidget);
       expect(repository.provinceCalls, 1);
       expect(repository.wardRequests, <String>['']);
-      expect(_wardSearch(), findsOneWidget);
-      await _tapVisible(tester, find.text('Hủy'));
+      // Danh sách tỉnh chỉ mở ô tìm tỉnh, không mở sẵn ô tìm phường.
+      expect(_provinceSearch(), findsOneWidget);
+      expect(_wardSearch(), findsNothing);
+      await _tapVisible(tester, find.byTooltip('Đóng'));
       expect(find.byType(BottomSheet), findsNothing);
       expect(tester.takeException(), isNull);
     });
@@ -162,13 +336,19 @@ void main() {
         tester,
         regionRepository: _FakeRegionRepository(wardRows: wards),
       );
-      await _ensureAreaVisible(tester);
 
       await _searchWard(tester, 'P');
-      expect(textCI('Nhập ít nhất 2 ký tự để tìm phường/xã.'), findsOneWidget);
+      await _pumpUi(tester);
+      expect(
+        textCI('Nhập ít nhất 2 ký tự để tìm phường/xã.'),
+        findsOneWidget,
+      );
+      expect(find.text('Phường Test 00'), findsNothing);
 
       await _searchWard(tester, 'Phường');
+      await _pumpUi(tester);
       expect(find.text('Phường Test 00'), findsOneWidget);
+      // Nhiều hơn 50 dòng thì cắt bớt, không dựng hết danh sách.
       await tester.drag(find.byType(Scrollable).last, const Offset(0, -5000));
       await _pumpUi(tester);
       expect(find.text('Phường Test 49'), findsOneWidget);
@@ -183,6 +363,7 @@ void main() {
         tester,
         regionRepository: _FakeRegionRepository(
           wardRows: [
+            // Cùng một tên phường ở hai tỉnh: chỉ tỉnh đang chọn được chào.
             Region.fromJson({
               'code': '01-101',
               'name': 'Phường An Phú',
@@ -193,57 +374,181 @@ void main() {
               'name': 'Phường An Phú',
               'provinceCode': '48',
             }),
+            Region.fromJson({
+              'code': '01-102',
+              'name': 'Phường Hải Châu',
+              'provinceCode': '01',
+            }),
           ],
         ),
       );
       await _ensureAreaVisible(tester);
-      await _searchWard(tester, 'An Phú');
+      await _searchWard(tester, 'Phú', province: 'Đà Nẵng');
 
-      expect(find.text('Hà Nội'), findsOneWidget);
-      expect(find.text('Đà Nẵng'), findsOneWidget);
-      await _tapVisible(
-        tester,
-        find.ancestor(of: find.text('Đà Nẵng'), matching: find.byType(InkWell)),
-      );
-      await _pumpUi(tester);
+      // Phường trùng tên ở tỉnh khác không lẫn vào danh sách tỉnh đang chọn.
+      expect(_listOption('Phường Hải Châu'), findsNothing);
+      await _selectOption(tester, 'Phường An Phú');
 
-      await _tapVisible(tester, find.text('Áp dụng'));
-      expect(_appliedArea('Phường An Phú, Đà Nẵng'), findsOneWidget);
+      expect(_fieldText(tester, _provinceField()), 'Đà Nẵng');
+      expect(_fieldText(tester, _wardField()), 'Phường An Phú');
+      expect(_appliedArea(tester), 'Phường An Phú, Đà Nẵng');
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets(
-      'a full typed address proposes a ward and city that compose into the request',
-      (tester) async {
-        final socialRepository = _RecordingSocialSessionRepository();
-        await _pumpSocialForm(
-          tester,
-          regionRepository: _FakeRegionRepository(),
-          socialRepository: socialRepository,
-        );
-        await tester.enterText(_venueNameField(), _manualVenue);
-        await _ensureAreaVisible(tester);
-        await tester.enterText(_addressField(), _myDinhAddress);
-        await _pumpUi(tester);
+    testWidgets('a full typed address fills the area itself and composes into the request', (
+      tester,
+    ) async {
+      final socialRepository = _RecordingSocialSessionRepository();
+      await _pumpSocialForm(
+        tester,
+        regionRepository: _FakeRegionRepository(),
+        socialRepository: socialRepository,
+      );
+      await tester.enterText(_venueNameField(), _manualVenue);
+      await tester.enterText(_addressField(), _myDinhAddress);
+      await _pumpUi(tester);
+      // Ngừng gõ là đủ: khu vực tự điền, host không bấm gì.
+      expect(_fieldText(tester, _provinceField()), 'Hà Nội');
+      expect(_fieldText(tester, _wardField()), 'Phường Mỹ Đình');
+      expect(_appliedArea(tester), _myDinhSummary);
+      expect(_addressText(tester), _myDinhAddress);
+      await _submit(tester);
+      expect(socialRepository.creates, hasLength(1));
+      final address = socialRepository.creates.single.venueAddress;
+      expect(address, contains('Hà Nội'));
+      expect('Hà Nội'.allMatches(address).length, 1);
+      expect('Phường Mỹ Đình'.allMatches(address).length, 1);
+      expect(tester.takeException(), isNull);
+    });
 
-        await _openAreaPicker(tester);
-        expect(find.text(_myDinhSummary), findsOneWidget);
-        expect(find.byType(BottomSheet), findsOneWidget);
-        await _tapVisible(tester, find.text('Áp dụng'));
+    testWidgets('typing pauses before the area is filled, once province data is already cached', (
+      tester,
+    ) async {
+      final repository = _FakeRegionRepository();
+      await _pumpSocialForm(tester, regionRepository: repository);
+      await _ensureAreaVisible(tester);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.enterText(_addressField(), '202 Hoàng Văn Thụ');
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.enterText(
+        _addressField(),
+        '202 Hoàng Văn Thụ, Phường Mỹ Đình, Hà Nội',
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      // Chưa ngừng gõ thì chưa nhận diện, chưa tải danh mục phụ.
+      expect(_appliedArea(tester), isNot(_myDinhSummary));
+      expect(repository.provinceCalls, 0);
+      await _pumpUi(tester);
+      // Chưa ngừng gõ thì chưa nhận diện, chưa tải danh mục phụ.
+      expect(_appliedArea(tester), _myDinhSummary);
+      expect(repository.provinceCalls, 1);
+      expect(tester.takeException(), isNull);
+    });
 
-        expect(_appliedArea(_myDinhSummary), findsOneWidget);
-        expect(find.text('Áp dụng'), findsNothing);
-        expect(_addressText(tester), _myDinhAddress);
+    testWidgets('an address with a city only fills that city', (tester) async {
+      await _pumpSocialForm(tester, regionRepository: _FakeRegionRepository());
+      await _ensureAreaVisible(tester);
+      await tester.enterText(_addressField(), '15 Lê Lợi, Đà Nẵng');
+      await _pumpUi(tester);
+      // Tỉnh nhanh nhận diện được thì chốt tỉnh thôi: phường thì không đoán.
+      expect(_fieldText(tester, _provinceField()), 'Đà Nẵng');
+      expect(_fieldText(tester, _wardField()), isEmpty);
+      expect(_appliedArea(tester), 'Đà Nẵng');
+      expect(_appliedArea(tester), isNot('Phường Hải Châu, Đà Nẵng'));
+      expect(tester.takeException(), isNull);
+    });
 
-        await _submit(tester);
-        expect(socialRepository.creates, hasLength(1));
-        final address = socialRepository.creates.single.venueAddress;
-        expect(address, contains('Hà Nội'));
-        expect('Hà Nội'.allMatches(address).length, 1);
-        expect('Phường Mỹ Đình'.allMatches(address).length, 1);
-        expect(tester.takeException(), isNull);
-      },
-    );
+    testWidgets('a bare ward name in the address fills ward and city', (
+      tester,
+    ) async {
+      // wards row 26983 of the catalogue the API serves: the host writes the
+      // ward as it reads on the street sign ("Bãy Hiến"), the catalogue stores
+      // the official name with its type prefix and its own tones
+      // ("Phường Bảy Hiền"). Both spellings must land on the same ward.
+      await _pumpSocialForm(
+        tester,
+        regionRepository: _FakeRegionRepository(
+          wardRows: [
+            Region.fromJson({
+              'code': '26983',
+              'name': 'Phường Bảy Hiền',
+              'fullName': 'Phường Bảy Hiền',
+              'provinceCode': '79',
+            }),
+          ],
+        ),
+      );
+      await _ensureAreaVisible(tester);
+      await tester.enterText(
+        _addressField(),
+        '83 Đường A4, Bãy Hiến, Hồ Chí Minh',
+      );
+      await _pumpUi(tester);
+      // Không gõ tiền tố "Phường" mà vẫn ra đúng phường, vì parser bỏ tiền tố
+      // loại ở cả hai đầu so khớp.
+      expect(_fieldText(tester, _provinceField()), 'TP. Hồ Chí Minh');
+      expect(_fieldText(tester, _wardField()), 'Phường Bảy Hiền');
+      expect(_appliedArea(tester), 'Phường Bảy Hiền, TP. Hồ Chí Minh');
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a host-made area is not re-decided by the typed address', (
+      tester,
+    ) async {
+      await _pumpSocialForm(tester, regionRepository: _FakeRegionRepository());
+      await tester.enterText(_venueNameField(), _manualVenue);
+      await _ensureAreaVisible(tester);
+      await tester.enterText(_addressField(), _myDinhAddress);
+      await _pumpUi(tester);
+      expect(_appliedArea(tester), _myDinhSummary);
+      // Host tự chọn phường khác: lựa chọn của host là chốt.
+      await _searchWard(tester, 'Cầu');
+      await _selectOption(tester, 'Phường Cầu Giấy');
+      expect(_fieldText(tester, _wardField()), 'Phường Cầu Giấy');
+      expect(_appliedArea(tester), _cauGiaySummary);
+
+      await tester.enterText(_addressField(), '$_myDinhAddress, gần ngã ba');
+      await _pumpUi(tester);
+      // Gõ tiếp không phải chỗ cho tự điền tự quyết lại chốt của host: phường
+      // host bấm chọn vẫn còn nguyên, còn địa chỉ thì thêm phần host vừa gõ.
+      expect(_appliedArea(tester), _cauGiaySummary);
+      expect(_fieldText(tester, _wardField()), 'Phường Cầu Giấy');
+      expect(_addressText(tester), contains('gần ngã ba'));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a city picked by hand is not overwritten by the address', (
+      tester,
+    ) async {
+      final socialRepository = _RecordingSocialSessionRepository();
+      await _pumpSocialForm(
+        tester,
+        regionRepository: _FakeRegionRepository(),
+        socialRepository: socialRepository,
+      );
+      // Chọn tay chỉ tỉnh, chưa chọn phường: vẫn là lựa chọn của host.
+      await _chooseProvince(tester, 'Hà Nội');
+      expect(_fieldText(tester, _provinceField()), 'Hà Nội');
+      expect(_fieldText(tester, _wardField()), isEmpty);
+
+      await tester.enterText(_venueNameField(), _manualVenue);
+      await _ensureAreaVisible(tester);
+      await tester.enterText(_addressField(), _benThanhAddress);
+      await _pumpUi(tester);
+      // Gõ tiếp không phải lý do để tự điền tự quyết lại tỉnh của host.
+      expect(_fieldText(tester, _provinceField()), 'Hà Nội');
+      expect(_fieldText(tester, _wardField()), isEmpty);
+      expect(_appliedArea(tester), 'Hà Nội');
+      expect(_appliedArea(tester), isNot(_benThanhSummary));
+
+      await _submit(tester);
+      final address = socialRepository.creates.single.venueAddress;
+      // Lựa chọn của host được ghép vào địa chỉ đúng một lần, tỉnh của địa
+      // chỉ nằm trong địa chỉ gõ tay chứ không bị chèn thêm.
+      expect('Hà Nội'.allMatches(address).length, 1);
+      expect('Phường Bến Thành'.allMatches(address).length, 1);
+      expect(tester.takeException(), isNull);
+    });
 
     testWidgets(
       'the attached club province grounds a ward when the address names no city',
@@ -257,8 +562,12 @@ void main() {
         await tester.enterText(_addressField(), _benThanhAddress);
         await _pumpUi(tester);
 
-        await _openAreaPicker(tester);
-        expect(find.text(_benThanhSummary), findsOneWidget);
+        // Tỉnh của CLB chỉ làm phạm vi tìm phường, rồi chốt thẳng vào hai
+        // trường — không cần mở danh sách và bấm "Áp dụng".
+        expect(_fieldText(tester, _provinceField()), 'TP. Hồ Chí Minh');
+        expect(_fieldText(tester, _wardField()), 'Phường Bến Thành');
+        expect(_appliedArea(tester), _benThanhSummary);
+        expect(find.byType(BottomSheet), findsNothing);
         expect(tester.takeException(), isNull);
       },
     );
@@ -278,11 +587,14 @@ void main() {
         '202 Hoàng Văn Thụ, Phường Mỹ Đình',
       );
       await _pumpUi(tester);
-      await _openAreaPicker(tester);
 
-      expect(find.text(_myDinhSummary), findsNothing);
-      expect(textCI('Gợi ý từ địa chỉ'), findsNothing);
-      expect(tester.widget<ElevatedButton>(_applyButton()).onPressed, isNull);
+      // Tỉnh của CLB là ngữ cảnh dự phòng nên vẫn chốt, nhưng phường của tỉnh
+      // khác thì không được đoán ra, và cặp tỉnh + phường sai lúc nào cũng
+      // không được chốt.
+      expect(_fieldText(tester, _provinceField()), 'TP. Hồ Chí Minh');
+      expect(_fieldText(tester, _wardField()), isEmpty);
+      expect(_appliedArea(tester), isNot(_myDinhSummary));
+      expect(_appliedArea(tester), isNot('Phường Mỹ Đình, TP. Hồ Chí Minh'));
       expect(_addressText(tester), '202 Hoàng Văn Thụ, Phường Mỹ Đình');
       expect(tester.takeException(), isNull);
     });
@@ -293,17 +605,18 @@ void main() {
       await _pumpSocialForm(
         tester,
         regionRepository: _FakeRegionRepository(),
-        club: _club(provinceCode: '79'),
+        club: _club(provinceCode: '01'),
       );
       await _ensureAreaVisible(tester);
       await tester.enterText(
         _addressField(),
-        '202 Hoàng Văn Thụ, Phường Mỹ Đình, Hà Nội',
+        '15 Lê Lợi, Phường Hải Châu, Đà Nẵng',
       );
       await _pumpUi(tester);
-      await _openAreaPicker(tester);
-
-      expect(find.text(_myDinhSummary), findsOneWidget);
+      // Khu vực tự điền lấy tỉnh của địa chỉ, không phải tỉnh của CLB.
+      expect(_appliedArea(tester), 'Phường Hải Châu, Đà Nẵng');
+      expect(_appliedArea(tester), isNot('Hà Nội'));
+      expect(_appliedArea(tester), isNot(_myDinhSummary));
       expect(tester.takeException(), isNull);
     });
 
@@ -318,45 +631,41 @@ void main() {
       await _ensureAreaVisible(tester);
       await tester.enterText(
         _addressField(),
-        '120 Nguyễn Thị Minh Khai, Phường Bến Thành, TP.HCM',
+        '120 Nguyễn Thị Minh Khai, Phường Bến Thành, TP. HCM',
       );
       await _pumpUi(tester);
-      await _openAreaPicker(tester);
-
-      expect(find.text(_benThanhSummary), findsOneWidget);
+      // Khu vực tự điền lấy tỉnh của địa chỉ, không phải tỉnh của CLB.
+      expect(_appliedArea(tester), _benThanhSummary);
+      expect(_appliedArea(tester), isNot(_myDinhSummary));
       expect(tester.takeException(), isNull);
     });
-    testWidgets(
-      'applying a locality does not duplicate a recognized city alias',
-      (tester) async {
-        final socialRepository = _RecordingSocialSessionRepository();
-        const typedAddress =
-            '120 Nguyễn Thị Minh Khai, Phường Bến Thành, TP.HCM';
-        await _pumpSocialForm(
-          tester,
-          regionRepository: _FakeRegionRepository(),
-          club: _club(provinceCode: '01'),
-          socialRepository: socialRepository,
-        );
-        await tester.enterText(_venueNameField(), _manualVenue);
-        await _ensureAreaVisible(tester);
-        await tester.enterText(_addressField(), typedAddress);
-        await _pumpUi(tester);
-        await _openAreaPicker(tester);
 
-        expect(find.text(_benThanhSummary), findsOneWidget);
-        await _tapVisible(tester, find.text('Áp dụng'));
-        await _submit(tester);
+    testWidgets('a self-filled locality does not duplicate a recognized city alias', (
+      tester,
+    ) async {
+      final socialRepository = _RecordingSocialSessionRepository();
+      const typedAddress = '120 Nguyễn Thị Minh Khai, Phường Bến Thành, TP. HCM';
+      await _pumpSocialForm(
+        tester,
+        regionRepository: _FakeRegionRepository(),
+        club: _club(provinceCode: '01'),
+        socialRepository: socialRepository,
+      );
+      await tester.enterText(_venueNameField(), _manualVenue);
+      await _ensureAreaVisible(tester);
+      await tester.enterText(_addressField(), typedAddress);
+      await _pumpUi(tester);
+      // Khu vực tự điền, host không bấm gì.
+      expect(_appliedArea(tester), _benThanhSummary);
+      await _submit(tester);
+      final savedAddress = socialRepository.creates.single.venueAddress;
+      expect(savedAddress, contains('TP. HCM'));
+      expect('TP. HCM'.allMatches(savedAddress).length, 1);
+      expect('Phường Bến Thành'.allMatches(savedAddress).length, 1);
+      expect(tester.takeException(), isNull);
+    });
 
-        final savedAddress = socialRepository.creates.single.venueAddress;
-        expect(savedAddress, contains('TP.HCM'));
-        expect(savedAddress, isNot(contains('TP. Hồ Chí Minh')));
-        expect('Phường Bến Thành'.allMatches(savedAddress), hasLength(1));
-        expect(tester.takeException(), isNull);
-      },
-    );
-
-    testWidgets('ward-only text without any context is not proposed', (
+    testWidgets('ward-only text without any context fills nothing', (
       tester,
     ) async {
       await _pumpSocialForm(
@@ -371,10 +680,10 @@ void main() {
         '202 Hoàng Văn Thụ, Phường Mỹ Đình',
       );
       await _pumpUi(tester);
-      await _openAreaPicker(tester);
 
-      expect(textCI('Gợi ý từ địa chỉ'), findsNothing);
-      expect(tester.widget<ElevatedButton>(_applyButton()).onPressed, isNull);
+      expect(_fieldText(tester, _provinceField()), isEmpty);
+      expect(_fieldText(tester, _wardField()), isEmpty);
+      expect(_appliedArea(tester), isNot(_myDinhSummary));
       expect(_addressText(tester), '202 Hoàng Văn Thụ, Phường Mỹ Đình');
       expect(tester.takeException(), isNull);
     });
@@ -391,28 +700,31 @@ void main() {
       await _ensureAreaVisible(tester);
       await tester.enterText(_addressField(), _myDinhAddress);
       await _pumpUi(tester);
-      await _openAreaPicker(tester);
-      expect(find.text(_myDinhSummary), findsOneWidget);
-
-      // Manual search hides the suggestion; applying the chosen ward replaces it.
-      await _searchWard(tester, 'Cầu');
-      await _selectOption(tester, 'Phường Cầu Giấy');
-      expect(find.text(_myDinhSummary), findsNothing);
-      await _tapVisible(tester, find.text('Áp dụng'));
-      expect(_appliedArea(_cauGiaySummary), findsOneWidget);
+      expect(_appliedArea(tester), _myDinhSummary);
 
       await _searchWard(tester, 'Cầu');
       await _selectOption(tester, 'Phường Cầu Giấy');
-      await _tapVisible(tester, find.text('Áp dụng'));
-      expect(_appliedArea(_cauGiaySummary), findsOneWidget);
+      expect(_appliedArea(tester), _cauGiaySummary);
+
+      // Host mở lại danh sách và chọn phường khác: lựa chọn mới thay cũ.
+      await _searchWard(tester, 'Mỹ Đình');
+      await _selectOption(tester, 'Phường Mỹ Đình');
+      expect(_fieldText(tester, _provinceField()), 'Hà Nội');
+      expect(_fieldText(tester, _wardField()), 'Phường Mỹ Đình');
+      expect(_appliedArea(tester), _myDinhSummary);
+      expect(_appliedArea(tester), isNot(_cauGiaySummary));
 
       await _submit(tester);
       final address = socialRepository.creates.single.venueAddress;
-      expect(address, endsWith('Phường Cầu Giấy'));
+      // Địa chỉ đã có sẵn tên phường và tỉnh, ghép lúc lưu không nhân bản,
+      // và phường host đã bỏ không quay lại địa chỉ.
+      expect('Phường Mỹ Đình'.allMatches(address).length, 1);
+      expect('Hà Nội'.allMatches(address).length, 1);
+      expect(address, isNot(contains('Cầu Giấy')));
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Cancel keeps the applied area and the typed address', (
+    testWidgets('closing the list keeps the applied area and the typed address', (
       tester,
     ) async {
       await _pumpSocialForm(tester, regionRepository: _FakeRegionRepository());
@@ -420,24 +732,29 @@ void main() {
       expect(_addressText(tester), _manualDetail);
 
       await _searchWard(tester, 'Cầu');
-      await _selectOption(tester, 'Phường Cầu Giấy');
-      await _tapVisible(tester, find.text('Hủy'));
+      await _tapVisible(tester, find.byTooltip('Đóng'));
 
-      expect(find.text('Hủy'), findsNothing);
-      expect(_appliedArea(_myDinhSummary), findsOneWidget);
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(_fieldText(tester, _wardField()), 'Phường Mỹ Đình');
+      expect(_appliedArea(tester), _myDinhSummary);
       expect(_addressText(tester), _manualDetail);
       expect(tester.takeException(), isNull);
     });
-    testWidgets('closing the sheet discards a draft locality', (tester) async {
+
+    testWidgets('tapping outside the list keeps the applied area', (
+      tester,
+    ) async {
       await _pumpSocialForm(tester, regionRepository: _FakeRegionRepository());
       await _applyMyDinh(tester);
 
       await _searchWard(tester, 'Cầu');
-      await _selectOption(tester, 'Phường Cầu Giấy');
-      await _tapVisible(tester, find.byTooltip('Đóng'));
+      // Bấm ra ngoài sheet: không chọn gì thì giữ nguyên lựa chọn đang có.
+      await tester.tapAt(const Offset(20, 20));
+      await _pumpUi(tester);
 
       expect(find.byType(BottomSheet), findsNothing);
-      expect(_appliedArea(_myDinhSummary), findsOneWidget);
+      expect(_appliedArea(tester), _myDinhSummary);
+      expect(_addressText(tester), _manualDetail);
       expect(tester.takeException(), isNull);
     });
 
@@ -449,6 +766,11 @@ void main() {
         regionRepository: _FakeRegionRepository(
           wardRows: [
             Region.fromJson({
+              'code': '01-001',
+              'name': 'Phường Mỹ Đình',
+              'provinceCode': '01',
+            }),
+            Region.fromJson({
               'code': 'XX-001',
               'name': 'Phường Mồ Côi',
               'provinceCode': 'XX',
@@ -457,7 +779,7 @@ void main() {
         ),
       );
       await _ensureAreaVisible(tester);
-      await _searchWard(tester, 'Mồ Côi');
+      await _searchWard(tester, 'Mồ Côi', province: 'Hà Nội');
 
       expect(find.text('Phường Mồ Côi'), findsNothing);
       expect(textCI('Không tìm thấy kết quả.'), findsOneWidget);
@@ -478,9 +800,10 @@ void main() {
           findsOneWidget,
         );
         await _tapVisible(tester, find.text('Thử lại'));
-        expect(_wardSearch(), findsOneWidget);
+        expect(_provinceSearch(), findsOneWidget);
         expect(repository.wardRequests, <String>['']);
-        await _tapVisible(tester, find.text('Hủy'));
+        await _tapVisible(tester, find.byTooltip('Đóng'));
+        expect(find.byType(BottomSheet), findsNothing);
         expect(tester.takeException(), isNull);
 
         await tester.enterText(_venueNameField(), _manualVenue);
@@ -506,7 +829,7 @@ void main() {
       await _tapVisible(tester, find.text('Thử lại'));
       expect(repository.provinceCalls, callsBeforeRetry + 1);
       expect(repository.wardRequests, <String>['']);
-      expect(find.text('Hà Nội'), findsOneWidget);
+      expect(_listOption('Hà Nội'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -523,19 +846,19 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text('Hà Nội'), findsNothing);
+      expect(_listOption('Hà Nội'), findsNothing);
       final callsBeforeRetry = repository.provinceCalls;
       await _tapVisible(tester, find.text('Thử lại'));
 
       expect(repository.provinceCalls, callsBeforeRetry + 1);
-      expect(repository.wardRequests, <String>['']);
+      // Lần nạp đầu thấy tỉnh rỗng, lần nạp lại thì tải được cả tỉnh lẫn phường.
+      expect(repository.wardRequests, <String>['', '']);
       expect(
-        textCI(
-          'Khu vực hiện không khả dụng. Bạn vẫn có thể nhập địa chỉ thủ công.',
-        ),
+        textCI('Khu vực hiện không khả dụng. Bạn vẫn có thể nhập địa chỉ thủ công.'),
         findsNothing,
       );
-      expect(textCI('Phường/Xã'), findsOneWidget);
+      expect(_provinceSearch(), findsOneWidget);
+      expect(_listOption('Hà Nội'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -545,28 +868,31 @@ void main() {
       final repository = _FakeRegionRepository(wardEmptyResponses: 1);
       await _pumpSocialForm(tester, regionRepository: repository);
 
-      await _openAreaPicker(tester);
+      // Tỉnh vẫn chọn được khi danh mục phường rỗng.
+      await _ensureAreaVisible(tester);
+      await _chooseProvince(tester, 'Hà Nội');
+      expect(_fieldText(tester, _provinceField()), 'Hà Nội');
+
+      await _openWardList(tester);
       expect(
-        textCI(
-          'Khu vực hiện không khả dụng. Bạn vẫn có thể nhập địa chỉ thủ công.',
-        ),
+        textCI('Khu vực hiện không khả dụng. Bạn vẫn có thể nhập địa chỉ thủ công.'),
         findsOneWidget,
       );
       expect(repository.wardRequests, <String>['']);
       await _tapVisible(tester, find.text('Thử lại'));
       await _pumpUi(tester);
       expect(
-        textCI(
-          'Khu vực hiện không khả dụng. Bạn vẫn có thể nhập địa chỉ thủ công.',
-        ),
+        textCI('Khu vực hiện không khả dụng. Bạn vẫn có thể nhập địa chỉ thủ công.'),
         findsNothing,
       );
-      expect(find.text('Hà Nội'), findsOneWidget);
+      // Nạp lại xong thì danh sách phường của tỉnh đã chọn có dữ liệu trở lại.
+      expect(_listOption('Phường Mỹ Đình'), findsOneWidget);
+      expect(_listOption('Phường Cầu Giấy'), findsOneWidget);
       expect(repository.wardRequests, <String>['', '']);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('a failed club lookup still proposes from the typed city', (
+    testWidgets('a failed club lookup still fills from the typed city', (
       tester,
     ) async {
       await _pumpSocialForm(
@@ -581,13 +907,13 @@ void main() {
         '120 Trần Phú, Phường Hải Châu, Đà Nẵng',
       );
       await _pumpUi(tester);
-      await _openAreaPicker(tester);
 
-      expect(find.text('Phường Hải Châu, Đà Nẵng'), findsOneWidget);
+      // Khu vực tự điền từ địa chỉ, không cần tỉnh của CLB.
+      expect(_appliedArea(tester), 'Phường Hải Châu, Đà Nẵng');
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('the locality popup stays usable at 360 px', (tester) async {
+    testWidgets('the locality fields stay usable at 360 px', (tester) async {
       await _pumpSocialForm(
         tester,
         regionRepository: _FakeRegionRepository(),
@@ -600,11 +926,15 @@ void main() {
         '202 Hoàng Văn Thụ, Phường Mỹ Đình',
       );
       await _pumpUi(tester);
-      await _openAreaPicker(tester);
 
-      expect(find.text(_myDinhSummary), findsOneWidget);
-      expect(find.byType(BottomSheet), findsOneWidget);
-      expect(find.text('Áp dụng'), findsAtLeastNWidgets(1));
+      // Hai trường nằm cạnh nhau và tự điền không làm tràn ở màn hẹp nhất.
+      expect(
+        tester.getTopLeft(_provinceField()).dy,
+        tester.getTopLeft(_wardField()).dy,
+      );
+      expect(_fieldText(tester, _provinceField()), 'Hà Nội');
+      expect(_fieldText(tester, _wardField()), 'Phường Mỹ Đình');
+      expect(find.byType(BottomSheet), findsNothing);
       expect(tester.takeException(), isNull);
     });
 
@@ -674,6 +1004,11 @@ void main() {
         tester.semantics.tap(option);
         await _pumpUi(tester);
 
+        // Chọn xong là áp dụng luôn vào trường tỉnh.
+        expect(find.byType(BottomSheet), findsNothing);
+        expect(_fieldText(tester, _provinceField()), 'Hà Nội');
+
+        await _openWardList(tester);
         expect(find.text('Phường Mỹ Đình'), findsOneWidget);
         expect(find.text('Phường Cầu Giấy'), findsOneWidget);
         expect(find.text('Phường Bến Thành'), findsNothing);
@@ -681,6 +1016,7 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     });
+
     testWidgets('a ward option is activatable by a screen reader', (
       tester,
     ) async {
@@ -703,15 +1039,13 @@ void main() {
         );
         tester.semantics.tap(option);
         await _pumpUi(tester);
-        expect(
-          tester.widget<ElevatedButton>(_applyButton()).onPressed,
-          isNotNull,
-        );
 
-        await _tapVisible(tester, _applyButton());
-        // The selected locality appears in both its picker trigger and the
-        // venue-location summary; both are part of the existing form layout.
-        expect(find.text(_myDinhSummary), findsAtLeastNWidgets(1));
+        // The applied locality is announced from the two inline fields, and
+        // the venue-location card no longer repeats it as a joined summary.
+        expect(find.byType(BottomSheet), findsNothing);
+        expect(_fieldText(tester, _provinceField()), 'Hà Nội');
+        expect(_fieldText(tester, _wardField()), 'Phường Mỹ Đình');
+        expect(find.text(_myDinhSummary), findsNothing);
         expect(tester.takeException(), isNull);
       });
     });
@@ -748,6 +1082,16 @@ const _cauGiaySummary = 'Phường Cầu Giấy, Hà Nội';
 const _benThanhAddress = '120 Nguyễn Thị Minh Khai, Phường Bến Thành';
 const _benThanhSummary = 'Phường Bến Thành, TP. Hồ Chí Minh';
 
+/// Tọa độ tâm phường mà [GET /regions/wards/centroid] trả về cho từng mã
+/// phường; mỗi phường một cặp riêng để thấy pin được dời sang phường mới
+/// chứ không phải pin cũ còn nằm yên.
+const _myDinhCentroid = '21.00000, 105.00000';
+const _haiChauCentroid = '16.00000, 108.00000';
+
+/// Điểm bản đồ rơi về khi host mở màn ghim mà chưa có ghim nào và app không
+/// lấy được vị trí user: tâm TP.HCM trong [CreateSocialScreen].
+const _handPicked = '10.77690, 106.70090';
+
 /// Deterministic frame advance that also flushes the fake repository futures.
 /// `pumpAndSettle` is avoided because a progress indicator would keep the
 /// scheduler permanently busy.
@@ -766,6 +1110,7 @@ Future<void> _pumpSocialForm(
   String clubId = 'club-1',
   String clubName = 'CLB Cầu Lông Sài Gòn',
   Size size = const Size(390, 844),
+  Dio? dio,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -802,6 +1147,9 @@ Future<void> _pumpSocialForm(
         socialSessionRepositoryProvider.overrideWith(
           (ref) => socialRepository ?? _RecordingSocialSessionRepository(),
         ),
+        // Only the geo endpoints matter here; a null dio leaves them on the
+        // real client, which fails in tests and models "no coordinates yet".
+        if (dio != null) dioProvider.overrideWith((ref) => dio),
       ],
       child: MaterialApp(
         theme: AppTheme.darkTheme,
@@ -847,39 +1195,51 @@ Future<void> _submit(WidgetTester tester) async {
   await _pumpSubmit(tester);
 }
 
-/// Brings the optional locality action on-screen without opening its sheet.
+/// Brings the two always-visible locality fields on-screen.
 Future<void> _ensureAreaVisible(WidgetTester tester) async {
-  await tester.ensureVisible(textCI('Khu vực (không bắt buộc)'));
+  await tester.ensureVisible(_provinceField());
   await _pumpUi(tester);
 }
 
+/// Opens the province list by tapping its field — there is no popup opener to
+/// go through first, the field itself is the control.
 Future<void> _openAreaPicker(WidgetTester tester) async {
-  await _ensureAreaVisible(tester);
   if (find.byType(BottomSheet).evaluate().isNotEmpty) return;
-  await _tapVisible(
-    tester,
-    find.descendant(
-      of: find.byType(SocialRegionPicker),
-      matching: find.byType(OutlinedButton),
-    ),
-  );
+  await _tapVisible(tester, _provinceField());
 }
 
-/// The applied-area summary the form keeps under the address field. The
-/// location card repeats the same words beside the pin state, so the lookup is
-/// scoped to the area control that owns them.
-Finder _appliedArea(String summary) => find.descendant(
-  of: find.byType(SocialRegionPicker),
-  matching: find.text(summary),
-);
+/// Opens the ward list of the chosen province by tapping its field.
+Future<void> _openWardList(WidgetTester tester) async {
+  if (find.byType(BottomSheet).evaluate().isNotEmpty) return;
+  await _tapVisible(tester, _wardField());
+}
+
+/// Chooses a city by hand: opens the province list and taps the name.
+Future<void> _chooseProvince(WidgetTester tester, String name) async {
+  await _openAreaPicker(tester);
+  await _selectOption(tester, name);
+}
+
+/// The area the form is showing right now, spelled exactly the way
+/// [SocialRegionSelection.summary] spells it: "Phường Mỹ Đình, Hà Nội", or
+/// just "Hà Nẵng" when only a city is chosen. The two always-visible locality
+/// fields are the one place the host sees the applied area; the venue
+/// location card no longer repeats it, so this is read off the fields.
+String _appliedArea(WidgetTester tester) {
+  final province = _fieldText(tester, _provinceField());
+  final ward = _fieldText(tester, _wardField());
+  if (province.isEmpty) return ward;
+  if (ward.isEmpty) return province;
+  return '$ward, $province';
+}
 
 Future<void> _selectOption(WidgetTester tester, String label) async {
-  var option = find.text(label);
+  var option = _listOption(label);
   for (var attempt = 0; option.evaluate().isEmpty && attempt < 3; attempt++) {
     // Options can sit below the sheet's bounded result list.
     await tester.drag(find.byType(Scrollable).last, const Offset(0, -220));
     await _pumpUi(tester);
-    option = find.text(label);
+    option = _listOption(label);
   }
   expect(
     option,
@@ -889,6 +1249,13 @@ Future<void> _selectOption(WidgetTester tester, String label) async {
   await tester.tap(option.last);
   await _pumpUi(tester);
 }
+
+/// Options live in the sheet; the inline fields repeat the same names once a
+/// value is applied, so the lookup is scoped to the list under test.
+Finder _listOption(String label) => find.descendant(
+  of: find.byType(BottomSheet),
+  matching: find.text(label),
+);
 
 /// The form is a single scroll view: every control is brought on-screen
 /// before the tap, because a tap on an off-screen offset silently misses.
@@ -900,8 +1267,17 @@ Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
   await _pumpUi(tester);
 }
 
-Future<void> _searchWard(WidgetTester tester, String query) async {
-  await _openAreaPicker(tester);
+/// Opens the ward list for [province] and types [query] into it. Wards are
+/// listed inside one city, so the city comes first.
+Future<void> _searchWard(
+  WidgetTester tester,
+  String query, {
+  String province = 'Hà Nội',
+}) async {
+  if (_fieldText(tester, _provinceField()) != province) {
+    await _chooseProvince(tester, province);
+  }
+  await _openWardList(tester);
   final field = _wardSearch();
   await tester.ensureVisible(field);
   await tester.tap(field);
@@ -910,22 +1286,51 @@ Future<void> _searchWard(WidgetTester tester, String query) async {
   await _pumpUi(tester);
 }
 
-Finder _applyButton() => find.widgetWithText(ElevatedButton, 'Áp dụng');
+/// Types into the city list's search field.
+Future<void> _searchProvince(WidgetTester tester, String query) async {
+  await _openAreaPicker(tester);
+  final field = _provinceSearch();
+  await tester.ensureVisible(field);
+  await tester.tap(field);
+  await _pumpUi(tester);
+  await tester.enterText(field, query);
+  await _pumpUi(tester);
+}
 
 /// Applies "Phường Mỹ Đình / Hà Nội" by hand, so a later case can check what
-/// Cancel leaves untouched.
+/// a dismissed list leaves untouched.
 Future<void> _applyMyDinh(WidgetTester tester) async {
   await tester.enterText(_venueNameField(), _manualVenue);
   await _ensureAreaVisible(tester);
   await tester.enterText(_addressField(), _manualDetail);
   await _searchWard(tester, 'Mỹ Đình');
   await _selectOption(tester, 'Phường Mỹ Đình');
-  await _tapVisible(tester, find.text('Áp dụng'));
-  expect(_appliedArea(_myDinhSummary), findsOneWidget);
+  expect(_appliedArea(tester), _myDinhSummary);
 }
 
-/// Ward results are searched nationally; city is resolved from response data.
+/// Ward results are listed per city; the search field is the one the ward
+/// list puts on screen.
 Finder _wardSearch() => _fieldWithCopy('phường/xã');
+
+Finder _provinceSearch() => _fieldWithCopy('tỉnh/thành phố');
+
+Finder _provinceField() => _fieldWithCopy('tỉnh / thành');
+
+Finder _wardField() => _fieldWithCopy('phường / xã');
+
+/// The read-only control behind an inline field, checked for its enabled
+/// state: the ward field is locked until a city is chosen.
+TextField _localityField(WidgetTester tester, Finder field) {
+  final control = find.ancestor(
+    of: field,
+    matching: find.byType(TextField),
+  );
+  expect(control, findsOneWidget, reason: 'The locality field is missing');
+  return tester.widget<TextField>(control);
+}
+
+String _fieldText(WidgetTester tester, Finder field) =>
+    tester.widget<EditableText>(field).controller.text;
 
 /// The persistent create control, matched on the create verb so the lookup
 /// survives the club/standalone wording split and the area controls.
@@ -963,6 +1368,24 @@ Finder _fieldWithCopy(String copy) {
 Finder _venueNameField() => _fieldWithCopy('tên sân');
 
 Finder _addressField() => _fieldWithCopy('địa');
+
+/// Tọa độ đang ghim, đọc từ dòng phụ của thẻ vị trí. Thẻ chỉ hiện dòng này
+/// khi đang có ghim, nên tìm thấy nó cũng là bằng chứng thẻ không còn ở
+/// trạng thái "chưa ghim".
+Finder _cardPin(WidgetTester tester, String coords) => find.descendant(
+  of: find.byKey(const ValueKey('venue-location-card')),
+  matching: find.text(coords),
+);
+
+/// Host tự mở bản đồ và bấm xác nhận: đây là nguồn ghim tay, khác hẳn tâm
+/// phường mà form tự suy ra.
+Future<void> _dropPinByHand(WidgetTester tester) async {
+  await _tapVisible(tester, find.byKey(const ValueKey('venue-location-card')));
+  await _tapVisible(
+    tester,
+    find.widgetWithText(ElevatedButton, 'Xác nhận vị trí'),
+  );
+}
 
 Future<void> _withSemanticsEnabled(
   WidgetTester tester,
@@ -1019,6 +1442,60 @@ class _FakeCommunityRepository extends Fake implements ICommunityRepository {
     }
     return club;
   }
+}
+
+/// Answers the two geo endpoints the venue card depends on: the ward centroid
+/// that backs the auto pin, and the reverse lookup that follows a hand pin.
+/// Everything else 404s, so a test that reaches further than it meant to fails
+/// loudly instead of silently getting an empty answer.
+Dio _geoDio() {
+  const centroids = <String, (double, double)>{
+    '01-001': (21, 105),
+    '48-001': (16, 108),
+  };
+  return Dio(BaseOptions(baseUrl: 'https://api.example.test'))
+    ..httpClientAdapter = _GeoAdapter(centroids);
+}
+
+class _GeoAdapter implements HttpClientAdapter {
+  _GeoAdapter(this.centroids);
+
+  final Map<String, (double, double)> centroids;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    final path = options.path;
+    if (path.startsWith('/regions/wards/centroid')) {
+      final point = centroids[options.queryParameters['wardCode']];
+      if (point != null) {
+        return _json(200, {'centerLat': point.$1, 'centerLng': point.$2});
+      }
+    }
+    if (path.startsWith('/regions/resolve')) {
+      return _json(200, {
+        'wardCode': '01-001',
+        'wardName': 'Phường Mỹ Đình',
+        'provinceCode': '01',
+        'provinceName': 'Hà Nội',
+      });
+    }
+    return _json(404, const {});
+  }
+
+  ResponseBody _json(int status, Map<String, dynamic> body) => ResponseBody.fromString(
+    jsonEncode({'data': body}),
+    status,
+    headers: {
+      Headers.contentTypeHeader: [Headers.jsonContentType],
+    },
+  );
+
+  @override
+  void close({bool force = false}) {}
 }
 
 /// Deterministic province/ward source with injectable lookup failures.

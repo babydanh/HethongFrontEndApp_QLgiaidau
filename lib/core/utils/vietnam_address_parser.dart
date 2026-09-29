@@ -99,6 +99,19 @@ class VietnamAddressParser {
     return null;
   }
 
+  /// Tiền tố loại đơn vị hành chính cấp xã mà API gắn vào tên ("Phường Bến
+  /// Thành", "Xã Cẩm Phế", "Thị Trấn Vạn Hồng"), đã bỏ dấu. Đây là các từ
+  /// loại, không tính viết tắt "p.", "x.", "tt." mà host gõ tay hay dùng.
+  static final RegExp _unitTypePrefix = RegExp(
+    r'^(?:phuong|xa|thi tran|dac khu)\s+',
+  );
+
+  /// Tên phường/xã đã bỏ dấu và bỏ tiền tố loại: "Phường Bến Thành" thành
+  /// "ben thanh". Một chỗ duy nhất biết tiền tố loại là gì, để cách so khớp
+  /// tên phường với cách host gõ tay không lệch nhau.
+  static String localityName(String wardName) =>
+      removeVietnameseTones(wardName).replaceFirst(_unitTypePrefix, '').trim();
+
   /// Nhận diện Phường/Xã từ chuỗi địa chỉ
   static T? detectWard<T>({
     required String rawAddress,
@@ -111,15 +124,17 @@ class VietnamAddressParser {
 
     final normalizedAddr = ' ${removeVietnameseTones(rawAddress)} ';
 
+    // Ưu tiên tên dài: tên cụ thể thắng tên chung.
     final sorted = [...wards]..sort((a, b) {
-        final lenA = (getFullName?.call(a) ?? getName(a)).length;
-        final lenB = (getFullName?.call(b) ?? getName(b)).length;
+        final lenA = localityName(getFullName?.call(a) ?? getName(a)).length;
+        final lenB = localityName(getFullName?.call(b) ?? getName(b)).length;
         return lenB.compareTo(lenA);
       });
 
     // 1. So khớp có tiền tố rõ ràng như "phuong ...", "xa ...", "p. ...", "x. ...", "tt. ..."
     for (final w in sorted) {
-      final normName = removeVietnameseTones(getName(w));
+      // So khớp theo tên phường đã bỏ tiền tố: host gõ "Bãy Hiến" cũng ra.
+      final normName = localityName(getName(w));
       final normFullName = removeVietnameseTones(getFullName?.call(w) ?? '');
 
       if (normName.isEmpty) continue;
@@ -138,7 +153,7 @@ class VietnamAddressParser {
 
     // 2. So khớp trực tiếp tên phường/xã (đối với tên chữ không phải số thuần túy)
     for (final w in sorted) {
-      final normName = removeVietnameseTones(getName(w));
+      final normName = localityName(getName(w));
       if (normName.isEmpty || RegExp(r'^\d+$').hasMatch(normName) || normName.length < 3) continue;
 
       final pattern = RegExp('(^|\\s|\\W)$normName(\\s|\\W|)', caseSensitive: false);

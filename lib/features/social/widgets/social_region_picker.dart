@@ -1,10 +1,8 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Khu vực đã áp dụng cho buổi: phường/xã trước, tỉnh/thành được suy ra.
 ///
@@ -27,41 +25,53 @@ class SocialRegionSelection {
   }
 }
 
-/// Locality selector opens as a bottom sheet with separate province/city and
-/// ward/commune fields, address-derived suggestions, and manual correction.
+/// Danh mục tỉnh + phường nạp một lần cho cả form: tự điền từ địa chỉ và hai
+/// trường khu vực dùng chung, nên host không tải trùng. `null` = mất mạng hoặc
+/// danh mục rỗng — khu vực tuỳ chọn nên chỉ mất tiện ích, địa chỉ vẫn gõ tay.
+typedef SocialRegionCatalogue = ({List<Region> provinces, List<Region> wards});
+
+/// Hai trường "Tỉnh / thành" và "Phường / xã" hiện sẵn trên form, đúng hình
+/// dạng màn "Tạo giải nhanh": host thấy ngay khu vực đang chọn và sửa tay bất
+/// cứ lúc nào, không phải mở popup mới thấy được. Phần tự điền từ địa chỉ gõ
+/// tay và phần tra ngược từ ghim map cùng đổ vào đúng hai trường này, nên
+/// host không bấm "Áp dụng" ở đâu cả.
 ///
-/// It uses only the existing `IRegionRepository` and deterministic
-/// `VietnamAddressParser`; no endpoint, payload field, region ID, or model call
-/// is added. The applied names are composed into the existing `venueAddress`.
-class SocialRegionPicker extends ConsumerStatefulWidget {
-  const SocialRegionPicker({
+/// Bấm trường mới mở danh sách để sửa tay: chọn xong là áp dụng luôn, đóng
+/// sheet mà không chọn gì thì giữ nguyên lựa chọn đang có.
+class SocialRegionInlineFields extends StatefulWidget {
+  const SocialRegionInlineFields({
     super.key,
-    required this.address,
     required this.applied,
-    required this.onApply,
-    this.contextProvinceCode,
+    required this.onSelect,
+    required this.loadCatalogue,
   });
 
-  /// Địa chỉ sân gõ tay, nguồn của đề xuất suy ra.
-  final String address;
-
-  /// Lựa chọn đã áp dụng cho form, hiển thị ở đầu phần khu vực.
+  /// Lựa chọn đang áp dụng — nguồn duy nhất cho cả hai trường.
   final SocialRegionSelection? applied;
 
-  /// Tỉnh của CLB gắn kèm: ngữ cảnh dự phòng khi địa chỉ không nêu thành phố.
-  final String? contextProvinceCode;
+  /// Host chọn tay: chọn ở trường nào chỉ thay đúng nửa đó. Chọn tỉnh thì bỏ
+  /// phường cũ, chọn phường thì giữ tỉnh đang có.
+  final ValueChanged<SocialRegionSelection> onSelect;
 
-  /// Chỉ gọi khi người dùng bấm "Áp dụng"; form ghép tên khu vực vào
-  /// `venueAddress` lúc lưu.
-  final ValueChanged<SocialRegionSelection> onApply;
+  /// Danh mục tỉnh + phường; `refresh` ép nạp lại khi host bấm "Thử lại".
+  final Future<SocialRegionCatalogue?> Function({bool refresh}) loadCatalogue;
 
   @override
-  ConsumerState<SocialRegionPicker> createState() => _SocialRegionPickerState();
+  State<SocialRegionInlineFields> createState() =>
+      _SocialRegionInlineFieldsState();
 }
 
-class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
-  Future<void> _openPicker() async {
-    final selection = await showModalBottomSheet<SocialRegionSelection>(
+class _SocialRegionInlineFieldsState extends State<SocialRegionInlineFields> {
+  /// Mở danh sách tỉnh hoặc phường để host sửa tay. Chọn xong là áp dụng luôn,
+  /// không có bước "Áp dụng" nữa; đóng sheet mà không chọn gì thì giữ nguyên
+  /// lựa chọn đang có.
+  Future<void> _openList(BuildContext context, {required bool isWard}) async {
+    final province = widget.applied?.province;
+    // Phường chỉ có nghĩa trong một tỉnh: chưa chọn tỉnh thì trường phường đã
+    // khoá, không mở danh sách phường của cả nước.
+    if (isWard && province == null) return;
+
+    final picked = await showModalBottomSheet<Region>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -71,51 +81,55 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
       ),
       builder: (_) => FractionallySizedBox(
         heightFactor: 0.86,
-        child: _SocialRegionPickerSheet(
-          address: widget.address,
-          applied: widget.applied,
-          contextProvinceCode: widget.contextProvinceCode,
+        child: _SocialRegionListSheet(
+          isWard: isWard,
+          province: province,
+          loadCatalogue: widget.loadCatalogue,
         ),
       ),
     );
-    if (selection != null && mounted) widget.onApply(selection);
+    if (picked == null || !context.mounted) return;
+    // Chọn tỉnh thì phường cũ không còn đúng nữa nên bỏ, chọn phường thì giữ
+    // tỉnh đang có. Lựa chọn này là của host nên form gọn đường tự điền: nó
+    // chỉ lấp chỗ trống, không chen vào lựa chọn vừa bấm.
+    widget.onSelect(
+      SocialRegionSelection(
+        province: isWard ? province : picked,
+        ward: isWard ? picked : null,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final applied = widget.applied;
-    return Column(
+    final selection = widget.applied;
+    final province = selection?.province;
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.socialRegionLabel,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w800,
-            color: context.colors.textSecondary,
-            letterSpacing: 0.3,
+        Expanded(
+          child: _LocalityField(
+            icon: Icons.map_outlined,
+            label: l10n.socialRegionProvinceFieldLabel,
+            hint: l10n.socialRegionProvinceFieldHint,
+            value: province?.name,
+            onTap: () => _openList(context, isWard: false),
           ),
         ),
-        const SizedBox(height: 6),
-        OutlinedButton.icon(
-          onPressed: _openPicker,
-          icon: const Icon(Icons.place_outlined),
-          label: Text(
-            applied == null || applied.isEmpty
-                ? l10n.socialRegionOpenAction
-                : applied.summary(l10n),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size.fromHeight(48),
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            side: BorderSide(color: context.colors.border),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _LocalityField(
+            icon: Icons.business_outlined,
+            label: l10n.socialRegionWardFieldLabel,
+            // Chưa có tỉnh thì phường chưa có nghĩa: nói rõ điều kiện thay vì
+            // để trống rồi để host tự đoán vì sao không bấm được.
+            hint: province == null
+                ? l10n.socialRegionWardNeedsProvinceHint
+                : l10n.socialRegionWardFieldHint,
+            value: selection?.ward?.name,
+            enabled: province != null,
+            onTap: () => _openList(context, isWard: true),
           ),
         ),
       ],
@@ -123,131 +137,212 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
   }
 }
 
-class _SocialRegionPickerSheet extends ConsumerStatefulWidget {
-  const _SocialRegionPickerSheet({
-    required this.address,
-    required this.applied,
-    required this.contextProvinceCode,
+/// Một trường khu vực: ô nhập chỉ đọc có nhãn hiện thành, tiền tố, mũi tên
+/// xuống — đúng như ô chọn của màn "Tạo giải nhanh", nhưng bấm vào thì mở
+/// danh sách có ô tìm thay vì kéo dài một menu dài hàng trăm dòng.
+class _LocalityField extends StatefulWidget {
+  const _LocalityField({
+    required this.icon,
+    required this.label,
+    required this.hint,
+    required this.value,
+    required this.onTap,
+    this.enabled = true,
   });
 
-  final String address;
-  final SocialRegionSelection? applied;
-  final String? contextProvinceCode;
+  final IconData icon;
+  final String label;
+  final String hint;
+
+  /// Tên khu vực đang áp dụng, `null` khi ô còn trống. Đây là nguồn duy nhất:
+  /// thẻ vị trí và hai ô này cùng đọc một lựa chọn nên host không thấy trạng
+  /// thái khác nhau ở hai nơi.
+  final String? value;
+  final VoidCallback onTap;
+  final bool enabled;
 
   @override
-  ConsumerState<_SocialRegionPickerSheet> createState() =>
-      _SocialRegionPickerSheetState();
+  State<_LocalityField> createState() => _LocalityFieldState();
 }
 
-class _SocialRegionPickerSheetState
-    extends ConsumerState<_SocialRegionPickerSheet> {
-  static const _alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  static const _maxVisibleOptions = 50;
-  static final _wardTypePrefix = RegExp(r'^(?:phuong|xa|thi tran|dac khu)\s+');
-
-  final TextEditingController _provinceSearch = TextEditingController();
-  final TextEditingController _wardSearch = TextEditingController();
-
-  List<Region> _provinces = const [];
-  Map<String, Region> _provincesByCode = const {};
-  List<Region> _wards = const [];
-  Region? _province;
-  Region? _ward;
-  SocialRegionSelection? _suggestion;
-  _RegionField _activeField = _RegionField.province;
-  String? _selectedLetter;
-
-  bool _loadingProvinces = true;
-  bool _provinceFailed = false;
-  bool _loadingWards = false;
-  bool _wardFailed = false;
+class _LocalityFieldState extends State<_LocalityField> {
+  /// Tên đã áp dụng nằm trong chính ô nhập chứ không phải một dòng chữ
+  /// ghép cạnh: ô chỉ đọc thì đó là chỗ hintText tự ẩn đi, và cũng là chỗ
+  /// trình đọc màn hình đọc tên đang chọn. Khu vực đổi giữa chừng thì đồng
+  /// bộ, không dựng lại ô — giữ nguyên controller cho mỗi ô.
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.value ?? '',
+  );
 
   @override
-  void initState() {
-    super.initState();
-    _resetDraft();
-    _loadProvinces();
-  }
-
-  @override
-  void didUpdateWidget(covariant _SocialRegionPickerSheet oldWidget) {
+  void didUpdateWidget(_LocalityField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.address != widget.address ||
-        oldWidget.contextProvinceCode != widget.contextProvinceCode) {
-      _suggestion = widget.applied == null ? _inferFrom(widget.address) : null;
-    }
+    final next = widget.value ?? '';
+    if (next != _controller.text) _controller.text = next;
   }
 
   @override
   void dispose() {
-    _provinceSearch.dispose();
-    _wardSearch.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
-  void _resetDraft() {
-    _province = widget.applied?.province;
-    _ward = widget.applied?.ward;
-    _provinceSearch.text = _province?.name ?? '';
-    _wardSearch.text = _ward?.name ?? '';
-    _activeField = _province == null
-        ? _RegionField.province
-        : _RegionField.ward;
-    _selectedLetter = null;
-    _suggestion = widget.applied == null ? _inferFrom(widget.address) : null;
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return TextField(
+      controller: _controller,
+      readOnly: true,
+      showCursor: false,
+      enableInteractiveSelection: false,
+      enabled: widget.enabled,
+      onTap: widget.enabled ? widget.onTap : null,
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: colors.textPrimary,
+      ),
+      decoration: InputDecoration(
+        // Nhãn luôn nổi lên, nên khi ô còn trống trong ô là gợi ý ("Chọn
+        // tỉnh") thay vì nhãn chui vào ô rồi biến mất — đọc được cả khi
+        // trống lẫn khi đã chọn.
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: 12,
+        ),
+        labelText: widget.label,
+        // Đã có tên khu vực thì không còn gợi ý nào để hiện: nhãn luôn nổi
+        // lên, nên trong ô chỉ còn tên đã chọn — đúng như kỳ vọng của host khi
+        // nhìn thấy hai ô này.
+        hintText: (widget.value ?? '').isEmpty ? widget.hint : null,
+        prefixIcon: Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: Icon(widget.icon, size: 18),
+        ),
+        // Ô nằm trong cột hẹp: chừa chỗ cho tiền tố nhỏ để tên tỉnh dài
+        // ("TP. Hồ Chí Minh") còn chỗ ở màn 360 px.
+        prefixIconConstraints: const BoxConstraints(
+          minWidth: 34,
+          minHeight: 18,
+        ),
+        suffixIcon: Icon(
+          Icons.arrow_drop_down,
+          size: 20,
+          color: colors.textMuted,
+        ),
+        suffixIconConstraints: const BoxConstraints(
+          minWidth: 30,
+          minHeight: 18,
+        ),
+        filled: true,
+        fillColor: colors.bgSurface,
+        border: _border(colors.border),
+        enabledBorder: _border(colors.border),
+        disabledBorder: _border(colors.border),
+        focusedBorder: _border(AppTheme.primary, width: 1.5),
+      ),
+    );
   }
 
-  SocialRegionSelection? _inferFrom(String rawAddress) {
-    final address = rawAddress.trim();
-    if (address.isEmpty || _provinces.isEmpty) return null;
-
-    final detected = VietnamAddressParser.detectProvince<Region>(
-      rawAddress: address,
-      provinces: _provinces,
-      getCode: (region) => region.code,
-      getName: (region) => region.name,
-      getFullName: (region) => region.fullName ?? region.name,
+  OutlineInputBorder _border(Color color, {double width = 1}) {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: color, width: width),
     );
-    final contextCode = widget.contextProvinceCode?.trim() ?? '';
-    final province =
-        detected ??
-        (contextCode.isEmpty ? null : _provincesByCode[contextCode]);
-    if (province == null) return null;
+  }
+}
 
-    final scope = _wards
-        .where((ward) => ward.provinceCode == province.code)
-        .toList(growable: false);
-    if (scope.isEmpty) return null;
+/// Danh sách tỉnh, hoặc phường của một tỉnh, mở ra khi host bấm trường tương
+/// ứng. Chọn là áp dụng luôn — không có nút "Áp dụng", không có bước xác nhận
+/// thừa; đóng sheet thì giữ nguyên lựa chọn đang có.
+class _SocialRegionListSheet extends StatefulWidget {
+  const _SocialRegionListSheet({
+    required this.isWard,
+    required this.province,
+    required this.loadCatalogue,
+  });
 
-    final ward = VietnamAddressParser.detectWard<Region>(
-      rawAddress: address,
-      wards: scope,
-      getCode: (region) => region.code,
-      getName: (region) => region.name,
-      getFullName: (region) => region.fullName ?? region.name,
-    );
-    if (ward == null || !_isUniquelyNamed(ward, scope)) return null;
-    return SocialRegionSelection(province: province, ward: ward);
+  /// Phường/xã hay tỉnh/thành: quyết định nhãn, danh sách và cách tìm.
+  final bool isWard;
+
+  /// Tỉnh đang chọn — phường chỉ được lọc trong tỉnh đó.
+  final Region? province;
+
+  final Future<SocialRegionCatalogue?> Function({bool refresh}) loadCatalogue;
+
+  @override
+  State<_SocialRegionListSheet> createState() => _SocialRegionListSheetState();
+}
+
+class _SocialRegionListSheetState extends State<_SocialRegionListSheet> {
+  static const _alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  static const _maxVisibleOptions = 50;
+
+  /// Rank of a spelling that does not answer a typed term at all.
+  static const int _noMatch = 3;
+
+  final TextEditingController _search = TextEditingController();
+
+  List<Region> _options = const [];
+  String? _selectedLetter;
+
+  bool _loading = true;
+  /// Danh mục không nạp được (mất mạng) — khác với danh mục rỗng.
+  bool _loadFailed = false;
+  bool _empty = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
   }
 
-  bool _isUniquelyNamed(Region ward, List<Region> scope) {
-    final key = VietnamAddressParser.removeVietnameseTones(ward.name);
-    return scope
-            .where(
-              (item) =>
-                  VietnamAddressParser.removeVietnameseTones(item.name) == key,
-            )
-            .length ==
-        1;
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load({bool refresh = false}) async {
+    setState(() {
+      _loading = true;
+      _loadFailed = false;
+      _empty = false;
+    });
+    final catalogue = await widget.loadCatalogue(refresh: refresh);
+    if (!mounted) return;
+    final options = _optionsOf(catalogue);
+    setState(() {
+      _options = options;
+      _loading = false;
+      // Mất mạng và danh mục rỗng là hai nguyên nhân khác nhau nên báo khác
+      // nhau, nhưng cùng để lại một đường thoát cho người dùng: nút thử lại,
+      // và tuyệt đối không chặn việc gõ địa chỉ tay.
+      _loadFailed = catalogue == null;
+      _empty = catalogue != null && options.isEmpty;
+    });
+  }
+
+  /// Danh sách đúng cấp đang mở: tỉnh thì toàn bộ, phường thì chỉ trong tỉnh
+  /// đang chọn, nên phường của tỉnh khác không lẫn vào lựa chọn.
+  List<Region> _optionsOf(SocialRegionCatalogue? catalogue) {
+    if (catalogue == null) return const [];
+    final rows = widget.isWard
+        ? catalogue.wards.where(
+            (ward) => ward.provinceCode == widget.province?.code,
+          )
+        : catalogue.provinces;
+    return _sortRegions(rows.toList(growable: false), isWard: widget.isWard);
   }
 
   List<Region> _sortRegions(List<Region> regions, {required bool isWard}) {
     final sorted = List<Region>.of(regions);
     sorted.sort((left, right) {
       final normalized = _alphabetKey(
-        left,
+        _searchKey(left),
         isWard: isWard,
-      ).compareTo(_alphabetKey(right, isWard: isWard));
+      ).compareTo(_alphabetKey(_searchKey(right), isWard: isWard));
       if (normalized != 0) return normalized;
       final byName = left.name.compareTo(right.name);
       if (byName != 0) return byName;
@@ -259,181 +354,129 @@ class _SocialRegionPickerSheetState
   String _searchKey(Region region) =>
       VietnamAddressParser.removeVietnameseTones(region.name);
 
-  String _alphabetKey(Region region, {required bool isWard}) {
-    final key = _searchKey(region);
-    return isWard ? key.replaceFirst(_wardTypePrefix, '') : key;
+  /// Tone-free key a name is filed and matched under: a ward drops its
+  /// "Phường/Xã" prefix, so "Phường Cầu Giấy" reads as "cau giay". The
+  /// parser owns what a type prefix is, so the list and the address
+  /// inference can never drift apart.
+  String _alphabetKey(String searchKey, {required bool isWard}) =>
+      isWard ? VietnamAddressParser.localityName(searchKey) : searchKey;
+
+  /// How well one spelling answers a typed [term]: 0 the spelling is the
+  /// term, 1 it opens with the term, 2 it carries the term inside,
+  /// [_noMatch] when the term is absent.
+  static int _nameRank(String key, String term) {
+    if (key == term) return 0;
+    if (key.startsWith(term)) return 1;
+    if (key.contains(term)) return 2;
+    return _noMatch;
   }
 
-  Future<void> _loadProvinces() async {
-    setState(() {
-      _loadingProvinces = true;
-      _provinceFailed = false;
-      _loadingWards = false;
-      _wardFailed = false;
-      _wards = const [];
-    });
-    try {
-      final provinces = await ref.read(regionRepositoryProvider).getProvinces();
-      if (!mounted) return;
-      final sorted = _sortRegions(provinces, isWard: false);
-      setState(() {
-        _provinces = sorted;
-        _provincesByCode = {
-          for (final province in sorted) province.code: province,
-        };
-        _loadingProvinces = false;
-        _provinceFailed = false;
-      });
-      if (sorted.isEmpty) return;
-      await _loadWards();
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _provinces = const [];
-        _provincesByCode = const {};
-        _wards = const [];
-        _loadingProvinces = false;
-        _loadingWards = false;
-        _provinceFailed = true;
-        _wardFailed = false;
-      });
+  /// The best rank over every spelling a term may match, or `null` when the
+  /// term is in none of them.
+  ///
+  /// A province answers besides its displayed name to its full name and to the
+  /// short forms the address parser already accepts ("hcm", "sai gon", ...),
+  /// so the list accepts the same wording the applied area is detected from. A
+  /// ward answers besides its name to the same name without its locality
+  /// prefix, so "my" ranks "Phường Mỹ Đình" above "Phường An Mỹ".
+  static int? _relevanceRank(
+    Region region, {
+    required String searchKey,
+    required String alphabetKey,
+    required String term,
+    required bool isWard,
+  }) {
+    var best = _noMatch;
+    for (final key in [
+      searchKey,
+      alphabetKey,
+      if (!isWard) ..._provinceSpellings(region),
+    ]) {
+      final rank = _nameRank(key, term);
+      if (rank == 0) return 0;
+      if (rank < best) best = rank;
     }
+    return best == _noMatch ? null : best;
   }
 
-  Future<void> _loadWards() async {
-    if (_provinces.isEmpty) return;
-    setState(() {
-      _loadingWards = true;
-      _wardFailed = false;
-    });
-    try {
-      final wards = await ref
-          .read(regionRepositoryProvider)
-          .getWardsByProvince('');
-      if (!mounted) return;
-      setState(() {
-        _wards = _sortRegions(wards, isWard: true);
-        _loadingWards = false;
-        _wardFailed = false;
-        _suggestion = widget.applied == null
-            ? _inferFrom(widget.address)
-            : null;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _wards = const [];
-        _loadingWards = false;
-        _wardFailed = true;
-      });
+  /// The full name and alias spellings of a province, tone-free. Wards have
+  /// neither: an alias table is keyed by province code.
+  static List<String> _provinceSpellings(Region region) {
+    final fullName = region.fullName?.trim() ?? '';
+    final aliases = VietnamAddressParser.provinceAliases[region.code];
+    if (fullName.isEmpty && aliases == null) return const <String>[];
+    return <String>[
+      if (fullName.isNotEmpty)
+        VietnamAddressParser.removeVietnameseTones(fullName),
+      ...?aliases?.map(VietnamAddressParser.removeVietnameseTones),
+    ];
+  }
+
+  /// [regions] narrowed to the names that answer [term] and ordered by how
+  /// well they answer it: the exact spelling first, then a spelling opening
+  /// with the term, then one carrying it inside. Equal ranks keep the loaded
+  /// order, so the result is stable for a given term.
+  List<Region> _rankByRelevance(
+    List<Region> regions, {
+    required String term,
+  }) {
+    final isWard = widget.isWard;
+    final ranked = <_RankedRegion>[];
+    for (final region in regions) {
+      final searchKey = _searchKey(region);
+      final alphabetKey = _alphabetKey(searchKey, isWard: isWard);
+      final rank = _relevanceRank(
+        region,
+        searchKey: searchKey,
+        alphabetKey: alphabetKey,
+        term: term,
+        isWard: isWard,
+      );
+      if (rank == null) continue;
+      ranked.add((
+        rank: rank,
+        key: alphabetKey,
+        name: region.name,
+        code: region.code,
+        region: region,
+      ));
     }
-  }
-
-  Region? _provinceFor(Region ward) {
-    final provinceCode = ward.provinceCode?.trim();
-    if (provinceCode == null || provinceCode.isEmpty) return null;
-    return _provincesByCode[provinceCode];
-  }
-
-  void _selectProvince(Region province) {
-    setState(() {
-      _province = province;
-      if (_ward?.provinceCode != province.code) _ward = null;
-      _provinceSearch.text = province.name;
-      _wardSearch.clear();
-      _activeField = _RegionField.ward;
-      _selectedLetter = null;
-      _suggestion = null;
+    ranked.sort((left, right) {
+      final byRank = left.rank.compareTo(right.rank);
+      if (byRank != 0) return byRank;
+      final byKey = left.key.compareTo(right.key);
+      if (byKey != 0) return byKey;
+      final byName = left.name.compareTo(right.name);
+      if (byName != 0) return byName;
+      return left.code.compareTo(right.code);
     });
+    return [for (final row in ranked) row.region];
   }
 
-  void _selectWard(Region ward) {
-    final province = _provinceFor(ward);
-    final selectedProvince = _province;
-    if (province == null ||
-        (selectedProvince != null && selectedProvince.code != province.code)) {
-      return;
-    }
-    setState(() {
-      _province = province;
-      _ward = ward;
-      _provinceSearch.text = province.name;
-      _wardSearch.text = ward.name;
-      _activeField = _RegionField.ward;
-      _selectedLetter = null;
-      _suggestion = null;
-    });
-  }
-
-  void _activateField(_RegionField field) {
-    setState(() {
-      _activeField = field;
-      _selectedLetter = null;
-    });
-  }
-
-  void _onProvinceSearchChanged(String _) {
-    setState(() {
-      _activeField = _RegionField.province;
-      _province = null;
-      _ward = null;
-      _wardSearch.clear();
-      _selectedLetter = null;
-      _suggestion = null;
-    });
-  }
-
-  void _onWardSearchChanged(String _) {
-    setState(() {
-      _activeField = _RegionField.ward;
-      _ward = null;
-      _selectedLetter = null;
-      _suggestion = null;
-    });
-  }
-
-  List<Region> _activeOptions() {
-    if (_activeField == _RegionField.province) return _provinces;
-    final province = _province;
-    if (province != null) {
-      return _wards
-          .where((ward) => ward.provinceCode == province.code)
-          .toList(growable: false);
-    }
-    return _wards
-        .where((ward) => _provincesByCode.containsKey(ward.provinceCode))
-        .toList(growable: false);
-  }
-
+  /// The options the list shows: narrowed by the letter chip and — once
+  /// something is typed — by the term as well, the closest name first. An
+  /// empty term keeps the loaded options in the order they arrived.
   List<Region> _visibleOptions() {
-    final queryController = _activeField == _RegionField.province
-        ? _provinceSearch
-        : _wardSearch;
-    final query = VietnamAddressParser.removeVietnameseTones(
-      queryController.text.trim(),
+    final term = VietnamAddressParser.removeVietnameseTones(
+      _search.text.trim(),
     );
-    return _activeOptions()
-        .where((region) {
-          final searchKey = _searchKey(region);
-          final alphabetKey = _alphabetKey(
-            region,
-            isWard: _activeField == _RegionField.ward,
-          );
-          final matchesQuery = query.isEmpty || searchKey.contains(query);
-          final matchesLetter =
-              _selectedLetter == null ||
-              alphabetKey.startsWith(_selectedLetter!.toLowerCase());
-          return matchesQuery && matchesLetter;
-        })
-        .take(_maxVisibleOptions)
-        .toList(growable: false);
+    final letter = _selectedLetter?.toLowerCase();
+    final candidates = <Region>[
+      for (final region in _options)
+        if (letter == null ||
+            _alphabetKey(_searchKey(region), isWard: widget.isWard)
+                .startsWith(letter))
+          region,
+    ];
+    final matches = term.isEmpty
+        ? candidates
+        : _rankByRelevance(candidates, term: term);
+    return matches.take(_maxVisibleOptions).toList(growable: false);
   }
 
-  bool _hasOptionsForLetter(String letter) => _activeOptions().any(
-    (region) => _alphabetKey(
-      region,
-      isWard: _activeField == _RegionField.ward,
-    ).startsWith(letter.toLowerCase()),
+  bool _hasOptionsForLetter(String letter) => _options.any(
+    (region) => _alphabetKey(_searchKey(region), isWard: widget.isWard)
+        .startsWith(letter.toLowerCase()),
   );
 
   void _selectLetter(String letter) {
@@ -442,44 +485,9 @@ class _SocialRegionPickerSheetState
     });
   }
 
-  void _apply() {
-    final province = _province;
-    final ward = _ward;
-    if (province == null ||
-        ward == null ||
-        ward.provinceCode != province.code) {
-      return;
-    }
-    Navigator.of(
-      context,
-    ).pop(SocialRegionSelection(province: province, ward: ward));
-  }
-
-  void _applySuggestion() {
-    final suggestion = _suggestion;
-    if (suggestion != null) Navigator.of(context).pop(suggestion);
-  }
-
-  Future<void> _retryLoad() {
-    if (_provinceFailed || _provinces.isEmpty) return _loadProvinces();
-    return _loadWards();
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final suggestion = _suggestion;
-    final province = _province;
-    final ward = _ward;
-    final canApply =
-        province != null &&
-        ward != null &&
-        ward.provinceCode == province.code &&
-        !_loadingProvinces &&
-        !_loadingWards &&
-        !_provinceFailed &&
-        !_wardFailed;
-
     return SafeArea(
       top: false,
       child: Padding(
@@ -501,42 +509,12 @@ class _SocialRegionPickerSheetState
             ),
             const SizedBox(height: 14),
             _sheetHeader(context, l10n),
-            if (suggestion != null) ...[
-              const SizedBox(height: 12),
-              _suggestionCard(context, l10n, suggestion),
-            ],
             const SizedBox(height: 12),
-            _selectionFields(context, l10n),
+            _searchField(context, l10n),
             const SizedBox(height: 8),
             _alphabetFilter(context, l10n),
             const SizedBox(height: 8),
             Expanded(child: _optionsList(context, l10n)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(l10n.socialRegionCancelAction),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: canApply ? _apply : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: Text(l10n.socialRegionApplyAction),
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),
@@ -565,48 +543,20 @@ class _SocialRegionPickerSheetState
     );
   }
 
-  Widget _selectionFields(BuildContext context, AppLocalizations l10n) {
-    return Column(
-      children: [
-        _searchField(
-          context,
-          field: _RegionField.province,
-          controller: _provinceSearch,
-          label: l10n.socialRegionProvinceLabel,
-          hint: l10n.socialRegionProvinceSearchHint,
-          onChanged: _onProvinceSearchChanged,
-        ),
-        const SizedBox(height: 8),
-        _searchField(
-          context,
-          field: _RegionField.ward,
-          controller: _wardSearch,
-          label: l10n.socialRegionWardLabel,
-          hint: l10n.socialRegionWardSearchHint,
-          onChanged: _onWardSearchChanged,
-        ),
-      ],
-    );
-  }
-
-  Widget _searchField(
-    BuildContext context, {
-    required _RegionField field,
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required ValueChanged<String> onChanged,
-  }) {
+  Widget _searchField(BuildContext context, AppLocalizations l10n) {
     return TextField(
-      controller: controller,
-      onTap: () => _activateField(field),
-      onChanged: onChanged,
+      controller: _search,
+      onChanged: (_) => setState(() {}),
       textInputAction: TextInputAction.search,
       style: const TextStyle(fontSize: 14.5),
       decoration: InputDecoration(
         isDense: true,
-        labelText: label,
-        hintText: hint,
+        labelText: widget.isWard
+            ? l10n.socialRegionWardLabel
+            : l10n.socialRegionProvinceLabel,
+        hintText: widget.isWard
+            ? l10n.socialRegionWardSearchHint
+            : l10n.socialRegionProvinceSearchHint,
         prefixIcon: const Icon(Icons.search, size: 20),
         filled: true,
         fillColor: context.colors.bgDark,
@@ -686,33 +636,23 @@ class _SocialRegionPickerSheetState
   }
 
   Widget _optionsList(BuildContext context, AppLocalizations l10n) {
-    if (_loadingProvinces || _loadingWards) {
+    if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_provinceFailed || _wardFailed) {
+    if (_loadFailed || _empty) {
       return _message(
         context,
-        l10n.socialRegionLoadError,
+        _loadFailed ? l10n.socialRegionLoadError : l10n.socialRegionUnavailable,
         action: TextButton(
-          onPressed: _retryLoad,
+          onPressed: () => _load(refresh: true),
           child: Text(l10n.socialRegionRetry),
         ),
       );
     }
-    if (_provinces.isEmpty || _wards.isEmpty) {
-      return _message(
-        context,
-        l10n.socialRegionUnavailable,
-        action: TextButton(
-          onPressed: _retryLoad,
-          child: Text(l10n.socialRegionRetry),
-        ),
-      );
-    }
-    final wardQuery = _wardSearch.text.trim();
-    if (_activeField == _RegionField.ward &&
-        wardQuery.isNotEmpty &&
-        wardQuery.length < 2 &&
+    final query = _search.text.trim();
+    if (widget.isWard &&
+        query.isNotEmpty &&
+        query.length < 2 &&
         _selectedLetter == null) {
       return Center(
         child: Text(
@@ -743,26 +683,16 @@ class _SocialRegionPickerSheetState
   }
 
   Widget _regionOption(BuildContext context, Region region) {
-    final isProvince = _activeField == _RegionField.province;
-    final selected = isProvince
-        ? _province?.code == region.code
-        : _ward?.code == region.code;
-    final province = isProvince ? null : _provinceFor(region);
-    final label = isProvince
+    final province = widget.isWard ? widget.province : null;
+    final label = province == null
         ? region.name
-        : '${region.name}, ${province?.name ?? ''}';
+        : '${region.name}, ${province.name}';
 
-    void onSelect() {
-      if (isProvince) {
-        _selectProvince(region);
-      } else {
-        _selectWard(region);
-      }
-    }
+    void onSelect() => Navigator.of(context).pop(region);
 
     return Semantics(
       button: true,
-      selected: selected,
+      selected: false,
       label: label,
       excludeSemantics: true,
       // Cùng lựa chọn với cú chạm, để trình đọc màn hình kích hoạt được
@@ -773,55 +703,7 @@ class _SocialRegionPickerSheetState
         contentPadding: const EdgeInsets.symmetric(horizontal: 8),
         title: Text(region.name),
         subtitle: province == null ? null : Text(province.name),
-        trailing: selected
-            ? Icon(Icons.check_circle, color: context.colors.success)
-            : null,
         onTap: onSelect,
-      ),
-    );
-  }
-
-  Widget _suggestionCard(
-    BuildContext context,
-    AppLocalizations l10n,
-    SocialRegionSelection suggestion,
-  ) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.socialRegionSuggestionLabel,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: context.colors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            suggestion.summary(l10n),
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: context.colors.textPrimary,
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: _applySuggestion,
-              child: Text(l10n.socialRegionApplyAction),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -849,4 +731,7 @@ class _SocialRegionPickerSheetState
   }
 }
 
-enum _RegionField { province, ward }
+/// One option in the relevance order: how well it answers the typed term,
+/// plus the keys that keep equally good answers in the loaded order.
+typedef _RankedRegion =
+    ({int rank, String key, String name, String code, Region region});
