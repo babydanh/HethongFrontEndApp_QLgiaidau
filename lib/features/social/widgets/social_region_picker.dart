@@ -27,14 +27,12 @@ class SocialRegionSelection {
   }
 }
 
-/// Phần khu vực nằm thẳng trong form (không bottom sheet).
+/// Locality selector opens as a bottom sheet with separate province/city and
+/// ward/commune fields, address-derived suggestions, and manual correction.
 ///
-/// - Nguồn duy nhất: `IRegionRepository` + `VietnamAddressParser` tất định;
-///   không thêm endpoint, trường API hay lời gọi mô hình nào.
-/// - Địa chỉ gõ tay đủ thông tin thì đề xuất phường + thành phố ngay tại chỗ.
-///   Thành phố nêu rõ trong địa chỉ luôn thắng; tỉnh của CLB chỉ làm ngữ cảnh
-///   khi địa chỉ không nêu thành phố. Không có ngữ cảnh nào thì không đoán.
-/// - Ô tìm kiếm tay luôn mở: người dùng sửa hoặc chọn lại bất cứ lúc nào.
+/// It uses only the existing `IRegionRepository` and deterministic
+/// `VietnamAddressParser`; no endpoint, payload field, region ID, or model call
+/// is added. The applied names are composed into the existing `venueAddress`.
 class SocialRegionPicker extends ConsumerStatefulWidget {
   const SocialRegionPicker({
     super.key,
@@ -62,18 +60,102 @@ class SocialRegionPicker extends ConsumerStatefulWidget {
 }
 
 class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
+  Future<void> _openPicker() async {
+    final selection = await showModalBottomSheet<SocialRegionSelection>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: context.colors.bgDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => FractionallySizedBox(
+        heightFactor: 0.86,
+        child: _SocialRegionPickerSheet(
+          address: widget.address,
+          applied: widget.applied,
+          contextProvinceCode: widget.contextProvinceCode,
+        ),
+      ),
+    );
+    if (selection != null && mounted) widget.onApply(selection);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final applied = widget.applied;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.socialRegionLabel,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: context.colors.textSecondary,
+            letterSpacing: 0.3,
+          ),
+        ),
+        const SizedBox(height: 6),
+        OutlinedButton.icon(
+          onPressed: _openPicker,
+          icon: const Icon(Icons.place_outlined),
+          label: Text(
+            applied == null || applied.isEmpty
+                ? l10n.socialRegionOpenAction
+                : applied.summary(l10n),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(48),
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            side: BorderSide(color: context.colors.border),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SocialRegionPickerSheet extends ConsumerStatefulWidget {
+  const _SocialRegionPickerSheet({
+    required this.address,
+    required this.applied,
+    required this.contextProvinceCode,
+  });
+
+  final String address;
+  final SocialRegionSelection? applied;
+  final String? contextProvinceCode;
+
+  @override
+  ConsumerState<_SocialRegionPickerSheet> createState() =>
+      _SocialRegionPickerSheetState();
+}
+
+class _SocialRegionPickerSheetState
+    extends ConsumerState<_SocialRegionPickerSheet> {
+  static const _alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  static const _maxVisibleOptions = 50;
+  static final _wardTypePrefix = RegExp(r'^(?:phuong|xa|thi tran|dac khu)\s+');
+
+  final TextEditingController _provinceSearch = TextEditingController();
   final TextEditingController _wardSearch = TextEditingController();
 
   List<Region> _provinces = const [];
   Map<String, Region> _provincesByCode = const {};
   List<Region> _wards = const [];
-
-  /// Lựa chọn tay đang chờ áp dụng.
   Region? _province;
   Region? _ward;
-
-  /// Đề xuất suy ra từ địa chỉ, chỉ hiện khi chưa có lựa chọn tay nào.
   SocialRegionSelection? _suggestion;
+  _RegionField _activeField = _RegionField.province;
+  String? _selectedLetter;
 
   bool _loadingProvinces = true;
   bool _provinceFailed = false;
@@ -88,34 +170,33 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
   }
 
   @override
-  void didUpdateWidget(covariant SocialRegionPicker oldWidget) {
+  void didUpdateWidget(covariant _SocialRegionPickerSheet oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.applied != widget.applied) _resetDraft();
     if (oldWidget.address != widget.address ||
         oldWidget.contextProvinceCode != widget.contextProvinceCode) {
-      // `build` chạy ngay sau đây nên gán thẳng, không cần setState.
-      _suggestion = _inferFrom(widget.address);
+      _suggestion = widget.applied == null ? _inferFrom(widget.address) : null;
     }
   }
 
   @override
   void dispose() {
+    _provinceSearch.dispose();
     _wardSearch.dispose();
     super.dispose();
   }
 
-  /// Lựa chọn đã áp dụng hiện ở đầu phần khu vực; ô tìm kiếm quay về trạng
-  /// thái trống để chọn lại, và đề xuất cũ không còn ý nghĩa.
   void _resetDraft() {
-    _province = null;
-    _ward = null;
-    _wardSearch.clear();
-    _suggestion = null;
+    _province = widget.applied?.province;
+    _ward = widget.applied?.ward;
+    _provinceSearch.text = _province?.name ?? '';
+    _wardSearch.text = _ward?.name ?? '';
+    _activeField = _province == null
+        ? _RegionField.province
+        : _RegionField.ward;
+    _selectedLetter = null;
+    _suggestion = widget.applied == null ? _inferFrom(widget.address) : null;
   }
 
-  /// Đề xuất chỉ được chốt khi địa chỉ đủ thông tin: thành phố nêu rõ trong
-  /// địa chỉ, hoặc tỉnh của CLB khi địa chỉ không nêu thành phố; và tên phường
-  /// phải khớp duy nhất trong tỉnh đó. Không đủ dữ kiện thì không đoán.
   SocialRegionSelection? _inferFrom(String rawAddress) {
     final address = rawAddress.trim();
     if (address.isEmpty || _provinces.isEmpty) return null;
@@ -149,7 +230,6 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
     return SocialRegionSelection(province: province, ward: ward);
   }
 
-  /// Trùng tên trong cùng tỉnh thì không chọn hộ: người dùng tự tìm tay.
   bool _isUniquelyNamed(Region ward, List<Region> scope) {
     final key = VietnamAddressParser.removeVietnameseTones(ward.name);
     return scope
@@ -159,6 +239,29 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
             )
             .length ==
         1;
+  }
+
+  List<Region> _sortRegions(List<Region> regions, {required bool isWard}) {
+    final sorted = List<Region>.of(regions);
+    sorted.sort((left, right) {
+      final normalized = _alphabetKey(
+        left,
+        isWard: isWard,
+      ).compareTo(_alphabetKey(right, isWard: isWard));
+      if (normalized != 0) return normalized;
+      final byName = left.name.compareTo(right.name);
+      if (byName != 0) return byName;
+      return left.code.compareTo(right.code);
+    });
+    return sorted;
+  }
+
+  String _searchKey(Region region) =>
+      VietnamAddressParser.removeVietnameseTones(region.name);
+
+  String _alphabetKey(Region region, {required bool isWard}) {
+    final key = _searchKey(region);
+    return isWard ? key.replaceFirst(_wardTypePrefix, '') : key;
   }
 
   Future<void> _loadProvinces() async {
@@ -172,15 +275,16 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
     try {
       final provinces = await ref.read(regionRepositoryProvider).getProvinces();
       if (!mounted) return;
+      final sorted = _sortRegions(provinces, isWard: false);
       setState(() {
-        _provinces = provinces;
+        _provinces = sorted;
         _provincesByCode = {
-          for (final province in provinces) province.code: province,
+          for (final province in sorted) province.code: province,
         };
         _loadingProvinces = false;
         _provinceFailed = false;
       });
-      if (provinces.isEmpty) return;
+      if (sorted.isEmpty) return;
       await _loadWards();
     } catch (_) {
       if (!mounted) return;
@@ -208,11 +312,12 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
           .getWardsByProvince('');
       if (!mounted) return;
       setState(() {
-        _wards = wards;
+        _wards = _sortRegions(wards, isWard: true);
         _loadingWards = false;
         _wardFailed = false;
-        // Địa chỉ có thể đã gõ trước khi danh mục tỉnh/phường về tới.
-        _suggestion = _inferFrom(widget.address);
+        _suggestion = widget.applied == null
+            ? _inferFrom(widget.address)
+            : null;
       });
     } catch (_) {
       if (!mounted) return;
@@ -230,40 +335,129 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
     return _provincesByCode[provinceCode];
   }
 
+  void _selectProvince(Region province) {
+    setState(() {
+      _province = province;
+      if (_ward?.provinceCode != province.code) _ward = null;
+      _provinceSearch.text = province.name;
+      _wardSearch.clear();
+      _activeField = _RegionField.ward;
+      _selectedLetter = null;
+      _suggestion = null;
+    });
+  }
+
   void _selectWard(Region ward) {
     final province = _provinceFor(ward);
-    if (province == null) return;
+    final selectedProvince = _province;
+    if (province == null ||
+        (selectedProvince != null && selectedProvince.code != province.code)) {
+      return;
+    }
     setState(() {
-      _ward = ward;
       _province = province;
-      // Lựa chọn tay thay cho đề xuất cho tới khi địa chỉ đổi.
-      _suggestion = null;
+      _ward = ward;
+      _provinceSearch.text = province.name;
       _wardSearch.text = ward.name;
+      _activeField = _RegionField.ward;
+      _selectedLetter = null;
+      _suggestion = null;
+    });
+  }
+
+  void _activateField(_RegionField field) {
+    setState(() {
+      _activeField = field;
+      _selectedLetter = null;
+    });
+  }
+
+  void _onProvinceSearchChanged(String _) {
+    setState(() {
+      _activeField = _RegionField.province;
+      _province = null;
+      _ward = null;
+      _wardSearch.clear();
+      _selectedLetter = null;
+      _suggestion = null;
     });
   }
 
   void _onWardSearchChanged(String _) {
     setState(() {
+      _activeField = _RegionField.ward;
       _ward = null;
-      _province = null;
+      _selectedLetter = null;
+      _suggestion = null;
     });
   }
 
-  void _cancel() {
+  List<Region> _activeOptions() {
+    if (_activeField == _RegionField.province) return _provinces;
+    final province = _province;
+    if (province != null) {
+      return _wards
+          .where((ward) => ward.provinceCode == province.code)
+          .toList(growable: false);
+    }
+    return _wards
+        .where((ward) => _provincesByCode.containsKey(ward.provinceCode))
+        .toList(growable: false);
+  }
+
+  List<Region> _visibleOptions() {
+    final queryController = _activeField == _RegionField.province
+        ? _provinceSearch
+        : _wardSearch;
+    final query = VietnamAddressParser.removeVietnameseTones(
+      queryController.text.trim(),
+    );
+    return _activeOptions()
+        .where((region) {
+          final searchKey = _searchKey(region);
+          final alphabetKey = _alphabetKey(
+            region,
+            isWard: _activeField == _RegionField.ward,
+          );
+          final matchesQuery = query.isEmpty || searchKey.contains(query);
+          final matchesLetter =
+              _selectedLetter == null ||
+              alphabetKey.startsWith(_selectedLetter!.toLowerCase());
+          return matchesQuery && matchesLetter;
+        })
+        .take(_maxVisibleOptions)
+        .toList(growable: false);
+  }
+
+  bool _hasOptionsForLetter(String letter) => _activeOptions().any(
+    (region) => _alphabetKey(
+      region,
+      isWard: _activeField == _RegionField.ward,
+    ).startsWith(letter.toLowerCase()),
+  );
+
+  void _selectLetter(String letter) {
     setState(() {
-      _ward = null;
-      _province = null;
-      _wardSearch.clear();
-      // Bỏ lựa chọn tay thì đề xuất theo địa chỉ hiện tại trở lại.
-      _suggestion = _inferFrom(widget.address);
+      _selectedLetter = _selectedLetter == letter ? null : letter;
     });
   }
 
   void _apply() {
     final province = _province;
     final ward = _ward;
-    if (province == null || ward == null) return;
-    widget.onApply(SocialRegionSelection(province: province, ward: ward));
+    if (province == null ||
+        ward == null ||
+        ward.provinceCode != province.code) {
+      return;
+    }
+    Navigator.of(
+      context,
+    ).pop(SocialRegionSelection(province: province, ward: ward));
+  }
+
+  void _applySuggestion() {
+    final suggestion = _suggestion;
+    if (suggestion != null) Navigator.of(context).pop(suggestion);
   }
 
   Future<void> _retryLoad() {
@@ -273,331 +467,386 @@ class _SocialRegionPickerState extends ConsumerState<SocialRegionPicker> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
-    final applied = widget.applied;
     final suggestion = _suggestion;
-    final loading = _loadingProvinces || _loadingWards;
+    final province = _province;
+    final ward = _ward;
     final canApply =
-        _province != null &&
-        _ward != null &&
-        !loading &&
+        province != null &&
+        ward != null &&
+        ward.provinceCode == province.code &&
+        !_loadingProvinces &&
+        !_loadingWards &&
         !_provinceFailed &&
-        !_wardFailed &&
-        _provinces.isNotEmpty &&
-        _wards.isNotEmpty;
+        !_wardFailed;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.socialRegionLabel,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w800,
-            color: colors.textSecondary,
-            letterSpacing: 0.3,
-          ),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          18,
+          10,
+          18,
+          12 + MediaQuery.viewInsetsOf(context).bottom,
         ),
-        if (applied != null && !applied.isEmpty)
-          _appliedSummary(context, applied.summary(l10n)),
-        if (suggestion != null && _ward == null) ...[
-          const SizedBox(height: 10),
-          _suggestionCard(context, l10n, suggestion),
-        ],
-        const SizedBox(height: 8),
-        _sectionLabel(context, l10n.socialRegionWardLabel),
-        _searchField(
-          context,
-          controller: _wardSearch,
-          hint: l10n.socialRegionWardSearchHint,
-          onChanged: _onWardSearchChanged,
-        ),
-        if (loading)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: CircularProgressIndicator()),
-          )
-        else if (_provinceFailed || _wardFailed)
-          _message(
-            context,
-            l10n.socialRegionLoadError,
-            action: TextButton(
-              onPressed: _retryLoad,
-              child: Text(l10n.socialRegionRetry),
-            ),
-          )
-        else if (_provinces.isEmpty || _wards.isEmpty)
-          _message(
-            context,
-            l10n.socialRegionUnavailable,
-            action: TextButton(
-              onPressed: _retryLoad,
-              child: Text(l10n.socialRegionRetry),
-            ),
-          )
-        else if (_wardSearch.text.trim().length < 2)
-          _message(context, l10n.socialRegionWardSearchPrompt)
-        else
-          _options(
-            context,
-            l10n: l10n,
-            query: _wardSearch.text,
-            selected: _ward,
-            onSelected: _selectWard,
-          ),
-        if (_ward != null) ...[
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _cancel,
-                  child: Text(l10n.socialRegionCancelAction),
-                ),
+        child: Column(
+          children: [
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: context.colors.border,
+                borderRadius: BorderRadius.circular(4),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: canApply ? _apply : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Text(l10n.socialRegionApplyAction),
-                ),
-              ),
+            ),
+            const SizedBox(height: 14),
+            _sheetHeader(context, l10n),
+            if (suggestion != null) ...[
+              const SizedBox(height: 12),
+              _suggestionCard(context, l10n, suggestion),
             ],
+            const SizedBox(height: 12),
+            _selectionFields(context, l10n),
+            const SizedBox(height: 8),
+            _alphabetFilter(context, l10n),
+            const SizedBox(height: 8),
+            Expanded(child: _optionsList(context, l10n)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(l10n.socialRegionCancelAction),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: canApply ? _apply : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(l10n.socialRegionApplyAction),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sheetHeader(BuildContext context, AppLocalizations l10n) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            l10n.socialRegionPickerTitle,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: context.colors.textPrimary,
+            ),
           ),
-        ],
+        ),
+        IconButton(
+          tooltip: l10n.socialRegionCloseAction,
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.close),
+        ),
       ],
     );
   }
 
-  Widget _appliedSummary(BuildContext context, String summary) {
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Row(
-        children: [
-          Icon(Icons.location_city_outlined, size: 16, color: AppTheme.primary),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              summary,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: colors.textPrimary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Phương án suy ra từ địa chỉ: hiện ngay dưới ô địa điểm, áp dụng bằng một
-  /// chạm hoặc bỏ qua và tìm tay.
-  Widget _suggestionCard(
-    BuildContext context,
-    AppLocalizations l10n,
-    SocialRegionSelection suggestion,
-  ) {
-    final colors = context.colors;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.location_on_outlined,
-            size: 16,
-            color: AppTheme.primary,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              suggestion.summary(l10n),
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: colors.textPrimary,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () => widget.onApply(suggestion),
-            child: Text(l10n.socialRegionApplyAction),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _sectionLabel(BuildContext context, String text) {
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: colors.textSecondary,
+  Widget _selectionFields(BuildContext context, AppLocalizations l10n) {
+    return Column(
+      children: [
+        _searchField(
+          context,
+          field: _RegionField.province,
+          controller: _provinceSearch,
+          label: l10n.socialRegionProvinceLabel,
+          hint: l10n.socialRegionProvinceSearchHint,
+          onChanged: _onProvinceSearchChanged,
         ),
-      ),
+        const SizedBox(height: 8),
+        _searchField(
+          context,
+          field: _RegionField.ward,
+          controller: _wardSearch,
+          label: l10n.socialRegionWardLabel,
+          hint: l10n.socialRegionWardSearchHint,
+          onChanged: _onWardSearchChanged,
+        ),
+      ],
     );
   }
 
   Widget _searchField(
     BuildContext context, {
+    required _RegionField field,
     required TextEditingController controller,
+    required String label,
     required String hint,
     required ValueChanged<String> onChanged,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        textInputAction: TextInputAction.search,
-        style: const TextStyle(fontSize: 14.5),
-        decoration: InputDecoration(
-          isDense: true,
-          hintText: hint,
-          prefixIcon: const Icon(Icons.search, size: 20),
-          filled: true,
-          fillColor: context.colors.bgDark,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: context.colors.border),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: context.colors.border),
-          ),
+    return TextField(
+      controller: controller,
+      onTap: () => _activateField(field),
+      onChanged: onChanged,
+      textInputAction: TextInputAction.search,
+      style: const TextStyle(fontSize: 14.5),
+      decoration: InputDecoration(
+        isDense: true,
+        labelText: label,
+        hintText: hint,
+        prefixIcon: const Icon(Icons.search, size: 20),
+        filled: true,
+        fillColor: context.colors.bgDark,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: context.colors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: context.colors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
         ),
       ),
     );
   }
 
-  Widget _options(
-    BuildContext context, {
-    required AppLocalizations l10n,
-    required String query,
-    required Region? selected,
-    required ValueChanged<Region> onSelected,
-  }) {
-    final colors = context.colors;
-    final needle = query.trim().toLowerCase();
-    final matches = _wards
-        .where(
-          (ward) =>
-              ward.name.toLowerCase().contains(needle) &&
-              _provinceFor(ward) != null,
-        )
-        .take(50)
-        .toList(growable: false);
-
-    if (matches.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        child: Text(
-          l10n.socialRegionNoResults,
-          style: TextStyle(fontSize: 13.5, color: colors.textSecondary),
-        ),
-      );
-    }
-
+  Widget _alphabetFilter(BuildContext context, AppLocalizations l10n) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final ward in matches)
-          Semantics(
-            button: true,
-            selected: selected?.code == ward.code,
-            label: '${ward.name}, ${_provinceFor(ward)!.name}',
-            excludeSemantics: true,
-            child: InkWell(
-              onTap: () => onSelected(ward),
-              borderRadius: BorderRadius.circular(10),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 11,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: selected?.code == ward.code
-                      ? colors.success.withValues(alpha: 0.12)
-                      : Colors.transparent,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            ward.name,
-                            style: TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: selected?.code == ward.code
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              color: colors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _provinceFor(ward)!.name,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (selected?.code == ward.code)
-                      Icon(Icons.check, size: 18, color: colors.success),
-                  ],
-                ),
-              ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            l10n.socialRegionAlphabetHint,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: context.colors.textSecondary,
             ),
           ),
+        ),
+        const SizedBox(height: 4),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final letter in _alphabet.split(''))
+                _letterFilter(l10n, letter),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  Widget _message(BuildContext context, String text, {Widget? action}) {
-    final colors = context.colors;
+  /// Một bộ lọc A–Z. Chip giữ callback chạm, nút [Semantics] bao ngoài mang
+  /// đúng lựa chọn đó cho trình đọc màn hình: chữ cái không chỉ được đọc mà
+  /// còn kích hoạt được. Chữ cái không có kết quả vẫn bị khoá ở cả hai đường.
+  Widget _letterFilter(AppLocalizations l10n, String letter) {
+    final available = _hasOptionsForLetter(letter);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.only(right: 4),
+      child: Semantics(
+        button: true,
+        enabled: available,
+        selected: _selectedLetter == letter,
+        label: '${l10n.socialRegionAlphabetHint}: $letter',
+        excludeSemantics: true,
+        onTap: available ? () => _selectLetter(letter) : null,
+        child: ChoiceChip(
+          label: Text(letter),
+          selected: _selectedLetter == letter,
+          onSelected: available ? (_) => _selectLetter(letter) : null,
+          // Mật độ chuẩn giữ vùng chạm tối thiểu 48 px trong hàng cuộn ngang.
+          materialTapTargetSize: MaterialTapTargetSize.padded,
+          visualDensity: VisualDensity.standard,
+        ),
+      ),
+    );
+  }
+
+  Widget _optionsList(BuildContext context, AppLocalizations l10n) {
+    if (_loadingProvinces || _loadingWards) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_provinceFailed || _wardFailed) {
+      return _message(
+        context,
+        l10n.socialRegionLoadError,
+        action: TextButton(
+          onPressed: _retryLoad,
+          child: Text(l10n.socialRegionRetry),
+        ),
+      );
+    }
+    if (_provinces.isEmpty || _wards.isEmpty) {
+      return _message(
+        context,
+        l10n.socialRegionUnavailable,
+        action: TextButton(
+          onPressed: _retryLoad,
+          child: Text(l10n.socialRegionRetry),
+        ),
+      );
+    }
+    final wardQuery = _wardSearch.text.trim();
+    if (_activeField == _RegionField.ward &&
+        wardQuery.isNotEmpty &&
+        wardQuery.length < 2 &&
+        _selectedLetter == null) {
+      return Center(
+        child: Text(
+          l10n.socialRegionWardSearchPrompt,
+          style: TextStyle(color: context.colors.textSecondary),
+        ),
+      );
+    }
+
+    final options = _visibleOptions();
+    if (options.isEmpty) {
+      return Center(
+        child: Text(
+          l10n.socialRegionNoResults,
+          style: TextStyle(color: context.colors.textSecondary),
+        ),
+      );
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.only(bottom: 8),
+      itemCount: options.length,
+      separatorBuilder: (context, index) => Divider(
+        height: 1,
+        color: context.colors.border.withValues(alpha: 0.5),
+      ),
+      itemBuilder: (context, index) => _regionOption(context, options[index]),
+    );
+  }
+
+  Widget _regionOption(BuildContext context, Region region) {
+    final isProvince = _activeField == _RegionField.province;
+    final selected = isProvince
+        ? _province?.code == region.code
+        : _ward?.code == region.code;
+    final province = isProvince ? null : _provinceFor(region);
+    final label = isProvince
+        ? region.name
+        : '${region.name}, ${province?.name ?? ''}';
+
+    void onSelect() {
+      if (isProvince) {
+        _selectProvince(region);
+      } else {
+        _selectWard(region);
+      }
+    }
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      excludeSemantics: true,
+      // Cùng lựa chọn với cú chạm, để trình đọc màn hình kích hoạt được
+      // tỉnh/phường chứ không chỉ nghe tên.
+      onTap: onSelect,
+      child: ListTile(
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        title: Text(region.name),
+        subtitle: province == null ? null : Text(province.name),
+        trailing: selected
+            ? Icon(Icons.check_circle, color: context.colors.success)
+            : null,
+        onTap: onSelect,
+      ),
+    );
+  }
+
+  Widget _suggestionCard(
+    BuildContext context,
+    AppLocalizations l10n,
+    SocialRegionSelection suggestion,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            text,
-            style: TextStyle(fontSize: 13.5, color: colors.textSecondary),
+            l10n.socialRegionSuggestionLabel,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: context.colors.textSecondary,
+            ),
           ),
-          if (action != null) ...[const SizedBox(height: 4), action],
+          const SizedBox(height: 4),
+          Text(
+            suggestion.summary(l10n),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: context.colors.textPrimary,
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: _applySuggestion,
+              child: Text(l10n.socialRegionApplyAction),
+            ),
+          ),
         ],
       ),
     );
   }
+
+  Widget _message(BuildContext context, String text, {Widget? action}) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13.5,
+                color: context.colors.textSecondary,
+              ),
+            ),
+            if (action != null) ...[const SizedBox(height: 4), action],
+          ],
+        ),
+      ),
+    );
+  }
 }
+
+enum _RegionField { province, ward }

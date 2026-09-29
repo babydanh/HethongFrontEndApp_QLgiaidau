@@ -92,12 +92,12 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('venue name and address precede the inline area control', (
+    testWidgets('venue name and address precede optional locality action', (
       tester,
     ) async {
       await _pumpSocialForm(tester, categories: _activeCatalog);
 
-      // The area control is part of the form, not something the user opens.
+      // The optional locality action opens a separate selection sheet.
       final areaControl = textCI('Khu vực (không bắt buộc)');
       expect(areaControl, findsOneWidget);
       expect(
@@ -337,19 +337,22 @@ void main() {
         expect(find.text('Club session'), findsOneWidget);
         expect(find.text('Sport'), findsOneWidget);
 
-        // The area control is inline, so its copy is readable on the form.
-        final areaSearch = _fieldWithCopy('ward/commune');
-        await tester.ensureVisible(areaSearch);
-        await _pumpUi(tester);
+        // Locality copy appears in its sheet after an explicit user action.
+        await _openAreaPicker(tester);
 
+        expect(find.byType(BottomSheet), findsOneWidget);
         expect(find.text('Area (optional)'), findsOneWidget);
         expect(find.text('Ward/Commune'), findsOneWidget);
         expect(
-          find.text('Area options are currently unavailable. You can still enter the address manually.'),
+          find.text(
+            'Area options are currently unavailable. You can still enter the address manually.',
+          ),
           findsOneWidget,
         );
         expect(
-          find.text('Could not load areas. You can still enter the address manually.'),
+          find.text(
+            'Could not load areas. You can still enter the address manually.',
+          ),
           findsNothing,
         );
         expect(_areaRetry(), findsOneWidget);
@@ -527,6 +530,17 @@ Future<void> _pumpUi(WidgetTester tester) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 600));
   await tester.pump();
+}
+
+Future<void> _openAreaPicker(WidgetTester tester) async {
+  final action = find.descendant(
+    of: find.byType(SocialRegionPicker),
+    matching: find.byType(OutlinedButton),
+  );
+  await tester.ensureVisible(action);
+  await _pumpUi(tester);
+  await tester.tap(action);
+  await _pumpUi(tester);
 }
 
 Future<void> _pumpSocialForm(
@@ -762,11 +776,9 @@ Finder _sportRetry() => find.descendant(
   matching: find.text('Thử lại'),
 );
 
-/// The inline area control's own retry, scoped to that control.
-Finder _areaRetry() => find.descendant(
-  of: find.byType(SocialRegionPicker),
-  matching: find.text('Retry'),
-);
+/// The locality sheet owns its retry action.
+Finder _areaRetry() =>
+    find.descendant(of: find.byType(BottomSheet), matching: find.text('Retry'));
 
 /// The session title the form proposes for whichever sport is currently held,
 /// including a legacy sport that is not part of the active catalog. The hint
@@ -863,5 +875,9 @@ class _RecordingSocialSessionRepository extends Fake
     String? search,
     int page = 1,
     int limit = 20,
+    double? lat,
+    double? lng,
+    double? radiusKm,
+    String? sortBy,
   }) async => const SocialSessionListResponse(items: <SocialSessionModel>[]);
 }

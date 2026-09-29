@@ -14048,6 +14048,88 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialClubFeeLabel => 'Club session fee';
 
   @override
+  String get socialCreateVenueNameLabel => 'Venue name';
+
+  @override
+  String get socialCreateVenueNameHint =>
+      'Enter venue name (e.g. 22 Cong Hoa)...';
+
+  @override
+  String get socialCreateVenueNameRequired => 'Venue name is required';
+
+  @override
+  String get socialCreateVenueNameDialogTitle => 'Please enter a venue name.';
+
+  @override
+  String get socialCreateLocationLabel => 'Location';
+
+  @override
+  String get socialCreateLocationHint => 'Enter a specific address...';
+
+  @override
+  String get socialCreateLocationRequired => 'Location is required';
+
+  @override
+  String get socialCreateLocationDialogTitle => 'Please enter a location.';
+
+  @override
+  String get socialCreatePrivacyLabel => 'Privacy';
+
+  @override
+  String get socialCreateNotesHint => 'Add notes';
+
+  @override
+  String get socialCreateFeeNone => 'Free';
+
+  @override
+  String socialCreateSuccess(String title) {
+    return 'Session \"$title\" created successfully!';
+  }
+
+  @override
+  String socialCreateUpdateSuccess(String title) {
+    return 'Session \"$title\" updated successfully!';
+  }
+
+  @override
+  String get socialLocationPinAction => 'Pin venue location';
+
+  @override
+  String get socialLocationPinDone => 'Venue location pinned';
+
+  @override
+  String get socialLocationPinHint => 'So this session shows up in \"Nearby\"';
+
+  @override
+  String get socialLocationPinClear => 'Remove location';
+
+  @override
+  String get socialLocationEditPin => 'Adjust pin';
+
+  @override
+  String get socialLocationConfirmRequired => 'Confirm location';
+
+  @override
+  String get socialLocationCenterOnPin => 'Center on selected pin';
+
+  @override
+  String socialLocationMovePinHint(String coords) {
+    return 'Tap the map to move the pin\n$coords';
+  }
+
+  @override
+  String get socialLocationSearching => 'Looking up the area...';
+
+  @override
+  String get socialLocationAutoPlaced => 'Auto-placed from area';
+
+  @override
+  String get socialPrivacyPublic => 'Public';
+
+  @override
+  String get socialPrivacyClubOnly => 'Club only';
+
+  @override
   String socialClubLinkedStatus(String clubName) {
     return 'This session belongs to $clubName.';
   }
@@ -14114,4 +14196,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String socialRegionSelectedSummary(String ward, String province) {
     return '$ward, $province';
   }
+
+  @override
+  String get socialRegionOpenAction => 'Choose area';
+
+  @override
+  String get socialRegionPickerTitle => 'Choose venue area';
+
+  @override
+  String get socialRegionProvinceLabel => 'City/Province';
+
+  @override
+  String get socialRegionProvinceSearchHint => 'Search city/province';
+
+  @override
+  String get socialRegionAlphabetHint => 'Filter options by initial letter';
+
+  @override
+  String get socialRegionSuggestionLabel => 'Suggested from the address';
+
+  @override
+  String get socialRegionCloseAction => 'Close';
+
+  @override
+  String get socialLocationReverseFailed =>
+      'Couldn\'t look up the area for this pin.';
+
+  @override
+  String get socialLocationNoAddressFound => 'No address found for this pin.';
 }

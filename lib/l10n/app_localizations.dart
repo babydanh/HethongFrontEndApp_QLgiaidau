@@ -25498,6 +25498,156 @@ abstract class AppLocalizations {
   /// **'Phí tham gia buổi giao lưu'**
   String get socialClubFeeLabel;
 
+  /// No description provided for @socialCreateVenueNameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên sân'**
+  String get socialCreateVenueNameLabel;
+
+  /// No description provided for @socialCreateVenueNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tên sân (VD: 22 Cộng Hòa)...'**
+  String get socialCreateVenueNameHint;
+
+  /// No description provided for @socialCreateVenueNameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên sân không được để trống'**
+  String get socialCreateVenueNameRequired;
+
+  /// No description provided for @socialCreateVenueNameDialogTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập tên sân.'**
+  String get socialCreateVenueNameDialogTitle;
+
+  /// No description provided for @socialCreateLocationLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa điểm'**
+  String get socialCreateLocationLabel;
+
+  /// No description provided for @socialCreateLocationHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập địa chỉ cụ thể...'**
+  String get socialCreateLocationHint;
+
+  /// No description provided for @socialCreateLocationRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa điểm không được để trống'**
+  String get socialCreateLocationRequired;
+
+  /// No description provided for @socialCreateLocationDialogTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập địa điểm.'**
+  String get socialCreateLocationDialogTitle;
+
+  /// No description provided for @socialCreatePrivacyLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quyền riêng tư'**
+  String get socialCreatePrivacyLabel;
+
+  /// No description provided for @socialCreateNotesHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm ghi chú'**
+  String get socialCreateNotesHint;
+
+  /// No description provided for @socialCreateFeeNone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có'**
+  String get socialCreateFeeNone;
+
+  /// No description provided for @socialCreateSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo Social \"{title}\" thành công!'**
+  String socialCreateSuccess(String title);
+
+  /// No description provided for @socialCreateUpdateSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật kèo \"{title}\" thành công!'**
+  String socialCreateUpdateSuccess(String title);
+
+  /// No description provided for @socialLocationPinAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghim vị trí sân'**
+  String get socialLocationPinAction;
+
+  /// No description provided for @socialLocationPinDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã ghim vị trí sân'**
+  String get socialLocationPinDone;
+
+  /// No description provided for @socialLocationPinHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Để kèo hiện trong \"Gần bạn\"'**
+  String get socialLocationPinHint;
+
+  /// No description provided for @socialLocationPinClear.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa vị trí'**
+  String get socialLocationPinClear;
+
+  /// No description provided for @socialLocationEditPin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉnh ghim'**
+  String get socialLocationEditPin;
+
+  /// No description provided for @socialLocationConfirmRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận vị trí'**
+  String get socialLocationConfirmRequired;
+
+  /// No description provided for @socialLocationCenterOnPin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Về vị trí đã chọn'**
+  String get socialLocationCenterOnPin;
+
+  /// No description provided for @socialLocationMovePinHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chạm vào bản đồ để di chuyển ghim\n{coords}'**
+  String socialLocationMovePinHint(String coords);
+
+  /// No description provided for @socialLocationSearching.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tìm vị trí theo khu vực...'**
+  String get socialLocationSearching;
+
+  /// No description provided for @socialLocationAutoPlaced.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghim tự động theo khu vực'**
+  String get socialLocationAutoPlaced;
+
+  /// No description provided for @socialPrivacyPublic.
+  ///
+  /// In vi, this message translates to:
+  /// **'Công khai'**
+  String get socialPrivacyPublic;
+
+  /// No description provided for @socialPrivacyClubOnly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội bộ CLB'**
+  String get socialPrivacyClubOnly;
+
   /// No description provided for @socialClubLinkedStatus.
   ///
   /// In vi, this message translates to:
@@ -25617,6 +25767,60 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'{ward}, {province}'**
   String socialRegionSelectedSummary(String ward, String province);
+
+  /// No description provided for @socialRegionOpenAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn khu vực'**
+  String get socialRegionOpenAction;
+
+  /// No description provided for @socialRegionPickerTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn khu vực sân'**
+  String get socialRegionPickerTitle;
+
+  /// No description provided for @socialRegionProvinceLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉnh/Thành phố'**
+  String get socialRegionProvinceLabel;
+
+  /// No description provided for @socialRegionProvinceSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm tỉnh/thành phố'**
+  String get socialRegionProvinceSearchHint;
+
+  /// No description provided for @socialRegionAlphabetHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lọc kết quả theo chữ cái đầu'**
+  String get socialRegionAlphabetHint;
+
+  /// No description provided for @socialRegionSuggestionLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gợi ý từ địa chỉ'**
+  String get socialRegionSuggestionLabel;
+
+  /// No description provided for @socialRegionCloseAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng'**
+  String get socialRegionCloseAction;
+
+  /// No description provided for @socialLocationReverseFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tra được khu vực từ vị trí đã ghim.'**
+  String get socialLocationReverseFailed;
+
+  /// No description provided for @socialLocationNoAddressFound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa tìm thấy địa chỉ cho vị trí đã ghim.'**
+  String get socialLocationNoAddressFound;
 }
 
 class _AppLocalizationsDelegate

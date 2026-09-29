@@ -17,41 +17,132 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Widget coverage for the inline ward/commune -> province/city control on the
-/// Social create form.
+/// Widget coverage for the Social create form's optional locality bottom sheet.
 ///
-/// The control is part of the form — no modal. It is backed only by the
-/// existing `IRegionRepository` plus the deterministic `VietnamAddressParser`:
-/// a full typed address proposes a ward + city that the user can apply, the
-/// attached club's province only narrows that inference, and the manual ward
-/// search stays open for correction. Apply composes locality names into the
-/// current address.
+/// The sheet uses only the existing `IRegionRepository` and deterministic
+/// `VietnamAddressParser`: address-derived suggestions require explicit Apply,
+/// separate city/ward controls support manual correction, and applied labels
+/// are composed into the existing address only when the form is saved.
 void main() {
-  group('Social inline area control', () {
-    testWidgets('the area control is part of the form, not a modal', (
+  group('Social locality popup', () {
+    testWidgets('opening locality shows separate city and ward fields', (
       tester,
     ) async {
+      await _pumpSocialForm(tester, regionRepository: _FakeRegionRepository());
+      await _ensureAreaVisible(tester);
+
+      await _openAreaPicker(tester);
+
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(textCI('Tỉnh/Thành phố'), findsOneWidget);
+      expect(textCI('Phường/Xã'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+    testWidgets('city options sort by Vietnamese name and filter by letter', (
+      tester,
+    ) async {
+      await _pumpSocialForm(tester, regionRepository: _FakeRegionRepository());
+      await _openAreaPicker(tester);
+
+      expect(
+        tester.getTopLeft(find.text('Đà Nẵng')).dy,
+        lessThan(tester.getTopLeft(find.text('Hà Nội')).dy),
+      );
+      expect(
+        tester.getTopLeft(find.text('Hà Nội')).dy,
+        lessThan(tester.getTopLeft(find.text('TP. Hồ Chí Minh')).dy),
+      );
+
+      await _tapVisible(tester, find.text('H'));
+      expect(find.text('Hà Nội'), findsOneWidget);
+      expect(find.text('Đà Nẵng'), findsNothing);
+      expect(find.text('TP. Hồ Chí Minh'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+    testWidgets(
+      'ward options sort by locality name and filter by its initial',
+      (tester) async {
+        await _pumpSocialForm(
+          tester,
+          regionRepository: _FakeRegionRepository(),
+        );
+        await _searchWard(tester, '');
+
+        expect(
+          tester.getTopLeft(find.text('Phường Cầu Giấy')).dy,
+          lessThan(tester.getTopLeft(find.text('Phường Hải Châu')).dy),
+        );
+        expect(find.text('Phường Cầu Giấy'), findsOneWidget);
+        expect(find.text('Phường Bến Thành'), findsOneWidget);
+
+        await _tapVisible(tester, find.text('C'));
+
+        expect(find.text('Phường Cầu Giấy'), findsOneWidget);
+        expect(find.text('Phường Bến Thành'), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+    testWidgets('selecting a city narrows the ward options', (tester) async {
+      await _pumpSocialForm(tester, regionRepository: _FakeRegionRepository());
+      await _openAreaPicker(tester);
+
+      await _tapVisible(tester, _fieldWithCopy('tỉnh/thành phố'));
+      await _selectOption(tester, 'Hà Nội');
+
+      expect(find.text('Phường Cầu Giấy'), findsOneWidget);
+      expect(find.text('Phường Mỹ Đình'), findsOneWidget);
+      expect(find.text('Phường Bến Thành'), findsNothing);
+      expect(find.text('Phường Hải Châu'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+    testWidgets(
+      'editing the address clears an applied locality before saving',
+      (tester) async {
+        final socialRepository = _RecordingSocialSessionRepository();
+        await _pumpSocialForm(
+          tester,
+          regionRepository: _FakeRegionRepository(),
+          socialRepository: socialRepository,
+        );
+        await tester.enterText(_venueNameField(), _manualVenue);
+        await tester.enterText(_addressField(), _myDinhAddress);
+        await _pumpUi(tester);
+        await _openAreaPicker(tester);
+        expect(find.text(_myDinhSummary), findsOneWidget);
+
+        await _tapVisible(tester, find.text('Áp dụng'));
+        await _pumpUi(tester);
+        expect(_appliedArea(_myDinhSummary), findsOneWidget);
+
+        const editedAddress = 'Sân mới, 15 Lê Lợi, Đà Nẵng';
+        await tester.enterText(_addressField(), editedAddress);
+        await _pumpUi(tester);
+        await _submit(tester);
+
+        final savedAddress = socialRepository.creates.single.venueAddress;
+        expect(savedAddress, editedAddress);
+        expect(savedAddress, isNot(contains('Mỹ Đình')));
+        expect(savedAddress, isNot(contains('Hà Nội')));
+        expect(tester.takeException(), isNull);
+      },
+    );
+    testWidgets('region data loads when the popup is opened', (tester) async {
       final repository = _FakeRegionRepository();
       await _pumpSocialForm(tester, regionRepository: repository);
 
-      // No entry point to open: the ward search, the state message and the
-      // retry control are on the form itself, right after the address.
       expect(find.byType(SocialRegionPicker), findsOneWidget);
       expect(textCI('Khu vực (không bắt buộc)'), findsOneWidget);
-      expect(textCI('Phường/Xã'), findsOneWidget);
-      expect(_wardSearch(), findsOneWidget);
-      expect(textCI('Nhập ít nhất 2 ký tự để tìm phường/xã.'), findsOneWidget);
-      expect(find.text('Phường Mỹ Đình'), findsNothing);
-      expect(find.text('Hà Nội'), findsNothing);
+      expect(textCI('Phường/Xã'), findsNothing);
       expect(find.byType(BottomSheet), findsNothing);
-      expect(repository.wardRequests, <String>['']);
+      expect(repository.provinceCalls, 0);
+      expect(repository.wardRequests, isEmpty);
 
-      // The whole flow — search, pick, apply — stays on the form.
-      await _ensureAreaVisible(tester);
-      await _searchWard(tester, 'Mỹ');
-      await _selectOption(tester, 'Phường Mỹ Đình');
-      expect(find.text('Áp dụng'), findsOneWidget);
-      expect(find.text('Hủy'), findsOneWidget);
+      await _openAreaPicker(tester);
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(repository.provinceCalls, 1);
+      expect(repository.wardRequests, <String>['']);
+      expect(_wardSearch(), findsOneWidget);
+      await _tapVisible(tester, find.text('Hủy'));
       expect(find.byType(BottomSheet), findsNothing);
       expect(tester.takeException(), isNull);
     });
@@ -78,6 +169,8 @@ void main() {
 
       await _searchWard(tester, 'Phường');
       expect(find.text('Phường Test 00'), findsOneWidget);
+      await tester.drag(find.byType(Scrollable).last, const Offset(0, -5000));
+      await _pumpUi(tester);
       expect(find.text('Phường Test 49'), findsOneWidget);
       expect(find.text('Phường Test 50'), findsNothing);
       expect(tester.takeException(), isNull);
@@ -115,7 +208,7 @@ void main() {
       await _pumpUi(tester);
 
       await _tapVisible(tester, find.text('Áp dụng'));
-      expect(find.text('Phường An Phú, Đà Nẵng'), findsOneWidget);
+      expect(_appliedArea('Phường An Phú, Đà Nẵng'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -133,14 +226,12 @@ void main() {
         await tester.enterText(_addressField(), _myDinhAddress);
         await _pumpUi(tester);
 
-        // The proposal is visible on the form without opening anything.
+        await _openAreaPicker(tester);
         expect(find.text(_myDinhSummary), findsOneWidget);
-        expect(find.text('Áp dụng'), findsOneWidget);
-        expect(find.byType(BottomSheet), findsNothing);
-
+        expect(find.byType(BottomSheet), findsOneWidget);
         await _tapVisible(tester, find.text('Áp dụng'));
 
-        expect(find.text(_myDinhSummary), findsOneWidget);
+        expect(_appliedArea(_myDinhSummary), findsOneWidget);
         expect(find.text('Áp dụng'), findsNothing);
         expect(_addressText(tester), _myDinhAddress);
 
@@ -166,6 +257,7 @@ void main() {
         await tester.enterText(_addressField(), _benThanhAddress);
         await _pumpUi(tester);
 
+        await _openAreaPicker(tester);
         expect(find.text(_benThanhSummary), findsOneWidget);
         expect(tester.takeException(), isNull);
       },
@@ -186,9 +278,11 @@ void main() {
         '202 Hoàng Văn Thụ, Phường Mỹ Đình',
       );
       await _pumpUi(tester);
+      await _openAreaPicker(tester);
 
       expect(find.text(_myDinhSummary), findsNothing);
-      expect(find.text('Áp dụng'), findsNothing);
+      expect(textCI('Gợi ý từ địa chỉ'), findsNothing);
+      expect(tester.widget<ElevatedButton>(_applyButton()).onPressed, isNull);
       expect(_addressText(tester), '202 Hoàng Văn Thụ, Phường Mỹ Đình');
       expect(tester.takeException(), isNull);
     });
@@ -207,6 +301,7 @@ void main() {
         '202 Hoàng Văn Thụ, Phường Mỹ Đình, Hà Nội',
       );
       await _pumpUi(tester);
+      await _openAreaPicker(tester);
 
       expect(find.text(_myDinhSummary), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -226,6 +321,7 @@ void main() {
         '120 Nguyễn Thị Minh Khai, Phường Bến Thành, TP.HCM',
       );
       await _pumpUi(tester);
+      await _openAreaPicker(tester);
 
       expect(find.text(_benThanhSummary), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -246,6 +342,7 @@ void main() {
         await _ensureAreaVisible(tester);
         await tester.enterText(_addressField(), typedAddress);
         await _pumpUi(tester);
+        await _openAreaPicker(tester);
 
         expect(find.text(_benThanhSummary), findsOneWidget);
         await _tapVisible(tester, find.text('Áp dụng'));
@@ -274,8 +371,10 @@ void main() {
         '202 Hoàng Văn Thụ, Phường Mỹ Đình',
       );
       await _pumpUi(tester);
+      await _openAreaPicker(tester);
 
-      expect(find.text('Áp dụng'), findsNothing);
+      expect(textCI('Gợi ý từ địa chỉ'), findsNothing);
+      expect(tester.widget<ElevatedButton>(_applyButton()).onPressed, isNull);
       expect(_addressText(tester), '202 Hoàng Văn Thụ, Phường Mỹ Đình');
       expect(tester.takeException(), isNull);
     });
@@ -292,19 +391,20 @@ void main() {
       await _ensureAreaVisible(tester);
       await tester.enterText(_addressField(), _myDinhAddress);
       await _pumpUi(tester);
+      await _openAreaPicker(tester);
       expect(find.text(_myDinhSummary), findsOneWidget);
 
-      // A search supersedes the proposal; the proposal comes back on Cancel.
+      // Manual search hides the suggestion; applying the chosen ward replaces it.
       await _searchWard(tester, 'Cầu');
       await _selectOption(tester, 'Phường Cầu Giấy');
       expect(find.text(_myDinhSummary), findsNothing);
-      await _tapVisible(tester, find.text('Hủy'));
-      expect(find.text(_myDinhSummary), findsOneWidget);
+      await _tapVisible(tester, find.text('Áp dụng'));
+      expect(_appliedArea(_cauGiaySummary), findsOneWidget);
 
       await _searchWard(tester, 'Cầu');
       await _selectOption(tester, 'Phường Cầu Giấy');
       await _tapVisible(tester, find.text('Áp dụng'));
-      expect(find.text(_cauGiaySummary), findsOneWidget);
+      expect(_appliedArea(_cauGiaySummary), findsOneWidget);
 
       await _submit(tester);
       final address = socialRepository.creates.single.venueAddress;
@@ -324,8 +424,20 @@ void main() {
       await _tapVisible(tester, find.text('Hủy'));
 
       expect(find.text('Hủy'), findsNothing);
-      expect(find.text(_myDinhSummary), findsOneWidget);
+      expect(_appliedArea(_myDinhSummary), findsOneWidget);
       expect(_addressText(tester), _manualDetail);
+      expect(tester.takeException(), isNull);
+    });
+    testWidgets('closing the sheet discards a draft locality', (tester) async {
+      await _pumpSocialForm(tester, regionRepository: _FakeRegionRepository());
+      await _applyMyDinh(tester);
+
+      await _searchWard(tester, 'Cầu');
+      await _selectOption(tester, 'Phường Cầu Giấy');
+      await _tapVisible(tester, find.byTooltip('Đóng'));
+
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(_appliedArea(_myDinhSummary), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -358,17 +470,17 @@ void main() {
         final repository = _FakeRegionRepository(provinceFailures: 1);
         await _pumpSocialForm(tester, regionRepository: repository);
 
+        await _openAreaPicker(tester);
         expect(
           textCI(
             'Không tải được khu vực. Bạn vẫn có thể nhập địa chỉ thủ công.',
           ),
           findsOneWidget,
         );
-        await _ensureAreaVisible(tester);
-        await tester.tap(find.text('Thử lại'));
-        await _pumpUi(tester);
+        await _tapVisible(tester, find.text('Thử lại'));
         expect(_wardSearch(), findsOneWidget);
         expect(repository.wardRequests, <String>['']);
+        await _tapVisible(tester, find.text('Hủy'));
         expect(tester.takeException(), isNull);
 
         await tester.enterText(_venueNameField(), _manualVenue);
@@ -385,19 +497,16 @@ void main() {
     ) async {
       final repository = _FakeRegionRepository(provinceFailures: 1);
       await _pumpSocialForm(tester, regionRepository: repository);
+      await _openAreaPicker(tester);
       expect(
         textCI('Không tải được khu vực. Bạn vẫn có thể nhập địa chỉ thủ công.'),
         findsOneWidget,
       );
-
       final callsBeforeRetry = repository.provinceCalls;
-      await _ensureAreaVisible(tester);
-      await tester.tap(find.text('Thử lại'));
-      await _pumpUi(tester);
-
+      await _tapVisible(tester, find.text('Thử lại'));
       expect(repository.provinceCalls, callsBeforeRetry + 1);
       expect(repository.wardRequests, <String>['']);
-      expect(textCI('Nhập ít nhất 2 ký tự để tìm phường/xã.'), findsOneWidget);
+      expect(find.text('Hà Nội'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -407,6 +516,7 @@ void main() {
       final repository = _FakeRegionRepository(provinceEmptyResponses: 1);
       await _pumpSocialForm(tester, regionRepository: repository);
 
+      await _openAreaPicker(tester);
       expect(
         textCI(
           'Khu vực hiện không khả dụng. Bạn vẫn có thể nhập địa chỉ thủ công.',
@@ -415,9 +525,7 @@ void main() {
       );
       expect(find.text('Hà Nội'), findsNothing);
       final callsBeforeRetry = repository.provinceCalls;
-      await _ensureAreaVisible(tester);
-      await tester.tap(find.text('Thử lại'));
-      await _pumpUi(tester);
+      await _tapVisible(tester, find.text('Thử lại'));
 
       expect(repository.provinceCalls, callsBeforeRetry + 1);
       expect(repository.wardRequests, <String>['']);
@@ -437,6 +545,7 @@ void main() {
       final repository = _FakeRegionRepository(wardEmptyResponses: 1);
       await _pumpSocialForm(tester, regionRepository: repository);
 
+      await _openAreaPicker(tester);
       expect(
         textCI(
           'Khu vực hiện không khả dụng. Bạn vẫn có thể nhập địa chỉ thủ công.',
@@ -444,9 +553,7 @@ void main() {
         findsOneWidget,
       );
       expect(repository.wardRequests, <String>['']);
-
-      await _ensureAreaVisible(tester);
-      await tester.tap(find.text('Thử lại'));
+      await _tapVisible(tester, find.text('Thử lại'));
       await _pumpUi(tester);
       expect(
         textCI(
@@ -454,7 +561,7 @@ void main() {
         ),
         findsNothing,
       );
-      expect(textCI('Nhập ít nhất 2 ký tự để tìm phường/xã.'), findsOneWidget);
+      expect(find.text('Hà Nội'), findsOneWidget);
       expect(repository.wardRequests, <String>['', '']);
       expect(tester.takeException(), isNull);
     });
@@ -474,14 +581,13 @@ void main() {
         '120 Trần Phú, Phường Hải Châu, Đà Nẵng',
       );
       await _pumpUi(tester);
+      await _openAreaPicker(tester);
 
       expect(find.text('Phường Hải Châu, Đà Nẵng'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('the inline area control stays usable at 360 px', (
-      tester,
-    ) async {
+    testWidgets('the locality popup stays usable at 360 px', (tester) async {
       await _pumpSocialForm(
         tester,
         regionRepository: _FakeRegionRepository(),
@@ -494,9 +600,141 @@ void main() {
         '202 Hoàng Văn Thụ, Phường Mỹ Đình',
       );
       await _pumpUi(tester);
+      await _openAreaPicker(tester);
 
       expect(find.text(_myDinhSummary), findsOneWidget);
-      expect(find.text('Áp dụng'), findsOneWidget);
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(find.text('Áp dụng'), findsAtLeastNWidgets(1));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('an A–Z filter is activatable by a screen reader', (
+      tester,
+    ) async {
+      await _withSemanticsEnabled(tester, () async {
+        await _pumpSocialForm(
+          tester,
+          regionRepository: _FakeRegionRepository(),
+        );
+        await _openAreaPicker(tester);
+
+        // Announcing the letter is not enough: it must expose selection and
+        // its tap action, so touch is not the only way to filter.
+        final filter = find.semantics.byLabel(
+          'Lọc kết quả theo chữ cái đầu: H',
+        );
+        expect(
+          filter,
+          isSemantics(
+            hasTapAction: true,
+            isButton: true,
+            hasSelectedState: true,
+            isSelected: false,
+          ),
+        );
+        tester.semantics.tap(filter);
+        await _pumpUi(tester);
+
+        expect(
+          filter,
+          isSemantics(
+            hasTapAction: true,
+            isButton: true,
+            hasSelectedState: true,
+            isSelected: true,
+          ),
+        );
+        expect(find.text('Hà Nội'), findsOneWidget);
+        expect(find.text('Đà Nẵng'), findsNothing);
+        expect(find.text('TP. Hồ Chí Minh'), findsNothing);
+        expect(tester.takeException(), isNull);
+      });
+    });
+
+    testWidgets('a city option is activatable by a screen reader', (
+      tester,
+    ) async {
+      await _withSemanticsEnabled(tester, () async {
+        await _pumpSocialForm(
+          tester,
+          regionRepository: _FakeRegionRepository(),
+        );
+        await _openAreaPicker(tester);
+
+        final option = find.semantics.byLabel('Hà Nội');
+        expect(
+          option,
+          isSemantics(
+            hasTapAction: true,
+            isButton: true,
+            hasSelectedState: true,
+            isSelected: false,
+          ),
+        );
+        tester.semantics.tap(option);
+        await _pumpUi(tester);
+
+        expect(find.text('Phường Mỹ Đình'), findsOneWidget);
+        expect(find.text('Phường Cầu Giấy'), findsOneWidget);
+        expect(find.text('Phường Bến Thành'), findsNothing);
+        expect(find.text('Phường Hải Châu'), findsNothing);
+        expect(tester.takeException(), isNull);
+      });
+    });
+    testWidgets('a ward option is activatable by a screen reader', (
+      tester,
+    ) async {
+      await _withSemanticsEnabled(tester, () async {
+        await _pumpSocialForm(
+          tester,
+          regionRepository: _FakeRegionRepository(),
+        );
+        await _searchWard(tester, 'Mỹ Đình');
+
+        final option = find.semantics.byLabel('Phường Mỹ Đình, Hà Nội');
+        expect(
+          option,
+          isSemantics(
+            hasTapAction: true,
+            isButton: true,
+            hasSelectedState: true,
+            isSelected: false,
+          ),
+        );
+        tester.semantics.tap(option);
+        await _pumpUi(tester);
+        expect(
+          tester.widget<ElevatedButton>(_applyButton()).onPressed,
+          isNotNull,
+        );
+
+        await _tapVisible(tester, _applyButton());
+        // The selected locality appears in both its picker trigger and the
+        // venue-location summary; both are part of the existing form layout.
+        expect(find.text(_myDinhSummary), findsAtLeastNWidgets(1));
+        expect(tester.takeException(), isNull);
+      });
+    });
+
+    testWidgets('every A–Z filter keeps a 48 px touch target', (tester) async {
+      await _pumpSocialForm(tester, regionRepository: _FakeRegionRepository());
+      await _openAreaPicker(tester);
+
+      final letters = find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.byType(ChoiceChip),
+      );
+      expect(letters, findsNWidgets(26));
+      for (var index = 0; index < 26; index++) {
+        expect(
+          tester.getSize(letters.at(index)).height,
+          greaterThanOrEqualTo(kMinInteractiveDimension),
+        );
+        expect(
+          tester.getSize(letters.at(index)).width,
+          greaterThanOrEqualTo(kMinInteractiveDimension),
+        );
+      }
       expect(tester.takeException(), isNull);
     });
   });
@@ -609,17 +847,36 @@ Future<void> _submit(WidgetTester tester) async {
   await _pumpSubmit(tester);
 }
 
-/// The area section sits at the end of the form, below the fold of the form's
-/// own scroll view; bring it on-screen so taps and offsets really land.
+/// Brings the optional locality action on-screen without opening its sheet.
 Future<void> _ensureAreaVisible(WidgetTester tester) async {
-  await tester.ensureVisible(_wardSearch());
+  await tester.ensureVisible(textCI('Khu vực (không bắt buộc)'));
   await _pumpUi(tester);
 }
+
+Future<void> _openAreaPicker(WidgetTester tester) async {
+  await _ensureAreaVisible(tester);
+  if (find.byType(BottomSheet).evaluate().isNotEmpty) return;
+  await _tapVisible(
+    tester,
+    find.descendant(
+      of: find.byType(SocialRegionPicker),
+      matching: find.byType(OutlinedButton),
+    ),
+  );
+}
+
+/// The applied-area summary the form keeps under the address field. The
+/// location card repeats the same words beside the pin state, so the lookup is
+/// scoped to the area control that owns them.
+Finder _appliedArea(String summary) => find.descendant(
+  of: find.byType(SocialRegionPicker),
+  matching: find.text(summary),
+);
 
 Future<void> _selectOption(WidgetTester tester, String label) async {
   var option = find.text(label);
   for (var attempt = 0; option.evaluate().isEmpty && attempt < 3; attempt++) {
-    // Options can sit below the fold of the form's own scroll view.
+    // Options can sit below the sheet's bounded result list.
     await tester.drag(find.byType(Scrollable).last, const Offset(0, -220));
     await _pumpUi(tester);
     option = find.text(label);
@@ -644,10 +901,16 @@ Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
 }
 
 Future<void> _searchWard(WidgetTester tester, String query) async {
-  await _ensureAreaVisible(tester);
-  await tester.enterText(_wardSearch(), query);
+  await _openAreaPicker(tester);
+  final field = _wardSearch();
+  await tester.ensureVisible(field);
+  await tester.tap(field);
+  await _pumpUi(tester);
+  await tester.enterText(field, query);
   await _pumpUi(tester);
 }
+
+Finder _applyButton() => find.widgetWithText(ElevatedButton, 'Áp dụng');
 
 /// Applies "Phường Mỹ Đình / Hà Nội" by hand, so a later case can check what
 /// Cancel leaves untouched.
@@ -655,10 +918,10 @@ Future<void> _applyMyDinh(WidgetTester tester) async {
   await tester.enterText(_venueNameField(), _manualVenue);
   await _ensureAreaVisible(tester);
   await tester.enterText(_addressField(), _manualDetail);
-  await _searchWard(tester, 'Mỹ');
+  await _searchWard(tester, 'Mỹ Đình');
   await _selectOption(tester, 'Phường Mỹ Đình');
   await _tapVisible(tester, find.text('Áp dụng'));
-  expect(find.text(_myDinhSummary), findsOneWidget);
+  expect(_appliedArea(_myDinhSummary), findsOneWidget);
 }
 
 /// Ward results are searched nationally; city is resolved from response data.
@@ -700,6 +963,18 @@ Finder _fieldWithCopy(String copy) {
 Finder _venueNameField() => _fieldWithCopy('tên sân');
 
 Finder _addressField() => _fieldWithCopy('địa');
+
+Future<void> _withSemanticsEnabled(
+  WidgetTester tester,
+  Future<void> Function() body,
+) async {
+  final handle = tester.ensureSemantics();
+  try {
+    await body();
+  } finally {
+    handle.dispose();
+  }
+}
 
 String _addressText(WidgetTester tester) {
   final field = _addressField();
@@ -861,6 +1136,10 @@ class _RecordingSocialSessionRepository extends Fake
     String? search,
     int page = 1,
     int limit = 20,
+    double? lat,
+    double? lng,
+    double? radiusKm,
+    String? sortBy,
   }) async => const SocialSessionListResponse(items: <SocialSessionModel>[]);
 }
 
