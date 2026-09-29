@@ -400,11 +400,11 @@ class _SocialRegionListSheetState extends State<_SocialRegionListSheet> {
   }
 
   /// The full name and alias spellings of a province, tone-free. Wards have
-  /// neither: an alias table is keyed by province code.
+  /// neither: the alias table is keyed by province name, and a ward name is
+  /// never a province name.
   static List<String> _provinceSpellings(Region region) {
     final fullName = region.fullName?.trim() ?? '';
-    final aliases = VietnamAddressParser.provinceAliases[region.code];
-    if (fullName.isEmpty && aliases == null) return const <String>[];
+    final aliases = VietnamAddressParser.provinceAliasesOf(region.name);
     return <String>[
       if (fullName.isNotEmpty)
         VietnamAddressParser.removeVietnameseTones(fullName),

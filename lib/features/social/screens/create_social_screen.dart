@@ -30,6 +30,26 @@ const Duration _autoPlaceDelay = Duration(milliseconds: 600);
 /// Ngừng gõ bao lâu thì tự điền khu vực từ địa chỉ.
 const Duration _autoRegionDelay = Duration(milliseconds: 600);
 
+/// Cổng bật/tắt cho hai đường đi qua dữ liệu hình học GeoJSON/PostGIS.
+///
+/// Danh mục tỉnh/phường đang chuẩn hoá về `provinces.open-api.vn/api/v2` —
+/// nguồn này không kèm toạ độ — nên cả lớp hình học bị dừng và cột
+/// `wards.center_lat/center_lng` không còn được đổ vào. Hai endpoint sau đều
+/// đọc đúng hai cột đó, nên cùng tắt theo:
+///
+///  * `GET /regions/resolve` — điểm host vừa ghim tay → tỉnh/phường.
+///  * `GET /regions/wards/centroid` — tỉnh + phường → ghim tạm theo tâm.
+///
+/// Tắt thì app không gọi mạng cho hai việc đó: tỉnh/phường lấp từ danh mục
+/// theo tên trong ô địa chỉ (tự điền) hoặc từ hai ô khu vực host tự chọn;
+/// toạ độ thì chỉ có khi host tự ghim map. Thẻ "Vị trí" vẫn hiện đúng trạng
+/// thái thật: chưa ghim thì hiện nút "Ghim vị trí sân".
+///
+/// Bật lại: đổi `false` thành `true`, và bảo đảm dữ liệu ranh giới đã được
+/// import vào `wards.boundary` — bước import GeoJSON ở CI hiện đang tắt nên
+/// server sẽ trả rỗng cho cả hai endpoint.
+const bool _kGeometryLookupEnabled = false;
+
 /// Định danh thẻ vị trí: thẻ tự hiển thị tóm tắt khu vực đã áp dụng, nên có
 /// định danh để test kiểm tra đúng chỗ đó thay vì dò chuỗi trên cả form.
 const Key _venueLocationCardKey = ValueKey('venue-location-card');
@@ -85,19 +105,25 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   /// Pin do hệ thống suy ra từ tâm phường (false = host tự ghim tay).
   /// UI đọc cờ này để phân biệt hai nguồn ghim.
   bool _pinAutoPlaced = false;
+
   /// Địa chỉ gõ lần cuối đã lên lịch ghim tự động — chống lên lịch lại
   /// vô ích mỗi lần form rebuild với cùng một nội dung ô địa chỉ.
   String? _autoPlaceScheduledFor;
+
   /// Hẹn giờ debounce trước khi gọi tâm phường.
   Timer? _autoPlaceDebounce;
+
   /// Địa chỉ gõ lần cuối đã lên lịch tự điền khu vực — chống lên lịch lại
   /// vô ích mỗi lần form rebuild với cùng nội dung ô địa chỉ.
   String? _autoRegionScheduledFor;
+
   /// Hẹn giờ debounce trước khi tự điền khu vực.
   Timer? _autoRegionDebounce;
+
   /// Host đã tự chọn khu vực (hai trường khu vực hoặc ghim map): tự điền chỉ
   /// lấp chỗ trống, nên cờ này tắt hẳn đường tự động cho tới hết buổi tạo kèo.
   bool _regionChosenByHost = false;
+
   /// Danh mục tỉnh + phường phục vụ tự điền và hai trường khu vực: nạp một
   /// lần rồi dùng lại cho cả hai. Giữ future để các lần gọi chồng nhau dùng
   /// chung một lần nạp; lần lỡ mạng thì bỏ cache để lần sau thử lại.
@@ -136,6 +162,14 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       _longitude = init.longitude;
       _titleController.text = init.title;
       _notesController.text = init.description ?? '';
+      // Sửa kèo: địa chỉ nạp sẵn không đi qua onChanged nên không có lần
+      // hẹn nào cả — trước đây builder gọi hẹn mỗi lần form dựng lại. Hẹn ở
+      // đây (ngoài build) để giữ nguyên đường tự điền khi mở kèo cũ.
+      final prefilledAddress = _venueAddressController.text.trim();
+      if (prefilledAddress.isNotEmpty) {
+        _scheduleAutoPlaceForAddress(prefilledAddress);
+        _scheduleAutoRegionForAddress(prefilledAddress);
+      }
       _isClubAttached =
           (init.communityId != null && init.communityId!.isNotEmpty);
     } else {
@@ -585,6 +619,12 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   void _restartAutoPlaceDebounce([Duration debounce = _autoPlaceDelay]) {
     _autoPlaceDebounce?.cancel();
     _autoPlaceDebounce = Timer(debounce, () {
+      // Xoá cờ "đã hẹn" ngay lúc hẹn nổ, chứ không phải trước khi hẹn: lần
+      // chạy này có thể hỏng (mất mạng, danh mục rỗng, host đã tự chọn khu
+      // vực...) và nếu giữ cờ thì mọi lần hẹn sau với đúng nội dung địa chỉ
+      // đó đều dừng ở guard, ghim tạm chết âm thầm tới khi host gõ thêm một
+      // ký tự. Xoá trước thì hẹn kế tiếp không còn chờ đợi thay đổi nào nữa.
+      _autoPlaceScheduledFor = null;
       unawaited(_autoPlacePinFromWard());
     });
   }
@@ -608,6 +648,11 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     _autoRegionScheduledFor = address;
     _autoRegionDebounce?.cancel();
     _autoRegionDebounce = Timer(_autoRegionDelay, () {
+      // Xoá cờ "đã hẹn" ngay lúc hẹn nổ, lý do như _restartAutoPlaceDebounce:
+      // một lần tự điền hỏng (mất mạng lúc nạp danh mục, host đã tự chọn khu
+      // vực) không được biến thành tự điền chết vĩnh viễn với nội dung địa
+      // chỉ đó.
+      _autoRegionScheduledFor = null;
       unawaited(_autoFillRegionFromAddress());
     });
   }
@@ -692,7 +737,9 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   /// rồi dùng lại. `null` = mất mạng: tự điền là tiện ích nên im lặng bỏ qua
   /// và thử lại ở lần ngừng gõ sau, tuyệt đối không báo lỗi lên form. Danh
   /// mục rỗng không cache, để lần sau vẫn thử lại được.
-  Future<SocialRegionCatalogue?> _regionCatalogueFor({bool refresh = false}) async {
+  Future<SocialRegionCatalogue?> _regionCatalogueFor({
+    bool refresh = false,
+  }) async {
     if (refresh) _regionCatalogue = null;
     final pending = _regionCatalogue ??= _fetchRegionCatalogue();
     final catalogue = await pending;
@@ -746,10 +793,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       final dio = ref.read(dioProvider);
       final response = await dio.get(
         '/regions/wards/centroid',
-        queryParameters: {
-          'provinceCode': provinceCode,
-          'wardCode': wardCode,
-        },
+        queryParameters: {'provinceCode': provinceCode, 'wardCode': wardCode},
       );
       final raw = response.data;
       final payload = raw is Map ? (raw['data'] ?? raw) : null;
@@ -766,6 +810,9 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   /// Ghim tạm theo tâm phường khi host đã chọn đủ tỉnh + phường và chưa ghim tay.
   /// Thiếu phường thì bỏ qua: tâm tỉnh lệch tới hàng chục km ở tỉnh lớn.
   Future<void> _autoPlacePinFromWard() async {
+    // Tâm phường lấy từ dữ liệu hình học. Cổng tắt thì hẹn giờ vẫn nổ — để
+    // cờ được xoá đúng lúc — nhưng không gọi mạng.
+    if (!_kGeometryLookupEnabled) return;
     final selection = _appliedRegion;
     final province = selection?.province;
     final ward = selection?.ward;
@@ -793,7 +840,13 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   /// vực vẫn trống, nên form phải nói ra chứ không được im lặng. Một chỗ
   /// duy nhất quyết định "hai phần này có khớp nhau không", thay vì rải
   /// điều kiện ở từng chỗ nên lệch nhau.
+  ///
+  /// Khi cổng hình học đang tắt thì "ghim tay + chưa có khu vực" là trạng
+  /// thái bình thường, vì khu vực lấp từ địa chỉ chứ không lấp từ pin. Cảnh
+  /// báo phải tắt theo: bật lên chỉ để mời host bấm "Tra lại", tức một nút
+  /// không bao giờ có kết quả.
   bool get _pinWithoutRegion =>
+      _kGeometryLookupEnabled &&
       _latitude != null &&
       _longitude != null &&
       (_appliedRegion == null || _appliedRegion!.isEmpty);
@@ -843,13 +896,18 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   /// Best-effort: mất mạng, server lỗi, điểm nằm ngoài vùng phủ ranh giới hay
   /// body thiếu trường đều chỉ báo lại chứ không bao giờ chặn lưu kèo.
   Future<void> _applyReverseLookup(LatLng point) async {
+    // Tra ngược cần ranh giới phường trên server. Cổng tắt thì ghim tay của
+    // host vẫn lưu bình thường, chỉ là không lấp thêm tỉnh/phường từ điểm.
+    if (!_kGeometryLookupEnabled) return;
     Map<String, dynamic>? body;
     var callFailed = false;
     try {
-      final response = await ref.read(dioProvider).get(
-        '/regions/resolve',
-        queryParameters: {'lat': point.latitude, 'lng': point.longitude},
-      );
+      final response = await ref
+          .read(dioProvider)
+          .get(
+            '/regions/resolve',
+            queryParameters: {'lat': point.latitude, 'lng': point.longitude},
+          );
       final raw = response.data;
       final payload = raw is Map ? (raw['data'] ?? raw) : null;
       if (payload is Map) body = Map<String, dynamic>.from(payload);
@@ -1396,7 +1454,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                 const SizedBox(height: 10),
                                 TextFormField(
                                   controller: _venueAddressController,
-                                  onChanged: (_) {
+                                  onChanged: (value) {
                                     // Ghim do form suy ra từ tâm phường cũ
                                     // thì trỏ vào địa chỉ cũ, nên địa chỉ đổi là
                                     // bỏ, khỏi chỉ vào một chỗ không còn đúng.
@@ -1415,15 +1473,29 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                     final dropRegion =
                                         _appliedRegion != null &&
                                         !_regionChosenByHost;
-                                    if (!dropPin && !dropRegion) return;
-                                    setState(() {
-                                      if (dropPin) {
-                                        _latitude = null;
-                                        _longitude = null;
-                                        _pinAutoPlaced = false;
-                                      }
-                                      if (dropRegion) _appliedRegion = null;
-                                    });
+                                    if (dropPin || dropRegion) {
+                                      setState(() {
+                                        if (dropPin) {
+                                          _latitude = null;
+                                          _longitude = null;
+                                          _pinAutoPlaced = false;
+                                        }
+                                        if (dropRegion) _appliedRegion = null;
+                                      });
+                                    }
+                                    // Hẹn giờ là tác dụng phụ nên thuộc về
+                                    // onChanged chứ không thuộc build: người gõ,
+                                    // không phải lần dựng widget, mới là người
+                                    // quyết định khi nào đã ngừng gõ. Địa chỉ
+                                    // nạp sẵn khi sửa kèo không đi qua onChanged
+                                    // nên initState tự hẹn một lần cho đúng.
+                                    // Ngừng gõ 600ms rồi mới ghim tạm theo tâm
+                                    // phường: không cần mở map, và không bao giờ
+                                    // ghi đè pin host đã tự ghim tay.
+                                    _scheduleAutoPlaceForAddress(value);
+                                    // Ngừng gõ 600ms thì tự điền khu vực từ
+                                    // địa chỉ, host khỏi phải bấm gì cả.
+                                    _scheduleAutoRegionForAddress(value);
                                   },
                                   maxLength: 500,
                                   maxLines: 2,
@@ -1458,14 +1530,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                                 // venueAddress lúc lưu.
                                 ValueListenableBuilder<TextEditingValue>(
                                   valueListenable: _venueAddressController,
+                                  // Builder chỉ dựng lại, không hẹn giờ: hẹn
+                                  // giờ trong build là tác dụng phụ và làm
+                                  // hành vi tuỳ vào lúc nào form dựng lại.
                                   builder: (context, address, _) {
-                                    // Ngừng gõ 600ms rồi mới ghim tạm theo tâm
-                                    // phường: không cần mở map, và không bao giờ
-                                    // ghi đè pin host đã tự ghim tay.
-                                    _scheduleAutoPlaceForAddress(address.text);
-                                    // Ngừng gõ 600ms thì tự điền khu vực từ
-                                    // địa chỉ, host khỏi phải bấm gì cả.
-                                    _scheduleAutoRegionForAddress(address.text);
                                     return SocialRegionInlineFields(
                                       applied: _appliedRegion,
                                       onSelect: (selection) =>
@@ -1680,7 +1748,6 @@ class _VenueLocationCard extends StatelessWidget {
   /// ngược đầu hỏng, thay vì bắt host mở bản đồ dò lại từ đầu.
   final VoidCallback onRetryRegion;
 
-
   const _VenueLocationCard({
     super.key,
     required this.latitude,
@@ -1796,10 +1863,7 @@ class _VenueLocationCard extends StatelessWidget {
                     ),
                   )
                 else
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: colors.textMuted,
-                  ),
+                  Icon(Icons.chevron_right_rounded, color: colors.textMuted),
               ],
             ),
             if (hasPin && regionMissing) ...[
@@ -1877,5 +1941,4 @@ class _VenueLocationCard extends StatelessWidget {
       ),
     );
   }
-
 }
