@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_display.dart';
+import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_field.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -420,8 +421,9 @@ class _TournamentGeneralSettingsState
   late final TextEditingController _nameController = TextEditingController(
     text: widget.tournament.name,
   );
-  late final TextEditingController _descriptionController =
-      TextEditingController(text: widget.tournament.description);
+  // Mô tả lưu dạng HTML (Editor.js của web xuất ra HTML). Dùng state thay vì
+  // TextEditingController vì RichTextField là WebView, không nhận controller.
+  late String _description = widget.tournament.description;
   late String _visibility =
       widget.tournament.visibility.toUpperCase() == 'PRIVATE'
       ? 'PRIVATE'
@@ -439,7 +441,6 @@ class _TournamentGeneralSettingsState
   @override
   void dispose() {
     _nameController.dispose();
-    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -465,15 +466,17 @@ class _TournamentGeneralSettingsState
                 ),
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _descriptionController,
-                minLines: 3,
-                maxLines: 5,
-                decoration: InputDecoration(
-                  labelText: l10n.tournamentManagementDescription,
-                  border: const OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                ),
+              // Rich text dùng chung với web: cùng Editor.js nên HTML xuất ra
+              // giống hệt, mô tả không bị đổi hình dạng khi lưu từ app.
+              RichTextField(
+                value: _description,
+                label: l10n.tournamentManagementDescription,
+                minHeight: 130,
+                onChanged: (html) {
+                  // Editor báo về cả lúc vừa sẵn sàng (giá trị chuẩn hoá) nên
+                  // chỉ setState khi thực sự khác.
+                  if (html != _description) setState(() => _description = html);
+                },
               ),
               const SizedBox(height: 12),
               _dateField(
@@ -782,7 +785,7 @@ class _TournamentGeneralSettingsState
     try {
       final payload = <String, dynamic>{
         'name': name,
-        'description': _descriptionController.text.trim(),
+        'description': _description.trim(),
         'visibility': _visibility,
         'tournamentConfig': {
           ...widget.tournament.tournamentConfig,
