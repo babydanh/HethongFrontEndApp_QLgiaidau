@@ -218,6 +218,10 @@ class _FakeRegionRepository implements IRegionRepository {
   @override
   Future<List<Region>> getWardsByProvince(String provinceCode) async =>
       const [];
+
+  @override
+  Future<List<Region>> searchRegions(String query, {int limit = 10}) async =>
+      const [];
 }
 
 class _PreviewAuthNotifier extends AuthNotifier {

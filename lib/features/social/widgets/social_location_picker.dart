@@ -53,8 +53,6 @@ class _SocialLocationPickerState extends State<SocialLocationPicker> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
-    final coords =
-        '${_picked.latitude.toStringAsFixed(5)}, ${_picked.longitude.toStringAsFixed(5)}';
 
     return Scaffold(
       appBar: AppBar(
@@ -122,7 +120,7 @@ class _SocialLocationPickerState extends State<SocialLocationPicker> {
                       border: Border.all(color: colors.border),
                     ),
                     child: Text(
-                      l10n.socialLocationMovePinHint(coords),
+                      l10n.socialPlaceMapHint,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12.5,
@@ -130,6 +128,11 @@ class _SocialLocationPickerState extends State<SocialLocationPicker> {
                         height: 1.4,
                       ),
                     ),
+                  ),
+                  const Text(
+                    '© OpenStreetMap contributors',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 11),
                   ),
                   const SizedBox(height: 10),
                   SizedBox(

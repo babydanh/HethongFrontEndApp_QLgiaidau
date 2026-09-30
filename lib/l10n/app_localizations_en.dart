@@ -14224,4 +14224,97 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialLocationNoAddressFound => 'No address found for this pin.';
+
+  @override
+  String get socialPlaceSelect => 'Select location';
+
+  @override
+  String get socialPlaceSearchHint => 'Search by name or address';
+
+  @override
+  String get socialPlaceSearchIdle => 'Search for a place by name or address.';
+
+  @override
+  String get socialPlaceSearchLoading => 'Searching places...';
+
+  @override
+  String get socialPlaceSearchEmpty => 'No matching locations found.';
+
+  @override
+  String get socialPlaceSearchError => 'Could not search locations.';
+
+  @override
+  String get socialPlaceRetry => 'Retry';
+
+  @override
+  String get socialPlaceAdd => 'Add new location';
+
+  @override
+  String get socialPlaceInputTitle => 'Add a location';
+
+  @override
+  String get socialPlaceInputHint => 'Full address or Google Maps link';
+
+  @override
+  String get socialPlaceMap => 'Choose from map';
+
+  @override
+  String get socialPlaceNext => 'Next';
+
+  @override
+  String get socialPlaceBack => 'Back';
+
+  @override
+  String get socialPlaceConfirm => 'Confirm';
+
+  @override
+  String get socialPlacePreviewTitle => 'Confirm location';
+
+  @override
+  String get socialPlaceUnsupportedLink =>
+      'This Google Maps link is not supported.';
+
+  @override
+  String get socialPlaceNotFound =>
+      'No location was found for that address or link.';
+
+  @override
+  String get socialPlaceUnresolvable =>
+      'A full street address and map pin could not be found. Try another input.';
+
+  @override
+  String get socialPlaceNetworkError =>
+      'The location service is unavailable. Please retry.';
+
+  @override
+  String get socialPlaceResolving => 'Looking up location...';
+
+  @override
+  String get socialPlaceRequired => 'Select a location before saving.';
+
+  @override
+  String get socialPlaceMapHint => 'Tap the map to move the pin.';
+
+  @override
+  String get socialPlaceReverseError =>
+      'Could not find a full address for that pin. Choose another pin or enter an address.';
+
+  @override
+  String get socialPlaceSuggestedSection => 'Suggestions';
+
+  @override
+  String get socialPlaceAreaSection => 'Administrative areas';
+
+  @override
+  String get socialPlaceNoPin => 'No map pin';
+
+  @override
+  String get socialPlaceSaveAreaTitle => 'Save this area?';
+
+  @override
+  String get socialPlaceSaveAreaMessage =>
+      'No street address and map pin were found for this input. You can save the administrative area or pin the exact spot on the map.';
+
+  @override
+  String get socialPlaceSaveArea => 'Save area';
 }

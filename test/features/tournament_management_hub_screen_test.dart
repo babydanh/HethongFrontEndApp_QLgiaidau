@@ -102,6 +102,10 @@ class _EmptyRegionRepository implements IRegionRepository {
 
   @override
   Future<List<Region>> getWardsByProvince(String provinceCode) async => [];
+
+  @override
+  Future<List<Region>> searchRegions(String query, {int limit = 10}) async =>
+      [];
 }
 
 class _IdleLiteManagementNotifier extends LiteManagementNotifier {

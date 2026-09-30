@@ -1,6 +1,8 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/data/models/social_place.dart';
+import 'package:app_quanly_giaidau/domain/repositories/social_location_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/repositories/community_repository.dart';
@@ -9,6 +11,7 @@ import 'package:app_quanly_giaidau/domain/repositories/region_repository.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_region_picker.dart';
 import 'package:app_quanly_giaidau/domain/repositories/social_session_repository.dart';
 import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_row.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -17,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:latlong2/latlong.dart';
 
 /// Widget coverage for the approved Social create/edit sport catalog.
 ///
@@ -92,24 +96,37 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('venue name and address precede optional locality action', (
+    testWidgets(
+      'create form exposes one location row and no manual venue fields',
+      (tester) async {
+        await _pumpSocialForm(tester, categories: _activeCatalog);
+        expect(find.byType(SocialLocationRow), findsOneWidget);
+        expect(find.text('Chọn địa điểm'), findsOneWidget);
+        expect(_venueNameField(), findsNothing);
+        expect(_addressField(), findsNothing);
+        expect(find.byType(SocialRegionPicker), findsNothing);
+        expect(find.byType(BottomSheet), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets('edit form keeps saved location when search is dismissed', (
       tester,
     ) async {
-      await _pumpSocialForm(tester, categories: _activeCatalog);
-
-      // The optional locality action opens a separate selection sheet.
-      final areaControl = textCI('Khu vực (không bắt buộc)');
-      expect(areaControl, findsOneWidget);
-      expect(
-        tester.getTopLeft(_venueNameField()).dy,
-        lessThan(tester.getTopLeft(areaControl).dy),
+      await _pumpSocialForm(
+        tester,
+        categories: _activeCatalog,
+        initialSession: _legacySession,
       );
-      expect(
-        tester.getTopLeft(_addressField()).dy,
-        lessThan(tester.getTopLeft(areaControl).dy),
-      );
-      expect(find.byType(BottomSheet), findsNothing);
-      expect(tester.takeException(), isNull);
+      expect(find.text('Nhà thi đấu Quân khu 7'), findsOneWidget);
+      expect(find.textContaining('202 Hoàng Văn Thụ'), findsOneWidget);
+      await tester.ensureVisible(find.byType(SocialLocationRow));
+      await _pumpUi(tester);
+      await tester.tap(find.byType(SocialLocationRow));
+      await _pumpUi(tester);
+      await tester.tap(find.byTooltip('Đóng'));
+      await _pumpUi(tester);
+      expect(find.text('Nhà thi đấu Quân khu 7'), findsOneWidget);
     });
 
     testWidgets('sport card icons render unfiltered like the home filter', (
@@ -170,7 +187,7 @@ void main() {
     );
 
     testWidgets(
-      'a catalog lookup failure explains the state and keeps the manual venue usable',
+      'a catalog lookup failure explains the state and keeps location selection usable',
       (tester) async {
         await _pumpSocialForm(
           tester,
@@ -189,15 +206,9 @@ void main() {
         expect(find.text('Tennis'), findsNothing);
         expect(_submitAction(tester).onPressed, isNull);
 
-        // The manual venue and address stay editable while sports are broken.
-        await tester.enterText(_venueNameField(), 'Sân 22 Cộng Hòa');
-        await tester.enterText(_addressField(), '202 Hoàng Văn Thụ, Quận 3');
-        await _pumpUi(tester);
-        expect(_fieldText(tester, _venueNameField()), 'Sân 22 Cộng Hòa');
-        expect(
-          _fieldText(tester, _addressField()),
-          '202 Hoàng Văn Thụ, Quận 3',
-        );
+        await _chooseSearchLocation(tester);
+        expect(find.text('Sân 22 Cộng Hòa'), findsOneWidget);
+        expect(_submitAction(tester).onPressed, isNull);
         expect(tester.takeException(), isNull);
       },
     );
@@ -324,7 +335,7 @@ void main() {
     });
 
     testWidgets(
-      'English club and region copy render without overflow at 360 px',
+      'English club and location copy render without overflow at 360 px',
       (tester) async {
         await _pumpSocialForm(
           tester,
@@ -337,25 +348,12 @@ void main() {
         expect(find.text('Club session'), findsOneWidget);
         expect(find.text('Sport'), findsOneWidget);
 
-        // Locality copy appears in its sheet after an explicit user action.
-        await _openAreaPicker(tester);
-
+        await tester.ensureVisible(find.byType(SocialLocationRow));
+        await tester.tap(find.byType(SocialLocationRow));
+        await _pumpUi(tester);
         expect(find.byType(BottomSheet), findsOneWidget);
-        expect(find.text('Area (optional)'), findsOneWidget);
-        expect(find.text('Ward/Commune'), findsOneWidget);
-        expect(
-          find.text(
-            'Area options are currently unavailable. You can still enter the address manually.',
-          ),
-          findsOneWidget,
-        );
-        expect(
-          find.text(
-            'Could not load areas. You can still enter the address manually.',
-          ),
-          findsNothing,
-        );
-        expect(_areaRetry(), findsOneWidget);
+        expect(find.text('Search by name or address'), findsOneWidget);
+        expect(find.text('Add new location'), findsOneWidget);
         expect(tester.takeException(), isNull);
       },
     );
@@ -370,9 +368,7 @@ void main() {
           socialRepository: repository,
         );
 
-        await tester.enterText(_venueNameField(), 'Sân 22 Cộng Hòa');
-        await tester.enterText(_addressField(), '202 Hoàng Văn Thụ, Quận 3');
-        await _pumpUi(tester);
+        await _chooseSearchLocation(tester);
         await _submit(tester);
 
         expect(repository.creates, hasLength(1));
@@ -395,9 +391,7 @@ void main() {
 
       await tester.tap(find.text('Xóa CLB'));
       await _pumpUi(tester);
-      await tester.enterText(_venueNameField(), 'Sân 22 Cộng Hòa');
-      await tester.enterText(_addressField(), '202 Hoàng Văn Thụ, Quận 3');
-      await _pumpUi(tester);
+      await _chooseSearchLocation(tester);
       await _submit(tester);
 
       expect(repository.creates, hasLength(1));
@@ -427,9 +421,7 @@ void main() {
       expect(_inputLabels(tester), contains('Tên kèo'));
       expect(_labelContaining(tester, 'phí'), 'Phí tham gia kèo');
 
-      await tester.enterText(_venueNameField(), 'Sân 22 Cộng Hòa');
-      await tester.enterText(_addressField(), '202 Hoàng Văn Thụ, Quận 3');
-      await _pumpUi(tester);
+      await _chooseSearchLocation(tester);
       await _submit(tester);
 
       expect(repository.creates, hasLength(1));
@@ -490,6 +482,64 @@ void main() {
       );
     }
   });
+
+  group('Social location save contract', () {
+    testWidgets('new Social cannot save without a selected location', (tester) async {
+      final repository = _RecordingSocialSessionRepository();
+      await _pumpSocialForm(tester, categories: _activeCatalog, socialRepository: repository);
+      await _submit(tester);
+      expect(repository.creates, isEmpty);
+      expect(find.text('Vui lòng chọn địa điểm trước khi lưu.'), findsOneWidget);
+    });
+
+    testWidgets('search selection supplies the POST name address and coordinate pair', (tester) async {
+      final repository = _RecordingSocialSessionRepository();
+      await _pumpSocialForm(tester, categories: _activeCatalog, socialRepository: repository);
+      await _chooseSearchLocation(tester);
+      await _submit(tester);
+      final request = repository.creates.single;
+      expect(request.venueName, 'Sân 22 Cộng Hòa');
+      expect(request.venueAddress, '202 Hoàng Văn Thụ, Quận 3');
+      expect(request.latitude, 10.8);
+      expect(request.longitude, 106.7);
+    });
+
+    testWidgets('editing another field keeps the old location and coordinate pair', (tester) async {
+      final repository = _RecordingSocialSessionRepository();
+      final original = _legacySession.copyWith(latitude: 10.1, longitude: 106.1);
+      await _pumpSocialForm(tester, categories: _activeCatalog,
+          initialSession: original, socialRepository: repository);
+      await _submit(tester, editing: true);
+      final fields = repository.updates.single.fields;
+      expect(fields['venueName'], 'Nhà thi đấu Quân khu 7');
+      expect(fields['venueAddress'], '202 Hoàng Văn Thụ, Phường 9, Quận 3');
+      expect(fields['latitude'], 10.1);
+      expect(fields['longitude'], 106.1);
+    });
+
+    testWidgets('changing the selected location sends new PATCH fields', (tester) async {
+      final repository = _RecordingSocialSessionRepository();
+      await _pumpSocialForm(tester, categories: _activeCatalog,
+          initialSession: _legacySession, socialRepository: repository);
+      await _chooseSearchLocation(tester);
+      await _submit(tester, editing: true);
+      final fields = repository.updates.single.fields;
+      expect(fields['venueName'], 'Sân 22 Cộng Hòa');
+      expect(fields['venueAddress'], '202 Hoàng Văn Thụ, Quận 3');
+      expect(fields['latitude'], 10.8);
+      expect(fields['longitude'], 106.7);
+    });
+
+    testWidgets('canceling an edited form never sends PATCH', (tester) async {
+      final repository = _RecordingSocialSessionRepository();
+      await _pumpSocialForm(tester, categories: _activeCatalog,
+          initialSession: _legacySession, socialRepository: repository);
+      await _chooseSearchLocation(tester);
+      await tester.tap(find.byIcon(Icons.arrow_back).first);
+      await _pumpUi(tester);
+      expect(repository.updates, isEmpty);
+    });
+  });
 }
 
 CategoryModel _category(
@@ -532,14 +582,22 @@ Future<void> _pumpUi(WidgetTester tester) async {
   await tester.pump();
 }
 
-Future<void> _openAreaPicker(WidgetTester tester) async {
-  final action = find.descendant(
-    of: find.byType(SocialRegionPicker),
-    matching: find.byType(OutlinedButton),
-  );
-  await tester.ensureVisible(action);
+Future<void> _chooseSearchLocation(WidgetTester tester) async {
+  await tester.ensureVisible(find.byType(SocialLocationRow));
   await _pumpUi(tester);
-  await tester.tap(action);
+  await tester.tap(find.byType(SocialLocationRow));
+  await _pumpUi(tester);
+  final search = find.descendant(
+    of: find.byType(BottomSheet),
+    matching: find.byType(TextField),
+  );
+  await tester.enterText(search, 'Sân 22 Cộng Hòa');
+  await tester.pump(const Duration(milliseconds: 500));
+  await tester.pump();
+  await tester.tap(find.descendant(
+    of: find.byType(ListTile),
+    matching: find.text('Sân 22 Cộng Hòa'),
+  ));
   await _pumpUi(tester);
 }
 
@@ -591,6 +649,7 @@ Future<void> _pumpSocialForm(
         socialSessionRepositoryProvider.overrideWith(
           (ref) => socialRepository ?? _RecordingSocialSessionRepository(),
         ),
+        socialLocationRepositoryProvider.overrideWithValue(_FormLocationRepository()),
       ],
       child: MaterialApp(
         theme: AppTheme.darkTheme,
@@ -777,9 +836,6 @@ Finder _sportRetry() => find.descendant(
 );
 
 /// The locality sheet owns its retry action.
-Finder _areaRetry() =>
-    find.descendant(of: find.byType(BottomSheet), matching: find.text('Retry'));
-
 /// The session title the form proposes for whichever sport is currently held,
 /// including a legacy sport that is not part of the active catalog. The hint
 /// belongs to the surrounding [InputDecorator], not to the edit control.
@@ -839,6 +895,33 @@ class _SilentRegionRepository implements IRegionRepository {
   @override
   Future<List<Region>> getWardsByProvince(String provinceCode) async =>
       const [];
+
+  @override
+  Future<List<Region>> searchRegions(String query, {int limit = 10}) async =>
+      const [];
+}
+
+const _formPlace = SocialPlace(
+  name: 'Sân 22 Cộng Hòa',
+  formattedAddress: '202 Hoàng Văn Thụ, Quận 3',
+  latitude: 10.8,
+  longitude: 106.7,
+);
+
+class _FormLocationRepository implements ISocialLocationRepository {
+  @override
+  Future<List<SocialPlace>> search(String query) async => [_formPlace];
+
+  @override
+  Future<SocialPlace> resolveInput(String addressOrMapsUrl) async => _formPlace;
+
+  @override
+  Future<SocialPlace> reverseLookup(LatLng pin) async => SocialPlace(
+    name: _formPlace.name,
+    formattedAddress: _formPlace.formattedAddress,
+    latitude: pin.latitude,
+    longitude: pin.longitude,
+  );
 }
 
 /// Captures the create and update payloads the form sends. `Fake` covers the

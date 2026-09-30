@@ -14178,4 +14178,97 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get socialLocationNoAddressFound =>
       'Chưa tìm thấy địa chỉ cho vị trí đã ghim.';
+
+  @override
+  String get socialPlaceSelect => 'Chọn địa điểm';
+
+  @override
+  String get socialPlaceSearchHint => 'Tìm theo tên hoặc địa chỉ';
+
+  @override
+  String get socialPlaceSearchIdle => 'Tìm địa điểm theo tên hoặc địa chỉ.';
+
+  @override
+  String get socialPlaceSearchLoading => 'Đang tìm địa điểm...';
+
+  @override
+  String get socialPlaceSearchEmpty => 'Không tìm thấy địa điểm phù hợp.';
+
+  @override
+  String get socialPlaceSearchError => 'Không thể tìm địa điểm.';
+
+  @override
+  String get socialPlaceRetry => 'Thử lại';
+
+  @override
+  String get socialPlaceAdd => 'Thêm địa điểm mới';
+
+  @override
+  String get socialPlaceInputTitle => 'Thêm địa điểm';
+
+  @override
+  String get socialPlaceInputHint => 'Địa chỉ đầy đủ hoặc Google Maps link';
+
+  @override
+  String get socialPlaceMap => 'Chọn từ bản đồ';
+
+  @override
+  String get socialPlaceNext => 'Kế tiếp';
+
+  @override
+  String get socialPlaceBack => 'Trở lại';
+
+  @override
+  String get socialPlaceConfirm => 'Xác nhận';
+
+  @override
+  String get socialPlacePreviewTitle => 'Xác nhận địa điểm';
+
+  @override
+  String get socialPlaceUnsupportedLink =>
+      'Google Maps link này không được hỗ trợ.';
+
+  @override
+  String get socialPlaceNotFound =>
+      'Không tìm thấy địa điểm cho địa chỉ hoặc link này.';
+
+  @override
+  String get socialPlaceUnresolvable =>
+      'Không tìm được địa chỉ đường đầy đủ và ghim bản đồ. Hãy thử đầu vào khác.';
+
+  @override
+  String get socialPlaceNetworkError =>
+      'Dịch vụ địa điểm không khả dụng. Vui lòng thử lại.';
+
+  @override
+  String get socialPlaceResolving => 'Đang tìm địa điểm...';
+
+  @override
+  String get socialPlaceRequired => 'Vui lòng chọn địa điểm trước khi lưu.';
+
+  @override
+  String get socialPlaceMapHint => 'Chạm bản đồ để di chuyển ghim.';
+
+  @override
+  String get socialPlaceReverseError =>
+      'Không tìm được địa chỉ đầy đủ cho ghim này. Hãy chọn ghim khác hoặc nhập địa chỉ.';
+
+  @override
+  String get socialPlaceSuggestedSection => 'Gợi ý';
+
+  @override
+  String get socialPlaceAreaSection => 'Khu vực hành chính';
+
+  @override
+  String get socialPlaceNoPin => 'Chưa có ghim';
+
+  @override
+  String get socialPlaceSaveAreaTitle => 'Lưu khu vực này?';
+
+  @override
+  String get socialPlaceSaveAreaMessage =>
+      'Không tìm thấy địa chỉ đường và ghim bản đồ cho nội dung này. Bạn có thể lưu khu vực hành chính hoặc ghim chính xác trên bản đồ.';
+
+  @override
+  String get socialPlaceSaveArea => 'Lưu khu vực';
 }

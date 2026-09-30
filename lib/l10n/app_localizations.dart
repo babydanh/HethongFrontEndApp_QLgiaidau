@@ -25821,6 +25821,180 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chưa tìm thấy địa chỉ cho vị trí đã ghim.'**
   String get socialLocationNoAddressFound;
+
+  /// No description provided for @socialPlaceSelect.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn địa điểm'**
+  String get socialPlaceSelect;
+
+  /// No description provided for @socialPlaceSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm theo tên hoặc địa chỉ'**
+  String get socialPlaceSearchHint;
+
+  /// No description provided for @socialPlaceSearchIdle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm địa điểm theo tên hoặc địa chỉ.'**
+  String get socialPlaceSearchIdle;
+
+  /// No description provided for @socialPlaceSearchLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tìm địa điểm...'**
+  String get socialPlaceSearchLoading;
+
+  /// No description provided for @socialPlaceSearchEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy địa điểm phù hợp.'**
+  String get socialPlaceSearchEmpty;
+
+  /// No description provided for @socialPlaceSearchError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tìm địa điểm.'**
+  String get socialPlaceSearchError;
+
+  /// No description provided for @socialPlaceRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get socialPlaceRetry;
+
+  /// No description provided for @socialPlaceAdd.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm địa điểm mới'**
+  String get socialPlaceAdd;
+
+  /// No description provided for @socialPlaceInputTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm địa điểm'**
+  String get socialPlaceInputTitle;
+
+  /// No description provided for @socialPlaceInputHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ đầy đủ hoặc Google Maps link'**
+  String get socialPlaceInputHint;
+
+  /// No description provided for @socialPlaceMap.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn từ bản đồ'**
+  String get socialPlaceMap;
+
+  /// No description provided for @socialPlaceNext.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kế tiếp'**
+  String get socialPlaceNext;
+
+  /// No description provided for @socialPlaceBack.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trở lại'**
+  String get socialPlaceBack;
+
+  /// No description provided for @socialPlaceConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận'**
+  String get socialPlaceConfirm;
+
+  /// No description provided for @socialPlacePreviewTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận địa điểm'**
+  String get socialPlacePreviewTitle;
+
+  /// No description provided for @socialPlaceUnsupportedLink.
+  ///
+  /// In vi, this message translates to:
+  /// **'Google Maps link này không được hỗ trợ.'**
+  String get socialPlaceUnsupportedLink;
+
+  /// No description provided for @socialPlaceNotFound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy địa điểm cho địa chỉ hoặc link này.'**
+  String get socialPlaceNotFound;
+
+  /// No description provided for @socialPlaceUnresolvable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm được địa chỉ đường đầy đủ và ghim bản đồ. Hãy thử đầu vào khác.'**
+  String get socialPlaceUnresolvable;
+
+  /// No description provided for @socialPlaceNetworkError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dịch vụ địa điểm không khả dụng. Vui lòng thử lại.'**
+  String get socialPlaceNetworkError;
+
+  /// No description provided for @socialPlaceResolving.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tìm địa điểm...'**
+  String get socialPlaceResolving;
+
+  /// No description provided for @socialPlaceRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn địa điểm trước khi lưu.'**
+  String get socialPlaceRequired;
+
+  /// No description provided for @socialPlaceMapHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chạm bản đồ để di chuyển ghim.'**
+  String get socialPlaceMapHint;
+
+  /// No description provided for @socialPlaceReverseError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm được địa chỉ đầy đủ cho ghim này. Hãy chọn ghim khác hoặc nhập địa chỉ.'**
+  String get socialPlaceReverseError;
+
+  /// No description provided for @socialPlaceSuggestedSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gợi ý'**
+  String get socialPlaceSuggestedSection;
+
+  /// No description provided for @socialPlaceAreaSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khu vực hành chính'**
+  String get socialPlaceAreaSection;
+
+  /// No description provided for @socialPlaceNoPin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có ghim'**
+  String get socialPlaceNoPin;
+
+  /// No description provided for @socialPlaceSaveAreaTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu khu vực này?'**
+  String get socialPlaceSaveAreaTitle;
+
+  /// No description provided for @socialPlaceSaveAreaMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy địa chỉ đường và ghim bản đồ cho nội dung này. Bạn có thể lưu khu vực hành chính hoặc ghim chính xác trên bản đồ.'**
+  String get socialPlaceSaveAreaMessage;
+
+  /// No description provided for @socialPlaceSaveArea.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu khu vực'**
+  String get socialPlaceSaveArea;
 }
 
 class _AppLocalizationsDelegate

@@ -147,6 +147,7 @@ void main() {
 
     await tester.tap(find.text('Guest'));
     await tester.pumpAndSettle();
+    expect(find.text('Chỉnh sửa kèo'), findsNothing);
     await tester.tap(find.text('Báo cáo buổi Social này'));
     await tester.pumpAndSettle();
     expect(reports, 1);
