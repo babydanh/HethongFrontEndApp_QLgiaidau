@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 import 'package:app_quanly_giaidau/data/models/social_place.dart';
 import 'package:app_quanly_giaidau/domain/repositories/social_location_repository.dart';
 import 'package:dio/dio.dart';
@@ -5,6 +7,8 @@ import 'package:latlong2/latlong.dart';
 
 /// Photon API adapter. The endpoint can point to a private Photon instance.
 class ApiSocialLocationRepository implements ISocialLocationRepository {
+  static const _log = AppLogger('ApiSocialLocationRepository');
+
   ApiSocialLocationRepository({Dio? dio, String? endpoint})
     : _dio = dio ?? Dio(),
       _endpoint = Uri.parse(
@@ -33,18 +37,25 @@ class ApiSocialLocationRepository implements ISocialLocationRepository {
   Future<List<SocialPlace>> search(String query) async {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return const [];
+    return _searchFeatures(trimmed);
+  }
+
+  Future<List<SocialPlace>> _searchFeatures(
+    String query, {
+    bool requireStreet = false,
+  }) async {
     final response = await _get(
       _endpoint.replace(
         path: '/api',
         queryParameters: {
-          'q': trimmed,
+          'q': query,
           'limit': '8',
           'bbox': _vietnamBbox,
           'lang': 'default',
         },
       ),
     );
-    return _parseFeatures(response.data);
+    return _parseFeatures(response.data, requireStreet: requireStreet);
   }
 
   @override
@@ -83,7 +94,7 @@ class ApiSocialLocationRepository implements ISocialLocationRepository {
         },
       ),
     );
-    final matches = _parseFeatures(response.data);
+    final matches = _parseFeatures(response.data, requireStreet: true);
     if (matches.isEmpty) throw const UnresolvableLocation();
     final match = matches.first;
     return SocialPlace(
@@ -95,11 +106,20 @@ class ApiSocialLocationRepository implements ISocialLocationRepository {
   }
 
   Future<SocialPlace> _resolveText(String text) async {
-    final results = await search(text);
+    final results = await _searchFeatures(text, requireStreet: true);
     if (results.isEmpty) throw const LocationNotFound();
-    final first = results.first;
-    if (!first.canPreview) throw const UnresolvableLocation();
-    return first;
+    final key = VietnamAddressParser.removeVietnameseTones(
+      text.split(',').first,
+    );
+    final tokens = key.split(' ').where((token) => token.isNotEmpty);
+    for (final place in results) {
+      final normalized = VietnamAddressParser.removeVietnameseTones(
+        '${place.name} ${place.formattedAddress}',
+      );
+      final words = normalized.split(' ').toSet();
+      if (tokens.every(words.contains)) return place;
+    }
+    throw const LocationNotFound();
   }
 
   Future<Response<dynamic>> _get(Uri uri, {bool redirects = true}) async {
@@ -112,7 +132,12 @@ class ApiSocialLocationRepository implements ISocialLocationRepository {
           headers: {'Accept': 'application/json'},
         ),
       );
-    } on DioException {
+    } on DioException catch (error, stack) {
+      _log.error(
+        'Photon ${uri.path} failed (${error.type}, HTTP ${error.response?.statusCode})',
+        error,
+        stack,
+      );
       throw const LocationNetworkFailure();
     }
   }
@@ -162,8 +187,9 @@ class ApiSocialLocationRepository implements ISocialLocationRepository {
     if (match == null) return null;
     final lat = double.tryParse(match.group(1)!);
     final lon = double.tryParse(match.group(2)!);
-    if (lat == null || lon == null || lat.abs() > 90 || lon.abs() > 180)
+    if (lat == null || lon == null || lat.abs() > 90 || lon.abs() > 180) {
       return null;
+    }
     return LatLng(lat, lon);
   }
 
@@ -175,7 +201,7 @@ class ApiSocialLocationRepository implements ISocialLocationRepository {
         : null;
   }
 
-  List<SocialPlace> _parseFeatures(dynamic raw) {
+  List<SocialPlace> _parseFeatures(dynamic raw, {bool requireStreet = false}) {
     if (raw is! Map || raw['features'] is! List) {
       throw const UnresolvableLocation();
     }
@@ -183,16 +209,18 @@ class ApiSocialLocationRepository implements ISocialLocationRepository {
     for (final item in raw['features'] as List) {
       if (item is! Map ||
           item['properties'] is! Map ||
-          item['geometry'] is! Map)
+          item['geometry'] is! Map) {
         continue;
+      }
       final properties = item['properties'] as Map;
       final geometry = item['geometry'] as Map;
       final coordinates = geometry['coordinates'];
       if (coordinates is! List || coordinates.length < 2) continue;
       final lon = _number(coordinates[0]);
       final lat = _number(coordinates[1]);
-      if (lat == null || lon == null || lat.abs() > 90 || lon.abs() > 180)
+      if (lat == null || lon == null || lat.abs() > 90 || lon.abs() > 180) {
         continue;
+      }
       final name = _value(properties['name']);
       // Photon ở VN thường thiếu street/housenumber (chỉ có district/city/
       // state). Không loại kết quả thiếu street nữa; dựng địa chỉ từ mọi
@@ -204,9 +232,11 @@ class ApiSocialLocationRepository implements ISocialLocationRepository {
         street = name;
       }
       final house = _value(properties['housenumber']);
-      final streetLine = [house, street]
-          .where((part) => part.isNotEmpty)
-          .join(' ');
+      final streetLine = [
+        house,
+        street,
+      ].where((part) => part.isNotEmpty).join(' ');
+      if (requireStreet && streetLine.isEmpty) continue;
       final country = _value(properties['country']);
       final address = [
         streetLine,

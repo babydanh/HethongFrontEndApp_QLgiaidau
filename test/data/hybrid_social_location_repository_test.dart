@@ -76,19 +76,17 @@ class _NominatimAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
-ResponseBody _json(Object value, [int status = 200]) =>
-    ResponseBody.fromString(
-      jsonEncode(value),
-      status,
-      headers: {Headers.contentTypeHeader: [Headers.jsonContentType]},
-    );
+ResponseBody _json(Object value, [int status = 200]) => ResponseBody.fromString(
+  jsonEncode(value),
+  status,
+  headers: {
+    Headers.contentTypeHeader: [Headers.jsonContentType],
+  },
+);
 
 NominatimReverseDataSource _nominatim(Object reply) =>
     NominatimReverseDataSource(
-      dio: Dio()
-        ..httpClientAdapter = _NominatimAdapter(
-          (_) => _json(reply),
-        ),
+      dio: Dio()..httpClientAdapter = _NominatimAdapter((_) => _json(reply)),
     );
 
 HybridSocialLocationRepository _repo({
@@ -139,36 +137,54 @@ void main() {
     );
   });
 
-  test('resolveInput falls back to region area when photon misses', () async {
+  test('resolveInput does not turn a missing address into a region', () async {
     final photon = _FakePhoton()
       ..onResolve = (_) async => throw const LocationNotFound();
-    final repository = _repo(photon: photon);
-
-    final place = await repository.resolveInput('Phường Bình Trưng');
-
-    expect(place.canApply, isTrue);
-    expect(place.hasPin, isFalse);
-    expect(place.formattedAddress, contains('TP Hồ Chí Minh'));
-  });
-
-  test('resolveInput rethrows unsupported links without region fallback', () async {
-    final photon = _FakePhoton()
-      ..onResolve = (_) async => throw const UnsupportedLocationLink();
+    var regionSearched = false;
     final regions = _FakeRegions()
-      ..onSearch = (_, _) async => const [_ward];
+      ..onSearch = (_, _) async {
+        regionSearched = true;
+        return const [_ward];
+      };
     final repository = _repo(photon: photon, regions: regions);
 
-    expect(
-      () => repository.resolveInput('https://evil.example/maps'),
-      throwsA(isA<UnsupportedLocationLink>()),
+    await expectLater(
+      repository.resolveInput('1 Lữ Gia, Phường Bình Trưng'),
+      throwsA(isA<LocationNotFound>()),
+    );
+    expect(regionSearched, isFalse);
+  });
+
+  test('resolveInput preserves a Photon network failure', () async {
+    final photon = _FakePhoton()
+      ..onResolve = (_) async => throw const LocationNetworkFailure();
+    await expectLater(
+      _repo(photon: photon).resolveInput('1 Lữ Gia'),
+      throwsA(isA<LocationNetworkFailure>()),
     );
   });
+
+  test(
+    'resolveInput rethrows unsupported links without region fallback',
+    () async {
+      final photon = _FakePhoton()
+        ..onResolve = (_) async => throw const UnsupportedLocationLink();
+      final regions = _FakeRegions()..onSearch = (_, _) async => const [_ward];
+      final repository = _repo(photon: photon, regions: regions);
+
+      expect(
+        () => repository.resolveInput('https://evil.example/maps'),
+        throwsA(isA<UnsupportedLocationLink>()),
+      );
+    },
+  );
 
   test('reverseLookup falls back to nominatim when photon is empty', () async {
     final photon = _FakePhoton()
       ..onReverse = (_) async => throw const UnresolvableLocation();
     final nominatim = _nominatim({
-      'display_name': '123 Nguyễn Trãi, Phường Bến Thành, TP Hồ Chí Minh, Việt Nam',
+      'display_name':
+          '123 Nguyễn Trãi, Phường Bến Thành, TP Hồ Chí Minh, Việt Nam',
       'address': {
         'house_number': '123',
         'road': 'Nguyễn Trãi',
@@ -179,25 +195,25 @@ void main() {
     });
     final repository = _repo(photon: photon, nominatim: nominatim);
 
-    final place = await repository.reverseLookup(
-      const LatLng(10.775, 106.699),
-    );
+    final place = await repository.reverseLookup(const LatLng(10.775, 106.699));
 
     expect(place.formattedAddress, contains('Nguyễn Trãi'));
     expect(place.latitude, 10.775);
     expect(place.longitude, 106.699);
   });
 
-  test('reverseLookup throws the photon error when nominatim also fails',
-      () async {
-    final photon = _FakePhoton()
-      ..onReverse = (_) async => throw const UnresolvableLocation();
-    final nominatim = _nominatim({'error': 'Unable to geocode'});
-    final repository = _repo(photon: photon, nominatim: nominatim);
+  test(
+    'reverseLookup throws the photon error when nominatim also fails',
+    () async {
+      final photon = _FakePhoton()
+        ..onReverse = (_) async => throw const UnresolvableLocation();
+      final nominatim = _nominatim({'error': 'Unable to geocode'});
+      final repository = _repo(photon: photon, nominatim: nominatim);
 
-    expect(
-      () => repository.reverseLookup(const LatLng(0, 0)),
-      throwsA(isA<UnresolvableLocation>()),
-    );
-  });
+      expect(
+        () => repository.reverseLookup(const LatLng(0, 0)),
+        throwsA(isA<UnresolvableLocation>()),
+      );
+    },
+  );
 }

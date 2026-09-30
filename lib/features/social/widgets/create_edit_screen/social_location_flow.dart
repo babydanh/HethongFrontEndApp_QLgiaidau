@@ -117,13 +117,7 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
           .read(socialLocationRepositoryProvider)
           .resolveInput(input);
       if (!mounted) return;
-      if (!place.canApply) throw const UnresolvableLocation();
-      if (!place.canPreview) {
-        // Chỉ ra khu vực hành chính (không pin): cho host lưu luôn hoặc
-        // ghim chính xác trên bản đồ, input gốc được giữ nguyên.
-        await _offerSaveArea(place);
-        return;
-      }
+      if (!place.canPreview) throw const UnresolvableLocation();
       setState(() {
         _candidate = place;
         _step = _LocationStep.preview;
@@ -135,45 +129,6 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
       );
     } finally {
       if (mounted) setState(() => _resolving = false);
-    }
-  }
-
-  /// Dialog khi input chỉ phân giải được khu vực hành chính (không pin).
-  Future<void> _offerSaveArea(SocialPlace area) async {
-    final l10n = AppLocalizations.of(context)!;
-    final save = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.socialPlaceSaveAreaTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              area.formattedAddress,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(l10n.socialPlaceSaveAreaMessage),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.socialPlaceMap),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.socialPlaceSaveArea),
-          ),
-        ],
-      ),
-    );
-    if (!mounted) return;
-    if (save == true) {
-      Navigator.of(context).pop(area);
-    } else if (save == false) {
-      await _pickOnMap();
     }
   }
 
@@ -380,11 +335,7 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
       leading: Icon(
         hasPin ? Icons.place_outlined : Icons.location_city_outlined,
       ),
-      title: Text(
-        place.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      title: Text(place.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
         hasPin
             ? place.formattedAddress

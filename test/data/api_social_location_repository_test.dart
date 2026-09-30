@@ -87,6 +87,60 @@ void main() {
     );
   });
 
+  test('address resolution skips an unrelated Photon first result', () async {
+    final unrelated = {
+      'properties': {
+        'name': 'Quán Ăn Vương Gia Tửu',
+        'housenumber': '15',
+        'street': 'Hoa Phượng',
+        'city': 'Hồ Chí Minh',
+      },
+      'geometry': {
+        'coordinates': [106.687, 10.797],
+      },
+    };
+    final repository = ApiSocialLocationRepository(
+      dio: Dio()
+        ..httpClientAdapter = _LocationAdapter(
+          (_) => _json({
+            'features': [unrelated, ..._places['features']!],
+          }),
+        ),
+    );
+
+    final place = await repository.resolveInput('1 Lữ Gia, Hồ Chí Minh');
+    expect(place.name, 'Nhà thi đấu Phú Thọ');
+    expect(place.formattedAddress, startsWith('1 Lữ Gia'));
+  });
+
+  test('a district centroid cannot be previewed as a street address', () async {
+    final repository = ApiSocialLocationRepository(
+      dio: Dio()
+        ..httpClientAdapter = _LocationAdapter(
+          (_) => _json({
+            'features': [
+              {
+                'properties': {
+                  'name': 'Bình Trưng',
+                  'district': 'Phường Bình Trưng',
+                  'city': 'Hồ Chí Minh',
+                },
+                'geometry': {
+                  'coordinates': [106.8, 10.78],
+                },
+              },
+            ],
+          }),
+        ),
+    );
+
+    expect(await repository.search('Bình Trưng'), hasLength(1));
+    await expectLater(
+      repository.resolveInput('Bình Trưng'),
+      throwsA(isA<LocationNotFound>()),
+    );
+  });
+
   test('resolves a Google Maps coordinate link by reverse lookup', () async {
     final adapter = _LocationAdapter((options) {
       expect(options.uri.path, '/reverse');
@@ -210,67 +264,80 @@ void main() {
     );
   });
 
-  test('uses a named road as the street address when Photon omits street', () async {
-    final repository = ApiSocialLocationRepository(
-      dio: Dio()
-        ..httpClientAdapter = _LocationAdapter((_) => _json({
+  test(
+    'uses a named road as the street address when Photon omits street',
+    () async {
+      final repository = ApiSocialLocationRepository(
+        dio: Dio()
+          ..httpClientAdapter = _LocationAdapter(
+            (_) => _json({
+              'features': [
+                {
+                  'properties': {
+                    'name': 'Hẻm 12 Lữ Gia',
+                    'osm_key': 'highway',
+                    'city': 'Hồ Chí Minh',
+                    'country': 'Việt Nam',
+                  },
+                  'geometry': {
+                    'type': 'Point',
+                    'coordinates': [106.657, 10.762],
+                  },
+                },
+              ],
+            }),
+          ),
+      );
+
+      final place = await repository.reverseLookup(
+        const LatLng(10.762, 106.657),
+      );
+
+      expect(place.name, 'Hẻm 12 Lữ Gia');
+      expect(place.formattedAddress, 'Hẻm 12 Lữ Gia, Hồ Chí Minh, Việt Nam');
+    },
+  );
+
+  test(
+    'accepts district-level VN results without a street and biases VN',
+    () async {
+      final adapter = _LocationAdapter(
+        (_) => _json({
           'features': [
             {
               'properties': {
-                'name': 'Hẻm 12 Lữ Gia',
-                'osm_key': 'highway',
-                'city': 'Hồ Chí Minh',
+                'name': 'Bình Trưng',
+                'district': 'Phường Bình Trưng',
+                'city': 'TP Hồ Chí Minh',
+                'state': 'Hồ Chí Minh',
                 'country': 'Việt Nam',
               },
-              'geometry': {'type': 'Point', 'coordinates': [106.657, 10.762]},
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [106.8, 10.78],
+              },
             },
           ],
-        })),
-    );
+        }),
+      );
+      final repository = ApiSocialLocationRepository(
+        dio: Dio()..httpClientAdapter = adapter,
+      );
 
-    final place = await repository.reverseLookup(const LatLng(10.762, 106.657));
+      final results = await repository.search('Bình Trưng');
 
-    expect(place.name, 'Hẻm 12 Lữ Gia');
-    expect(place.formattedAddress, 'Hẻm 12 Lữ Gia, Hồ Chí Minh, Việt Nam');
-  });
+      expect(results, hasLength(1));
+      expect(results.single.name, 'Bình Trưng');
+      expect(
+        results.single.formattedAddress,
+        'Phường Bình Trưng, TP Hồ Chí Minh, Hồ Chí Minh, Việt Nam',
+      );
+      expect(adapter.requested.single.queryParameters['bbox'], isNotEmpty);
+    },
+  );
 
-  test('accepts district-level VN results without a street and biases VN',
-      () async {
-    final adapter = _LocationAdapter(
-      (_) => _json({
-        'features': [
-          {
-            'properties': {
-              'name': 'Bình Trưng',
-              'district': 'Phường Bình Trưng',
-              'city': 'TP Hồ Chí Minh',
-              'state': 'Hồ Chí Minh',
-              'country': 'Việt Nam',
-            },
-            'geometry': {
-              'type': 'Point',
-              'coordinates': [106.8, 10.78],
-            },
-          },
-        ],
-      }),
-    );
-    final repository = ApiSocialLocationRepository(
-      dio: Dio()..httpClientAdapter = adapter,
-    );
-
-    final results = await repository.search('Bình Trưng');
-
-    expect(results, hasLength(1));
-    expect(results.single.name, 'Bình Trưng');
-    expect(
-      results.single.formattedAddress,
-      'Phường Bình Trưng, TP Hồ Chí Minh, Hồ Chí Minh, Việt Nam',
-    );
-    expect(adapter.requested.single.queryParameters['bbox'], isNotEmpty);
-  });
-
-  test('distinguishes empty results from network failure', () async {    final empty = ApiSocialLocationRepository(
+  test('distinguishes empty results from network failure', () async {
+    final empty = ApiSocialLocationRepository(
       dio: Dio()
         ..httpClientAdapter = _LocationAdapter((_) => _json({'features': []})),
     );

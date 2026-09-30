@@ -181,19 +181,50 @@ void main() {
     expect(applied, isEmpty);
   });
 
-  testWidgets('a Google Maps link resolves then waits for confirmation', (tester) async {
+  testWidgets('network failure keeps the entered address for retry', (
+    tester,
+  ) async {
+    final repo = _PlaceRepository()
+      ..onResolve = (_) async => throw const LocationNetworkFailure();
+    final applied = await pumpFlow(tester, repo);
+    await tester.tap(find.text('Add new location'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, '1 Lữ Gia');
+    await tester.pump();
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('The location service is unavailable. Please retry.'),
+      findsOneWidget,
+    );
+    expect(find.text('1 Lữ Gia'), findsOneWidget);
+    expect(applied, isEmpty);
+  });
+
+  testWidgets('a Google Maps link resolves then waits for confirmation', (
+    tester,
+  ) async {
     String? resolved;
-    final repo = _PlaceRepository()..onResolve = (input) async {
-      resolved = input;
-      return _place;
-    };
+    final repo = _PlaceRepository()
+      ..onResolve = (input) async {
+        resolved = input;
+        return _place;
+      };
     final applied = await pumpFlow(tester, repo);
     await tester.tap(find.text('Add new location'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).last, '   ');
     await tester.pump();
-    expect(tester.widget<TextButton>(find.widgetWithText(TextButton, 'Next')).onPressed, isNull);
-    await tester.enterText(find.byType(TextField).last, 'https://www.google.com/maps?q=1+Lu+Gia');
+    expect(
+      tester
+          .widget<TextButton>(find.widgetWithText(TextButton, 'Next'))
+          .onPressed,
+      isNull,
+    );
+    await tester.enterText(
+      find.byType(TextField).last,
+      'https://www.google.com/maps?q=1+Lu+Gia',
+    );
     await tester.pump();
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
@@ -204,10 +235,16 @@ void main() {
     expect(applied.single?.name, _place.name);
   });
 
-  testWidgets('an incomplete resolved place cannot reach confirmation', (tester) async {
-    final repo = _PlaceRepository()..onResolve = (_) async => const SocialPlace(
-      name: 'Incomplete', formattedAddress: '', latitude: 10.7, longitude: 106.7,
-    );
+  testWidgets('an incomplete resolved place cannot reach confirmation', (
+    tester,
+  ) async {
+    final repo = _PlaceRepository()
+      ..onResolve = (_) async => const SocialPlace(
+        name: 'Incomplete',
+        formattedAddress: '',
+        latitude: 10.7,
+        longitude: 106.7,
+      );
     final applied = await pumpFlow(tester, repo);
     await tester.tap(find.text('Add new location'));
     await tester.pumpAndSettle();
@@ -274,33 +311,40 @@ void main() {
     },
   );
 
-  testWidgets('canceling the map keeps draft input and leaves the form unchanged', (tester) async {
-    final applied = await pumpFlow(tester, _PlaceRepository());
-    await tester.tap(find.text('Add new location'));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField).last, 'draft address');
-    await tester.pump();
-    await tester.tap(find.text('Choose from map'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Back').first);
-    await tester.pumpAndSettle();
-    expect(find.text('draft address'), findsOneWidget);
-    expect(applied, isEmpty);
-  });
+  testWidgets(
+    'canceling the map keeps draft input and leaves the form unchanged',
+    (tester) async {
+      final applied = await pumpFlow(tester, _PlaceRepository());
+      await tester.tap(find.text('Add new location'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).last, 'draft address');
+      await tester.pump();
+      await tester.tap(find.text('Choose from map'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Back').first);
+      await tester.pumpAndSettle();
+      expect(find.text('draft address'), findsOneWidget);
+      expect(applied, isEmpty);
+    },
+  );
 
-  testWidgets('input remains usable on a narrow screen with the keyboard focused', (tester) async {    tester.view.physicalSize = const Size(320, 640);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    await pumpFlow(tester, _PlaceRepository());
-    await tester.tap(find.text('Add new location'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byType(TextField).last);
-    await tester.enterText(find.byType(TextField).last, '1 Lữ Gia');
-    await tester.pump();
-    expect(find.text('Next'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'input remains usable on a narrow screen with the keyboard focused',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await pumpFlow(tester, _PlaceRepository());
+      await tester.tap(find.text('Add new location'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(TextField).last);
+      await tester.enterText(find.byType(TextField).last, '1 Lữ Gia');
+      await tester.pump();
+      expect(find.text('Next'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('area results show a no-pin note and apply on tap', (
     tester,
@@ -321,7 +365,9 @@ void main() {
     expect(applied.single?.formattedAddress, area.formattedAddress);
   });
 
-  testWidgets('region-only resolve offers saving the area', (tester) async {
+  testWidgets('region-only resolve cannot skip the pinned preview', (
+    tester,
+  ) async {
     const area = SocialPlace(
       name: 'Phường Bình Trưng',
       formattedAddress: 'Phường Bình Trưng, TP Hồ Chí Minh',
@@ -334,10 +380,9 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
-    expect(find.text('Save this area?'), findsOneWidget);
+    expect(find.textContaining('A full street address'), findsOneWidget);
+    expect(find.text('Confirm'), findsNothing);
     expect(applied, isEmpty);
-    await tester.tap(find.text('Save area'));
-    await tester.pumpAndSettle();
-    expect(applied.single?.formattedAddress, area.formattedAddress);
+    expect(find.text('Bình Trưng'), findsOneWidget);
   });
 }

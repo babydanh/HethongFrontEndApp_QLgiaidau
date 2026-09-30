@@ -82,17 +82,9 @@ class HybridSocialLocationRepository implements ISocialLocationRepository {
   Future<SocialPlace> resolveInput(String addressOrMapsUrl) async {
     final value = addressOrMapsUrl.trim();
     if (value.isEmpty) throw const LocationNotFound();
-    try {
-      return await _photon.resolveInput(value);
-    } on UnsupportedLocationLink {
-      rethrow;
-    } catch (_) {
-      // Photon không phân giải được (không thấy / lỗi mạng): thử hậu tố
-      // khu vực hành chính để host vẫn lưu được Tỉnh/Phường (không pin).
-      final fallback = await _regionFallback(value);
-      if (fallback != null) return fallback;
-      throw const LocationNotFound();
-    }
+    // AC5 requires a pinned place for the preview. Administrative regions
+    // have no pin and must not turn a failed address lookup into a selection.
+    return _photon.resolveInput(value);
   }
 
   @override
@@ -120,33 +112,6 @@ class HybridSocialLocationRepository implements ISocialLocationRepository {
       name: name.isEmpty ? address : name,
       formattedAddress: address.isEmpty ? name : address,
     );
-  }
-
-  /// Fallback khi Photon bó tay: thử toàn chuỗi, rồi 2 đoạn cuối sau dấu
-  /// phẩy (thường là "Phường/Xã, Tỉnh/TP").
-  Future<SocialPlace?> _regionFallback(String input) async {
-    final candidates = <String>[input];
-    final segments = input
-        .split(',')
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
-    if (segments.length >= 2) {
-      candidates.add(segments.sublist(segments.length - 2).join(', '));
-      candidates.add(segments.last);
-    }
-    for (final candidate in candidates) {
-      try {
-        final matches = await _regions.searchRegions(
-          candidate,
-          limit: _maxRegionResults,
-        );
-        if (matches.isNotEmpty) return _regionToPlace(matches.first);
-      } catch (_) {
-        continue;
-      }
-    }
-    return null;
   }
 
   /// Chuẩn hóa hậu tố Tỉnh/Phường nếu địa chỉ Photon/Nominatim thiếu:
