@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
 enum LiveZoom { fit, half, full }
@@ -12,12 +13,20 @@ enum LiveZoom { fit, half, full }
 /// trượt khi xem bằng một tay. Nút chỉ dùng icon, nhãn nằm trong
 /// [Semantics] để trình đọc màn hình vẫn đọc được chứ không chỉ dựa vào hình.
 class LiveVideoPlayer extends StatefulWidget {
-  const LiveVideoPlayer({super.key, required this.url, this.label});
+  const LiveVideoPlayer({
+    super.key,
+    required this.url,
+    this.label,
+    this.onToggleChat,
+  });
 
   final String url;
 
   /// Tên sân/camera, hiện ở góc phải. Rỗng thì không hiện.
   final String? label;
+
+  /// Bật/tắt khung thảo luận. Rỗng thì ẩn nút chat, khớp web.
+  final VoidCallback? onToggleChat;
 
   @override
   State<LiveVideoPlayer> createState() => _LiveVideoPlayerState();
@@ -30,6 +39,10 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
   Timer? _hideTimer;
   LiveZoom _zoom = LiveZoom.fit;
   bool _muted = true;
+  bool _playing = false;
+  double _volume = 1;
+  bool _fullscreen = false;
+  bool _chatOpen = false;
   bool _controlsVisible = true;
   String? _error;
 
@@ -87,6 +100,13 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
       _zoom = LiveZoom.fit;
       _error = null;
     });
+    // Nút play/pause phải phản ánh trạng thái thật của player (đã tự dừng khi
+    // hết luồng, người dùng điều khiển ở nơi khác…) chứ không chỉ khi bấm.
+    controller.addListener(() {
+      if (!mounted) return;
+      final playing = controller.value.isPlaying;
+      if (playing != _playing) setState(() => _playing = playing);
+    });
     _scheduleHide();
     await previous?.dispose();
   }
@@ -119,6 +139,36 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
         LiveZoom.full => LiveZoom.fit,
       };
     });
+    _revealControls();
+  }
+
+  void _togglePlay() {
+    final controller = _controller;
+    if (controller == null) return;
+    if (controller.value.isPlaying) {
+      controller.pause();
+    } else {
+      controller.play();
+    }
+    _revealControls();
+  }
+
+  void _setVolume(double value) {
+    final controller = _controller;
+    if (controller == null) return;
+    setState(() {
+      _volume = value.clamp(0, 1);
+      _muted = _volume == 0;
+      controller.setVolume(_volume);
+    });
+    _revealControls();
+  }
+
+  void _toggleFullscreen() {
+    setState(() => _fullscreen = !_fullscreen);
+    SystemChrome.setEnabledSystemUIMode(
+      _fullscreen ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge,
+    );
     _revealControls();
   }
 
@@ -211,31 +261,123 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
                       ),
                     ),
 
+                  // Thanh điều khiển: đúng bố cục web
+                  // (`SportOLivePlayer.tsx:465-558`) — trái: play, âm lượng +
+                  // thanh trượt, chấm TRỰC TIẾP; phải: phóng, chat, toàn màn.
+                  // Nút 48dp và thanh trượt cao 44dp, không thu nhỏ.
                   Positioned(
-                    right: 8,
-                    bottom: 8,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
                     child: AnimatedOpacity(
                       opacity: visible ? 1 : 0,
                       duration: const Duration(milliseconds: 200),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _ControlButton(
-                            icon: _zoom == LiveZoom.fit
-                                ? Icons.zoom_in_map
-                                : Icons.zoom_out_map,
-                            label: 'Phóng to',
-                            onPressed: _cycleZoom,
+                      child: IgnorePointer(
+                        ignoring: !visible,
+                        child: Container(
+                          color: Colors.black.withValues(alpha: 0.35),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
                           ),
-                          const SizedBox(width: 6),
-                          _ControlButton(
-                            icon: _muted
-                                ? Icons.volume_off_outlined
-                                : Icons.volume_up_outlined,
-                            label: _muted ? 'Bật tiếng' : 'Tắt tiếng',
-                            onPressed: _toggleMute,
+                          child: Row(
+                            children: [
+                              _ControlButton(
+                                icon: _playing
+                                    ? Icons.pause
+                                    : Icons.play_arrow,
+                                label: _playing ? 'Tạm dừng' : 'Phát',
+                                onPressed: _togglePlay,
+                              ),
+                              _ControlButton(
+                                icon: _muted || _volume == 0
+                                    ? Icons.volume_off
+                                    : Icons.volume_up,
+                                label: _muted ? 'Bật tiếng' : 'Tắt tiếng',
+                                onPressed: _toggleMute,
+                              ),
+                              // Vùng chạm 44dp dù thanh trượt chỉ mảnh, đúng
+                              // web: slider mảnh nhưng vùng bấm rộng.
+                              SizedBox(
+                                width: 80,
+                                height: 44,
+                                child: SliderTheme(
+                                  data: SliderThemeData(
+                                    trackHeight: 4,
+                                    thumbShape:
+                                        const RoundSliderThumbShape(
+                                          enabledThumbRadius: 6,
+                                        ),
+                                    activeTrackColor: Colors.white,
+                                    inactiveTrackColor:
+                                        Colors.white.withValues(alpha: 0.25),
+                                    thumbColor: Colors.white,
+                                    overlayShape:
+                                        SliderComponentShape.noOverlay,
+                                  ),
+                                  child: Slider(
+                                    value: _muted ? 0 : _volume,
+                                    onChanged: _setVolume,
+                                    onChangeEnd: (_) => _revealControls(),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              // Tín hiệu live nằm cùng hàng nút như web.
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFEF4444),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    'TRỰC TIẾP',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.8,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Spacer(),
+                              _ControlButton(
+                                icon: _zoom == LiveZoom.fit
+                                    ? Icons.zoom_in_map
+                                    : Icons.zoom_out_map,
+                                label: 'Phóng to',
+                                onPressed: _cycleZoom,
+                              ),
+                              if (widget.onToggleChat != null)
+                                _ControlButton(
+                                  icon: _chatOpen
+                                      ? Icons.chat
+                                      : Icons.chat_bubble_outline,
+                                  label: _chatOpen
+                                      ? 'Ẩn thảo luận'
+                                      : 'Xem thảo luận',
+                                  onPressed: () {
+                                    setState(() => _chatOpen = !_chatOpen);
+                                    widget.onToggleChat!();
+                                    _revealControls();
+                                  },
+                                ),
+                              _ControlButton(
+                                icon: _fullscreen
+                                    ? Icons.fullscreen_exit
+                                    : Icons.fullscreen,
+                                label: _fullscreen ? 'Thoát toàn màn' : 'Toàn màn',
+                                onPressed: _toggleFullscreen,
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -262,11 +404,13 @@ class _ControlButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Ghost như web (`SportOLivePlayer.tsx:621`): không viền, không nền đen,
+    // chỉ đổi màu chữ/nền khi rê. Nền chip đen làm nút nặng và lệch bố cục.
     return Semantics(
       button: true,
       label: label,
       child: Material(
-        color: Colors.black.withValues(alpha: 0.6),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
@@ -275,7 +419,7 @@ class _ControlButton extends StatelessWidget {
           child: SizedBox(
             width: 48,
             height: 48,
-            child: Icon(icon, color: Colors.white, size: 20),
+            child: Icon(icon, color: const Color(0xFFCBD5E1), size: 20),
           ),
         ),
       ),
