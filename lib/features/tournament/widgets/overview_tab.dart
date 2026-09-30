@@ -4,11 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
-import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
@@ -145,23 +143,6 @@ class _OverviewTabState extends State<OverviewTab> {
     return '${fmt.format(amount)} đ';
   }
 
-  String _resolveFormatBadge(Tournament t) {
-    final l10n = AppLocalizations.of(context)!;
-    final formatStr = (t.format).toLowerCase();
-    final sportStr = (t.sport).toLowerCase();
-    final isFootball =
-        sportStr.contains('bóng đá') || sportStr.contains('football');
-
-    if (isFootball) {
-      return l10n.tournamentCategoryFootballMen;
-    }
-    final isDoubles =
-        formatStr.contains('doubles') || formatStr.contains('đôi');
-    return isDoubles
-        ? l10n.createClubTournament_formatDoubles
-        : l10n.createClubTournament_formatSingles;
-  }
-
   @override
   Widget build(BuildContext context) {
     final t = widget.tournament;
@@ -210,29 +191,6 @@ class _OverviewTabState extends State<OverviewTab> {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         _buildSportBadge(t.sport),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3.5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primary.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: AppTheme.primary.withValues(alpha: 0.2),
-                              width: 0.8,
-                            ),
-                          ),
-                          child: Text(
-                            _resolveFormatBadge(t),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.primary,
-                            ),
-                          ),
-                        ),
-                        _buildStatusBadge(t.status),
                         if (t.isRanked) _buildRankingBadge(true),
                       ],
                     ),
@@ -401,19 +359,16 @@ class _OverviewTabState extends State<OverviewTab> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
-                              Icons.location_on_rounded,
-                              size: 20,
-                              color: AppTheme.primary,
+                            SportChoiceTile.buildSportIcon(
+                              t.sport,
+                              20,
+                              AppTheme.primary,
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              t.venueName != null &&
-                                      t.venueName!.trim().isNotEmpty
-                                  ? t.venueName!
-                                  : (locationStr.isNotEmpty
-                                        ? locationStr.split(',').first.trim()
-                                        : 'Đang cập nhật'),
+                              t.sport.isNotEmpty
+                                  ? (AppConstants.sportNames[t.sport.toLowerCase()] ?? t.sport)
+                                  : 'Thể thao',
                               style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w900,
@@ -426,9 +381,7 @@ class _OverviewTabState extends State<OverviewTab> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              locationStr.isNotEmpty
-                                  ? locationStr.split(',').last.trim()
-                                  : 'Việt Nam',
+                              'Môn thi đấu',
                               style: TextStyle(
                                 fontSize: 10.5,
                                 color: colors.textMuted,
@@ -504,7 +457,85 @@ class _OverviewTabState extends State<OverviewTab> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+
+                // ─── CARD SÂN (tách riêng, mặc định hiện ĐỊA CHỈ CHI TIẾT) ───
+                if (locationStr.trim().isNotEmpty ||
+                    (t.venueName?.trim().isNotEmpty ?? false)) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.bgCard,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: colors.border.withValues(alpha: 0.65),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: AppTheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                          child: const Icon(
+                            Icons.location_on_rounded,
+                            size: 18,
+                            color: AppTheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Địa điểm thi đấu',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.textMuted,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              if (t.venueName?.trim().isNotEmpty ?? false)
+                                Text(
+                                  t.venueName!.trim(),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    color: colors.textPrimary,
+                                    height: 1.25,
+                                  ),
+                                ),
+                              // Mặc định hiện ĐỊA CHỈ CHI TIẾT, không rút gọn
+                              // còn tên phường — người dùng cần biết đi đâu.
+                              if (locationStr.trim().isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  locationStr.trim(),
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    color: colors.textSecondary,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
 
                 // ─── CARD LỆ PHÍ THAM GIA (Entry Fee Card) ───
                 Container(
@@ -785,40 +816,6 @@ class _OverviewTabState extends State<OverviewTab> {
                   },
                 ),
 
-                // Nút Lịch thi đấu (nhanh gọn)
-                if (!isClubLite) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.primary,
-                        backgroundColor: colors.bgCard,
-                        side: BorderSide(
-                          color: AppTheme.primary.withValues(alpha: 0.4),
-                          width: 1,
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      onPressed: () {
-                        if (widget.onNavigateToMatches != null) {
-                          widget.onNavigateToMatches!();
-                        }
-                      },
-                      icon: const Icon(Icons.calendar_month_rounded, size: 16),
-                      label: const Text(
-                        'Xem lịch thi đấu chi tiết',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                ],
 
                 // ─── LƯỚI XÁC NHẬN THAM GIA 16/32 SLOT (ĐỒNG BỘ CHUẨN WEB) ───
                 if (isClubLite ||
@@ -1036,36 +1033,6 @@ class _OverviewTabState extends State<OverviewTab> {
         fontWeight: FontWeight.w800,
         color: context.colors.textMuted,
         letterSpacing: 0.6,
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(String status) {
-    final l10n = AppLocalizations.of(context)!;
-    final label = StatusHelper.getTournamentStatusLabel(status, l10n: l10n);
-    final bg = StatusHelper.getTournamentStatusColor(status, context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
-      decoration: BoxDecoration(
-        color: bg.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: [
-          BoxShadow(
-            color: bg.withValues(alpha: 0.35),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-          letterSpacing: 0.2,
-        ),
       ),
     );
   }

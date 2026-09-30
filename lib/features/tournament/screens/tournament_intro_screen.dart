@@ -327,49 +327,56 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       queryParameters: queryParameters.isEmpty ? null : queryParameters,
     ).toString();
 
-    return SafeArea(
-      top: false,
-      child: Container(
-        color: Colors.transparent,
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
-        child: SizedBox(
-          height: 48,
-          child: FilledButton(
-            onPressed: canRegister ? () => context.push(registrationUri) : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.primary,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: context.colors.bgSurface,
-              disabledForegroundColor: context.colors.textMuted,
-              elevation: canRegister ? 2 : 0,
-              shadowColor: AppTheme.primary.withValues(alpha: 0.35),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.how_to_reg_rounded, size: 20),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    registerLabel,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                      letterSpacing: 0.2,
+    // FAB mini góc dưới phải, nổi TRÊN thanh nav. Trước đây nút full-width
+    // chiếm cả thanh nav và đẩy nav đi; nay nav luôn hiện, FAB chỉ lơ lửng.
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        _buildFloatingBottomNav(context),
+        Positioned(
+          right: 16,
+          bottom: 8,
+          child: Material(
+            color: canRegister ? AppTheme.primary : context.colors.bgSurface,
+            elevation: canRegister ? 6 : 0,
+            shadowColor: AppTheme.primary.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(16),
+            child: InkWell(
+              onTap: canRegister ? () => context.push(registrationUri) : null,
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.how_to_reg_rounded,
+                      size: 20,
+                      color: canRegister
+                          ? Colors.white
+                          : context.colors.textMuted,
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Text(
+                      registerLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        letterSpacing: 0.2,
+                        color: canRegister
+                            ? Colors.white
+                            : context.colors.textMuted,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 
