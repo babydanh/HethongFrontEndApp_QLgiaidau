@@ -5,7 +5,6 @@ import 'package:app_quanly_giaidau/core/services/excel_export_service.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_action_button.dart';
 import 'package:app_quanly_giaidau/core/widgets/responsive_layout.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_banner.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
@@ -40,8 +39,10 @@ class TournamentManagementHubScreen extends ConsumerStatefulWidget {
 
 class _TournamentManagementHubScreenState
     extends ConsumerState<TournamentManagementHubScreen> {
+  // Khởi tạo `.general` vì tab Tổng quan đã bị bỏ; nếu để `.overview` thì cột
+  // chi tiết trên tablet mở lên sẽ hiện nội dung không còn nằm trong nav.
   TournamentManagementSection _selectedSection =
-      TournamentManagementSection.overview;
+      TournamentManagementSection.general;
   bool _isFinalizing = false;
   bool _isExporting = false;
   bool _isDeleting = false;
@@ -216,7 +217,7 @@ class _TournamentManagementHubScreenState
   }) {
     final l10n = AppLocalizations.of(context)!;
     return DefaultTabController(
-      length: 4,
+      length: 3,
       child: Column(
         children: [
           Material(
@@ -233,7 +234,6 @@ class _TournamentManagementHubScreenState
               ),
               unselectedLabelStyle: const TextStyle(fontSize: 12),
               tabs: [
-                Tab(text: l10n.tournamentManagementOverview),
                 Tab(text: l10n.tournamentManagementSetupGroup),
                 Tab(text: l10n.tournamentManagementOperationsGroup),
                 Tab(text: l10n.tournamentManagementSystemGroup),
@@ -243,20 +243,6 @@ class _TournamentManagementHubScreenState
           Expanded(
             child: TabBarView(
               children: [
-                if (isTablet)
-                  ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      _buildSectionAction(
-                        context,
-                        l10n,
-                        true,
-                        TournamentManagementSection.overview,
-                      ),
-                    ],
-                  )
-                else
-                  _buildOverviewContent(context, tournament),
                 _buildSectionGroupPage(
                   context,
                   isTablet: isTablet,
@@ -286,28 +272,6 @@ class _TournamentManagementHubScreenState
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildOverviewContent(BuildContext context, Tournament tournament) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: TournamentManagementBanner(
-            tournament: tournament,
-            colors: context.colors,
-          ),
-        ),
-        Expanded(
-          child: TournamentManagementSectionScreen(
-            tournament: tournament,
-            section: TournamentManagementSection.overview,
-            opsWorkspaceRoute: widget.opsWorkspaceRoute,
-            actionRouteBase: widget.actionRouteBase,
-          ),
-        ),
-      ],
     );
   }
 
@@ -341,21 +305,20 @@ class _TournamentManagementHubScreenState
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        AppActionButton(
-          icon: Icons.sports_score_rounded,
-          label: l10n.opsTitle,
-          subtitle: l10n.tournamentManagementOpsRouteDescription,
-          color: context.colors.warning,
-          isSelected: false,
-          onTap: () => context.push(widget.opsWorkspaceRoute),
-        ),
-        const SizedBox(height: 12),
+        // Trước đây có thêm một `AppActionButton` độc lập mở
+        // `opsWorkspaceRoute`, nhưng dòng `schedule` bên dưới cũng mở đúng
+        // workspace đó (`_buildSectionAction` map schedule -> opsWorkspaceRoute).
+        // Hai lối vào một chỗ, lại lệch hình dạng với các dòng còn lại. Đã bỏ
+        // nút riêng, giữ lại dòng `schedule` để mọi dòng cùng một kiểu.
         _buildSectionGroup(
           context,
           isTablet: isTablet,
           title: l10n.tournamentManagementOperationsGroup,
           icon: Icons.sports_score_rounded,
           sections: const [
+            // `schedule` trước đây có trong enum nhưng không nằm ở tab nào
+            // nên không mục nào mở được. Đưa vào đây để tới được.
+            TournamentManagementSection.schedule,
             TournamentManagementSection.teams,
             TournamentManagementSection.draw,
             TournamentManagementSection.bracket,
@@ -372,8 +335,6 @@ class _TournamentManagementHubScreenState
   Widget _buildDetailView(BuildContext context) {
     final tournament = widget.tournament;
     switch (_selectedSection) {
-      case TournamentManagementSection.overview:
-        return _buildOverviewContent(context, tournament);
       case TournamentManagementSection.teams:
         return TeamListScreen(
           tournamentId: tournament.id,
@@ -506,12 +467,6 @@ class _TournamentManagementHubScreenState
     AppLocalizations l10n,
     TournamentManagementSection section,
   ) => switch (section) {
-    TournamentManagementSection.overview => _SectionDetails(
-      Icons.dashboard_outlined,
-      l10n.tournamentManagementOverview,
-      l10n.tournamentManagementOverviewDescription,
-      AppTheme.primary,
-    ),
     TournamentManagementSection.general => _SectionDetails(
       Icons.settings_outlined,
       l10n.tournamentManagementGeneral,

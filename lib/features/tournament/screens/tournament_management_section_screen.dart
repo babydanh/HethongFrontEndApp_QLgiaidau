@@ -12,15 +12,12 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
-import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_display.dart';
 import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_field.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:intl/intl.dart';
 
 enum TournamentManagementSection {
-  overview,
   general,
   branding,
   venues,
@@ -86,7 +83,6 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
   }
 
   String _sectionTitle(AppLocalizations l10n) => switch (section) {
-    TournamentManagementSection.overview => l10n.tournamentManagementOverview,
     TournamentManagementSection.general => l10n.tournamentManagementGeneral,
     TournamentManagementSection.branding => l10n.tournamentManagementBranding,
     TournamentManagementSection.venues => l10n.tournamentManagementVenues,
@@ -109,8 +105,6 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
   };
 
   String _sectionDescription(AppLocalizations l10n) => switch (section) {
-    TournamentManagementSection.overview =>
-      l10n.tournamentManagementOverviewDescription,
     TournamentManagementSection.general =>
       l10n.tournamentManagementGeneralDescription,
     TournamentManagementSection.branding =>
@@ -144,9 +138,6 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
   };
 
   Widget _content(BuildContext context, WidgetRef ref) => switch (section) {
-    TournamentManagementSection.overview => _TournamentManagementOverview(
-      tournament: tournament,
-    ),
     TournamentManagementSection.general => _TournamentGeneralSettings(
       tournament: tournament,
     ),
@@ -207,205 +198,6 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
   };
 }
 
-class _TournamentManagementOverview extends StatelessWidget {
-  const _TournamentManagementOverview({required this.tournament});
-
-  final Tournament tournament;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final locale = Localizations.localeOf(context).toString();
-    final money = NumberFormat.currency(
-      locale: locale,
-      name: 'VND',
-      symbol: '₫',
-      decimalDigits: 0,
-    );
-    final localizations = MaterialLocalizations.of(context);
-    String date(DateTime? value) => value == null
-        ? l10n.tournamentManagementNotSet
-        : localizations.formatMediumDate(value.toLocal());
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        TournamentManagementSectionCard(
-          title: tournament.name,
-          subtitle: _statusLabel(l10n, tournament.status),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (tournament.description.trim().isNotEmpty)
-                // Mô tả lưu dạng HTML (web nhập bằng Editor.js rồi xuất ra
-                // HTML). Dùng `Text()` sẽ lộ nguyên thẻ <h3>/<li> cho BTC.
-                // Dùng widget dùng chung để cỡ chữ khớp với trang công khai —
-                // trước đó chỉ truyền `textStyle` nên thẻ tiêu đề phình to.
-                RichTextDisplay(
-                  data: tournament.description,
-                  color: colors.textSecondary,
-                ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _SummaryChip(
-                    icon: Icons.calendar_today_rounded,
-                    label: l10n.tournamentManagementStartDate,
-                    value: date(tournament.startDate),
-                  ),
-                  _SummaryChip(
-                    icon: Icons.event_available_rounded,
-                    label: l10n.tournamentManagementEndDate,
-                    value: date(tournament.endDate),
-                  ),
-                  _SummaryChip(
-                    icon: Icons.people_alt_outlined,
-                    label: l10n.tournamentManagementDivisions,
-                    value: '${tournament.divisions.length}',
-                  ),
-                  _SummaryChip(
-                    icon: Icons.place_outlined,
-                    label: l10n.tournamentManagementVenue,
-                    value: (tournament.venueName?.trim().isNotEmpty == true
-                        ? tournament.venueName!
-                        : l10n.tournamentManagementNotSet),
-                  ),
-                  _SummaryChip(
-                    icon: Icons.payments_outlined,
-                    label: l10n.tournamentManagementEntryFee,
-                    value: tournament.entryFee == null
-                        ? l10n.tournamentManagementNotSet
-                        : money.format(tournament.entryFee),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        TournamentManagementSectionCard(
-          title: l10n.tournamentManagementRegistrationWindow,
-          subtitle: tournament.isRegistrationLocked
-              ? l10n.tournamentManagementRegistrationLocked
-              : l10n.tournamentManagementRegistrationOpen,
-          child: Row(
-            children: [
-              Expanded(
-                child: _InfoValue(
-                  label: l10n.tournamentManagementRegistrationStarts,
-                  value: date(tournament.registrationStartDate),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _InfoValue(
-                  label: l10n.tournamentManagementRegistrationEnds,
-                  value: date(tournament.registrationEndDate),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          l10n.tournamentManagementOverviewHint,
-          style: TextStyle(color: colors.textSecondary),
-        ),
-      ],
-    );
-  }
-
-  String _statusLabel(AppLocalizations l10n, String status) => switch (status
-      .toUpperCase()) {
-    'DRAFT' => l10n.tournamentManagementStatusDraft,
-    'UPCOMING' => l10n.tournamentManagementStatusUpcoming,
-    'REGISTRATION_OPEN' => l10n.tournamentManagementStatusRegistrationOpen,
-    'REGISTRATION_CLOSED' => l10n.tournamentManagementStatusRegistrationClosed,
-    'IN_PROGRESS' => l10n.tournamentManagementStatusInProgress,
-    'COMPLETED' => l10n.tournamentManagementStatusCompleted,
-    'CANCELLED' => l10n.tournamentManagementStatusCancelled,
-    _ => l10n.tournamentManagementStatusOther,
-  };
-}
-
-class _SummaryChip extends StatelessWidget {
-  const _SummaryChip({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Container(
-      constraints: const BoxConstraints(minWidth: 135, maxWidth: 245),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 17, color: AppTheme.primary),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(color: colors.textMuted, fontSize: 11),
-                ),
-                Text(
-                  value,
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoValue extends StatelessWidget {
-  const _InfoValue({required this.label, required this.value});
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: TextStyle(color: colors.textMuted, fontSize: 12)),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          style: TextStyle(
-            color: colors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 class _TournamentGeneralSettings extends ConsumerStatefulWidget {
   const _TournamentGeneralSettings({required this.tournament});
