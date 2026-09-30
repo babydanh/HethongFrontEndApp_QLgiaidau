@@ -109,7 +109,7 @@ class _RichTextFieldState extends State<RichTextField> {
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: Container(
-            constraints: BoxConstraints(minHeight: widget.minHeight),
+            height: widget.minHeight,
             decoration: BoxDecoration(
               border: Border.all(
                 color: widget.errorText != null ? theme.colorScheme.error : theme.dividerColor,
@@ -117,18 +117,21 @@ class _RichTextFieldState extends State<RichTextField> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Stack(
+              fit: StackFit.expand,
               children: [
+                // `WebViewWidget` không có kích thước nội tại. Đặt trong
+                // ListView (chiều cao vô hạn) mà chỉ set `minHeight` thì
+                // container co về 0 → "Cannot hit test a render box with no size".
+                // Vì vậy dùng `height` cố định cho khung editor.
                 WebViewWidget(controller: _controller),
                 if (!_ready)
-                  const Positioned.fill(
-                    child: ColoredBox(
-                      color: Colors.white,
-                      child: Center(
-                        child: SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
+                  const ColoredBox(
+                    color: Colors.white,
+                    child: Center(
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                     ),
                   ),
