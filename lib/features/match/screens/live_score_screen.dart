@@ -1648,8 +1648,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final currentScore = _currentLiveScore(match);
     final effectiveId = _effectiveTournamentId(match);
     final params = (tournamentId: effectiveId, matchId: widget.matchId);
-    final isLandscape =
-        MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Column(
       children: [
@@ -1657,10 +1655,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         // ─── Live Video Stream Player Box (Mockup) ───
         Container(
           margin: EdgeInsets.fromLTRB(12, canOpenScoring ? 10 : 12, 12, 6),
-          child: AspectRatio(
-            // Landscape needs a shorter broadcast frame so controls and tabs
-            // remain inside the viewport instead of overflowing at the bottom.
-            aspectRatio: isLandscape ? 2.35 : 16 / 9,
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.black,
@@ -1678,7 +1672,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 children: [
                   // Luồng phát thật từ backend. Chưa có URL thì widget tự hiện
                   // khung 'chưa có tín hiệu', không cần mockup gradient nữa.
-                  Positioned.fill(child: LiveVideoBox(matchId: widget.matchId)),
+                  LiveVideoBox(matchId: widget.matchId),
 
                   // Bảng điểm đè khung hình, đúng bố cục web: HAI HÀNG CHỒNG ở
                   // góc trên trái, mỗi hàng là [tên viết tắt | điểm nền trắng].
@@ -1822,7 +1816,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 ],
               ),
             ),
-          ),
         ),
 
         // ─── Viewer Count Badge (Sockets Realtime) ───

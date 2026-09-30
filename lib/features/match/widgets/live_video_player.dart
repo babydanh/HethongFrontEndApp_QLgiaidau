@@ -31,6 +31,9 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
   VideoPlayerController? _controller;
   Timer? _hideTimer;
   bool _muted = true;
+  /// Tỉ lệ khung hình của luồng. Lúc stream chưa có metadata thì tạm dùng 16/9,
+  /// rồi thay bằng tỉ lệ thật ngay khi player khởi tạo xong.
+  double _aspectRatio = 16 / 9;
   bool _playing = false;
   bool _controlsVisible = true;
   String? _error;
@@ -60,6 +63,15 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
     final controller = VideoPlayerController.networkUrl(Uri.parse(widget.url));
     try {
       await controller.initialize();
+      // Tỉ lệ thật chỉ có sau khi metadata về — đặt trong setState để khung
+      // đổi chiều cao một lần thay vì kẹp cứng 16/9 (camera sân hay 4:3).
+      final size = controller.value.size;
+      if (size.width > 0 && size.height > 0) {
+        final ratio = size.width / size.height;
+        if ((ratio - _aspectRatio).abs() > 0.01) {
+          setState(() => _aspectRatio = ratio);
+        }
+      }
       await controller.setLooping(false);
       await controller.setVolume(_muted ? 0 : 1);
       await controller.play();
@@ -100,7 +112,6 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
       if (mounted) setState(() => _controlsVisible = false);
     });
   }
-
   void _revealControls() {
     setState(() => _controlsVisible = true);
     _scheduleHide();
@@ -150,7 +161,9 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
             return Container(
               color: Colors.black,
               width: constraints.maxWidth,
-              height: constraints.maxWidth * 9 / 16,
+              // Cao theo tỉ lệ thật của luồng, chỉ fallback 16/9 lúc stream chưa
+              // có metadata. Ép cứng 16/9 làm camera sân 4:3 bị dư viền đen.
+              height: constraints.maxWidth / _aspectRatio,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
