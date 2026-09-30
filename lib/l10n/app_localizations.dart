@@ -5804,6 +5804,24 @@ abstract class AppLocalizations {
   /// **'Của tôi'**
   String get dashboard_title;
 
+  /// No description provided for @dashboard_tab_overview.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổng quan'**
+  String get dashboard_tab_overview;
+
+  /// No description provided for @dashboard_tab_activity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoạt động'**
+  String get dashboard_tab_activity;
+
+  /// No description provided for @dashboard_tab_manage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý'**
+  String get dashboard_tab_manage;
+
   /// No description provided for @dashboard_sportActivityFilterLabel.
   ///
   /// In vi, this message translates to:
@@ -5887,6 +5905,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Ban tổ chức'**
   String get dashboard_coOrganizer;
+
+  /// No description provided for @dashboard_participant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tham gia'**
+  String get dashboard_participant;
 
   /// No description provided for @dashboard_noRolesDesc.
   ///
@@ -22006,11 +22030,197 @@ abstract class AppLocalizations {
   /// **'Chưa có hoạt động vận hành nào.'**
   String get opsNoActivity;
 
-  /// No description provided for @opsCameraNotReady.
+  /// No description provided for @tournamentManagementCamera.
   ///
   /// In vi, this message translates to:
-  /// **'App chưa có contract gán camera cho giải này.'**
-  String get opsCameraNotReady;
+  /// **'Camera'**
+  String get tournamentManagementCamera;
+
+  /// No description provided for @tournamentManagementCameraDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khai báo URL phát cho từng sân và gán trận vào sân để camera của sân đó theo trận.'**
+  String get tournamentManagementCameraDescription;
+
+  /// No description provided for @tournamentManagementCameraCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count, plural, other{{count} camera sân}}'**
+  String tournamentManagementCameraCount(num count);
+
+  /// No description provided for @tournamentManagementCameraRefresh.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải lại danh sách camera'**
+  String get tournamentManagementCameraRefresh;
+
+  /// No description provided for @tournamentManagementCameraUrl.
+  ///
+  /// In vi, this message translates to:
+  /// **'URL phát của camera'**
+  String get tournamentManagementCameraUrl;
+
+  /// No description provided for @tournamentManagementCameraUrlHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'https://…'**
+  String get tournamentManagementCameraUrlHint;
+
+  /// No description provided for @tournamentManagementCameraReady.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera đã sẵn sàng'**
+  String get tournamentManagementCameraReady;
+
+  /// No description provided for @tournamentManagementCameraNotReady.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có URL camera'**
+  String get tournamentManagementCameraNotReady;
+
+  /// No description provided for @tournamentManagementCameraUrlRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập URL phát của camera.'**
+  String get tournamentManagementCameraUrlRequired;
+
+  /// No description provided for @tournamentManagementCameraUrlSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu URL camera.'**
+  String get tournamentManagementCameraUrlSaved;
+
+  /// No description provided for @tournamentManagementCameraUrlCleared.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xoá URL camera.'**
+  String get tournamentManagementCameraUrlCleared;
+
+  /// No description provided for @tournamentManagementCameraUrlSaveFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không lưu được URL camera.'**
+  String get tournamentManagementCameraUrlSaveFailed;
+
+  /// No description provided for @tournamentManagementCameraClearUrl.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá URL'**
+  String get tournamentManagementCameraClearUrl;
+
+  /// No description provided for @tournamentManagementCameraClearUrlConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá URL camera của sân {court}? Các trận ở sân này sẽ không còn camera.'**
+  String tournamentManagementCameraClearUrlConfirm(Object court);
+
+  /// No description provided for @tournamentManagementCameraNoCourts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải này chưa có sân nào. Hãy thêm sân ở mục Cơ sở trước.'**
+  String get tournamentManagementCameraNoCourts;
+
+  /// No description provided for @tournamentManagementCameraMatchPool.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đấu'**
+  String get tournamentManagementCameraMatchPool;
+
+  /// No description provided for @tournamentManagementCameraMatchPoolHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhấn giữ một trận rồi kéo thả lên sân, hoặc chọn sân từ menu của trận.'**
+  String get tournamentManagementCameraMatchPoolHint;
+
+  /// No description provided for @tournamentManagementCameraMatchPoolEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có trận nào để gán sân.'**
+  String get tournamentManagementCameraMatchPoolEmpty;
+
+  /// No description provided for @tournamentManagementCameraUnassigned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có sân'**
+  String get tournamentManagementCameraUnassigned;
+
+  /// No description provided for @tournamentManagementCameraChooseCourt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn sân'**
+  String get tournamentManagementCameraChooseCourt;
+
+  /// No description provided for @tournamentManagementCameraSelectHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chọn trận. Chọn một sân để gán.'**
+  String get tournamentManagementCameraSelectHint;
+
+  /// No description provided for @tournamentManagementCameraSelectedMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chọn: {match}'**
+  String tournamentManagementCameraSelectedMatch(Object match);
+
+  /// No description provided for @tournamentManagementCameraClearSelection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ chọn'**
+  String get tournamentManagementCameraClearSelection;
+
+  /// No description provided for @tournamentManagementCameraAssigned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chuyển {match} sang sân {court}.'**
+  String tournamentManagementCameraAssigned(Object court, Object match);
+
+  /// No description provided for @tournamentManagementCameraAssignFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không chuyển được trận sang sân.'**
+  String get tournamentManagementCameraAssignFailed;
+
+  /// No description provided for @tournamentManagementCameraAlreadyAssigned.
+  ///
+  /// In vi, this message translates to:
+  /// **'{match} đã ở sân {court}.'**
+  String tournamentManagementCameraAlreadyAssigned(Object court, Object match);
+
+  /// No description provided for @tournamentManagementCameraMatchesHere.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count, plural, other{Trận tại sân này}}'**
+  String tournamentManagementCameraMatchesHere(num count);
+
+  /// No description provided for @tournamentManagementCameraNoMatchesHere.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trận nào được xếp vào sân này.'**
+  String get tournamentManagementCameraNoMatchesHere;
+
+  /// No description provided for @tournamentManagementCameraAssignHere.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gán {match} vào sân này'**
+  String tournamentManagementCameraAssignHere(Object match);
+
+  /// No description provided for @tournamentManagementCameraPickCamera.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera cho trận này'**
+  String get tournamentManagementCameraPickCamera;
+
+  /// No description provided for @tournamentManagementCameraManualAssigned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gán camera: {camera}'**
+  String tournamentManagementCameraManualAssigned(Object camera);
+
+  /// No description provided for @tournamentManagementCameraManualAssignFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không gán được camera cho trận.'**
+  String get tournamentManagementCameraManualAssignFailed;
 
   /// No description provided for @opsSpecialOperation.
   ///
@@ -25006,6 +25216,18 @@ abstract class AppLocalizations {
   /// **'Vận động viên'**
   String get homeSearchScopeAthletes;
 
+  /// No description provided for @homeSearchScopeSessions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kèo'**
+  String get homeSearchScopeSessions;
+
+  /// No description provided for @homeSearchSessionsHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kèo giao lưu...'**
+  String get homeSearchSessionsHint;
+
   /// No description provided for @homeGlobalSearchAdvancedFilters.
   ///
   /// In vi, this message translates to:
@@ -25072,6 +25294,12 @@ abstract class AppLocalizations {
   /// **'Địa điểm được tổng hợp từ các trận đấu công khai; chưa hỗ trợ tìm quanh đây.'**
   String get homeGlobalSearchVenueNote;
 
+  /// No description provided for @homeGlobalSearchSessionNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kèo được tìm theo ngày chơi. Mở bộ lọc nâng cao để đổi ngày.'**
+  String get homeGlobalSearchSessionNote;
+
   /// No description provided for @homeGlobalSearchSport.
   ///
   /// In vi, this message translates to:
@@ -25101,6 +25329,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Khoảng ngày'**
   String get homeGlobalSearchDate;
+
+  /// No description provided for @homeGlobalSearchSessionDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày chơi'**
+  String get homeGlobalSearchSessionDate;
 
   /// No description provided for @homeGlobalSearchLocation.
   ///
@@ -25636,6 +25870,18 @@ abstract class AppLocalizations {
   /// **'Ghim tự động theo khu vực'**
   String get socialLocationAutoPlaced;
 
+  /// No description provided for @socialLocationRegionMissing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa nhận ra tỉnh/phường từ điểm đã ghim. Hãy chọn khu vực để kèo hiện đúng chỗ.'**
+  String get socialLocationRegionMissing;
+
+  /// No description provided for @socialLocationRegionRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tra lại'**
+  String get socialLocationRegionRetry;
+
   /// No description provided for @socialPrivacyPublic.
   ///
   /// In vi, this message translates to:
@@ -25702,11 +25948,35 @@ abstract class AppLocalizations {
   /// **'Môn đã ngừng hoạt động'**
   String get socialLegacyInactiveSport;
 
-  /// No description provided for @socialRegionLabel.
+  /// No description provided for @socialRegionProvinceFieldLabel.
   ///
   /// In vi, this message translates to:
-  /// **'Khu vực (không bắt buộc)'**
-  String get socialRegionLabel;
+  /// **'Tỉnh / thành'**
+  String get socialRegionProvinceFieldLabel;
+
+  /// No description provided for @socialRegionProvinceFieldHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn tỉnh'**
+  String get socialRegionProvinceFieldHint;
+
+  /// No description provided for @socialRegionWardFieldLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phường / xã'**
+  String get socialRegionWardFieldLabel;
+
+  /// No description provided for @socialRegionWardFieldHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn phường'**
+  String get socialRegionWardFieldHint;
+
+  /// No description provided for @socialRegionWardNeedsProvinceHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn tỉnh trước'**
+  String get socialRegionWardNeedsProvinceHint;
 
   /// No description provided for @socialRegionWardLabel.
   ///
@@ -25725,18 +25995,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Nhập ít nhất 2 ký tự để tìm phường/xã.'**
   String get socialRegionWardSearchPrompt;
-
-  /// No description provided for @socialRegionApplyAction.
-  ///
-  /// In vi, this message translates to:
-  /// **'Áp dụng'**
-  String get socialRegionApplyAction;
-
-  /// No description provided for @socialRegionCancelAction.
-  ///
-  /// In vi, this message translates to:
-  /// **'Hủy'**
-  String get socialRegionCancelAction;
 
   /// No description provided for @socialRegionNoResults.
   ///
@@ -25768,12 +26026,6 @@ abstract class AppLocalizations {
   /// **'{ward}, {province}'**
   String socialRegionSelectedSummary(String ward, String province);
 
-  /// No description provided for @socialRegionOpenAction.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chọn khu vực'**
-  String get socialRegionOpenAction;
-
   /// No description provided for @socialRegionPickerTitle.
   ///
   /// In vi, this message translates to:
@@ -25797,12 +26049,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Lọc kết quả theo chữ cái đầu'**
   String get socialRegionAlphabetHint;
-
-  /// No description provided for @socialRegionSuggestionLabel.
-  ///
-  /// In vi, this message translates to:
-  /// **'Gợi ý từ địa chỉ'**
-  String get socialRegionSuggestionLabel;
 
   /// No description provided for @socialRegionCloseAction.
   ///

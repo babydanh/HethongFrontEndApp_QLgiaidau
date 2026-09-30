@@ -1,7 +1,7 @@
 name: app_quanly_giaidau
 description: "Ứng dụng Quản lý Giải đấu Thể thao"
 publish_to: 'none'
-version: 1.0.26+29
+version: 1.0.27+30
 
 flutter_launcher_icons:
   android: true
@@ -16,6 +16,8 @@ environment:
   flutter: ">=3.41.0"
 
 dependencies:
+  # Live video (HLS): phat duoc tren ca Android (ExoPlayer) va iOS (AVPlayer)
+  video_player: ^2.9.2
   flutter:
     sdk: flutter
 
@@ -36,6 +38,7 @@ dependencies:
   shimmer: ^3.0.0
   flutter_svg: ^2.3.0
   flutter_widget_from_html: ^0.15.2
+  webview_flutter: ^4.10.0
 
   # Import/Export
   excel: ^4.0.6
@@ -90,8 +93,6 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  integration_test:
-    sdk: flutter
   flutter_lints: ^6.0.0
   mocktail: ^1.0.4
   build_runner: ^2.4.0
@@ -104,4 +105,6 @@ flutter:
     - .env
     - assets/icons/
     - assets/images/
+    - assets/editorjs/
+
     - assets/logos/

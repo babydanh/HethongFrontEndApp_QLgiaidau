@@ -1,23 +1,31 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart';
+import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
-import 'package:app_quanly_giaidau/data/models/social_place.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/social_region_picker.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
-import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_flow.dart';
-import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_row.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/social_location_picker.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_duration_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_price_dialog.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_privacy_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_setting_tile.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_participant_counter.dart';
+
+/// Ngừng gõ bao lâu thì ghim tạm theo tâm phường.
+const Duration _autoPlaceDelay = Duration(milliseconds: 600);
 
 class CreateSocialScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -43,6 +51,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   late String _selectedSportName;
   // Người dùng đã tự chọn môn: không còn tự chọn danh mục đầu tiên.
   bool _userPickedSport = false;
+  // Khu vực đã áp dụng (tuỳ chọn): chỉ ghép vào venueAddress lúc lưu.
+  SocialRegionSelection? _appliedRegion;
 
   // Format options: Giao lưu, Đánh vòng tròn, Đánh đơn, Đánh đôi
   final List<String> _formats = const [
@@ -57,7 +67,22 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   late DateTime _selectedDateTime;
   double _durationHours = 1.0;
 
-  SocialPlace? _selectedPlace;
+  // Venue / Location (Tách 2 trường theo Yêu cầu 5)
+  final TextEditingController _venueNameController = TextEditingController();
+  final TextEditingController _venueAddressController = TextEditingController();
+
+  /// Tọa độ sân do host ghim map (null = chưa ghim).
+  double? _latitude;
+  double? _longitude;
+
+  /// Pin do hệ thống suy ra từ tâm phường (false = host tự ghim tay).
+  /// UI đọc cờ này để phân biệt hai nguồn ghim.
+  bool _pinAutoPlaced = false;
+  /// Địa chỉ gõ lần cuối đã lên lịch ghim tự động — chống lên lịch lại
+  /// vô ích mỗi lần form rebuild với cùng một nội dung ô địa chỉ.
+  String? _autoPlaceScheduledFor;
+  /// Hẹn giờ debounce trước khi gọi tâm phường.
+  Timer? _autoPlaceDebounce;
 
   // Configurations
   int _maxParticipants = 6;
@@ -86,15 +111,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       _maxParticipants = init.maxSlots;
       _privacy = init.visibility == 'CLUB_ONLY' ? 'Nội bộ CLB' : 'Công khai';
       _price = init.feePerSlot;
-      if (init.venueName.trim().isNotEmpty &&
-          init.venueAddress.trim().isNotEmpty) {
-        _selectedPlace = SocialPlace(
-          name: init.venueName,
-          formattedAddress: init.venueAddress,
-          latitude: init.latitude,
-          longitude: init.longitude,
-        );
-      }
+      _venueNameController.text = init.venueName;
+      _venueAddressController.text = init.venueAddress;
+      _latitude = init.latitude;
+      _longitude = init.longitude;
       _titleController.text = init.title;
       _notesController.text = init.description ?? '';
       _isClubAttached =
@@ -120,6 +140,9 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
 
   @override
   void dispose() {
+    _autoPlaceDebounce?.cancel();
+    _venueNameController.dispose();
+    _venueAddressController.dispose();
     _titleController.dispose();
     _notesController.dispose();
     super.dispose();
@@ -173,6 +196,50 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   String _getComputedDefaultTitle(String sportName) {
     final hostName = _getHostName();
     return '$sportName $_selectedFormat với $hostName';
+  }
+
+  /// Ghép khu vực đã áp dụng vào địa chỉ gõ tay, bỏ qua nhãn đã có sẵn.
+  String _composeVenueAddress() {
+    var composed = _venueAddressController.text.trim();
+    final region = _appliedRegion;
+    if (region == null) return composed;
+    final province = region.province;
+    final provinceAlreadyNamed =
+        province != null &&
+        VietnamAddressParser.detectProvince(
+              rawAddress: composed,
+              provinces: [province],
+              getCode: (item) => item.code,
+              getName: (item) => item.name,
+              getFullName: (item) => item.fullName ?? item.name,
+            ) !=
+            null;
+    for (final name in [
+      region.ward?.name,
+      if (!provinceAlreadyNamed) province?.name,
+    ]) {
+      final label = name?.trim() ?? '';
+      if (label.isEmpty || composed.isEmpty) continue;
+      final parts = composed
+          .split(',')
+          .map((part) => part.trim().toLowerCase());
+      if (parts.contains(label.toLowerCase())) continue;
+      composed = '$composed, $label';
+    }
+    return composed;
+  }
+
+  /// Tỉnh của CLB gắn kèm: chỉ làm ngữ cảnh dự phòng cho phần khu vực khi
+  /// địa chỉ gõ tay không nêu thành phố. Kèo độc lập hoặc CLB không có tỉnh
+  /// thì không có ngữ cảnh nào — phần khu vực tự tìm tay.
+  String? get _clubProvinceCode {
+    if (!_isClubAttached || widget.clubId.isEmpty) return null;
+    final community = ref
+        .watch(communityDetailProvider(widget.clubId))
+        .asData
+        ?.value;
+    final code = community?.provinceCode?.trim();
+    return (code == null || code.isEmpty) ? null : code;
   }
 
   // ─── Wording: phân biệt buổi gắn CLB và kèo độc lập ───
@@ -478,12 +545,162 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     if (privacy != null && mounted) setState(() => _privacy = privacy);
   }
 
-  Future<void> _chooseLocation() async {
-    final selected = await SocialLocationFlow.show(
-      context,
-      initialPlace: _selectedPlace,
+  /// Lên lịch ghim tự động, chỉ khi nội dung ô địa chỉ thực sự đổi.
+  /// Ô địa chỉ đổi thì lựa chọn khu vực cũ bị bỏ, nên phải chờ ngừng gõ.
+  void _scheduleAutoPlaceForAddress(String address) {
+    if (_autoPlaceScheduledFor == address) return;
+    _autoPlaceScheduledFor = address;
+    _restartAutoPlaceDebounce();
+  }
+
+  /// Huỷ lần hẹn trước và hẹn lại sau [debounce].
+  void _restartAutoPlaceDebounce([Duration debounce = _autoPlaceDelay]) {
+    _autoPlaceDebounce?.cancel();
+    _autoPlaceDebounce = Timer(debounce, () {
+      unawaited(_autoPlacePinFromWard());
+    });
+  }
+
+  /// Tâm phường — GET /regions/wards/centroid. Trả null khi server không
+  /// tìm thấy hoặc lỗi mạng: ghim tạm là tiện ích, không được chặn lưu kèo.
+  Future<({double lat, double lng})?> _fetchWardCentroid({
+    required String provinceCode,
+    required String wardCode,
+  }) async {
+    try {
+      final dio = ref.read(dioProvider);
+      final response = await dio.get(
+        '/regions/wards/centroid',
+        queryParameters: {
+          'provinceCode': provinceCode,
+          'wardCode': wardCode,
+        },
+      );
+      final raw = response.data;
+      final payload = raw is Map ? (raw['data'] ?? raw) : null;
+      if (payload is! Map) return null;
+      final lat = (payload['centerLat'] as num?)?.toDouble();
+      final lng = (payload['centerLng'] as num?)?.toDouble();
+      if (lat == null || lng == null) return null;
+      return (lat: lat, lng: lng);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Ghim tạm theo tâm phường khi host đã chọn đủ tỉnh + phường và chưa ghim tay.
+  /// Thiếu phường thì bỏ qua: tâm tỉnh lệch tới hàng chục km ở tỉnh lớn.
+  Future<void> _autoPlacePinFromWard() async {
+    final selection = _appliedRegion;
+    final province = selection?.province;
+    final ward = selection?.ward;
+    if (province == null || ward == null) return;
+    if (province.code.isEmpty || ward.code.isEmpty) return;
+    if (_latitude != null || _longitude != null) return;
+
+    final centroid = await _fetchWardCentroid(
+      provinceCode: province.code,
+      wardCode: ward.code,
     );
-    if (selected != null && mounted) setState(() => _selectedPlace = selected);
+    if (centroid == null || !mounted) return;
+    // Chờ xong mà host vừa kéo ghim tay thì giữ pin của host.
+    if (_latitude != null || _longitude != null) return;
+    setState(() {
+      _latitude = centroid.lat;
+      _longitude = centroid.lng;
+      _pinAutoPlaced = true;
+    });
+  }
+
+  /// Mở bản đồ cho host ghim vị trí sân. Tâm map ưu tiên:
+  /// tọa độ cũ (sửa kèo) → vị trí user → fallback TP.HCM.
+  Future<void> _openLocationPicker() async {
+    final userLoc = ref.read(userLocationProvider);
+    final LatLng center;
+    if (_latitude != null && _longitude != null) {
+      center = LatLng(_latitude!, _longitude!);
+    } else if (userLoc.hasPosition) {
+      center = LatLng(userLoc.latitude!, userLoc.longitude!);
+    } else {
+      center = const LatLng(10.7769, 106.7009);
+    }
+    final picked = await SocialLocationPicker.show(
+      context,
+      initialCenter: center,
+      initialPin: (_latitude != null && _longitude != null)
+          ? LatLng(_latitude!, _longitude!)
+          : null,
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        _latitude = picked.latitude;
+        _longitude = picked.longitude;
+        // Host tự ghim tay: không phải tọa độ suy ra từ tâm phường.
+        _pinAutoPlaced = false;
+      });
+      await _applyReverseLookup(picked);
+    }
+  }
+
+  /// Suy ngược điểm host vừa ghim thành tỉnh/phường rồi điền ngược vào form.
+  ///
+  /// Best-effort: mất mạng, server lỗi, điểm nằm ngoài vùng phủ ranh giới hay
+  /// body thiếu trường đều chỉ báo lại chứ không bao giờ chặn lưu kèo.
+  Future<void> _applyReverseLookup(LatLng point) async {
+    Map<String, dynamic>? body;
+    var callFailed = false;
+    try {
+      final response = await ref.read(dioProvider).get(
+        '/regions/resolve',
+        queryParameters: {'lat': point.latitude, 'lng': point.longitude},
+      );
+      final raw = response.data;
+      final payload = raw is Map ? (raw['data'] ?? raw) : null;
+      if (payload is Map) body = Map<String, dynamic>.from(payload);
+    } catch (_) {
+      callFailed = true;
+    }
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    if (callFailed) {
+      _showLocationMessage(l10n.socialLocationReverseFailed);
+      return;
+    }
+    final wardCode = body?['wardCode']?.toString() ?? '';
+    final wardName = body?['wardName']?.toString() ?? '';
+    final provinceCode = body?['provinceCode']?.toString() ?? '';
+    final provinceName = body?['provinceName']?.toString() ?? '';
+    if (wardCode.isEmpty ||
+        wardName.isEmpty ||
+        provinceCode.isEmpty ||
+        provinceName.isEmpty) {
+      _showLocationMessage(l10n.socialLocationNoAddressFound);
+      return;
+    }
+    // centerLat/centerLng là tâm của phường, không phải tâm tỉnh.
+    final selection = SocialRegionSelection(
+      province: Region(code: provinceCode, name: provinceName),
+      ward: Region(
+        code: wardCode,
+        name: wardName,
+        provinceCode: provinceCode,
+        latitude: (body?['centerLat'] as num?)?.toDouble(),
+        longitude: (body?['centerLng'] as num?)?.toDouble(),
+      ),
+    );
+    setState(() {
+      _appliedRegion = selection;
+      // Chỉ điền khi host chưa gõ: tuyệt đối không xoá địa chỉ đã gõ tay.
+      if (_venueAddressController.text.trim().isEmpty) {
+        _venueAddressController.text = selection.summary(l10n);
+      }
+    });
+  }
+
+  void _showLocationMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
   }
 
   /// Invalidate cache Social theo CLB để tab Hoạt động cập nhật ngay.
@@ -513,12 +730,22 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
 
     final sport = _resolveSport(_activeSports(ref.read(categoriesProvider)));
     if (sport.slug.isEmpty) return;
+    final venueNameText = _venueNameController.text.trim();
+    final venueAddressText = _venueAddressController.text.trim();
     final l10n = AppLocalizations.of(context)!;
-    final place = _selectedPlace;
-    if (place == null || !place.canApply) {
+    if (venueNameText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.socialPlaceRequired),
+          content: Text(l10n.socialCreateVenueNameDialogTitle),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (venueAddressText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.socialCreateLocationDialogTitle),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -551,12 +778,11 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           'playFormat': _selectedFormat,
           'startAt': _selectedDateTime.toIso8601String(),
           'durationMinutes': (_durationHours * 60).round(),
-          'venueName': place.name.trim(),
-          'venueAddress': place.formattedAddress.trim(),
-          if (place.hasPin) ...{
-            'latitude': place.latitude,
-            'longitude': place.longitude,
-          },
+          'venueName': venueNameText,
+          'venueAddress': _composeVenueAddress(),
+          // Tọa độ ghim (null = xóa vị trí đã ghim).
+          'latitude': _latitude,
+          'longitude': _longitude,
           'maxSlots': _maxParticipants,
           'feePerSlot': _price,
           'levelRequirement': 'ALL',
@@ -593,10 +819,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           playFormat: _selectedFormat,
           startAt: _selectedDateTime,
           durationMinutes: (_durationHours * 60).round(),
-          venueName: place.name.trim(),
-          venueAddress: place.formattedAddress.trim(),
-          latitude: place.hasPin ? place.latitude : null,
-          longitude: place.hasPin ? place.longitude : null,
+          venueName: venueNameText,
+          venueAddress: _composeVenueAddress(),
+          latitude: _latitude,
+          longitude: _longitude,
           maxSlots: _maxParticipants,
           feePerSlot: _price,
           levelRequirement: 'ALL',
@@ -653,6 +879,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     final activeSports = _activeSports(catalog);
     final sport = _resolveSport(activeSports);
     final canSubmit = sport.slug.isNotEmpty;
+    final clubProvinceCode = _clubProvinceCode;
 
     return Container(
       decoration: BoxDecoration(
@@ -927,9 +1154,130 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                       ),
                       const SizedBox(height: 10),
 
-                      SocialLocationRow(
-                        place: _selectedPlace,
-                        onTap: _chooseLocation,
+                      // Tách venueName và venueAddress thành 2 input field (Yêu cầu 5)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 14),
+                            child: Icon(
+                              Icons.location_on_outlined,
+                              color: AppTheme.primary,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextFormField(
+                                  controller: _venueNameController,
+                                  maxLength: 100,
+                                  style: TextStyle(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: colors.textPrimary,
+                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: l10n.socialCreateVenueNameLabel,
+                                    hintText: l10n.socialCreateVenueNameHint,
+                                    counterText: '',
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                  validator: (val) {
+                                    if (val == null || val.trim().isEmpty) {
+                                      return l10n.socialCreateVenueNameRequired;
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 10),
+                                TextFormField(
+                                  controller: _venueAddressController,
+                                  onChanged: (_) {
+                                    if (_appliedRegion == null) return;
+                                    setState(() => _appliedRegion = null);
+                                  },
+                                  maxLength: 500,
+                                  maxLines: 2,
+                                  minLines: 1,
+                                  style: TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w400,
+                                    color: colors.textPrimary,
+                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: l10n.socialCreateLocationLabel,
+                                    hintText: l10n.socialCreateLocationHint,
+                                    counterText: '',
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                  validator: (val) {
+                                    if (val == null || val.trim().isEmpty) {
+                                      return l10n.socialCreateLocationRequired;
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                                // Khu vực tuỳ chọn được xác nhận trong popup.
+                                // Khi địa chỉ đổi, bỏ lựa chọn cũ để không ghép
+                                // nhầm phường/tỉnh vào venueAddress lúc lưu.
+                                ValueListenableBuilder<TextEditingValue>(
+                                  valueListenable: _venueAddressController,
+                                  builder: (context, address, _) {
+                                    // Ngừng gõ 600ms rồi mới ghim tạm theo tâm
+                                    // phường: không cần mở map, và không bao giờ
+                                    // ghi đè pin host đã tự ghim tay.
+                                    _scheduleAutoPlaceForAddress(address.text);
+                                    return SocialRegionPicker(
+                                      address: address.text,
+                                      applied: _appliedRegion,
+                                      contextProvinceCode: clubProvinceCode,
+                                      onApply: (selection) {
+                                        setState(
+                                          () => _appliedRegion = selection,
+                                        );
+                                        // Vừa chốt đủ tỉnh + phường thì hẹn
+                                        // ghim tạm luôn, khỏi chờ gõ thêm.
+                                        _restartAutoPlaceDebounce();
+                                      },
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 10),
+                                // Thẻ "Vị trí" duy nhất: địa chỉ + gợi ý khu vực +
+                                // trạng thái ghim (chưa ghim / tay / tự động).
+                                ValueListenableBuilder<TextEditingValue>(
+                                  valueListenable: _venueAddressController,
+                                  builder: (context, address, _) =>
+                                      _VenueLocationCard(
+                                        address: address.text,
+                                        regionHint: _appliedRegion?.summary(
+                                          l10n,
+                                        ),
+                                        latitude: _latitude,
+                                        longitude: _longitude,
+                                        autoPlaced: _pinAutoPlaced,
+                                        onPick: _openLocationPicker,
+                                        onClear: () => setState(() {
+                                          _latitude = null;
+                                          _longitude = null;
+                                          _pinAutoPlaced = false;
+                                        }),
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
                       Divider(height: 1, color: colors.border),
@@ -1003,6 +1351,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                           color: colors.textPrimary,
                         ),
                         decoration: InputDecoration(
+                          labelText: _titleFieldLabel(l10n),
                           hintText: _getComputedDefaultTitle(sport.name),
                           counterText: '',
                           contentPadding: const EdgeInsets.symmetric(
@@ -1078,6 +1427,227 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Trạng thái ghim của thẻ vị trí. Màu KHÔNG đủ để phân biệt: mỗi trạng
+/// thái luôn đi kèm nhãn chữ riêng (xem [_VenueLocationCard._stateLabel]).
+enum _VenuePinState { unpinned, manual, auto }
+
+/// Thẻ "Vị trí" duy nhất của form: gộp địa chỉ gõ tay, gợi ý khu vực đã
+/// áp dụng và trạng thái ghim (chưa ghim / host ghim tay / suy ra tự động),
+/// kèm nút mở bản đồ để ghim lại cho chính xác hơn.
+class _VenueLocationCard extends StatelessWidget {
+  /// Địa chỉ gõ tay, hiển thị tóm tắt trong thẻ.
+  final String address;
+
+  /// "Phường, Tỉnh" đã áp dụng, rỗng khi host chưa chốt khu vực.
+  final String? regionHint;
+  final double? latitude;
+  final double? longitude;
+
+  /// Tọa độ do tâm phường suy ra, chưa phải ghim tay của host.
+  final bool autoPlaced;
+  final VoidCallback onPick;
+  final VoidCallback onClear;
+
+  const _VenueLocationCard({
+    required this.address,
+    required this.regionHint,
+    required this.latitude,
+    required this.longitude,
+    required this.autoPlaced,
+    required this.onPick,
+    required this.onClear,
+  });
+
+  bool get _hasPin => latitude != null && longitude != null;
+
+  _VenuePinState get _state {
+    if (!_hasPin) return _VenuePinState.unpinned;
+    return autoPlaced ? _VenuePinState.auto : _VenuePinState.manual;
+  }
+
+  /// Nhãn chữ của trạng thái — bắt buộc khác nhau, không dựa màu một mình.
+  String _stateLabel(AppLocalizations l10n) {
+    return switch (_state) {
+      _VenuePinState.unpinned => l10n.socialLocationPinAction,
+      _VenuePinState.manual => l10n.socialLocationPinDone,
+      _VenuePinState.auto => l10n.socialLocationAutoPlaced,
+    };
+  }
+
+  IconData _stateIcon() {
+    return switch (_state) {
+      _VenuePinState.unpinned => Icons.map_outlined,
+      _VenuePinState.manual => Icons.location_on_rounded,
+      _VenuePinState.auto => Icons.gps_fixed_rounded,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final state = _state;
+    final hasPin = state != _VenuePinState.unpinned;
+    final accent = switch (state) {
+      _VenuePinState.unpinned => colors.border,
+      _VenuePinState.manual => colors.success,
+      _VenuePinState.auto => colors.warning,
+    };
+    final place = address.trim();
+    final area = regionHint?.trim() ?? '';
+
+    return InkWell(
+      onTap: onPick,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 44),
+        padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+        decoration: BoxDecoration(
+          color: hasPin ? accent.withValues(alpha: 0.10) : colors.bgCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasPin ? accent.withValues(alpha: 0.45) : accent,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  _stateIcon(),
+                  color: hasPin ? accent : AppTheme.primary,
+                  size: 22,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _stateLabel(l10n),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        hasPin
+                            ? '${latitude!.toStringAsFixed(5)}, ${longitude!.toStringAsFixed(5)}'
+                            : l10n.socialLocationPinHint,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (hasPin)
+                  SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: IconButton(
+                      tooltip: l10n.socialLocationPinClear,
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: colors.textMuted,
+                        size: 20,
+                      ),
+                      onPressed: onClear,
+                    ),
+                  )
+                else
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: colors.textMuted,
+                  ),
+              ],
+            ),
+            if (place.isNotEmpty || area.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: colors.bgSurface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: colors.borderLight),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (place.isNotEmpty)
+                      _placeLine(colors, Icons.place_outlined, place),
+                    if (place.isNotEmpty && area.isNotEmpty)
+                      const SizedBox(height: 6),
+                    if (area.isNotEmpty)
+                      _placeLine(colors, Icons.map_outlined, area),
+                  ],
+                ),
+              ),
+            ],
+            if (hasPin) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton.icon(
+                  onPressed: onPick,
+                  icon: const Icon(Icons.edit_location_alt_rounded, size: 18),
+                  label: Text(
+                    l10n.socialLocationEditPin,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: accent,
+                    side: BorderSide(color: accent),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Một dòng địa chỉ/khu vực trong khung xem trước vị trí.
+  Widget _placeLine(AppColorsExtension colors, IconData icon, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 15, color: colors.textMuted),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12.5,
+              height: 1.35,
+              color: colors.textSecondary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

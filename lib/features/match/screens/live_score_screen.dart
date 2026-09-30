@@ -18,6 +18,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/penalty_input_dialog.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/live_video_box.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
 import 'package:app_quanly_giaidau/core/strategy/penalty_strategy.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
@@ -1980,35 +1981,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
               child: Stack(
                 children: [
-                  // Video feed mockup / Background
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              const Color(0xFF0F172A),
-                              const Color(0xFF1E293B),
-                              const Color(0xFF0F172A),
-                            ],
-                          ),
-                        ),
-                        child: Center(
-                          child: Opacity(
-                            opacity: 0.15,
-                            child: Icon(
-                              Icons.videocam_rounded,
-                              size: 64,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  // Luồng phát thật từ backend. Chưa có URL thì widget tự hiện
+                  // khung 'chưa có tín hiệu', không cần mockup gradient nữa.
+                  Positioned.fill(child: LiveVideoBox(matchId: widget.matchId)),
 
                   // TV Broadcast Scoreboard Overlay (Top-Left)
                   Positioned(

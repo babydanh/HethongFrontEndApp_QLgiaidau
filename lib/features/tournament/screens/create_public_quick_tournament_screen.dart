@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_field.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
@@ -159,7 +160,9 @@ class _CreatePublicQuickTournamentScreenState
   static const _log = AppLogger('CreatePublicQuickTournament');
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _descController = TextEditingController();
+  // Mô tả lưu dạng HTML (Editor.js của web xuất ra HTML). Dùng state thay vì
+  // TextEditingController vì RichTextField là WebView, không nhận controller.
+  String _description = '';
   final _maxTeamsController = TextEditingController(text: '16');
   final _entryFeeController = TextEditingController(text: '0');
   final _maxCombinedEloController = TextEditingController();
@@ -355,7 +358,6 @@ class _CreatePublicQuickTournamentScreenState
   @override
   void dispose() {
     _nameController.dispose();
-    _descController.dispose();
     _maxTeamsController.dispose();
     _venueNameController.dispose();
     _locationAddressController.dispose();
@@ -656,8 +658,8 @@ class _CreatePublicQuickTournamentScreenState
           'awayGoalsRule': _awayGoalsRule,
           'penaltyShootout': _penaltyShootout,
         },
-        if (_descController.text.trim().isNotEmpty)
-          'description': _descController.text.trim(),
+        if (_description.trim().isNotEmpty)
+          'description': _description.trim(),
         if (_venueNameController.text.trim().isNotEmpty)
           'venueName': _venueNameController.text.trim(),
         if (_locationAddressController.text.trim().isNotEmpty)
@@ -1048,18 +1050,16 @@ class _CreatePublicQuickTournamentScreenState
             // ─── Mô tả giải đấu ───
             _sectionLabel('Mô tả giải đấu (Tùy chọn)', colors),
             const SizedBox(height: 6),
-            TextFormField(
-              controller: _descController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'Mô tả thể lệ, lệ phí, yêu cầu trình độ...',
-                filled: true,
-                fillColor: colors.bgSurface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-              ),
+            // Rich text dùng chung engine với web nên mô tả tạo ở app vẫn hiện
+            // đúng hình dạng khi mở trên web. Trường này tùy chọn nên không cần
+            // validate trong Form.
+            RichTextField(
+              value: _description,
+              onChanged: (html) {
+                // Editor báo về cả lúc vừa sẵn sàng (giá trị chuẩn hoá) nên
+                // chỉ setState khi thực sự khác.
+                if (html != _description) setState(() => _description = html);
+              },
             ),
             const SizedBox(height: 12),
 

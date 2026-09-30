@@ -8,7 +8,6 @@ import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/repositories/community_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/repositories/region_repository.dart';
-import 'package:app_quanly_giaidau/features/social/widgets/social_region_picker.dart';
 import 'package:app_quanly_giaidau/domain/repositories/social_session_repository.dart';
 import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_row.dart';
@@ -26,8 +25,9 @@ import 'package:latlong2/latlong.dart';
 ///
 /// The sport section is driven by `categoriesProvider` (active categories
 /// only), renders shared sport icons and blocks submission when none is active.
-/// It keeps legacy inactive sports read-only; the ward-first area control and
-/// city resolution are covered by `social_region_picker_test.dart`.
+/// It keeps legacy inactive sports read-only; the two inline locality fields
+/// and the city/ward lists behind them are covered by
+/// `social_region_picker_test.dart`.
 void main() {
   group('Social create/edit active sport catalog', () {
     testWidgets(
@@ -96,6 +96,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+<<<<<<< HEAD
     testWidgets(
       'create form exposes one location row and no manual venue fields',
       (tester) async {
@@ -117,6 +118,20 @@ void main() {
         tester,
         categories: _activeCatalog,
         initialSession: _legacySession,
+=======
+    testWidgets('venue name and address precede the inline locality fields', (
+      tester,
+    ) async {
+      await _pumpSocialForm(tester, categories: _activeCatalog);
+
+      // Both locality fields are on the form itself: no opener, no sheet.
+      final areaControl = textCI('Tỉnh / thành');
+      expect(areaControl, findsOneWidget);
+      expect(textCI('Phường / xã'), findsOneWidget);
+      expect(
+        tester.getTopLeft(_venueNameField()).dy,
+        lessThan(tester.getTopLeft(areaControl).dy),
+>>>>>>> 37da62470a745899b8af100d09b533de7a40fcfb
       );
       expect(find.text('Nhà thi đấu Quân khu 7'), findsOneWidget);
       expect(find.textContaining('202 Hoàng Văn Thụ'), findsOneWidget);
@@ -348,12 +363,38 @@ void main() {
         expect(find.text('Club session'), findsOneWidget);
         expect(find.text('Sport'), findsOneWidget);
 
+<<<<<<< HEAD
         await tester.ensureVisible(find.byType(SocialLocationRow));
         await tester.tap(find.byType(SocialLocationRow));
         await _pumpUi(tester);
         expect(find.byType(BottomSheet), findsOneWidget);
         expect(find.text('Search by name or address'), findsOneWidget);
         expect(find.text('Add new location'), findsOneWidget);
+=======
+        // Both locality fields are on the form itself, in English copy.
+        expect(find.text('Province / City'), findsOneWidget);
+        expect(find.text('Select a province'), findsOneWidget);
+        expect(find.text('Ward / Commune'), findsOneWidget);
+        expect(find.text('Select a province first'), findsOneWidget);
+
+        await _openAreaPicker(tester);
+
+        expect(find.byType(BottomSheet), findsOneWidget);
+        expect(find.text('City/Province'), findsOneWidget);
+        expect(
+          find.text(
+            'Area options are currently unavailable. You can still enter the address manually.',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            'Could not load areas. You can still enter the address manually.',
+          ),
+          findsNothing,
+        );
+        expect(_areaRetry(), findsOneWidget);
+>>>>>>> 37da62470a745899b8af100d09b533de7a40fcfb
         expect(tester.takeException(), isNull);
       },
     );
@@ -582,6 +623,7 @@ Future<void> _pumpUi(WidgetTester tester) async {
   await tester.pump();
 }
 
+<<<<<<< HEAD
 Future<void> _chooseSearchLocation(WidgetTester tester) async {
   await tester.ensureVisible(find.byType(SocialLocationRow));
   await _pumpUi(tester);
@@ -598,6 +640,14 @@ Future<void> _chooseSearchLocation(WidgetTester tester) async {
     of: find.byType(ListTile),
     matching: find.text('Sân 22 Cộng Hòa'),
   ));
+=======
+/// Taps the "Province / City" field, which is what opens the city list.
+Future<void> _openAreaPicker(WidgetTester tester) async {
+  final field = _fieldWithCopy('province / city');
+  await tester.ensureVisible(field);
+  await _pumpUi(tester);
+  await tester.tap(field);
+>>>>>>> 37da62470a745899b8af100d09b533de7a40fcfb
   await _pumpUi(tester);
 }
 
@@ -952,7 +1002,7 @@ class _RecordingSocialSessionRepository extends Fake
 
   @override
   Future<SocialSessionListResponse> listByDate({
-    required String date,
+    String? date,
     String? sport,
     String? communityId,
     String? search,

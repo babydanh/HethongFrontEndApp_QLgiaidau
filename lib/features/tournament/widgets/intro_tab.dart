@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
+import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_display.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 
@@ -181,25 +181,10 @@ class IntroTab extends StatelessWidget {
   }
 
   Widget _buildHtmlContent(BuildContext context, String text) {
-    final colors = context.colors;
-    final isHtml = text.contains('<') && text.contains('>');
-    if (isHtml) {
-      return HtmlWidget(
-        text,
-        textStyle: TextStyle(
-          fontSize: 13.5,
-          color: colors.textSecondary,
-          height: 1.55,
-        ),
-      );
-    }
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 13.5,
-        color: colors.textSecondary,
-        height: 1.55,
-      ),
+    return RichTextDisplay(
+      data: text,
+      fontSize: 13.5,
+      color: context.colors.textSecondary,
     );
   }
 }

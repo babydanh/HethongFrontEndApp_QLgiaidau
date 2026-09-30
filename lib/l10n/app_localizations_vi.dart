@@ -3056,6 +3056,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get dashboard_title => 'Của tôi';
 
   @override
+  String get dashboard_tab_overview => 'Tổng quan';
+
+  @override
+  String get dashboard_tab_activity => 'Hoạt động';
+
+  @override
+  String get dashboard_tab_manage => 'Quản lý';
+
+  @override
   String get dashboard_sportActivityFilterLabel => 'Hoạt động theo môn';
 
   @override
@@ -3096,6 +3105,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get dashboard_coOrganizer => 'Ban tổ chức';
+
+  @override
+  String get dashboard_participant => 'Tham gia';
 
   @override
   String get dashboard_noRolesDesc => 'Bạn chưa có vai trò nào trong giải đấu.';
@@ -12085,8 +12097,136 @@ class AppLocalizationsVi extends AppLocalizations {
   String get opsNoActivity => 'Chưa có hoạt động vận hành nào.';
 
   @override
-  String get opsCameraNotReady =>
-      'App chưa có contract gán camera cho giải này.';
+  String get tournamentManagementCamera => 'Camera';
+
+  @override
+  String get tournamentManagementCameraDescription =>
+      'Khai báo URL phát cho từng sân và gán trận vào sân để camera của sân đó theo trận.';
+
+  @override
+  String tournamentManagementCameraCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count camera sân',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tournamentManagementCameraRefresh => 'Tải lại danh sách camera';
+
+  @override
+  String get tournamentManagementCameraUrl => 'URL phát của camera';
+
+  @override
+  String get tournamentManagementCameraUrlHint => 'https://…';
+
+  @override
+  String get tournamentManagementCameraReady => 'Camera đã sẵn sàng';
+
+  @override
+  String get tournamentManagementCameraNotReady => 'Chưa có URL camera';
+
+  @override
+  String get tournamentManagementCameraUrlRequired =>
+      'Nhập URL phát của camera.';
+
+  @override
+  String get tournamentManagementCameraUrlSaved => 'Đã lưu URL camera.';
+
+  @override
+  String get tournamentManagementCameraUrlCleared => 'Đã xoá URL camera.';
+
+  @override
+  String get tournamentManagementCameraUrlSaveFailed =>
+      'Không lưu được URL camera.';
+
+  @override
+  String get tournamentManagementCameraClearUrl => 'Xoá URL';
+
+  @override
+  String tournamentManagementCameraClearUrlConfirm(Object court) {
+    return 'Xoá URL camera của sân $court? Các trận ở sân này sẽ không còn camera.';
+  }
+
+  @override
+  String get tournamentManagementCameraNoCourts =>
+      'Giải này chưa có sân nào. Hãy thêm sân ở mục Cơ sở trước.';
+
+  @override
+  String get tournamentManagementCameraMatchPool => 'Trận đấu';
+
+  @override
+  String get tournamentManagementCameraMatchPoolHint =>
+      'Nhấn giữ một trận rồi kéo thả lên sân, hoặc chọn sân từ menu của trận.';
+
+  @override
+  String get tournamentManagementCameraMatchPoolEmpty =>
+      'Không có trận nào để gán sân.';
+
+  @override
+  String get tournamentManagementCameraUnassigned => 'Chưa có sân';
+
+  @override
+  String get tournamentManagementCameraChooseCourt => 'Chọn sân';
+
+  @override
+  String get tournamentManagementCameraSelectHint =>
+      'Đã chọn trận. Chọn một sân để gán.';
+
+  @override
+  String tournamentManagementCameraSelectedMatch(Object match) {
+    return 'Đang chọn: $match';
+  }
+
+  @override
+  String get tournamentManagementCameraClearSelection => 'Bỏ chọn';
+
+  @override
+  String tournamentManagementCameraAssigned(Object court, Object match) {
+    return 'Đã chuyển $match sang sân $court.';
+  }
+
+  @override
+  String get tournamentManagementCameraAssignFailed =>
+      'Không chuyển được trận sang sân.';
+
+  @override
+  String tournamentManagementCameraAlreadyAssigned(Object court, Object match) {
+    return '$match đã ở sân $court.';
+  }
+
+  @override
+  String tournamentManagementCameraMatchesHere(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Trận tại sân này',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tournamentManagementCameraNoMatchesHere =>
+      'Chưa có trận nào được xếp vào sân này.';
+
+  @override
+  String tournamentManagementCameraAssignHere(Object match) {
+    return 'Gán $match vào sân này';
+  }
+
+  @override
+  String get tournamentManagementCameraPickCamera => 'Camera cho trận này';
+
+  @override
+  String tournamentManagementCameraManualAssigned(Object camera) {
+    return 'Đã gán camera: $camera';
+  }
+
+  @override
+  String get tournamentManagementCameraManualAssignFailed =>
+      'Không gán được camera cho trận.';
 
   @override
   String get opsSpecialOperation => 'Xử lý đặc biệt';
@@ -13726,6 +13866,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeSearchScopeAthletes => 'Vận động viên';
 
   @override
+  String get homeSearchScopeSessions => 'Kèo';
+
+  @override
+  String get homeSearchSessionsHint => 'Tìm kèo giao lưu...';
+
+  @override
   String get homeGlobalSearchAdvancedFilters => 'Bộ lọc nâng cao';
 
   @override
@@ -13761,6 +13907,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Địa điểm được tổng hợp từ các trận đấu công khai; chưa hỗ trợ tìm quanh đây.';
 
   @override
+  String get homeGlobalSearchSessionNote =>
+      'Kèo được tìm theo ngày chơi. Mở bộ lọc nâng cao để đổi ngày.';
+
+  @override
   String get homeGlobalSearchSport => 'Môn thể thao';
 
   @override
@@ -13774,6 +13924,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeGlobalSearchDate => 'Khoảng ngày';
+
+  @override
+  String get homeGlobalSearchSessionDate => 'Ngày chơi';
 
   @override
   String get homeGlobalSearchLocation => 'Sân/địa chỉ';
@@ -14075,6 +14228,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get socialLocationAutoPlaced => 'Ghim tự động theo khu vực';
 
   @override
+  String get socialLocationRegionMissing =>
+      'Chưa nhận ra tỉnh/phường từ điểm đã ghim. Hãy chọn khu vực để kèo hiện đúng chỗ.';
+
+  @override
+  String get socialLocationRegionRetry => 'Tra lại';
+
+  @override
   String get socialPrivacyPublic => 'Công khai';
 
   @override
@@ -14113,7 +14273,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get socialLegacyInactiveSport => 'Môn đã ngừng hoạt động';
 
   @override
-  String get socialRegionLabel => 'Khu vực (không bắt buộc)';
+  String get socialRegionProvinceFieldLabel => 'Tỉnh / thành';
+
+  @override
+  String get socialRegionProvinceFieldHint => 'Chọn tỉnh';
+
+  @override
+  String get socialRegionWardFieldLabel => 'Phường / xã';
+
+  @override
+  String get socialRegionWardFieldHint => 'Chọn phường';
+
+  @override
+  String get socialRegionWardNeedsProvinceHint => 'Chọn tỉnh trước';
 
   @override
   String get socialRegionWardLabel => 'Phường/Xã';
@@ -14124,12 +14296,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get socialRegionWardSearchPrompt =>
       'Nhập ít nhất 2 ký tự để tìm phường/xã.';
-
-  @override
-  String get socialRegionApplyAction => 'Áp dụng';
-
-  @override
-  String get socialRegionCancelAction => 'Hủy';
 
   @override
   String get socialRegionNoResults => 'Không tìm thấy kết quả.';
@@ -14151,9 +14317,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get socialRegionOpenAction => 'Chọn khu vực';
-
-  @override
   String get socialRegionPickerTitle => 'Chọn khu vực sân';
 
   @override
@@ -14164,9 +14327,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get socialRegionAlphabetHint => 'Lọc kết quả theo chữ cái đầu';
-
-  @override
-  String get socialRegionSuggestionLabel => 'Gợi ý từ địa chỉ';
 
   @override
   String get socialRegionCloseAction => 'Đóng';

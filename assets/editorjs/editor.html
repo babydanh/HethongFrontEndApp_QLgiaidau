@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Rich text editor</title>
+  <style>
+    body { margin: 0; padding: 10px 12px; background: #ffffff; }
+    #editorjs { min-height: 120px; }
+    /* Editor.js đo chiều rộng theo holder; trong WebView hẹp cần cho phép xuống dòng. */
+    .ce-block__content, .ce-paragraph, [contenteditable="true"] { word-break: break-word; }
+    /* Hộp công cụ (Ordered List / Checklist / Image) mặc định rất cao và rộng,
+       che gần hết khung editor. Ép lại thành hàng ngang gọn gàng. */
+    .ce-toolbar__plus, .ce-toolbar__settings-btn { width: 22px; height: 22px; }
+    .ce-toolbar__plus svg, .ce-toolbar__settings-btn svg { width: 14px; height: 14px; }
+    .ce-toolbar__content { max-width: none; flex-wrap: nowrap; overflow-x: auto; }
+    .ce-popover { border-radius: 8px; }
+    .ce-popover-item__icon { width: 20px; height: 20px; }
+    .ce-popover-item:hover { background: #f1f5f9; }
+    .ce-inline-toolbar { border-radius: 6px; }
+    .ce-inline-tool { width: 26px; height: 26px; }
+    .ce-inline-tool svg { width: 14px; height: 14px; }
+  </style>
+</head>
+<body>
+  <div id="editorjs"></div>
+
+  <script src="editorjs.umd.js"></script>
+  <script src="header.umd.js"></script>
+  <script src="editorjs-list.umd.js"></script>
+  <script src="image.umd.js"></script>
+
+  <script>
+    // ==== Đồng bộ với web: HethongFrontEndWeb_QLgiaidau
+    //      src/components/ui/RichTextEditor.tsx (htmlToEditorjs / editorjsToHtml).
+    // Hai hàm này là hợp đồng dữ liệu dùng chung: web và app phải ra CÙNG một
+    // dạng HTML, nếu lệch thì mô tả sẽ bị đổi hình dạng mỗi lần lưu.
+
+    function htmlToEditorjs(html) {
+      if (!html) return { blocks: [] };
+      if (!html.includes('<p>') && !html.includes('<h') && !html.includes('<ul') &&
+          !html.includes('<ol') && !html.includes('<figure') && !html.includes('<img')) {
+        return { blocks: [{ type: 'paragraph', data: { text: html } }] };
+      }
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const blocks = [];
+        doc.body.childNodes.forEach(function (node) {
+          if (node.nodeType !== 1) return;
+          const element = node;
+          const tagName = element.tagName.toLowerCase();
+          if (tagName.indexOf('h') === 0) {
+            const level = parseInt(tagName.substring(1), 10) || 2;
+            blocks.push({ type: 'header', data: { text: element.innerHTML, level: level } });
+          } else if (tagName === 'p') {
+            blocks.push({ type: 'paragraph', data: { text: element.innerHTML } });
+          } else if (tagName === 'ul' || tagName === 'ol') {
+            const items = Array.prototype.slice
+              .call(element.querySelectorAll('li'))
+              .map(function (li) { return { content: li.innerHTML, items: [] }; });
+            blocks.push({
+              type: 'list',
+              data: { style: tagName === 'ol' ? 'ordered' : 'unordered', items: items }
+            });
+          } else if (tagName === 'figure') {
+            const img = element.querySelector('img');
+            const figcaption = element.querySelector('figcaption');
+            if (img) {
+              blocks.push({
+                type: 'image',
+                data: {
+                  file: { url: img.src },
+                  caption: figcaption ? figcaption.innerHTML : '',
+                  withBorder: false, withBackground: false, stretched: false
+                }
+              });
+            }
+          } else if (tagName === 'img') {
+            blocks.push({
+              type: 'image',
+              data: {
+                file: { url: element.src },
+                caption: '',
+                withBorder: false, withBackground: false, stretched: false
+              }
+            });
+          }
+        });
+        return { blocks: blocks };
+      } catch (e) {
+        console.error('Failed to parse HTML to EditorJS blocks', e);
+        return { blocks: [{ type: 'paragraph', data: { text: html } }] };
+      }
+    }
+
+    function editorjsToHtml(data) {
+      if (!data || !data.blocks) return '';
+      return data.blocks.map(function (block) {
+        switch (block.type) {
+          case 'header':
+            return '<h' + block.data.level + '>' + block.data.text + '</h' + block.data.level + '>';
+          case 'paragraph':
+            return '<p>' + block.data.text + '</p>';
+          case 'list': {
+            const tag = block.data.style === 'ordered' ? 'ol' : 'ul';
+            if (!block.data.items) return '<' + tag + '></' + tag + '>';
+            const items = block.data.items.map(function (item) {
+              if (typeof item === 'object' && item !== null) {
+                return '<li>' + (item.content || '') + '</li>';
+              }
+              return '<li>' + item + '</li>';
+            }).join('');
+            return '<' + tag + '>' + items + '</' + tag + '>';
+          }
+          case 'image': {
+            const caption = block.data.caption || '';
+            return '<figure><img src="' + (block.data.file && block.data.file.url || '') + '" alt="' + caption + '" />' +
+              (caption ? '<figcaption>' + caption + '</figcaption>' : '') + '</figure>';
+          }
+          default:
+            return '';
+        }
+      }).join('\n');
+    }
+
+    // ==== Cầu nối với Dart ====
+    var editorInstance = null;
+    // Gửi HTML (Editor.js JSON -> HTML) lên Dart qua JavaScriptChannel.
+    function emitHtml() {
+      if (!editorInstance) return;
+      editorInstance.saver.save().then(function (saved) {
+        try {
+          // Tên channel phải KHỚP chính xác với addJavaScriptChannel bên Dart
+          // ('RichTextChannel'). Sai tên thì postMessage ném lỗi và bị catch ở
+          // đây nuốt mất — Dart không bao giờ nhận được tin nhắn nào.
+          window.RichTextChannel.postMessage(editorjsToHtml(saved));
+        } catch (e) {
+          // KHÔNG nuốt im lỗi ở đây: chính việc nuốt im đã che mất bug sai tên
+          // channel. Log ra để thấy ngay trong WebView console.
+          console.error('[RichText] postMessage failed', e);
+        }
+      });
+    }
+
+    // Dart gọi hàm này (runJavaScript) để nạp giá trị ban đầu.
+    window.setEditorHtml = function (html) {
+      var holder = document.getElementById('editorjs');
+      holder.innerHTML = '';
+      if (editorInstance && typeof editorInstance.destroy === 'function') {
+        try { editorInstance.destroy(); } catch (e) { /* ignore */ }
+      }
+      // UMD có thể trả thẳng class hoặc namespace {default: Class}. Dùng
+      // fallback cho cả hai trường hợp để không phụ thuộc cách bundler đóng gói.
+      var EditorJSClass = window.EditorJS.default || window.EditorJS;
+      editorInstance = new EditorJSClass({
+        holder: holder,
+        data: htmlToEditorjs(html || ''),
+        placeholder: 'Nhập mô tả…',
+        tools: {
+          header: {
+            class: (window.Header.default || window.Header),
+            inlineToolbar: ['link', 'bold', 'italic'],
+            config: { placeholder: 'Tiêu đề', levels: [1, 2, 3, 4], defaultLevel: 2 }
+          },
+          list: {
+            class: (window.EditorjsList.default || window.EditorjsList),
+            inlineToolbar: true,
+            config: { defaultStyle: 'unordered' }
+          },
+          image: {
+            class: (window.ImageTool.default || window.ImageTool),
+            config: {
+              uploader: {
+                // App không cho chọn ảnh trong lúc soạn thảo: báo rõ thay vì
+                // trả về URL rỗng rồi lưu <img src=""> vào mô tả.
+                uploadByFile: function () {
+                  return Promise.resolve({ success: 0, message: 'Chưa hỗ trợ chèn ảnh trên app' });
+                },
+                uploadByUrl: function (url) {
+                  return Promise.resolve({ success: 1, file: { url: url } });
+                }
+              }
+            }
+          }
+        },
+        onReady: function () { emitHtml(); },
+        onChange: function () { emitHtml(); }
+      });
+    };
+
+    // Báo Dart rằng trang đã nạp xong 4 file UMD. Dart chỉ gửi giá trị ban đầu sau
+    // khi nhận được tín hiệu này — gọi `setEditorHtml` sớm hơn thì
+    // `window.EditorJS` chưa tồn tại và editor không khởi tạo được.
+    // `window.RichTextChannel` chỉ tồn tại SAU khi Dart gọi
+    // addJavaScriptChannel, còn sự kiện 'load' của WebView có thể bắn trước lúc
+    // channel được gắn vào. Nếu chỉ post một lần thì `__ready__` mất sạch và
+    // editor không bao giờ nhận giá trị ban đầu. Vì vậy thử lại cho tới khi
+    // thành công.
+    function notifyReady(attempt) {
+      try {
+        if (window.RichTextChannel) {
+          window.RichTextChannel.postMessage('__ready__');
+          return;
+        }
+      } catch (e) {
+        console.error('[RichText] ready notify failed', e);
+      }
+      if ((attempt || 0) < 40) {
+        setTimeout(function () { notifyReady((attempt || 0) + 1); }, 100);
+      }
+    }
+    window.addEventListener('load', function () { notifyReady(0); });
+  </script>
+</body>
+</html>

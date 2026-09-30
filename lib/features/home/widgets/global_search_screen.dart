@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/widgets/province_picker.dart';
 import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
+import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
@@ -25,6 +26,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+/// Ngày chơi của hôm nay — chỉ dùng làm mặc định khi user KHÔNG gõ từ khoá.
+/// Backend bắt buộc `date` trừ khi có `search`, nên lướt trống vẫn phải gửi
+/// một ngày; có từ khoá thì mới bỏ trống được để tìm mọi ngày.
+DateTime _startOfToday() {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month, now.day);
+}
+
 class _SearchFilterDraft {
   _SearchFilterDraft.fromState(_GlobalSearchScreenState state)
     : matchSport = state._matchSport,
@@ -39,7 +48,9 @@ class _SearchFilterDraft {
       clubProvince = state._clubProvince,
       athleteSport = state._athleteSport,
       athleteGender = state._athleteGender,
-      athleteProvince = state._athleteProvince;
+      athleteProvince = state._athleteProvince,
+      sessionSport = state._sessionSport,
+      sessionDate = state._sessionDate;
 
   String matchSport;
   String matchStatus;
@@ -55,6 +66,9 @@ class _SearchFilterDraft {
   String athleteGender;
   String? athleteProvince;
 
+  String sessionSport;
+  DateTime? sessionDate;
+
   void reset() {
     matchSport = 'all';
     matchStatus = 'all';
@@ -69,6 +83,8 @@ class _SearchFilterDraft {
     athleteSport = 'all';
     athleteGender = 'all';
     athleteProvince = null;
+    sessionSport = 'all';
+    sessionDate = null;
   }
 }
 
@@ -131,7 +147,8 @@ class GlobalSearchScreen extends ConsumerStatefulWidget {
 }
 
 class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
-  static const _scopes = [1, 0, 3, 4, 5];
+  // 2 = kèo (social session) — id 2 chưa dùng, nên không đụng các scope cũ.
+  static const _scopes = [1, 0, 2, 3, 4, 5];
 
   late final TextEditingController _queryController;
   late final TextEditingController _matchLocationController;
@@ -333,6 +350,8 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       _athleteSport = draft.athleteSport;
       _athleteGender = draft.athleteGender;
       _athleteProvince = draft.athleteProvince;
+      _sessionSport = draft.sessionSport;
+      _sessionDate = draft.sessionDate;
     });
     _matchLocationController.text = draft.matchLocation;
     _loadScope();
@@ -422,6 +441,18 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
           setSheetState(() => draft.tournamentDateRange = range);
         }),
       );
+    } else if (_scope == 2) {
+      add(
+        l10n.homeGlobalSearchSport,
+        draft.sessionSport,
+        sportBySlug,
+        (value) => draft.sessionSport = value,
+      );
+      children.add(
+        _dayFilter(l10n, colors, draft.sessionDate, (date) {
+          setSheetState(() => draft.sessionDate = date);
+        }),
+      );
     } else if (_scope == 3) {
       add(
         l10n.homeGlobalSearchSport,
@@ -475,6 +506,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   List<Tournament> _tournaments = [];
   List<Community> _clubs = [];
   List<PlayerRanking> _athletes = [];
+  List<SocialSessionModel> _sessions = [];
 
   String _matchSport = 'all';
   String _matchStatus = 'all';
@@ -488,6 +520,9 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   String _athleteSport = 'all';
   String _athleteGender = 'all';
   String? _athleteProvince;
+  String _sessionSport = 'all';
+  // null = không ghim ngày, tìm trên mọi ngày chơi. Chỉ ghim khi user tự chọn.
+  DateTime? _sessionDate;
 
   @override
   void initState() {
@@ -644,6 +679,40 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
           _nextCursor = result.nextCursor;
           _hasMore = result.hasMore && (result.nextCursor?.isNotEmpty ?? false);
           break;
+        case 2:
+          // Kèo dùng chung endpoint của trang kèo (GET /social-sessions).
+          // Endpoint nới `date` khi có `search`, nên mặc định (không ghim ngày)
+          // tìm được kèo ở mọi ngày; ghim ngày thì vẫn lọc đúng một ngày.
+          final sessionPage = append
+              ? int.tryParse(_nextCursor ?? '') ?? 1
+              : 1;
+          // Có từ khoá thì không ghim ngày (tìm mọi ngày chơi); không có từ
+          // khoá thì rơi về hôm nay — backend chỉ chấp nhận thiếu `date` khi
+          // request mang `search`, thiếu cả hai sẽ bị 400.
+          final sessionSearch = query.isEmpty ? null : query;
+          final sessionDate =
+              _sessionDate ?? (sessionSearch == null ? _startOfToday() : null);
+          final sessionResult = await ref
+              .read(socialSessionRepositoryProvider)
+              .listByDate(
+                date: sessionDate == null
+                    ? null
+                    : DateFormat('yyyy-MM-dd').format(sessionDate),
+                sport: _sessionSport == 'all' ? null : _sessionSport,
+                search: sessionSearch,
+                page: sessionPage,
+                limit: 10,
+              );
+          if (!mounted || version != _requestVersion) return;
+          _sessions = append
+              ? [..._sessions, ...sessionResult.items]
+              : sessionResult.items;
+          // Endpoint trả về total, không có cursor — suy ra trang kế bằng total.
+          final sessionHasMore =
+              sessionPage * sessionResult.limit < sessionResult.total;
+          _hasMore = sessionHasMore;
+          _nextCursor = sessionHasMore ? '${sessionPage + 1}' : null;
+          break;
         case 3:
           final result = await ref
               .read(communityRepositoryProvider)
@@ -797,6 +866,11 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     return athletes;
   }
 
+  /// Kèo đã được backend lọc sẵn theo `search` (title/sân/địa chỉ, unaccent).
+  /// Không lọc lại bằng `contains` ở client vì sẽ loại mất chính các kèo mà
+  /// backend tìm được (ví dụ gõ "bong da" ra kèo "Kèo bóng đá cuối tuần").
+  List<SocialSessionModel> get _visibleSessions => _sessions;
+
   int _newestFirst(DateTime? a, DateTime? b) {
     if (a == null) return b == null ? 0 : 1;
     if (b == null) return -1;
@@ -806,6 +880,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   int get _visibleResultCount => switch (_scope) {
     0 => _visibleMatches.length,
     1 => _visibleTournaments.length,
+    2 => _visibleSessions.length,
     3 => _visibleClubs.length,
     4 => _visibleAthletes.length,
     5 => _venueEntries(_visibleMatches).length,
@@ -827,6 +902,10 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
           (_tournamentStatus != 'all' ? 1 : 0) +
           (_tournamentProvinceCode.isNotEmpty ? 1 : 0) +
           (_tournamentDateRange != null ? 1 : 0),
+    // Ngày chơi không còn bắt buộc nên chỉ tính vào số bộ lọc khi đang ghim;
+    // mặc định (null) là tìm mọi ngày nên không có gì để "mở ra đổi".
+    2 =>
+      (_sessionDate != null ? 1 : 0) + (_sessionSport != 'all' ? 1 : 0),
     3 => (_clubSport != 'all' ? 1 : 0) + (_clubProvince != null ? 1 : 0),
     4 =>
       (_athleteSport != 'all' ? 1 : 0) +
@@ -850,6 +929,8 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       _athleteSport = 'all';
       _athleteGender = 'all';
       _athleteProvince = null;
+      _sessionSport = 'all';
+      _sessionDate = null;
     });
     _loadScope();
   }
@@ -882,6 +963,14 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                   child: Text(
                     l10n.homeGlobalSearchVenueNote,
+                    style: TextStyle(fontSize: 12, color: colors.textMuted),
+                  ),
+                ),
+              if (_scope == 2)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Text(
+                    l10n.homeGlobalSearchSessionNote,
                     style: TextStyle(fontSize: 12, color: colors.textMuted),
                   ),
                 ),
@@ -1018,6 +1107,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   String _scopeLabel(AppLocalizations l10n, int scope) => switch (scope) {
     0 => l10n.homeSearchScopeMatches,
     1 => l10n.homeSearchScopeTournaments,
+    2 => l10n.homeSearchScopeSessions,
     3 => l10n.homeSearchScopeClubs,
     4 => l10n.homeSearchScopeAthletes,
     5 => l10n.homeSearchScopeVenues,
@@ -1047,7 +1137,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
             label: _scopeLabel(l10n, scope),
             child: ChoiceChip(
               avatar: switch (scope) {
-                0 || 1 || 3 => null,
+                0 || 1 || 2 || 3 => null,
                 _ => Icon(
                   _scopeIcon(scope),
                   size: 17,
@@ -1167,6 +1257,47 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     );
   }
 
+  /// Bộ lọc một ngày — kèo được backend lọc theo đúng `playDate` nên không
+  /// dùng được khoảng ngày như giải đấu/trận đấu.
+  ///
+  /// `null` là trạng thái mặc định: chưa ghim ngày, tìm mọi ngày chơi. Nhãn chỉ
+  /// hiện ngày khi đang ghim, giống [_dateFilter] khi không có khoảng ngày.
+  Widget _dayFilter(
+    AppLocalizations l10n,
+    AppColorsExtension colors,
+    DateTime? value,
+    ValueChanged<DateTime?> onChanged,
+  ) {
+    final now = DateTime.now();
+    return OutlinedButton.icon(
+      onPressed: () async {
+        final picked = await showDatePicker(
+          context: context,
+          firstDate: DateTime(now.year - 3),
+          lastDate: DateTime(now.year + 4),
+          initialDate: value ?? _startOfDay(DateTime.now()),
+        );
+        if (picked != null) onChanged(_startOfDay(picked));
+      },
+      icon: const Icon(Icons.event_rounded),
+      label: Text(
+        value == null
+            ? l10n.homeGlobalSearchSessionDate
+            : '${l10n.homeGlobalSearchSessionDate}: '
+                  '${DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(value)}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      style: OutlinedButton.styleFrom(
+        alignment: Alignment.centerLeft,
+        foregroundColor: colors.textPrimary,
+        minimumSize: const Size.fromHeight(48),
+        side: BorderSide(color: colors.border),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
   Widget _buildResults(AppLocalizations l10n, AppColorsExtension colors) {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -1188,6 +1319,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         ? _venueEntries(matches)
         : const <MapEntry<String, List<MatchModel>>>[];
     final tournaments = _visibleTournaments;
+    final sessions = _visibleSessions;
     final clubs = _visibleClubs;
     final athletes = _visibleAthletes;
     final count = _visibleResultCount;
@@ -1264,6 +1396,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                   return switch (_scope) {
                     0 => _matchCard(matches[index], l10n, colors),
                     1 => _tournamentCard(tournaments[index], l10n, colors),
+                    2 => _sessionRow(sessions[index], colors),
                     3 => _clubCard(clubs[index], l10n, colors),
                     4 => _athleteCard(athletes[index], colors),
                     5 => _venueCard(venues[index], colors),
@@ -1733,6 +1866,23 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     );
   }
 
+  /// Dòng kết quả kèo: tên kèo + giờ chơi + sân/địa chỉ, dùng đúng style dòng
+  /// gọn của scope CLB/VĐV/Địa điểm (không dùng card toàn màn hình của trang kèo).
+  Widget _sessionRow(SocialSessionModel session, AppColorsExtension colors) {
+    final startAt = session.startAt.toLocal();
+    final time = DateFormat.yMMMd(
+      Localizations.localeOf(context).toString(),
+    ).add_Hm().format(startAt);
+    return _resultRow(
+      colors: colors,
+      title: session.title,
+      details: [time, _joinLocation(session.venueName, session.venueAddress)],
+      onTap: () => context.push('/social/${session.id}'),
+      imageUrl: session.community?.logoUrl,
+      sport: session.sport,
+    );
+  }
+
   String _clubWardAndCity(Community club) {
     final provinceCode = club.provinceCode?.trim() ?? '';
     final provinceList =
@@ -2048,6 +2198,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   String _scopeHint(AppLocalizations l10n) => switch (_scope) {
     0 || 5 => l10n.homeSearchMatchesHint,
     1 => l10n.homeSearchTournamentsHint,
+    2 => l10n.homeSearchSessionsHint,
     3 => l10n.homeSearchClubsHint,
     4 => l10n.homeSearchAthletesHint,
     _ => l10n.homeSearchGenericHint,

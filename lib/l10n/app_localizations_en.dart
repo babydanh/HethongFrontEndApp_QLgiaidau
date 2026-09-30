@@ -3067,6 +3067,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboard_title => 'My Dashboard';
 
   @override
+  String get dashboard_tab_overview => 'Overview';
+
+  @override
+  String get dashboard_tab_activity => 'Activity';
+
+  @override
+  String get dashboard_tab_manage => 'Manage';
+
+  @override
   String get dashboard_sportActivityFilterLabel => 'Activity by sport';
 
   @override
@@ -3107,6 +3116,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboard_coOrganizer => 'Co-Organizer';
+
+  @override
+  String get dashboard_participant => 'Participant';
 
   @override
   String get dashboard_noRolesDesc =>
@@ -12124,8 +12136,138 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opsNoActivity => 'No operational activity yet.';
 
   @override
-  String get opsCameraNotReady =>
-      'Camera assignment is not available in the App yet.';
+  String get tournamentManagementCamera => 'Camera';
+
+  @override
+  String get tournamentManagementCameraDescription =>
+      'Declare a playback URL for each court and assign a match to a court so that court\'s camera follows it.';
+
+  @override
+  String tournamentManagementCameraCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count court cameras',
+      one: '$count court camera',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tournamentManagementCameraRefresh => 'Reload cameras';
+
+  @override
+  String get tournamentManagementCameraUrl => 'Camera playback URL';
+
+  @override
+  String get tournamentManagementCameraUrlHint => 'https://…';
+
+  @override
+  String get tournamentManagementCameraReady => 'Camera ready';
+
+  @override
+  String get tournamentManagementCameraNotReady => 'No camera URL';
+
+  @override
+  String get tournamentManagementCameraUrlRequired =>
+      'Enter a camera playback URL.';
+
+  @override
+  String get tournamentManagementCameraUrlSaved => 'Camera URL saved.';
+
+  @override
+  String get tournamentManagementCameraUrlCleared => 'Camera URL removed.';
+
+  @override
+  String get tournamentManagementCameraUrlSaveFailed =>
+      'Could not save the camera URL.';
+
+  @override
+  String get tournamentManagementCameraClearUrl => 'Clear URL';
+
+  @override
+  String tournamentManagementCameraClearUrlConfirm(Object court) {
+    return 'Remove the camera URL of $court? Matches on this court lose their camera.';
+  }
+
+  @override
+  String get tournamentManagementCameraNoCourts =>
+      'This tournament has no courts yet. Add one in Venues first.';
+
+  @override
+  String get tournamentManagementCameraMatchPool => 'Matches';
+
+  @override
+  String get tournamentManagementCameraMatchPoolHint =>
+      'Long-press a match and drop it on a court, or pick a court from the match menu.';
+
+  @override
+  String get tournamentManagementCameraMatchPoolEmpty =>
+      'No match can be assigned to a court.';
+
+  @override
+  String get tournamentManagementCameraUnassigned => 'No court yet';
+
+  @override
+  String get tournamentManagementCameraChooseCourt => 'Choose a court';
+
+  @override
+  String get tournamentManagementCameraSelectHint =>
+      'Match selected. Choose a court to assign it.';
+
+  @override
+  String tournamentManagementCameraSelectedMatch(Object match) {
+    return 'Selected: $match';
+  }
+
+  @override
+  String get tournamentManagementCameraClearSelection => 'Clear selection';
+
+  @override
+  String tournamentManagementCameraAssigned(Object court, Object match) {
+    return '$match moved to $court.';
+  }
+
+  @override
+  String get tournamentManagementCameraAssignFailed =>
+      'Could not move that match to the court.';
+
+  @override
+  String tournamentManagementCameraAlreadyAssigned(Object court, Object match) {
+    return '$match is already on $court.';
+  }
+
+  @override
+  String tournamentManagementCameraMatchesHere(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Matches here',
+      one: 'Match here',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tournamentManagementCameraNoMatchesHere =>
+      'No match scheduled on this court.';
+
+  @override
+  String tournamentManagementCameraAssignHere(Object match) {
+    return 'Assign $match here';
+  }
+
+  @override
+  String get tournamentManagementCameraPickCamera => 'Camera for this match';
+
+  @override
+  String tournamentManagementCameraManualAssigned(Object camera) {
+    return 'Camera pinned: $camera';
+  }
+
+  @override
+  String get tournamentManagementCameraManualAssignFailed =>
+      'Could not pin that camera to the match.';
 
   @override
   String get opsSpecialOperation => 'Special operation';
@@ -13775,6 +13917,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSearchScopeAthletes => 'Athletes';
 
   @override
+  String get homeSearchScopeSessions => 'Sessions';
+
+  @override
+  String get homeSearchSessionsHint => 'Search sessions...';
+
+  @override
   String get homeGlobalSearchAdvancedFilters => 'Advanced filters';
 
   @override
@@ -13810,6 +13958,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Venues are derived from public matches; nearby search is not available.';
 
   @override
+  String get homeGlobalSearchSessionNote =>
+      'Sessions are searched by play date. Open advanced filters to change the day.';
+
+  @override
   String get homeGlobalSearchSport => 'Sport';
 
   @override
@@ -13823,6 +13975,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeGlobalSearchDate => 'Date range';
+
+  @override
+  String get homeGlobalSearchSessionDate => 'Play date';
 
   @override
   String get homeGlobalSearchLocation => 'Venue/address';
@@ -14124,6 +14279,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialLocationAutoPlaced => 'Auto-placed from area';
 
   @override
+  String get socialLocationRegionMissing =>
+      'No province/ward resolved from the pinned point. Pick the area so the session shows in the right locality.';
+
+  @override
+  String get socialLocationRegionRetry => 'Look up again';
+
+  @override
   String get socialPrivacyPublic => 'Public';
 
   @override
@@ -14160,7 +14322,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialLegacyInactiveSport => 'Inactive sport';
 
   @override
-  String get socialRegionLabel => 'Area (optional)';
+  String get socialRegionProvinceFieldLabel => 'Province / City';
+
+  @override
+  String get socialRegionProvinceFieldHint => 'Select a province';
+
+  @override
+  String get socialRegionWardFieldLabel => 'Ward / Commune';
+
+  @override
+  String get socialRegionWardFieldHint => 'Select a ward';
+
+  @override
+  String get socialRegionWardNeedsProvinceHint => 'Select a province first';
 
   @override
   String get socialRegionWardLabel => 'Ward/Commune';
@@ -14171,12 +14345,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get socialRegionWardSearchPrompt =>
       'Enter at least 2 characters to search wards/communes.';
-
-  @override
-  String get socialRegionApplyAction => 'Apply';
-
-  @override
-  String get socialRegionCancelAction => 'Cancel';
 
   @override
   String get socialRegionNoResults => 'No results found.';
@@ -14198,9 +14366,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get socialRegionOpenAction => 'Choose area';
-
-  @override
   String get socialRegionPickerTitle => 'Choose venue area';
 
   @override
@@ -14211,9 +14376,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialRegionAlphabetHint => 'Filter options by initial letter';
-
-  @override
-  String get socialRegionSuggestionLabel => 'Suggested from the address';
 
   @override
   String get socialRegionCloseAction => 'Close';
