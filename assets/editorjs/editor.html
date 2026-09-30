@@ -9,7 +9,17 @@
     #editorjs { min-height: 120px; }
     /* Editor.js đo chiều rộng theo holder; trong WebView hẹp cần cho phép xuống dòng. */
     .ce-block__content, .ce-paragraph, [contenteditable="true"] { word-break: break-word; }
-    .cdx-block { max-width: none; }
+    /* Hộp công cụ (Ordered List / Checklist / Image) mặc định rất cao và rộng,
+       che gần hết khung editor. Ép lại thành hàng ngang gọn gàng. */
+    .ce-toolbar__plus, .ce-toolbar__settings-btn { width: 22px; height: 22px; }
+    .ce-toolbar__plus svg, .ce-toolbar__settings-btn svg { width: 14px; height: 14px; }
+    .ce-toolbar__content { max-width: none; flex-wrap: nowrap; overflow-x: auto; }
+    .ce-popover { border-radius: 8px; }
+    .ce-popover-item__icon { width: 20px; height: 20px; }
+    .ce-popover-item:hover { background: #f1f5f9; }
+    .ce-inline-toolbar { border-radius: 6px; }
+    .ce-inline-tool { width: 26px; height: 26px; }
+    .ce-inline-tool svg { width: 14px; height: 14px; }
   </style>
 </head>
 <body>

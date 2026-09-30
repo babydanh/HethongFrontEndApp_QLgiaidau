@@ -1055,7 +1055,6 @@ class _CreatePublicQuickTournamentScreenState
             // validate trong Form.
             RichTextField(
               value: _description,
-              minHeight: 120,
               onChanged: (html) {
                 // Editor báo về cả lúc vừa sẵn sàng (giá trị chuẩn hoá) nên
                 // chỉ setState khi thực sự khác.
