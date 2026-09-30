@@ -2,10 +2,7 @@ import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
-
-enum LiveZoom { fit, half, full }
 
 /// Trình phát luồng trực tiếp.
 ///
@@ -17,16 +14,12 @@ class LiveVideoPlayer extends StatefulWidget {
     super.key,
     required this.url,
     this.label,
-    this.onToggleChat,
   });
 
   final String url;
 
   /// Tên sân/camera, hiện ở góc phải. Rỗng thì không hiện.
   final String? label;
-
-  /// Bật/tắt khung thảo luận. Rỗng thì ẩn nút chat, khớp web.
-  final VoidCallback? onToggleChat;
 
   @override
   State<LiveVideoPlayer> createState() => _LiveVideoPlayerState();
@@ -37,20 +30,11 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
 
   VideoPlayerController? _controller;
   Timer? _hideTimer;
-  LiveZoom _zoom = LiveZoom.fit;
   bool _muted = true;
   bool _playing = false;
-  double _volume = 1;
-  bool _fullscreen = false;
-  bool _chatOpen = false;
   bool _controlsVisible = true;
   String? _error;
 
-  double get _scale => switch (_zoom) {
-        LiveZoom.fit => 1,
-        LiveZoom.half => 1.5,
-        LiveZoom.full => 2,
-      };
 
   @override
   void initState() {
@@ -97,7 +81,6 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
     }
     setState(() {
       _controller = controller;
-      _zoom = LiveZoom.fit;
       _error = null;
     });
     // Nút play/pause phải phản ánh trạng thái thật của player (đã tự dừng khi
@@ -131,16 +114,6 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
     _revealControls();
   }
 
-  void _cycleZoom() {
-    setState(() {
-      _zoom = switch (_zoom) {
-        LiveZoom.fit => LiveZoom.half,
-        LiveZoom.half => LiveZoom.full,
-        LiveZoom.full => LiveZoom.fit,
-      };
-    });
-    _revealControls();
-  }
 
   void _togglePlay() {
     final controller = _controller;
@@ -153,24 +126,7 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
     _revealControls();
   }
 
-  void _setVolume(double value) {
-    final controller = _controller;
-    if (controller == null) return;
-    setState(() {
-      _volume = value.clamp(0, 1);
-      _muted = _volume == 0;
-      controller.setVolume(_volume);
-    });
-    _revealControls();
-  }
 
-  void _toggleFullscreen() {
-    setState(() => _fullscreen = !_fullscreen);
-    SystemChrome.setEnabledSystemUIMode(
-      _fullscreen ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge,
-    );
-    _revealControls();
-  }
 
   @override
   void dispose() {
@@ -204,10 +160,7 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
                       child: SizedBox(
                         width: controller.value.size.width,
                         height: controller.value.size.height,
-                        child: Transform.scale(
-                          scale: _scale,
-                          child: VideoPlayer(controller),
-                        ),
+                        child: VideoPlayer(controller),
                       ),
                     )
                   else
@@ -261,10 +214,10 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
                       ),
                     ),
 
-                  // Thanh điều khiển: đúng bố cục web
-                  // (`SportOLivePlayer.tsx:465-558`) — trái: play, âm lượng +
-                  // thanh trượt, chấm TRỰC TIẾP; phải: phóng, chat, toàn màn.
-                  // Nút 48dp và thanh trượt cao 44dp, không thu nhỏ.
+                  // Thanh điều khiển gọn: chỉ phát/dừng và tắt/bật tiếng.
+                  // Đã bỏ phóng to, thanh trượt âm lượng, toàn màn và chat: người
+                  // xem theo trận chỉ cần dừng/phát và tắt tiếng, các nút kia
+                  // chỉ chật hơn và che khung hình trên màn hẹp.
                   Positioned(
                     left: 0,
                     right: 0,
@@ -277,7 +230,7 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
                         child: Container(
                           color: Colors.black.withValues(alpha: 0.35),
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
+                            horizontal: 8,
                             vertical: 4,
                           ),
                           child: Row(
@@ -290,90 +243,11 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
                                 onPressed: _togglePlay,
                               ),
                               _ControlButton(
-                                icon: _muted || _volume == 0
+                                icon: _muted
                                     ? Icons.volume_off
                                     : Icons.volume_up,
                                 label: _muted ? 'Bật tiếng' : 'Tắt tiếng',
                                 onPressed: _toggleMute,
-                              ),
-                              // Vùng chạm 44dp dù thanh trượt chỉ mảnh, đúng
-                              // web: slider mảnh nhưng vùng bấm rộng.
-                              SizedBox(
-                                width: 80,
-                                height: 44,
-                                child: SliderTheme(
-                                  data: SliderThemeData(
-                                    trackHeight: 4,
-                                    thumbShape:
-                                        const RoundSliderThumbShape(
-                                          enabledThumbRadius: 6,
-                                        ),
-                                    activeTrackColor: Colors.white,
-                                    inactiveTrackColor:
-                                        Colors.white.withValues(alpha: 0.25),
-                                    thumbColor: Colors.white,
-                                    overlayShape:
-                                        SliderComponentShape.noOverlay,
-                                  ),
-                                  child: Slider(
-                                    value: _muted ? 0 : _volume,
-                                    onChanged: _setVolume,
-                                    onChangeEnd: (_) => _revealControls(),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              // Tín hiệu live nằm cùng hàng nút như web.
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFEF4444),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  const Text(
-                                    'TRỰC TIẾP',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.8,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Spacer(),
-                              _ControlButton(
-                                icon: _zoom == LiveZoom.fit
-                                    ? Icons.zoom_in_map
-                                    : Icons.zoom_out_map,
-                                label: 'Phóng to',
-                                onPressed: _cycleZoom,
-                              ),
-                              if (widget.onToggleChat != null)
-                                _ControlButton(
-                                  icon: _chatOpen
-                                      ? Icons.chat
-                                      : Icons.chat_bubble_outline,
-                                  label: _chatOpen
-                                      ? 'Ẩn thảo luận'
-                                      : 'Xem thảo luận',
-                                  onPressed: () {
-                                    setState(() => _chatOpen = !_chatOpen);
-                                    widget.onToggleChat!();
-                                    _revealControls();
-                                  },
-                                ),
-                              _ControlButton(
-                                icon: _fullscreen
-                                    ? Icons.fullscreen_exit
-                                    : Icons.fullscreen,
-                                label: _fullscreen ? 'Thoát toàn màn' : 'Toàn màn',
-                                onPressed: _toggleFullscreen,
                               ),
                             ],
                           ),
