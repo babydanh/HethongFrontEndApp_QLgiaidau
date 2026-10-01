@@ -3924,12 +3924,13 @@
   "registerBracketDoubleElimination": "Winners/losers bracket",
   "registerBracketRoundRobin": "Round robin",
   "registerBracketGroupStageKnockout": "Group stage + knockout",
-  "registerParticipantCount": "{count} profiles",
-  "@registerParticipantCount": {
+  "registerTeamSlotCount": "{count} team slots",
+  "@registerTeamSlotCount": {
     "placeholders": {
       "count": {}
     }
   },
+  "registerDivisionFull": "This division is full",
   "phoneVerificationPhoneRequired": "Please update your phone number before verification",
   "phoneVerificationSendFailed": "Unable to send OTP: {error}",
   "@phoneVerificationSendFailed": {

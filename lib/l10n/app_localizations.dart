@@ -18462,11 +18462,17 @@ abstract class AppLocalizations {
   /// **'Vòng bảng + loại trực tiếp'**
   String get registerBracketGroupStageKnockout;
 
-  /// No description provided for @registerParticipantCount.
+  /// No description provided for @registerTeamSlotCount.
   ///
   /// In vi, this message translates to:
-  /// **'{count} hồ sơ'**
-  String registerParticipantCount(Object count);
+  /// **'{count} suất đội'**
+  String registerTeamSlotCount(Object count);
+
+  /// No description provided for @registerDivisionFull.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung này đã đủ suất'**
+  String get registerDivisionFull;
 
   /// No description provided for @phoneVerificationPhoneRequired.
   ///

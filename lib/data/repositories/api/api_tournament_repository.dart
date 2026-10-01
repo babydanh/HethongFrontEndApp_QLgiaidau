@@ -345,6 +345,10 @@ class ApiTournamentRepository implements ITournamentRepository {
             matchType: isDoubles ? 'DOUBLES' : 'SINGLES',
             entryFee: tournament.entryFee,
             maxParticipants: tournament.maxTeams,
+            // Giải đứng một mình không có payload nội dung nào để dựng, nên
+            // phải mang theo projection cấp giải — thiếu nó thì nội dung đôi sẽ
+            // không hiện sức chứa và mở nút cho claim vào chỗ đã đầy.
+            capacity: tournament.capacity,
           ),
         ];
       }

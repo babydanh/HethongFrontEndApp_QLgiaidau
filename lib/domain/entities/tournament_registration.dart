@@ -13,6 +13,7 @@ class TournamentDivisionOption {
     this.registrationEndDate,
     this.effectiveRegistrationEndDate,
     this.participantCount,
+    this.capacity,
   });
 
   final String id;
@@ -31,6 +32,77 @@ class TournamentDivisionOption {
   /// trường hợp đó, nên client không được tự coi là đã hết hạn.
   final DateTime? effectiveRegistrationEndDate;
   final int? participantCount;
+
+  /// Sức chứa do backend tính sẵn. Nội dung đôi dùng suất đội nên có thể
+  /// lẻ (một VĐV chưa ghép = 0.5 đội); app không tự chia lại từ số bản ghi.
+  final TournamentDivisionCapacity? capacity;
+
+  /// `matchType` chuẩn hoá về `SINGLES`/`DOUBLES`/`MIXED_DOUBLES`; null nghĩa là
+  /// app không nhận ra format này nên không được suy bất cứ điều gì từ nó.
+  String? get _normalizedMatchType {
+    final normalized =
+        matchType
+            ?.trim()
+            .toUpperCase()
+            .replaceAll('-', '_')
+            .replaceAll(' ', '_');
+    return switch (normalized) {
+      'SINGLE' || 'SINGLES' || 'DON' => 'SINGLES',
+      'DOUBLE' || 'DOUBLES' || 'DOI' => 'DOUBLES',
+      'MIXED_DOUBLE' || 'MIXED_DOUBLES' || 'DOI_NAM_NU' => 'MIXED_DOUBLES',
+      _ => null,
+    };
+  }
+
+  /// Số suất đội đã chiếm. null nghĩa là backend chưa gửi projection cho nội
+  /// dung mà app không chắc 1 bản ghi = 1 suất → sức chứa CHƯA BIẾT, không
+  /// phải bằng 0 cũng không phải bằng số hồ sơ.
+  ///
+  /// Chỉ `SINGLES` được đếm dòng: đơn (và môn đội, backend cũng gán
+  /// `matchType: SINGLES` cho giải bóng đá) đúng là mỗi bản ghi một suất. Đôi
+  /// tính theo SUẤT ĐỘI nên 4 hồ sơ có thể chỉ là 2 suất (1 VĐV chưa ghép =
+  /// 0.5 suất); format lạ/mất `matchType` thì app không có quy ước nào để
+  /// quy đổi. Cả hai trường hợp đó sức chứa phải để ngỏ cho tới khi server gửi
+  /// projection — đoán sai rồi báo "đầy" còn tệ hơn là không hiện gì.
+  double? get occupiedTeamSlots {
+    final projection = capacity?.occupiedTeamSlots;
+    if (projection != null) return projection;
+    if (_normalizedMatchType != 'SINGLES') return null;
+    // Đơn: một bản ghi = một suất, nên đếm dòng vẫn đúng đơn vị.
+    return (participantCount ?? 0).toDouble();
+  }
+
+  /// `maxParticipants` vẫn là giới hạn số đội.
+  int? get effectiveMaxTeamSlots =>
+      capacity?.maxTeamSlots ?? maxParticipants;
+
+  bool get isFull => capacity?.isFull ?? _isFullByTeamSlots;
+
+  bool get _isFullByTeamSlots {
+    final max = effectiveMaxTeamSlots;
+    final occupied = occupiedTeamSlots;
+    if (max == null || max <= 0 || occupied == null) return false;
+    return occupied >= max;
+  }
+
+  /// Nhãn sức chứa theo SUẤT ĐỘI, không phải số hồ sơ: `0.5/4`, `2/4`, `4/4`.
+  /// Nội dung không đặt giới hạn đội thì chỉ hiện phần đã chiếm; nội dung thiếu
+  /// projection (đôi, format lạ, mất `matchType`) thì không hiện gì thay vì đoán.
+  String? get teamSlotsLabel {
+    final occupied = occupiedTeamSlots;
+    if (occupied == null) return null;
+    final text = _formatTeamSlots(occupied);
+    final maxTeams = effectiveMaxTeamSlots;
+    return maxTeams == null ? text : '$text/$maxTeams';
+  }
+
+  /// Giữ một chữ số thập phân cho suất đội lẻ (0.5), bỏ `.0` khi là số nguyên.
+  static String _formatTeamSlots(double value) {
+    final rounded = (value * 10).round() / 10;
+    return rounded == rounded.roundToDouble()
+        ? rounded.toInt().toString()
+        : rounded.toStringAsFixed(1);
+  }
 
   factory TournamentDivisionOption.fromJson(Map<String, dynamic> json) {
     final minElo = json['minElo'] ?? json['min_elo'];
@@ -64,6 +136,38 @@ class TournamentDivisionOption {
           ? DateTime.tryParse(rawEffectiveEnd)
           : null,
       participantCount: _parseInt(rawCount),
+      capacity: json['capacity'] is Map
+          ? TournamentDivisionCapacity.fromJson(
+              Map<String, dynamic>.from(json['capacity'] as Map),
+            )
+          : null,
+    );
+  }
+}
+
+/// Projection sức chứa do backend tính sẵn cho một nội dung thi đấu.
+class TournamentDivisionCapacity {
+  const TournamentDivisionCapacity({
+    required this.occupiedTeamSlots,
+    this.occupiedMemberSlots,
+    this.maxTeamSlots,
+    this.isFull,
+  });
+
+  /// Số suất đội đã chiếm; nội dung đôi có thể lẻ (1 VĐV = 0.5 đội).
+  final double occupiedTeamSlots;
+  final double? occupiedMemberSlots;
+
+  /// null nghĩa là nội dung không đặt giới hạn số đội.
+  final int? maxTeamSlots;
+  final bool? isFull;
+
+  factory TournamentDivisionCapacity.fromJson(Map<String, dynamic> json) {
+    return TournamentDivisionCapacity(
+      occupiedTeamSlots: _parseDouble(json['occupiedTeamSlots']) ?? 0,
+      occupiedMemberSlots: _parseDouble(json['occupiedMemberSlots']),
+      maxTeamSlots: _parseInt(json['maxTeamSlots']),
+      isFull: json['isFull'] is bool ? json['isFull'] as bool : null,
     );
   }
 }

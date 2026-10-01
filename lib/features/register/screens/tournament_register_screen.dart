@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/core/services/match_socket_service.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
@@ -46,6 +47,7 @@ class _TournamentRegisterScreenState
   String? _selectedDiv;
   StreamSubscription<Map<String, dynamic>>? _registrationSubscription;
   Timer? _registrationRefreshDebounce;
+  MatchSocketService? _socketService;
 
   @override
   void initState() {
@@ -58,7 +60,10 @@ class _TournamentRegisterScreenState
   }
 
   void _listenForRegistrationUpdates() {
+    // Riverpod chặn dùng `ref` trong `dispose`, nên giữ lại service thay vì
+    // đọc lại lúc teardown (trước đây làm màn hình văng exception khi unmount).
     final socket = ref.read(matchSocketServiceProvider);
+    _socketService = socket;
     _registrationSubscription = socket.onRegistrationUpdate.listen((payload) {
       if (!mounted ||
           payload['tournamentId']?.toString() != widget.tournamentId) {
@@ -355,7 +360,7 @@ class _TournamentRegisterScreenState
   void dispose() {
     _registrationSubscription?.cancel();
     _registrationRefreshDebounce?.cancel();
-    ref.read(matchSocketServiceProvider).leaveTournament(widget.tournamentId);
+    _socketService?.leaveTournament(widget.tournamentId);
     _nameCtrl.dispose();
     _inviteCtrl.dispose();
     super.dispose();
@@ -395,6 +400,38 @@ class _TournamentRegisterScreenState
     final deadline = _effectiveRegistrationDeadline;
     return deadline != null && DateTime.now().isAfter(deadline);
   }
+
+  /// Nội dung mà lần bấm đăng ký kế tiếp sẽ thực sự gửi lên server.
+  ///
+  /// `_register()` không bắt buộc chọn nội dung: khi giải chỉ có MỘT nội dung
+  /// thì nó tự lấy `divisions.first`. Gate sức chứa phải bám đúng nhánh này —
+  /// nếu chỉ nhìn `_selectedDivision` thì trước khi `addPostFrameCallback` tự
+  /// chọn chạy, đã có một frame vẽ ra với nút bấm được dù nội dung đã đầy suất.
+  ///
+  /// Trả null khi chưa chọn và có nhiều nội dung: lúc đó server tự chọn, client
+  /// không biết sức chứa nội dung nào nên không chặn.
+  TournamentDivisionOption? get _claimDivision {
+    final divisions = ref
+        .read(_divisionsProvider(widget.tournamentId))
+        .asData
+        ?.value;
+    if (divisions == null) return null;
+    final id = _selectedDiv ??
+        (divisions.length == 1 ? divisions.first.id : null);
+    if (id == null) return null;
+    for (final division in divisions) {
+      if (division.id == id) return division;
+    }
+    return null;
+  }
+
+  /// Nội dung sắp đăng ký đã đầy suất đội.
+  ///
+  /// Chỉ chặn đăng ký MỚI: người đã có đơn được `build` đưa thẳng sang
+  /// `_buildExistingRegistration`, không bao giờ tới form nên vẫn xem trạng
+  /// thái / thanh toán / rút lui bình thường. Khóa đăng ký thủ công của BTC là
+  /// trạng thái riêng (`isRegistrationClosed`), không gộp vào đây.
+  bool get _isSelectedDivisionFull => _claimDivision?.isFull ?? false;
 
   void _onDivisionSelected(
     String id,
@@ -506,6 +543,15 @@ class _TournamentRegisterScreenState
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.registerAlreadyRegistered)));
+      return;
+    }
+
+    // Chặn ở client trước khi gọi API; server vẫn là nguồn chân lý và trả 400
+    // nếu suất vừa bị người khác chiếm mất giữa hai lần đọc capacity.
+    if (_isSelectedDivisionFull) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.registerDivisionFull)));
       return;
     }
     if (!_formKey.currentState!.validate()) return;
@@ -794,14 +840,11 @@ class _TournamentRegisterScreenState
       _ => null,
     };
     if (bracket != null) items.add(bracket);
-    if (d.participantCount != null) {
-      final count = d.maxParticipants != null
-          ? '${d.participantCount}/${d.maxParticipants}'
-          : '${d.participantCount}';
-      items.add(l10n.registerParticipantCount(count));
-    } else if (d.maxParticipants != null) {
-      items.add(l10n.registerParticipantCount('0/${d.maxParticipants}'));
-    }
+    // Sức chứa đếm theo suất đội: nội dung đôi có thể lẻ (1 VĐV = 0.5 đội).
+    // Nội dung đôi thiếu projection thì bỏ trống — số bản ghi không phải số suất.
+    final slots = d.teamSlotsLabel;
+    if (slots != null) items.add(l10n.registerTeamSlotCount(slots));
+    if (d.isFull) items.add(l10n.registerDivisionFull);
     return items;
   }
 
@@ -866,6 +909,7 @@ class _TournamentRegisterScreenState
                               : 'SINGLES',
                           entryFee: t.entryFee,
                           maxParticipants: t.maxTeams,
+                          capacity: t.capacity,
                         ),
                       ];
                 if (_alreadyRegistered) {
@@ -891,6 +935,7 @@ class _TournamentRegisterScreenState
                         : 'SINGLES',
                     entryFee: t.entryFee,
                     maxParticipants: t.maxTeams,
+                    capacity: t.capacity,
                   ),
                 ];
                 if (_alreadyRegistered) {
@@ -2139,16 +2184,53 @@ class _TournamentRegisterScreenState
                   ),
                   const SizedBox(height: 12),
                 ],
+                // Nội dung đã đầy suất: cảnh báo tĩnh trước khi bấm, tách bạch
+                // với việc BTC khóa đăng ký (hiện ở trên bằng `registerRegClosed`).
+                if (_isSelectedDivisionFull) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: context.colors.warning.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: context.colors.warning.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.groups_rounded,
+                          size: 20,
+                          color: context.colors.warning,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            l10n.registerDivisionFull,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                              color: context.colors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 SizedBox(
                   width: double.infinity,
                   height: 52,
                   child: FilledButton(
                     // Hạn cấp nội dung cũng chặn: trước đây chỉ xét hạn cấp
                     // giải nên chọn nội dung đã đóng vẫn bấm được rồi mới nhận
-                    // lỗi từ server.
+                    // lỗi từ server. Suất đội đã đầy chặn tương tự, nhưng là
+                    // trạng thái riêng vì khóa thủ công của BTC vẫn độc lập.
                     onPressed:
                         (isRegistrationClosed ||
                             _isDivisionRegistrationExpired ||
+                            _isSelectedDivisionFull ||
                             _submitting)
                         ? null
                         : _register,
@@ -2175,6 +2257,8 @@ class _TournamentRegisterScreenState
                             (isRegistrationClosed ||
                                     _isDivisionRegistrationExpired)
                                 ? l10n.registerRegClosed
+                                : _isSelectedDivisionFull
+                                ? l10n.registerDivisionFull
                                 : (_selectedDivision?.entryFee != null &&
                                       _selectedDivision!.entryFee! > 0)
                                 ? l10n.registerSubmitFee(

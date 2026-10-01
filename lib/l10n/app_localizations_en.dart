@@ -10069,9 +10069,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerBracketGroupStageKnockout => 'Group stage + knockout';
 
   @override
-  String registerParticipantCount(Object count) {
-    return '$count profiles';
+  String registerTeamSlotCount(Object count) {
+    return '$count team slots';
   }
+
+  @override
+  String get registerDivisionFull => 'This division is full';
 
   @override
   String get phoneVerificationPhoneRequired =>

@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
@@ -21,6 +22,13 @@ class Tournament {
   final String? creatorAvatarUrl;
   final int maxTeams;
   final int? maxPlayersPerTeam;
+
+  /// Projection sức chứa cấp GIẢI do backend dán vào payload
+  /// `/tournaments/:id`. Giải không có nội dung con thì đây là nguồn duy nhất
+  /// để màn hình đăng ký biết đã chiếm bao nhiêu suất; null khi server không
+  /// gửi (khi đó sức chứa phải tính từ nội dung con thật sự tồn tại).
+  final TournamentDivisionCapacity? capacity;
+
   final String description;
   final int roundCount;
   final DateTime createdAt;
@@ -92,6 +100,7 @@ class Tournament {
     this.creatorAvatarUrl,
     this.maxTeams = 16,
     this.maxPlayersPerTeam,
+    this.capacity,
     this.description = '',
     this.roundCount = 1,
     required this.createdAt,
@@ -365,6 +374,13 @@ class Tournament {
       creatorAvatarUrl:
           json['creator']?['avatarUrl'] ?? json['organizer']?['avatarUrl'],
       maxTeams: maxTeamsVal,
+      // Projection cấp giải: cùng shape với projection cấp nội dung nên
+      // nội dung chính tự dựng cho giải không có nội dung con dùng lại được.
+      capacity: json['capacity'] is Map
+          ? TournamentDivisionCapacity.fromJson(
+              Map<String, dynamic>.from(json['capacity'] as Map),
+            )
+          : null,
       maxPlayersPerTeam: json['maxPlayersPerTeam'],
       description: json['description'] ?? '',
       roundCount: roundCountVal,
@@ -561,6 +577,7 @@ class Tournament {
     String? creatorAvatarUrl,
     int? maxTeams,
     int? maxPlayersPerTeam,
+    TournamentDivisionCapacity? capacity,
     String? description,
     int? roundCount,
     DateTime? createdAt,
@@ -616,6 +633,7 @@ class Tournament {
       creatorAvatarUrl: creatorAvatarUrl ?? this.creatorAvatarUrl,
       maxTeams: maxTeams ?? this.maxTeams,
       maxPlayersPerTeam: maxPlayersPerTeam ?? this.maxPlayersPerTeam,
+      capacity: capacity ?? this.capacity,
       teamSize: teamSize ?? this.teamSize,
       minTeamSize: minTeamSize ?? this.minTeamSize,
       maxReserve: maxReserve ?? this.maxReserve,

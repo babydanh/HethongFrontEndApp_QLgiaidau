@@ -259,6 +259,14 @@ class _DoublesRegistrationFlowState
 
   String? _partnerContact;
 
+  /// Chỉ chặn khiếu nại ĐĂNG KÝ MỚI vào nội dung đã đầy suất đội.
+  ///
+  /// Đợi đồng đội (`PENDING_PARTNER`, step 2) và các bước thanh toán / rút lui
+  /// (step 3) đều thuộc luồng của người ĐÃ có đơn nên không bị đụng tới: khi đó
+  /// `_step` đã rời khỏi 1. Server vẫn là nguồn chân lý và trả 400 nếu suất vừa
+  /// bị người khác chiếm mất giữa hai lần đọc capacity.
+  bool get _isNewClaimBlocked => _step == 1 && widget.division.isFull;
+
   @override
   void initState() {
     super.initState();
@@ -523,6 +531,12 @@ class _DoublesRegistrationFlowState
 
   Future<void> _handleStep1Submit() async {
     final l10n = AppLocalizations.of(context)!;
+    // Chặn TRƯỚC khi POST: đây là khiếu nại đăng ký mới, còn step 2/3 là
+    // luồng của người đã có đơn nên không bị chặn.
+    if (_isNewClaimBlocked) {
+      _showError(l10n.registerDivisionFull);
+      return;
+    }
     final tournament = ref
         .read(
           registerTournamentProvider((
@@ -1130,7 +1144,10 @@ class _DoublesRegistrationFlowState
           width: double.infinity,
           height: 50,
           child: FilledButton.icon(
-            onPressed: _submitting ? null : _handleStep1Submit,
+            onPressed:
+                (_submitting || _isNewClaimBlocked)
+                ? null
+                : _handleStep1Submit,
             icon: _submitting
                 ? const SizedBox(
                     width: 20,

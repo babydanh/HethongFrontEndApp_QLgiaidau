@@ -3924,12 +3924,13 @@
   "registerBracketDoubleElimination": "Nhánh thắng/thua",
   "registerBracketRoundRobin": "Vòng tròn",
   "registerBracketGroupStageKnockout": "Vòng bảng + loại trực tiếp",
-  "registerParticipantCount": "{count} hồ sơ",
-  "@registerParticipantCount": {
+  "registerTeamSlotCount": "{count} suất đội",
+  "@registerTeamSlotCount": {
     "placeholders": {
       "count": {}
     }
   },
+  "registerDivisionFull": "Nội dung này đã đủ suất",
   "phoneVerificationPhoneRequired": "Vui lòng cập nhật số điện thoại trước khi xác minh",
   "phoneVerificationSendFailed": "Không thể gửi mã OTP: {error}",
   "@phoneVerificationSendFailed": {

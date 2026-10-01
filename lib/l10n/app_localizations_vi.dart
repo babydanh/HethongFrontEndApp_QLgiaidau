@@ -10044,9 +10044,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get registerBracketGroupStageKnockout => 'Vòng bảng + loại trực tiếp';
 
   @override
-  String registerParticipantCount(Object count) {
-    return '$count hồ sơ';
+  String registerTeamSlotCount(Object count) {
+    return '$count suất đội';
   }
+
+  @override
+  String get registerDivisionFull => 'Nội dung này đã đủ suất';
 
   @override
   String get phoneVerificationPhoneRequired =>
