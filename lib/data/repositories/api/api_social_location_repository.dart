@@ -34,25 +34,36 @@ class ApiSocialLocationRepository implements ISocialLocationRepository {
   static const _vietnamBbox = '102.1,8.0,109.5,23.5';
 
   @override
-  Future<List<SocialPlace>> search(String query) async {
+  Future<List<SocialPlace>> search(String query, {LatLng? bias}) async {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return const [];
-    return _searchFeatures(trimmed);
+    return _searchFeatures(trimmed, bias: bias);
+  }
+
+  @override
+  Future<SocialPlace> getPlaceDetail(String placeId) async {
+    return resolveInput(placeId);
   }
 
   Future<List<SocialPlace>> _searchFeatures(
     String query, {
     bool requireStreet = false,
+    LatLng? bias,
   }) async {
+    final params = <String, String>{
+      'q': query,
+      'limit': '8',
+      'bbox': _vietnamBbox,
+      'lang': 'default',
+      if (bias != null) ...{
+        'lat': bias.latitude.toString(),
+        'lon': bias.longitude.toString(),
+      },
+    };
     final response = await _get(
       _endpoint.replace(
         path: '/api',
-        queryParameters: {
-          'q': query,
-          'limit': '8',
-          'bbox': _vietnamBbox,
-          'lang': 'default',
-        },
+        queryParameters: params,
       ),
     );
     return _parseFeatures(response.data, requireStreet: requireStreet);

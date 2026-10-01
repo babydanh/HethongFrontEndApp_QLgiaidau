@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SocialDetailsTab extends StatelessWidget {
   const SocialDetailsTab({
@@ -241,6 +242,36 @@ class SocialDetailsTab extends StatelessWidget {
                               height: 1.35,
                             ),
                           ),
+                          if (session.latitude != null &&
+                              session.longitude != null)
+                            TextButton.icon(
+                              icon: const Icon(Icons.directions_outlined),
+                              label: const Text('Chỉ đường'),
+                              onPressed: () async {
+                                final lat = session.latitude!;
+                                final lng = session.longitude!;
+                                final uri = Theme.of(context).platform ==
+                                        TargetPlatform.iOS
+                                    ? Uri.parse('https://maps.apple.com/?daddr=$lat,$lng')
+                                    : Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
+                                try {
+                                  final opened = await launchUrl(
+                                    uri, mode: LaunchMode.externalApplication,
+                                  );
+                                  if (!opened && context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Không mở được ứng dụng bản đồ.')),
+                                    );
+                                  }
+                                } catch (_) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Không mở được ứng dụng bản đồ.')),
+                                    );
+                                  }
+                                }
+                              },
+                            ),
                           // const SizedBox(height: 4),
                           // Text(
                           //   '${session.distanceKm.toStringAsFixed(1)} km từ Nhà',

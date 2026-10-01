@@ -32,7 +32,7 @@ class HybridSocialLocationRepository implements ISocialLocationRepository {
   static const _maxRegionResults = 5;
 
   @override
-  Future<List<SocialPlace>> search(String query) async {
+  Future<List<SocialPlace>> search(String query, {LatLng? bias}) async {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return const [];
 
@@ -44,7 +44,7 @@ class HybridSocialLocationRepository implements ISocialLocationRepository {
     await Future.wait([
       () async {
         try {
-          photonResults = await _photon.search(trimmed);
+          photonResults = await _photon.search(trimmed, bias: bias);
         } catch (e) {
           photonError = e;
         }
@@ -76,6 +76,11 @@ class HybridSocialLocationRepository implements ISocialLocationRepository {
       throw const LocationNetworkFailure();
     }
     return merged.take(_maxResults).toList(growable: false);
+  }
+
+  @override
+  Future<SocialPlace> getPlaceDetail(String placeId) async {
+    return _photon.getPlaceDetail(placeId);
   }
 
   @override
@@ -111,6 +116,7 @@ class HybridSocialLocationRepository implements ISocialLocationRepository {
     return SocialPlace(
       name: name.isEmpty ? address : name,
       formattedAddress: address.isEmpty ? name : address,
+      provinceCode: region.code,
     );
   }
 
@@ -141,6 +147,12 @@ class HybridSocialLocationRepository implements ISocialLocationRepository {
           formattedAddress: '${place.formattedAddress}, ${detected.name}',
           latitude: place.latitude,
           longitude: place.longitude,
+          placeId: place.placeId,
+          sourceProvince: place.sourceProvince,
+          sourceWard: place.sourceWard,
+          provinceCode: place.provinceCode ?? detected.code,
+          wardCode: place.wardCode,
+          regionEstimated: place.regionEstimated,
         );
       }
     } catch (_) {

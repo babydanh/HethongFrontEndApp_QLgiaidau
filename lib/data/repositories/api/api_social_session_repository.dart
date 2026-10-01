@@ -211,6 +211,40 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
   }
 
   @override
+  Future<NearbySocialSessionsResponse> listNearby({
+    required double lat,
+    required double lng,
+    int? radius,
+    int limit = 20,
+    String? cursor,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'lat': lat,
+        'lng': lng,
+        'limit': limit,
+      };
+      if (radius != null) queryParams['radius'] = radius;
+      if (cursor != null && cursor.isNotEmpty) queryParams['cursor'] = cursor;
+
+      final response = await _dioClient.dio.get(
+        '/socials/nearby',
+        queryParameters: queryParams,
+        options: Options(extra: {'noCache': true}),
+      );
+
+      final body = _asMap(response.data);
+      return NearbySocialSessionsResponse.fromJson(body);
+    } on DioException catch (error, stack) {
+      _log.error('listNearby error for lat: $lat, lng: $lng', error, stack);
+      throw SocialApiException.fromDioException(error);
+    } catch (error, stack) {
+      _log.error('listNearby unexpected error', error, stack);
+      rethrow;
+    }
+  }
+
+  @override
   Future<SocialSessionModel> getDetail(String sessionId) async {
     try {
       final response = await _dioClient.dio.get(

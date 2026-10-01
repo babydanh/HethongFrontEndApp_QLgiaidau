@@ -177,8 +177,12 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
               if (filterState.nearbyOnly) {
                 for (final entry in groupedSessions.entries) {
                   entry.value.sort((a, b) {
-                    final da = a.distanceKm > 0 ? a.distanceKm : double.infinity;
-                    final db = b.distanceKm > 0 ? b.distanceKm : double.infinity;
+                    final da = (a.distanceM != null && a.distanceM! > 0)
+                        ? a.distanceM!
+                        : (a.distanceKm > 0 ? a.distanceKm * 1000 : double.infinity);
+                    final db = (b.distanceM != null && b.distanceM! > 0)
+                        ? b.distanceM!
+                        : (b.distanceKm > 0 ? b.distanceKm * 1000 : double.infinity);
                     return da.compareTo(db);
                   });
                 }

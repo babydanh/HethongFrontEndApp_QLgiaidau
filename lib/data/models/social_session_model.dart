@@ -369,6 +369,9 @@ class SocialSessionModel {
   final double? latitude;
   final double? longitude;
 
+  /// Khoảng cách đường chim bay từ user tới sân tính bằng mét (server trả từ /socials/nearby).
+  final double? distanceM;
+
   /// Khoảng cách từ user tới sân (km) — server tính qua PostGIS khi query
   /// kèm lat/lng; 0.0 = chưa có (không hiện badge).
   final double distanceKm;
@@ -412,6 +415,7 @@ class SocialSessionModel {
     required this.venueAddress,
     this.latitude,
     this.longitude,
+    this.distanceM,
     this.distanceKm = 0.0,
     this.maxSlots = 6,
     this.currentSlots = 1,
@@ -435,6 +439,25 @@ class SocialSessionModel {
     this.matches = const [],
     this.chatMessages = const [],
   });
+
+  /// Hiển thị khoảng cách thẳng (đường chim bay) từ server:
+  /// < 1000m: "42 m"
+  /// >= 1000m: "1.2 km"
+  String get distanceDisplay {
+    if (distanceM != null) {
+      if (distanceM! < 1000) {
+        return '${distanceM!.round()} m';
+      }
+      return '${(distanceM! / 1000.0).toStringAsFixed(1)} km';
+    }
+    if (distanceKm > 0) {
+      if (distanceKm < 1.0) {
+        return '${(distanceKm * 1000).round()} m';
+      }
+      return '${distanceKm.toStringAsFixed(1)} km';
+    }
+    return '';
+  }
 
   // Backward compatibility getters for UI
   String? get clubId => communityId ?? community?.id;
@@ -596,8 +619,12 @@ class SocialSessionModel {
       venueAddress: json['venueAddress']?.toString() ?? '',
       latitude: _toDoubleOrNull(json['latitude']),
       longitude: _toDoubleOrNull(json['longitude']),
+      distanceM: _toDoubleOrNull(json['distance_m'] ?? json['distanceM']),
       distanceKm:
-          _toDoubleOrNull(json['distanceKm'] ?? json['distance_km']) ?? 0.0,
+          _toDoubleOrNull(json['distanceKm'] ?? json['distance_km']) ??
+          ((json['distance_m'] != null || json['distanceM'] != null)
+              ? (_toDoubleOrNull(json['distance_m'] ?? json['distanceM'])! / 1000.0)
+              : 0.0),
       maxSlots: (json['maxSlots'] is num)
           ? (json['maxSlots'] as num).toInt()
           : ((json['maxParticipants'] is num)
@@ -673,6 +700,7 @@ class SocialSessionModel {
     if (latitude != null) 'latitude': latitude,
     if (longitude != null) 'longitude': longitude,
     if (distanceKm > 0) 'distanceKm': distanceKm,
+    if (distanceM != null) 'distance_m': distanceM,
     'maxSlots': maxSlots,
     'currentSlots': currentSlots,
     'feePerSlot': feePerSlot,
@@ -710,6 +738,7 @@ class SocialSessionModel {
     double? latitude,
     double? longitude,
     double? distanceKm,
+    double? distanceM,
     int? maxSlots,
     int? currentSlots,
     int? feePerSlot,
@@ -749,6 +778,7 @@ class SocialSessionModel {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       distanceKm: distanceKm ?? this.distanceKm,
+      distanceM: distanceM ?? this.distanceM,
       maxSlots: maxSlots ?? this.maxSlots,
       currentSlots: currentSlots ?? this.currentSlots,
       feePerSlot: feePerSlot ?? this.feePerSlot,
@@ -784,9 +814,11 @@ class CreateSocialSessionRequest {
   final String venueName;
   final String venueAddress;
 
-  /// Tọa độ sân do host ghim map (đi cặp; null = không ghim).
-  final double? latitude;
-  final double? longitude;
+  /// Tọa độ sân do host ghim map (bắt buộc cho Social mới theo backend contract).
+  final double latitude;
+  final double longitude;
+  final String? provinceCode;
+  final String? wardCode;
   final int maxSlots;
   final int feePerSlot;
   final String levelRequirement;
@@ -804,8 +836,10 @@ class CreateSocialSessionRequest {
     this.durationMinutes = 120,
     required this.venueName,
     required this.venueAddress,
-    this.latitude,
-    this.longitude,
+    required this.latitude,
+    required this.longitude,
+    this.provinceCode,
+    this.wardCode,
     this.maxSlots = 6,
     this.feePerSlot = 0,
     this.levelRequirement = 'ALL',
@@ -833,10 +867,10 @@ class CreateSocialSessionRequest {
       'durationMinutes': durationMinutes,
       'venueName': venueName,
       'venueAddress': venueAddress,
-      if (latitude != null && longitude != null) ...{
-        'latitude': latitude,
-        'longitude': longitude,
-      },
+      'latitude': latitude,
+      'longitude': longitude,
+      if (provinceCode != null) 'provinceCode': provinceCode,
+      if (wardCode != null) 'wardCode': wardCode,
       'maxSlots': maxSlots,
       'feePerSlot': feePerSlot,
       'levelRequirement': levelRequirement,
@@ -915,6 +949,36 @@ class SocialSessionListResponse {
       total: (meta['total'] is num)
           ? (meta['total'] as num).toInt()
           : itemsList.length,
+    );
+  }
+}
+
+class NearbySocialSessionsResponse {
+  final List<SocialSessionModel> items;
+  final String? nextCursor;
+
+  const NearbySocialSessionsResponse({
+    required this.items,
+    this.nextCursor,
+  });
+
+  factory NearbySocialSessionsResponse.fromJson(Map<String, dynamic> json) {
+    final rawData = json['data'] is Map ? json['data'] as Map : json;
+    final rawItems = rawData['items'] ?? rawData['data'];
+    final itemsList = (rawItems is List)
+        ? rawItems
+              .whereType<Map>()
+              .map(
+                (item) => SocialSessionModel.fromJson(
+                  item.map((k, v) => MapEntry(k.toString(), v)),
+                ),
+              )
+              .toList()
+        : <SocialSessionModel>[];
+
+    return NearbySocialSessionsResponse(
+      items: itemsList,
+      nextCursor: rawData['nextCursor']?.toString(),
     );
   }
 }

@@ -131,6 +131,28 @@ class SocialSessionsNotifier
     final location = ref.watch(userLocationProvider);
     final repo = ref.watch(socialSessionRepositoryProvider);
 
+    if (filter.nearbyOnly && location.hasPosition) {
+      final radiusM = (filter.radiusKm * 1000).round().clamp(100, 50000);
+      final nearby = await repo.listNearby(
+        lat: location.latitude!,
+        lng: location.longitude!,
+        radius: radiusM,
+      );
+      var items = nearby.items;
+      if (filter.selectedSport != 'all') {
+        items = items.where((s) => s.sport == filter.selectedSport).toList();
+      }
+      if (filter.searchQuery.trim().isNotEmpty) {
+        final query = filter.searchQuery.trim().toLowerCase();
+        items = items.where((s) =>
+          s.title.toLowerCase().contains(query) ||
+          s.venueName.toLowerCase().contains(query) ||
+          s.venueAddress.toLowerCase().contains(query)
+        ).toList();
+      }
+      return items;
+    }
+
     final dateStr = DateFormat('yyyy-MM-dd').format(filter.selectedDate);
     final geo = _geoParams(filter, location);
     final response = await repo.listByDate(
@@ -151,11 +173,33 @@ class SocialSessionsNotifier
     final filter = ref.read(socialFilterProvider);
     final location = ref.read(userLocationProvider);
     final repo = ref.read(socialSessionRepositoryProvider);
-    final dateStr = DateFormat('yyyy-MM-dd').format(filter.selectedDate);
-    final geo = _geoParams(filter, location);
 
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
+      if (filter.nearbyOnly && location.hasPosition) {
+        final radiusM = (filter.radiusKm * 1000).round().clamp(100, 50000);
+        final nearby = await repo.listNearby(
+          lat: location.latitude!,
+          lng: location.longitude!,
+          radius: radiusM,
+        );
+        var items = nearby.items;
+        if (filter.selectedSport != 'all') {
+          items = items.where((s) => s.sport == filter.selectedSport).toList();
+        }
+        if (filter.searchQuery.trim().isNotEmpty) {
+          final query = filter.searchQuery.trim().toLowerCase();
+          items = items.where((s) =>
+            s.title.toLowerCase().contains(query) ||
+            s.venueName.toLowerCase().contains(query) ||
+            s.venueAddress.toLowerCase().contains(query)
+          ).toList();
+        }
+        return items;
+      }
+
+      final dateStr = DateFormat('yyyy-MM-dd').format(filter.selectedDate);
+      final geo = _geoParams(filter, location);
       final response = await repo.listByDate(
         date: dateStr,
         sport: filter.selectedSport == 'all' ? null : filter.selectedSport,

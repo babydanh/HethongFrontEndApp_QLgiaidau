@@ -10,7 +10,6 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
-import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_flow.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_row.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_duration_sheet.dart';
@@ -58,6 +57,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   double _durationHours = 1.0;
 
   SocialPlace? _selectedPlace;
+  final _venueNameController = TextEditingController();
+  final _venueAddressController = TextEditingController();
 
   // Configurations
   int _maxParticipants = 6;
@@ -95,6 +96,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           longitude: init.longitude,
         );
       }
+      _venueNameController.text = init.venueName;
+      _venueAddressController.text = init.venueAddress;
       _titleController.text = init.title;
       _notesController.text = init.description ?? '';
       _isClubAttached =
@@ -122,6 +125,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   void dispose() {
     _titleController.dispose();
     _notesController.dispose();
+    _venueNameController.dispose();
+    _venueAddressController.dispose();
     super.dispose();
   }
 
@@ -483,7 +488,25 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       context,
       initialPlace: _selectedPlace,
     );
-    if (selected != null && mounted) setState(() => _selectedPlace = selected);
+    if (selected != null && mounted) {
+      _venueNameController.text = selected.name;
+      _venueAddressController.text = selected.formattedAddress;
+      setState(() => _selectedPlace = selected);
+    }
+  }
+
+  void _editVenueText() {
+    final place = _selectedPlace;
+    if (place == null) return;
+    setState(() => _selectedPlace = SocialPlace(
+      name: _venueNameController.text,
+      formattedAddress: _venueAddressController.text,
+      latitude: place.latitude,
+      longitude: place.longitude,
+      placeId: place.placeId,
+      provinceCode: place.provinceCode,
+      wardCode: place.wardCode,
+    ));
   }
 
   /// Invalidate cache Social theo CLB để tab Hoạt động cập nhật ngay.
@@ -515,7 +538,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     if (sport.slug.isEmpty) return;
     final l10n = AppLocalizations.of(context)!;
     final place = _selectedPlace;
-    if (place == null || !place.canApply) {
+    if (place == null || !place.canApply ||
+        (widget.initialSession == null && !place.hasPin)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.socialPlaceRequired),
@@ -553,6 +577,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           'durationMinutes': (_durationHours * 60).round(),
           'venueName': place.name.trim(),
           'venueAddress': place.formattedAddress.trim(),
+          if (place.provinceCode != null) 'provinceCode': place.provinceCode,
+          if (place.wardCode != null) 'wardCode': place.wardCode,
           if (place.hasPin) ...{
             'latitude': place.latitude,
             'longitude': place.longitude,
@@ -595,8 +621,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           durationMinutes: (_durationHours * 60).round(),
           venueName: place.name.trim(),
           venueAddress: place.formattedAddress.trim(),
-          latitude: place.hasPin ? place.latitude : null,
-          longitude: place.hasPin ? place.longitude : null,
+          latitude: place.latitude!,
+          longitude: place.longitude!,
+          provinceCode: place.provinceCode,
+          wardCode: place.wardCode,
           maxSlots: _maxParticipants,
           feePerSlot: _price,
           levelRequirement: 'ALL',
@@ -931,6 +959,25 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                         place: _selectedPlace,
                         onTap: _chooseLocation,
                       ),
+                      if (_selectedPlace != null) ...[
+                        const SizedBox(height: 10),
+                        TextFormField(
+                          controller: _venueNameController,
+                          maxLength: 255,
+                          decoration: const InputDecoration(labelText: 'Tên sân'),
+                          onChanged: (_) => _editVenueText(),
+                          validator: (value) => value == null || value.trim().isEmpty
+                              ? 'Nhập tên sân' : null,
+                        ),
+                        TextFormField(
+                          controller: _venueAddressController,
+                          maxLength: 500,
+                          decoration: const InputDecoration(labelText: 'Địa chỉ sân'),
+                          onChanged: (_) => _editVenueText(),
+                          validator: (value) => value == null || value.trim().isEmpty
+                              ? 'Nhập địa chỉ sân' : null,
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       Divider(height: 1, color: colors.border),
                       const SizedBox(height: 16),

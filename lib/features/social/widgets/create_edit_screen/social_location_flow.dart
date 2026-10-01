@@ -62,10 +62,10 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
     setState(() {
       _results = const [];
       _searchError = false;
-      _searching = query.trim().isNotEmpty;
+      _searching = query.trim().length >= 3;
     });
-    if (query.trim().isEmpty) return;
-    _searchTimer = Timer(const Duration(milliseconds: 450), () {
+    if (query.trim().length < 3) return;
+    _searchTimer = Timer(const Duration(milliseconds: 400), () {
       unawaited(_search(query.trim(), generation));
     });
   }
@@ -156,10 +156,15 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
       Navigator.of(context).pop(place);
     } catch (_) {
       if (!mounted) return;
-      setState(
-        () =>
-            _inputError = AppLocalizations.of(context)!.socialPlaceReverseError,
-      );
+      final entered = _inputController.text.trim();
+      Navigator.of(context).pop(SocialPlace(
+        name: entered.isEmpty ? 'Vị trí đã chọn' : entered,
+        formattedAddress: entered.isEmpty
+            ? '${pin.latitude.toStringAsFixed(6)}, ${pin.longitude.toStringAsFixed(6)}'
+            : entered,
+        latitude: pin.latitude,
+        longitude: pin.longitude,
+      ));
     } finally {
       if (mounted) setState(() => _resolving = false);
     }
@@ -343,7 +348,28 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
-      onTap: () => Navigator.of(context).pop(place),
+      onTap: () async {
+        if (!place.hasPin) {
+          _inputController.text = place.formattedAddress;
+          setState(() => _step = _LocationStep.input);
+          return;
+        }
+        if (place.placeId == null) {
+          Navigator.of(context).pop(place);
+          return;
+        }
+        try {
+          final detail = await ref.read(socialLocationRepositoryProvider)
+              .getPlaceDetail(place.placeId!);
+          if (mounted) Navigator.of(context).pop(detail);
+        } catch (_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.socialPlaceNotFound)),
+            );
+          }
+        }
+      },
     );
   }
 

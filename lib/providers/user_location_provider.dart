@@ -15,6 +15,9 @@ enum UserLocationStatus {
   /// Đã có tọa độ (dùng được cho lọc "gần bạn").
   granted,
 
+  /// A location chosen on the map; distance is approximate.
+  selected,
+
   /// User từ chối (còn xin lại được).
   denied,
 
@@ -41,7 +44,8 @@ class UserLocationState {
   });
 
   bool get hasPosition =>
-      status == UserLocationStatus.granted &&
+      (status == UserLocationStatus.granted ||
+          status == UserLocationStatus.selected) &&
       latitude != null &&
       longitude != null;
 
@@ -69,7 +73,7 @@ class UserLocationNotifier extends Notifier<UserLocationState> {
   /// Xin quyền khi user vào tab Social (đúng lúc cần — không xin khi mở app).
   /// Gọi 1 lần khi tab hiện; các lần sau dùng [refreshSilently] nếu đã granted.
   Future<void> requestWhenInUse() async {
-    if (state.isLoading) return;
+    if (state.isLoading || state.status == UserLocationStatus.selected) return;
     if (state.hasPosition) {
       await refreshSilently();
       return;
@@ -106,7 +110,7 @@ class UserLocationNotifier extends Notifier<UserLocationState> {
 
   /// Đọc lại GPS im lặng (không hiện loading). Chỉ gọi khi đã granted.
   Future<void> refreshSilently() async {
-    if (!state.hasPosition) return;
+    if (state.status != UserLocationStatus.granted || !state.hasPosition) return;
     await _fetchPosition(silent: true);
   }
 
@@ -150,6 +154,15 @@ class UserLocationNotifier extends Notifier<UserLocationState> {
     state = state.copyWith(
       status: UserLocationStatus.denied,
       message: 'Không lấy được vị trí — đang hiện danh sách theo giờ.',
+    );
+  }
+
+  void useSelectedPosition(double latitude, double longitude) {
+    state = UserLocationState(
+      status: UserLocationStatus.selected,
+      latitude: latitude,
+      longitude: longitude,
+      message: 'Vị trí đã chọn (ước lượng).',
     );
   }
 

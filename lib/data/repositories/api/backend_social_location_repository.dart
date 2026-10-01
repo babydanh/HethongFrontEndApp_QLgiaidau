@@ -11,6 +11,7 @@ class BackendSocialLocationRepository implements ISocialLocationRepository {
 
   final Dio _dio;
   final Dio _linkDio;
+  CancelToken? _searchToken;
 
   static const _googleHosts = {
     'google.com',
@@ -21,18 +22,47 @@ class BackendSocialLocationRepository implements ISocialLocationRepository {
   };
 
   @override
-  Future<List<SocialPlace>> search(String query) async {
+  Future<List<SocialPlace>> search(String query, {LatLng? bias}) async {
     final value = query.trim();
-    if (value.isEmpty) return const [];
+    if (value.length < 3) return const [];
+    _searchToken?.cancel();
+    final token = CancelToken();
+    _searchToken = token;
     try {
+      final queryParams = <String, dynamic>{'q': value, 'limit': 8};
+      if (bias != null &&
+          bias.latitude >= -90 &&
+          bias.latitude <= 90 &&
+          bias.longitude >= -180 &&
+          bias.longitude <= 180) {
+        queryParams['lat'] = bias.latitude;
+        queryParams['lng'] = bias.longitude;
+      }
       final response = await _dio.get<dynamic>(
-        '/social-locations/search',
-        queryParameters: {'q': value, 'limit': 8},
+        '/places/autocomplete',
+        queryParameters: queryParams,
         options: Options(extra: {'noCache': true}),
+        cancelToken: token,
       );
       final data = _data(response.data);
       if (data is! List) throw const UnresolvableLocation();
       return data.whereType<Map>().map(_place).toList(growable: false);
+    } on DioException catch (error) {
+      if (CancelToken.isCancel(error)) return const [];
+      throw _failure(error);
+    }
+  }
+
+  @override
+  Future<SocialPlace> getPlaceDetail(String placeId) async {
+    final value = placeId.trim();
+    if (value.isEmpty) throw const LocationNotFound();
+    try {
+      final response = await _dio.get<dynamic>(
+        '/places/${Uri.encodeComponent(value)}',
+        options: Options(extra: {'noCache': true}),
+      );
+      return _place(_map(_data(response.data)));
     } on DioException catch (error) {
       throw _failure(error);
     }
@@ -42,6 +72,9 @@ class BackendSocialLocationRepository implements ISocialLocationRepository {
   Future<SocialPlace> resolveInput(String addressOrMapsUrl) async {
     var value = addressOrMapsUrl.trim();
     if (value.isEmpty) throw const LocationNotFound();
+    if (value.startsWith('photon:')) {
+      return getPlaceDetail(value);
+    }
     if (RegExp(
       r'^[a-z][a-z0-9+.-]*://',
       caseSensitive: false,
@@ -91,8 +124,8 @@ class BackendSocialLocationRepository implements ISocialLocationRepository {
   Future<SocialPlace> reverseLookup(LatLng pin) async {
     try {
       final response = await _dio.get<dynamic>(
-        '/social-locations/reverse',
-        queryParameters: {'lat': pin.latitude, 'lon': pin.longitude},
+        '/places/reverse',
+        queryParameters: {'lat': pin.latitude, 'lng': pin.longitude},
         options: Options(extra: {'noCache': true}),
       );
       final place = _place(_map(_data(response.data)));
@@ -101,6 +134,12 @@ class BackendSocialLocationRepository implements ISocialLocationRepository {
         formattedAddress: place.formattedAddress,
         latitude: pin.latitude,
         longitude: pin.longitude,
+        placeId: place.placeId,
+        sourceProvince: place.sourceProvince,
+        sourceWard: place.sourceWard,
+        provinceCode: place.provinceCode,
+        wardCode: place.wardCode,
+        regionEstimated: place.regionEstimated,
       );
     } on DioException catch (error) {
       throw _failure(error);
@@ -132,11 +171,36 @@ class BackendSocialLocationRepository implements ISocialLocationRepository {
       formattedAddress: address,
       latitude: lat,
       longitude: lon,
+      placeId: raw['placeId']?.toString(),
+      sourceProvince: raw['sourceProvince']?.toString(),
+      sourceWard: raw['sourceWard']?.toString(),
+      provinceCode: raw['provinceCode']?.toString(),
+      wardCode: raw['wardCode']?.toString(),
+      regionEstimated: raw['regionEstimated'] == true,
     );
   }
 
   SocialLocationFailure _failure(DioException error) {
-    switch (error.response?.statusCode) {
+    final status = error.response?.statusCode;
+    final rawData = error.response?.data;
+    final code = rawData is Map ? rawData['code']?.toString() : null;
+
+    if (code == 'LOCATION_PAIR_REQUIRED') {
+      return const UnresolvableLocation();
+    }
+    if (code == 'PLACE_NOT_FOUND' || status == 404) {
+      return const LocationNotFound();
+    }
+    if (code == 'INCOMPLETE_PLACE' || status == 422) {
+      return const UnresolvableLocation();
+    }
+    if (code == 'PLACE_PROVIDER_UNAVAILABLE' ||
+        code == 'PLACE_QUOTA_EXCEEDED' ||
+        status == 503) {
+      return const LocationNetworkFailure();
+    }
+
+    switch (status) {
       case 404:
         return const LocationNotFound();
       case 422:

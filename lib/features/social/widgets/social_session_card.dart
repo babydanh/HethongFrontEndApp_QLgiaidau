@@ -164,10 +164,10 @@ class SocialSessionCard extends StatelessWidget {
                     color: isDark ? Colors.white : const Color(0xFF1E293B),
                   ),
                 ),
-                if (session.distanceKm > 0) ...[
+                if (session.distanceDisplay.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(
-                    '${session.distanceKm.toStringAsFixed(1)}km',
+                    session.distanceDisplay,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,

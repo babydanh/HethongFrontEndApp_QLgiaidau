@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/social_location_picker.dart';
+import 'package:latlong2/latlong.dart';
 
 /// Toggle "Gần bạn" + chips bán kính + banner xin quyền vị trí.
 /// Đặt dưới [SocialDateSelector] trong [SocialListView].
@@ -82,6 +84,15 @@ class SocialNearbyFilter extends ConsumerWidget {
                 ),
             ],
           ),
+          if (filter.nearbyOnly &&
+              location.status == UserLocationStatus.selected)
+            const Padding(
+              padding: EdgeInsets.only(top: 6),
+              child: Text(
+                'Vị trí đã chọn (ước lượng) · khoảng cách đường chim bay',
+                style: TextStyle(fontSize: 12),
+              ),
+            ),
           // Banner khi bật "Gần bạn" nhưng chưa có vị trí.
           if (filter.nearbyOnly && !location.hasPosition && !location.isLoading)
             _PermissionBanner(location: location),
@@ -201,6 +212,19 @@ class _PermissionBanner extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 8),
+          TextButton(
+            onPressed: () async {
+              final pin = await SocialLocationPicker.show(
+                context,
+                initialCenter: const LatLng(10.7769, 106.7009),
+              );
+              if (pin != null) {
+                ref.read(userLocationProvider.notifier)
+                    .useSelectedPosition(pin.latitude, pin.longitude);
+              }
+            },
+            child: const Text('Chọn trên bản đồ'),
+          ),
           TextButton(
             onPressed: () => _onBannerAction(ref, isBlocked),
             style: TextButton.styleFrom(
